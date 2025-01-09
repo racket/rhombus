@@ -113,7 +113,7 @@ rx_charset.macro '$left && $right':
   rx_charset_meta.pack(rx_charset_meta.unpack(left).intersect(rx_charset_meta.unpack(right)), stx)
 
 rx_charset.macro '$left || $right':
-  ~order: rx_disjunction
+  ~order: rx_concatenation
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(left).union(rx_charset_meta.unpack(right)), stx)
 

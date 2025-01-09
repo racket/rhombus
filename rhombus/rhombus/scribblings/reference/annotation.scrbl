@@ -101,6 +101,8 @@
 
 @doc(
   expr.macro '$expr is_a $annot'
+  operator_order:
+    ~order: equivalence
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr)

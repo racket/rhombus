@@ -56,6 +56,8 @@ bytes to match for a byte-mode @tech{regexp}.
   rx_charset.macro '$charset #%juxtapose $charset'
   rx_charset.macro '$charset || $charset'
   rx_charset.macro '$charset #%call ($charset)'
+  operator_order:
+    ~order: rx_concatenation
 ){
 
  Character sets that are adjacent or joined with

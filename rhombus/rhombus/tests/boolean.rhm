@@ -22,6 +22,14 @@ check:
   any(#false, print("reached")) ~prints "reached"
   all(#false, print("reached")) ~prints ""
 
+check:
+  1 is_a Int && 2 is_a Int ~is #true
+  1 is_a Int || 2 is_a Int ~is #true
+  1 is_a String && 2 is_a Int ~is #false
+  1 is_a Int && 2 is_a String ~is #false
+  1 is_a String || 2 is_a Int ~is #true
+  1 is_a String || 2 is_a String ~is #false
+
 block:
   def [x, ...] = [#true, #true, #false]
   def [y, ...] = [#true, #false, #false]

@@ -27,7 +27,9 @@
          "number.rkt"
          "is-static.rkt"
          "rhombus-primitive.rkt"
-         "annotation-failure.rkt")
+         "annotation-failure.rkt"
+         "order.rkt"
+         "order-primitive.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -542,8 +544,8 @@
 
 (define-syntax is_a
   (expression-infix-operator
-   #f
-   '((default . weaker))
+   (lambda () (order-quote equivalence))
+   '()
    'macro
    (lambda (form tail)
      (syntax-parse tail
