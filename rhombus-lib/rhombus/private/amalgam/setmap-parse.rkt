@@ -129,6 +129,7 @@
                                  rev-argss
                                  (cons (reverse rev-args) rev-argss))))]
               [(group key-e ... (~and blk (_::block val ...)))
+               #:when (not (eq? init-shape 'set))
                (raise-syntax-error who "repetition requires a single-group block" #'blk)]
               [_
                (assert-set)
@@ -166,6 +167,7 @@
                             rev-args)
                      rev-argss)]
               [(group key-e ... (~and blk (b-tag::block val ...)))
+               #:when (not (eq? init-shape 'set))
                (when repetition?
                  (raise-syntax-error who "repetition requires a single-group block" #'blk))
                (assert-map)
