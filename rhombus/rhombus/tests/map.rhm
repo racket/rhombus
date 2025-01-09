@@ -28,6 +28,10 @@ check:
   {"a": 1, #'~b: 2}
   ~is Map(["a", 1], [#'~b, 2])
 
+check:  
+  {"a": 0; 1, #'~b: -2; -3; 2}
+  ~is Map(["a", 1], [#'~b, 2])
+
 check:
   Map.length({"a": 1, "b": 2})
   ~is 2

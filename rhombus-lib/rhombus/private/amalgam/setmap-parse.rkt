@@ -128,6 +128,8 @@
                              (if (null? rev-args)
                                  rev-argss
                                  (cons (reverse rev-args) rev-argss))))]
+              [(group key-e ... (~and blk (_::block val ...)))
+               (raise-syntax-error who "repetition requires a single-group block" #'blk)]
               [_
                (assert-set)
                (loop (list-tail (cddr elems) extra-ellipses)
@@ -160,6 +162,16 @@
                (loop (cdr elems)
                      'map
                      (list* (one-argument #'val)
+                            (one-argument #'(group key-e ...))
+                            rev-args)
+                     rev-argss)]
+              [(group key-e ... (~and blk (b-tag::block val ...)))
+               (when repetition?
+                 (raise-syntax-error who "repetition requires a single-group block" #'blk))
+               (assert-map)
+               (loop (cdr elems)
+                     'map
+                     (list* #`(rhombus-body-at b-tag val ...)
                             (one-argument #'(group key-e ...))
                             rev-args)
                      rev-argss)]
