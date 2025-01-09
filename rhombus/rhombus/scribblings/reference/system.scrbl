@@ -10,10 +10,22 @@
   fun system.version() :: String
 ){
 
- Reports the host Racket version.
+ Reports the running Rhombus version.
 
 @examples(
   system.version()
+)
+
+}
+
+@doc(
+  fun system.racket_version() :: String
+){
+
+ Reports the host Racket version.
+
+@examples(
+  system.racket_version()
 )
 
 }
