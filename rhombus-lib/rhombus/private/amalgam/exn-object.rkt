@@ -11,7 +11,8 @@
          (submod "pair.rkt" for-static-info)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info)
-         "annotation-failure.rkt")
+         "annotation-failure.rkt"
+         "name-root.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -67,7 +68,7 @@
               OutOfMemory
               Unsupported
               User
-              [Annot Exn.Fail.Annot]))
+              Annot))
 
 (define-exn Contract exn:fail:contract
   #:parent Fail exn:fail
@@ -78,11 +79,23 @@
               Continuation
               Variable))
 
-(define/arity (Exn.Fail.Annot message marks)
-  #:static-infos ((#%call-result #,(get-exn:fail:contract-static-infos)))
-  (unless (string? message) (raise-annotation-failure who message "ReadableString"))
-  (unless (continuation-mark-set? marks) (raise-annotation-failure who marks "Continuation.Marks"))
-  (exn:fail:contract message marks))
+(struct exn:fail:annot exn:fail:contract (srclocs)
+  #:transparent
+  #:property prop:exn:srclocs (lambda (self)
+                                (exn:fail:annot-srclocs self))
+  #:guard (lambda (msg marks srclocs st)
+            (define who 'Exn.Fail.Annot)
+            (unless (string? msg) (raise-annotation-failure who msg "ReadableString"))
+            (unless (continuation-mark-set? marks) (raise-annotation-failure who marks "Continuation.Marks"))
+            (unless (and (list? srclocs) (andmap srcloc? srclocs))
+              (raise-annotation-failure who srclocs "PairList.of(Srcloc)"))
+            (values msg marks srclocs)))
+
+(define-exn Annot exn:fail:annot
+  #:parent Exn.Fail.Annot exn:fail:contract
+  #:fields ([(srclocs) ((#%index-result #,(get-srcloc-static-infos))
+                        . #,(get-list-static-infos))])
+  #:children ())
 
 (define-exn Arity exn:fail:contract:arity
   #:parent Contract exn:fail:contract

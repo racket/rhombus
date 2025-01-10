@@ -11,6 +11,7 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (submod "syntax-object.rkt" for-quasiquote)
                      (for-syntax racket/base))
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (submod "import.rkt" for-meta)
          "macro-macro.rkt")
@@ -27,11 +28,15 @@
 (begin-for-syntax
   (define-name-root impo_meta
     #:fields
-    (ParsedModifier
+    (space
+     ParsedModifier
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
      NameStart)))
+
+(define-for-syntax space
+  (space-syntax rhombus/impo))
 
 ;; ----------------------------------------
 

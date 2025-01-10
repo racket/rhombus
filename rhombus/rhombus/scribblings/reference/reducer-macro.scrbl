@@ -171,6 +171,17 @@
 
 @doc(
   ~meta
+  def reducer_meta.space :: SpaceMeta
+){
+
+ A compile-time value that identifies the same space as
+ @rhombus(reducer, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
+  ~meta
   fun reducer_meta.pack(complete_id :: Identifier,
                         binds :: Syntax,
                         pre_clause_id :: maybe(Identifier),

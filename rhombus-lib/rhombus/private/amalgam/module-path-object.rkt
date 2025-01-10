@@ -16,6 +16,7 @@
          "define-arity.rkt"
          "static-info.rkt"
          "call-result-key.rkt"
+         "maybe-key.rkt"
          "realm.rkt"
          "annotation-failure.rkt"
          "module-path-parse.rkt"
@@ -44,6 +45,8 @@
   #:existing
   #:just-annot
   #:fields ()
+  #:namespace-fields
+  ([try ModulePath.try])
   #:properties
   ()
   #:methods
@@ -143,19 +146,20 @@
     (raise-annotation-failure who mp "ModulePath"))
   (module-path-raw mp))
 
-(define/arity (ModulePath stx)
-  #:static-infos ((#%call-result #,(get-module-path-static-infos)))
+(define (parse-ModulePath who stx just-try?)
   (define g (and (syntax? stx) (unpack-group stx #f #f)))
   (unless g (raise-annotation-failure who stx "Group"))
   (define (bad)
-    (raise-arguments-error* who rhombus-realm "syntax object does not contain a valid module path"
-                            "syntax object" stx))
+    (and (not just-try?)
+         (raise-arguments-error* who rhombus-realm "syntax object does not contain a valid module path"
+                                 "syntax object" stx)))
   (define (check-and-wrap mp submods)
-    (unless (racket:module-path? mp) (bad))
-    (module-path
-     (if (null? (syntax-e submods))
-         mp
-         `(submod ,mp ,@(map syntax-e (syntax->list submods))))))
+    (if (racket:module-path? mp)
+        (module-path
+         (if (null? (syntax-e submods))
+             mp
+             `(submod ,mp ,@(map syntax-e (syntax->list submods)))))
+        (bad)))
   (syntax-parse g
     #:datum-literals (group lib file op self parent / ! |.|)
     [(group str:string (~seq (op !) sub:identifier) ...)
@@ -193,3 +197,11 @@
                                                                  accum))])))))
                      #'(sub ...))]
     [_ (bad)]))
+
+(define/arity (ModulePath stx)
+  #:static-infos ((#%call-result #,(get-module-path-static-infos)))
+  (parse-ModulePath who stx #f))
+
+(define/arity (ModulePath.try stx)
+  #:static-infos ((#%call-result ((#%maybe #,(get-module-path-static-infos)))))
+  (parse-ModulePath who stx #t))

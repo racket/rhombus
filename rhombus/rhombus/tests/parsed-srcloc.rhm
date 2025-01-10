@@ -75,7 +75,7 @@ check_exp_loc: Array(1, 2, 3)[0]
 check_exp_loc: {1: 2}[0]
 check_exp_loc: Map{1: 2}[0]
 check_exp_loc: {1}[0]
-check_exp_loc: Set{1: 2}[0]
+check_exp_loc: Set{1}[0]
 check_exp_loc: Srcloc(1, 2, 3, 4, 5).line
 check_exp_loc: 1+2
 check_exp_loc: 1 GT 2

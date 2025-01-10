@@ -89,6 +89,17 @@
 
 @doc(
   ~meta
+  def expo_meta.space :: SpaceMeta
+){
+
+ A compile-time value that identifies the same space as
+ @rhombus(expo, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
+  ~meta
   syntax_class expo_meta.Parsed:
     kind: ~group
     fields:

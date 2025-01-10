@@ -12,11 +12,15 @@
       (string-append str "/main.rhm")))
 
 (define (module-lib-string-to-lib-string str)
-  (define (maybe-add-rhm-suffix s)
-    (if (regexp-match? #rx"[.]" s) s (string-append s ".rhm")))
-  (define new-str (maybe-add-rhm-suffix str))
+  (define new-str
+    (cond
+      [(regexp-match? #rx"/" str)
+       (if (regexp-match? #rx"[.]" str)
+           str
+           (string-append str ".rhm"))]
+      [else
+       (string-append str "/main.rhm")]))
   (and (module-path? `(lib ,new-str))
-       (regexp-match? #rx"/" new-str)
        new-str))
 
 (define (module-path-convert-parsed mod-stx)

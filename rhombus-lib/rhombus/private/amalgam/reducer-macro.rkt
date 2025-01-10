@@ -16,6 +16,7 @@
                      "call-result-key.rkt"
                      "syntax-wrap.rkt"
                      (for-syntax racket/base))
+         (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -37,7 +38,8 @@
 (begin-for-syntax
   (define-name-root reducer_meta
     #:fields
-    ([pack reducer_meta.pack]
+    (space
+     [pack reducer_meta.pack]
      [unpack reducer_meta.unpack]
      Parsed
      AfterPrefixParsed
@@ -50,6 +52,9 @@
   #'make-reducer-prefix-operator
   #'make-reducer-infix-operator
   #'reducer-prefix+infix-operator)
+
+(define-for-syntax space
+  (space-syntax rhombus/reducer))
 
 (begin-for-syntax
   (define-operator-syntax-classes

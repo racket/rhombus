@@ -40,8 +40,9 @@
  When @rhombus(exn) is called by @rhombus(error), the first argument is
  a string message, and the second argument is
  @rhombus(Continuation.Marks.current()). If @rhombus(exn) accepts at
- least three arguments, then @rhombus(srcloc) is provided as the third
- argument. If @rhombus(exn) accepts four arguments, then the list of
+ least three arguments, then @rhombus(PairList[srcloc]) is provided as the third
+ argument if @rhombus(srcloc) is a @rhombus(Srcloc) or @rhombus(PairList[]) otherwise.
+ If @rhombus(exn) accepts four arguments, then the list of
  @rhombus(clause)s is provided as the fourth argument.
 
  Conventions for using @rhombus(error):

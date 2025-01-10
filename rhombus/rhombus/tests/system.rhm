@@ -1,6 +1,7 @@
 #lang rhombus
 
 check system.version() ~is_a String
+check system.racket_version() ~is_a String
 
 check system.type() ~is_a Any.of(#'unix, #'windows, #'macosx)
 

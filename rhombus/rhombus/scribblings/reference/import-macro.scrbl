@@ -97,6 +97,17 @@
 
 @doc(
   ~meta
+  def impo_meta.space :: SpaceMeta
+){
+
+ A compile-time value that identifies the same space as
+ @rhombus(impo, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
+  ~meta
   syntax_class impo_meta.Parsed:
     kind: ~group
     fields:

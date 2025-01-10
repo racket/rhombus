@@ -122,6 +122,8 @@
     extends Exn.Fail.Contract
   class Exn.Fail.Contract.Variable(id :: Symbol):
     extends Exn.Fail.Contract
+  class Exn.Fail.Annot(srclocs :: PairList.of(Srcloc)):
+    extends Exn.Fail.Contract
   class Exn.Fail.Syntax(exprs :: PairList.of(Syntax)):
     extends Exn.Fail
   class Exn.Fail.Syntax.Unbound():
@@ -166,18 +168,5 @@
 ){
 
  Primitive exceptions.
-
-}
-
-
-@doc(
-  fun Exn.Fail.Annot(message :: ReadableString,
-                     marks :: Continuation.Marks)
-    :: Exn.Fail.Contract
-){
-
- A constructor alias for @rhombus(Exn.Fail.Contract, ~annot), since
- annotation-satisfaction failures exceptions do not have additional
- information beyond @rhombus(Exn.Fail.Contract, ~annot).
 
 }

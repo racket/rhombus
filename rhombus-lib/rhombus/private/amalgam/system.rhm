@@ -3,6 +3,7 @@ import:
   "core-meta.rkt" open
   lib("racket/base.rkt") as rkt
   "error.rhm" open
+  "version.rkt" as rhombus_version
 
 export:
   system
@@ -15,6 +16,7 @@ namespace system:
     host
     target_machine
     version
+    racket_version
     path
     seconds
     milliseconds
@@ -43,6 +45,9 @@ namespace system:
     rkt.#{system-type}(#'#{target-machine}) || #'racket
 
   fun version() :~ String:
+    rhombus_version.version
+
+  fun racket_version() :~ String:
     String.snapshot(rkt.#{version}())
 
   fun path(which :: Symbol):

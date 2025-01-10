@@ -134,9 +134,10 @@
  @item{@rhombus(#,(@rhombus(lib, ~impo))(string)): refers to an installed collection library,
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
-   by itself, with additional constraints: at least one @litchar{/}
-   is required, and @litchar{.} and
-   @litchar{..} directory indicators are disallowed. When @rhombus(string)
+   by itself, with the additional constraint that @litchar{.} and
+   @litchar{..} directory indicators are disallowed. More like a @rhombus(collection_module_path),
+   if @rhombus(string) does not include @litchar{/}, then @filepath{/main.rhm}
+   is appended to @rhombus(string). When @rhombus(string) contains @litchar{/} but 
    does not end with a file suffix, @filepath{.rhm} is added.},
 
  @item{@rhombus(#,(@rhombus(file, ~impo))(string)): refers to a file through a
@@ -443,6 +444,8 @@
   expr.macro '«ModulePath '$module_path'»'
   repet.macro 'ModulePath'
 
+  fun ModulePath.try(mod_stx :: Group) :: maybe(ModulePath)
+
   method (mp :: ModulePath).s_exp() :: Any
 ){
 
@@ -451,7 +454,10 @@
  expression form create such a value for a syntax-object
  @rhombus(mod_stx) or a quoted @rhombus(module_path). As a repetition,
  @rhombus(ModulePath, ~repet) is the same as referring to the
- @rhombus(ModulePath) function.
+ @rhombus(ModulePath) function. The @rhombus(ModulePath.try) function
+ is like @rhombus(ModulePath), but it returns @rhombus(#false) instead
+ of throwing an exception when @rhombus(mod_stx) does not represent
+ a valid module path.
 
  The format of a @rhombus(module_path) or the content of
  @rhombus(mod_stx) is the same as for @rhombus(import, ~defn), except

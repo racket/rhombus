@@ -134,7 +134,8 @@ repet.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ..
 
 fun definitely_failed(who):
   throw Exn.Fail.Annot(who +& ": claimed not false, but actual value is false",
-                       Continuation.Marks.current())
+                       Continuation.Marks.current(),
+                       PairList[])
 
 fun check_definitey_at_depth(who, v, depth):
   if depth == 0
