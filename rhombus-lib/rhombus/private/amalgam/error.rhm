@@ -68,8 +68,8 @@ fun error(~srcloc: srcloc :: maybe(Srcloc) = #false,
   let marks = Continuation.Marks.current()
   let e:
     match exn
-    | exn :: Function.of_arity(4): exn(msg, marks, [srcloc], [clause, ...])
-    | exn :: Function.of_arity(3): exn(msg, marks, [srcloc])
+    | exn :: Function.of_arity(4): exn(msg, marks, if srcloc | PairList[srcloc] | PairList[], [clause, ...])
+    | exn :: Function.of_arity(3): exn(msg, marks, if srcloc | PairList[srcloc] | PairList[])
     | exn :: Function.of_arity(2): exn(msg, marks)
   throw e
 
