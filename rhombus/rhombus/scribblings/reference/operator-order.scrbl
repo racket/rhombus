@@ -19,6 +19,26 @@ in multple spaces (such as via @rhombus(bind.macro, ~defn) or
 @rhombus(annot.macro, ~defn)) can use the same set of operator orders.
 
 @doc(
+  space.transform operator_order
+){
+
+ The @tech{space} for bindings of identifiers that can be used in
+ operator order positions.
+
+}
+
+@doc(
+  ~meta
+  def operator_order_meta.space :: SpaceMeta
+){
+
+ A compile-time value that identifies the same space as
+ @rhombus(operator_order, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+
+@doc(
   defn.macro 'operator_order.def $id_name:
                 $option
                 ...'
