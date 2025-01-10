@@ -39,7 +39,7 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (let loop ([root root] [ns-root #f] [fields fields] [root-raw #f] [ns-raw-prefix #f] [raw-prefix-len 0])
+  (define (loop root ns-root fields root-raw ns-raw-prefix raw-prefix-len)
     (cond
       [(null? fields) #f]
       [else
@@ -110,9 +110,9 @@
                                            (and is-import? raw-prefix)))
                       'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len))))
        (define (next named-dest)
-         (loop named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
-               raw (or (and is-import? raw-prefix) ns-raw-prefix)
-               (if is-import? (add1 raw-prefix-len) raw-prefix-len)))
+         (loop/squashed named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
+                        raw (or (and is-import? raw-prefix) ns-raw-prefix)
+                        (if is-import? (add1 raw-prefix-len) raw-prefix-len)))
        (cond
          [dest
           (define loc-stx
@@ -138,4 +138,30 @@
                                                  field))
                                  (or given-raw raw)))])
                  (or (next named-id)
-                     (add-rest named-id))))])])))
+                     (add-rest named-id))))])]))
+  (define (loop/squashed root ns-root fields root-raw ns-raw-prefix raw-prefix-len)
+    (define r (loop root ns-root fields root-raw ns-raw-prefix raw-prefix-len))
+    (cond
+      [(and (pair? fields)
+            (pair? (cdr fields))
+            (or (not r) (pair? (hash-ref r 'remains null))))
+       ;; not all field components were used, so try combining
+       ;; the first field with an identifier
+       (define squashed-fields (cons (let ([a (car fields)]
+                                           [b (cadr fields)])
+                                       (define ab
+                                         (append-consecutive-syntax-objects
+                                          (string->symbol (format "~a.~a" (syntax-e a) (syntax-e b)))
+                                          a b))
+                                       (syntax-raw-property ab (list (syntax-raw-property a)
+                                                                     "."
+                                                                     (syntax-raw-property b))))
+                                     (cddr fields)))
+       (define r2 (loop root ns-root squashed-fields root-raw ns-raw-prefix raw-prefix-len))
+       (if (and r2 (or (not r)
+                       (< (length (hash-ref r2 'remains null))
+                          (length (hash-ref r 'remains null)))))
+           r2
+           r)]
+      [else r]))
+  (loop/squashed root #f fields #f #f 0))

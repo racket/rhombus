@@ -257,7 +257,8 @@
 
 (define-for-syntax (identifier-macro-extract-name stx space-name)
   (syntax-parse stx
-    #:datum-literals (group op quotes)
+    #:datum-literals (group op quotes parens)
+    [(group _::doc-form (quotes (group (parens (group (~var id (identifier-target space-name)))) . _) . _)) #'id.name]
     [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _) . _)) #'id.name]
     [(group _::doc-form (quotes (~var id (identifier-target space-name)))) #'id.name]))
 
@@ -278,7 +279,11 @@
 
 (define-for-syntax (identifier-macro-extract-metavariables stx space-name vars)
   (syntax-parse stx
-    #:datum-literals (group op quotes)
+    #:datum-literals (group op quotes parens)
+    [(group _::doc-form (quotes (group (parens (group (~var _ (identifier-target space-name)))) t ...)
+                                (group t2 ...)
+                                ...))
+     (extract-pattern-metavariables #'(group t ... t2 ... ...) vars)]
     [(group _::doc-form (quotes (group (~var _ (identifier-target space-name)) t ...)
                                 (group t2 ...)
                                 ...))
@@ -322,6 +327,11 @@
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals ($ group op quotes)
+    [(group _::doc-form (quotes (~and g (group (parens (group (~var id (identifier-target space-name)))) e ...))))
+     ;; just one group; don't keep `group` tag prefix and suffix
+     (rb #:at #'g
+         #:pattern? #t
+         #`(group #,@(subst #'id.name) e ...))]
     [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
      ;; just one group; don't keep `group` tag prefix and suffix
      (rb #:at #'g
