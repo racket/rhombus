@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/print
                      "make-get-veneer-like-static-infos.rkt")
          racket/string
          racket/symbol
@@ -19,6 +20,7 @@
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
          "define-arity.rkt"
+         "binding.rkt"
          (submod "literal.rkt" for-info)
          (submod "annotation.rkt" for-class)
          (submod "char.rkt" for-static-info)
@@ -308,6 +310,50 @@
   #:static-infos ((#%call-result ((#%maybe #,(get-number-static-infos)))))
   (check-readable-string who s)
   (string->number s))
+
+(define-annotation-syntax String.to_int
+  (make-identifier-binding-annotation
+   (lambda (stx)
+     (values (binding-form #'from-string-infoer #`(x String.to_int #,(shrubbery-syntax->string stx)))
+             #'x
+             (get-int-static-infos)))))
+
+(define-annotation-syntax String.to_number
+  (make-identifier-binding-annotation
+   (lambda (stx)
+     (values (binding-form #'from-string-infoer #`(x String.to_number  #,(shrubbery-syntax->string stx)))
+             #'x
+             (get-real-static-infos)))))
+
+(define-syntax (from-string-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (x cvt ann-str))
+     (binding-info (syntax-e #'ann-str)
+                   #'s
+                   #'()
+                   #'((x (0)))
+                   #'from-string-matcher
+                   #'(v)
+                   #'from-string-committer
+                   #'from-string-binder
+                   #'(x v cvt))]))
+
+(define-syntax (from-string-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (x v cvt) IF success fail)
+     #'(begin
+         (define v (and (string? arg-id) (cvt arg-id)))
+         (IF v success fail))]))
+
+(define-syntax (from-string-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (v) _)
+     #'(begin)]))
+
+(define-syntax (from-string-binder stx)
+  (syntax-parse stx
+    [(_ arg-id (v) (x . _))
+     #'(define x v)]))
 
 (define/method (String.find s1 s2)
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))

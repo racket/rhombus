@@ -346,9 +346,10 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   method String.to_int(str :: ReadableString) :: maybe(Int)
+  annot.macro 'String.to_int'
 ){
 
- Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
+ The @rhombus(String.to_int) function parses @rhombus(str) as an integer, returning @rhombus(#false) if the
  string does not parse as an integer, otherwise returning the integer
  value.
 
@@ -359,14 +360,26 @@ Strings are @tech{comparable}, which means that generic operations like
   "100".to_int()
 )
 
+ The @rhombus(String.to_int, ~annot) @tech(~doc: guide_doc){converter annotation} is
+ satisfied by a string that can be converted to an integer via
+ @rhombus(String.to_int), and it converts to that integer.
+
+@examples(
+  def n :: String.to_int = "-42"
+  n
+  ~error:
+    def m :: String.to_int && Int.in(0, 40) = "-42"
+)
+
 }
 
 
 @doc(
   method String.to_number(str :: ReadableString) :: maybe(Number)
+  annot.macro 'String.to_number'
 ){
 
- Parses @rhombus(str) as a number, returning @rhombus(#false) if the
+ The @rhombus(String.to_number) function @rhombus(str) as a number, returning @rhombus(#false) if the
  string does not parse as a number, otherwise returning the number
  value.
 
@@ -375,6 +388,15 @@ Strings are @tech{comparable}, which means that generic operations like
   String.to_number("42.0")
   String.to_number("forty-two")
   "3/4".to_number()
+)
+
+ The @rhombus(String.to_number, ~annot) @tech(~doc: guide_doc){converter annotation} is
+ satisfied by a string that can be converted to an integer via
+ @rhombus(String.to_int), and it converts to that integer.
+
+@examples(
+  def n :: String.to_number = "42.0"
+  n
 )
 
 }

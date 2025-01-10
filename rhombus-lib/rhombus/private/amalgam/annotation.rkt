@@ -73,6 +73,7 @@
 
              identifier-annotation
              identifier-binding-annotation
+             make-identifier-binding-annotation
 
              in-annotation-space
              annot-quote
@@ -245,9 +246,9 @@
   (define-syntax (identifier-binding-annotation stx)
     (syntax-case stx ()
       [(_ binding body static-infos)
-       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)))]
+       #'(make-identifier-binding-annotation (lambda (stx) (values #`binding #`body #`static-infos)))]
       [(_ binding body static-infos #:static-only)
-       #'(make-identifier-binding-annotation (lambda () (values #`binding #`body #`static-infos)) #t)]))
+       #'(make-identifier-binding-annotation (lambda (stx) (values #`binding #`body #`static-infos)) #t)]))
 
   (define (make-identifier-binding-annotation get [static-only? #f])
     (annotation-prefix-operator
@@ -256,7 +257,7 @@
      'macro
      (lambda (stx)
        (when static-only? (check-static stx))
-       (define-values (binding-stx body-stx static-infos) (get))
+       (define-values (binding-stx body-stx static-infos) (get stx))
        (define packed (annotation-binding-form binding-stx body-stx static-infos))
        (syntax-parse stx
          [(self . tail)
@@ -1028,20 +1029,22 @@
    (lambda (stxes)
      (syntax-parse stxes
        #:datum-literals (group)
-       [(form-id (_::parens lo::incl-group hi::incl-group)
+       [(form-id (~and args (_::parens lo::incl-group hi::incl-group))
                  . tail)
-        (values (annotation-predicate-form
-                 #`(let ([lo-v (rhombus-expression lo.g)]
-                         [hi-v (rhombus-expression hi.g)])
-                     (unless (#,pred-stx lo-v)
-                       (raise-annotation-failure 'form-id lo-v '#,annot-str))
-                     (unless (#,pred-stx hi-v)
-                       (raise-annotation-failure 'form-id hi-v '#,annot-str))
-                     (lambda (v)
-                       (and (#,pred-stx v)
-                            (lo.comp lo-v v)
-                            (hi.comp v hi-v))))
-                 #'())
+        (values (relocate+reraw
+                 (datum->syntax #f (list #'form-id #'args))
+                 (annotation-predicate-form
+                  #`(let ([lo-v (rhombus-expression lo.g)]
+                          [hi-v (rhombus-expression hi.g)])
+                      (unless (#,pred-stx lo-v)
+                        (raise-annotation-failure 'form-id lo-v '#,annot-str))
+                      (unless (#,pred-stx hi-v)
+                        (raise-annotation-failure 'form-id hi-v '#,annot-str))
+                      (lambda (v)
+                        (and (#,pred-stx v)
+                             (lo.comp lo-v v)
+                             (hi.comp v hi-v))))
+                  #'()))
                 #'tail)]))))
 
 (define-annotation-syntax Real.in
