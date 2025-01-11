@@ -19,7 +19,10 @@
                   racketresultfont
                   racketoutput
                   racketerror)
+         (only-in scribble/racket
+                  output-color)
          (only-in scribble/core
+                  element
                   table
                   paragraph
                   nested-flow
@@ -207,7 +210,7 @@
                                     (lambda () (eval (strip-context expr)))
                                     list)]))])
                  (append
-                  (format-lines (get-output eval) racketoutput indent)
+                  (format-lines (get-output eval) racketoutput* indent)
                   (format-lines (get-error-output eval) racketerror indent)
                   (cond
                     [(eq? mode 'error)
@@ -273,20 +276,21 @@
     (paragraph plain
                (list
                 (if (= all-indent 0) "" (hspace all-indent))
-                (let loop ([line line] [indent indent])
+                (let loop ([line line] [indent indent] [blank? #t])
                   (cond
                     [(not (eqv? indent 0))
                      (define line-str (car line))
                      (define len (string-length line-str))
                      (if (len . > . indent)
-                         (loop (cons (substring line-str indent) (cdr line)) 0)
-                         (loop (cdr line) (- indent len)))]
-                    [(null? line) null]
+                         (loop (cons (substring line-str indent) (cdr line)) 0 blank?)
+                         (loop (cdr line) (- indent len) blank?))]
+                    [(null? line) (if blank? (list (hspace 1)) null)]
                     [else
-                     (cons (if (string? (car line))
-                               (format-str (car line))
+                     (define a (car line))
+                     (cons (if (string? a)
+                               (format-str a)
                                (car line))
-                           (loop (cdr line) 0))]))))))
+                           (loop (cdr line) 0 (and blank? (equal? a ""))))]))))))
 
 (define (format-exception exn eval)
   (define o (open-output-string))
@@ -319,3 +323,6 @@
       (let ([b (box #f)])
         (hash-set! spacer-info-boxes evaluator b)
         b)))
+
+(define (racketoutput* . str)
+  (element output-color str))

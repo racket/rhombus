@@ -351,13 +351,19 @@
                      (define-values (e new-line-shape) (make-element start end skip-ws line-shape))
                      (cons e
                            (token-loop new-state end (- skip-ws (- end start)) new-line-shape))]))]))])))
-    (define elementss (let loop ([l elements+linebreaks])
+    (define cleaned-elements+linebreaks
+      ;; drop empty lists so that they don't interfere with consecutive-'linebreak detection:
+      (for/list ([e (in-list elements+linebreaks)]
+                 #:unless (null? e))
+        e))
+    (define elementss (let loop ([l cleaned-elements+linebreaks])
                         (cond
                           [(null? l) (list null)]
                           [(eq? 'linebreak (car l))
                            (define rl (cdr l))
                            (define r (loop (if (and (pair? rl)
                                                     (eq? 'linebreak (car rl)))
+                                               ;; add a space if the line is otherwise empty
                                                (cons (whitespace 1)
                                                      rl)
                                                rl)))

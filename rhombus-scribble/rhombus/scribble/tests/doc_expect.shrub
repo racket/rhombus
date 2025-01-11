@@ -323,6 +323,12 @@ html:
                   span {class: "stt"}: a {class: "RktValLink"}: "length"
                   span {class: "RktPn"}: "("
                   span {class: "RktPn"}: ")"
+            tr: td: p: span {class: "hspace"}: nbsp
+            tr:
+              td:
+                p:
+                  span {class: "RktCmt"}:
+                    "// keep trailing whitespace in above line"
             tr:
               td:
                 p:
@@ -347,6 +353,29 @@ html:
                   span {class: "stt"}: a {class: "RktValLink"}: "length"
                   span {class: "RktPn"}: "("
                   span {class: "RktPn"}: ")"
+        blockquote:
+          table:
+            tr:
+              td:
+                table:
+                  tr:
+                    td:
+                      p:
+                        span {class: "hspace"}:«»
+                        span {class: "stt"}:
+                          ">"
+                          span {class: "hspace"}: nbsp
+                        span {class: "stt"}: a {class: "RktValLink"}: "println"
+                        span {class: "RktPn"}: "("
+                        span {class: "RktVal"}: "\"1\\n\\n2\""
+                        span {class: "RktPn"}: ")"
+            tr: td: p: span {class: "RktOut"}: "1"
+            tr:
+              td:
+                p:
+                  span {class: "RktOut"}:«»
+                  span {class: "hspace"}: nbsp
+            tr: td: p: span {class: "RktOut"}: "2"
         p:
           div {class: "SIntrapara"}:
             table:

@@ -51,8 +51,14 @@ Starting example:
   s5.length()
   def s6 = String.snapshot("Hello")
   s6.length()
+  
+  // keep trailing whitespace in above line
   fun (s :: String):
     s.length()
+)
+
+@examples(
+  println("1\n\n2")
 )
 
 @doc(
