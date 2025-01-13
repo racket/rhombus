@@ -950,7 +950,7 @@ block:
 check:
   use_static
   def m :: MutableMap.later_of(Int, String) = MutableMap{100: "1"}
-  m[100] ++ "!"
+  m[100]!! ++ "!"
   ~is "1!"
 
 block:

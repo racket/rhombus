@@ -207,7 +207,7 @@
     [(treelist? indexable) (treelist-ref indexable index)]
     [(list? indexable) (list-ref indexable index)]
     [(vector? indexable) (vector-ref indexable index)]
-    [(hash? indexable) (hash-ref indexable index)]
+    [(hash? indexable) (hash-ref indexable index #f)]
     [(set? indexable) (set-ref indexable index)]
     [(string? indexable) (string-ref indexable index)]
     [(bytes? indexable) (bytes-ref indexable index)]

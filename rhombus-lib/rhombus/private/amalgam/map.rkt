@@ -24,6 +24,7 @@
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
+         "maybe-key.rkt"
          "values-key.rkt"
          "composite.rkt"
          (submod "list.rkt" for-compound-repetition)
@@ -137,7 +138,7 @@
   (provide build-map))
 
 (define-static-info-getter get-any-map-static-infos
-  (#%index-get Map.get)
+  (#%index-get Map.maybe_get)
   (#%sequence-constructor Map.to_sequence/optimize))
 
 (define-primitive-class ReadableMap readable-map hash
@@ -438,7 +439,7 @@
 
 (define-for-syntax map-annotation-make-static-info
   (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))
+    #`((#%index-result ((#%maybe #,(cadr static-infoss))))
        (#%sequence-element ((#%values (#,(car static-infoss)
                                        #,(cadr static-infoss))))))))
 
@@ -484,7 +485,7 @@
   #f
   (make-map-later-chaperoner 'Map)
   (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))))
+    #`((#%index-result ((#%maybe #,(cadr static-infoss))))))
   "converter annotation not supported for elements;\n checking needs a predicate annotation for the map content"
   #'()
   #:parse-of parse-annotation-of/chaperone)
@@ -603,7 +604,7 @@
   #f
   (make-map-later-chaperoner 'MutableMap)
   (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))))
+    #`((#%index-result ((#%maybe #,(cadr static-infoss))))))
   #'mutable-map-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
@@ -898,6 +899,7 @@
                                        #'())
                                      #:static-infos (get-map-static-infos)
                                      #:index-result-info? #t
+                                     #:index-result-maybe? #t
                                      #:sequence-element-info? #t
                                      #:rest-accessor (and maybe-rest #`(lambda (v) #,rest-tmp))
                                      #:rest-to-repetition #'in-immutable-hash-pairs
@@ -1082,6 +1084,10 @@
   (case-lambda
     [(ht key) (hash-ref ht key)]
     [(ht key default) (hash-ref ht key default)]))
+
+(define Map.maybe_get
+  (case-lambda
+    [(ht key) (hash-ref ht key #f)]))
 
 (define (check-map who ht)
   (unless (immutable-hash? ht)

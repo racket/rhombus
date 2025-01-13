@@ -123,7 +123,7 @@ def local_map = Map{#'alice: Posn(4, 5),
                     #'bob: Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  def p = neighborhood[who]
+  def p = neighborhood[who]!!
   p.x +& ", " +& p.y
 
 check:

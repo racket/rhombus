@@ -61,7 +61,7 @@ check:
   ~is 3
 
 check:
-  {mcons(1, 2): 3}[mcons(1, 2)]
+  {mcons(1, 2): 3}.get(mcons(1, 2))
   ~throws "Map.get: no value found for key"
 
 block:
@@ -169,7 +169,7 @@ def local_map = Map{#'alice: Posn(4, 5),
                     #'bob: Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  def p = neighborhood[who]
+  def p = neighborhood[who]!!
   p.x +& ", " +& p.y
 
 check:

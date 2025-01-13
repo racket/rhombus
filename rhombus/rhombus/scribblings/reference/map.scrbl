@@ -19,7 +19,9 @@ use of curly braces with no preceding expression is parsed as an
 implicit use of the @rhombus(#%braces) form.
 
 A map is @tech{indexable} using @brackets after a map expression with an
-expression for the key within @brackets. Mutable maps can be
+expression for the key within @brackets, where @rhombus(#false) is returned
+when the key is not mapped; use @rhombus(!!) or use @rhombus(Map.get), instead,
+to have an exception thrown for an unmapped key. Mutable maps can be
 updated with a combination of @brackets and @tech{assignment operators}
 such as @rhombus(:=) (but use @rhombus(++) to functionally update an
 immutable map). These uses of square brackets are implemented by
@@ -76,6 +78,12 @@ in an unspecified order.
 
  Static information associated by @rhombus(Map, ~annot), etc., makes an
  expression acceptable as a sequence to @rhombus(for) in static mode.
+ Static information from @rhombus(Map.of(key_annot, val_annot), ~annot), etc.,
+ propagates the static information of @rhombus(maybe(val_annot), ~annot) for the
+ result of an indexing operation (such as via @brackets) and static
+ information of @rhombus(key_annot) and @rhombus(val_annot) for
+ iteration operations (such as @rhombus(each, ~for_clause) in
+ @rhombus(for)).
 
 }
 
@@ -495,9 +503,12 @@ in an unspecified order.
     :: Any
 ){
 
- Equivalent @rhombus(mp[key]) (with the default implicit
- @rhombus(#%index) form) when @rhombus(default) is not provided,
- otherwise @rhombus(default) is used when @rhombus(mp) does
+ Returns the same value as @rhombus(mp[key]) (with the default implicit
+ @rhombus(#%index) form) when @rhombus(key) is mapped or when
+ @rhombus(default) is @rhombus(#false). If @rhombus(key) is not mapped
+ and @rhombus(default) is not provided, an exception is thrown.
+
+ More generally, @rhombus(default) is used when @rhombus(mp) does
  not contain a mapping for @rhombus(key). In that case, if
  @rhombus(default) is a function, then the function is called with zero
  arguments to get a result, otherwise @rhombus(default) is returned as

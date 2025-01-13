@@ -38,6 +38,7 @@
                                                   #:bounds-key [bounds-key #f]
                                                   #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                   #:index-result-info? [index-result-info? #f]
+                                                  #:index-result-maybe? [index-result-maybe? #f]
                                                   #:sequence-element-info? [sequence-element-info? #f]
                                                   #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
                                                   #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
@@ -73,7 +74,7 @@
           #,steppers #,accessors #,static-infoss
           (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
           #,(length post-args)
-          #,accessor->info? #,index-result-info? #,sequence-element-info?
+          #,accessor->info? #,index-result-info? #,index-result-maybe? #,sequence-element-info?
           #,(and rest-arg
                  #`(#,rest-accessor
                     #,rest-to-repetition
@@ -94,7 +95,7 @@
                       steppers accessors ((static-info ...) ...)
                       (infoer-id ...) (data ...)
                       num-post
-                      accessor->info? index-result-info? sequence-element-info?
+                      accessor->info? index-result-info? index-result-maybe? sequence-element-info?
                       rest-data))
      #:with (arg-static-infos ...) (cond
                                      [(syntax-e #'accessor->info?)
@@ -128,16 +129,16 @@
                     (syntax-parse (normalize-static-infos/values 2 maybe-infos)
                       [(() ()) #f]
                       [(car-infos cdr-infos) #'((car car-infos) (cdr cdr-infos))])))
-             (or (and (syntax-e #'index-result-info?)
-                      (static-info-lookup/pair #'static-infos #'#%index-result))
-                 (and (syntax-e #'sequence-element-info?)
+             (or (and (syntax-e #'sequence-element-info?)
                       (static-info-lookup/pair #'static-infos #'#%sequence-element))
+                 (and (syntax-e #'index-result-info?)
+                      (static-info-lookup #'static-infos #'#%index-result))
                  #'())]
             [(#t)
-             (or (and (syntax-e #'index-result-info?)
-                      (static-info-lookup #'static-infos #'#%index-result))
-                 (and (syntax-e #'sequence-element-info?)
+             (or (and (syntax-e #'sequence-element-info?)
                       (static-info-lookup #'static-infos #'#%sequence-element))
+                 (and (syntax-e #'index-result-info?)
+                      (static-info-lookup #'static-infos #'#%index-result))
                  #'())]
             [(#f)
              (define (static-info-lookup/wrap infos key)
@@ -203,7 +204,9 @@
                                                          #'()))
                                                    (append
                                                     (if (syntax-e #'index-result-info?)
-                                                        (list #`(#%index-result #,cdr-infos))
+                                                        (list #`(#%index-result #,(if (syntax-e #'index-result-maybe?)
+                                                                                      #`((#%maybe #,cdr-infos))
+                                                                                      cdr-infos)))
                                                         '())
                                                     (if (syntax-e #'sequence-element-info?)
                                                         (list #`(#%sequence-element
@@ -212,7 +215,9 @@
                                                   [(#t)
                                                    (append
                                                     (if (syntax-e #'index-result-info?)
-                                                        (list #`(#%index-result #,rest-static-infos))
+                                                        (list #`(#%index-result #,(if (syntax-e #'index-result-maybe?)
+                                                                                      #`((#%maybe #,rest-static-infos))
+                                                                                      rest-static-infos)))
                                                         '())
                                                     (if (syntax-e #'sequence-element-info?)
                                                         (list #`(#%sequence-element #,rest-static-infos))

@@ -5,6 +5,7 @@ import:
     expose:
       flag
       multi
+      help
       state
 
 fun file_to_mod_path(str :: String):
@@ -14,75 +15,167 @@ fun file_to_mod_path(str :: String):
         && ModulePath.try('file($base) $(List.append(['!', Symbol.from_string(submod)], ...))')
   | ~else: #false
 
+// Keys for `args` map
+enum S:
+  evals
+  leftover_args
+  action
+  repl
+  init_lib
+  no_lib
+  no_make
+  version
+
 def args :~ Map:
   cmdline.parse:
+    ~init: { S.evals: [],
+             S.init_lib: ModulePath 'rhombus' }
+    help:
+      "Evaluation options:\n"
     multi:
-      flag "-l" (mod_path :: cmdline.String.to_lib_module_path):
-        ~alias "--lib"
-        ~help (@str{Loads the collection-based module <mod_path>
-                    Use `!` at end to refer to a submodule.})
-        state[#'lib] := (state.get(#'lib, []) :~ List) ++ [mod_path]
-        state[#'eval] := #true
       flag "-f" path:
         ~alias "--file"
-        ~help (@str{Loads the module <path>.
-                    Use `!` at end to refer to a submodule.})
+        ~help (@str{Loads the module <path>, where `!` can appear in <path>
+                    as a submodule separator.})
         let mod_path = file_to_mod_path(path)
         unless mod_path
         | error(~who: to_string(cmdline.current_program()),
                 "expected a module path",
                 error.text(~label: "given", path),
                 error.text(~label: "for flag", cmdline.current_flag_string()))
-        state[#'lib] := (state.get(#'lib, []) :~ List) ++ [mod_path]
-        state[#'eval] := #true
+        when state[S.evals] == []
+        | state[S.no_lib] := #true
+        state[S.evals] := (state[S.evals] :~ List) ++ [mod_path]
+        state[S.action] := #true
       flag "-t" (path :: PathString):
         ~alias "--require"
-        ~help (@str{Loads the module <path> exactly, without treating
-                    `!` as a submodule separator.})
-        state[#'lib] := (state.get(#'lib, []) :~ List) ++ [ModulePath('file($path)')]
-        state[#'eval] := #true
+        ~help (@str{Loads the module <path> exactly, without treating `!`
+                    as a submodule separator.})
+        when state[S.evals] == []
+        | state[S.no_lib] := #true
+        state[S.evals] := (state[S.evals] :~ List) ++ [ModulePath('file($path)')]
+        state[S.action] := #true
+      flag "-l" (mod_path :: cmdline.String.to_lib_module_path):
+        ~alias "--lib"
+        ~help (@str{Loads the collection-based module <mod_path>, where `!` can
+                    be used in <mod_path> as a submodule separator.})
+        when state[S.evals] == []
+        | state[S.no_lib] := #true
+        state[S.evals] := (state[S.evals] :~ List) ++ [mod_path]
+        state[S.action] := #true
+      flag "-e" expr:
+        ~alias "--eval"
+        ~help (@str{Evaluates <expr>.})
+        state[S.evals] := (state[S.evals] :~ List) ++ [expr]
+        state[S.action] := #true
+    help:
+      "\nInteraction options:\n"
     flag "-i":
       ~alias "--repl"
-      ~key: #'repl
       ~help: "Run a read-eval-print-loop."
-    flag "-u":
-      ~alias "--no-make"
-      ~key: #'no_make
-      ~help: "Disable automatic compilation of modules."
+      state[S.repl] := #true
+      state[S.action] := #true
+    flag "-n":
+      ~alias "--no-lib"
+      ~help: "Skip load of <init-lib>."
+      state[S.no_lib] := #true
+      state[S.action] := #true
     flag "-v":
       ~alias "--version"
       ~help: "Show version."
-      state[#'version] := #true
-      state[#'eval] := #true
+      state[S.version] := #true
+      state[S.action] := #true
+    help:
+      "\nConfiguration options:\n"
+    flag "-I" (mod_path :: cmdline.String.to_lib_module_path):
+      ~help: "Set <init-lib> to <mod-path> (i.e., sets the language)."
+      state[S.init_lib] := mod_path
+    flag "-u":
+      ~alias "--no-make"
+      ~key: S.no_make
+      ~help: "Disable compilation of modules to \"compiled\" directories."
+    help:
+      "\nMeta options:\n"
+    help:
+      ~after_notation
+      "\n"
+        ++ (@str{Defaults:
+
+                   If only configuration options are provided, `-i` is added.
+                   If only configuration options are before the first argument, `-f` is added.
+                   If `-f`, `-t`, `or `-l` appear before the first `-e`, `-n` is added.
+                   The <init-lib> library defaults to `rhombus`.
+
+                 Startup sequence:
+
+                   1. Set `cmdline.current_command_line` to remaining non-flag arguments.
+                   2. Load compilation manager unless `-u` or no `-i`/`-f`/`-t`/`-l`/`-e`.
+                   3. Import <init-lib> unless `-n`.
+                   4. Perform `-f`/`-t`/`-l`/`-e` in order.
+                   5. Run read-eval-print loop when `-i`.
+
+                   During steps 3 and 4: Before loading the first module, load its
+                   `configure_runtime` module, if any. For any module, load its
+                   `main` submodule, if any, after loading the module.
+
+               })
+
     cmdline.args arg ...:
       let args = [arg, ...]
-      if !state.get(#'eval, #false) && (args.length() != 0)
+      if !state[S.action] && (args.length() != 0)
       | let mp = file_to_mod_path(args.first)
         unless mp
         | error(~who: to_string(cmdline.current_program()),
                 "expected a module path as first argument",
                 error.text(~label: "given", args.first))
-        state[#'lib] := [mp]
-        state[#'args] := args.rest
-        state[#'eval] := #true
-      | state[#'args] := [arg, ...]
+        state[S.evals] := [mp]
+        state[S.leftover_args] := args.rest
+        state[S.action] := #true
+      | state[S.leftover_args] := [arg, ...]
 
-cmdline.current_command_line(args[#'args])
+cmdline.current_command_line(args[S.leftover_args])
 
-when args.get(#'version, #false) || !args.get(#'eval, #false)
+when args[S.version] || !args[S.action]
 | println(@str{Welcome to Rhombus v@(system.version())})
 
-when args.get(#'eval, #false) && !args.get(#'no_make, #false)
+when !args[S.no_make] && (args[S.repl] || !args[S.no_lib] || args[S.evals] != [])
 | let make:
     rkt.#{dynamic-require}(ModulePath('lib("compiler/private/cm-minimal.rkt")').s_exp(),
                            #'#{make-compilation-manager-load/use-compiled-handler})
   rkt.#{current-load/use-compiled}(make())
 
-for (mp :~ ModulePath: args.get(#'lib, []) :~ List):
+fun import_module(mp :~ ModulePath, can_configure):
+  fun try_load_submodule(mp :~ ModulePath, submod):
+    let rt_mp = mp.add(ModulePath('self ! $submod'))
+    when Evaluator.module_is_declared(rt_mp, ~load: #true)
+    | Evaluator.instantiate(rt_mp)
+  when can_configure
+  | try_load_submodule(mp, '#{configure-runtime}')
   Evaluator.import(mp)
+  try_load_submodule(mp, 'main')
 
-when args.get(#'repl, #false) || !args.get(#'eval, #false)
-| when !args.get(#'eval, #false)
-  | Evaluator.import(ModulePath 'rhombus')
-  Evaluator.import(ModulePath 'lib("racket/interactive.rkt")')
+def can_configure:
+  if args[S.no_lib]
+  | #true
+  | import_module(args[S.init_lib], #true)
+    #false
+
+block:
+  for values(can_configure = can_configure) (e: args[S.evals] :~ List):
+    match e
+    | mp :: ModulePath:
+        import_module(mp, can_configure)
+        #false
+    | str :: String:
+        let shrubbery_read = Evaluator.instantiate(ModulePath 'rhombus/shrubbery',
+                                                   #'read)
+        let v = shrubbery_read(Port.Input.open_string(str),
+                               ~mode: #'interactive)
+        call_with_values(fun (): eval(v, ~as_interaction: #true),
+                         println)
+        can_configure
+  #void
+
+when args[S.repl] || !args[S.action]
+| Evaluator.import(ModulePath 'lib("racket/interactive.rkt")')
   rkt.#{read-eval-print-loop}()

@@ -58,3 +58,5 @@ block:
   def [x :: maybe(String), ...] = [#false, "abc", #false]
   check: [x?.length(), ...]
          ~is [#false, 3, #false]
+  check: [(x || 0)!!, ...]
+         ~is [0, "abc", 0]

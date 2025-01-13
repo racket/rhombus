@@ -27,8 +27,21 @@ it accepts keys paired with values in two-item lists to create a map:
     )
   ~repl:
     neighborhood["alice"]
+)
+
+When a map does not have a key requested via @brackets, then the result
+is @rhombus(#false). Use the @rhombus(Map.get) methods to have an
+exception thrown, instead, or use @rhombus(!!) to check for a
+@rhombus(#false) result.
+
+@examples(
+  ~eval: map_eval
+  ~repl:
+    neighborhood["clara"]
     ~error:
-      neighborhood["clara"]
+      neighborhood.get("clara")
+    ~error:
+      neighborhood["clara"]!!
 )
 
 Curly braces @braces can be used as a shorthand
@@ -95,7 +108,7 @@ for keys and one for values:
   ~eval: map_eval
   ~defn:
     fun locale(who, neighborhood :~ Map.of(String, Posn)):
-      let p = neighborhood[who]
+      let p = neighborhood[who]!!
       p.x +& ", " +& p.y
   ~repl:
     locale("alice", neighborhood)
