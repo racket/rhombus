@@ -924,4 +924,43 @@ html:
                             span {class: "RktSym"}:
                               a {class: "RktValDef RktValLink"}: "winding"
           div {class: "SIntrapara"}: "Draw description."
+        h3:«»
+        p:
+          table:
+            tr:
+              td:
+                span {class: "hspace"}: nbsp
+                span {class: "stt"}: span {class: "RktSym"}: "import"
+                span {class: "stt"}: ": "
+                a {class: "RktModLink"}:
+                  span {class: "stt"}: "rhombus"
+                  span {class: "stt"}: "/"
+                  span {class: "stt"}: "cmdline"
+              td:
+                span {class: "RpackageSpec"}:
+                  span {class: "Smaller"}:
+                    nbsp
+                    "package:"
+                  " "
+                  a: span {class: "stt"}: "rhombus-lib"
+        p:
+          div {class: "SIntrapara"}:
+            table:
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "annotation"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          a:«»
+                          span:
+                            span {class: "RktSym"}: "cmdline."
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}:
+                                "String.to_lib_module_path"
+          div {class: "SIntrapara"}: "Annotation via namespace extension."
     div: nbsp

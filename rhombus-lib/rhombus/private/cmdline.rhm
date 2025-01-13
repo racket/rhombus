@@ -1,0 +1,466 @@
+#lang rhombus/static
+import:
+  lib("racket/base.rkt"):
+    expose:
+      #{find-system-path}
+      #{current-command-line-arguments}
+  "cmdline_flag.rhm" open
+  rhombus/meta.annot
+
+export:
+  current_command_line
+  current_program
+  current_flag_string
+  current_containing_flag_string
+
+  Parser
+
+  Handler
+
+  Flag
+  FinalFlag
+  Multi
+  OnceEach
+  OnceAny
+  Text
+  EndText
+
+  only_space annot:
+    Content
+
+  make_builtin_flags
+
+Parameter.def current_command_line :: List.of(String) = Array.to_list(#{current-command-line-arguments}())
+Parameter.def current_program :: String || Path = #{find-system-path}(#'#{run-file})
+Parameter.def current_flag_string :: maybe(String) = #false
+Parameter.def current_containing_flag_string :: maybe(String) = #false
+
+class Handler(init :~ Map,
+              args :~ List.of(String),
+              repeat_last :~ Boolean,
+              handler :: (~any) -> Map):
+  nonfinal
+  constructor (init :: Map,
+               args :: List.of(String),
+               repeat_last :: Any.to_boolean,
+               handler :: Function described_as ((~any) -> Map)):
+    ~who: who
+    let (a, req_kws, _) = handler.arity()
+    let args_mask: (if repeat_last | -1 | 1) bits.(<<) (args.length() + 1)
+    unless req_kws == [] && ((a bits.and args_mask) == args_mask)
+    | error(~who: who,
+            "handler function's arity is not consistent with receiving a map followed by arguments",
+            error.val(~label: "handler", handler),
+            error.val(~label: "arguments", args))
+    super(init, args, repeat_last, handler)
+
+interface Content
+
+class Flag(flag_strs :~ List.of(String),
+           help :~ maybe(String)):
+  extends Handler
+  implements Content
+  nonfinal
+  constructor (defaults :: Map,
+               args :: List.of(String),
+               repeat_last :: Any.to_boolean,
+               handler :: Function described_as ((~any) -> Map),
+               flag_strs :: List.of(String),
+               help :: maybe(String)):
+    ~who: who
+    let self:
+      super(defaults, args, repeat_last, handler)(flag_strs, help)
+    for (flag: flag_strs):
+      unless (ok_flag_string(flag))
+      | error(~who: who,
+              "invalid flag string",
+              error.val(~label: "flag string", flag))
+    self
+
+class FinalFlag():
+  extends Flag
+  internal _FinalFlag
+
+class Multi(choices :: List.of(Flag || Multi)):
+  implements Content
+
+class OnceEach(choices :: List.of(Flag || OnceEach)):
+  implements Content
+
+class OnceAny(choices :: List.of(Flag || OnceAny)):
+  implements Content
+
+class Text(text :: String):
+  nonfinal
+  implements Content
+
+class EndText():
+  extends Text
+
+class Parser(private _parse,
+             private _flags,
+             private _args,
+             private _init):
+  opaque
+  internal _Parser
+  constructor (
+    ~who: alt_who :: maybe(error.Who) = #false,
+    ~flags: flags :: List.of(Content),
+    ~add_builtin: add_builtin = #true,
+    ~args: args :: Handler,
+    ~init: init_state :: Map = {}
+  ):
+    ~who: who
+    command_line_parser(~who: alt_who || who,
+                        ~flags: flags,
+                        ~add_builtin: add_builtin,
+                        ~args: args,
+                        ~init: init_state)
+
+  property flags :~ List.of(Content): _flags
+  property args :~ Handler: _args
+  property init :~ Map: _init
+
+  method print_help(~program: exe_who :: String || Path = current_program()):
+    show_help(~program: exe_who,
+              ~flags: _flags,
+              ~args: _args)
+  method parse(~program: exe_who :: String || Path = current_program(),
+               ~line: line :: List.of(String) = current_command_line()) :~ Map:
+    _parse(~program: exe_who,
+           ~line: line)
+
+fun make_builtin_flags(help :: Map -> Map) :~ List.of(Content):
+  [
+    OnceEach([Flag({}, [], #false, help, ["--help", "-h"], "Show this information and exit, ignoring remaining arguments."),
+              FinalFlag({}, [], #false, fun (state): state, ["--"], "No argument after this flag is a flag.")])
+  ]
+
+fun command_line_parser(
+  ~who: who,
+  ~flags: flags :: List.of(Content),
+  ~add_builtin: add_builtin,
+  ~args: args :: Handler,
+  ~init: init_state
+) :~ Parser:
+  let flags:
+    if add_builtin
+    | let (flags, end_text) = split_end_text(flags)
+      flags ++ make_builtin_flags(fun (state): print_help_and_exit(result_parser)) ++ end_text
+    | flags
+  let (init_state, long_flags :~ Map, short_flags :~ Map, once_keys):
+    gather_flags(flags,
+                 args,
+                 init_state,
+                 ~who: who)
+  def result_parser:
+    _Parser(
+      fun (~program: exe_who :: String || Path = current_program(),
+           ~line: line :: List.of(String) = current_command_line()):
+        parameterize { current_program: exe_who,
+                       current_command_line: line }:
+          recur parse(state = init_state,
+                      once = {},
+                      line :~ List = line):
+            fun finish(state, line :~ List):
+              cond
+              | args.repeat_last:
+                  when line.length() < args.args.length() - 1
+                  | throw_wrong_args(~who: to_string(exe_who), args, line, #false, #false)
+              | ~else:
+                  when line.length() != args.args.length()
+                  | throw_wrong_args(~who: to_string(exe_who), args, line, #false, #false)
+              args.handler(state, & line)
+            match line
+            | []:
+                finish(state, line)
+            | [first :~ String, rest, ...]:
+                cond
+                | first.length() > 1 && (first[0] == Char"-" || first[0] == Char"+"):
+                    if first.length() > 2 && first[0] == first[1]
+                    | // long flag
+                      let (state, once, line, is_final):
+                        apply_flag(first, first, long_flags.get(first, #false), state, [rest, ...],
+                                   once_keys, once, #false,
+                                   ~who: to_string(exe_who))
+                      if is_final
+                      | finish(state, line)
+                      | parse(state, once, line)
+                    | // short flag(s)
+                      let (state, once, line, is_final):
+                        for values(state = state, once = once, line = [rest, ...], is_final = #false):
+                          each i: 1 .. first.length()
+                          let flag = first[0] +& first[i]
+                          apply_flag(flag, first, short_flags.get(flag, #false), state, line,
+                                     once_keys, once, is_final,
+                                     ~who: to_string(exe_who))
+                      if is_final
+                      | finish(state, line)
+                      | parse(state, once, line)
+                | ~else:
+                    finish(state, line),
+      flags,
+      args,
+      init_state
+    )
+  result_parser
+
+fun gather_flags(flags :~ List, args, init_state,
+                 ~who: who):
+  recur setup(c = flags.add(args),
+              state = init_state,
+              long_flags = {},
+              short_flags = {},
+              once_keys :~ Map = {},
+              once_key = #'self):
+    match c
+    | [c, ...]:
+        for values(state = state, long_flags = long_flags, short_flags = short_flags, once_keys = once_keys):
+          each c: [c, ...]
+          setup(c, state, long_flags, short_flags, once_keys, once_key)
+    | h :: Handler:
+        let once_keys:
+          cond
+          | once_key == #'self: once_keys ++ { h: h }
+          | once_key: once_keys ++ { h: once_key }
+          | ~else: once_keys
+        let state:
+          for values(state :~ Map = state):
+            each (key, val): h.init
+            if state.has_key(key)
+            | error(~who: who,
+                    "duplicate default key",
+                    error.val(~label: "key", key))
+            | state ++ { key : val }
+        match c
+        | f :: Flag:
+            let (long_flags, short_flags):
+              for values(long_flags :~ Map = long_flags,
+                         short_flags :~ Map = short_flags):
+                each flag_str: f.flag_strs
+                let is_short = flag_str.length() == 2
+                when (if is_short
+                      | short_flags.get(flag_str, #false)
+                      | long_flags.get(flag_str, #false))
+                | error(~who: who,
+                        "duplicate flag",
+                        error.val(~label: "flag", flag_str))
+                if is_short
+                | values(long_flags, short_flags ++ { flag_str: f })
+                | values(long_flags ++ { flag_str: f }, short_flags)
+            values(state, long_flags, short_flags, once_keys)
+        | ~else:
+            values(state, long_flags, short_flags, once_keys)
+    | fs :: Multi:
+        setup(fs.choices, state, long_flags, short_flags, once_keys, #false)
+    | fs :: OnceEach:
+        for values(state = state, long_flags = long_flags, short_flags = short_flags, once_keys = once_keys):
+          each c: fs.choices
+          setup(c, state, long_flags, short_flags, once_keys, #'self)
+    | fs :: OnceAny:
+        setup(fs.choices, state, long_flags, short_flags, once_keys, Symbol.gen())
+    | ~else:
+        values(state, long_flags, short_flags, once_keys)
+
+fun apply_flag(flag_str, first, flag, state, line :~ List,
+               once_keys :~ Map, once :~ Map, is_final,
+               ~who: exe_who):
+  match flag
+  | #false:
+      error(~exn: Exn.Fail.User,
+            ~who: exe_who,
+            "unrecognized flag " ++ flag_str,
+            & make_within(flag_str, first))
+  | f :: Flag:
+      let already = once.get(once_keys.get(f, #false), #false)
+      when already
+      | error(~exn: Exn.Fail.User,
+              ~who: exe_who,
+              if already == flag_str
+              | "the " ++ flag_str ++ " flag can only be used once"
+              | "the " ++ flag_str ++ " flag cannot be used after " ++ already,
+              & make_within(flag_str, first))
+      when line.length() < f.args.length() - (if f.repeat_last | 1 | 0)
+      | throw_wrong_args(~who: exe_who, f, line, flag_str, first)
+      let (state, line :~ List):
+        if f.repeat_last
+        | values(f.handler(state, & line), [])
+        | let n = f.args.length()
+          let state:
+            parameterize { current_flag_string: flag_str,
+                           current_containing_flag_string: first }:
+              f.handler(state, & line.take(n))
+          values(state, line.drop(n))
+      let once:
+        let key = once_keys.get(f, #false)
+        if key
+        | once ++ { key: flag_str }
+        | once
+      values(state, once, line, is_final || f is_a FinalFlag)
+
+fun format_args(args :~ Handler, prefix :~ String = "") :~ String:
+  if args.args == []
+  | ""
+  | prefix ++ "<" ++ String.join(args.args, "> <") ++ ">" ++ (if args.repeat_last | " ..." | "")
+
+fun throw_wrong_args(~who: exe_who, h :~ Handler, line :~ List, flag_str, first):
+  let (flag_desc, after_desc):
+    match flag_str
+    | s :: String: values(s ++ " ", " after " ++ s)
+    | ~else: values("", "")
+  let args_desc:
+    if h.args == []
+    | "no arguments"
+    | format_args(h)
+  error(~exn: Exn.Fail.User,
+        ~who: exe_who,
+        "expected " ++ flag_desc ++ args_desc ++ " on the command line,"
+          ++ " given " +& line.length() +& " argument" ++ (if line.length() == 1 | "" | "s")
+          ++ after_desc,
+        & (if line == []
+           | []
+           | [error.vals(~label: "given arguments", & line)]),
+        & make_within(flag_str, first))
+
+fun make_within(flag_str, first):
+  if flag_str == first
+  | []
+  | [error.text(~label: "within combined flag",
+                first)]
+
+fun split_end_text(flags :: List) :~ values(List, List):
+  match flags
+  | []: values([], [])
+  | [rest, ..., t :: EndText]:
+      let (flags, end_text) = split_end_text([rest, ...])
+      values(flags, end_text.add(t))
+  | ~else:
+      values(flags, [])
+
+fun print_help_and_exit(parser :: _Parser):
+  show_help(~flags: parser.flags,
+            ~args: parser.args)
+  system.exit(0)
+
+fun show_help(~program: exe_who :: String || Path = current_program(),
+              ~flags: flags :: List,
+              ~args: args :: Handler):
+  let (min_flags, max_flags, num_flags):
+    recur seek(flags :~ List = flags, just_once = #true):
+      for values(min_flags = 0, max_flags = 0, num_flags = 0) (flag: flags):
+        let (min_flag, max_flag, a_flag):
+          match flag
+          | f :: Flag: values(1, if just_once | 1 | #inf, f.flag_strs.length())
+          | fs :: Multi:
+              seek(fs.choices, #false)
+          | fs :: OnceEach:
+              let [flag, ...] = fs.choices
+              seek([OnceAny([flag]), ...], #true)
+          | fs :: OnceAny: seek(fs.choices, #true)
+          | _: values(0, 0, 0)
+        values(min_flags + min_flag,
+               max_flags + max_flag,
+               num_flags + a_flag)
+  let options_str:
+    match max_flags
+    | 0: ""
+    | 1: " [<option>]"
+    | ~else: " [<option> ...]"
+  let args_str:
+    format_args(args, " ")
+  println(@str{usage: @exe_who@options_str@args_str})
+  when min_flags > 0
+  | println("")
+    if max_flags == 1
+    | print("The <option>, if present, starts with ")
+    | print("Each <option> starts with ")
+    if num_flags == 1
+    | println("the flag listed below.")
+    | println("one of the flags listed below.")
+    println("")
+    let mode_and_flags :~ List:
+      recur flatten(flags = flags, mode = #'once_each):
+        match flags
+        | []: []
+        | [flag, rest, ...]:
+            let first :~ List:
+              match flag
+              | f :: Flag: [[mode, f]]
+              | fs :: Multi: flatten(fs.choices, #'multi)
+              | fs :: OnceEach: flatten(fs.choices, #'once_each)
+              | fs :: OnceAny:
+                  let prs = flatten(fs.choices, #'once_each)
+                  let (prs, _):
+                    recur adapt_mode(prs = prs, started = #false):
+                      match prs
+                      | []: values([], #false)
+                      | [[mode, f :: Flag], rest, ...]:
+                          let (prs, ended) = adapt_mode([rest, ...], #true)
+                          let mode:
+                            cond
+                            | started && ended: #'once_continue
+                            | started && !ended: #'once_end
+                            | !started && ended: #'once_start
+                            | ~else: #'once_each
+                          values([[mode, f]] ++ prs, #true)
+                      | [pr, rest, ...]:
+                          let (prs, ended) = adapt_mode([rest, ...], started)
+                          values([pr] ++ prs, ended)
+                  prs
+              | _: [[#'inherit, flag]]
+            first ++ flatten([rest, ...], mode)
+    for ([mode, flag]: mode_and_flags):
+      match flag
+      | f :: Flag:
+          match mode
+          | #'multi: print("* ")
+          | #'once_each: print("  ")
+          | #'once_start: print("/ ")
+          | #'once_continue: print("| ")
+          | #'once_end: (if f.help | print("| ") | print("\\ "))
+          for (flag_str: f.flag_strs,
+               i: 0..):
+            when i > 0
+            | print(", ")
+            print(flag_str)
+            print(format_args(f, " "))
+          println("")
+          when f.help:
+          | let help = f.help!!.split("\n")
+            for (h: help.drop_last(1)):
+              match mode
+              | #'multi || #'once_each: print("    ")
+              | ~else: print("|   ")
+              println(h)
+            match mode
+            | #'multi || #'once_each: print("    ")
+            | #'once_start || #'once_continue: print("|   ")
+            | #'once_end: print("\\   ")
+            println(help.last)
+      | t :: Text:
+          println(t.text)
+    let any_multi = (for any ([mode, flag]: mode_and_flags): mode == #'multi)
+    let any_once = (for any ([mode, flag]: mode_and_flags): mode == #'once_start)
+    when any_multi || any_once
+    | println("")
+    when any_multi
+    | println(" * " ++ (if any_once | "  " | "") ++ "Asterisks indicate options allowed multiple times.")
+    when any_once
+    | println("/|\\ Brackets indicate mutually exclusive options.")
+    fun find_single_flag(f :~ Flag):
+      for any (flag_str: f.flag_strs):
+        flag_str.length() == 2 && flag_str
+    let singles = mode_and_flags.filter(~keep: fun([mode, flag]):
+                                                 match flag
+                                                 | f :: Flag:
+                                                     find_single_flag(f)
+                                                 | ~else: #false)
+    when singles.length() > 1
+    | println("")
+      let [_, f1] = singles[singles.length() - 2]
+      let [_, f2] = singles[singles.length() - 1]
+      let flag_str1 :~ String = find_single_flag(f1)
+      let flag_str2 :~ String = find_single_flag(f2)
+      println(" Multiple single-letter flags can be combined after one `-`.")
+      println(@str{ For example, `@(flag_str1)@(flag_str2[1])@(format_args(f1, " "))@(format_args(f2, " "))`}
+                ++ @str{ is the same as `@(flag_str1)@(format_args(f1, " ")) @(flag_str2)@(format_args(f2, " "))`.})

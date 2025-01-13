@@ -1,0 +1,9 @@
+#lang rhombus/static
+
+export:
+  ok_flag_string
+
+fun ok_flag_string(flag :~ String):
+  !((flag.length() < 2)
+      || (flag[0] != Char"-"  && flag[0] != Char"+")
+      || (flag.length() > 2 && (flag[0] != flag[1])))

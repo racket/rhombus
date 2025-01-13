@@ -19,3 +19,4 @@ see @docref(ref_doc).
 @include_section("guide/macro.scrbl")
 @include_section("guide/class-overview.scrbl")
 @include_section("guide/static-overview.scrbl")
+@include_section("guide/running.scrbl")
