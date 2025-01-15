@@ -879,10 +879,14 @@
             [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
              #'sym.name]))
         (syntax-parse field
-          #:datum-literals (group mutable)
+          #:datum-literals (group block mutable)
           [(group mutable id:identifier . _)
            (field-name->name #'id)]
           [(group id:identifier . _)
+           (field-name->name #'id)]
+          [(group :keyword (block (group mutable id:identifier . _)))
+           (field-name->name #'id)]
+          [(group :keyword (block (group id:identifier . _)))
            (field-name->name #'id)])))]))
 
 (define-for-syntax (class-body-extract-metavariables stx space-name vars)
@@ -914,11 +918,15 @@
                   (p-tag #,@(for/list ([field (in-list (syntax->list #'(field ...)))]
                                        [subst (in-list (cdr substs))])
                               (syntax-parse field
-                                #:datum-literals (group mutable)
+                                #:datum-literals (group mutable block)
                                 [((~and tag group) (~and mut mutable) id:identifier . r)
                                  #`(tag mut #,@(subst #'id #:as_meta #t) . r)]
                                 [((~and tag group) id:identifier . r)
-                                 #`(tag #,@(subst #'id #:as_meta #t) . r)])))
+                                 #`(tag #,@(subst #'id #:as_meta #t) . r)]
+                                [((~and tag group) kw:keyword ((~and blk block) ((~and tag2 group) (~and mut mutable) id:identifier . r)))
+                                 #`(tag kw (blk (tag2 mut #,@(subst #'id #:as_meta #t) . r)))]
+                                [((~and tag group) kw:keyword ((~and blk block) ((~and tag2 group) id:identifier . r)))
+                                 #`(tag kw (blk (tag2 #,@(subst #'id #:as_meta #t) . r)))])))
                   e ...))]))
 
 (define-doc class

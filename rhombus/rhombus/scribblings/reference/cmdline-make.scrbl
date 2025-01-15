@@ -296,7 +296,11 @@
                 ...'
 
   grammar option:
-    ~end
+    $placement
+
+  grammar placement:
+    ~after_options
+    ~after_notation
 ){
 
  Creates a @rhombus(Text) object to provide help text for
@@ -308,11 +312,13 @@
  @rhombus(cmdline.parse), and the text will be rendered in the same
  relative order as the flag and help-text implementations.
 
- If @rhombus(~end) is provided as an @rhombus(option) and the help text
+ If @rhombus(~after_options) is provided as an @rhombus(option) and the help text
  is after all flags and other help text, then it is placed after the
  builtin flags when those flags are not disabled (e.g., using
- @rhombus(~no_builtin) in @rhombus(cmdline.parse)). Without
- @rhombus(~end), trailing help text is rendered after all other text and
+ @rhombus(~no_builtin) in @rhombus(cmdline.parse)).
+ If @rhombus(~after_notation) is provided as an @rhombus(option), then the help text
+ is place even later, after a description of flag notation. Without
+ @rhombus(~after_options) or @rhombus(~after_options), trailing help text is rendered after all other text and
  flags, but before the help text for builtin options.
 
 }
