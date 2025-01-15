@@ -23,7 +23,8 @@
            #:module racket/vector
            #:module racket/match
            #:collect "racket/match"
-           #:module racket/mutability)
+           #:module racket/mutability
+           #:module syntax/private/modcollapse_noctc)
 
 #:exclude (#:module syntax/parse/pre)
 

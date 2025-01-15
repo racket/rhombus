@@ -95,3 +95,8 @@ check:
   dynamic(ModulePath 'parent').s_exp() ~is dynamic(ModulePath 'parent').s_exp()
   dynamic(ModulePath 'parent!x').s_exp() ~is dynamic(ModulePath 'parent ! x').s_exp()
   dynamic(ModulePath 'parent!x!y').s_exp() ~is dynamic(ModulePath 'parent ! x ! y').s_exp()
+
+check:
+  ModulePath('m').add(ModulePath('self!main')) ~is ModulePath('m!main')
+  ModulePath('m/x/y').add(ModulePath('"z.rhm"')) ~is ModulePath('m/x/z')
+  ModulePath('m/x/y').add(ModulePath('"../z.rhm"!main')) ~is ModulePath('m/z!main')

@@ -443,7 +443,10 @@ check:
         ~help: "The X factor."
       help: "\nBuiltin flags:\n"
       help:
-        ~end
+        ~after_options
+        "\nA late note."
+      help:
+        ~after_notation
         "\nA final note."
       args name ...
   p.print_help(~program: "demo")      
@@ -467,10 +470,12 @@ check:
                  --
                    No argument after this flag is a flag.
 
-               A final note.
+               A late note.
 
                 @can_combine
                 For example, `-h-` is the same as `-h --`.
+
+               A final note.
                @""}
 
 check:

@@ -36,7 +36,7 @@ module class ~lang rhombus:
     OnceEach
     OnceAny
     Text
-    EndText
+    TextPlacement
     Content
     make_builtin_flags
 
@@ -327,11 +327,15 @@ fun flatten(who, args :~ List, srclocs :~ List, pred, desc, keep_srcloc = #false
 
 expr.macro 'help:
               $(group_option_sequence
-                | '~end':
-                    field end = #true)
+                | '$(pattern
+                     | '~after_options':
+                         field placement = #'after_options
+                     | '~after_notation':
+                         field placement = #'after_notation)':
+                    default placement = #'inline)
               $body
               ...':
-  '$(if end | 'EndText' | 'Text')(block: $body; ...)'
+  'Text(block: $body; ..., ~placement: #'$placement)'
 
 fun arg_fail(arg_name, str):
   error(~who: to_string(current_program()),

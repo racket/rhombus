@@ -23,10 +23,10 @@ export:
   OnceEach
   OnceAny
   Text
-  EndText
 
   only_space annot:
     Content
+  TextPlacement
 
   make_builtin_flags
 
@@ -90,12 +90,14 @@ class OnceEach(choices :: List.of(Flag || OnceEach)):
 class OnceAny(choices :: List.of(Flag || OnceAny)):
   implements Content
 
-class Text(text :: String):
-  nonfinal
-  implements Content
+enum TextPlacement:
+  inline
+  after_options
+  after_notation
 
-class EndText():
-  extends Text
+class Text(text :: String,
+           ~placement: placement :: TextPlacement = #'inline):
+  implements Content
 
 class Parser(private _parse,
              private _flags,
@@ -144,10 +146,10 @@ fun command_line_parser(
   ~init: init_state
 ) :~ Parser:
   let flags:
+    let (flags, end_text) = split_end_text(flags)
     if add_builtin
-    | let (flags, end_text) = split_end_text(flags)
-      flags ++ make_builtin_flags(fun (state): print_help_and_exit(result_parser)) ++ end_text
-    | flags
+    | flags ++ make_builtin_flags(fun (state): print_help_and_exit(result_parser)) ++ end_text
+    | flags ++ end_text
   let (init_state, long_flags :~ Map, short_flags :~ Map, once_keys):
     gather_flags(flags,
                  args,
@@ -331,7 +333,8 @@ fun make_within(flag_str, first):
 fun split_end_text(flags :: List) :~ values(List, List):
   match flags
   | []: values([], [])
-  | [rest, ..., t :: EndText]:
+  | [rest, ..., t :: Text] when (t.placement == #'after_options
+                                   || t.placement == #'after_notation):
       let (flags, end_text) = split_end_text([rest, ...])
       values(flags, end_text.add(t))
   | ~else:
@@ -438,7 +441,8 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
             | #'once_end: print("\\   ")
             println(help.last)
       | t :: Text:
-          println(t.text)
+          unless t.placement == #'after_notation
+          | println(t.text)
     let any_multi = (for any ([mode, flag]: mode_and_flags): mode == #'multi)
     let any_once = (for any ([mode, flag]: mode_and_flags): mode == #'once_start)
     when any_multi || any_once
@@ -464,3 +468,9 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
       println(" Multiple single-letter flags can be combined after one `-`.")
       println(@str{ For example, `@(flag_str1)@(flag_str2[1])@(format_args(f1, " "))@(format_args(f2, " "))`}
                 ++ @str{ is the same as `@(flag_str1)@(format_args(f1, " ")) @(flag_str2)@(format_args(f2, " "))`.})
+    for ([mode, flag]: mode_and_flags):
+      match flag
+      | t :: Text:
+          when t.placement == #'after_notation
+          | println(t.text)
+      | ~else: #void
