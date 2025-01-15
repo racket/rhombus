@@ -5,6 +5,7 @@
          syntax/parse/pre
          (only-in racket/base
                   [module-path? racket:module-path?])
+         syntax/private/modcollapse-noctc
          "provide.rkt"
          "printer-property.rkt"
          "print-desc.rkt"
@@ -35,10 +36,30 @@
 (module+ for-primitive
   (provide module-path
            module-path?
-           module-path-raw))
+           module-path-s-exp
+           module-path-resolved
+           module-path-index-or-resolved
+           module-path-s-exp-or-index-or-resolved))
+
 
 (define/method (ModulePath.s_exp mp)
-  (module-path-s-exp who mp))
+  (check-module-path who mp)
+  (module-path-s-exp mp))
+
+(define/method (ModulePath.add mp rel-mp)
+  #:static-infos ((#%call-result ((#%maybe #,(get-module-path-static-infos)))))
+  (check-module-path who mp)
+  (check-module-path who rel-mp)
+  (define mpi (module-path-index-join (module-path-s-exp rel-mp)
+                                      (module-path-index-or-resolved mp)))
+  (cond
+    [(or (module-path-index? (module-path-raw rel-mp))
+         (module-path-index? (module-path-raw mp)))
+     (module-path mpi)]
+    [else
+     ;; stay in plain S-expression mode:
+     (module-path (or (collapse-module-path-index mpi)
+                      '(submod ".")))]))
 
 (define-primitive-class ModulePath module-path
   #:no-constructor-static-info
@@ -50,9 +71,10 @@
   #:properties
   ()
   #:methods
-  (s_exp))
+  ([s_exp ModulePath.s_exp]
+   [add ModulePath.add]))
 
-(struct module-path (raw)
+(struct module-path (raw) ; `raw` can be an S-expression, resolved module path, or module path index
   #:authentic
   #:sealed
   #:property prop:field-name->accessor (list* '() module-path-method-table #hasheq())
@@ -70,7 +92,7 @@
                                     (recur (datum->syntax
                                             #f
                                             (format-module-path
-                                             (module-path-raw v))))))
+                                             (module-path-s-exp v))))))
                              ")")))
 
 (define (format-module-path raw)
@@ -141,9 +163,42 @@
    (lambda (stx)
      (parse-module-path-form stx #:repet? #t))))
 
-(define (module-path-s-exp who mp)
+(define (check-module-path who mp)
   (unless (module-path? mp)
-    (raise-annotation-failure who mp "ModulePath"))
+    (raise-annotation-failure who mp "ModulePath")))
+
+(define (module-path-s-exp mp)
+  (define raw (module-path-raw mp))
+  (cond
+    [(resolved-module-path? raw)
+     (let loop ([r (resolved-module-path-name raw)])
+       (cond
+         [(pair? r)
+          `(submod ,(loop (car r)) ,@(cdr r))]
+         [(path? r)
+          r]
+         [else `(quote ,r)]))]
+    [(module-path-index? raw)
+     (or (collapse-module-path-index raw)
+         `(submod "."))]
+    [else raw]))
+
+(define (module-path-resolved mp)
+  (define raw (module-path-raw mp))
+  (cond
+    [(resolved-module-path? raw)
+     raw]
+    [else (module-path-index-resolve raw)]))
+
+(define (module-path-index-or-resolved mp)
+  (define raw (module-path-raw mp))
+  (cond
+    [(or (resolved-module-path? raw)
+         (module-path-index? raw))
+     raw]
+    [else (module-path-index-join raw #f)]))
+
+(define (module-path-s-exp-or-index-or-resolved mp)
   (module-path-raw mp))
 
 (define (parse-ModulePath who stx just-try?)

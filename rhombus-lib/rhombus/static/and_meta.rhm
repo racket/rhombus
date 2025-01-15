@@ -1,3 +1,7 @@
 #lang rhombus
 import: "and_meta.rkt"
 export: all_from(.and_meta)
+
+module reader ~lang lib("rhombus/main.rkt"):
+  import: "and_meta.rkt"!reader
+  export: all_from(.reader)

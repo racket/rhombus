@@ -447,6 +447,7 @@
   fun ModulePath.try(mod_stx :: Group) :: maybe(ModulePath)
 
   method (mp :: ModulePath).s_exp() :: Any
+  method (mod :: ModulePath).add(rel_mod :: ModulePath) :: ModulePath
 ){
 
  The @rhombus(ModulePath, ~annot) annotation recognizes values that
@@ -471,8 +472,16 @@
  generated module path is relative to the top-level environment, not the
  enclosing context.
 
- The @rhombus(ModulePath.s_exp) function produces the Racket form of a
+ The @rhombus(ModulePath.s_exp) method produces the Racket form of a
  Rhombus module path, which is suitable for use with Racket functions
  that expect a module path.
+
+ The @rhombus(ModulePath.add) method returns a module path that is
+ @rhombus(rel_mod) resolved relative to @rhombus(mod).
+
+ When used with a function like @rhombus(Evaluator.import) or
+ @rhombus(Evaluator.instantiate), a module path is resolved with respect
+ to either the directory of a module being loaded or the current
+ directory according to @rhombus(Path.current_directory).
 
 }

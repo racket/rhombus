@@ -70,6 +70,36 @@ by an evaluator, for example.
 }
 
 @doc(
+  fun Evaluator.instantiate(mod :: ModulePath,
+                            export_name :: maybe(Symbol) = #false) :: Any
+){
+
+ In the current evaluator, loads @rhombus(mod) if it is not loaded
+ already, and instantiates the run-time component of the loaded module if
+ it is not instantiated already.
+
+ If @rhombus(export_name) is @rhombus(#false), then the result is
+ @rhombus(#void). Otherwise, the value exported by @rhombus(mod) as
+ @rhombus(export_name) is returned, or an exception is thrown if no such
+ export is available.
+
+}
+
+@doc(
+  fun Evaluator.module_is_declared(mod :: ModulePath,
+                                   ~load: load = #false) :: Boolean
+){
+
+ Reports whether @rhombus(mod) is declared in the current evaluator. If
+ @rhombus(load) is true, then the module may be loaded in the process of
+ resolving @rhombus(mod), but no exception is thrown if @rhombus(mod)
+ refers to a @rhombus(submodule) that does not exist (either because the
+ enclosing module cannot be found or loaded, or because no submodule is
+ declared within using the name in @rhombus(mod)).
+
+}
+
+@doc(
   Parameter.def Evaluator.current :: Evaluator
 ){
 
