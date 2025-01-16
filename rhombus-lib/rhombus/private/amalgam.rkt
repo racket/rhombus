@@ -24,7 +24,7 @@
            #:module racket/match
            #:collect "racket/match"
            #:module racket/mutability
-           #:module syntax/private/modcollapse_noctc)
+           #:module syntax/private/modcollapse-noctc)
 
 #:exclude (#:module syntax/parse/pre)
 
