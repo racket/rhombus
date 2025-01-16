@@ -95,7 +95,7 @@ definitions.
   import:
     "f2c.rhm"
 
-  f2c.fahrenheit_to_celsius(f2cfahrenheit_freezing)  // prints 0
+  f2c.fahrenheit_to_celsius(f2c.fahrenheit_freezing)  // prints 0
 )
 
 Refer to imported bindings using a prefix name and
