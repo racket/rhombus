@@ -15,9 +15,6 @@
          "parse.rkt"
          "expression.rkt"
          "entry-point.rkt"
-         (only-in "class-parse.rkt" class-desc-ref)
-         (only-in "interface-parse.rkt" interface-desc-ref)
-         (only-in "veneer-parse.rkt" veneer-desc-ref)
          "class-this.rkt"
          "class-define-method-result.rkt"
          "index-key.rkt"
