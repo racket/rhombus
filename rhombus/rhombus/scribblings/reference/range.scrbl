@@ -13,6 +13,9 @@ when the ending point is not @rhombus(#inf), the range is
 equal to the ending point, so that the lower bound is ``less than or
 equal to'' the upper bound by comparison on bounds.
 
+A range supports @tech{membership tests} using the @rhombus(in)
+operator, which is the same as @rhombus(Range.contains).
+
 @doc(
   annot.macro 'Range'
   annot.macro 'SequenceRange'
@@ -292,16 +295,17 @@ equal to'' the upper bound by comparison on bounds.
 
 
 @doc(
-  method (rge :: Range).has_element(int :: Int) :: Boolean
+  method (rge :: Range).contains(int :: Int) :: Boolean
 ){
 
  Checks whether @rhombus(rge) has @rhombus(int) in the range that it
- represents.
+ represents. See also @rhombus(in).
 
 @examples(
-  (3..=7).has_element(5)
-  (3..=7).has_element(7)
-  (3..=7).has_element(10)
+  (3..=7).contains(5)
+  (3..=7).contains(7)
+  (3..=7).contains(10)
+  5 in 3..=7
 )
 
 }

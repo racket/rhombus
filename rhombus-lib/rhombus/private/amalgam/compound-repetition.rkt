@@ -81,9 +81,13 @@
   ;;  - 'mixfix  -- both infix and postfix, depending on the tail
   (define (make-expression&repetition-infix-operator order prec kind exp assc
                                                      #:element-statinfo? [element-statinfo? #f])
-    (define (infix-exp form1 form2 self-stx)
-      (exp form1 form2 self-stx))
-    (define (infix-rep form1 form2 self-stx)
+    (define infix-exp
+      (case-lambda
+        [(form1 form2 self-stx)
+         (exp form1 form2 self-stx)]
+        [(form1 form2 self-stx mode)
+         (exp form1 form2 self-stx mode)]))
+    (define (do-rep-infix form1 form2 self-stx exp)
       (build-compound-repetition self-stx
                                  (list form1 form2)
                                  (lambda (form1 form2)
@@ -91,6 +95,13 @@
                                    (values (discard-static-infos expr)
                                            (extract-static-infos expr)))
                                  #:element-statinfo? element-statinfo?))
+    (define infix-rep
+      (case-lambda
+        [(form1 form2 self-stx)
+         (do-rep-infix form1 form2 self-stx exp)]
+        [(form1 form2 self-stx mode)
+         (do-rep-infix form1 form2 self-stx (lambda (form1 form2 self-stx)
+                                              (exp form1 form2 self-stx mode)))]))
     (define (postfix-exp form stx)
       (syntax-parse stx
         [(self . tail)

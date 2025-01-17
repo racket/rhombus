@@ -23,7 +23,9 @@ expression for the key within @brackets. Mutable maps can be
 updated with a combination of @brackets and @tech{assignment operators}
 such as @rhombus(:=) (but use @rhombus(++) to functionally update an
 immutable map). These uses of square brackets are implemented by
-@rhombus(#%index).  A map can be used as @tech{sequence}, in which case
+@rhombus(#%index).  A map is also supports @tech{membership tests} via
+@rhombus(in), which checks for keys (not values) the same as @rhombus(Map.has_key).
+A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
@@ -550,16 +552,16 @@ in an unspecified order.
 
 
 @doc(
-  method (mp :: MutableMap).delete(key :: Any) :: Void
+  method (mp :: MutableMap).remove(key :: Any) :: Void
 ){
 
  Changes @rhombus(mp) to remove a mapping for @rhombus(key), if any.
 
 @examples(
   def m = MutableMap{"a": 1, "b": 2}
-  m.delete("c")
+  m.remove("c")
   m
-  m.delete("a")
+  m.remove("a")
   m
 )
 
@@ -568,14 +570,18 @@ in an unspecified order.
 
 @doc(
   method Map.has_key(mp :: ReadableMap, key :: Any) :: Boolean
+  method Map.contains(mp :: ReadableMap, key :: Any) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
- @rhombus(mp), @rhombus(#false) otherwise.
+ @rhombus(mp), @rhombus(#false) otherwise. The @rhombus(Map.contains)
+ method is a synonym for @rhombus(Map.has_key) and reflects how a
+ map supports @rhombus(in).
 
 @examples(
   Map.has_key({"a": 1, "b": 2}, "a")
   Map.has_key({"a": 1, "b": 2}, "c")
+  "a" in {"a": 1, "b": 2}
 )
 
 }

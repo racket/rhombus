@@ -117,7 +117,8 @@
                                  [flonum-statinfos #'()]))
           (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
                      #:defaults ([fxprim #'#f]
-                                 [fixnum-statinfos #'()])))
+                                 [fixnum-statinfos #'()]))
+          (~optional (~seq (~and #:negatable negatable))))
        #`(make-expression&repetition-infix-operator
           (~? (lambda () (order-quote order-id))
               #f)
@@ -137,7 +138,9 @@
                       ...)))
           'infix
           #:element-statinfo? #t
-          (lambda (form1 form2 stx)
+          (lambda (form1 form2 stx #,@(if (attribute negatable)
+                                          #`([mode 'normal])
+                                          #'()))
             #,@(if (syntax-e #'flprim)
                    #`((define flonum? (and (flonum-statinfo? form1)
                                            (flonum-statinfo? form2))))
@@ -148,22 +151,29 @@
                    #`())
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list form1 stx form2)))
-                             (datum->syntax (quote-syntax here)
-                                            (list (relocate-id stx
-                                                               #,(if (syntax-e #'flprim)
-                                                                     #`(if flonum?
-                                                                           (quote-syntax flprim)
-                                                                           #,(if (syntax-e #'fxprim)
-                                                                                 #`(if fixnum?
-                                                                                       (quote-syntax fxprim)
-                                                                                       (quote-syntax prim))
-                                                                                 #`(quote-syntax prim)))
-                                                                     #`(quote-syntax prim)))
-                                                  (discard-static-infos form1)
-                                                  (discard-static-infos form2))
-                                            #f
-                                            stx))
-
+                             #,(let ([r #`(datum->syntax (quote-syntax here)
+                                                         (list (relocate-id stx
+                                                                            #,(if (syntax-e #'flprim)
+                                                                                  #`(if flonum?
+                                                                                        (quote-syntax flprim)
+                                                                                        #,(if (syntax-e #'fxprim)
+                                                                                              #`(if fixnum?
+                                                                                                    (quote-syntax fxprim)
+                                                                                                    (quote-syntax prim))
+                                                                                              #`(quote-syntax prim)))
+                                                                                  #`(quote-syntax prim)))
+                                                               (discard-static-infos form1)
+                                                               (discard-static-infos form2))
+                                                         #f
+                                                         stx)])
+                                 (if (attribute negatable)
+                                     #`(let ([r #,r])
+                                         (if (eq? mode 'invert)
+                                             (datum->syntax (quote-syntax here)
+                                                            (list (quote-syntax not) r)
+                                                            #f)
+                                             r))
+                                     r)))
              #,(if (syntax-e #'flprim)
                    #`(if flonum?
                          #`flonum-statinfos

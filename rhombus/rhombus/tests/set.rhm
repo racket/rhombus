@@ -8,16 +8,16 @@ block:
   static_arity.check:
     Set(k, ...)
     Set.length(st) ~method ReadableSet
-    Set.get(st, val) ~method ReadableSet
-    Set.has_element(st, val) ~method ReadableSet
+    Set.contains(st, val) ~method ReadableSet
     Set.copy(st) ~method ReadableSet
     Set.snapshot(st) ~method ReadableSet
     Set.append(st0, st, ...) ~method
     Set.union(st0, st, ...) ~method
     Set.intersect(st0, st, ...) ~method
+    Set.add(st, v) ~method
     Set.remove(st, v) ~method
-    MutableSet.set(st, v, in) ~method
-    MutableSet.delete(st, v) ~method
+    MutableSet.add(st, v) ~method
+    MutableSet.remove(st, v) ~method
     Set.to_list(st, [try_sort]) ~method ReadableSet
     Set.to_sequence(st) ~method ReadableSet
     Set.by(==)(p, ...)
@@ -43,13 +43,12 @@ block:
     {1, 2}.length()
     ~is 2
   check:
-    {"a", "b"}["a"]
-    ~is #true
+    "a" in {"a", "b"} ~is #true
+    "b" in {"a", "b"} ~is #true
+    "a" !in {"a", "b"} ~is #false
+    1 !in {"a", "b"} ~is #true
   check:
-    {"a", "b"}.get("a")
-    ~is #true
-  check:
-    {"a", "b"}.has_element("a")
+    {"a", "b"}.contains("a")
     ~is #true
   check:
     {1, 2, 3} ++ {4, 5} ~is {1, 2, 3, 4, 5}
@@ -106,14 +105,11 @@ block:
     dynamic({"a", "b"}).length()
     ~is 2
   check:
-    dynamic({"a", "b"})["a"]
-    ~is #true
+    "a" in dynamic({"a", "b"}) ~is #true
+    "c" in dynamic({"a", "b"}) ~is #false
+    dynamic({"a", "b"}).contains("a") ~is #true
   check:
-    dynamic({"a", "b"}).get("a")
-    ~is #true
-  check:
-    dynamic({"a", "b"}).has_element("a")
-    ~is #true
+    dynamic({"a", "b"}).add("c") ~is {"a", "b", "c"}
   check:
     dynamic({1, 2, 3}) ++ {4, 5} ~is {1, 2, 3, 4, 5}
     dynamic({1, 2, 3}).append({4, 5}) ~is {1, 2, 3, 4, 5}
@@ -292,7 +288,6 @@ check:
   {1, 2, 3}.to_list().length() ~is 3
   {1, 2, 3}.to_list(#true) ~is [1, 2, 3]
   Set.append({1}, {3, 5}, {2, 4, 6}) ~is {1, 2, 3, 4, 5, 6}
-  {1}.copy().remove(2) ~throws "no such field or method"
   {1, 3}.intersect() ~is {1, 3}
   {1, 3}.intersect({2, 3}) ~is {3}
   {1, 3}.intersect({2, 3}, {3, 4}) ~is {3}
@@ -327,54 +322,48 @@ block:
   use_static
   check {1, 2}.remove(1) ~is {2}
   check {1, 2}.remove(3) ~is {1, 2}
-  check {1, 2}.remove(1)[2] ~is #true
+  check 2 in {1, 2}.remove(1) ~is #true
   check Set.remove({1, 2}, 1) ~is {2}
   check Set.remove({1, 2}, 3) ~is {1, 2}
-  check Set.remove({1, 2}, 1)[2] ~is #true
+  check 2 in Set.remove({1, 2}, 1) ~is #true
   block:
     use_dynamic
     check dynamic({1, 2}).remove(1) ~is {2}
     check dynamic({1, 2}).remove(3) ~is {1, 2}
-    check MutableSet{1, 2}.remove ~throws "no such field or method"
-    check MutableSet{1, 2}.remove(1) ~throws "no such field or method"
 
 block:
   use_static
   let m = MutableSet{1, 2}
-  m.delete(1)
+  m.remove(1)
   check m ~is_now MutableSet{2}
-  m.delete(3)
+  m.remove(3)
   check m ~is_now MutableSet{2}
-  m[1] := "a"
+  m.add(1)
   check m ~is_now MutableSet{1, 2}
-  check MutableSet.delete(m, 1) ~is #void
+  check MutableSet.remove(m, 1) ~is #void
   check m ~is_now MutableSet{2}
-  check MutableSet.delete(m, 3) ~is #void
+  check MutableSet.remove(m, 3) ~is #void
   check m ~is_now MutableSet{2}
-  m.set(1, "a")
+  m.add(1)
   check m ~is_now MutableSet{1, 2}
   block:
     use_dynamic
-    check dynamic(m).delete(1) ~is #void
+    check dynamic(m).remove(1) ~is #void
     check m ~is_now MutableSet{2}
-    check dynamic(m)[1] := "a" ~is #void
+    check dynamic(m).add(1) ~is #void
     check m ~is_now MutableSet{1, 2}
-    check dynamic(m).delete(1) ~is #void
+    check dynamic(m).remove(1) ~is #void
     check m ~is_now MutableSet{2}
-    check dynamic(m).set(1, "a") ~is #void
+    check dynamic(m).add(1) ~is #void
     check m ~is_now MutableSet{1, 2}
-
-check:
-  {1, 2}.delete ~throws "no such field or method"
-  {1, 2}.delete(1) ~throws "no such field or method"
 
 block:
   let m = MutableSet{1, 2}
   let n = m.copy()
   check m is_now n ~is #true
   check m == n ~is #false
-  m[2] := #false
-  n[1] := #false
+  m.remove(2)
+  n.remove(1)
   check m ~is_now MutableSet{1}
   check n ~is_now MutableSet{2}
 
@@ -471,22 +460,14 @@ check:
   ~is {3, 7, 9}
 
 check:
-  ~eval
   use_static
-  // make sure sequence element static info isn't confused for index
-  def set :: Set.of(String) = {"foo", "1", "Box(2)"}
-  set["foo"].length()
-  ~throws "no such field or method (based on static information)"
-
-check:
-  use_static
-  Set.empty["no such thing"]
+  "no such thing" in Set.empty
   ~is #false
 
 check:
   use_static
   def Set.empty && empty = dynamic(Set{})
-  empty["no such thing"]
+  "no such thing" in empty
   ~is #false
 
 check:
@@ -502,13 +483,13 @@ check:
 
 check:
   use_static
-  ReadableSet.empty["no such thing"]
+  "no such thing" in ReadableSet.empty
   ~is #false
 
 check:
   use_static
   def ReadableSet.empty && empty = dynamic(Set{})
-  empty["no such thing"]
+  "no such thing" in empty
   ~is #false
 
 check:
@@ -534,7 +515,7 @@ check:
 
 check:
   def s = MutableSet{}
-  s[s] := #true
+  s.add(s)
   to_string(s)
   ~is "#0=MutableSet{#0#}"
 
@@ -542,31 +523,31 @@ block:
   def orig = MutableSet{"x", 2}
   check orig :: MutableSet.now_of(String) ~throws "value does not satisfy annotation"
   check orig :: MutableSet.now_of(Any) ~is orig
-  check (orig :: MutableSet.now_of(Any))["y"] := #true ~is #void
+  check (orig :: MutableSet.now_of(Any)).add("y") ~is #void
   check orig ~is_now MutableSet{"x", "y", 2}
 
 block:
   def orig = MutableSet{"x", 2}
   def m :: MutableSet.later_of(String) = orig
-  check m["x"] ~is #true
-  check m[2] ~throws "element does not satisfy annotation"
-  check m[2] := #true ~throws "element does not satisfy annotation"
+  check "x" in m ~is #true
+  check 2 in m ~throws "element does not satisfy annotation"
+  check m.set(2) ~throws "element does not satisfy annotation"
   check to_string(m) ~throws "element does not satisfy annotation"
-  check m["x"] := #true ~is #void
-  check m["y"] := #true ~is #void
-  check orig[2] ~is #true
-  check orig["x"] ~is #true
-  check orig["y"] ~is #true
-  check orig["z"] ~is #false
-  check m.delete(2) ~throws "element does not satisfy annotation"
-  check m.delete("y") ~is #void
-  check orig.delete(2) ~is #void
+  check m.add("x") ~is #void
+  check m.add("y") ~is #void
+  check 2 in orig ~is #true
+  check "x" in orig ~is #true
+  check "y" in orig ~is #true
+  check "z" in orig ~is #false
+  check m.remove(2) ~throws "element does not satisfy annotation"
+  check m.remove("y") ~is #void
+  check orig.remove(2) ~is #void
   check to_string(m) ~is "MutableSet{\"x\"}"
 
 block:
   def m :: Set.later_of(String) = Set{"x", 2}
-  check m["x"] ~is #true
-  check m[2] ~throws "element does not satisfy annotation"
+  check "x" in m ~is #true
+  check 2 in m ~throws "element does not satisfy annotation"
   check to_string(m) ~throws "element does not satisfy annotation"
   check m.remove(2) ~throws "element does not satisfy annotation"
   check m.remove("x") ~is_a Set
@@ -582,13 +563,13 @@ block:
   def s1 = Set.by(===){ a, b }
   def s2 = Set.by(is_same_number_or_object){ a, b, 1 / 2, 2 / 4 }
   def s3 = Set.by(is_now){ ab, bb }
-  check s1[a] ~is #true
-  check s1[b] ~is #true
-  check s2[a] ~is #true
-  check s2[b] ~is #true
-  check s2[1/2] ~is #true
+  check a in s1 ~is #true
+  check b in s1 ~is #true
+  check a in s2 ~is #true
+  check b in s2 ~is #true
+  check 1/2 in s2 ~is #true
   check s2.length() ~is 3
-  check s3[ab] ~is #true
+  check ab in s3 ~is #true
   check s3.length() ~is 1
   let str = to_string(s1)
   check str ~is "Set.by(===){Posn(1, 2), Posn(1, 2)}"
@@ -642,10 +623,10 @@ block:
        block:
          let Set.by($key_comp){ 1, & rest } = Set.by($key_comp){ 1, 2 }
          check rest ~is_a Set.by($key_comp)
-         check rest[2] ~is #true
+         check 2 in rest ~is #true
        let m4 = MutableSet.by($key_comp){}
-       m4[0] := #true
-       check m4[0] ~is #true
+       m4.add(0)
+       check 0 in m4 ~is #true
        check m4 ~is_now MutableSet.by($key_comp){ 0 }
        check m4 ~is_now MutableSet.by($key_comp)(0)
        check m4 ~is_a MutableSet.by($key_comp)
@@ -661,8 +642,8 @@ block:
        class Boson(v)
        let m5 = WeakMutableSet.by($key_comp){}
        let mutable boson = Boson("plus")
-       m5[boson] := #true
-       check m5[boson] ~is #true
+       m5.add(boson)
+       check boson in m5 ~is #true
        check m5 ~is_now WeakMutableSet.by($key_comp){ boson }
        check m5 ~is_now WeakMutableSet.by($key_comp)(boson)
        check m5 ~is_a WeakMutableSet.by($key_comp)
@@ -690,7 +671,7 @@ block:
       ~hash_code: fun (a, recur): 1
     let m = Set.by(is_anything){ 1, 3 }
     check m.length() ~is 1
-    check m["any value at all"] ~is #true
+    check "any value at all" in m ~is #true
     check m.to_list() ~is [3]
 
     key_comp.def 'both_42_or_both_other':
@@ -698,8 +679,8 @@ block:
       ~hash_code: fun (a, recur): if (a == 42) | 42 | 1
     let m2 = Set.by(both_42_or_both_other){ 1, 42, 3 }
     check m2.length() ~is 2
-    check m2["any non-42 value"] ~is #true
-    check m2[42] ~is #true
+    check "any non-42 value" in m2 ~is #true
+    check 42 in m2 ~is #true
     check m2.to_list().sort(math.less) ~is [3, 42]
 
     key_comp.def 'equals':
@@ -1159,17 +1140,17 @@ block:
       ) ~is Set.by(equals){}
 
 check:
-  ("oops" :~ Set)[0]
+  0 in ("oops" :~ Set)
   ~throws values(
-    "Set.get: " ++ error.annot_msg(),
+    "Set.contains: " ++ error.annot_msg(),
     error.annot("ReadableSet").msg,
     error.val("oops").msg,
   )
 
 check:
-  ("oops" :~ MutableSet)[0] := 0
+  ("oops" :~ MutableSet).add(0)
   ~throws values(
-    "MutableSet.set: " ++ error.annot_msg(),
+    "MutableSet.add: " ++ error.annot_msg(),
     error.annot("MutableSet").msg,
     error.val("oops").msg,
   )

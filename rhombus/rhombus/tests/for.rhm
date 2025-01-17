@@ -223,7 +223,7 @@ check:
   def set:
     for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
       each i: 0..8
-      if set[i] | set.remove(i) | set
+      if i in set | set.remove(i) | set
   set ++ {36}
   ~is {9, 16, 25, 36}
 
@@ -232,7 +232,7 @@ check:
   def set:
     for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
       each i: 0..8
-      if set[i] | set.remove(i) | set
+      if i in set | set.remove(i) | set
   set ++ {36}
   ~is {9, 16, 25, 36}
 
@@ -241,7 +241,7 @@ version_guard.at_least "8.11.1.4":
     use_static
     for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
       each i: 0..8
-      keep_when set[i]
+      keep_when i in set
       set.remove(i)
     ~is {9, 16, 25}
 
@@ -250,7 +250,7 @@ version_guard.at_least "8.11.1.4":
     use_static
     for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
       each i: 0..8
-      keep_when set[i]
+      keep_when i in set
       set.remove(i)
     ~is {9, 16, 25}
 

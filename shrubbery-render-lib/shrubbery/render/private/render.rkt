@@ -195,7 +195,8 @@
                                                                         (lambda (stx output)
                                                                           (cond
                                                                             [(element*? (syntax-e stx))
-                                                                             (display "ELEM" output)
+                                                                             ;; write as something self-delimiting:
+                                                                             (display "\"elem\"" output)
                                                                              #t]
                                                                             [else #f])))
                                               (syntax-column

@@ -69,7 +69,7 @@ meta:
             let seen:
               for values (seen :~ Set = seen):
                 each sym: new_syms
-                when seen[sym.unwrap()]
+                when sym.unwrap() in seen
                 | syntax_meta.error("duplicate enum identifier",
                                     stx,
                                     sym)

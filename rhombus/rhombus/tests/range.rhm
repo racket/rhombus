@@ -16,7 +16,7 @@ block:
     Range.end(rge) ~method
     Range.includes_start(rge) ~method
     Range.includes_end(rge) ~method
-    Range.has_element(rge, v) ~method
+    Range.contains(rge, v) ~method
     Range.encloses(rge, ...) ~method
     Range.is_connected(rge, other) ~method
     Range.overlaps(rge, other) ~method
@@ -45,8 +45,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #false
       rge.encloses(0..5) ~is #true
       rge.is_connected(0..5) ~is #true
       rge.overlaps(0..5) ~is #true
@@ -58,8 +58,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0..5) ~is #true
     dynamic(rge).is_connected(0..5) ~is #true
     dynamic(rge).overlaps(0..5) ~is #true
@@ -84,8 +84,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(0..=5) ~is #true
       rge.is_connected(0..=5) ~is #true
       rge.overlaps(0..=5) ~is #true
@@ -97,8 +97,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..=5) ~is #true
     dynamic(rge).is_connected(0..=5) ~is #true
     dynamic(rge).overlaps(0..=5) ~is #true
@@ -122,8 +122,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(0..) ~is #true
       rge.is_connected(0..) ~is #true
       rge.overlaps(0..) ~is #true
@@ -135,8 +135,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..) ~is #true
     dynamic(rge).is_connected(0..) ~is #true
     dynamic(rge).overlaps(0..) ~is #true
@@ -161,8 +161,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #false
       rge.encloses(0 <.. 5) ~is #true
       rge.is_connected(0 <.. 5) ~is #true
       rge.overlaps(0 <.. 5) ~is #true
@@ -174,8 +174,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0 <.. 5) ~is #true
     dynamic(rge).is_connected(0 <.. 5) ~is #true
     dynamic(rge).overlaps(0 <.. 5) ~is #true
@@ -200,8 +200,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #true
       rge.encloses(0 <..= 5) ~is #true
       rge.is_connected(0 <..= 5) ~is #true
       rge.overlaps(0 <..= 5) ~is #true
@@ -213,8 +213,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..= 5) ~is #true
     dynamic(rge).is_connected(0 <..= 5) ~is #true
     dynamic(rge).overlaps(0 <..= 5) ~is #true
@@ -238,8 +238,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #true
       rge.encloses(0 <..) ~is #true
       rge.is_connected(0 <..) ~is #true
       rge.overlaps(0 <..) ~is #true
@@ -251,8 +251,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..) ~is #true
     dynamic(rge).is_connected(0 <..) ~is #true
     dynamic(rge).overlaps(0 <..) ~is #true
@@ -276,8 +276,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #false
       rge.encloses(..5) ~is #true
       rge.is_connected(..5) ~is #true
       rge.overlaps(..5) ~is #true
@@ -289,8 +289,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(..5) ~is #true
     dynamic(rge).is_connected(..5) ~is #true
     dynamic(rge).overlaps(..5) ~is #true
@@ -314,8 +314,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(..=5) ~is #true
       rge.is_connected(..=5) ~is #true
       rge.overlaps(..=5) ~is #true
@@ -327,8 +327,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..=5) ~is #true
     dynamic(rge).is_connected(..=5) ~is #true
     dynamic(rge).overlaps(..=5) ~is #true
@@ -350,8 +350,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(..) ~is #true
       rge.is_connected(..) ~is #true
       rge.overlaps(..) ~is #true
@@ -363,8 +363,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..) ~is #true
     dynamic(rge).is_connected(..) ~is #true
     dynamic(rge).overlaps(..) ~is #true
@@ -1093,85 +1093,85 @@ block:
   generate_checks 63
 
 // The following checks are borrowed from Rebellion
-// `Range.has_element`
+// `Range.contains`
 block:
   def rng = 2..4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 check:
-  (3..3).has_element(3) ~is #false
+  (3..3).contains(3) ~is #false
 
 block:
   def rng = 2..=4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 check:
-  (3..=3).has_element(3) ~is #true
+  (3..=3).contains(3) ~is #true
 
 block:
   def rng = 2..
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
 
 block:
   def rng = 2 <.. 4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 block:
   def rng = 2 <..= 4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 block:
   def rng = 2 <..
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
 
 block:
   def rng = ..4
   check:
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 block:
   def rng = ..=4
   check:
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 block:
   def rng = ..
   check:
-    rng.has_element(1) ~is #true
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #true
+    rng.contains(1) ~is #true
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #true
 
 // `Range.encloses`
 check:

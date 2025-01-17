@@ -9,9 +9,8 @@
 When @braces is used with elements that do not
 have @colon to separate a key and value, then @braces creates a set. (If
 a set-element expression uses @colon, then it will need to be in
-parentheses to avoid being parsed as a key–value pair.) A set is @tech(~doc: ref_doc){indexable}
-with @brackets, where the set's elements act as indices to values of
-@rhombus(#true), while using any other value as an index produces @rhombus(#false).
+parentheses to avoid being parsed as a key–value pair.) A set
+supports @tech(~doc: ref_doc){membership tests} with the @rhombus(in) operator.
 There's a @rhombus(Set) constructor that's analogous to
 @rhombus(Map), but @rhombus(Set) accepts just values to include in the
 set. The @rhombus(++) operator effectively unions sets.
@@ -21,14 +20,14 @@ set. The @rhombus(++) operator effectively unions sets.
   ~defn:
     def friends = {"alice", "bob", "carol"}
   ~repl:
-    if friends["alice"] && friends["carol"]
+    if "alice" in friends && "carol" in friends
     | "I know both"
     | "Who are they?"
   ~defn:
     def new_friends = friends ++ {"david"}
   ~repl:
-    new_friends["david"]
-    friends["david"]
+    "david" in new_friends
+    "david" in friends
 )
 
 Using @rhombus(Set) explicitly before @braces

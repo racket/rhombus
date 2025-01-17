@@ -14,15 +14,9 @@ which creates a set containing the values of the @rhombus(val_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
 parsed as an implicit use of the @rhombus(#%braces) form.
 
-A set is @tech{indexable}, and @brackets after a set
-expression with an expression for a value checks for membership: the result is a boolean
-indicating whether the value is in the set. Mutable sets can be updated
-with a combination of @brackets and the @rhombus(:=) operator, where
-a @rhombus(#false) result on the right-hand side of @rhombus(:=) removes an
-element from a set, and any other right-hand side result causes the value
-to be included in the set. (Use @rhombus(++) to functionally add to an
-immutable set.) These uses of @brackets are implemented by
-@rhombus(#%index). A set can be used as @tech{sequence}, in which case
+A set supports @tech{membership tests} with the @rhombus(in) operator.
+Use @rhombus(++) or @rhombus(Set.add) to functionally add to an
+immutable set. A set can be used as @tech{sequence}, in which case
 it supplies its elements in an unspecified order.
 
 @doc(
@@ -58,7 +52,7 @@ it supplies its elements in an unspecified order.
   annotation} given an annotations for elements; satisfaction of those
  annotations is confirmed only on demand, both for elements that are
  extracted from the set and for elements added or appended to the set.
- For @rhombus(Set.later_of), the key and value annotations must be
+ For @rhombus(Set.later_of, ~annot), the key and value annotations must be
  @tech(~doc: guide_doc){predicate annotations}. Since an element annotation is checked on
  every access, its static information is associated with access using
  @brackets.
@@ -110,9 +104,9 @@ it supplies its elements in an unspecified order.
 @examples(
   def s = Set{"x", 1, "y", 2}
   s
-  s["x"]
-  s[1]
-  s[42]
+  "x" in s
+  1 in s
+  42 in s
   Set("x", 1, "y", 2)
 )
 
@@ -207,10 +201,8 @@ it supplies its elements in an unspecified order.
 @examples(
   def m = MutableSet{"x", 1, "y", 2}
   m
-  m["x"]
-  m["x"] := #false
-  m
-  m["x"] := #true
+  "x" in m
+  m.remove("x")
   m
 )
 
@@ -285,18 +277,15 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method Set.get(st :: ReadableSet, val :: Any) :: Boolean
-  method Set.has_element(st :: ReadableSet, val :: Any) :: Boolean
+  method Set.contains(st :: ReadableSet, val :: Any) :: Boolean
 ){
 
- Equivalent to @rhombus(st[val]) (with the default implicit
- @rhombus(#%index) form). Returns @rhombus(#true) if @rhombus(val) is
+ Equivalent to @rhombus(val in st), returning @rhombus(#true) if @rhombus(val) is
  in @rhombus(st), @rhombus(#false) otherwise.
 
 @examples(
-  {"a", "b"}.get("a")
-  {"a", "b"}.has_element("a")
-  {"a", "b"}["a"]
+  {"a", "b"}.contains("a")
+  "a" in {"a", "b"}
 )
 
 }
@@ -355,6 +344,20 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
+  method (st :: Set).add(val :: Any) :: Set
+){
+
+ Returns a set like @rhombus(st) but with @rhombus(val) added if it is
+ not already present.
+
+@examples(
+  {1, 2, 3}.add(4)
+  {1, 2, 3}.add(2)
+)
+
+}
+
+@doc(
   method (st :: Set).remove(val :: Any) :: Set
 ){
 
@@ -370,20 +373,15 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method (st :: MutableSet).set(val :: Any, in :: Any)
+  method (st :: MutableSet).add(val :: Any)
     :: Void
 ){
 
- Equivalent to @rhombus(st[val] := in) (with the default implicit
- @rhombus(#%index) form). Changes @rhombus(st) to remove
- @rhombus(val) if @rhombus(in) is @rhombus(#false), otherwise add
- @rhombus(val).
+ Changes @rhombus(st) to add @rhombus(val) to the set.
 
 @examples(
   def s = MutableSet{1, 2, 3}
-  s.set(1, #false)
-  s
-  s[1] := #true
+  s.add(1)
   s
 )
 
@@ -391,7 +389,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method (st :: MutableSet).delete(val :: Any)
+  method (st :: MutableSet).remove(val :: Any)
     :: Void
 ){
 
@@ -399,7 +397,7 @@ it supplies its elements in an unspecified order.
 
 @examples(
   def s = MutableSet{1, 2, 3}
-  s.delete(2)
+  s.remove(2)
   s
 )
 

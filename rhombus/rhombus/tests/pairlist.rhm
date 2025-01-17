@@ -16,7 +16,7 @@ block:
     PairList.for_each(lst, proc) ~method
     List.filter(lst) ~method
     List.partition(lst, proc) ~method
-    PairList.has_element(lst, val, [eql]) ~method
+    PairList.contains(lst, val, [eql]) ~method
     PairList.find(lst, pred) ~method
     PairList.index(lst, pred) ~method
     PairList.remove(lst, val) ~method
@@ -313,12 +313,12 @@ check:
   ~is "empty"
 
 check:
-  PairList[1, 2, 3].has_element(2) ~is #true
-  PairList[1, 2, 3].has_element(4) ~is #false
-  PairList[1, 2, 3].has_element(-3, fun (x, y): x == -y) ~is #true
-  PairList[1, 2, 3].has_element(-4, fun (x, y): x == -y) ~is #false
-  dynamic(PairList[1, 2, 3]).has_element(1) ~is #true
-  dynamic(PairList[1, 2, 3]).has_element(-1, fun (x, y): x == -y) ~is #true
+  PairList[1, 2, 3].contains(2) ~is #true
+  PairList[1, 2, 3].contains(4) ~is #false
+  PairList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+  PairList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  dynamic(PairList[1, 2, 3]).contains(1) ~is #true
+  dynamic(PairList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 check:
   PairList[1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -381,13 +381,13 @@ check:
 
 check:
   use_static
-  PairList.empty.has_element("no such thing")
+  PairList.empty.contains("no such thing")
   ~is #false
 
 check:
   use_static
   def PairList.empty && empty = dynamic(PairList[])
-  empty.has_element("no such thing")
+  empty.contains("no such thing")
   ~is #false
 
 block:

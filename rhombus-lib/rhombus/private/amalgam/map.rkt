@@ -25,6 +25,7 @@
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "values-key.rkt"
+         "contains-key.rkt"
          "composite.rkt"
          (submod "list.rkt" for-compound-repetition)
          "parse.rkt"
@@ -138,6 +139,7 @@
 
 (define-static-info-getter get-any-map-static-infos
   (#%index-get Map.get)
+  (#%contains Map.contains)
   (#%sequence-constructor Map.to_sequence/optimize))
 
 (define-primitive-class ReadableMap readable-map hash
@@ -158,6 +160,7 @@
    [values Map.values]
    [get Map.get]
    [has_key Map.has_key]
+   [contains Map.contains]
    [copy Map.copy]
    [snapshot Map.snapshot]
    [to_sequence Map.to_sequence]))
@@ -179,6 +182,7 @@
    [keys Map.keys]
    [get Map.get]
    [has_key Map.has_key]
+   [contains Map.contains]
    [copy Map.copy]
    [snapshot Map.snapshot]
    [to_sequence Map.to_sequence]
@@ -189,7 +193,8 @@
   ()
   #:methods
   (append
-   remove))
+   remove
+   add))
 
 (void (set-primitive-contract! '(and/c hash? (not/c immutable?)) "MutableMap"))
 (define-primitive-class MutableMap mutable-map mutable-hash
@@ -209,7 +214,7 @@
   ()
   #:methods
   (set
-   delete))
+   remove))
 
 (define-primitive-class WeakMutableMap weak-mutable-map
   #:lift-declaration
@@ -1083,6 +1088,10 @@
     [(ht key) (hash-ref ht key)]
     [(ht key default) (hash-ref ht key default)]))
 
+(define/method (Map.add ht key val)
+  #:primitive (hash-set)
+  (hash-set ht key val))
+
 (define (check-map who ht)
   (unless (immutable-hash? ht)
     (raise-annotation-failure who ht "Map")))
@@ -1115,6 +1124,10 @@
        (hash-append new-ht ht))]))
 
 (define/method (Map.has_key ht key)
+  (check-readable-map who ht)
+  (hash-has-key? ht key))
+
+(define/method (Map.contains ht key)
   (check-readable-map who ht)
   (hash-has-key? ht key))
 
@@ -1159,6 +1172,6 @@
   #:primitive (hash-set!)
   (hash-set! ht key val))
 
-(define/method (MutableMap.delete ht key)
+(define/method (MutableMap.remove ht key)
   #:primitive (hash-remove!)
   (hash-remove! ht key))

@@ -33,7 +33,8 @@
              [(set) (class-desc-index-set-method-id super)]
              [(append) (class-desc-append-method-id super)]
              [(compare) (class-desc-compare-method-id super)]
-             [else (error "unknown able")]))))
+             [(contains) (class-desc-contains-method-id super)]
+             [else (error "unknown able" which)]))))
 
 ;; gets public or private id, whatever is available to supply arity info in case
 ;; it's not overridden
@@ -98,5 +99,6 @@
                             [(set) (class-desc-index-set-method-id super)]
                             [(append) (class-desc-append-method-id super)]
                             [(compare) (class-desc-compare-method-id super)]
-                            [else (error "unknown able")])]))]
+                            [(contains) (class-desc-contains-method-id super)]
+                            [else (error "unknown able" which)])]))]
     [else #'#f]))

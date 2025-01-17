@@ -264,15 +264,25 @@
   operator (! (v :: Any)) :: Boolean
   operator_order:
     ~order: logical_negation
+  expr.macro '$expr !in $expr'
+  expr.macro '$expr !is_now $expr'
+  expr.macro '$expr !is_a $annot'
+  operator_order:
+    ~order: equivalence
 ){
 
- Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),
- @rhombus(#false) otherwise.
+ The prefix @rhombus(!) operator produces @rhombus(#true) if @rhombus(v)
+ is @rhombus(#false), @rhombus(#false) otherwise.
+
+ As an infix operator, @rhombus(!) modifies @rhombus(in),
+ @rhombus(is_now), or @rhombus(is_a). Any other infix use of @rhombus(!)
+ is an error.
 
 @examples(
   !#false
   !#true
   !"false"
+  1 !in [0, 2, 4]
 )
 
 }

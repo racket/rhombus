@@ -13,7 +13,9 @@
 
 The @rhombus(Map) constructor creates an immutable mapping of arbitrary
 keys to values. A map is @tech(~doc: ref_doc){indexable} using @brackets with a key,
-and the result is the corresponding value.
+and the result is the corresponding value. A map also supports
+@tech(~doc: ref_doc){membership tests} with the @rhombus(in) operator to
+check whether a key has a value in the map.
 
 The @rhombus(Map) constructor can be used like a function, in which case
 it accepts keys paired with values in two-item lists to create a map:
@@ -29,6 +31,8 @@ it accepts keys paired with values in two-item lists to create a map:
     neighborhood["alice"]
     ~error:
       neighborhood["clara"]
+    "clara" in neighborhood
+    "alice" in neighborhood
 )
 
 Curly braces @braces can be used as a shorthand

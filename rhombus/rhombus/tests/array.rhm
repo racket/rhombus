@@ -10,6 +10,7 @@ block:
     Array.length(arr) ~method
     Array.get(arr, n) ~method
     Array.set(arr, n, v) ~method
+    Array.contains(arr, v, [eql]) ~method
     Array.append(arr, ...) ~method
     Array.copy(arr, [start], [end]) ~method
     Array.copy_from(dest_arr, dest_start, src_arr, [src_start], [src_end]) ~method
@@ -216,6 +217,14 @@ check:
   Array.append(Array(1), Array(2)) ~is_now Array(1, 2)
   Array.append(Array(1), Array(2), Array(3)) ~is_now Array(1, 2, 3)
   Array.append(Array(1), Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
+
+check:
+  Array(10, 20, 30).contains(20) ~is #true
+  Array(10, 20, 30).contains(2) ~is #false
+  20 in Array(10, 20, 30) ~is #true
+  2 in Array(10, 20, 30) ~is #false
+  20 !in Array(10, 20, 30) ~is #false
+  2 !in Array(10, 20, 30) ~is #true
 
 check:
   10 :: Array

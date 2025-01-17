@@ -16,7 +16,6 @@
          "call-result-key.rkt"
          "static-info.rkt"
          (submod "assign.rkt" for-assign)
-         (submod "set.rkt" for-index)
          "repetition.rkt"
          "compound-repetition.rkt"
          "index-property.rkt"
@@ -55,7 +54,6 @@
       (list? v)
       (vector? v)
       (hash? v)
-      (set? v)
       (string? v)
       (bytes? v)
       (mutable-treelist? v)
@@ -95,7 +93,6 @@
 (define (mutable-indexable? v)
   (or (mutable-vector? v)
       (mutable-hash? v)
-      (mutable-set? v)
       (mutable-bytes? v)
       (mutable-treelist? v)
       (MutableIndexable? v)))
@@ -208,7 +205,6 @@
     [(list? indexable) (list-ref indexable index)]
     [(vector? indexable) (vector-ref indexable index)]
     [(hash? indexable) (hash-ref indexable index)]
-    [(set? indexable) (set-ref indexable index)]
     [(string? indexable) (string-ref indexable index)]
     [(bytes? indexable) (bytes-ref indexable index)]
     [(mutable-treelist? indexable) (mutable-treelist-ref indexable index)]
@@ -222,7 +218,6 @@
   (cond
     [(mutable-vector? indexable) (vector-set! indexable index val)]
     [(mutable-hash? indexable) (hash-set! indexable index val)]
-    [(mutable-set? indexable) (set-set! indexable index val)]
     [(mutable-bytes? indexable) (bytes-set! indexable index val)]
     [(mutable-treelist? indexable) (mutable-treelist-set! indexable index val)]
     [else

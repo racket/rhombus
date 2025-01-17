@@ -15,6 +15,7 @@
          "call-result-key.rkt"
          "index-result-key.rkt"
          "sequence-constructor-key.rkt"
+         "contains-key.rkt"
          "composite.rkt"
          "op-literal.rkt"
          "reducer.rkt"
@@ -44,6 +45,7 @@
   #:constructor-arity -1
   #:instance-static-info ((#%index-get Array.get)
                           (#%index-set Array.set)
+                          (#%contains Array.contains)
                           (#%append Array.append)
                           (#%sequence-constructor Array.to_sequence/optimize))
   #:existing
@@ -60,6 +62,7 @@
   (length
    get
    set
+   contains
    append
    copy
    copy_from
@@ -221,6 +224,10 @@
 (define/method (Array.set v i x)
   #:primitive (vector-set!)
   (vector-set! v i x))
+
+(define/method (Array.contains v i [eql equal-always?])
+  #:primitive (vector-member)
+  (and (vector-member i v eql) #t))
 
 (define (check-array who v)
   (unless (vector? v)

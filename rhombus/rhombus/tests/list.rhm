@@ -18,7 +18,7 @@ block:
     List.for_each(lst, proc) ~method
     List.filter(lst) ~method
     List.partition(lst, proc) ~method
-    List.has_element(lst, val, [eql]) ~method
+    List.contains(lst, val, [eql]) ~method
     List.find(lst, pred) ~method
     List.index(lst, pred) ~method
     List.remove(lst, val) ~method
@@ -360,12 +360,12 @@ check:
   ~is "empty"
 
 check:
-  [1, 2, 3].has_element(2) ~is #true
-  [1, 2, 3].has_element(4) ~is #false
-  [1, 2, 3].has_element(-3, fun (x, y): x == -y) ~is #true
-  [1, 2, 3].has_element(-4, fun (x, y): x == -y) ~is #false
-  dynamic([1, 2, 3]).has_element(1) ~is #true
-  dynamic([1, 2, 3]).has_element(-1, fun (x, y): x == -y) ~is #true
+  [1, 2, 3].contains(2) ~is #true
+  [1, 2, 3].contains(4) ~is #false
+  [1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+  [1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  dynamic([1, 2, 3]).contains(1) ~is #true
+  dynamic([1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 check:
   [1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -421,13 +421,13 @@ check:
 
 check:
   use_static
-  List.empty.has_element("no such thing")
+  List.empty.contains("no such thing")
   ~is #false
 
 check:
   use_static
   def List.empty && empty = dynamic([])
-  empty.has_element("no such thing")
+  empty.contains("no such thing")
   ~is #false
 
 block:

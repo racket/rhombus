@@ -34,6 +34,7 @@
          "class-able.rkt"
          "index-property.rkt"
          "append-property.rkt"
+         "contains-property.rkt"
          "reconstructor.rkt"
          "serializable.rkt"
          "name-prefix.rkt"
@@ -156,6 +157,7 @@
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
                        compare-statinfo-indirect-id
+                       contains-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -195,6 +197,7 @@
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
+                     [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
@@ -242,7 +245,7 @@
                          name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
-                         append-statinfo-indirect compare-statinfo-indirect
+                         append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                          super-call-statinfo-indirect
                          indirect-static-infos
                          instance-static-infos
@@ -264,7 +267,7 @@
                     name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
-                    append-statinfo-indirect compare-statinfo-indirect
+                    append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                     super-call-statinfo-indirect
                     indirect-static-infos
                     instance-static-infos
@@ -477,6 +480,9 @@
        (define-values (comparable? here-comparable? public-comparable?)
          (able-method-status 'compare super interfaces method-mindex method-vtable method-private
                              #:name 'compare_to))
+       (define-values (container? here-container? public-container?)
+         (able-method-status 'contains super interfaces method-mindex method-vtable method-private
+                             #:name 'contains))
 
        (define serializable (hash-ref options 'serializable #f))
        (when serializable
@@ -657,7 +663,7 @@
                                    abstract-name
                                    interfaces private-interfaces protected-interfaces
                                    has-extra-fields? here-callable? here-indexable? here-setable?
-                                   here-appendable? here-comparable?
+                                   here-appendable? here-comparable? here-container?
                                    primitive-properties
                                    #'(name reflect-name class:name make-all-name name? name-ref prefab-guard-name
                                            reconstructor-name serializer-name deserialize-submodule-name
@@ -775,6 +781,7 @@
                                  here-setable? public-setable?
                                  here-appendable? public-appendable?
                                  here-comparable? public-comparable?
+                                 here-container? public-container?
                                  (or (hash-ref options 'reconstructor-fields #f)
                                      (and super (class-desc-reconstructor-fields super)))
                                  #'(name name-extends class:name constructor-maker-name name-defaults name-ref
@@ -805,6 +812,7 @@
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
                                      #'compare-statinfo-indirect comparable?
+                                     #'contains-statinfo-indirect container?
                                      #'super-call-statinfo-indirect)
                (build-deserialize-submodule serializer-stx-params
                                             (append super-keywords constructor-public-keywords)
@@ -820,7 +828,7 @@
                                        abstract-name
                                        interfaces private-interfaces protected-interfaces
                                        has-extra-fields? here-callable? here-indexable? here-setable?
-                                       here-appendable? here-comparable?
+                                       here-appendable? here-comparable? here-container?
                                        primitive-properties
                                        names)
   (with-syntax ([(name reflect-name class:name make-all-name name? name-ref prefab-guard-name
@@ -962,6 +970,8 @@
                                                                                       method-mindex method-vtable method-private)
                                                           #,@(able-method-as-property 'append #'prop:appendable here-appendable?
                                                                                       method-mindex method-vtable method-private)
+                                                          #,@(able-method-as-property 'contains #'prop:contains here-container?
+                                                                                      method-mindex method-vtable method-private)
                                                           #,@(if (or abstract-name
                                                                      (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
                                                                             (not (syntax-e maybe-name)))
@@ -1086,6 +1096,7 @@
                                      here-setable? public-setable?
                                      here-appendable? public-appendable?
                                      here-comparable? public-comparable?
+                                     here-container? public-container?
                                      force-custom-recon?
                                      names)
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
@@ -1120,7 +1131,8 @@
                           #,@(if public-indexable? '(get) null)
                           #,@(if public-setable? '(set) null)
                           #,@(if public-appendable? '(append) null)
-                          #,@(if public-comparable? '(compare) null))
+                          #,@(if public-comparable? '(compare) null)
+                          #,@(if public-container? '(contains) null))
                         ;; ----------------------------------------
                         #,final?
                         (quote-syntax name)
@@ -1220,6 +1232,9 @@
                                                       super
                                                       method-mindex method-vtable method-private
                                                       #:const '#:method)
+                        #,(able-method-for-class-desc 'contains here-container? public-container?
+                                                      super
+                                                      method-mindex method-vtable method-private)
                         #,(let ([id (if (syntax-e #'call-statinfo-indirect)
                                         #'call-statinfo-indirect
                                         #'super-call-statinfo-indirect)])

@@ -116,6 +116,7 @@
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
                        compare-statinfo-indirect-id
+                       contains-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -142,6 +143,7 @@
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
+                     [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id])
          (values
           #`(begin
@@ -161,7 +163,8 @@
                                           #,internal-internal-name
                                           instance-static-infos
                                           call-statinfo-indirect index-statinfo-indirect
-                                          index-set-statinfo-indirect append-statinfo-indirect compare-statinfo-indirect
+                                          index-set-statinfo-indirect append-statinfo-indirect
+                                          compare-statinfo-indirect contains-statinfo-indirect
                                           super-call-statinfo-indirect]
                                 exports
                                 [option stx-param] ...))))])))
@@ -176,7 +179,8 @@
                     internal-internal-name-id
                     instance-static-infos
                     call-statinfo-indirect index-statinfo-indirect
-                    index-set-statinfo-indirect append-statinfo-indirect compare-statinfo-indirect
+                    index-set-statinfo-indirect append-statinfo-indirect
+                    compare-statinfo-indirect contains-statinfo-indirect
                     super-call-statinfo-indirect]
           exports
           [option stx-param] ...)
@@ -230,6 +234,9 @@
        (define-values (comparable? here-comparable? public-comparable?)
          (able-method-status 'compare #f supers method-mindex method-vtable method-private
                              #:name 'compare_to))
+       (define-values (container? here-container? public-container?)
+         (able-method-status 'contains #f supers method-mindex method-vtable method-private
+                             #:name 'contains))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -293,7 +300,7 @@
                                      method-mindex method-names method-vtable method-results method-private
                                      dots
                                      internal-name
-                                     callable? indexable? setable? appendable? comparable?
+                                     callable? indexable? setable? appendable? comparable? container?
                                      primitive-properties
                                      #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
@@ -310,6 +317,7 @@
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
                                      #'compare-statinfo-indirect comparable?
+                                     #'contains-statinfo-indirect container?
                                      #'super-call-statinfo-indirect))))
            #`(begin . #,defns)))])))
 
@@ -376,7 +384,7 @@
                                          method-mindex method-names method-vtable method-results method-private
                                          dots
                                          internal-name
-                                         callable? indexable? setable? appendable? comparable?
+                                         callable? indexable? setable? appendable? comparable? container?
                                          primitive-properties
                                          names)
   (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
@@ -437,7 +445,8 @@
                                   (if indexable? '(get) '())
                                   (if setable? '(set) '())
                                   (if appendable? '(append) '())
-                                  (if comparable? '(compare) '()))
+                                  (if comparable? '(compare) '())
+                                  (if container? '(contains) '()))
                               ;; ----------------------------------------
                               (quote-syntax name)
                               #,(and internal-name
