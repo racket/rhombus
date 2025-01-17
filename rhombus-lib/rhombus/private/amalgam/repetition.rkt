@@ -103,7 +103,7 @@
                           id))
     (make-repetition-info (list id)
                           null
-                          #`(rhombus-expression (group #,id))
+                          (relocate id #`(rhombus-expression (group #,id)))
                           #`((#%indirect-static-info #,id))
                           0))
 
