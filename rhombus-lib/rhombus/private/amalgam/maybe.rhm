@@ -40,11 +40,13 @@ meta:
     | statinfos
 
 expr.macro '$e !!':
+  ~all_stx: stx
   ~op_stx: self
   let statinfos = statinfo_meta.gather(e)
   statinfo_meta.replace('match $(statinfo_meta.replace(e, '()'))
-                         | #false: definitely_failed(#' $(Symbol.from_string(self.to_source_string())))
-                         | v: v',
+                         | #false: definitely_failed(#' $(Symbol.from_string(self.to_source_string())),
+                                                     $(stx.srcloc()))
+                         | v: v'.relocate_group_span([stx]),
                         demaybe_statinfos(statinfos))
 
 #//
@@ -52,16 +54,17 @@ expr.macro '$e !!. $tail ... ~nonempty':
   ~order: member_access
   ~op_stx: self
   let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
-  values('($e !!)', '$dot $tail ...')
+  values('($e $('!!'.relocate(self)))', '$dot $tail ...')
 
 repet.macro '$e !!':
   ~op_stx: self
   ~all_stx: stx
   let '($_, $expr, $depth, $use_depth, $statinfos)' = repet_meta.unpack_list(e)
   repet_meta.pack_list('($stx,
-                         'check_definitely_at_depth(#' $(Symbol.from_string(self.to_source_string())),
-                                                    $expr,
-                                                    $depth - $use_depth)',
+                         check_definitely_at_depth(#' $(Symbol.from_string(self.to_source_string())),
+                                                   $expr,
+                                                   $(depth.unwrap() - use_depth.unwrap()),
+                                                   $(stx.srcloc())),
                          $depth,
                          $use_depth,
                          $(demaybe_statinfos(statinfos)))')
@@ -132,16 +135,19 @@ repet.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ..
   | ~else:
       syntax_meta.error("repetition expansion does not have a single input", '$e $self $id $args ...')
 
-fun definitely_failed(who):
+fun definitely_failed(who, srcloc):
   throw Exn.Fail.Annot(who +& ": claimed not false, but actual value is false",
                        Continuation.Marks.current(),
-                       PairList[])
+                       if srcloc
+                       | PairList[srcloc]
+                       | PairList[])
 
-fun check_definitey_at_depth(who, v, depth):
+fun check_definitely_at_depth(who, v, depth, srcloc):
   if depth == 0
-  | v || definitely_failed(who)
+  | v || definitely_failed(who, srcloc)
   | for (e: (v :~ List)):
-      check_definitey_at_depth(who, e, depth-1)
+      check_definitely_at_depth(who, e, depth-1, srcloc)
+  v
 
 bind.macro '$b !!':
   ~op_stx: self

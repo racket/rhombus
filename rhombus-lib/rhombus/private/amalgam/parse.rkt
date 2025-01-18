@@ -173,7 +173,8 @@
          (syntax-parse #'form
            [(~var e (:nestable-declaration d-prefix)) #'(begin . e.parsed)]
            [(~var e (:definition d-prefix)) #'(begin . e.parsed)]
-           [_ #`(#%expression (rhombus-expression form))]))
+           [_ (relocate (maybe-respan #'form)
+                        #`(#%expression (rhombus-expression form)))]))
        (define parsed
          (if (syntax-e #'decl-ok?)
              (syntax-parse #'form
@@ -192,7 +193,8 @@
       [(_) #'(begin)]
       [(_ (group (parsed #:rhombus/defn defn))) #'defn]
       [(_ (~var e (:definition #f))) #'(begin . e.parsed)]
-      [(_ form) #'(#%expression (rhombus-expression form))])))
+      [(_ form) (relocate (maybe-respan #'form)
+                          #'(#%expression (rhombus-expression form)))])))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
@@ -253,7 +255,7 @@
            (rhombus-body-sequence . tail))]
       [(_ g . tail)
        #`(begin
-           (#%expression (rhombus-expression g))
+           #,(relocate (maybe-respan #'g) #`(#%expression (rhombus-expression g)))
            (rhombus-body-sequence . tail))])))
 
 ;; Wraps a `parsed` term that can be treated as a definition:

@@ -902,6 +902,10 @@ meta:
                   | ~else: 'Set'
         let braces = braces.property(#'annot, Pair(#'as_export, id), #true)
         '$(self || '') $(spacer.adjust_rest_sequence(braces, '$tail ...', context, esc))'
+    | '$(parens && '($g, ...)') $tail ...' when id:
+        let parens = '{$(spacer.adjust_group(g, context, esc)), ...}'.relocate(parens)
+        let parens = parens.property(#'annot, Pair(#'as_export, id), #true)
+        '$(self || '') $(spacer.adjust_rest_sequence(parens, '$tail ...', context, esc))'
     | ~else:
         spacer.adjust_rest_sequence(self, tail, context, esc)
 
