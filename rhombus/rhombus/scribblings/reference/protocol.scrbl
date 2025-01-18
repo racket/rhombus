@@ -6,6 +6,7 @@
 
 @local_table_of_contents()
 
+@include_section("equatable.scrbl")
 @include_section("indexable.scrbl")
 @include_section("listable.scrbl")
 @include_section("sequence.scrbl")
