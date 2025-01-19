@@ -27,7 +27,7 @@ module private:
 
 fun
 | nonarchival(p :: Pict) :~ Pict:
-    for values(p = p) (i: 0..p.duration):
+    for values(p = p) (i in 0..p.duration):
       nonarchival(p, i)
 | nonarchival(p :: Pict, epoch :: Int) :~ Pict:
     p.epoch_set_metadata(epoch, p.epoch_metadata(epoch) ++ { #'nonarchival: #true })
@@ -162,7 +162,7 @@ fun align_content(sep, horiz, contents):
   let [width, recorded :~ List]:
     recur gather_widths (cs :: List = contents):
       let (max_w, accum):
-        for values(max_w = 0, accum :~ List = []) (c: cs):
+        for values(max_w = 0, accum :~ List = []) (c in cs):
           match c
           | p :: Pict: values(math.max(max_w, p.width),
                               accum.add(p))
@@ -191,7 +191,7 @@ fun align_content(sep, horiz, contents):
   recur widen (w = width, sep = sep, cs :: List = recorded,
                widener = make_widener(width, horiz, values)):
     List.append(
-      & for List (c: cs):
+      & for List (c in cs):
         match c
         | p :: Pict:
             [widener(p)]

@@ -28,7 +28,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
   // duplicating the binding machinery for the initial call and recursive calls,
   // we'll expand in a way that uses `#{unsafe-undefined}` on the initial call
   let all_immediate: for values(immed = #true):
-                       each info: [arg_info, ...]
+                       each info in [arg_info, ...]
                        immed && bind_meta.is_immediate(info)
   let ['($_, $a_name, $_, ...)', ...] = [bind_meta.unpack_info(arg_info), ...]
   let [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
@@ -111,7 +111,7 @@ meta:
                                              #%literal $annotation_string))'
       | let [arg, ...]:
           for List:
-            each i: 0..count
+            each i in 0..count
             Syntax.make_id("arg" +& i)
         'block:
            fun fail(): bad_result(#' $name, #%literal $annotation_string)

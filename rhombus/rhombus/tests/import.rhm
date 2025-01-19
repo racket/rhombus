@@ -25,7 +25,7 @@ check:
   import: lib("rhombus/tests/example-a.rhm").ExList
   [ExList(1, 2), ExList.length([1, 2, 3]),
    for ExList:
-     each i: 10..12
+     each i in 10..12
      i]
   ~is [[1, 2], 3, [10, 11]]
 

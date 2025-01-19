@@ -1088,7 +1088,7 @@ check_spacer:
 
 check_spacer:
   for List:
-    each v: ["a", "b", "c"]
+    each v in ["a", "b", "c"]
     skip_when v == "b"
     v
   $(expr.full) $reducer:
@@ -1109,7 +1109,7 @@ check_spacer:
 
 check_spacer:
   for:
-    each v: ["a", "b", "c"]
+    each v in ["a", "b", "c"]
     skip_when v == "b"
     v
     ~into List

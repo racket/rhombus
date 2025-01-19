@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt"
@@ -31,6 +32,9 @@
          (for-spaces (#f
                       rhombus/repet)
                      in))
+
+(module+ in-operator
+  (provide (for-syntax :in)))
 
 (define-values (prop:MembershipTestable MembershipTestable? MembershipTestable-ref)
   (make-struct-type-property 'MembershipTestable))
@@ -98,6 +102,14 @@
                               (if (eq? mode 'invert)
                                   `(not ,r)
                                   r))))))
+
+(begin-for-syntax
+  (define-syntax-class :in
+    #:description "a membership operator"
+    #:opaque
+    [pattern ::name
+             #:when (free-identifier=? #'name
+                                       (expr-quote in))]))
 
 (define-syntax in
   (expression-infix-operator

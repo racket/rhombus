@@ -20,19 +20,17 @@
                 $body
                 ~into $reducer'
   grammar maybe_each:
-    ($bind:
-       $body
-       ...,
-     ...)
+    ($bind_each, ...)
     #,(epsilon)
+  grammar bind_each:
+    $bind in $expr
+    $bind:
+     $body
+     ...
   grammar clause_or_body:
-    #,(@rhombus(each, ~for_clause)) $bind:
-      $body
-      ...
+    #,(@rhombus(each, ~for_clause)) $bind_each
     #,(@rhombus(each, ~for_clause)):
-      $bind:
-        $body
-        ...
+      $bind_each
       ...
     #,(@rhombus(keep_when, ~for_clause)) $expr_or_block
     #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
@@ -54,9 +52,10 @@
  iteration, and additional @rhombus(each, ~for_clause) groups form nested
  iterations.
 
- The block after a binding within an @rhombus(each, ~for_clause) clause must produce
+ The expression after @rhombus(in) or block after a binding within
+ an @rhombus(each, ~for_clause) clause must produce
  a @tech{sequence}. When @rhombus(for) is static (see
- @rhombus(use_static)), static information for the block must indicate
+ @rhombus(use_static)), static information for the expression or block must indicate
  a static sequence implementation that may specialize iteration over the
  sequence; see also @rhombus(Sequence, ~annot) and @rhombus(statinfo_meta.sequence_constructor_key).
  A fresh @tech{instantiation} of the sequence is used each
@@ -99,71 +98,73 @@
 
 @examples(
   ~repl:
+    for (v in ["a", "b", "c"]):
+      println(v)
     for (v: ["a", "b", "c"]):
       println(v)
     for:
-      each v: ["a", "b", "c"]
+      each v in ["a", "b", "c"]
       println(v)
     for:
-      each v: ["a", "b", "c"]
+      each v in ["a", "b", "c"]
       keep_when v == "b"
       println(v)
     for:
-      each v: ["a", "b", "c"]
+      each v in ["a", "b", "c"]
       skip_when v == "b"
       println(v)
     for:
-      each v: ["a", "b", "c"]
+      each v in ["a", "b", "c"]
       break_when v == "b"
       println(v)
     for:
-      each v: ["a", "b", "c"]
+      each v in ["a", "b", "c"]
       final_when v == "b"
       println(v)
-    for (v: ["a", "b", "c"],
-         i: 0..):
+    for (v in ["a", "b", "c"],
+         i in 0..):
       println(i +& ". " +& v)
     for:
       each:
-        v: ["a", "b", "c"]
-        i: 0..
+        v in ["a", "b", "c"]
+        i in 0..
       println(i +& ". " +& v)
   ~repl:
     fun grid(m, n):
       for List:
-        each i: 0..m
-        each j: 0..n
+        each i in 0..m
+        each j in 0..n
         [i, j]
     grid(2, 3)
   ~repl:
     fun sum(l :: List):
       for values(sum = 0):
-        each i: l
+        each i in l
         sum+i
     sum([2, 3, 4])
   ~repl:
     for:
-      each i: [1, 2, 3]
-      each j: 10..10+3
+      each i in [1, 2, 3]
+      each j in 10..10+3
       [i, j]
       ~into List
   ~repl:
     for values(x = 0, y = 2):
-      each j: 0..3
+      each j in 0..3
       values(x + y, j)
   ~repl:
     fun grid2(m, n):
       for List:
-        each i: 0..m
+        each i in 0..m
         let k = i + 1
-        each j: 0..n
+        each j in 0..n
         [k, j]
     grid2(2, 3)
   ~repl:
-    for Map (i: 0..3):
+    for Map (i in 0..3):
       values(i, i +& "!")
     for Map:
-      each i: 0..3
+      each i in 0..3
       values(i, i +& "!")
 )
 
@@ -171,14 +172,12 @@
 
 
 @doc(
+  ~nonterminal:
+    bind_each: for bind_each
   for_clause.macro 'each:
-                      $bind:
-                        $body
-                        ...
+                      $bind_each
                       ...'
-  for_clause.macro 'each $bind:
-                      $body
-                      ...'
+  for_clause.macro 'each $bind_each'
   for_clause.macro 'keep_when $expr'
   for_clause.macro 'keep_when: $body; ...'
   for_clause.macro 'skip_when $expr'

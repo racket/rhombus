@@ -25,10 +25,10 @@ fun rand_test(plst, tl, lst, n, history):
     | unless lst == tl.to_list()
       | error(#'rand_test, "fail " +& lst +& " vs. " +& tl +& " using " +& PairList.reverse(history))
     when do_pairlist && do_list
-    | unless plst == (for PairList (e: lst): e)
+    | unless plst == (for PairList (e in lst): e)
       | error(#'rand_test, "fail " +& plst +& " vs. " +& lst +& " using " +& PairList.reverse(history))
     when do_list
-    | let lst2 = (for List (e: (for PairList (e: lst): e)): e)
+    | let lst2 = (for List (e in (for PairList (e in lst): e)): e)
       unless (lst2 == lst) && (lst == lst2) && Equatable.hash(lst) == Equatable.hash(lst2)
       | error(#'rand_test, "equal fails " +& lst)
   cond
@@ -51,5 +51,5 @@ fun rand_test(plst, tl, lst, n, history):
                   List.cons(pos, history))
 
 measure.time:
-  for (i: 0..1000):
+  for (i in 0..1000):
     rand_test(PairList[], TreeList[], [], 0, [])

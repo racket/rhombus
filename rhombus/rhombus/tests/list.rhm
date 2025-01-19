@@ -315,7 +315,7 @@ check:
   ~is "other"
 
 check:
-  match (for List (i: []): i)
+  match (for List (i in []): i)
   | List.empty: "empty"
   | ~else: "other"
   ~is "empty"
@@ -440,15 +440,15 @@ block:
   use_static
   def lst = ["a", "b", "c"]
   check:
-    for List (x: lst):
+    for List (x in lst):
       x
     ~is ["a", "b", "c"]
   check:
-    for List (x: List.to_sequence(lst)):
+    for List (x in List.to_sequence(lst)):
       x
     ~is ["a", "b", "c"]
   check:
-    for List (x: lst.to_sequence()):
+    for List (x in lst.to_sequence()):
       x
     ~is ["a", "b", "c"]
 
@@ -468,7 +468,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ List):
+    for List (x in "oops" :~ List):
       x
     ~throws values(
       "List.to_sequence: " ++ error.annot_msg(),
@@ -476,7 +476,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: List.to_sequence("oops")):
+    for List (x in List.to_sequence("oops")):
       x
     ~throws values(
       "List.to_sequence: " ++ error.annot_msg(),
@@ -484,7 +484,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ List).to_sequence()):
+    for List (x in ("oops" :~ List).to_sequence()):
       x
     ~throws values(
       "List.to_sequence: " ++ error.annot_msg(),

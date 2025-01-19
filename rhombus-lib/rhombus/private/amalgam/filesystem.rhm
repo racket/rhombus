@@ -96,7 +96,7 @@ namespace filesystem:
       let files :~ PairList:
         rkt_error.local_error_adjust { #'#{directory-list}: who }:
           rkt.#{directory-list}(p, #{#:build?}: !onto_path && add_path)
-      for values (accum :~ List = accum) (file: files):
+      for values (accum :~ List = accum) (file in files):
         let file = (if onto_path | Path.add(onto_path, file) | file)
         keep_when keep(file)
         skip_when skip(file)
@@ -157,7 +157,7 @@ namespace filesystem:
               | let files :~ PairList:
                   rkt_error.local_error_adjust { #'#{directory-list}: who }:
                     rkt.#{directory-list}(p, #{#:build?}: #true)
-                for (f: files):
+                for (f in files):
                   delete(f)
               rkt_error.local_error_adjust { #'#{delete-directory}: who }:
                 rkt.#{delete-directory}(p)
@@ -311,7 +311,7 @@ namespace filesystem:
             let files :~ PairList:
               rkt_error.local_error_adjust { #'#{directory-list}: who }:
                 rkt.#{directory-list}(src_path)
-            for (file: files):
+            for (file in files):
               recur(Path.add(src_path, file), Path.add(dest_path, file))
           match file_type(who, src_path)
           | #'file: copy_file(src_path, dest_path)

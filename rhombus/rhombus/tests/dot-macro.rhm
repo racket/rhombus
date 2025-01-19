@@ -149,12 +149,12 @@ dot.macro 'myint2_dot_provider $left $dot $right':
                              $use_depth,
                              ())')
     match '$right $tail ...'
-    | 'is_zero $tail ...': values(make('for List (v: ($expr :~ List)): v .= 0'),
+    | 'is_zero $tail ...': values(make('for List (v in ($expr :~ List)): v .= 0'),
                                   '$tail ...')
     | 'add($(right :: repet_meta.Parsed)) $tail ...':
         // assumes a depth-1 `right`, too
         let '($_, $r_expr, $r_depth, $r_use_depth, $_)' = repet_meta.unpack_list(right)
-        values(make('for List (v: ($expr :~ List),
+        values(make('for List (v in ($expr :~ List),
                                r_v: ($r_expr :~ List)):
                        v + r_v'),
                '$tail ...')

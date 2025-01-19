@@ -29,10 +29,10 @@ macro 'radix($index, $height)':
   '((($index) bits.(>>) (BITS * ($height))) bits.and MASK)'
 
 module test:
-  for (i: 0 .. MAX_WIDTH):
+  for (i in 0 .. MAX_WIDTH):
     check: radix(i, 0) ~is i
     check: radix(i, 1) ~is 0
-  for (i: MAX_WIDTH .. 2*MAX_WIDTH):
+  for (i in MAX_WIDTH .. 2*MAX_WIDTH):
     check: radix(i, 1) ~is 1
 
 /* a node in the RRB Tree
@@ -183,7 +183,7 @@ class TreeList(root :~ Node,
   // TODO i want it to be equal if the represented sequence is equal which requires walking the tree
   // how to do efficiently?
   private override equals(rhs :~ TreeList, recur):
-    (size == rhs.size) && (for all (i: 0..size):
+    (size == rhs.size) && (for all (i in 0..size):
                              recur(rhs[i], this[i]))
 
   private override hash_code(recur):
@@ -256,7 +256,7 @@ class TreeList(root :~ Node,
   // rather than traverse once per element of represented vector
   method to_list() :~ List:
     for List:
-      each idx: 0..size
+      each idx in 0..size
       get(idx)
 
   method length() :~ Int:
@@ -325,7 +325,7 @@ class TreeList(root :~ Node,
                   new_sizes[0] := size0
               | ~else:
                   def step = 1 bits.(<<) (depth * BITS)
-                  for (i: 0 .. new_len - 1):
+                  for (i in 0 .. new_len - 1):
                     new_sizes[i] := (size0 + i * step)
                   let sizeN = size_subtree(new_children[new_len-1], depth-1)
                   new_sizes[new_len - 1] := size0 + (new_len - 2) * step + sizeN
@@ -335,7 +335,7 @@ class TreeList(root :~ Node,
               def (branch_index, subindex) = step(node, index, depth)
               def new_children :~ Array.now_of(Node) = node.children.drop(branch_index)
               def new_sizes = for Array.of_length((node.sizes :~ Array.now_of(Int)).length() - branch_index):
-                each i: branch_index .. (node.sizes :~ Array.now_of(Int)).length()
+                each i in branch_index .. (node.sizes :~ Array.now_of(Int)).length()
                 (node.sizes :~ Array.now_of(Int))[i] - index
               def new_child = drop(node.get(branch_index), subindex, depth - 1)
                 
@@ -376,7 +376,7 @@ class TreeList(root :~ Node,
                          block:
                            let sizes :~ Array: a.sizes
                            for Array.of_length(sizes.length()) ():
-                             each n: sizes
+                             each n in sizes
                              n+1)
       let new_root = insert_left(root, height)
       if new_root
@@ -516,7 +516,7 @@ fun set_sizes(children :~ Array, height :~ Int) :~ Node:
   if height == 0:
   | Node(children)
   | def sizes = Array.make(children.length())
-    for values(sum = 0) (i: 0 .. children.length()):
+    for values(sum = 0) (i in 0 .. children.length()):
       def new_sum = sum + size_subtree(children[i], height - 1)
       sizes[i] := new_sum
       new_sum
@@ -527,7 +527,7 @@ fun set_sizes(children :~ Array, height :~ Int) :~ Node:
 fun concat_plan(slots :~ Array) :~ maybe(Array):
   def plan = Array.make(slots.length())
   def child_count:
-    for values(count = 0) (i: 0 .. slots.length()):
+    for values(count = 0) (i in 0 .. slots.length()):
       def sz = (slots[i] :~ Node).size
       plan[i] := sz
       count + sz
@@ -553,7 +553,7 @@ fun distribute(plan :~ Array, target :~ Int, count :~ Int, node_idx :~ Int = 0) 
 
     /* we've removed a node (conceptually) at this point,
        so move nodes to the right of current node left by one */
-    for (j: i .. count - 1):
+    for (j in i .. count - 1):
       plan[j] := plan[j + 1]
 
     distribute(plan, target, count - 1, i - 1)
@@ -578,17 +578,17 @@ fun exec_concat_plan(slots :~ Array,
     def flattened:
       for Array.of_length(flattened_size):
         each node :~ Node: slots
-        each child: node.children
+        each child in node.children
         child
 
     def new_slots = Array.make(plan.length())
     for values(sum = 0):
-      each i: 0..plan.length()
+      each i in 0..plan.length()
               
       let new_sum = sum + plan[i]
       let new_node:
         for Array.of_length(new_sum - sum):
-          each j: sum .. new_sum
+          each j in sum .. new_sum
           flattened[j]
       new_slots[i] :=  set_sizes(new_node, height - 1)
       
@@ -654,7 +654,7 @@ fun new_branch(el, height):
 fun
 | from() :~ TreeList: TreeList[]
 | from(s :~ Sequence) :~ TreeList:
-    for values(v :~ TreeList = TreeList[]) (el: s):
+    for values(v :~ TreeList = TreeList[]) (el in s):
       v.add(el)
                    
 module test:
@@ -664,11 +664,11 @@ module test:
 
   fun
   | array_from(s :: Sequence) :~ Array:
-      for Array (si: s): si
+      for Array (si in s): si
 
   fun
   | list_from(s :: Sequence) :~ List:
-      for List (i: s): i
+      for List (i in s): i
 
   /* Node tests */ 
   let leaf_n :~ Node = Node(Array(1, 2, 3, 4))
@@ -919,7 +919,7 @@ module test:
 
   let (vec :~ TreeList, lst :~ List):
     for values(v :~ TreeList = TreeList[1], l :~ List = [1]):
-      each i: 0..10
+      each i in 0..10
       match math.random(4)
       | 0: values(v.add(i), l ++ [i])
       | 1: values(v.insert(0, i), List.cons(i, l))
@@ -970,7 +970,7 @@ module test:
 //    large_ub ++? medium_ub ~is #true
 //    large_ub ++? medium ~is #true
 
-  for (i: 0 .. 100): // pop of singleton => empty
+  for (i in 0 .. 100): // pop of singleton => empty
     def n = math.random(100)
     check: TreeList[n].pop()
            ~is TreeList.empty

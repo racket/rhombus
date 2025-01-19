@@ -17,117 +17,117 @@ macro 'bm $who: $body':
      #void' 
 
 bm "+ Pair.cons":
-  for values(r = #false) (i: 0..M):
-    for values(l = []) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = []) (i in 0..N):
       Pair.cons(i, l)
 
 bm "+ PairList.for":
-  for values(r = #false) (i: 0..M):
-    for PairList (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for PairList (i in 0..N):
       i
 
 bm "+ PairList.cons":
-  for values(r = #false) (i: 0..M):
-    for values(l = PairList[]) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = PairList[]) (i in 0..N):
       PairList.cons(i, l)
 
 bm "+ List.for":
-  for values(r = #false) (i: 0..M):
-    for List (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for List (i in 0..N):
       i
 
 bm "+ List.add":
-  for values(r = #false) (i: 0..M):
-    for values(l = []) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = []) (i in 0..N):
       List.add(l, i)
 
 bm "+ List.cons":
-  for values(r = #false) (i: 0..M):
-    for values(l = []) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = []) (i in 0..N):
       List.cons(i, l)
 
 when show_TreeList
 | bm "+ TreeList.add":
-    for values(r = #false) (i: 0..M):
-      for values(l = TreeList.empty) (i: 0..N):
+    for values(r = #false) (i in 0..M):
+      for values(l = TreeList.empty) (i in 0..N):
         TreeList.add(l, i)
 
 when show_TreeList
 | bm "+ TreeList.cons":
-    for values(r = #false) (i: 0..M):
-      for values(l = TreeList.empty) (i: 0..N):
+    for values(r = #false) (i in 0..M):
+      for values(l = TreeList.empty) (i in 0..N):
         TreeList.cons(l, i)
 
 bm "+ Set.add":
-  for values(r = #false) (i: 0..M):
-    for values(l = Set.empty) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = Set.empty) (i in 0..N):
       l ++ { i }
 
 bm "- Pair.rest":
   let init:
-    for values(l = []) (i: 0..N):
+    for values(l = []) (i in 0..N):
       Pair.cons(i, l)
-  for values(r = #false) (i: 0..M):
-    for values(l = init) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = init) (i in 0..N):
       Pair.rest(l)
 
 bm "- PairList.rest":
   let init:
-    for PairList (i: 0..N): i
-  for values(r = #false) (i: 0..M):
-    for values(l = init) (i: 0..N):
+    for PairList (i in 0..N): i
+  for values(r = #false) (i in 0..M):
+    for values(l = init) (i in 0..N):
       PairList.rest(l)
 
 bm "- List.rest":
   let init:
-    for List (i: 0..N): i
-  for values(r = #false) (i: 0..M):
-    for values(l = init) (i: 0..N):
+    for List (i in 0..N): i
+  for values(r = #false) (i in 0..M):
+    for values(l = init) (i in 0..N):
       List.rest(l)
 
 when show_TreeList
 | bm "- TreeList.drop":
     let init:
-      for values(l = TreeList.empty) (i: 0..N):
+      for values(l = TreeList.empty) (i in 0..N):
         TreeList.cons(l, i)
-    for values(r = #false) (i: 0..M):
-      for values(l = init) (i: 0..N):
+    for values(r = #false) (i in 0..M):
+      for values(l = init) (i in 0..N):
         TreeList.drop(l, 1)
 
 bm "- Set.remove":
   let init:
-    for values(l = Set.empty) (i: 0..N):
+    for values(l = Set.empty) (i in 0..N):
       l ++ { i }
-  for values(r = #false) (i: 0..M):
-    for values(l = init) (i: 0..N):
+  for values(r = #false) (i in 0..M):
+    for values(l = init) (i in 0..N):
       Set.remove(l, i)
 
 bm "^ PairList.iter":
   let init :~ PairList:
-    for PairList (i: 0..N): i
-  for values(r = #false) (i: 0..M):
-    for values(r = r) (e: init):
+    for PairList (i in 0..N): i
+  for values(r = #false) (i in 0..M):
+    for values(r = r) (e in init):
       e
 
 bm "^ List.iter":
   let init :~ List:
-    for List (i: 0..N): i
-  for values(r = #false) (i: 0..M):
-    for values(r = r) (e: init):
+    for List (i in 0..N): i
+  for values(r = #false) (i in 0..M):
+    for values(r = r) (e in init):
       e
 
 when show_TreeList
 | bm "^ TreeList.iter":
     let init :~ TreeList:
-      for values(l = TreeList.empty) (i: 0..N):
+      for values(l = TreeList.empty) (i in 0..N):
         TreeList.cons(l, i)
-    for values(r = #false) (i: 0..M):
-      for values(r = r) (e: init):
+    for values(r = #false) (i in 0..M):
+      for values(r = r) (e in init):
         e
 
 bm "^ Set.iter":
   let init :~ Set:
-    for Set (i: 0..N): i
-  for values(r = #false) (i: 0..M):
-    for values(r = r) (e: init):
+    for Set (i in 0..N): i
+  for values(r = #false) (i in 0..M):
+    for values(r = r) (e in init):
       e

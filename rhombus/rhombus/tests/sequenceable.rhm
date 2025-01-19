@@ -28,37 +28,37 @@ class Posn3D(z):
 
 check:
   for List:
-    each j: Posn(1, 2)
+    each j in Posn(1, 2)
     j
   ~is [2, 1]
 
 check:
   for List:
-    each j: Posn(1, 2) :: Sequence
+    each j in Posn(1, 2) :: Sequence
     j
   ~is [2, 1]
 
 check:
   for List:
-    each j: Posn(1, 2).to_sequence()
+    each j in Posn(1, 2).to_sequence()
     j
   ~is [2, 1]
 
 check:
   for List:
-    each j: Posn3D(1, 2, 3)
+    each j in Posn3D(1, 2, 3)
     j
   ~is [2, 1]
 
 check:
   for List:
-    each j: Posn3D(1, 2, 3) :: Sequence
+    each j in Posn3D(1, 2, 3) :: Sequence
     j
   ~is [2, 1]
 
 check:
   for List:
-    each j: Posn3D(1, 2, 3).to_sequence()
+    each j in Posn3D(1, 2, 3).to_sequence()
     j
   ~is [2, 1]
 
@@ -88,19 +88,19 @@ class Posn2(x, y):
 
 check:
   for List:
-    each j: Posn2(1, 2)
+    each j in Posn2(1, 2)
     j
   ~is [-2, -1]
 
 check:
   for List:
-    each j: Posn2(1, 2) :: Sequence
+    each j in Posn2(1, 2) :: Sequence
     j
   ~throws "don't use this"
 
 check:
   for List:
-    each j: Posn2(1, 2).to_sequence()
+    each j in Posn2(1, 2).to_sequence()
     j
   ~throws "don't use this"
 
@@ -114,19 +114,19 @@ class Posn3(x, y):
 
 check:
   for List:
-    each j: Posn3(1, 2) :: _Posn3
+    each j in Posn3(1, 2) :: _Posn3
     j
   ~is [-2, -1]
 
 check:
   for List:
-    each j: Posn3(1, 2) :: Sequence
+    each j in Posn3(1, 2) :: Sequence
     j
   ~throws "don't use this"
 
 check:
   for List:
-    each j: (Posn3(1, 2) :: _Posn3).to_sequence()
+    each j in (Posn3(1, 2) :: _Posn3).to_sequence()
     j
   ~throws "don't use this"
 
@@ -146,19 +146,19 @@ class Posn4(x, y):
 
 check:
   for List:
-    each j: Posn4(1, 2)
+    each j in Posn4(1, 2)
     j
   ~is [20, 10]
 
 check:
   for List:
-    each j: Posn4(1, 2) :: Sequence
+    each j in Posn4(1, 2) :: Sequence
     j
   ~is [20, 10]
 
 check:
   for List:
-    each j: Posn4(1, 2).to_sequence()
+    each j in Posn4(1, 2).to_sequence()
     j
   ~is [20, 10]
 
@@ -189,7 +189,7 @@ check:
         si
       '(($statinfo_meta.index_result_key, $(statinfo_meta.pack(list_info))))'
   for List:
-    each elem: Posn(1, 2)
+    each elem in Posn(1, 2)
     elem[0]
   ~is [1]
 
@@ -206,12 +206,12 @@ block:
       )
   check:
     for List:
-      each elem: TwoList([1, 2, 3, 4, 5]) :: Sequence
+      each elem in TwoList([1, 2, 3, 4, 5]) :: Sequence
       elem
     ~is [1, 3, 5]
   check:
     for List:
-      each elem: TwoList([1, 2, 3, 4, 5]).to_sequence()
+      each elem in TwoList([1, 2, 3, 4, 5]).to_sequence()
       elem
     ~is [1, 3, 5]
 
@@ -235,17 +235,17 @@ block:
           (pos + 1))'
   check:
     for List:
-      each elem: Posn(1, 2)
+      each elem in Posn(1, 2)
       elem
     ~is [2, 1]
   check:
     for List:
-      each elem: Posn(1, 2) :: Sequence
+      each elem in Posn(1, 2) :: Sequence
       elem
     ~is [Char"o", Char"o", Char"p", Char"s"]
   check:
     for List:
-      each elem: Posn(1, 2).to_sequence()
+      each elem in Posn(1, 2).to_sequence()
       elem
     ~is [Char"o", Char"o", Char"p", Char"s"]
   check:
@@ -259,7 +259,7 @@ block:
       Box("really not a sequence")
   check:
     for List:
-      each elem: Broken() :: Sequence
+      each elem in Broken() :: Sequence
       elem
     ~throws values(
       "result does not satisfy annotation",
@@ -268,7 +268,7 @@ block:
     )
   check:
     for List:
-      each elem: Broken().to_sequence()
+      each elem in Broken().to_sequence()
       elem
     ~throws values(
       "result does not satisfy annotation",

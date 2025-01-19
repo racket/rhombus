@@ -70,6 +70,7 @@ export:
       s_MutableSet as MutableSet
       s_WeakMutableSet as WeakMutableSet
     for
+    each
     import
     export
     Any
@@ -974,6 +975,18 @@ spacer.bridge WeakMutableSet.by(self, tail, context, esc):
 meta:
   def for_spaces = [#'#{rhombus/for_clause}, & body_spaces]
 
+  fun adjust_bind_each(s_g, context, esc):
+    match s_g
+    | '$s_bind ... $(s_body && ': $_')':
+        '$(spacer.adjust_sequence('$s_bind ...', #'~bind, esc))
+           $(spacer.adjust_term(s_body, context, esc))'.relocate_group(s_g)
+    | '$s_bind ... $(in_op && 'in') $s_expr ...':
+        '$(spacer.adjust_sequence('$s_bind ...', #'~bind, esc))
+           $in_op
+           $(spacer.adjust_sequence('$s_expr ...', context, esc))'.relocate_group(s_g)
+    | ~else:
+        spacer.adjust_group(s_g, context, esc)
+
 spacer.bridge for(self, tail, context, esc):
   ~in: ~expr
   match tail
@@ -987,11 +1000,10 @@ spacer.bridge for(self, tail, context, esc):
           '$kw $new_reduce'.relocate_group(into)
         ': $new_g; ...; $new_gn; $new_into'.relocate_group(b)
       '$self $new_b'
-  | '$reduce ... $(s && '($(s_g && '$s_bind ... $(s_body && ': $_')'), ...)') $(b && ': $g; ...; $gn')':
+  | '$reduce ... $(s && '($s_bind_each, ...)') $(b && ': $g; ...; $gn')':
       // shorthand form before body
-      let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)
-      let new_s = '($('$(spacer.adjust_sequence('$s_bind ...', #'~bind, esc))
-                         $(spacer.adjust_term(s_body, context, esc))'.relocate_group(s_g)),
+      let new_reduce = spacer.adjust_sequence('$reduce ...', #'~reducer, esc)       
+      let new_s = '($(adjust_bind_each(s_bind_each, context, esc)),
                     ...)'.relocate(s)
       let new_b:
         let [new_g, ...] = [spacer.adjust_group(g, for_spaces, esc), ...]
@@ -1006,6 +1018,13 @@ spacer.bridge for(self, tail, context, esc):
         ': $new_g; ...; $new_gn'.relocate(b)
       '$self $new_reduce $new_b'
   | ~else: '$self $tail'
+
+spacer.bridge each(self, tail, context, esc):
+  ~in: ~for_clause
+  match tail
+  | '': self
+  | ~else:
+      '$self $(adjust_bind_each(tail, context, esc))'
 
 spacer.bridge import(self, tail, context, esc):
   ~in: ~defn

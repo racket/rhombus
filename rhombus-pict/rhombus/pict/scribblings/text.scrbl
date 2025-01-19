@@ -199,7 +199,7 @@ paragraph typesetting.
   @para{Say ``hello'' for me!}
   @para(~width: 50){Say ``hello'' for me!}
   @para(~width: 50, ~horiz: #'right){Say ``hello'' for me!}
-  para(& for List (i: 0..50): @t{Echo}.scale((50 - i)/50))
+  para(& for List (i in 0..50): @t{Echo}.scale((50 - i)/50))
   parameterize { current_font:
                    current_font() with (size = 18, kind = #'roman) }:
     para(@{There's a fine line between fishing},

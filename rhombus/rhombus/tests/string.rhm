@@ -344,15 +344,15 @@ block:
   use_static
   def str = "abc"
   check:
-    for List (x: str):
+    for List (x in str):
       x
     ~is [Char"a", Char"b", Char"c"]
   check:
-    for List (x: String.to_sequence(str)):
+    for List (x in String.to_sequence(str)):
       x
     ~is [Char"a", Char"b", Char"c"]
   check:
-    for List (x: str.to_sequence()):
+    for List (x in str.to_sequence()):
       x
     ~is [Char"a", Char"b", Char"c"]
 
@@ -372,7 +372,7 @@ version_guard.at_least "8.13.0.1":
       error.val(#"oops").msg,
     )
   check:
-    for List (x: #"oops" :~ ReadableString):
+    for List (x in #"oops" :~ ReadableString):
       x
     ~throws values(
       "String.to_sequence: " ++ error.annot_msg(),
@@ -380,7 +380,7 @@ version_guard.at_least "8.13.0.1":
       error.val(#"oops").msg,
     )
   check:
-    for List (x: String.to_sequence(#"oops")):
+    for List (x in String.to_sequence(#"oops")):
       x
     ~throws values(
       "String.to_sequence: " ++ error.annot_msg(),
@@ -388,7 +388,7 @@ version_guard.at_least "8.13.0.1":
       error.val(#"oops").msg,
     )
   check:
-    for List (x: (#"oops" :~ ReadableString).to_sequence()):
+    for List (x in (#"oops" :~ ReadableString).to_sequence()):
       x
     ~throws values(
       "String.to_sequence: " ++ error.annot_msg(),

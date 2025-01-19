@@ -1007,9 +1007,9 @@ block:
   check m2 is_a Map.by(is_same_number_or_object) ~is #true
   check m3 is_a Map.by(===) ~is #false
   check m3 is_a Map.by(is_now) ~is #true
-  check (for Map.by(===) (i: 0..1): values(i, i+1)) ~is Map.by(===){ 0: 1 }
-  check (for Map.by(is_now) (i: 0..1): values(i, i+1)) ~is Map.by(is_now){ 0: 1 }
-  check (for Map.by(is_same_number_or_object) (i: 0..1): values(i, i+1)) ~is Map.by(is_same_number_or_object){ 0: 1 }
+  check (for Map.by(===) (i in 0..1): values(i, i+1)) ~is Map.by(===){ 0: 1 }
+  check (for Map.by(is_now) (i in 0..1): values(i, i+1)) ~is Map.by(is_now){ 0: 1 }
+  check (for Map.by(is_same_number_or_object) (i in 0..1): values(i, i+1)) ~is Map.by(is_same_number_or_object){ 0: 1 }
   let [x, ...] = [1, 2, 3]
   check Map.by(===){ x: x, ...} ~is Map.by(===){ 1: 1, 2: 2, 3: 3 }
 
@@ -1039,7 +1039,7 @@ block:
        check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1: 1 },
                                                         Map.by($key_comp){ 2: 2 },
                                                         Map.by($key_comp){ 3: 3 }]
-       check (for Map.by($key_comp) (i: 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
+       check (for Map.by($key_comp) (i in 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
        block:
          let Map.by($key_comp){ 1: v } = Map.by($key_comp){ 1: "x" }
          check v ~is "x"

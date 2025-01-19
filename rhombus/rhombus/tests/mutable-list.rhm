@@ -250,15 +250,15 @@ block:
   use_static
   def lst = MutableList[1, 2, 3]
   check:
-    for List (x: lst):
+    for List (x in lst):
       x
     ~is [1, 2, 3]
   check:
-    for List (x: MutableList.to_sequence(lst)):
+    for List (x in MutableList.to_sequence(lst)):
       x
     ~is [1, 2, 3]
   check:
-    for List (x: lst.to_sequence()):
+    for List (x in lst.to_sequence()):
       x
     ~is [1, 2, 3]
 
@@ -282,7 +282,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ MutableList):
+    for List (x in "oops" :~ MutableList):
       x
     ~throws values(
       who ++ error.annot_msg(),
@@ -290,7 +290,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: MutableList.to_sequence("oops")):
+    for List (x in MutableList.to_sequence("oops")):
       x
     ~throws values(
       who ++ error.annot_msg(),
@@ -298,7 +298,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ MutableList).to_sequence()):
+    for List (x in ("oops" :~ MutableList).to_sequence()):
       x
     ~throws values(
       who ++ error.annot_msg(),

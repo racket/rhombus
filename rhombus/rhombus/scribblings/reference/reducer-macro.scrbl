@@ -39,7 +39,7 @@
     reducer.macro '(Array.len5)':
       'Array.of_length(5)'
   ~repl:
-    for Array.len5 (i: 0..3): i
+    for Array.len5 (i in 0..3): i
 )
 
  Here's an example that sums only the positive numbers that result
@@ -78,7 +78,7 @@
       '$new_accum'
   ~repl:
     for sum_pos_to_20 (a: [6, -4, 3]): a
-    for sum_pos_to_20 (a: 3..): a
+    for sum_pos_to_20 (a in 3..): a
 )
 
  @margin_note_block{It is recommended that a reducer macro only consume a
@@ -146,12 +146,12 @@
          def ($id, ...) = $finish $data
          values($count + 1, $id, ...)'
   ~repl:
-    for counted(List) (i: 0..3): i
+    for counted(List) (i in 0..3): i
   ~defn:
     :
       // static information is also chained
       def (map, count):
-        for counted(Map) (i: 0..10):
+        for counted(Map) (i in 0..10):
           keep_when i mod 2 == 0
           values(i, "val" +& i)
   ~repl:
@@ -162,7 +162,7 @@
   ~repl:
     :
       // cooperate with multiple-value reducers
-      for counted(values(i = 0, j = 10)) (k: 0..5):
+      for counted(values(i = 0, j = 10)) (k in 0..5):
         values(i+k, j-k)
 
 )

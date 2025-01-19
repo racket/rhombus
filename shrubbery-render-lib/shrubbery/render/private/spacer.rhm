@@ -32,7 +32,7 @@ meta:
       | context :: Keyword:
           Symbol.from_string(to_string(context))
       | context :: List:
-          for PairList (e: context): e
+          for PairList (e in context): e
       | ~else:
           context
     match stx
@@ -53,9 +53,9 @@ meta:
     let nows :~ PairList = #{full-space-names}(context)
     // `relevant_context` can be `#false` (the default space)
     for values(found = #false, relevant_context = #false):
-      each now: nows
-      each in: in_contexts
-      skip_when now != in
+      each now in nows
+      each in_ctx in in_contexts
+      skip_when now != in_ctx
       final_when #true
       values(#true, now)
 

@@ -60,7 +60,7 @@ class RX(private _rkt_partial_rx,
   private method
   | strings_result(#false): #false
   | strings_result(m :~ PairList):
-      def mList = (for List (elem: m): freeze(elem))
+      def mList = (for List (elem in m): freeze(elem))
       RXMatch(mList[0], mList.rest, _vars)
 
   match_method match(input, start_pos, end_pos, output_port, input_prefix):
@@ -109,7 +109,7 @@ class RX(private _rkt_partial_rx,
                  ~end: end_pos :: maybe(Int) = #false,
                  ~input_prefix: input_prefix :: Bytes = #"") :~ List:
     def m :~ PairList = base.#{regexp-match*}(_rkt_partial_rx, input, start_pos, end_pos, input_prefix)
-    for List (elem: m):
+    for List (elem in m):
       freeze(elem)
 
   method split(input :: String || Bytes || Port.Input,
@@ -117,7 +117,7 @@ class RX(private _rkt_partial_rx,
                ~end: end_pos :: maybe(Int) = #false,
                ~input_prefix: input_prefix :: Bytes = #"") :~ List:
     def m :~ PairList = base.#{regexp-split}(_rkt_partial_rx, input, start_pos, end_pos, input_prefix)
-    for List (elem: m):
+    for List (elem in m):
       freeze(elem)
 
   fun check_filter(who, in, out):

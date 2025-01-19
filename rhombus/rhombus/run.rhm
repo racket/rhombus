@@ -161,7 +161,7 @@ def can_configure:
     #false
 
 block:
-  for values(can_configure = can_configure) (e: args[S.evals] :~ List):
+  for values(can_configure = can_configure) (e in args[S.evals] :~ List):
     match e
     | mp :: ModulePath:
         import_module(mp, can_configure)

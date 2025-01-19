@@ -364,10 +364,10 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
     fun fixnum_sum(ns :: List.of(Fixnum)) :: Fixnum:
       ~unsafe:
         // assume all fixnums and that result fits:
-        for values(res = 0) (n: ns):
+        for values(res = 0) (n in ns):
           res fixnum.(+) n
       // use generic arithmetic, check fixnum result at end:
-      for values(res = 0) (n: ns):
+      for values(res = 0) (n in ns):
           res + n
   ~repl:
     fixnum_sum([1, 2, 3])

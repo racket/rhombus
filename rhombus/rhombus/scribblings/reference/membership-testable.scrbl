@@ -32,6 +32,9 @@ instances of classes that implement
  The operator combination @rhombus(!in) inverts the result relative to
  @rhombus(in).
 
+ The @rhombus(in) operator is also recognized by @rhombus(for) and
+ @rhombus(each, ~for_clause) as part of the syntax of iteration.
+
  See also @rhombus(use_static).
 
 @examples(

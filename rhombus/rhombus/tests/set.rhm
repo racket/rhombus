@@ -383,15 +383,15 @@ block:
   use_static
   def st = {"a", "b", "c"}
   check:
-    for Set (x: st):
+    for Set (x in st):
       x
     ~is {"a", "b", "c"}
   check:
-    for Set (x: Set.to_sequence(st)):
+    for Set (x in Set.to_sequence(st)):
       x
     ~is {"a", "b", "c"}
   check:
-    for Set (x: st.to_sequence()):
+    for Set (x in st.to_sequence()):
       x
     ~is {"a", "b", "c"}
 
@@ -399,15 +399,15 @@ block:
   use_static
   def st = MutableSet{"a", "b", "c"}
   check:
-    for Set (x: st):
+    for Set (x in st):
       x
     ~is {"a", "b", "c"}
   check:
-    for Set (x: Set.to_sequence(st)):
+    for Set (x in Set.to_sequence(st)):
       x
     ~is {"a", "b", "c"}
   check:
-    for Set (x: st.to_sequence()):
+    for Set (x in st.to_sequence()):
       x
     ~is {"a", "b", "c"}
 
@@ -427,7 +427,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for Set (x: "oops" :~ Set):
+    for Set (x in "oops" :~ Set):
       x
     ~throws values(
       "Set.to_sequence: " ++ error.annot_msg(),
@@ -435,7 +435,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for Set (x: Set.to_sequence("oops")):
+    for Set (x in Set.to_sequence("oops")):
       x
     ~throws values(
       "Set.to_sequence: " ++ error.annot_msg(),
@@ -443,7 +443,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for Set (x: ("oops" :~ Set).to_sequence()):
+    for Set (x in ("oops" :~ Set).to_sequence()):
       x
     ~throws values(
       "Set.to_sequence: " ++ error.annot_msg(),
@@ -455,7 +455,7 @@ check:
   use_static
   class Posn(x, y)
   def set :: Set.of(Posn) = {Posn(1, 2), Posn(3, 4), Posn(4, 5)}
-  for Set (val: set):
+  for Set (val in set):
     val.x + val.y
   ~is {3, 7, 9}
 
@@ -583,9 +583,9 @@ block:
   check s2 is_a Set.by(is_same_number_or_object) ~is #true
   check s3 is_a Set.by(===) ~is #false
   check s3 is_a Set.by(is_now) ~is #true
-  check (for Set.by(===) (i: 0..1): i) ~is Set.by(===){ 0 }
-  check (for Set.by(is_now) (i: 0..1): i) ~is Set.by(is_now){ 0 }
-  check (for Set.by(is_same_number_or_object) (i: 0..1): i) ~is Set.by(is_same_number_or_object){ 0 }
+  check (for Set.by(===) (i in 0..1): i) ~is Set.by(===){ 0 }
+  check (for Set.by(is_now) (i in 0..1): i) ~is Set.by(is_now){ 0 }
+  check (for Set.by(is_same_number_or_object) (i in 0..1): i) ~is Set.by(is_same_number_or_object){ 0 }
   let [x, ...] = [1, 2, 3]
   check Set.by(===){ x, ... } ~is Set.by(===){ 1, 2, 3 }
 
@@ -616,7 +616,7 @@ block:
                                                      Set.by($key_comp){ 2 },
                                                      Set.by($key_comp){ 3 }]
 
-       check (for Set.by($key_comp) (i: 0..1): i) ~is Set.by($key_comp){ 0 }
+       check (for Set.by($key_comp) (i in 0..1): i) ~is Set.by($key_comp){ 0 }
        block:
          let Set.by($key_comp){ v, $('...') } = Set.by($key_comp){ "x" }
          check [v, $('...')] ~is ["x"]

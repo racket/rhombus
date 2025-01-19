@@ -241,7 +241,7 @@ class TransitionPictEpoch(epochs :~ List.of(PictEpoch),
                           splice):
   extends PictEpoch
   field starts :~ List:
-    for values(sums :~ List = [0]) (e: extents):
+    for values(sums :~ List = [0]) (e in extents):
       sums.add(sums.last + e)
   override pict(n :: Real.in(0, 1)):
     let s_n = n * starts.last
@@ -320,7 +320,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     match _child_starts
     | starts :: List: starts
     | ~else:
-        for List (c: children):
+        for List (c in children):
           _child_starts
 
   override property duration: _duration
@@ -369,12 +369,12 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | this
     | let ([new_prefix :~ PictEpoch, ...] && prefix, _):
         for values(prefix :~ List = [], first :~ PictEpoch = _epochs[0]):
-          each i: 0 .. math.max(0, -min_epoch - _duration_start)
+          each i in 0 .. math.max(0, -min_epoch - _duration_start)
           let new = first.before()
           values(prefix.insert(0, new), new)
       let ([new_suffix :~ PictEpoch, ...] && suffix, _):
         for values(suffix :~ List = [], last :~ PictEpoch = _epochs[_epochs.length() - 1]):
-          each i: 0 .. math.max(0, max_epoch - now_max_epoch)
+          each i in 0 .. math.max(0, max_epoch - now_max_epoch)
           let new = last.after()
           values(suffix.add(new), new)
       anim_pict_like(this,
@@ -547,7 +547,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | amt < 0:
         let ([new :~ PictEpoch, ...] && suffix, _):
           for values(suffix :~ List = [], last :~ PictEpoch = _epochs[_epochs.length()-1]):
-            each i: 0 .. math.max(0, _duration_start - amt - _epochs.length())
+            each i in 0 .. math.max(0, _duration_start - amt - _epochs.length())
             let new = last.after()
             values(suffix.add(new), new)
         anim_pict_like(this,
@@ -566,7 +566,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | ~else:
         let ([new :~ PictEpoch, ...] && prefix, _):
           for values(prefix :~ List = [], first :~ PictEpoch = _epochs[0]):
-            each i: 0 .. math.max(0, amt - _duration_start)
+            each i in 0 .. math.max(0, amt - _duration_start)
             let new = first.before()
             values(prefix.insert(0, new), new)
         anim_pict_like(this,
@@ -589,7 +589,7 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
     | amt < 0:
         let ([new :~ PictEpoch, ...] && prefix, _):
           for values(prefix :~ List = [], first :~ PictEpoch = _epochs[0]):
-            each i: 0 .. math.max(0, _duration - amt)
+            each i in 0 .. math.max(0, _duration - amt)
             let new = first.before()
             values(prefix.insert(0, new), new)
         anim_pict_like(this,
@@ -820,7 +820,7 @@ fun merge_anim_epochs([p :~ _AnimPict, ...], dalign):
   let max_epoch = math.max(math.max(0, epochs_length(p) - duration_start(p) - 1), ...)
   let ps && [p :~ AnimPict, ...] = [reify_epochs(p, min_epoch, max_epoch), ...]
   let all_epochs:
-    for List (i: min_epoch ..= max_epoch):
+    for List (i in min_epoch ..= max_epoch):
       math.max(p.epoch_extent(i), ...)
   values (ps, -min_epoch, max_duration_epoch + 1, all_epochs)
 
@@ -867,7 +867,7 @@ fun rebuildable_list(ps :~ List, orig_ps, rebuild):
                        ~dependencies: [container_p],
                        ~rebuild: fun ([container_p]):
                                    extract_from_container(container_p, i))
-  for List (i: 0..ps.length()):
+  for List (i in 0..ps.length()):
     extract_from_container(container_p, i)
 
 // keeps `nothing`s so that result is parallel to input
@@ -880,7 +880,7 @@ fun sequential(~join: mode :: SequentialJoin = #'step,
   | []: []
   | [p]: orig_ps
   | ~else:
-      let (ps, starts) = make_sequential(for List (p: orig_ps):
+      let (ps, starts) = make_sequential(for List (p in orig_ps):
                                            cond
                                            | p == nothing: p
                                            | p is_a StaticPict: AnimPict(p)
@@ -939,14 +939,14 @@ fun make_sequential(ps :~ List.of(AnimPict),
     let next_splice = mode == #'splice
     values(offset + p.duration - (if next_splice | 1 | 0),
            !next_splice)
-  for values(offset = 0, splice = #false) (p: ps):
+  for values(offset = 0, splice = #false) (p in ps):
     if p == nothing
     | values(offset, splice)
     | bump_extents(p, adjust_offset(p, offset, splice), extents)
   let used_extents = MutableMap{}
   let (accum, starts_accum, t, _):
     for values(accum :~ List = [], starts_accum :~ List = [], offset = 0, splice = #false):          
-      each p: ps
+      each p in ps
       if p == nothing
       | values(if keep_nothing | accum.add(p) | accum,
                starts_accum,
@@ -976,10 +976,10 @@ fun concurrent(~epoch: ealign :: EpochAlignment = #'center,
                p :: Pict, ...) :~ List.of(Pict):
   let orig_ps = [p, ...]
   let ps:
-    if (for all (p: orig_ps):
+    if (for all (p in orig_ps):
           p is_a StaticPict)
     | orig_ps
-    | let (ps, _) = make_concurrent(for List (p: orig_ps):
+    | let (ps, _) = make_concurrent(for List (p in orig_ps):
                                       cond
                                       | p == nothing: p
                                       | p is_a StaticPict: AnimPict(p)
@@ -1072,7 +1072,7 @@ class CombinePictEpoch(combine,
      CombinePictEpoch(combine, pad_combine, dt+1, orig_picts, orig_sustainings, [post, ...]),
      math.max(post_extent, ...)]     
   override metadata():
-    for values(metadata :~ Map = {}) (orig: origs):
+    for values(metadata :~ Map = {}) (orig in origs):
       metadata ++ orig.metadata()
 
 private.set_convert(
@@ -1080,14 +1080,14 @@ private.set_convert(
     // can assume that `nothing`s have been filtered out and `ps` is non-empty
     recur rebuild (ps :~ List = ps):
       let ([p :~ _AnimPict, ...] && [p0 :~ _AnimPict, & _], m_duration):
-        make_concurrent(for List (p: ps):
+        make_concurrent(for List (p in ps):
                           when p == nothing | error("nothing in convert!")
                           if p is_a StaticPict
                           | AnimPict(p)
                           | p,
                         ~epoch: ealign,
                         ~duration: dalign)
-      anim_pict(for List (i: 0..p0._epochs.length()):
+      anim_pict(for List (i in 0..p0._epochs.length()):
                   let dt = i - p0._duration_start
                   CombinePictEpoch(combine, pad_combine, dt, [p, ...], [p._sustaining, ...], [p._epochs[i], ...]),
                 p0._epoch_extents,

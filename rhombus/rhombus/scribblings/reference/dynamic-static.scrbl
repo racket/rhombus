@@ -34,6 +34,11 @@
   @tech{list} or @tech{map} lookup), otherwise the lookup form is an
   error.}
 
+ @item{A static @rhombus(in) performs a @tech{membership test} only when
+  the test can be specialized statically (e.g., to a
+  @tech{set} or @tech{list} lookup), otherwise the membership test is an
+  error.}
+
  @item{A static @rhombus(++) works only when the append operation can be
   specialized statically (e.g., to a @tech{list} or @tech{map} append),
   otherwise the operator use is an error.}

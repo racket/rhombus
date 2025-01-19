@@ -124,15 +124,15 @@ block:
   use_static
   def bstr = #"123"
   check:
-    for List (x: bstr):
+    for List (x in bstr):
       x
     ~is [49, 50, 51]
   check:
-    for List (x: Bytes.to_sequence(bstr)):
+    for List (x in Bytes.to_sequence(bstr)):
       x
     ~is [49, 50, 51]
   check:
-    for List (x: bstr.to_sequence()):
+    for List (x in bstr.to_sequence()):
       x
     ~is [49, 50, 51]
 
@@ -152,7 +152,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ Bytes):
+    for List (x in "oops" :~ Bytes):
       x
     ~throws values(
       "Bytes.to_sequence: " ++ error.annot_msg(),
@@ -160,7 +160,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: Bytes.to_sequence("oops")):
+    for List (x in Bytes.to_sequence("oops")):
       x
     ~throws values(
       "Bytes.to_sequence: " ++ error.annot_msg(),
@@ -168,7 +168,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ Bytes).to_sequence()):
+    for List (x in ("oops" :~ Bytes).to_sequence()):
       x
     ~throws values(
       "Bytes.to_sequence: " ++ error.annot_msg(),

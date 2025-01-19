@@ -118,9 +118,9 @@
  returns @rhombus(#false).
 
 @examples(
-  for any (i: 0..10):
+  for any (i in 0..10):
     i == 5 && to_string(i)
-  for any (i: 0..10):
+  for any (i in 0..10):
     i == 10
 )
 
@@ -240,9 +240,9 @@
  last iteration.
 
 @examples(
-  for all (i: 0..10):
+  for all (i in 0..10):
     i == 5
-  for all (i: 0..10):
+  for all (i in 0..10):
     i < 10 && to_string(i)
 )
 

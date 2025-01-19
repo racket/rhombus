@@ -93,12 +93,12 @@ check_exp_loc: (box := 0) // `:=` claims weaker precedence than everything
 check_exp_loc: Posn(1, 2).p := 0
 
 check_exp_loc: for:
-                 each i: 0..1
+                 each i in 0..1
                  i
 check_exp_loc: for values(x = 1):
-                 each i: 0..1
+                 each i in 0..1
                  i
 check_exp_loc: for:
-                 each i: 0..1
+                 each i in 0..1
                  i
                  ~into values(x = 1)

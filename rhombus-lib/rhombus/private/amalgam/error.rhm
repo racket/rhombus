@@ -153,7 +153,7 @@ fun reindent(s :~ String,
              ~max_len: max_len :: NonnegInt
                          = 72 - (2 + label.length() + 1 + space.length())) :~ String:
   if (s.length() > max_len
-        || (for any (c: s):
+        || (for any (c in s):
               c == Char"\n"))
   | "\n" ++ tab
       ++ (block:
