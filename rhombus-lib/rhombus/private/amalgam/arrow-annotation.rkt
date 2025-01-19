@@ -4,7 +4,6 @@
                      shrubbery/print
                      enforest/name-parse
                      shrubbery/property
-                     "annotation-string.rkt"
                      "srcloc.rkt")
          racket/unsafe/undefined
          shrubbery/print
@@ -21,7 +20,6 @@
          (submod "define-arity.rkt" for-info)
          (only-in "values.rkt"
                   [values rhombus:values])
-         "values-key.rkt"
          "static-info.rkt"
          "if-blocked.rkt"
          "parens.rkt"
@@ -84,7 +82,7 @@
       #:datum-literals (group)
       [((group #:any))
        (values null '#:any #f '#:any #f)]
-      [else
+      [_
        (parse-annotation-sequence arrow-name args #f)]))
   (arrow-annotation multi-kw+name+opt+lhs
                     rest-name+ann rest-ann-whole?
@@ -219,18 +217,25 @@
                                      head stx)
   (define arrow (syntax-parse stx [(a . _) #'a]))
   (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole? loc tail)
-    (let ([multi (lambda (args p-res tail)
-                   (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole?)
-                     (parse-annotation-sequence head args #t))
-                   (values multi-name+rhs
-                           res-rest-name+ann res-rest-ann-whole?
-                           (datum->syntax #f (list head arrow p-res))
-                           tail))])
-      (define (any-result tail) (values null '#:any #t #f tail))
+    (let ()
+      (define (multi args p-res tail)
+        (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole?)
+          (parse-annotation-sequence head args #t))
+        (values multi-name+rhs
+                res-rest-name+ann res-rest-ann-whole?
+                (datum->syntax #f (list head arrow p-res))
+                tail))
+      (define (any-result any-res tail)
+        (values null
+                '#:any #t
+                (datum->syntax #f (list head arrow any-res))
+                tail))
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ #:any . tail) (any-result #'tail)]
-        [(_ (_::parens (group #:any)) . tail) (any-result #'tail)]
+        [(_ (~and any-res #:any) . tail)
+         (any-result #'any-res #'tail)]
+        [(_ (~and any-res (_::parens (group #:any))) . tail)
+         (any-result #'any-res #'tail)]
         [(_ vals (~and p-res (_::parens res ...)) . tail)
          #:when (free-identifier=? (in-annotation-space #'vals) (annot-quote rhombus:values))
          (multi (syntax->list #'(res ...)) #'p-res #'tail)]
