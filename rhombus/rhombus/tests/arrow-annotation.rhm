@@ -704,3 +704,25 @@ block:
   check f(1.0) ~throws error.annot_msg("result")
   check f(1, 2) ~is values(1, 2)
   check f(1, 2, 3) ~throws "arity mismatch"
+
+block:
+  import rhombus/meta open
+  expr.macro 'source $(ann :: annot_meta.Parsed) $()':
+    '#%literal $(ann.to_source_string())'
+  check source (~any) -> ~any ~is "(~any) -> ~any"
+  check source (~any) -> (~any) ~is "(~any) -> (~any)"
+  check source (String) -> ~any ~is "(String) -> ~any"
+  check source (String) -> (~any) ~is "(String) -> (~any)"
+  check source (String) -> String ~is "(String) -> String"
+  check source (String) -> (String) ~is "(String) -> (String)"
+  check source (String) -> (String, Boolean) ~is "(String) -> (String, Boolean)"
+  check source (String) -> values(String, Boolean) ~is "(String) -> (String, Boolean)"
+  check:
+    source Function.all_of((~any) -> ~any)
+    ~is "(~any) -> ~any"
+  check:
+    source Function.all_of(String -> String, (~any) -> ~any)
+    ~is "Function.all_of(String -> String, (~any) -> ~any)"
+  check:
+    source Function.all_of(String -> String, (~any) -> ~any, ~name: "dropped")
+    ~is "Function.all_of(String -> String, (~any) -> ~any)"
