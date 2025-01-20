@@ -217,7 +217,7 @@ fun lookup(n, env):
 #//
 fun lookup(n, env):
   // using `for`
-  (for any (b: (env :~ List)):
+  (for any (b in (env :~ List)):
      (n == bind.name(b)) && bind.val(b))
     || error(#'lookup, "free variable: " +& n)
 

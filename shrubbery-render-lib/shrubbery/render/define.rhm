@@ -250,7 +250,7 @@ meta:
         | '$(kw_stx && ('~inset' || '~indent' || '~prompt' || '~indent_from_block'
                           || '~spacer_info_box' || '~escape' || '~space')) $_ ...':
             let kw = kw_stx.unwrap()
-            if kws[kw]
+            if kw in kws
             | syntax_meta.error("duplicate option", stx, kw_stx)
             | kws ++ { kw }
         | ~else: syntax_meta.error("invalid option", stx, opt)

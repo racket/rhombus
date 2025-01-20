@@ -27,7 +27,7 @@ arguments:
   ~defn:
     fun add(x :~ Number, ...):
       for values(total = 0):
-        each v: [x, ...]
+        each v in [x, ...]
         total+v
   ~repl:
     add(1, 2, 3, 4)
@@ -64,7 +64,7 @@ its argument instead of @rhombus(...), like this:
   ~defn:
     fun add(& xs :~ List.of(Number)):
       for values(total = 0):
-        each v: xs
+        each v in xs
         total+v
   ~repl:
     add(1, 2, 3, 4)

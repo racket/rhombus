@@ -709,8 +709,8 @@ class's name.
                     | '~max_args: $(max :: Int)')':
       'fun $(Syntax.make(
                [#'alts,
-                & for List (i: min.unwrap() ..= (max || min).unwrap()):
-                  let [var, ...] = for List (j: i): Syntax.make_temp_id()
+                & for List (i in min.unwrap() ..= (max || min).unwrap()):
+                  let [var, ...] = for List (j in i): Syntax.make_temp_id()
                   ': ($var, ...): [$var, ...]']
              ))'
   ~repl:

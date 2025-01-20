@@ -34,7 +34,7 @@
   import rhombus/measure
   measure.time:
     for all:
-      each i: 0..10000000
+      each i in 0..10000000
       "useless"
 )
 
@@ -54,7 +54,7 @@
   import rhombus/measure
   measure.memory:
     for all:
-      each i: 0..10
+      each i in 0..10
       [1, 2]
 )
 

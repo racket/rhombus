@@ -147,7 +147,7 @@ block:
   check:
     use_static
     def m = [{x}, ...]
-    m[1][2]
+    2 in m[1]
     ~is #true
 
 // list-builiding `[]` as a repetition

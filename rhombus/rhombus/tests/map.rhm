@@ -12,12 +12,14 @@ block:
     Map.values(mp) ~method ReadableMap
     Map.get(mp, k, [default])  ~method ReadableMap
     Map.has_key(mp, k) ~method ReadableMap
+    Map.contains(mp, k) ~method ReadableMap
+    Map.add(mp, k, v)  ~method
     Map.copy(mp) ~method ReadableMap
     Map.snapshot(mp) ~method ReadableMap
     Map.append(mp0, mp, ...) ~method
     Map.remove(mp, k) ~method
     MutableMap.set(mp, k, val) ~method
-    MutableMap.delete(mp, k) ~method
+    MutableMap.remove(mp, k) ~method
     Map.to_sequence(mp) ~method ReadableMap
     Map.by(==)(p, ...)
     Map.by(===)(p, ...)
@@ -54,6 +56,20 @@ block:
     {"a": 1, "b": 2}.get("a") ~is 1
     {"a": 1, "b": 2}.get("c", "other") ~is "other"
     {"a": 1, "b": 2}.get("c", fun (): "got other") ~is "got other"
+  check:
+    "a" in {"a": 1, "b": 2} ~is #true
+    "b" in {"a": 1, "b": 2} ~is #true
+    1 in {"a": 1, "b": 2} ~is #false
+    "a" !in {"a": 1, "b": 2} ~is #false
+    1 !in {"a": 1, "b": 2} ~is #true
+    {"a": 1, "b": 2}.contains("a") ~is #true
+    {"a": 1, "b": 2}.has_key("a") ~is #true
+    {"a": 1, "b": 2}.contains(1) ~is #false
+    {"a": 1, "b": 2}.has_key(1) ~is #false
+  check:
+    {"a": 1, "b": 2}.add("c", 3) ~is {"a": 1, "b": 2, "c": 3}
+    {"a": 1, "b": 2}.add("a", 3) ~is {"a": 3, "b": 2}
+    Map.add({"a": 1, "b": 2}, "c", 3) ~is {"a": 1, "b": 2, "c": 3}
   check:
     ({"a": 1, "b": 2} ++ {"a": 3})["a"] ~is 3
     ({"a": 1, "b": 2} ++ {"a": 3, "b": 4})["a"] ~is 3
@@ -203,6 +219,8 @@ block:
     dynamic({"a": 1, "b": 2})["a"] ~is 1
     dynamic({"a": 1, "b": 2}).get("a") ~is 1
     dynamic({"a": 1, "b": 2}).get("c", "other") ~is "other"
+  check:
+    dynamic({"a": 1, "b": 2}).add("c", 3) ~is {"a": 1, "b": 2, "c": 3}
   check:
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3})["a"] ~is 3
     (dynamic({"a": 1, "b": 2}) ++ {"a": 3, "b": 4})["a"] ~is 3
@@ -716,38 +734,32 @@ block:
     use_dynamic
     check dynamic({1: "a", 2: "b"}).remove(1) ~is {2: "b"}
     check dynamic({1: "a", 2: "b"}).remove(3) ~is {1: "a", 2: "b"}
-    check MutableMap{1: "a", 2: "b"}.remove ~throws "no such field or method"
-    check MutableMap{1: "a", 2: "b"}.remove(1) ~throws "no such field or method"
 
 block:
   use_static
   let m = MutableMap{1: "a", 2: "b"}
-  m.delete(1)
+  m.remove(1)
   check m ~is_now MutableMap{2: "b"}
-  m.delete(3)
+  m.remove(3)
   check m ~is_now MutableMap{2: "b"}
   m[1] := "a"
   check m ~is_now MutableMap{1: "a", 2: "b"}
-  check MutableMap.delete(m, 1) ~is #void
+  check MutableMap.remove(m, 1) ~is #void
   check m ~is_now MutableMap{2: "b"}
-  check MutableMap.delete(m, 3) ~is #void
+  check MutableMap.remove(m, 3) ~is #void
   check m ~is_now MutableMap{2: "b"}
   m.set(1, "a")
   check m ~is_now MutableMap{1: "a", 2: "b"}
   block:
     use_dynamic
-    check dynamic(m).delete(1) ~is #void
+    check dynamic(m).remove(1) ~is #void
     check m ~is_now MutableMap{2: "b"}
     check dynamic(m)[1] := "a" ~is #void
     check m ~is_now MutableMap{1: "a", 2: "b"}
-    check dynamic(m).delete(1) ~is #void
+    check dynamic(m).remove(1) ~is #void
     check m ~is_now MutableMap{2: "b"}
     check dynamic(m).set(1, "a") ~is #void
     check m ~is_now MutableMap{1: "a", 2: "b"}
-
-check:
-  {1: "a", 2: "b"}.delete ~throws "no such field or method"
-  {1: "a", 2: "b"}.delete(1) ~throws "no such field or method"
 
 block:
   let m = MutableMap{1: "a", 2: "b"}
@@ -942,9 +954,9 @@ block:
   check orig[2] ~is 5
   check orig["x"] ~is 10
   check orig["y"] ~is 11
-  check m.delete(2) ~throws "key does not satisfy annotation"
-  check m.delete("y") ~is #void
-  check orig.delete(2) ~is #void
+  check m.remove(2) ~throws "key does not satisfy annotation"
+  check m.remove("y") ~is #void
+  check orig.remove(2) ~is #void
   check to_string(m) ~is "MutableMap{\"x\": 10}"
 
 check:
@@ -995,9 +1007,9 @@ block:
   check m2 is_a Map.by(is_same_number_or_object) ~is #true
   check m3 is_a Map.by(===) ~is #false
   check m3 is_a Map.by(is_now) ~is #true
-  check (for Map.by(===) (i: 0..1): values(i, i+1)) ~is Map.by(===){ 0: 1 }
-  check (for Map.by(is_now) (i: 0..1): values(i, i+1)) ~is Map.by(is_now){ 0: 1 }
-  check (for Map.by(is_same_number_or_object) (i: 0..1): values(i, i+1)) ~is Map.by(is_same_number_or_object){ 0: 1 }
+  check (for Map.by(===) (i in 0..1): values(i, i+1)) ~is Map.by(===){ 0: 1 }
+  check (for Map.by(is_now) (i in 0..1): values(i, i+1)) ~is Map.by(is_now){ 0: 1 }
+  check (for Map.by(is_same_number_or_object) (i in 0..1): values(i, i+1)) ~is Map.by(is_same_number_or_object){ 0: 1 }
   let [x, ...] = [1, 2, 3]
   check Map.by(===){ x: x, ...} ~is Map.by(===){ 1: 1, 2: 2, 3: 3 }
 
@@ -1027,7 +1039,7 @@ block:
        check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1: 1 },
                                                         Map.by($key_comp){ 2: 2 },
                                                         Map.by($key_comp){ 3: 3 }]
-       check (for Map.by($key_comp) (i: 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
+       check (for Map.by($key_comp) (i in 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
        block:
          let Map.by($key_comp){ 1: v } = Map.by($key_comp){ 1: "x" }
          check v ~is "x"

@@ -21,15 +21,32 @@ block:
   def mutable accum = []
   check:
     for:
-      each i: 0..2
+      each i in 0..2
       accum := List.cons(i, accum)
     accum
     ~is [1, 0]
   check:
+    for:
+      each i: 0..2
+      accum := List.cons(i, accum)
+    accum
+    ~is [1, 0, 1, 0]
+  check:
+    for (i in 0..2):
+      accum := List.cons(i + 10, accum)
+    accum
+    ~is [11, 10, 1, 0, 1, 0]
+  check:
     for (i: 0..2):
       accum := List.cons(i + 10, accum)
     accum
-    ~is [11, 10, 1, 0]
+    ~is [11, 10, 11, 10, 1, 0, 1, 0]
+
+check:
+  for List:
+    each i in 0..2
+    i
+  ~is [0, 1]
 
 check:
   for List:
@@ -39,14 +56,22 @@ check:
 
 check:
   for List:
-    each i: dynamic(0..2)
+    each i in dynamic(0..2)
     i
   ~is [0, 1]
 
 check:
-  for List (i: 0..2):
+  for List (i in 0..2):
     i
   ~is [0, 1]
+
+check:
+  for List:
+    each:
+      i in -2..
+      _ in 0..2
+    i
+  ~is [-2, -1]
 
 check:
   for List:
@@ -59,76 +84,76 @@ check:
 check:
   for List:
     each:
-      i: dynamic(-2..)
-      _: 0..2
+      i in dynamic(-2..)
+      _ in 0..2
     i
   ~is [-2, -1]
 
 check:
-  for List (i: -2..,
-            _: 0..2):
+  for List (i in -2..,
+            _ in 0..2):
     i
   ~is [-2, -1]
 
 check:
   for List:
-    each i: 0..=2
+    each i in 0..=2
     i
   ~is [0, 1, 2]
 
 check:
   for List:
-    each i: dynamic(0..=2)
+    each i in dynamic(0..=2)
     i
   ~is [0, 1, 2]
 
 check:
-  for List (i: 0..=2):
+  for List (i in 0..=2):
     i
   ~is [0, 1, 2]
 
 check:
   for Map:
-    each i: 0..2
+    each i in 0..2
     values(i, "" +& i)
   ~is {0: "0", 1: "1"}
 
 check:
-  for Map (i: 0..2):
+  for Map (i in 0..2):
     values(i, "" +& i)
   ~is {0: "0", 1: "1"}
 
 check:
   for:
-    each i: 0..2
+    each i in 0..2
     i
     ~into List
   ~is [0, 1]
 
 check:
-  for (i: 0..2):
+  for (i in 0..2):
     i
     ~into List
   ~is [0, 1]
 
 check:
   for List:
-    each i: 0..2
-    each j: 0..2
+    each i in 0..2
+    each j in 0..2
     [i, -j-1]
   ~is [[0, -1], [0, -2], [1, -1], [1, -2]]
 
 check:
   for List:
     each:
-      i: 0..2
-      j: 0..2
+      i in 0..2
+      j in 0..2
     [i, -j-1]
   ~is [[0, -1], [1, -2]]
 
 check:
-  for List (i: 0..2,
-            j: 0..2):
+  for List (i in 0..2,
+            j in 0..2):
     [i, -j-1]
   ~is [[0, -1], [1, -2]]
 
@@ -136,82 +161,82 @@ check:
   for List:
     def len = 2
     each:
-      i: 0..len
-      j: 0..len
+      i in 0..len
+      j in 0..len
     [i, -j-1]
   ~is [[0, -1], [1, -2]]
 
 check:
   for List:
-    each i: 0..2
+    each i in 0..2
     def i_plus = i+1
-    each j: 0..2
+    each j in 0..2
     [i_plus, -j-1]
   ~is [[1, -1], [1, -2], [2, -1], [2, -2]]
 
 check:
-  for List (i: 0..2):
+  for List (i in 0..2):
     def i_plus = i+1
-    each j: 0..2
+    each j in 0..2
     [i_plus, -j-1]
   ~is [[1, -1], [1, -2], [2, -1], [2, -2]]
 
 check:
   for List:
-    each i: 0..2
+    each i in 0..2
     def i_len = i+1
-    each j: 0..i_len
+    each j in 0..i_len
     [i, -j-1]
   ~is [[0, -1], [1, -1], [1, -2]]
 
 check:
   for values(sum = 0):
-    each i: 0..4
+    each i in 0..4
     sum + i
   ~is 6
 
 check:
-  for values(sum = 0) (i: 0..4):
+  for values(sum = 0) (i in 0..4):
     sum + i
   ~is 6
 
 check:
   for values(sum = 0, parity = #true):
-    each i: 0..4
+    each i in 0..4
     values(sum + i, !parity)
   ~is values(6, #true)
 
 check:
   for values(sum = 0):
-    each i: 0..4
+    each i in 0..4
     keep_when i != 1
     sum + i
   ~is 5
 
 check:
   for values(sum = 0):
-    each i: 0..4
+    each i in 0..4
     skip_when i == 1
     sum + i
   ~is 5
 
 check:
   for values(sum = 0):
-    each i: 0..8
+    each i in 0..8
     break_when i == 4
     sum + i
   ~is 6
 
 check:
   for values(sum = 0):
-    each i: 0..8
+    each i in 0..8
     final_when i == 4
     sum + i
   ~is 10
 
 check:
   for values(sum = 0):
-    each i: 0..8
+    each i in 0..8
     def new_sum = sum + i
     final_when i == 4
     def result = new_sum + 1
@@ -222,8 +247,8 @@ check:
   use_static
   def set:
     for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
-      each i: 0..8
-      if set[i] | set.remove(i) | set
+      each i in 0..8
+      if i in set | set.remove(i) | set
   set ++ {36}
   ~is {9, 16, 25, 36}
 
@@ -231,8 +256,8 @@ check:
   use_static
   def set:
     for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
-      each i: 0..8
-      if set[i] | set.remove(i) | set
+      each i in 0..8
+      if i in set | set.remove(i) | set
   set ++ {36}
   ~is {9, 16, 25, 36}
 
@@ -240,8 +265,8 @@ version_guard.at_least "8.11.1.4":
   check:
     use_static
     for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
-      each i: 0..8
-      keep_when set[i]
+      each i in 0..8
+      keep_when i in set
       set.remove(i)
     ~is {9, 16, 25}
 
@@ -249,38 +274,38 @@ version_guard.at_least "8.11.1.4":
   check:
     use_static
     for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
-      each i: 0..8
-      keep_when set[i]
+      each i in 0..8
+      keep_when i in set
       set.remove(i)
     ~is {9, 16, 25}
 
 check:
   for values(_ = 0, _ = 0+1):
-    each i: 0..8
+    each i in 0..8
     values(i, i+1)
   ~is values(7, 8)
 
 check:
   for values(_ :~ Int = 0, _ :~ Int = 0+1):
-    each i: 0..8
+    each i in 0..8
     values(i, i+1)
   ~is values(7, 8)
 
 check:
   for values(_ :: Int = 0, _ :: Int = 0+1):
-     each i: 0..8
+     each i in 0..8
      values(i, i+1)
   ~is values(7, 8)
 
 check:
   for values(_ :~ Int = 0, _ :~ Int = 0+1):
-    each _: 0..8
+    each _ in 0..8
     values("oops", "oh no")
   ~is values("oops", "oh no")
 
 check:
   for values(_ :~ Int = 0, _ :: Int = 0+1):
-    each _: 0..8
+    each _ in 0..8
     values("oops", "oh no")
   ~throws values(
     "value does not satisfy annotation",
@@ -290,7 +315,7 @@ check:
 
 check:
   for values(_ :: Int = 0, _ :: Int = 0+1):
-    each _: 0..8
+    each _ in 0..8
     values("oops", "oh no")
   ~throws values(
     "value does not satisfy annotation",
@@ -300,13 +325,13 @@ check:
 
 check:
   for values(_ :~ Int = "oops", _ :~ Int = "oh no"):
-    each i: 0..8
+    each i in 0..8
     values(i, i+1)
   ~is values(7, 8)
 
 check:
   for values(_ :~ Int = "oops", _ :: Int = "oh no"):
-    each i: 0..8
+    each i in 0..8
     values(i, i+1)
   ~throws values(
     "value does not satisfy annotation",
@@ -316,7 +341,7 @@ check:
 
 check:
   for values(_ :: Int = "oops", _ :: Int = "oh no"):
-    each i: 0..8
+    each i in 0..8
     values(i, i+1)
   ~throws values(
     "value does not satisfy annotation",
@@ -326,7 +351,7 @@ check:
 
 check:
   for values(_: println("first"); 0, _: println("second"); 0+1):
-    each i: 0..8
+    each i in 0..8
     println(i)
     values(i, i+1)
   ~prints "first\nsecond\n0\n1\n2\n3\n4\n5\n6\n7\n"
@@ -336,8 +361,8 @@ check:
   class Posn(x, y)
   fun point_xs(l :~ List.of(List.of(Posn))):
     for:
-      each ll: l
-      each p: ll
+      each ll in l
+      each p in ll
       p.x
       ~into List
   point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
@@ -345,65 +370,65 @@ check:
 
 check:
   for Set:
-    each values(key, val): {1: "a", 2: "b"}
+    each values(key, val) in {1: "a", 2: "b"}
     key +& " -> " +& val
   ~is {"1 -> a", "2 -> b"}
 
 check:
   for Set:
-    each (key, val): {3: "c", 4: "d"}
+    each (key, val) in {3: "c", 4: "d"}
     key +& " -> " +& val
   ~is {"3 -> c", "4 -> d"}
 
 check:
-  for Set ((key, val): {3: "c", 4: "d"}):
+  for Set ((key, val) in {3: "c", 4: "d"}):
     key +& " -> " +& val
   ~is {"3 -> c", "4 -> d"}
 
 check:
   for Map:
-    each key: {3, 4}
+    each key in {3, 4}
     values(key, key+1)
   ~is {3: 4, 4: 5}
 
 check:
   for Array:
-    each i: 3..7
+    each i in 3..7
     i
   ~is_now Array(3, 4, 5, 6)
 
 check:
   for Array.of_length(6):
-    each i: 3..7
+    each i in 3..7
     i
   ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
   for Array.of_length(1 + 5):
-    each i: 3..7
+    each i in 3..7
     i
   ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
-  for Array.of_length(6) (i: 3..7):
+  for Array.of_length(6) (i in 3..7):
     i
   ~is_now Array(3, 4, 5, 6, 0, 0)
 
 check:
-  for Array.of_length(6, ~fill: 42) (i: 3..7):
+  for Array.of_length(6, ~fill: 42) (i in 3..7):
     i
   ~is_now Array(3, 4, 5, 6, 42, 42)
 
 check:
   for Array.of_length(2):
-    each i: 3..7
+    each i in 3..7
     i
   ~throws "index is out of range"
 
 check:
   def mutable accum = []
   [for all:
-     each i: 0..10
+     each i in 0..10
      accum := List.cons(i, accum)
      i > -1 && i,
    accum]
@@ -412,21 +437,21 @@ check:
 check:
   def mutable accum = []
   [for all:
-     each i: 0..10
+     each i in 0..10
      accum := List.cons(i, accum)
      i < 6,
    accum]
   ~is [#false, [6, 5, 4, 3, 2, 1, 0]]
 
 check:
-  for all (i: 0..10):
+  for all (i in 0..10):
     i < 10
   ~is #true
 
 check:
   def mutable accum = []
   [for any:
-     each i: 0..10
+     each i in 0..10
      accum := List.cons(i, accum)
      i > 9,
    accum]
@@ -435,14 +460,14 @@ check:
 check:
   def mutable accum = []
   [for any:
-     each i: 0..10
+     each i in 0..10
      accum := List.cons(i, accum)
      i > 5 && i,
    accum]
   ~is [6, [6, 5, 4, 3, 2, 1, 0]]
 
 check:
-  for any (i: 0..10):
+  for any (i in 0..10):
     i == 5
   ~is #true
 
@@ -450,27 +475,27 @@ check:
   ~eval
   use_static
   for:
-    each x: dynamic([1])
+    each x in dynamic([1])
     x
   ~throws "no specific iteration implementation available"
 
 check:
   for Set:
     each:
-      values(key, [x, ...]): { "x": [1, 2, 3],
-                               "y": [4, 5] }
+      values(key, [x, ...]) in { "x": [1, 2, 3],
+                                 "y": [4, 5] }
     [x, ...].reverse()
   ~is {[3, 2, 1], [5, 4]}
 
 check:
   for values() ():
-    each i: 1..2
+    each i in 1..2
     values()
   ~is values()
 
 check:
   for values():
-    each i: 1..2
+    each i in 1..2
     values()
   ~is values()
 
@@ -492,77 +517,77 @@ check:
 
 check:
   ~eval
-  for List (i: 0..2):
+  for List (i in 0..2):
     i
     ~into List
   ~throws "both `~into` and reducer"
 
 check:
   ~eval
-  for (i: 0..2):
+  for (i in 0..2):
     i
-    ~into List (i: 0..2)
+    ~into List (i in 0..2)
   ~throws "misplaced term"
 
 check:
-  for List (val: dynamic([1, 2, 3])):
+  for List (val in dynamic([1, 2, 3])):
     val
   ~is [1, 2, 3]
 
 check:
-  for Array (val: dynamic(Array(1, 2, 3))):
+  for Array (val in dynamic(Array(1, 2, 3))):
     val
   ~is_now Array(1, 2, 3)
 
 check:
-  for Map ((key, val): {1: 2, 2: 3, 3: 4}):
+  for Map ((key, val) in {1: 2, 2: 3, 3: 4}):
     values(key, val)
   ~is {1: 2, 2: 3, 3: 4}
 
 check:
-  for Set (val: dynamic({1, 2, 3})):
+  for Set (val in dynamic({1, 2, 3})):
     val
   ~is {1, 2, 3}
 
 check:
   ~eval
   use_static
-  for ((key, val): ([Box(1), Box(2), Box(3)] :: List.of(Box))):
+  for ((key, val) in ([Box(1), Box(2), Box(3)] :: List.of(Box))):
     key.value
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  for ((key, val): ([Box(1), Box(2), Box(3)] :: List.of(Box))):
+  for ((key, val) in ([Box(1), Box(2), Box(3)] :: List.of(Box))):
     val.value
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  for ((key, val): ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
+  for ((key, val) in ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
     key.value
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  for ((key, val): ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
+  for ((key, val) in ({Box(1), Box(2), Box(3)} :: Set.of(Box))):
     val.value
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  for (val: ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
+  for (val in ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
     val.value
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  for (val: ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
+  for (val in ({Box(1): "1", Box(2): "2", Box(3): "3"} :: Map.of(Box, String))):
     val.length()
   ~throws "no such field or method (based on static information)"
 
@@ -583,7 +608,7 @@ block:
 // check `let` across clause boundary
 check:
   for List:
-    each num_str: ["1","2","3","4","5", "a"]
+    each num_str in ["1","2","3","4","5", "a"]
     let num = String.to_number(num_str)
     skip_when !num
     num
@@ -593,7 +618,7 @@ version_guard.at_least "8.11.1.4":
   // check `import` across clause boundary
   check:
     for List:
-      each num_str: ["1","2","3","4","5"]
+      each num_str in ["1","2","3","4","5"]
       import: rhombus.List as L
       skip_when !num_str
       L(num_str)
@@ -602,7 +627,7 @@ version_guard.at_least "8.11.1.4":
   // combine `import` and `let` across clause boundary
   check:
     for List:
-      each num_str: ["1","2","3","4","5", "a"]
+      each num_str in ["1","2","3","4","5", "a"]
       import: rhombus.List as L
       let num = String.to_number(num_str)
       skip_when !num
@@ -617,7 +642,7 @@ version_guard.at_least "8.11.1.4":
   // check syntax parameter within body
   check:
     for List:
-      each num_str: ["1","2","3"]
+      each num_str in ["1","2","3"]
       skip_when !num_str
       syntax_parameter.relet today_name:
         "Friday"
@@ -628,7 +653,7 @@ version_guard.at_least "8.11.1.4":
   check:
     def mutable accum = []
     [for List:
-       each num_str: ["1","2","3"]
+       each num_str in ["1","2","3"]
        syntax_parameter.relet today_name:
          "Friday"
        def now = today
@@ -645,7 +670,7 @@ version_guard.at_least "8.11.1.4":
     for List:
       syntax_parameter.relet today_name:
         "Friday"
-      each day_str: [today, today]
+      each day_str in [today, today]
       [day_str, today]
     ~is [["Friday", "Friday"], ["Friday", "Friday"]]
 
@@ -654,7 +679,7 @@ version_guard.at_least "8.11.1.4":
     for List:
       syntax_parameter.relet today_name:
         "Friday"
-      each day_str: [fun (): today, fun (): today]
+      each day_str in [fun (): today, fun (): today]
       [day_str(), today]
     ~is [["Friday", "Friday"], ["Friday", "Friday"]]
 
@@ -666,7 +691,7 @@ version_guard.at_least "8.11.1.4":
   // check syntax parameter used in guards
   check:
     for List:
-      each i: 0..2
+      each i in 0..2
       syntax_parameter.relet true_or_false_val:
         #true
       keep_when true_or_false
@@ -675,7 +700,7 @@ version_guard.at_least "8.11.1.4":
 
   check:
     for List:
-      each i: 0..2
+      each i in 0..2
       syntax_parameter.relet true_or_false_val:
         #true
       skip_when true_or_false
@@ -684,7 +709,7 @@ version_guard.at_least "8.11.1.4":
 
   check:
     for List:
-      each i: 0..2
+      each i in 0..2
       syntax_parameter.relet true_or_false_val:
         #true
       break_when true_or_false
@@ -693,7 +718,7 @@ version_guard.at_least "8.11.1.4":
 
   check:
     for List:
-      each i: 0..2
+      each i in 0..2
       syntax_parameter.relet true_or_false_val:
         #true
       final_when true_or_false
@@ -703,7 +728,7 @@ version_guard.at_least "8.11.1.4":
   syntax_parameter.bridge a_range_stx:
     #false
   for_clause.macro 'each_a_range $id':
-    'each $id: $(syntax_parameter_meta.lookup('a_range_stx'))'
+    'each $id in $(syntax_parameter_meta.lookup('a_range_stx'))'
 
   // check syntax parameter used in `for`-clause macros
   check:
@@ -727,6 +752,6 @@ version_guard.at_least "8.11.1.4":
 
 check:
   use_static
-  for List (i: 0..2):
+  for List (i in 0..2):
     i < 1
   ~is [#true, #false]

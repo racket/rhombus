@@ -25,26 +25,31 @@
          "syntax-parameter.rkt"
          "if-blocked.rkt"
          (only-in "for-clause-primitive.rkt"
-                  each))
+                  each)
+         (submod "membership-testable.rkt" in-operator))
 
 (provide (rename-out [rhombus-for for]))
 
-(begin-for-syntax
+(begin-for-syntax  
   (define-syntax-class :maybe-ends-each
     #:attributes (each red-parsed)
     #:datum-literals (group)
-    (pattern ((_::parens (~and g (group bind ...+ (_::block . _))) ...))
+    (pattern ((_::parens (~and g (~or (group bind ...+ _::in _ ...+)
+                                      (group bind ...+ (_::block . _))))
+                         ...))
              #:with each #`(#,group-tag each (block g ...))
              #:attr red-parsed #f)
     (pattern ()
              #:attr each #f
              #:attr red-parsed #f)
     (pattern (red ...)
-             #:with (~var redr (:infix-op+reducer+tail #'#%call)) #`(#,group-tag red ...)
+             #:with (~var redr (:infix-op+reducer+tail #'#%call)) (no-srcloc #`(#,group-tag red ...))
              #:attr each (syntax-parse #'redr.tail
                            #:datum-literals (group)
-                           [((_::parens (~and g (group bind ...+ (_::block . _))) ...))
-                            #`(#,group-tag each (block g ...))]
+                           [((_::parens (~and g (~or (group bind ...+ _::in _ ...+)
+                                                     (group bind ...+ (_::block . _))))
+                                        ...))
+                            (no-srcloc #`(#,group-tag each (block g ...)))]
                            [()
                             #f])
              #:with red-parsed #'redr.parsed)))

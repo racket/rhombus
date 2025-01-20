@@ -1,6 +1,12 @@
 #lang rhombus
 
 check:
+  [1] is_now [1] ~is #true
+  [1] !is_now [1] ~is #false
+  [1] is_now [2] ~is #false
+  [1] !is_now [2] ~is #true
+
+check:
   #false || !(#false || #false) ~is #true
   #false && !(#false || #false) ~is #false
   any(#false, 1) ~is 1
@@ -25,6 +31,7 @@ check:
 check:
   1 is_a Int && 2 is_a Int ~is #true
   1 is_a Int || 2 is_a Int ~is #true
+  1 !is_a Int || 2 !is_a Int ~is #false
   1 is_a String && 2 is_a Int ~is #false
   1 is_a Int && 2 is_a String ~is #false
   1 is_a String || 2 is_a Int ~is #true
@@ -62,3 +69,8 @@ block:
   check:
     Function.pass(x || println("reached: " +& y), ...)
     ~prints "reached: 3\n"
+
+check:
+  ~eval
+  1 ! = 2
+  ~throws "expected a negatable operator"

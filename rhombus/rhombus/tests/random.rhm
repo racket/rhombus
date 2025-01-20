@@ -76,7 +76,7 @@ check:
   for (n: [2 ** 31, 2 ** 32, 2 ** 64, 10 ** 1000]):
     let M = 64
     let hits = Array.make(M)
-    for (i: 0..M*100):
+    for (i in 0..M*100):
       let x = math.random(n)
       when x .>= n | error("too big")
       let k = x div (n div M)
@@ -84,7 +84,7 @@ check:
     // We expect about 100 hits in each bin. Having less than 50 or
     // more than 150 should be so extremely unlikely that we can rely on
     // it not happening:
-    for (v: hits):
+    for (v in hits):
       when v < 50 || v > 150
       | error("bad sample")
   ~completes

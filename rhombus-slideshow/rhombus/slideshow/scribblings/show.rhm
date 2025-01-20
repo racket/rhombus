@@ -49,10 +49,10 @@ block:
           rectangle(~around: p.scale(0.33), ~width: 150, ~height: 100)
         let p = switch(frame(p), ...)
         timeline(p, List.append(
-                      & for List (i: 0..p.duration):
+                      & for List (i in 0..p.duration):
                         if p.epoch_extent(i) == 0
                         | [i]
-                        | for List (j: 0..3):
+                        | for List (j in 0..3):
                             i + j/3))
   )
   #void

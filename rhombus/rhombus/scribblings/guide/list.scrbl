@@ -22,12 +22,14 @@ A @brackets form as an expression creates a list:
 Operations on lists include functions like @rhombus(List.length), and
 some of those operations can be applied using @rhombus(.) directly on an
 expression that produces a list. The @rhombus(++) operator appends
-lists.
+lists. Lists support @tech(~doc: ref_doc){membership tests} with the
+@rhombus(in) operator.
 
 @examples(
    List.length(["a", "b", "c"])
    ["a", "b", "c"].length()
    ["a", "b"] ++ ["c", "d", "e"]
+   "b" in ["a", "b", "c"]
 )
 
 You can also use the @rhombus(List) constructor, which takes any number of

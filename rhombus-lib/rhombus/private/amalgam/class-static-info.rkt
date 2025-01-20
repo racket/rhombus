@@ -30,6 +30,8 @@
     (able-statinfo-indirect-id 'append super interfaces name-id intro))
   (define compare-statinfo-indirect-id
     (able-statinfo-indirect-id 'compare super interfaces name-id intro))
+  (define contains-statinfo-indirect-id
+    (able-statinfo-indirect-id 'contains super interfaces name-id intro))
 
   (define super-call-statinfo-indirect-id
     (able-super-statinfo-indirect-id 'call super interfaces))
@@ -74,6 +76,9 @@
               #'())
        #,@(if compare-statinfo-indirect-id
               #`((#%indirect-static-info #,compare-statinfo-indirect-id))
+              #'())
+       #,@(if contains-statinfo-indirect-id
+              #`((#%indirect-static-info #,contains-statinfo-indirect-id))
               #'())))
 
   (define indirect-static-infos
@@ -88,6 +93,7 @@
           index-set-statinfo-indirect-id
           append-statinfo-indirect-id
           compare-statinfo-indirect-id
+          contains-statinfo-indirect-id
 
           super-call-statinfo-indirect-id
 

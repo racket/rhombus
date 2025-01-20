@@ -101,12 +101,15 @@
 
 @doc(
   expr.macro '$expr is_a $annot'
+  non_target:
+    expr.macro '$expr !is_a $annot'
   operator_order:
     ~order: equivalence
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr)
  satisfies @rhombus(annot), @rhombus(#false) otherwise.
+ The operator combination @rhombus(!is_a) inverts the test.
 
  If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}, only the matching
  component of the annotation is used, and the converting part is not
@@ -178,7 +181,7 @@
   ~defn:
     fun
     | is_list_with_one(lst :: List):
-        lst.has_element(1)
+        lst.contains(1)
     | is_list_with_one(_):
         #false
   ~repl:

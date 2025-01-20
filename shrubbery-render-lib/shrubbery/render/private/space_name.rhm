@@ -1,4 +1,4 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 
 export:
   SpaceName
@@ -44,9 +44,9 @@ def space_names:
     #'~doc }
 
 fun is_builtin_space_keyword(v):
-  space_names[v]
+  v in space_names
 
 fun normalize_space_name(v):
-  if space_names[v]
+  if v in space_names
   | Symbol.from_string("rhombus/" ++ to_string(v))
   | v

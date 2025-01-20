@@ -105,6 +105,8 @@
         "appendable.rkt"
         "comparable.rkt"
         "listable.rkt"
+        "membership-testable.rkt"
+        "not-infix.rkt"
         "assign.rkt"
         "equal.rkt"
         "function.rkt"

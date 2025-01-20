@@ -109,7 +109,7 @@ check:
   A4() is_a MutableIndexable ~is #false
 
   { 1: 2 } is_a Indexable ~is #true
-  { 1, 2 } is_a Indexable ~is #true
+  { 1, 2 } is_a Indexable ~is #false
   Array(1, 2) is_a Indexable ~is #true
   [1, 2] is_a Indexable ~is #true
   "apple" is_a Indexable ~is #true
@@ -125,7 +125,7 @@ check:
   #"apple" is_a MutableIndexable ~is #false
 
   { 1: 2 }.copy() is_a MutableIndexable ~is #true
-  { 1, 2 }.copy() is_a MutableIndexable ~is #true
+  { 1, 2 }.copy() is_a MutableIndexable ~is #false
   "apple".copy() is_a MutableIndexable ~is #false
   #"apple".copy() is_a MutableIndexable ~is #true
 

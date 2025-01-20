@@ -8,15 +8,15 @@ block:
         println(v)
     fun print_all_lst(lst):
       let [& rst] && all = lst
-      for (v: all):
+      for (v in all):
         println(v)
-      for (v: rst):
+      for (v in rst):
         println(v)
     fun print_all_set(set):
       let Set{& rst} && all = set
-      for (v: all):
+      for (v in all):
         println(v)
-      for (v: rst):
+      for (v in rst):
         println(v)
     fun print_all_map(map):
       let Map{& rst} && all = map
@@ -26,15 +26,15 @@ block:
         println(k +& ": " +& v)
     fun print_all_cons_lst(lst):
       let List.cons(_, rst) && all = lst
-      for (v: all):
+      for (v in all):
         println(v)
-      for (v: rst):
+      for (v in rst):
         println(v)
     ~completes
 
   check:
     def [& xs] = (["a", "b", "cd"] :: List.of(String))
-    for List (x: xs):
+    for List (x in xs):
       x.length()
     ~is [1, 1, 2]
 
@@ -45,13 +45,13 @@ block:
 
   check:
     def [& xs :: List.of(String)] = ["a", "b", "cd"]
-    for List (x: xs):
+    for List (x in xs):
       x.length()
     ~is [1, 1, 2]
 
   check:
     def [x :: String, ...] && xs = ["a", "b", "cd"]
-    [x.length(), ...] == (for List (x: xs):
+    [x.length(), ...] == (for List (x in xs):
                             x.length())
     ~is #true
 
@@ -89,7 +89,7 @@ block:
 
   check:
     def Set{& set} = ({"a", "b", "cd"} :: Set.of(String))
-    for Set (val: set):
+    for Set (val in set):
       val.length()
     ~is {1, 2}
 
@@ -106,6 +106,6 @@ block:
 
   check:
     def {val :: String, ...} && set = {"a", "b", "cd"}
-    {val.length(), ...} == (for Set (val: set):
+    {val.length(), ...} == (for Set (val in set):
                               val.length())
     ~is #true

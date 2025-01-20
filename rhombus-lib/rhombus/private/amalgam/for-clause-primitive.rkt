@@ -5,7 +5,9 @@
                      "tag.rkt")
          "for-clause.rkt"
          "parens.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "implicit.rkt" #%body) ; for `block` in `:each-decl`
+         (submod "membership-testable.rkt" in-operator))
 
 (provide (for-space rhombus/for_clause
                     each
@@ -16,9 +18,19 @@
 
 (begin-for-syntax
   ;; Like `:var-decl`, but we don't allow `=` here
-  (define-splicing-syntax-class :each-decl
+  (define-splicing-syntax-class (:each-decl stx)
     #:datum-literals (group)
     #:attributes ([bind 1] blk)
+    (pattern (~seq bind ...+ _::in expr ...+)
+             #:do [(syntax-parse #'(bind ... expr ...)
+                     [(_ ... i::in _ ...)
+                      (raise-syntax-error #f
+                                          (string-append "multiple immediate membership operators not allowed in this group;"
+                                                         "\n use parentheses to disambiguate")
+                                          stx
+                                          #'i)]
+                     [_ (void)])]
+             #:attr blk #'(block (group expr ...)))
     (pattern (~seq bind ...+ (~and blk (_::block . _))))))
 
 (define-for-clause-syntax each
@@ -26,9 +38,9 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id d::each-decl)
+       [(form-id (~var d (:each-decl stx)))
         #`(#:each d.bind ... d.blk)]
-       [(form-id (tag::block (group d::each-decl) ...))
+       [(form-id (tag::block (group (~var d (:each-decl stx))) ...))
         #`(#:each (tag (group d.bind ... d.blk)
                        ...))]
        [_

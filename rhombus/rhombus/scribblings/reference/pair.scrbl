@@ -423,8 +423,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
 
 @doc(
-  method (lst :: PairList).has_element(v :: Any,
-                                       eqls :: Function.of_arity(2) = (_ == _))
+  method (lst :: PairList).contains(v :: Any,
+                                    eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -434,8 +434,8 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  cost of @rhombus(eqls)) to find an element as position @math{N}.
 
 @examples(
-  PairList[1, 2, 3].has_element(2)
-  PairList[1, 2, 3].has_element(200)
+  PairList[1, 2, 3].contains(2)
+  PairList[1, 2, 3].contains(200)
 )
 
 }

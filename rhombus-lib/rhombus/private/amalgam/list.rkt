@@ -21,6 +21,7 @@
          "sequence-constructor-key.rkt"
          "list-bounds-key.rkt"
          "maybe-key.rkt"
+         "contains-key.rkt"
          "op-literal.rkt"
          "literal.rkt"
          (submod "ellipsis.rkt" for-parse)
@@ -85,6 +86,7 @@
   #:lift-declaration
   #:constructor-arity -1
   #:instance-static-info ((#%index-get List.get)
+                          (#%contains List.contains)
                           (#%append List.append)
                           (#%sequence-constructor List.to_sequence/optimize))
   #:existing
@@ -126,7 +128,7 @@
    drop
    drop_last
    sublist
-   has_element
+   contains
    find
    index
    remove
@@ -143,6 +145,7 @@
   #:lift-declaration
   #:constructor-arity -1
   #:instance-static-info ((#%index-get PairList.get)
+                          (#%contains PairList.contains)
                           (#%append PairList.append)
                           (#%sequence-constructor PairList.to_sequence/optimize))
   #:existing
@@ -178,7 +181,7 @@
    take_last
    drop
    drop_last
-   has_element
+   contains
    find
    index
    remove
@@ -195,6 +198,7 @@
   #:constructor-arity -1
   #:instance-static-info ((#%index-get MutableList.get)
                           (#%index-set MutableList.set)
+                          (#%contains MutableList.contains)
                           (#%sequence-constructor MutableList.to_sequence/optimize))
   #:existing
   #:opaque
@@ -219,7 +223,7 @@
    drop
    drop_last
    sublist
-   has_element
+   contains
    find
    index
    remove
@@ -1158,16 +1162,16 @@
               [else #f])
     (void)))
 
-(define/method (List.has_element l v [eql equal-always?])
+(define/method (List.contains l v [eql equal-always?])
   #:primitive (treelist-member?)
   (treelist-member? l v eql))
 
-(define/method (PairList.has_element l v [eql equal-always?])
+(define/method (PairList.contains l v [eql equal-always?])
   (check-list who l)
   (check-function-of-arity 2 who eql)
   (and (member v l eql) #t))
 
-(define/method (MutableList.has_element l v [eql equal-always?])
+(define/method (MutableList.contains l v [eql equal-always?])
   #:primitive (mutable-treelist-member?)
   (mutable-treelist-member? l v eql))
 

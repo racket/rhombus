@@ -21,7 +21,7 @@ from a starting integer (inclusive) to an ending integer (exclusive):
 
 @examples(
   for:
-    each i: 1..4
+    each i in 1..4
     println(i)
 )
 
@@ -29,7 +29,7 @@ As a shorthand, an initial @rhombus(each, ~for_clause) form can be written
 using parentheses before the @rhombus(for) body block:
 
 @examples(
-  for (i: 1..4):
+  for (i in 1..4):
     println(i)
 )
 
@@ -39,8 +39,8 @@ all elements are used for the second @rhombus(each, ~for_clause) clause, and so 
 
 @examples(
   for:
-    each friend: ["Alice", "Bob", "Carol"]
-    each say: ["Hello", "Goodbye"]
+    each friend in ["Alice", "Bob", "Carol"]
+    each say in ["Hello", "Goodbye"]
     println(say +& ", " +& friend +& "!")
 )
 
@@ -51,9 +51,9 @@ languages, is that definitions or expressions can be written among
 
 @examples(
   for:
-    each friend: ["Alice", "Bob", "Carol"]
+    each friend in ["Alice", "Bob", "Carol"]
     let dear_friend = "dear " +& friend
-    each say: ["Hello", "Goodbye"]
+    each say in ["Hello", "Goodbye"]
     println(say +& ", " +& dear_friend +& "!")
 )
 
@@ -63,8 +63,8 @@ immediately after @rhombus(each, ~for_clause).
 @examples(
   for:
     each:
-      friend: ["Alice", "Bob", "Carol"]
-      index: 1..4
+      friend in ["Alice", "Bob", "Carol"]
+      index in 1..4
     println(index +& ". " +& friend)
 )
 
@@ -73,8 +73,8 @@ Note that the shorthand form using parentheses for an initial
 since the short is for a single @rhombus(each, ~for_clause) clause:
 
 @examples(
-  for (friend: ["Alice", "Bob", "Carol"],
-       index: 1..4):
+  for (friend in ["Alice", "Bob", "Carol"],
+       index in 1..4):
     println(index +& ". " +& friend)
 )
 
@@ -91,11 +91,11 @@ accumulating the values produced by each iteration of the @rhombus(for)
 body.
 
 @examples(
-  for List (i: 1..4):
+  for List (i in 1..4):
     "number " +& i
   for List:
-    each i: [1, 2]
-    each j: ["a", "b", "c"]
+    each i in [1, 2]
+    each j in ["a", "b", "c"]
     [i, j]
 )
 
@@ -103,7 +103,7 @@ If you prefer, you can put the reducer at the end of a @rhombus(for)
 body with @rhombus(~into).
 
 @examples(
-  for (i: 1..4):
+  for (i in 1..4):
     "number " +& i
     ~into List
 )
@@ -113,8 +113,8 @@ body with @rhombus(~into).
 a value.
 
 @examples(
-  for Map (friend: ["alice", "bob", "carol"],
-           index: 1..):
+  for Map (friend in ["alice", "bob", "carol"],
+           index in 1..):
     values(index, friend)
 )
 
@@ -128,7 +128,7 @@ identifiers.
 
 @examples(
   fun sum(ns :~ List):
-    for values(sum = 0) (n: ns):
+    for values(sum = 0) (n in ns):
       sum+n
   sum([2, 3, 4])
 )
@@ -143,8 +143,8 @@ specialization is visible only as a change in performance, if at all.
 @examples(
   fun sum2d(nss :~ List.of(List.of(Number))):
     for values(sum = 0):
-      each ns: nss
-      each n: ns
+      each ns in nss
+      each n in ns
       sum+n
   sum2d([[1], [2, 3, 4], [5, 6, 7], [8, 9]])
 )

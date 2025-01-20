@@ -69,8 +69,8 @@ check_exp_loc: Posn(1, 2).m()
 check_exp_loc: Posn(1, 2).p
 check_exp_loc: [1, 2, 3].first
 check_exp_loc: [List.repet([1]), ...].first
-check_exp_loc: [1, 2, 3].has_element(1)
-check_exp_loc: [1, 2, 3].has_element
+check_exp_loc: [1, 2, 3].contains(1)
+check_exp_loc: [1, 2, 3].contains
 check_exp_loc: Array(1, 2, 3)[0]
 check_exp_loc: {1: 2}[0]
 check_exp_loc: Map{1: 2}[0]
@@ -93,12 +93,12 @@ check_exp_loc: (box := 0) // `:=` claims weaker precedence than everything
 check_exp_loc: Posn(1, 2).p := 0
 
 check_exp_loc: for:
-                 each i: 0..1
+                 each i in 0..1
                  i
 check_exp_loc: for values(x = 1):
-                 each i: 0..1
+                 each i in 0..1
                  i
 check_exp_loc: for:
-                 each i: 0..1
+                 each i in 0..1
                  i
                  ~into values(x = 1)

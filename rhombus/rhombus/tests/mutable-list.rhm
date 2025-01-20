@@ -13,7 +13,7 @@ block:
     MutableList.map(lst, proc) ~method
     MutableList.for_each(lst, proc) ~method
     MutableList.filter(lst) ~method
-    MutableList.has_element(lst, val, [eql]) ~method
+    MutableList.contains(lst, val, [eql]) ~method
     MutableList.find(lst, pred) ~method
     MutableList.index(lst, pred) ~method
     MutableList.remove(lst, val) ~method
@@ -196,12 +196,12 @@ block:
     check l ~is_now MutableList[3, 2]
 
 check:
-  MutableList[1, 2, 3].has_element(2) ~is #true
-  MutableList[1, 2, 3].has_element(4) ~is #false
-  MutableList[1, 2, 3].has_element(-3, fun (x, y): x == -y) ~is #true
-  MutableList[1, 2, 3].has_element(-4, fun (x, y): x == -y) ~is #false
-  dynamic(MutableList[1, 2, 3]).has_element(1) ~is #true
-  dynamic(MutableList[1, 2, 3]).has_element(-1, fun (x, y): x == -y) ~is #true
+  MutableList[1, 2, 3].contains(2) ~is #true
+  MutableList[1, 2, 3].contains(4) ~is #false
+  MutableList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+  MutableList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  dynamic(MutableList[1, 2, 3]).contains(1) ~is #true
+  dynamic(MutableList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 check:
   MutableList[1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -243,22 +243,22 @@ check:
 
 check:
   use_static
-  MutableList().has_element("no such thing")
+  MutableList().contains("no such thing")
   ~is #false
 
 block:
   use_static
   def lst = MutableList[1, 2, 3]
   check:
-    for List (x: lst):
+    for List (x in lst):
       x
     ~is [1, 2, 3]
   check:
-    for List (x: MutableList.to_sequence(lst)):
+    for List (x in MutableList.to_sequence(lst)):
       x
     ~is [1, 2, 3]
   check:
-    for List (x: lst.to_sequence()):
+    for List (x in lst.to_sequence()):
       x
     ~is [1, 2, 3]
 
@@ -282,7 +282,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ MutableList):
+    for List (x in "oops" :~ MutableList):
       x
     ~throws values(
       who ++ error.annot_msg(),
@@ -290,7 +290,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: MutableList.to_sequence("oops")):
+    for List (x in MutableList.to_sequence("oops")):
       x
     ~throws values(
       who ++ error.annot_msg(),
@@ -298,7 +298,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ MutableList).to_sequence()):
+    for List (x in ("oops" :~ MutableList).to_sequence()):
       x
     ~throws values(
       who ++ error.annot_msg(),

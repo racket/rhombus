@@ -10,6 +10,7 @@ block:
     Array.length(arr) ~method
     Array.get(arr, n) ~method
     Array.set(arr, n, v) ~method
+    Array.contains(arr, v, [eql]) ~method
     Array.append(arr, ...) ~method
     Array.copy(arr, [start], [end]) ~method
     Array.copy_from(dest_arr, dest_start, src_arr, [src_start], [src_end]) ~method
@@ -218,6 +219,14 @@ check:
   Array.append(Array(1), Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
 
 check:
+  Array(10, 20, 30).contains(20) ~is #true
+  Array(10, 20, 30).contains(2) ~is #false
+  20 in Array(10, 20, 30) ~is #true
+  2 in Array(10, 20, 30) ~is #false
+  20 !in Array(10, 20, 30) ~is #false
+  2 !in Array(10, 20, 30) ~is #true
+
+check:
   10 :: Array
   ~throws "does not satisfy annotation"
 
@@ -329,15 +338,15 @@ block:
   use_static
   def arr = Array("a", "b", "c")
   check:
-    for List (x: arr):
+    for List (x in arr):
       x
     ~is ["a", "b", "c"]
   check:
-    for List (x: Array.to_sequence(arr)):
+    for List (x in Array.to_sequence(arr)):
       x
     ~is ["a", "b", "c"]
   check:
-    for List (x: arr.to_sequence()):
+    for List (x in arr.to_sequence()):
       x
     ~is ["a", "b", "c"]
 
@@ -357,7 +366,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ Array):
+    for List (x in "oops" :~ Array):
       x
     ~throws values(
       "Array.to_sequence: " ++ error.annot_msg(),
@@ -366,7 +375,7 @@ version_guard.at_least "8.13.0.1":
     )
 
   check:
-    for List (x: Array.to_sequence("oops")):
+    for List (x in Array.to_sequence("oops")):
       x
     ~throws values(
       "Array.to_sequence: " ++ error.annot_msg(),
@@ -374,7 +383,7 @@ version_guard.at_least "8.13.0.1":
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ Array).to_sequence()):
+    for List (x in ("oops" :~ Array).to_sequence()):
       x
     ~throws values(
       "Array.to_sequence: " ++ error.annot_msg(),

@@ -70,7 +70,7 @@ rx_charset.macro '#%parens ($(charset :: rx_charset_meta.Parsed))':
 rx_charset.macro '#%literal $(s :: String)':
   let str :~ String = s.unwrap()
   let cs:
-    for values(cs :~ Charset = Charset()) (ch: str):
+    for values(cs :~ Charset = Charset()) (ch in str):
       cs.union(Charset(ch, ch))
   rx_charset_meta.pack(cs, s)
 

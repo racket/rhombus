@@ -18,7 +18,8 @@ construct a list.
 A list is @tech{indexable} using @brackets to access a list
 element by position---in @math{O(log N)} time---via
 @rhombus(#%index). A list also works with the @rhombus(++) operator
-to append lists. A list can be used as @tech{sequence}, in which case
+to append lists. A list supports @tech{membership tests} using
+the @rhombus(in) operator. A list can be used as @tech{sequence}, in which case
 it supplies its elements in order.
 
 @doc(
@@ -515,19 +516,21 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).has_element(v :: Any,
-                                   eqls :: Function.of_arity(2) = (_ == _))
+  method (lst :: List).contains(v :: Any,
+                                eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
  equality. Searching the list takes @math{O(N)} time (multiplied by the
- cost of @rhombus(eqls)) to find an element as position @math{N}.
+ cost of @rhombus(eqls)) to find an element as position @math{N}. See
+ also @rhombus(in).
 
 @examples(
-  [1, 2, 3].has_element(2)
-  [1, 2, 3].has_element(200)
+  [1, 2, 3].contains(2)
+  [1, 2, 3].contains(200)
+  2 in [1, 2, 3]
 )
 
 }

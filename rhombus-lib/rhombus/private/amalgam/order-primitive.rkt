@@ -63,17 +63,18 @@
       (order-quote exponentiation)
       (order-quote integer_division)))))
 
-(define-order-syntax enumeration
+(define-order-syntax equivalence
   (make-order
    (lambda ()
      (list
       (cons (order-quote addition) 'weaker)
       (cons (order-quote multiplication) 'weaker)
       (cons (order-quote exponentiation) 'weaker)
-      (cons (order-quote integer_division) 'weaker)))
+      (cons (order-quote integer_division) 'weaker)
+      (cons (order-quote enumeration) 'weaker)))
    'none))
 
-(define-order-syntax equivalence
+(define-order-syntax enumeration
   (make-order
    (lambda ()
      (list

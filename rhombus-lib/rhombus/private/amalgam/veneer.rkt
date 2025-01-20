@@ -108,6 +108,7 @@
                        index-set-statinfo-indirect-id
                        append-statinfo-indirect-id
                        compare-statinfo-indirect-id
+                       contains-statinfo-indirect-id
 
                        super-call-statinfo-indirect-id
 
@@ -132,6 +133,7 @@
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
                      [append-statinfo-indirect append-statinfo-indirect-id]
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
+                     [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [indirect-static-infos indirect-static-infos]
                      [instance-static-infos instance-static-infos])
@@ -148,7 +150,7 @@
                          name? name-convert check?
                          name-instance
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
-                         append-statinfo-indirect compare-statinfo-indirect
+                         append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                          super-call-statinfo-indirect
                          indirect-static-infos
                          instance-static-infos
@@ -164,7 +166,7 @@
                     name? name-convert check?
                     name-instance
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
-                    append-statinfo-indirect compare-statinfo-indirect
+                    append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                     super-call-statinfo-indirect
                     indirect-static-infos
                     instance-static-infos
@@ -233,6 +235,9 @@
        (define-values (comparable? here-comparable? public-comparable?)
          (able-method-status 'compare super interfaces method-mindex method-vtable method-private
                              #:name 'compare_to))
+       (define-values (container? here-container? public-container?)
+         (able-method-status 'contains super interfaces method-mindex method-vtable method-private
+                             #:name 'contains))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -322,6 +327,7 @@
                                   public-setable?
                                   public-appendable?
                                   public-comparable?
+                                  public-container?
                                   #'(name name-extends class:name constructor-maker-name name-defaults name-ref
                                           name? name-convert check? converter?
                                           dot-provider-name prefab-guard-name
@@ -336,6 +342,7 @@
                                      #'index-set-statinfo-indirect setable?
                                      #'append-statinfo-indirect appendable?
                                      #'compare-statinfo-indirect comparable?
+                                     #'contains-statinfo-indirect container?
                                      #'super-call-statinfo-indirect
                                      #:checked-append? #f
                                      #:checked-compare? #f))))
@@ -519,6 +526,7 @@
                                       public-setable?
                                       public-appendable?
                                       public-comparable?
+                                      public-container?
                                       names)
   (with-syntax ([(name name-extends class:name constructor-maker-name name-defaults name-ref
                        name? name-convert check? converter?
@@ -531,7 +539,8 @@
           [flags #`(#,@(if public-indexable? '(get) null)
                     #,@(if public-setable? '(set) null)
                     #,@(if public-appendable? '(append) null)
-                    #,@(if public-comparable? '(compare) null))]
+                    #,@(if public-comparable? '(compare) null)
+                    #,@(if public-container? '(contains) null))]
           [interface-names (interface-names->quoted-list interface-names all-interfaces
                                                          private-interfaces protected-interfaces
                                                          'public)])

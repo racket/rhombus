@@ -16,7 +16,7 @@ block:
     Range.end(rge) ~method
     Range.includes_start(rge) ~method
     Range.includes_end(rge) ~method
-    Range.has_element(rge, v) ~method
+    Range.contains(rge, v) ~method
     Range.encloses(rge, ...) ~method
     Range.is_connected(rge, other) ~method
     Range.overlaps(rge, other) ~method
@@ -45,8 +45,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #false
       rge.encloses(0..5) ~is #true
       rge.is_connected(0..5) ~is #true
       rge.overlaps(0..5) ~is #true
@@ -58,8 +58,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0..5) ~is #true
     dynamic(rge).is_connected(0..5) ~is #true
     dynamic(rge).overlaps(0..5) ~is #true
@@ -84,8 +84,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(0..=5) ~is #true
       rge.is_connected(0..=5) ~is #true
       rge.overlaps(0..=5) ~is #true
@@ -97,8 +97,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..=5) ~is #true
     dynamic(rge).is_connected(0..=5) ~is #true
     dynamic(rge).overlaps(0..=5) ~is #true
@@ -122,8 +122,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(0..) ~is #true
       rge.is_connected(0..) ~is #true
       rge.overlaps(0..) ~is #true
@@ -135,8 +135,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..) ~is #true
     dynamic(rge).is_connected(0..) ~is #true
     dynamic(rge).overlaps(0..) ~is #true
@@ -161,8 +161,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #false
       rge.encloses(0 <..< 5) ~is #true
       rge.is_connected(0 <..< 5) ~is #true
       rge.overlaps(0 <..< 5) ~is #true
@@ -174,8 +174,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0 <..< 5) ~is #true
     dynamic(rge).is_connected(0 <..< 5) ~is #true
     dynamic(rge).overlaps(0 <..< 5) ~is #true
@@ -200,8 +200,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #true
       rge.encloses(0 <..= 5) ~is #true
       rge.is_connected(0 <..= 5) ~is #true
       rge.overlaps(0 <..= 5) ~is #true
@@ -213,8 +213,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..= 5) ~is #true
     dynamic(rge).is_connected(0 <..= 5) ~is #true
     dynamic(rge).overlaps(0 <..= 5) ~is #true
@@ -238,8 +238,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #false
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #false
+      rge.contains(5) ~is #true
       rge.encloses(0 <..<) ~is #true
       rge.is_connected(0 <..<) ~is #true
       rge.overlaps(0 <..<) ~is #true
@@ -251,8 +251,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #false
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #false
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..<) ~is #true
     dynamic(rge).is_connected(0 <..<) ~is #true
     dynamic(rge).overlaps(0 <..<) ~is #true
@@ -276,8 +276,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #false
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #false
       rge.encloses(..5) ~is #true
       rge.is_connected(..5) ~is #true
       rge.overlaps(..5) ~is #true
@@ -289,8 +289,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #false
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(..5) ~is #true
     dynamic(rge).is_connected(..5) ~is #true
     dynamic(rge).overlaps(..5) ~is #true
@@ -314,8 +314,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(..=5) ~is #true
       rge.is_connected(..=5) ~is #true
       rge.overlaps(..=5) ~is #true
@@ -327,8 +327,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..=5) ~is #true
     dynamic(rge).is_connected(..=5) ~is #true
     dynamic(rge).overlaps(..=5) ~is #true
@@ -350,8 +350,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
-      rge.has_element(0) ~is #true
-      rge.has_element(5) ~is #true
+      rge.contains(0) ~is #true
+      rge.contains(5) ~is #true
       rge.encloses(..) ~is #true
       rge.is_connected(..) ~is #true
       rge.overlaps(..) ~is #true
@@ -363,8 +363,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
-    dynamic(rge).has_element(0) ~is #true
-    dynamic(rge).has_element(5) ~is #true
+    dynamic(rge).contains(0) ~is #true
+    dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..) ~is #true
     dynamic(rge).is_connected(..) ~is #true
     dynamic(rge).overlaps(..) ~is #true
@@ -534,37 +534,37 @@ check:
 block:
   use_static
   check:
-    for List (x: 0..5):
+    for List (x in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
   check:
-    for List (x: (0..5).step_by(2)):
+    for List (x in (0..5).step_by(2)):
       x
     ~is [0, 2, 4]
   block:
     def rge = 0..5
     check:
-      for List (x: rge):
+      for List (x in rge):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: dynamic(rge) :~ SequenceRange):
+      for List (x in dynamic(rge) :~ SequenceRange):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: dynamic(rge) :~ ListRange):
+      for List (x in dynamic(rge) :~ ListRange):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.to_sequence()):
+      for List (x in rge.to_sequence()):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: Range.to_sequence(rge)):
+      for List (x in Range.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.step_by(2)):
+      for List (x in rge.step_by(2)):
         x
       ~is [0, 2, 4]
     check:
@@ -574,29 +574,29 @@ block:
 
 block:
   check:
-    for List (x: dynamic(0..5)):
+    for List (x in dynamic(0..5)):
       x
     ~is [0, 1, 2, 3, 4]
   check:
-    for List (x: dynamic(0..5).step_by(2)):
+    for List (x in dynamic(0..5).step_by(2)):
       x
     ~is [0, 2, 4]
   block:
     def rge = dynamic(0..5)
     check:
-      for List (x: rge):
+      for List (x in rge):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.to_sequence()):
+      for List (x in rge.to_sequence()):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: Range.to_sequence(rge)):
+      for List (x in Range.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.step_by(2)):
+      for List (x in rge.step_by(2)):
         x
       ~is [0, 2, 4]
     check:
@@ -607,37 +607,37 @@ block:
 block:
   use_static
   check:
-    for List (x: 0..=5):
+    for List (x in 0..=5):
       x
     ~is [0, 1, 2, 3, 4, 5]
   check:
-    for List (x: (0..=5).step_by(2)):
+    for List (x in (0..=5).step_by(2)):
       x
     ~is [0, 2, 4]
   block:
     def rge = 0..=5
     check:
-      for List (x: rge):
+      for List (x in rge):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: dynamic(rge) :~ SequenceRange):
+      for List (x in dynamic(rge) :~ SequenceRange):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: dynamic(rge) :~ ListRange):
+      for List (x in dynamic(rge) :~ ListRange):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: rge.to_sequence()):
+      for List (x in rge.to_sequence()):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: Range.to_sequence(rge)):
+      for List (x in Range.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: rge.step_by(2)):
+      for List (x in rge.step_by(2)):
         x
       ~is [0, 2, 4]
     check:
@@ -647,29 +647,29 @@ block:
 
 block:
   check:
-    for List (x: dynamic(0..=5)):
+    for List (x in dynamic(0..=5)):
       x
     ~is [0, 1, 2, 3, 4, 5]
   check:
-    for List (x: dynamic(0..=5).step_by(2)):
+    for List (x in dynamic(0..=5).step_by(2)):
       x
     ~is [0, 2, 4]
   block:
     def rge = dynamic(0..=5)
     check:
-      for List (x: rge):
+      for List (x in rge):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: rge.to_sequence()):
+      for List (x in rge.to_sequence()):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: Range.to_sequence(rge)):
+      for List (x in Range.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x: rge.step_by(2)):
+      for List (x in rge.step_by(2)):
         x
       ~is [0, 2, 4]
     check:
@@ -681,83 +681,83 @@ block:
   use_static
   check:
     for List (x: 0..,
-              _: 0..5):
+              _ in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
   check:
-    for List (x: (0..).step_by(2),
-              _: 0..5):
+    for List (x in (0..).step_by(2),
+              _ in 0..5):
       x
     ~is [0, 2, 4, 6, 8]
   block:
     def rge = 0..
     check:
-      for List (x: dynamic(rge) :~ SequenceRange,
-                _: 0..5):
+      for List (x in dynamic(rge) :~ SequenceRange,
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
       for List (x: rge,
-                _: 0..5):
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.to_sequence(),
-                _: 0..5):
+      for List (x in rge.to_sequence(),
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: Range.to_sequence(rge),
-                _: 0..5):
+      for List (x in Range.to_sequence(rge),
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.step_by(2),
-                _: 0..5):
+      for List (x in rge.step_by(2),
+                _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
     check:
       for List (x: Range.step_by(rge, 2),
-                _: 0..5):
+                _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
 
 block:
   check:
-    for List (x: dynamic(0..),
-              _: 0..5):
+    for List (x in dynamic(0..),
+              _ in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
   check:
-    for List (x: dynamic(0..).step_by(2),
-              _: 0..5):
+    for List (x in dynamic(0..).step_by(2),
+              _ in 0..5):
       x
     ~is [0, 2, 4, 6, 8]
   block:
     def rge = dynamic(0..)
     check:
       for List (x: rge,
-                _: 0..5):
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.to_sequence(),
-                _: 0..5):
+      for List (x in rge.to_sequence(),
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: Range.to_sequence(rge),
-                _: 0..5):
+      for List (x in Range.to_sequence(rge),
+                _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge.step_by(2),
-                _: 0..5):
+      for List (x in rge.step_by(2),
+                _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
     check:
       for List (x: Range.step_by(rge, 2),
-                _: 0..5):
+                _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
 
@@ -803,7 +803,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (x: "oops" :~ SequenceRange):
+    for List (x in "oops" :~ SequenceRange):
       x
     ~throws values(
       "Range.to_sequence: " ++ error.annot_msg(),
@@ -811,7 +811,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (x: Range.to_sequence("oops")):
+    for List (x in Range.to_sequence("oops")):
       x
     ~throws values(
       "Range.to_sequence: " ++ error.annot_msg(),
@@ -819,7 +819,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ SequenceRange).to_sequence()):
+    for List (x in ("oops" :~ SequenceRange).to_sequence()):
       x
     ~throws values(
       "Range.to_sequence: " ++ error.annot_msg(),
@@ -835,7 +835,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (x: ("oops" :~ SequenceRange).step_by(2)):
+    for List (x in ("oops" :~ SequenceRange).step_by(2)):
       x
     ~throws values(
       "Range.step_by: " ++ error.annot_msg(),
@@ -862,7 +862,7 @@ block:
 // errors in optimized cases
 block:
   check:
-    for List (i: "oops"..5):
+    for List (i in "oops"..5):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -870,7 +870,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: 0.."oops"):
+    for List (i in 0.."oops"):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -878,7 +878,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: 5..0):
+    for List (i in 5..0):
       i
     ~throws values(
       "..: starting point must be less than or equal to ending point",
@@ -886,7 +886,7 @@ block:
       "ending point: 0",
     )
   check:
-    for List (i: "oops"..=5):
+    for List (i in "oops"..=5):
       i
     ~throws values(
       "..=: " ++ error.annot_msg(),
@@ -894,7 +894,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: 0..="oops"):
+    for List (i in 0..="oops"):
       i
     ~throws values(
       "..=: " ++ error.annot_msg(),
@@ -902,7 +902,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: 5..=0):
+    for List (i in 5..=0):
       i
     ~throws values(
       "..=: starting point must be less than or equal to ending point",
@@ -910,7 +910,7 @@ block:
       "ending point: 0",
     )
   check:
-    for List (i: "oops"..):
+    for List (i in "oops"..):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -920,7 +920,7 @@ block:
 
 block:
   check:
-    for List (i: ("oops"..5).step_by(2)):
+    for List (i in ("oops"..5).step_by(2)):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -928,7 +928,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: (0.."oops").step_by(2)):
+    for List (i in (0.."oops").step_by(2)):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -936,7 +936,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: (5..0).step_by(2)):
+    for List (i in (5..0).step_by(2)):
       i
     ~throws values(
       "..: starting point must be less than or equal to ending point",
@@ -944,7 +944,7 @@ block:
       "ending point: 0",
     )
   check:
-    for List (i: (0..5).step_by("oops")):
+    for List (i in (0..5).step_by("oops")):
       i
     ~throws values(
       "Range.step_by: " ++ error.annot_msg(),
@@ -952,7 +952,7 @@ block:
       error.val("oops").msg
     )
   check:
-    for List (i: ("oops"..=5).step_by(2)):
+    for List (i in ("oops"..=5).step_by(2)):
       i
     ~throws values(
       "..=: " ++ error.annot_msg(),
@@ -960,7 +960,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: (0..="oops").step_by(2)):
+    for List (i in (0..="oops").step_by(2)):
       i
     ~throws values(
       "..=: " ++ error.annot_msg(),
@@ -968,7 +968,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: (5..=0).step_by(2)):
+    for List (i in (5..=0).step_by(2)):
       i
     ~throws values(
       "..=: starting point must be less than or equal to ending point",
@@ -976,7 +976,7 @@ block:
       "ending point: 0",
     )
   check:
-    for List (i: (0..=5).step_by("oops")):
+    for List (i in (0..=5).step_by("oops")):
       i
     ~throws values(
       "Range.step_by: " ++ error.annot_msg(),
@@ -984,7 +984,7 @@ block:
       error.val("oops").msg
     )
   check:
-    for List (i: ("oops"..).step_by(2)):
+    for List (i in ("oops"..).step_by(2)):
       i
     ~throws values(
       "..: " ++ error.annot_msg(),
@@ -992,7 +992,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (i: (0..).step_by("oops")):
+    for List (i in (0..).step_by("oops")):
       i
     ~throws values(
       "Range.step_by: " ++ error.annot_msg(),
@@ -1013,75 +1013,75 @@ block:
     let most_negative_from = most_negative - 5
     'block:
        $check:
-         for List (i: (#%literal $most_positive) .. (#%literal $most_positive_to)):
+         for List (i in (#%literal $most_positive) .. (#%literal $most_positive_to)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: most_positive .. most_positive_to):
+                   for List (i in most_positive .. most_positive_to):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: (#%literal $most_negative_from) .. (#%literal $most_negative)):
+         for List (i in (#%literal $most_negative_from) .. (#%literal $most_negative)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: most_negative_from .. most_negative):
+                   for List (i in most_negative_from .. most_negative):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: ((#%literal $most_positive) .. (#%literal $most_positive_to)).step_by(2)):
+         for List (i in ((#%literal $most_positive) .. (#%literal $most_positive_to)).step_by(2)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: (most_positive .. most_positive_to).step_by(2)):
+                   for List (i in (most_positive .. most_positive_to).step_by(2)):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: ((#%literal $most_negative_from) .. (#%literal $most_negative)).step_by(2)):
+         for List (i in ((#%literal $most_negative_from) .. (#%literal $most_negative)).step_by(2)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: (most_negative_from .. most_negative).step_by(2)):
+                   for List (i in (most_negative_from .. most_negative).step_by(2)):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: (0..5).step_by(#%literal $(most_positive + 1))):
+         for List (i in (0..5).step_by(#%literal $(most_positive + 1))):
            i
          ~is [0]
        $check:
-         for List (i: (#%literal $most_positive) ..= (#%literal $most_positive_to)):
+         for List (i in (#%literal $most_positive) ..= (#%literal $most_positive_to)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: most_positive ..= most_positive_to):
+                   for List (i in most_positive ..= most_positive_to):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: (#%literal $most_negative_from) ..= (#%literal $most_negative)):
+         for List (i in (#%literal $most_negative_from) ..= (#%literal $most_negative)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: most_negative_from ..= most_negative):
+                   for List (i in most_negative_from ..= most_negative):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: ((#%literal $most_positive) ..= (#%literal $most_positive_to)).step_by(2)):
+         for List (i in ((#%literal $most_positive) ..= (#%literal $most_positive_to)).step_by(2)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: (most_positive ..= most_positive_to).step_by(2)):
+                   for List (i in (most_positive ..= most_positive_to).step_by(2)):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: ((#%literal $most_negative_from) ..= (#%literal $most_negative)).step_by(2)):
+         for List (i in ((#%literal $most_negative_from) ..= (#%literal $most_negative)).step_by(2)):
            i
          ~is $(block:
                  let [num, ...]:
-                   for List (i: (most_negative_from ..= most_negative).step_by(2)):
+                   for List (i in (most_negative_from ..= most_negative).step_by(2)):
                      i
                  '[#%literal $num, ...]')
        $check:
-         for List (i: (0..=5).step_by(#%literal $(most_positive + 1))):
+         for List (i in (0..=5).step_by(#%literal $(most_positive + 1))):
            i
          ~is [0]'
   generate_checks 29
@@ -1093,85 +1093,85 @@ block:
   generate_checks 63
 
 // The following checks are borrowed from Rebellion
-// `Range.has_element`
+// `Range.contains`
 block:
   def rng = 2..4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 check:
-  (3..3).has_element(3) ~is #false
+  (3..3).contains(3) ~is #false
 
 block:
   def rng = 2..=4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 check:
-  (3..=3).has_element(3) ~is #true
+  (3..=3).contains(3) ~is #true
 
 block:
   def rng = 2..
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
 
 block:
   def rng = 2 <..< 4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 block:
   def rng = 2 <..= 4
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 block:
   def rng = 2 <..<
   check:
-    rng.has_element(1) ~is #false
-    rng.has_element(2) ~is #false
-    rng.has_element(3) ~is #true
+    rng.contains(1) ~is #false
+    rng.contains(2) ~is #false
+    rng.contains(3) ~is #true
 
 block:
   def rng = ..4
   check:
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #false
-    rng.has_element(5) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #false
+    rng.contains(5) ~is #false
 
 block:
   def rng = ..=4
   check:
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #false
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #false
 
 block:
   def rng = ..
   check:
-    rng.has_element(1) ~is #true
-    rng.has_element(2) ~is #true
-    rng.has_element(3) ~is #true
-    rng.has_element(4) ~is #true
-    rng.has_element(5) ~is #true
+    rng.contains(1) ~is #true
+    rng.contains(2) ~is #true
+    rng.contains(3) ~is #true
+    rng.contains(4) ~is #true
+    rng.contains(5) ~is #true
 
 // `Range.encloses`
 check:
@@ -1599,14 +1599,14 @@ block:
     [(x..y).to_list(), ...] ~is [[1], [2], [3], [4], [5]]
     [(x..=y).to_list(), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
   fun sequence_to_list(xs :: Sequence):
-    for List (x: xs):
+    for List (x in xs):
       x
   check:
     [sequence_to_list((x..y).to_sequence()), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_to_list((x..=y).to_sequence()), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
   fun sequence_take(xs :: Sequence, num :: NonnegInt):
     for List (x: xs,
-              _: 0..num):
+              _ in 0..num):
       x
   check:
     [sequence_take((x..).to_sequence(), 1), ...] ~is [[1], [2], [3], [4], [5]]

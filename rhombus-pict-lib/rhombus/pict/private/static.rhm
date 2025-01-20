@@ -379,7 +379,7 @@ class StaticPict(private _handle,
     | _children
 
   override property _children_starts:
-    for List (c: children):
+    for List (c in children):
       0
 
   override method launder() :~ Pict:
@@ -601,7 +601,7 @@ class NothingPict():
 def nothing = NothingPict()
 
 fun remove_nothings(ps :~ List):
-  for List (p: ps):
+  for List (p in ps):
     skip_when p == nothing
     p
 
@@ -624,7 +624,7 @@ fun static_instance([p :: Pict, ...], as_p :: _StaticPict,
 
 fun find_instance(p :: _StaticPict, q :~ Pict):
   recur loop (instances :: List = p._instances):
-    for any (inst: instances):
+    for any (inst in instances):
       match inst
       | Pair(key, handle):
           key === q && handle
@@ -797,7 +797,7 @@ fun overlay(~dx: dx :: maybe(Real) = #false,
             let (min_x, min_y, max_x, max_y):
               for values(min_x = init_x, min_y = init_y,
                          max_x = init_x, max_y = init_y):
-                each p: ps.rest
+                each p in ps.rest
                 let (x, y) = get_pt(p, 1)
                 values(math.min(min_x, x),
                        math.min(min_y, y),
@@ -1796,13 +1796,13 @@ fun table(rows :: List.of(List.of(Pict)),
       | let picts = [& picts]
         let col_length = rows.length()
         let ws:
-          for List (i: 0 .. row_length):
-            let [p, ...]: for List (r: 0 .. col_length):
+          for List (i in 0 .. row_length):
+            let [p, ...]: for List (r in 0 .. col_length):
                             picts[i + r * row_length]
             math.max(rkt.#{pict-width}(p), ...)
         let hs:
-          for List (i: 0 .. col_length):
-            let [p, ...]: for List (r: 0 .. row_length):
+          for List (i in 0 .. col_length):
+            let [p, ...]: for List (r in 0 .. row_length):
                             picts[r + i * row_length]
             math.max(rkt.#{pict-height}(p), ...)
         let r: rkt.inset(r, & if ins is_a List | ins | [ins])

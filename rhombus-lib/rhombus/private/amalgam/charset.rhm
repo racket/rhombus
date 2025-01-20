@@ -30,7 +30,7 @@ class Charset(private _ranges):
           super([[start, end]])
   | (pred :: Function, ~only_ascii: only_ascii):
       if only_ascii
-      | for values(cs :~ Charset = Charset()) (i: 0..128):
+      | for values(cs :~ Charset = Charset()) (i in 0..128):
           if pred(Char.from_int(i))
           | cs.union(Charset(Char.from_int(i)))
           | cs
@@ -41,7 +41,7 @@ class Charset(private _ranges):
   fun build_unicode(pred):
     let u_ranges :~ PairList = base.#{make-known-char-range-list}()
     let ranges:
-      for values(ranges :~ List = []) (ur: u_ranges):
+      for values(ranges :~ List = []) (ur in u_ranges):
         fun add(ranges :~ List, [s, e]):
           match ranges
           | [r, ..., [ls, le]] when le+1 == s:
@@ -54,7 +54,7 @@ class Charset(private _ranges):
             | if pred(Char.from_int(s))
               | add(ranges, [s, e])
               | ranges
-            | for values(ranges :~ List = ranges) (i: s..e):
+            | for values(ranges :~ List = ranges) (i in s..e):
                 if pred(Char.from_int(i))
                 | add(ranges, [i, i])
                 | ranges

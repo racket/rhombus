@@ -31,8 +31,8 @@ expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg
                         expr_meta.pack_expr('$target ...'),
                         method,
                         & (for List:
-                             each p: [[kw, expr_meta.pack_expr(kw_arg)], ...]
-                             each i: p
+                             each p in [[kw, expr_meta.pack_expr(kw_arg)], ...]
+                             each i in p
                              i),
                         expr_meta.pack_expr(arg), ...])
 

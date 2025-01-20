@@ -359,8 +359,8 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).has_element(v :: Any,
-                                           eqls :: Function.of_arity(2) = (_ == _))
+  method (mlst :: MutableList).contains(v :: Any,
+                                        eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean
 ){
 
@@ -371,8 +371,8 @@ and it is not managed by a lock.
 
 @examples(
   def l = MutableList[1, 2, 3]
-  l.has_element(2)
-  l.has_element(200)
+  l.contains(2)
+  l.contains(200)
 )
 
 }

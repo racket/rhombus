@@ -124,7 +124,7 @@ internal state, and the state can even be specific to a particular
         ~position_to_next: fun (i): i + 2
       )
   ~repl:
-    for List (i: even_strings_up_to(5)): i
+    for List (i in even_strings_up_to(5)): i
 )
 
 }
@@ -152,7 +152,7 @@ internal state, and the state can even be specific to a particular
             ~position_to_next: fun (_): i := i + 2
           ))
   ~repl:
-    for List (i: even_strings_up_to(5)): i
+    for List (i in even_strings_up_to(5)): i
 )
 
 }

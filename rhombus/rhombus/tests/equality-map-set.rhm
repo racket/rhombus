@@ -76,17 +76,17 @@ block:
     ~is "b"
 
 check:
-  {[1, 2]}[[1, 2]]
+  [1, 2] in {[1, 2]}
   ~is #true
 
 check:
-  {mcons(1, 2)}[mcons(1, 2)]
+  mcons(1, 2) in {mcons(1, 2)}
   ~is #false
 
 check:
   block:
     def v = mcons(1, 2)
-    {v}[v]
+    v in {v}
   ~is #true
 
 block:
@@ -95,13 +95,13 @@ block:
   def c = mcons(1, 2)
   def s = {a, b}
   check:
-    s[a]
+    a in s
     ~is #true
   check:
-    s[b]
+    b in s
     ~is #true
   check:
-    s[c]
+    c in s
     ~is #false
 
 // empty map, not empty set

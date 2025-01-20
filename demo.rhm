@@ -220,6 +220,10 @@ def yep_nums :: List.of(Int) = nums
 // `[]` on a list accesses by a 0-based index
 nums[1]
 
+// `in` searches a list
+3 in nums
+"hi" in ["hi", "bye"]
+
 block:
   // `use_dynamic` because `also_nums` is not declared to be a list
   use_dynamic
@@ -235,6 +239,7 @@ def yep_nums_a :: Array.now_of(Int): nums_a
 nums_a[1]
 nums_a[2] := 30
 nums_a[2]
+30 in nums_a
 
 // `later_of` doesn't check immediately, but checks on read/write
 def really_nums_a :: Array.later_of(Int): nums_a
@@ -253,6 +258,9 @@ map
 
 // `[]` on a map find the value for a key
 map[17]
+
+// `in` checks for a key in a map
+17 in map
 
 // `Map` is also bound as a constructor function, in which case
 // it expects 2-argument lists for the keys and values
@@ -280,8 +288,8 @@ mut_map[2]
 // using `{}` without `:` creates a set instead of a map
 def a_set = {1, 3, 5, 7, 9}
 
-// `[]` on a set checks whether something is in a set
-if a_set[1] && !a_set[2]
+// `in` on a set checks whether something is in a set
+if 1 in a_set && 2 !in a_set
 | "ok"
 | error("no way!")
 
@@ -562,22 +570,22 @@ check_later()
 // for
 
 fun enumerate(l :: List):
-  for (v: l,
-       i: 0..):
+  for (v in l,
+       i in 0..):
     println(i +& ". " +& v)
 
 enumerate(["a", "b", "c"])
 
 fun grid(m, n):
   for List:
-    each i: 0..m
-    each j: 0..n
+    each i in 0..m
+    each j in 0..n
     [i, j]
 
 grid(2, 3)
 
 fun loop_sum(l :: List):
-  for values(sum = 0) (i: l):
+  for values(sum = 0) (i in l):
     sum+i
 
 loop_sum([2, 3, 4])

@@ -11,7 +11,7 @@ block:
 check:
   reducer.macro '(Array.len5)':
     'Array.of_length(5)'
-  for Array.len5 (i: 0..3): i
+  for Array.len5 (i in 0..3): i
   ~is_now Array(0, 1, 2, 0, 0)
 
 block:
@@ -35,7 +35,7 @@ block:
   expr.macro 'use_add [$_, $next_l]':
     next_l
   def lst:
-    for List.nested (i: 0..3):
+    for List.nested (i in 0..3):
       values(& List.iota(i))
   check:
     lst
@@ -96,11 +96,11 @@ block:
        def ($id, ...) = $finish $data
        values($count + 1, $id, ...)'
   check:
-    for counted(List) (i: 0..3): i
+    for counted(List) (i in 0..3): i
     ~is values([0, 1, 2], 3)
   block:
     def (map, count):
-      for counted(Map) (i: 0..10):
+      for counted(Map) (i in 0..10):
         keep_when i mod 2 == 0
         values(i, "val" +& i)
     check:
@@ -114,6 +114,6 @@ block:
       map.remove(2)
       ~is {0: "val0", 4: "val4", 6: "val6", 8: "val8"}
   check:
-    for counted(values(i = 0, j = 10)) (k: 0..5):
+    for counted(values(i = 0, j = 10)) (k in 0..5):
       values(i+k, j-k)
     ~is values(10, 0, 5)

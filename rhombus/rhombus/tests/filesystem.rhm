@@ -187,7 +187,7 @@ block:
   | check filesystem.roots() ~is [Path("/")]
 
   check filesystem.rename(x, tmp.add("x_new")) ~is #void
-  check filesystem.files(tmp) ~is (for List (f: all_immediate_files):
+  check filesystem.files(tmp) ~is (for List (f in all_immediate_files):
                                      if f == Path("x")
                                      | Path("x_new")
                                      | f)
@@ -282,14 +282,14 @@ block:
     let inode = filesystem.identity(x)
     block:
       Closeable.let f = Port.Output.open_file(x, ~exists: #'truncate)
-      for (i: 0..4096):
+      for (i in 0..4096):
         println("hello world", ~out: f)
     check filesystem.identity(x) ~is inode
   check filesystem.size(x) ~is 12*4096
-  check filesystem.read_bytes(x) ~is_now Bytes.append(& for List (i: 0..4096): #"hello world\n")
-  check filesystem.read_string(x) ~is String.append(& for List (i: 0..4096): "hello world\n")
-  check filesystem.read_bytes_lines(x) ~is_now for List (i: 0..4096): #"hello world"
-  check filesystem.read_lines(x) ~is for List (i: 0..4096): "hello world"
+  check filesystem.read_bytes(x) ~is_now Bytes.append(& for List (i in 0..4096): #"hello world\n")
+  check filesystem.read_string(x) ~is String.append(& for List (i in 0..4096): "hello world\n")
+  check filesystem.read_bytes_lines(x) ~is_now for List (i in 0..4096): #"hello world"
+  check filesystem.read_lines(x) ~is for List (i in 0..4096): "hello world"
 
   check filesystem.write_bytes(x, #"hello world") ~throws "filesystem.write_bytes:"
   check filesystem.write_bytes(x, #"hello world", ~exists: #'truncate) ~is #void

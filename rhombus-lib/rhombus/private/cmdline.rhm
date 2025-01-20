@@ -191,7 +191,7 @@ fun command_line_parser(
                     | // short flag(s)
                       let (state, once, line, is_final):
                         for values(state = state, once = once, line = [rest, ...], is_final = #false):
-                          each i: 1 .. first.length()
+                          each i in 1 .. first.length()
                           let flag = first[0] +& first[i]
                           apply_flag(flag, first, short_flags.get(flag, #false), state, line,
                                      once_keys, once, is_final,
@@ -218,7 +218,7 @@ fun gather_flags(flags :~ List, args, init_state,
     match c
     | [c, ...]:
         for values(state = state, long_flags = long_flags, short_flags = short_flags, once_keys = once_keys):
-          each c: [c, ...]
+          each c in [c, ...]
           setup(c, state, long_flags, short_flags, once_keys, once_key)
     | h :: Handler:
         let once_keys:
@@ -239,7 +239,7 @@ fun gather_flags(flags :~ List, args, init_state,
             let (long_flags, short_flags):
               for values(long_flags :~ Map = long_flags,
                          short_flags :~ Map = short_flags):
-                each flag_str: f.flag_strs
+                each flag_str in f.flag_strs
                 let is_short = flag_str.length() == 2
                 when (if is_short
                       | short_flags.get(flag_str, #false)
@@ -257,7 +257,7 @@ fun gather_flags(flags :~ List, args, init_state,
         setup(fs.choices, state, long_flags, short_flags, once_keys, #false)
     | fs :: OnceEach:
         for values(state = state, long_flags = long_flags, short_flags = short_flags, once_keys = once_keys):
-          each c: fs.choices
+          each c in fs.choices
           setup(c, state, long_flags, short_flags, once_keys, #'self)
     | fs :: OnceAny:
         setup(fs.choices, state, long_flags, short_flags, once_keys, Symbol.gen())
@@ -350,7 +350,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
               ~args: args :: Handler):
   let (min_flags, max_flags, num_flags):
     recur seek(flags :~ List = flags, just_once = #true):
-      for values(min_flags = 0, max_flags = 0, num_flags = 0) (flag: flags):
+      for values(min_flags = 0, max_flags = 0, num_flags = 0) (flag in flags):
         let (min_flag, max_flag, a_flag):
           match flag
           | f :: Flag: values(1, if just_once | 1 | #inf, f.flag_strs.length())
@@ -430,7 +430,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
           println("")
           when f.help:
           | let help = f.help!!.split("\n")
-            for (h: help.drop_last(1)):
+            for (h in help.drop_last(1)):
               match mode
               | #'multi || #'once_each: print("    ")
               | ~else: print("|   ")
@@ -452,7 +452,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
     when any_once
     | println("/|\\ Brackets indicate mutually exclusive options.")
     fun find_single_flag(f :~ Flag):
-      for any (flag_str: f.flag_strs):
+      for any (flag_str in f.flag_strs):
         flag_str.length() == 2 && flag_str
     let singles = mode_and_flags.filter(~keep: fun([mode, flag]):
                                                  match flag

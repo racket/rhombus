@@ -85,11 +85,11 @@ class MouseEvent():
                ~timestamp: timestamp :: Int = 0):
     super(rkt.make_object(gui.#{mouse-event%},
                           convert_kind(kind),
-                          down[#'left], down[#'middle], down[#'right],
+                          #'left in down, #'middle in down, #'right in down,
                           x, y,
-                          down[#'shift], down[#'control], down[#'meta], down[#'alt],
+                          #'shift in down, #'control in down, #'meta in down, #'alt in down,
                           timestamp,
-                          down[#'caps], down[#'mod3], down[#'mod4], down[#'mod5]))()
+                          #'caps in down, #'mod3 in down, #'mod4 in down, #'mod5 in down))()
 
   property kind:
     unconvert_kind(rkt.send handle.#{get-event-type}())
@@ -161,10 +161,10 @@ class KeyEvent():
                               match code
                               | _ :: Char: code
                               | ~else: convert_key(code),
-                              down[#'shift], down[#'control], down[#'meta], down[#'alt],
+                              #'shift in down, #'control in down, #'meta in down, #'alt in down,
                               x, y,
                               timestamp,
-                              down[#'caps], down[#'mod3], down[#'mod4], down[#'mod5],
+                              #'caps in down, #'mod3 in down, #'mod4 in down, #'mod5 in down,
                               use_altgr && #true)
     rkt.send evt.#{set-key-release-code}(release_code)
     when other_caps_code | rkt.send evt.#{set-other-caps-key-code}(other_caps_code)

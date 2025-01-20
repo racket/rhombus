@@ -16,8 +16,8 @@
          (submod "list.rkt" for-compound-repetition)
          "static-info.rkt"
          "reducer.rkt"
-         "index-key.rkt"
          "append-key.rkt"
+         "contains-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
@@ -62,12 +62,6 @@
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))
 
-(module+ for-index
-  (provide set?
-           mutable-set?
-           set-ref
-           set-set!))
-
 (module+ for-builtin
   (provide set?
            mutable-set?
@@ -88,6 +82,10 @@
 (module+ for-append
   (provide set-append
            immutable-set?))
+
+(module+ for-container
+  (provide set?
+           set-ht))
 
 (module+ for-print
   (provide set?
@@ -177,7 +175,7 @@
   (module declare-preserve-for-embedding racket/kernel))
 
 (define-static-info-getter get-any-set-static-infos
-  (#%index-get Set.get)
+  (#%contains Set.contains)
   (#%sequence-constructor Set.to_sequence/optimize))
 
 (define-primitive-class ReadableSet readable-set
@@ -194,8 +192,7 @@
   ()
   #:methods
   ([length Set.length]
-   [get Set.get]
-   [has_element Set.has_element]
+   [contains Set.contains]
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
@@ -213,8 +210,7 @@
   #:namespace-fields
   ([empty empty-set]
    [length Set.length]
-   [get Set.get]
-   [has_element Set.has_element]
+   [contains Set.contains]
    [to_list Set.to_list]
    [copy Set.copy]
    [snapshot Set.snapshot]
@@ -225,7 +221,8 @@
   #:properties
   ()
   #:methods
-  (append
+  (add
+   append
    union
    intersect
    remove))
@@ -233,8 +230,7 @@
 (define-primitive-class MutableSet mutable-set
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%index-set MutableSet.set)
-                          . #,(get-any-set-static-infos))
+  #:instance-static-info #,(get-any-set-static-infos)
   #:existing
   #:opaque #:no-primitive
   #:parent #f readable-set
@@ -246,8 +242,8 @@
   #:properties
   ()
   #:methods
-  (set
-   delete))
+  (add
+   remove))
 
 (define-primitive-class WeakMutableSet weak-mutable-set
   #:lift-declaration
@@ -292,11 +288,7 @@
 (define (set-ref s v)
   (hash-ref (set-ht s) v #f))
 
-(define/method (Set.get s v)
-  (check-readable-set who s)
-  (set-ref s v))
-
-(define/method (Set.has_element s v)
+(define/method (Set.contains s v)
   (check-readable-set who s)
   (set-ref s v))
 
@@ -998,6 +990,10 @@
   (unless (immutable-set? s)
     (raise-annotation-failure who s "Set")))
 
+(define/method (Set.add s v)
+  (check-set who s)
+  (set (hash-set (set-ht s) v #t)))
+
 (define (set-append/hash a b)
   (let-values ([(a b)
                 (if (and ((hash-count a) . < . (hash-count b))
@@ -1085,16 +1081,11 @@
   (unless (mutable-set? s)
     (raise-annotation-failure who s "MutableSet")))
 
-(define (set-set! s v in?)
-  (if in?
-      (hash-set! (set-ht s) v #t)
-      (hash-remove! (set-ht s) v)))
-
-(define/method (MutableSet.set s v in?)
+(define/method (MutableSet.add s v)
   (check-mutable-set who s)
-  (set-set! s v in?))
+  (hash-set! (set-ht s) v #t))
 
-(define/method (MutableSet.delete s v)
+(define/method (MutableSet.remove s v)
   (check-mutable-set who s)
   (hash-remove! (set-ht s) v))
 

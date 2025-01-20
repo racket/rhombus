@@ -11,6 +11,7 @@
          "index-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
+         "contains-key.rkt"
          "values-key.rkt"
          (submod "function-parse.rkt" for-build)
          (only-in "function-arity.rkt"
@@ -26,7 +27,8 @@
         maybe-ref-statinfo-id+id
         maybe-set-statinfo-id+id
         maybe-append-statinfo-id+id
-        maybe-compare-statinfo-id+id)
+        maybe-compare-statinfo-id+id
+        maybe-contains-statinfo-id+id)
      #:do [(define-values (proc predicate? count annot-str static-infos)
              (cond
                [(attribute ret.converter)
@@ -188,7 +190,8 @@
                         ;; boxed identifier means "checked" for `#%append`
                         #:box-id? (syntax-e #'checked-append?))
          #,@(gen-bounce #'maybe-compare-statinfo-id+id #'#%compare #f
-                        #:box-id? (syntax-e #'checked-compare?)))]))
+                        #:box-id? (syntax-e #'checked-compare?))
+         #,@(gen-bounce #'maybe-contains-statinfo-id+id #'#%contains #f))]))
 
 (define-for-syntax (de-method-arity arity)
   (datum->syntax #f

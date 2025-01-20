@@ -31,8 +31,8 @@ fun explain_anim(p :: Pict,
 fun gen_times(start, end, steps, pre_extra, post_extra):
   let l:
     for List:
-      each i: start .. end
-      each step: 0 .. steps
+      each i in start .. end
+      each step in 0 .. steps
       if step == 0
       | i
       | i + (step * math.inexact(1/steps))
@@ -40,7 +40,7 @@ fun gen_times(start, end, steps, pre_extra, post_extra):
     if n == 0
     | []
     | for List:
-        each i: 1 ..= n
+        each i in 1 ..= n
         let j = i mod steps
         let delta:
           if j == 0

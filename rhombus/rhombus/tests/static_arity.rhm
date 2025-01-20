@@ -42,7 +42,7 @@ expr.macro 'static_arity_check $(pattern:
     | '($t, ...)':
         let ([arg, ...], [more, ...]):
           for values(args :~ List = [], mores :~ List = []):
-            each t: [t, ...]
+            each t in [t, ...]
             match t
             | '$(_ :: Identifier)': values(args.add(t), mores)
             | '[$(_ :: Identifier)]': values(args, mores.add(t))

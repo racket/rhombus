@@ -1,0 +1,82 @@
+#lang rhombus
+
+use_static
+
+class A():
+  nonfinal
+  implements MembershipTestable
+  override method contains(index):
+    match index
+    | 1: #false
+    | 100: "yes"
+    | ~else: #true
+  method get_self(index):
+    index in this
+
+class C():
+  extends A
+
+interface I3:
+  extends MembershipTestable
+
+class A3():
+  implements I3
+  override method contains(index):
+    index != 3
+
+class A4():
+  private implements MembershipTestable
+  private override method contains(index):
+    index != 4
+
+class A5():
+  implements MembershipTestable
+  override method contains(index):
+    values("oops", "wow")
+
+check:
+  0 in A() ~is #true
+  0 !in A() ~is #false
+  1 in A() ~is #false
+  100 in A()  ~throws values(
+    "result does not satisfy annotation",
+    "Boolean"
+  )
+  A().get_self(7) ~is #true
+  4 in C() ~is #true
+  1 in A3() ~is #true
+  0 in (A3() :: I3) ~is #true
+  10 in A4() ~is #true
+  10 in A5() ~throws values(
+    "results do not satisfy annotation",
+    "Boolean",
+    "\"oops\"", "\"wow\"",
+  )
+  A5().contains("not good") ~throws values(
+    "results do not satisfy annotation",
+    "Boolean",
+    "\"oops\"", "\"wow\"",
+  )
+
+check:
+  A() is_a MembershipTestable ~is #true
+  C() is_a MembershipTestable ~is #true
+  A4() is_a MembershipTestable ~is #true
+  4 is_a MembershipTestable ~is #false
+
+  { 1: 2 } is_a MembershipTestable ~is #true
+  { 1, 2 } is_a MembershipTestable ~is #true
+  Array(1, 2) is_a MembershipTestable ~is #true
+  [1, 2] is_a MembershipTestable ~is #true
+
+  "apple" is_a MembershipTestable ~is #false
+  #"apple" is_a MembershipTestable ~is #false
+  #'apple is_a MembershipTestable ~is #false
+
+check:
+  0 in (#'apple :~ MembershipTestable) ~throws values(
+    "MembershipTestable.contains: " ++ error.annot_msg(),
+    error.annot("MembershipTestable").msg,
+    "#'apple",
+  )
+

@@ -313,7 +313,7 @@ fun flatten(who, args :~ List, srclocs :~ List, pred, desc, keep_srcloc = #false
                 srcloc: srclocs):
       cond
       | arg is_a List:
-          let srclocs: for List (a: arg :~ List): srcloc
+          let srclocs: for List (a in arg :~ List): srcloc
           flatten(who, arg, srclocs, pred, desc, keep_srcloc)
       | pred(arg): (if keep_srcloc | [[arg, srcloc]] | [arg])
       | ~else:

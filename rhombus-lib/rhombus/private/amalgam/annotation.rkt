@@ -548,13 +548,16 @@
    (lambda () (order-quote equivalence))
    '()
    'macro
-   (lambda (form tail)
+   (lambda (form tail [mode 'normal])
      (syntax-parse tail
        [(op . (~var t (:annotation-seq #'is_a)))
         (values
          (syntax-parse #'t.parsed
            [c-parsed::annotation-predicate-form
-            #`(c-parsed.predicate #,form)]
+            (let ([r #`(c-parsed.predicate #,form)])
+              (if (eq? mode 'invert)
+                  #`(not #,r)
+                  r))]
            [c-parsed::annotation-binding-form
             #:with arg-parsed::binding-form #'c-parsed.binding
             #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
@@ -564,8 +567,8 @@
                 (arg-info.matcher-id val-in
                                      arg-info.data
                                      if/blocked
-                                     #t
-                                     #f))])
+                                     #,(eq? mode 'normal)
+                                     #,(not (eq? mode 'normal))))])
          #'t.tail)]))
    'none))
 

@@ -102,11 +102,14 @@ See also @secref("Equatables").
 @doc(
   operator ((v1 :: Any) is_now (v2 :: Any)) :: Boolean:
     ~order: equivalence
+  non_target:
+    expr.macro '$expr !is_now $expr'
   key_comp.def 'is_now'
 ){
 
  Reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
- in the sense that mutable fields of objects have the same values.
+ in the sense that mutable fields of objects have the same values. The
+ operator combination @rhombus(!is_now) inverts the test.
 
  Mutable and immutable strings, byte vectors, and arrays are considered
  the same if they have the same elements, even if one is mutable and the

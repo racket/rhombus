@@ -10,8 +10,9 @@
 An @deftech{array} is @tech{indexable} using @brackets to access an array element
 by position (in constant time) via @rhombus(#%index), and it also support element
 assignment via @brackets and @rhombus(:=). An array also
-works with the @rhombus(++) operator to append arrays. An array can be
-used as @tech{sequence}, in which case it supplies its elements in
+works with the @rhombus(++) operator to append arrays.
+An array supports @tech{membership tests} using the @rhombus(in) operator.
+An array can be used as @tech{sequence}, in which case it supplies its elements in
 order.
 
 An array is normally mutable, but immutable arrays can originate from
@@ -222,6 +223,22 @@ contents, even if one is mutable and the other is immutable.
   a
   a[1] := "e"
   a
+)
+
+}
+
+
+@doc(
+  method (arr :: Array).contains(val :: Any,
+                                 eqls :: Function.of_arity(2) = (_ == _))
+    :: Boolean
+){
+
+ List @rhombus(List.contains), but for arrays. See also @rhombus(in).
+
+@examples(
+  Array("a", "b", "c").contains("b")
+  "b" in Array("a", "b", "c")
 )
 
 }

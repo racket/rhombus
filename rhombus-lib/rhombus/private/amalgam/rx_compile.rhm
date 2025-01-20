@@ -22,7 +22,7 @@ meta:
 
   // create a map from symbols to indices
   fun map_vars(var_seq :~ List):
-    for values(vars :~ Map: {}, di = 0) (var: var_seq):
+    for values(vars :~ Map: {}, di = 0) (var in var_seq):
       match var
       | var :: Identifier:
           values(vars ++ { var.unwrap(): di+1 }, di+1)
@@ -33,7 +33,7 @@ meta:
 
   // create a list expression that records names and where splices happen
   fun describe_splice_vars(var_seq :~ List, vars :~ Map):
-    for List (var: var_seq):
+    for List (var in var_seq):
       skip_when:
         match var
         | '[~maybe_splice, $id]': vars.has_key(id.unwrap())
@@ -147,7 +147,7 @@ meta:
           let elem:
             match str.unwrap()
             | str :: String:
-                if (for all (c: str):
+                if (for all (c in str):
                       c.to_int() < 256)
                 | #'any
                 | #'char

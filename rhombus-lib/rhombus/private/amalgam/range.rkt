@@ -31,6 +31,7 @@
          (submod "dot.rkt" for-dot-provider)
          "define-arity.rkt"
          "call-result-key.rkt"
+         "contains-key.rkt"
          "sequence-constructor-key.rkt"
          "order.rkt"
          "order-primitive.rkt")
@@ -49,10 +50,14 @@
                      <..<
                      <..=))
 
+(module+ for-container
+  (provide range?
+           Range.contains))
+
 (define-primitive-class Range range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ()
+  #:instance-static-info ((#%contains Range.contains))
   #:existing
   #:just-annot #:no-primitive
   #:fields ()
@@ -76,7 +81,7 @@
    end
    includes_start
    includes_end
-   has_element
+   contains
    encloses
    is_connected
    overlaps
@@ -86,7 +91,8 @@
 
 (define-static-info-getter get-sequence-range-static-infos/sequence
   (#%sequence-constructor Range.to_sequence/optimize)
-  (#%sequence-element #,(get-int-static-infos)))
+  (#%sequence-element #,(get-int-static-infos))
+  #,@(get-range-static-infos))
 
 (define-primitive-class SequenceRange sequence-range
   #:lift-declaration
@@ -641,7 +647,7 @@
            (not other-upper?)
            (= point other-point))))
 
-(define/method (Range.has_element r i)
+(define/method (Range.contains r i)
   (check-range who r)
   (check-int who i)
   (define-values (start in-start? end in-end?)

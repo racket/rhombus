@@ -20,6 +20,7 @@
          "index-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
+         "contains-key.rkt"
          "static-info.rkt"
          "indirect-static-info-key.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -413,6 +414,7 @@
                                          index-set-statinfo-indirect-stx setable?
                                          append-statinfo-indirect-stx appendable?
                                          compare-statinfo-indirect-stx comparable?
+                                         contains-statinfo-indirect-stx container?
                                          super-call-statinfo-indirect-id
                                          #:checked-append? [checked-append? #t]
                                          #:checked-compare? [checked-compare? #t])
@@ -468,7 +470,10 @@
                                       [op (in-list ops)])
                              #`(#,op #,(or (let ([a (hash-ref addeds name #f)])
                                              (and a (added-method-rhs-id a)))
-                                           (box (added-method-rhs-id added))))))])]))))
+                                           (box (added-method-rhs-id added))))))])])
+          #,(and container?
+                 (eq? 'contains (syntax-e (added-method-id added)))
+                 #`[#,contains-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
 
   ;; may need to add info for inherited `call`, etc.:
   (define (add-able which statinfo-indirect-stx able? key defs abstract-args
@@ -504,7 +509,8 @@
                          ;; boxed means "checked" for `#%append`:
                          #:box-id? checked-append?)]
          [defs (add-able 'compare_to compare-statinfo-indirect-stx comparable? #'#%compare defs #'(val)
-                         #:const '#:method)])
+                         #:const '#:method)]
+         [defs (add-able 'contains contains-statinfo-indirect-stx container? #'#%contains defs #'(val))])
     defs))
 
 (define-for-syntax (build-method-result-expression method-result)

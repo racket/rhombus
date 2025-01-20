@@ -49,7 +49,7 @@ meta:
     let ([parsed, ...], _):
       for values (parseds :~ List = [],
                   seen :~ Set = Set.by(===){}):
-        each c: [clause, ...]
+        each c in [clause, ...]
         match c
         | (pattern:
              kind ~group
@@ -68,8 +68,8 @@ meta:
             let new_syms = [sym, ...]
             let seen:
               for values (seen :~ Set = seen):
-                each sym: new_syms
-                when seen[sym.unwrap()]
+                each sym in new_syms
+                when sym.unwrap() in seen
                 | syntax_meta.error("duplicate enum identifier",
                                     stx,
                                     sym)
@@ -88,7 +88,7 @@ meta:
                               c)
     let [sym, ...]:
       for values (syms :~ List = []):
-        each parsed: [parsed, ...]
+        each parsed in [parsed, ...]
         match parsed
         | Parsed.Symbol([sym, ...]): syms ++ [sym, ...]
         | ~else: syms
@@ -103,7 +103,7 @@ meta:
             statinfo
       let ann_statinfos:
         for values (statinfos :~ List = []):
-          each parsed: [parsed, ...]
+          each parsed in [parsed, ...]
           match parsed
           | Parsed.Annot([ann, ...]): statinfos ++ [unpack_statinfo(ann), ...]
           | ~else: statinfos

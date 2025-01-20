@@ -13,6 +13,7 @@
          "flonum-key.rkt"
          "fixnum-key.rkt"
          "rhombus-primitive.rkt"
+         "order.rkt"
          "order-primitive.rkt")
 
 (provide (for-spaces (#f
@@ -52,6 +53,9 @@
                        get-int-static-infos
                        get-fixnum-static-infos
                        get-flonum-static-infos)))
+
+(module+ parse-not
+  (provide (for-syntax set-parse-not!)))
 
 (define-static-info-getter get-number-static-infos
   ;; comparison actually requires real numbers, but we want to
@@ -130,8 +134,38 @@
   #:order integer_division
   #:static-infos #,(get-real-static-infos))
 
-(define-prefix ! not
-  #:order logical_negation)
+(begin-for-syntax
+  (define parse-not void)
+  (define (set-parse-not! proc) (set! parse-not proc)))
+
+(define-values-for-syntax (not-expr-prefix not-repet-prefix)
+  (prefix not
+          #:order logical_negation))
+(define-values-for-syntax (not-expr-infix not-repet-infix)
+  (values
+   (expression-infix-operator
+    (lambda () (order-quote equivalence))
+    '()
+    'macro
+    (lambda (form1 tail)
+      (parse-not form1 tail #f))
+    'left)
+   (repetition-infix-operator
+    (lambda () (order-quote member_access))
+    '()
+    'macro
+    (lambda (form1 tail)
+      (parse-not form1 tail #t))
+    'left)))
+
+(define-syntax !
+  (expression-prefix+infix-operator
+   not-expr-prefix
+   not-expr-infix))
+(define-repetition-syntax !
+  (repetition-prefix+infix-operator
+   not-repet-prefix
+   not-repet-infix))
 
 (define-infix && and
   #:order logical_conjunction)
@@ -198,9 +232,10 @@
 
 (define-syntax (define-eql-infix stx)
   (syntax-parse stx
-    [(_ name racket-name)
+    [(_ name racket-name option ...)
      #'(define-infix name racket-name
-         #:order equivalence)]))
+         #:order equivalence
+         option ...)]))
 
 (define (not-equal-always? a b)
   (not (equal-always? a b)))
@@ -208,7 +243,8 @@
 (define-eql-infix == equal-always?)
 (define-eql-infix != not-equal-always?)
 (define-eql-infix === eq?)
-(define-eql-infix is_now equal?)
+(define-eql-infix is_now equal?
+  #:negatable)
 (define-eql-infix is_same_number_or_object eqv?)
 
 (void (set-primitive-who! 'fl+ '+))
