@@ -227,7 +227,11 @@
 
 (define/method (Array.contains v i [eql equal-always?])
   #:primitive (vector-member)
-  (and (vector-member i v eql) #t))
+  (and (meta-if-version-at-least
+        "8.15.0.1"
+        (vector-member i v eql)
+        (vector-member i v))
+       #t))
 
 (define (check-array who v)
   (unless (vector? v)
