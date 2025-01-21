@@ -79,6 +79,7 @@ module private:
     remove_nothings
     set_switch
     set_animate
+    genident
     METHOD
 
 enum ColorMode:
@@ -106,6 +107,11 @@ def empty_instances = []
 
 annot.delayed_declare SnapshotPict
 
+class PictIdentity(mutable rep)
+
+fun genident():
+  PictIdentity(#false)
+
 expr.macro 'METHOD($name, $arg, ...)':
   'fun (this :~ _Pict): this . $name($arg, ...)'
 
@@ -131,6 +137,8 @@ class Pict():
   private override describe(mode, recur):
     PrintDesc.special(snapshot().draw_handle, ~mode: #'print,
                       "Pict(...)")
+
+  abstract property identity
 
   abstract property width :~ Real
   abstract property height :~ Real
@@ -324,6 +332,7 @@ class Pict():
             values(new, subst ++ { this: new })
 
 class StaticPict(private _handle,
+                 private _identity,
                  private _children :~ Pict || List,
                  private _dependencies :~ maybe(List),
                  private _config :~ maybe(Map),
@@ -335,10 +344,11 @@ class StaticPict(private _handle,
   opaque
   internal _StaticPict
   constructor
-  | (): super()(rkt.blank(), [], #false, #false, empty_instances, #false, {})
-  | (children, rebuild): super()(rkt.blank(), children, #false, #false, empty_instances, rebuild, {})
+  | (): super()(rkt.blank(), genident(), [], #false, #false, empty_instances, #false, {})
+  | (children, rebuild): super()(rkt.blank(), genident(), children, #false, #false, empty_instances, rebuild, {})
 
   property handle: _handle
+  override property identity: _identity
   override property width: rkt.#{pict-width}(_handle)
   override property height: rkt.#{pict-height}(_handle)
   override property ascent: rkt.#{pict-ascent}(_handle)
@@ -363,7 +373,7 @@ class StaticPict(private _handle,
     let rebuild:
       if rebuild_prompt
       | fun (p): p
-      | METHOD(snapshot)
+      | METHOD(snapshot, epoch, n, ~rebuild_prompt: rebuild_prompt)
     if epoch == 0
     | static_pict(_handle, this, _instances, rebuild)
     | static_pict(rkt.ghost(_handle), this, _instances, rebuild)
@@ -509,7 +519,7 @@ fun static_pict(handle, children, instances, rebuild = #false,
                 ~dependencies: dependencies = #false,
                 ~config: config = #false,
                 ~metadata: metadata = {}) :~ StaticPict:
-  _StaticPict()(handle, children, dependencies, config, instances, rebuild, metadata)
+  _StaticPict()(handle, genident(), children, dependencies, config, instances, rebuild, metadata)
 
 def mutable do_convert = (fun (p): error("convert not ready"))
 fun convert(p :~ List.of(Pict), epoch, duration, combine, non_sustain_combine = combine,
@@ -540,6 +550,7 @@ class NothingPict():
   extends StaticPict
   constructor (): super()()
 
+  override property identity: #false
   override property width: 0
   override property height: 0
   override property ascent: 0
@@ -621,7 +632,7 @@ fun static_instance([p :: Pict, ...], as_p :: _StaticPict,
   if as_p == nothing
   | as_p
   | let handle: rkt.inset(as_p.handle, 0) // fresh identity
-    static_pict(handle, as_p, as_p._instances ++ [Pair(p, handle), ...], rebuild,
+    static_pict(handle, as_p, as_p._instances ++ [Pair(p.identity, handle), ...], rebuild,
                 ~dependencies: dependencies,
                 ~config: config)
 
@@ -630,7 +641,7 @@ fun find_instance(p :: _StaticPict, q :~ Pict):
     for any (inst in instances):
       match inst
       | Pair(key, handle):
-          key === q && handle
+          key === q.identity && handle
       | ~else:
           loop(inst)
 
