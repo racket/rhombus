@@ -139,10 +139,9 @@ class Pict():
 
   abstract property duration :~ Int
   abstract method epoch_extent(i :: Int) :~ Real
-  abstract method
-  | snapshot() :~ SnapshotPict
-  | snapshot(epoch :: Int,
-             n :: Real.in(0, 1)) :~ SnapshotPict
+  abstract method snapshot(epoch :: Int = 0,
+                           n :: Real.in(0, 1) = 0,
+                           ~rebuild_prompt: rebuild_prompt = #true) :~ SnapshotPict
 
   abstract property children :~ List.of(Pict)
   abstract property _children_starts :~ List.of(Int)
@@ -358,13 +357,16 @@ class StaticPict(private _handle,
   override property duration: 1
   override method epoch_extent(i :: Int): 0
 
-  override method
-  | snapshot():
-      static_pict(_handle, this, _instances, METHOD(snapshot))
-  | snapshot(epoch, n):
-      if epoch == 0
-      | snapshot()
-      | static_pict(rkt.ghost(_handle), this, _instances, METHOD(snapshot))
+  override method snapshot(epoch :: Int = 0,
+                           n :: Real.in(0, 1) = 0,
+                           ~rebuild_prompt: rebuild_prompt = #true):
+    let rebuild:
+      if rebuild_prompt
+      | fun (p): p
+      | METHOD(snapshot)
+    if epoch == 0
+    | static_pict(_handle, this, _instances, rebuild)
+    | static_pict(rkt.ghost(_handle), this, _instances, rebuild)
 
   override method draw(dc :: DC, ~dx: dx :: Real = 0, ~dy: dy :: Real = 0):
     rkt.#{draw-pict}(_handle, dc.handle, dx, dy)
@@ -548,9 +550,10 @@ class NothingPict():
   | epoch_extent(i :: Int): 0
   | epoch_extent(i :: Int, extent :: NonnegReal): this
 
-  override method
-  | snapshot(): this
-  | snapshot(epoch, n): this
+  override method snapshot(epoch :: Int = 0,
+                           n :: Real.in(0, 1) = 0,
+                           ~rebuild_prompt: _ = #true):
+    this
 
   override method launder(): this
   override method ghost(do_ghost = #true): this

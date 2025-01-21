@@ -482,14 +482,22 @@
 }
 
 @doc(
-  method (pict :: Pict).snapshot() :: StaticPict
-  method (pict :: Pict).snapshot(epoch :: Int, n :: Real.in(0, 1))
+  method (pict :: Pict).snapshot(epoch :: Int = 0,
+                                 n :: Real.in(0, 1) = 0,
+                                 ~rebuild_prompt: rebuild_prompt = #true)
     :: StaticPict
 ){
 
  Converts an @tech{animated pict} to a @tech{static pict} for the
- animation at time @math{t} @math{=} @rhombus(epoch + n). The 0-argument
- variant is a shorthand for providing @rhombus(0) and @rhombus(0).
+ animation at time @math{t} @math{=} @rhombus(epoch + n).
+
+ If @rhombus(rebuild_prompt) is @rhombus(#false), then a rebuilding
+ operation on the result pict via @rhombus(Pict.build) is propagated to
+ the original @rhombus(pict), and a snapshot of the rebuilt
+ @rhombus(pict) is taken for the overall rebuild result. If
+ @rhombus(rebuild_prompt) is a true value, then then a rebuilding
+ operation rebuilds in the initial snapshot, instead of taking a snapshot
+ of a rebuilt @rhombus(pict).
 
 @examples(
   ~eval: pict_eval

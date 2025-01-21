@@ -434,30 +434,34 @@ class AnimPict(_epochs :~ List.of(PictEpoch),
   override method drawer():
     snapshot().drawer()
 
-  override method
-  | snapshot() :~ Pict: snapshot(0, 0)
-  | snapshot(epoch :: Int, n :: Real.in(0, 1)) :~ Pict:
-      let e = get_epoch(epoch)
-      fun animate_result(p :: StaticPict):
-        static_instances(this, p,
+  override method snapshot(epoch :: Int = 0,
+                           n :: Real.in(0, 1) = 0,
+                           ~rebuild_prompt: rebuild_prompt :: Any.to_boolean = #true) :~ Pict:
+    let e = get_epoch(epoch)
+    fun animate_result(p :: StaticPict):
+      if rebuild_prompt
+      | static_instances(this, p,
+                         ~dependencies: [p],
+                         ~rebuild: fun ([p]): p)
+      | static_instances(this, p,
                          ~dependencies: [this],
                          ~rebuild: fun ([p :~ Pict]):
-                                     p.snapshot(epoch, n))
-      cond
-      | e:
-          animate_result(PictEpoch.pict(e, n))
-      | epoch < _duration_start:
-          recur loop(n = _duration_start - epoch,
-                     e :~ PictEpoch = _epochs[0]):
-            if n == 0            
-            | animate_result(e.pict(0))
-            | loop(n-1, e.before())
-      | ~else:
-          recur loop(n = epoch + _duration_start - _epochs.length() + 1,
-                     e :~ PictEpoch = _epochs[_epochs.length() - 1]):
-            if n == 0            
-            | animate_result(e.pict(0))
-            | loop(n-1, e.after())
+                                     p.snapshot(epoch, n, ~rebuild_prompt: rebuild_prompt))
+    cond
+    | e:
+        animate_result(PictEpoch.pict(e, n))
+    | epoch < _duration_start:
+        recur loop(n = _duration_start - epoch,
+                   e :~ PictEpoch = _epochs[0]):
+          if n == 0
+          | animate_result(e.pict(0))
+          | loop(n-1, e.before())
+    | ~else:
+        recur loop(n = epoch + _duration_start - _epochs.length() + 1,
+                   e :~ PictEpoch = _epochs[_epochs.length() - 1]):
+          if n == 0
+          | animate_result(e.pict(0))
+          | loop(n-1, e.after())
 
   override method
   | _pad(amt :: Real) :~ AnimPict:
