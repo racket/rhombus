@@ -255,9 +255,9 @@
   property (pict :: Pict).children :: List.of(Pict)
 ){
 
- A list of component @tech{picts} that were combined to construct
- @rhombus(pict). Those picts can be located within @rhombus(pict) using a
- @tech{finder}.
+ Produces the @tech{children} pf @rhombus(pict): a list of component
+ @tech{picts} that were combined to construct @rhombus(pict). Those picts
+ can be located within @rhombus(pict) using a @tech{finder}.
 
 @examples(
   ~eval: pict_eval
@@ -280,7 +280,7 @@
  fresh identity and hiding the identity of any component inside
  @rhombus(pict) from a @tech{finder}, traversal via
  @rhombus(Pict.rebuild), or the result of the @rhombus(Pict.children)
- property.
+ property. See also @secref("identity").
 
 @examples(
   ~eval: pict_eval
@@ -376,13 +376,17 @@
  replacement for the given pict. When rebuilding does recur, when a
  pict's descendants are unchanged and when @rhombus(config_adjust) (if
  applicable) returns a configuration unchanged, then the original
- construction of the pict is kept, preserving its identity (while picts
- will have fresh identities when they are rebuilt due to a changed child
- or configuration). Finally, @rhombus(post_adjust) is applied to either
+ construction of the pict is kept. Finally, @rhombus(post_adjust) is applied to either
  the rebuilt pict or so-far-preserved original pict to obtain the rebuilt
  replacement for the original pict. The replacement of a given pict is
  cached, so @rhombus(pre_adjust) and @rhombus(post_adjust) are each
  applied at most once to a pict within a call to @rhombus(Pict.rebuild).
+
+ A rebuilt pict--either @rhombus(pict) itself or a rebuilt
+ dependency---shares the identity of the original pict, so the rebuilt
+ pict can be located via @rhombus(Find, ~class) objects, replaced via
+ @rhombus(Pict.replace), or extracted using @rhombus(Pict.find_rebuilt).
+ See also @secref("identity").
 
 @examples(
   ~eval: pict_eval
@@ -443,6 +447,20 @@
                    | config ++ { key: val }
                    | config)
 )
+}
+
+
+@doc(
+  method (pict :: Pict).find_rebuilt(orig :: Pict) :: maybe(Pict)
+){
+
+ Returns a descendant of @rhombus(pict) (by recursively checking
+ @tech{children}) that has the same identity as @rhombus(orig), or
+ returns @rhombus(#false) no such pict can be found.
+
+ See @rhombus("identity") for more information about pict identity and
+ rebuilt picts.
+
 }
 
 

@@ -1,5 +1,4 @@
 #lang rhombus/scribble/manual
-
 @(import:
     pict open
     draw
@@ -140,7 +139,8 @@ past the bounding box, but clips beyond that small allowance.
   hello.pad(-10)
 )
 
-Pict identities are preserved in a composite pict so that the originals
+Pict identities (discussed more in @secref("identity")) are preserved
+in a composite pict so that the originals
 can be located relative to the composite. The @rhombus(Find, ~annot)
 familty of functions produces a pict-specific finder that can be applied
 to a composite pict.
@@ -155,11 +155,7 @@ to a composite pict.
 
 The @rhombus(Pict.ghost) operation takes a pict and produces a new one
 whose drawing is blank, but with the same bounding box and preserving
-the identities of all picts (including the ghosted one). The
-@rhombus(Pict.launder) operation on a pict produces one that draws the
-same and has the same bounding box, but that hides the identity of all
-picts within the composite, so @rhombus(Find, ~annot) functions cannot find
-them.
+the identities of all picts (including the ghosted one).
 
 Not only are pict identities preserved in a composite pict, but the way
 that those picts are used to produce the composite is also recorded.

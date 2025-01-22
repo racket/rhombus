@@ -107,7 +107,12 @@ def empty_instances = []
 
 annot.delayed_declare SnapshotPict
 
-class PictIdentity(mutable rep)
+class PictIdentity(mutable gen):
+  implements Printable
+  override describe(mode, recur):
+    PrintDesc.list("PictIdentity(",
+                   [recur(Equatable.identity_hash(this))],
+                   ")")
 
 fun genident():
   PictIdentity(#false)
@@ -138,7 +143,7 @@ class Pict():
     PrintDesc.special(snapshot().draw_handle, ~mode: #'print,
                       "Pict(...)")
 
-  abstract property identity
+  abstract property _identity
 
   abstract property width :~ Real
   abstract property height :~ Real
@@ -252,7 +257,7 @@ class Pict():
     let (p, _) = _replace(fun (p): p,
                           fun (p): p,
                           fun (c): c,
-                          Map.by(===){ from : to })
+                          Map.by(===){ from._identity : to })
     p
 
   method configure(key, val) :~ Pict:
@@ -268,8 +273,8 @@ class Pict():
                                _children, _dependencies, _config,
                                _rebuild):
     cond
-    | subst.has_key(this):
-        values(subst[this], subst)
+    | _identity in subst:
+        values(subst[_identity], subst)
     | ~else:
         let new = pre_adjuster(this)
         cond
@@ -281,7 +286,8 @@ class Pict():
                     error.annot("Pict"),
                     error.val(~label: "function", pre_adjuster),
                     error.val(~label: "result", new))
-            values(new, subst ++ { this: new })
+            let new = Pict._identify_as(new, _identity)
+            values(new, subst ++ { _identity: new })
         | ~else:
             let (new, subst :~ Map):
               match  _dependencies || _children:
@@ -322,20 +328,33 @@ class Pict():
                   | let new = (if new_config | _rebuild(new_child, new_config) | _rebuild(new_child))
                     values (new, subst)
             let new = adjuster(new)
-            unless new is_a Pict
-            | error(~who: #'rebuild,
-                    ~exn: Exn.Fail.Annot,
-                    error.annot_msg("post-adjust function's result"),
-                    error.annot("Pict"),
-                    error.val(~label: "function", adjuster),
-                    error.val(~label: "result", new))
-            values(new, subst ++ { this: new })
+            if new === this
+            | values(this, subst)
+            | unless new is_a Pict
+              | error(~who: #'rebuild,
+                      ~exn: Exn.Fail.Annot,
+                      error.annot_msg("post-adjust function's result"),
+                      error.annot("Pict"),
+                      error.val(~label: "function", adjuster),
+                      error.val(~label: "result", new))
+              let new = Pict._identify_as(new, _identity)
+              values(new, subst ++ { _identity: new })
+
+  abstract protected method _identify_as(identity)
+
+  method find_rebuilt(p :: Pict) :~ maybe(Pict):
+    if p._identity == _identity
+    | this
+    | for any (c in children):
+        c.find_rebuilt(p)
 
 class StaticPict(private _handle,
-                 private _identity,
+                 private _identity_f,
                  private _children :~ Pict || List,
                  private _dependencies :~ maybe(List),
                  private _config :~ maybe(Map),
+                 // tree of `Pair(identity, handle)`, which maps animated-pict identities
+                 // to handles within `_handle` that represents those aniimated picts
                  private _instances :~ List,
                  private _rebuild,
                  private _metadata :~ Map):
@@ -348,7 +367,7 @@ class StaticPict(private _handle,
   | (children, rebuild): super()(rkt.blank(), genident(), children, #false, #false, empty_instances, rebuild, {})
 
   property handle: _handle
-  override property identity: _identity
+  override property _identity: _identity_f
   override property width: rkt.#{pict-width}(_handle)
   override property height: rkt.#{pict-height}(_handle)
   override property ascent: rkt.#{pict-ascent}(_handle)
@@ -507,6 +526,11 @@ class StaticPict(private _handle,
                 _children, _dependencies, _config,
                 _rebuild)
 
+  override method _identify_as(identity):
+    static_pict(_handle, this, [_instances, Pair(identity, _handle)], fun (p): p,
+                ~identity: identity,
+                ~dependencies: this)
+
 namespace StaticPict_public:
   export:
     rename:
@@ -518,8 +542,9 @@ annot.delayed_complete SnapshotPict: StaticPict
 fun static_pict(handle, children, instances, rebuild = #false,
                 ~dependencies: dependencies = #false,
                 ~config: config = #false,
-                ~metadata: metadata = {}) :~ StaticPict:
-  _StaticPict()(handle, genident(), children, dependencies, config, instances, rebuild, metadata)
+                ~metadata: metadata = {},
+                ~identity: identity = genident()) :~ StaticPict:
+  _StaticPict()(handle, identity, children, dependencies, config, instances, rebuild, metadata)
 
 def mutable do_convert = (fun (p): error("convert not ready"))
 fun convert(p :~ List.of(Pict), epoch, duration, combine, non_sustain_combine = combine,
@@ -544,13 +569,15 @@ class ContainerPict(private ps :~ List.of(Pict)):
   internal _ContainerPict
   constructor (ps, children, rebuild):
     super(children, rebuild)(ps)
+  override method _identify_as(identity):
+    this
 
 class NothingPict():
   ~name Pict
   extends StaticPict
   constructor (): super()()
 
-  override property identity: #false
+  override property _identity: #false
   override property width: 0
   override property height: 0
   override property ascent: 0
@@ -612,6 +639,8 @@ class NothingPict():
 
   override method _replace(pre_adjuster, adjuster, config_adjuster, subst): this
 
+  override method _identify_as(identity): this
+
 def nothing = NothingPict()
 
 fun remove_nothings(ps :~ List):
@@ -626,13 +655,15 @@ fun from_handle(p :: satisfying(#{pict?}),
   static_pict(p, [sub, ...], [sub._instances, ...], rebuild)
 
 fun static_instance([p :: Pict, ...], as_p :: _StaticPict,
+                    ~identity: identity = genident(),
                     ~dependencies: dependencies = #false,
                     ~config: config = #false,
                     ~rebuild: rebuild = fun (p): p):
   if as_p == nothing
   | as_p
   | let handle: rkt.inset(as_p.handle, 0) // fresh identity
-    static_pict(handle, as_p, as_p._instances ++ [Pair(p.identity, handle), ...], rebuild,
+    static_pict(handle, as_p, as_p._instances ++ [Pair(p._identity, handle), ...], rebuild,
+                ~identity: identity,
                 ~dependencies: dependencies,
                 ~config: config)
 
@@ -641,7 +672,7 @@ fun find_instance(p :: _StaticPict, q :~ Pict):
     for any (inst in instances):
       match inst
       | Pair(key, handle):
-          key === q.identity && handle
+          key === q._identity && handle
       | ~else:
           loop(inst)
 
@@ -1311,7 +1342,7 @@ fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
 
 // ------------------------------------------------------------
 
-class Find(private q, private find, private t_find_or_dt, private is_animated):
+class Find(private q :~ Pict, private find, private t_find_or_dt, private is_animated):
   internal _Find
 
   constructor(q :: Pict,
@@ -1371,7 +1402,7 @@ class Find(private q, private find, private t_find_or_dt, private is_animated):
 
   method start_in(p :: Pict) :~ Int:
     fun loop (p :~ Pict, delta):
-      if p == q
+      if p._identity == q._identity
       | delta
       | for any (c: p.children,
                  start: (p :~ _Pict)._children_starts):
@@ -1455,8 +1486,9 @@ fun offset(proc, dx, dy, dx_w, dy_h):
         match q
         | q :: StaticPict:
             try:
-              let (x, y) = proc(p.handle, q.handle)
-              let (dx_w, dy_h) = size_shift(p.handle, q.handle)
+              let q_handle = find_instance(p, q) || q.handle
+              let (x, y) = proc(p.handle, q_handle)
+              let (dx_w, dy_h) = size_shift(p.handle, q_handle)
               values(x + dx + dx_w, y + dy + dy_h)
               ~catch x:
                 values(#false, #false)
