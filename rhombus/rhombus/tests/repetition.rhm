@@ -175,6 +175,25 @@ block:
     [a[x], ...][0].x
     ~is 4
 
+// membership test `in` as a repetition
+block:
+  use_static
+  class Posn(x, y)
+  def a :: List.of(Posn):
+    [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
+  def [x, ...] = [Posn(2, 2), Posn(2, 3), Posn(3, 3)]
+  check:
+    [x in a, ...] ~is [#true, #false, #true]
+    [x !in a, ...] ~is [#false, #true, #false]
+
+// `!is_now` as a repetition
+block:
+  def [x, ...]:
+    [Array(1, 2, 3), Array("foo", "bar", "baz"), ["not", "an", "array"]]
+  check:
+    [x is_now Array(1, 2, 3), ...] ~is [#true, #false, #false]
+    [x !is_now Array(1, 2, 3), ...] ~is [#false, #true, #true]
+
 // dotted names as repetitions
 block:
   def [i, ...] = [1, 2, 3]

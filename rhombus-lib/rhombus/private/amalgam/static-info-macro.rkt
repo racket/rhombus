@@ -33,6 +33,7 @@
          "function-arity-key.rkt"
          "call-result-key.rkt"
          "append-key.rkt"
+         "contains-key.rkt"
          "index-key.rkt"
          "index-result-key.rkt"
          "flonum-key.rkt"
@@ -78,6 +79,7 @@
      index_get_key
      index_set_key
      append_key
+     contains_key
      flonum_key
      fixnum_key
      dot_provider_key
@@ -323,6 +325,7 @@
 (define-key index_get_key #%index-get)
 (define-key index_set_key #%index-set)
 (define-key append_key #%append)
+(define-key contains_key #%contains)
 (define-key dot_provider_key #%dot-provider)
 (define-key sequence_constructor_key #%sequence-constructor)
 (define-key sequence_element_key #%sequence-element)

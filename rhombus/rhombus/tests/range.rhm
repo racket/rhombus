@@ -45,6 +45,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
+      0 in rge ~is #true
+      5 in rge ~is #false
       rge.contains(0) ~is #true
       rge.contains(5) ~is #false
       rge.encloses(0..5) ~is #true
@@ -58,6 +60,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #false
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0..5) ~is #true
@@ -84,6 +88,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #true
       rge.includes_end() ~is #true
+      0 in rge ~is #true
+      5 in rge ~is #true
       rge.contains(0) ~is #true
       rge.contains(5) ~is #true
       rge.encloses(0..=5) ~is #true
@@ -97,6 +103,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #true
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..=5) ~is #true
@@ -122,6 +130,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #true
       rge.includes_end() ~is #false
+      0 in rge ~is #true
+      5 in rge ~is #true
       rge.contains(0) ~is #true
       rge.contains(5) ~is #true
       rge.encloses(0..) ~is #true
@@ -135,6 +145,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #true
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0..) ~is #true
@@ -161,6 +173,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
+      0 in rge ~is #false
+      5 in rge ~is #false
       rge.contains(0) ~is #false
       rge.contains(5) ~is #false
       rge.encloses(0 <.. 5) ~is #true
@@ -174,6 +188,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #false
+    5 in dynamic(rge) ~is #false
     dynamic(rge).contains(0) ~is #false
     dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(0 <.. 5) ~is #true
@@ -200,6 +216,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
+      0 in rge ~is #false
+      5 in rge ~is #true
       rge.contains(0) ~is #false
       rge.contains(5) ~is #true
       rge.encloses(0 <..= 5) ~is #true
@@ -213,6 +231,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
+    0 in dynamic(rge) ~is #false
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #false
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..= 5) ~is #true
@@ -238,6 +258,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
+      0 in rge ~is #false
+      5 in rge ~is #true
       rge.contains(0) ~is #false
       rge.contains(5) ~is #true
       rge.encloses(0 <..) ~is #true
@@ -251,6 +273,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #false
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #false
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(0 <..) ~is #true
@@ -276,6 +300,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
+      0 in rge ~is #true
+      5 in rge ~is #false
       rge.contains(0) ~is #true
       rge.contains(5) ~is #false
       rge.encloses(..5) ~is #true
@@ -289,6 +315,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #false
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #false
     dynamic(rge).encloses(..5) ~is #true
@@ -314,6 +342,8 @@ block:
       rge.end() ~is 5
       rge.includes_start() ~is #false
       rge.includes_end() ~is #true
+      0 in rge ~is #true
+      5 in rge ~is #true
       rge.contains(0) ~is #true
       rge.contains(5) ~is #true
       rge.encloses(..=5) ~is #true
@@ -327,6 +357,8 @@ block:
     dynamic(rge).end() ~is 5
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #true
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..=5) ~is #true
@@ -350,6 +382,8 @@ block:
       rge.end() ~is #inf
       rge.includes_start() ~is #false
       rge.includes_end() ~is #false
+      0 in rge ~is #true
+      5 in rge ~is #true
       rge.contains(0) ~is #true
       rge.contains(5) ~is #true
       rge.encloses(..) ~is #true
@@ -363,6 +397,8 @@ block:
     dynamic(rge).end() ~is #inf
     dynamic(rge).includes_start() ~is #false
     dynamic(rge).includes_end() ~is #false
+    0 in dynamic(rge) ~is #true
+    5 in dynamic(rge) ~is #true
     dynamic(rge).contains(0) ~is #true
     dynamic(rge).contains(5) ~is #true
     dynamic(rge).encloses(..) ~is #true
@@ -529,6 +565,18 @@ check:
   0..=5 ~is_a Listable
   0.. ~is_a Sequence
   0.. ~is_a !Listable
+
+check:
+  0..2 ~is_a Sequence
+  0..2 ~is_a Listable
+  0..=2 ~is_a Sequence
+  0..=2 ~is_a Listable
+  -2.. ~is_a Sequence
+  -2.. ~is_a !Listable
+  -2..0 ~is_a Sequence
+  -2..0 ~is_a Listable
+  -2..=0 ~is_a Sequence
+  -2..=0 ~is_a Listable
 
 // sequences
 block:
@@ -765,6 +813,9 @@ block:
 check:
   [& 0..5] ~is [0, 1, 2, 3, 4]
   [& 0..=5] ~is [0, 1, 2, 3, 4, 5]
+
+check:
+  [& -2..0, & 0..=2] ~is [-2, -1, 0, 1, 2]
 
 block:
   use_static
@@ -1611,3 +1662,26 @@ block:
   check:
     [sequence_take((x..).to_sequence(), 1), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_take((x..).to_sequence(), 2), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+
+// error message in `in` expressions
+check:
+  "oops" in 0..5 ~throws values(
+    "Range.contains: " ++ error.annot_msg(),
+    error.annot("Int").msg,
+    error.val("oops").msg,
+  )
+  1 in ("oops" :~ Range) ~throws values(
+    "Range.contains: " ++ error.annot_msg(),
+    error.annot("Range").msg,
+    error.val("oops").msg,
+  )
+  (0..5).contains("oops") ~throws values(
+    "Range.contains: " ++ error.annot_msg(),
+    error.annot("Int").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Range).contains(1) ~throws values(
+    "Range.contains: " ++ error.annot_msg(),
+    error.annot("Range").msg,
+    error.val("oops").msg,
+  )

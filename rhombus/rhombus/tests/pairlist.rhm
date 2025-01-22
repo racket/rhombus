@@ -308,17 +308,38 @@ check:
 
 check:
   match PairList[]
-  | PairList.cons(hd,tl): "no"
+  | PairList.cons(hd, tl): "no"
   | PairList[]: "empty"
   ~is "empty"
 
+block:
+  use_static
+  check:
+    2 in PairList[1, 2, 3] ~is #true
+    4 in PairList[1, 2, 3] ~is #false
+    PairList[1, 2, 3].contains(2) ~is #true
+    PairList[1, 2, 3].contains(4) ~is #false
+    PairList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+    PairList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+
 check:
-  PairList[1, 2, 3].contains(2) ~is #true
-  PairList[1, 2, 3].contains(4) ~is #false
-  PairList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
-  PairList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  1 in dynamic(PairList[1, 2, 3]) ~is #true
   dynamic(PairList[1, 2, 3]).contains(1) ~is #true
   dynamic(PairList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
+
+block:
+  let bx = Box(1)
+  let bx_copy = bx.copy()
+  block:
+    use_static
+    check:
+      bx_copy in PairList[bx] ~is #false
+      PairList[bx].contains(bx_copy) ~is #false
+      PairList[bx].contains(bx_copy, fun (x, y): x is_now y) ~is #true
+  check:
+    bx_copy in dynamic(PairList[bx]) ~is #false
+    dynamic(PairList[bx]).contains(bx_copy) ~is #false
+    dynamic(PairList[bx]).contains(bx_copy, fun (x, y): x is_now y) ~is #true
 
 check:
   PairList[1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -381,7 +402,18 @@ check:
 
 check:
   use_static
+  "no such thing" in PairList.empty
+  ~is #false
+
+check:
+  use_static
   PairList.empty.contains("no such thing")
+  ~is #false
+
+check:
+  use_static
+  def PairList.empty && empty = dynamic(PairList[])
+  "no such thing" in empty
   ~is #false
 
 check:
@@ -582,5 +614,27 @@ check:
   ("oops" :~ PairList).append() ~throws values(
     "PairList.append: " ++ error.annot_msg(),
     error.annot("PairList").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ PairList) ++ PairList[1, 2, 3] ~throws values(
+    "PairList.append: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  1 in ("oops" :~ PairList) ~throws values(
+    "PairList.contains: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ PairList).contains(1) ~throws values(
+    "PairList.contains: " ++ error.annot_msg(),
+    error.annot("PairList").msg,
+    error.val("oops").msg,
+  )
+  PairList[1, 2, 3].contains(1, "oops") ~throws values(
+    "PairList.contains: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(2)").msg,
     error.val("oops").msg,
   )

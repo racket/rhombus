@@ -61,14 +61,21 @@ check:
   import:
     meta -1: rhombus/meta open
   use_static
+  statinfo_meta.function_arity_key.unwrap()
   statinfo_meta.call_result_key.unwrap()
   statinfo_meta.index_result_key.unwrap()
   statinfo_meta.index_get_key.unwrap()
   statinfo_meta.index_set_key.unwrap()
   statinfo_meta.append_key.unwrap()
+  statinfo_meta.contains_key.unwrap()
   statinfo_meta.dot_provider_key.unwrap()
   statinfo_meta.sequence_constructor_key.unwrap()
   statinfo_meta.sequence_element_key.unwrap()
+  statinfo_meta.list_bounds_key.unwrap()
+  statinfo_meta.pairlist_bounds_key.unwrap()
+  statinfo_meta.maybe_key.unwrap()
+  statinfo_meta.flonum_key.unwrap()
+  statinfo_meta.fixnum_key.unwrap()
   statinfo_meta.values_key.unwrap()
   statinfo_meta.indirect_key.unwrap()
   ~completes

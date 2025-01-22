@@ -25,8 +25,8 @@
   grammar bind_each:
     $bind in $expr
     $bind:
-     $body
-     ...
+      $body
+      ...
   grammar clause_or_body:
     #,(@rhombus(each, ~for_clause)) $bind_each
     #,(@rhombus(each, ~for_clause)):

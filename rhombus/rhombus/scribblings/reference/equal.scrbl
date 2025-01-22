@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Equality}
 
@@ -104,6 +105,8 @@ See also @secref("Equatables").
     ~order: equivalence
   non_target:
     expr.macro '$expr !is_now $expr'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(is_now, ~repet)) $repet'
   key_comp.def 'is_now'
 ){
 

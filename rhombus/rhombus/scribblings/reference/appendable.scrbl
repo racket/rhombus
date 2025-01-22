@@ -8,7 +8,7 @@
 
 @title{Appendables}
 
-An @deftech{appendable} value is one that supports @rhombus(++). Maps,
+An @deftech{appendable} value is one that supports @rhombus(++). @tech{Maps},
 @tech{lists}, @tech{arrays}, @tech{sets}, @tech{strings}, and @tech{byte
  strings} are all appendable, as are instances of classes that implement
 @rhombus(Appendable, ~class).
@@ -21,7 +21,7 @@ An @deftech{appendable} value is one that supports @rhombus(++). Maps,
     set_expr: block expr
     elem_expr: block expr
 
-  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map  operator_order
+  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
   operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
   operator ((v1 :: List) ++ (v2 :: List)) :: List
   operator ((v1 :: PairList) ++ (v2 :: PairList)) :: PairList

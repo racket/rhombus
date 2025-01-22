@@ -359,13 +359,34 @@ check:
   | []: "empty"
   ~is "empty"
 
+block:
+  use_static
+  check:
+    2 in [1, 2, 3] ~is #true
+    4 in [1, 2, 3] ~is #false
+    [1, 2, 3].contains(2) ~is #true
+    [1, 2, 3].contains(4) ~is #false
+    [1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+    [1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+
 check:
-  [1, 2, 3].contains(2) ~is #true
-  [1, 2, 3].contains(4) ~is #false
-  [1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
-  [1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  1 in dynamic([1, 2, 3]) ~is #true
   dynamic([1, 2, 3]).contains(1) ~is #true
   dynamic([1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
+
+block:
+  let bx = Box(1)
+  let bx_copy = bx.copy()
+  block:
+    use_static
+    check:
+      bx_copy in [bx] ~is #false
+      [bx].contains(bx_copy) ~is #false
+      [bx].contains(bx_copy, fun (x, y): x is_now y) ~is #true
+  check:
+    bx_copy in dynamic([bx]) ~is #false
+    dynamic([bx]).contains(bx_copy) ~is #false
+    dynamic([bx]).contains(bx_copy, fun (x, y): x is_now y) ~is #true
 
 check:
   [1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -421,7 +442,18 @@ check:
 
 check:
   use_static
+  "no such thing" in List.empty
+  ~is #false
+
+check:
+  use_static
   List.empty.contains("no such thing")
+  ~is #false
+
+check:
+  use_static
+  def List.empty && empty = dynamic([])
+  "no such thing" in empty
   ~is #false
 
 check:
@@ -732,6 +764,28 @@ check:
   ("oops" :~ List).append() ~throws values(
     "List.append: " ++ error.annot_msg(),
     error.annot("List").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ List) ++ [1, 2, 3] ~throws values(
+    "List.append: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  1 in ("oops" :~ List) ~throws values(
+    "List.contains: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ List).contains(1) ~throws values(
+    "List.contains: " ++ error.annot_msg(),
+    error.annot("List").msg,
+    error.val("oops").msg,
+  )
+  [1, 2, 3].contains(1, "oops") ~throws values(
+    "List.contains: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(2)").msg,
     error.val("oops").msg,
   )
 

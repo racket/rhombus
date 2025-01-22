@@ -10,16 +10,20 @@
 
 A @deftech{membership test} uses the @rhombus(in) operator to check
 whether an element is included in the value. @tech{Maps}, @tech{lists},
-@tech{arrays}, and @tech{sets} all support membership tests, as do
-instances of classes that implement
+@tech{arrays}, @tech{sets}, and @tech{ranges} all support membership
+tests, as do instances of classes that implement
 @rhombus(MembershipTestable, ~class).
 
 @doc(
   ~nonterminal:
     elem_expr: block expr
+    elem_repet: block repet
   expr.macro '$elem_expr in $expr'
+  repet.macro '$elem_repet in $repet'
   non_target:
     expr.macro '$elem_expr !in $expr'
+  non_target:
+    repet.macro '$elem_repet !#,(@rhombus(in, ~repet)) $repet'
   operator_order:
     ~order: equivalence
 ){
@@ -35,7 +39,9 @@ instances of classes that implement
  The @rhombus(in) operator is also recognized by @rhombus(for) and
  @rhombus(each, ~for_clause) as part of the syntax of iteration.
 
- See also @rhombus(use_static).
+ The @rhombus(use_static) declaration constrains @rhombus(in) to work
+ only when the right-hand argument has static information indicating
+ that it satisfies @rhombus(MembershipTestable, ~annot).
 
 @examples(
   "a" in {"a", "b"}

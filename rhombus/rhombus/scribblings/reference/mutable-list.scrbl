@@ -15,9 +15,10 @@ satisfy the @rhombus(List, ~annot) annotation), but it is
 
 A mutable list is @tech{indexable} using @brackets to access a list
 element by position---in @math{O(log N)} time---via @rhombus(#%index),
-and it also support element assignment via @brackets and @rhombus(:=). A
-mutable list can be used as @tech{sequence}, in which case it supplies
-its elements in order.
+and it also support element assignment via @brackets and @rhombus(:=).
+A mutable list supports @tech{membership tests} using the @rhombus(in)
+operator. A mutable list can be used as @tech{sequence}, in which case
+it supplies its elements in order.
 
 Operations on a mutable list tend to modify the mutable list and produce
 @rhombus(#void), instead of creating a new list or returning the
@@ -367,12 +368,14 @@ and it is not managed by a lock.
  Returns @rhombus(#true) if @rhombus(mlst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
  equality. Searching the list takes @math{O(N)} time (multiplied by the
- cost of @rhombus(eqls)) to find an element as position @math{N}.
+ cost of @rhombus(eqls)) to find an element as position @math{N}.  See
+ also @rhombus(in).
 
 @examples(
   def l = MutableList[1, 2, 3]
   l.contains(2)
   l.contains(200)
+  2 in l
 )
 
 }

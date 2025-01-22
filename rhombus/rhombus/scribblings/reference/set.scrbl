@@ -280,8 +280,8 @@ it supplies its elements in an unspecified order.
   method Set.contains(st :: ReadableSet, val :: Any) :: Boolean
 ){
 
- Equivalent to @rhombus(val in st), returning @rhombus(#true) if @rhombus(val) is
- in @rhombus(st), @rhombus(#false) otherwise.
+ Returns @rhombus(#true) if @rhombus(val) is in @rhombus(st),
+ @rhombus(#false) otherwise. See also @rhombus(in).
 
 @examples(
   {"a", "b"}.contains("a")

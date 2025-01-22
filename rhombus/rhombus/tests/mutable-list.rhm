@@ -195,13 +195,34 @@ block:
     l.filter(~keep: (_ > 1), ~skip: (_ > 3))
     check l ~is_now MutableList[3, 2]
 
+block:
+  use_static
+  check:
+    2 in MutableList[1, 2, 3] ~is #true
+    4 in MutableList[1, 2, 3] ~is #false
+    MutableList[1, 2, 3].contains(2) ~is #true
+    MutableList[1, 2, 3].contains(4) ~is #false
+    MutableList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
+    MutableList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+
 check:
-  MutableList[1, 2, 3].contains(2) ~is #true
-  MutableList[1, 2, 3].contains(4) ~is #false
-  MutableList[1, 2, 3].contains(-3, fun (x, y): x == -y) ~is #true
-  MutableList[1, 2, 3].contains(-4, fun (x, y): x == -y) ~is #false
+  1 in dynamic(MutableList[1, 2, 3]) ~is #true
   dynamic(MutableList[1, 2, 3]).contains(1) ~is #true
   dynamic(MutableList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
+
+block:
+  let bx = Box(1)
+  let bx_copy = bx.copy()
+  block:
+    use_static
+    check:
+      bx_copy in MutableList[bx] ~is #false
+      MutableList[bx].contains(bx_copy) ~is #false
+      MutableList[bx].contains(bx_copy, fun (x, y): x is_now y) ~is #true
+  check:
+    bx_copy in dynamic(MutableList[bx]) ~is #false
+    dynamic(MutableList[bx]).contains(bx_copy) ~is #false
+    dynamic(MutableList[bx]).contains(bx_copy, fun (x, y): x is_now y) ~is #true
 
 check:
   MutableList[1, 2, 3].find(fun (x): x > 1) ~is 2
@@ -240,6 +261,11 @@ check:
   (block: let l = MutableList[1, 2, 3]; l.sort(fun (x, y): x > y); l) ~is_now MutableList[3, 2, 1]
   (block: let l = MutableList["", "a", "ab"]; l.sort(); l) ~is_now MutableList["", "a", "ab"]
   (block: let l = MutableList["", "a", "ab"]; l.sort(fun (x, y): x > y); l) ~is_now MutableList["ab", "a", ""]
+
+check:
+  use_static
+  "no such thing" in MutableList()
+  ~is #false
 
 check:
   use_static
@@ -476,3 +502,20 @@ version_guard.at_least "8.14.0.2":
       error.annot("NonnegInt").msg,
       error.val(-1).msg,
     )
+
+check:
+  1 in ("oops" :~ MutableList) ~throws values(
+    "MutableList.contains: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ MutableList).contains(1) ~throws values(
+    "MutableList.contains: " ++ error.annot_msg(),
+    error.annot("MutableList").msg,
+    error.val("oops").msg,
+  )
+  MutableList[1, 2, 3].contains(1, "oops") ~throws values(
+    "MutableList.contains: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(2)").msg,
+    error.val("oops").msg,
+  )

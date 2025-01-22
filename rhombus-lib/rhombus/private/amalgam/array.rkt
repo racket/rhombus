@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-         racket/vector
+         (except-in racket/vector
+                    vector-member)
+         "vector-member.rkt"
          "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
@@ -217,6 +219,19 @@
   (syntax-parse stx
     [(_ accum v) #'(cons v accum)]))
 
+(define (check-array who v)
+  (unless (vector? v)
+    (raise-annotation-failure who v "Array")))
+
+(define (check-function-of-arity n who proc)
+  (unless (and (procedure? proc)
+               (procedure-arity-includes? proc n))
+    (raise-annotation-failure who
+                              proc
+                              (string-append "Function.of_arity("
+                                             (number->string n)
+                                             ")"))))
+
 (define/method (Array.get v i)
   #:primitive (vector-ref)
   (vector-ref v i))
@@ -226,16 +241,9 @@
   (vector-set! v i x))
 
 (define/method (Array.contains v i [eql equal-always?])
-  #:primitive (vector-member)
-  (and (meta-if-version-at-least
-        "8.15.0.1"
-        (vector-member i v eql)
-        (vector-member i v))
-       #t))
-
-(define (check-array who v)
-  (unless (vector? v)
-    (raise-annotation-failure who v "Array")))
+  (check-array who v)
+  (check-function-of-arity 2 who eql)
+  (and (vector-member i v eql) #t))
 
 (define/method Array.append
   #:primitive (vector-append)
