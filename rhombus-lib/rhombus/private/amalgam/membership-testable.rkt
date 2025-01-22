@@ -6,9 +6,9 @@
                      "statically-str.rkt"
                      "interface-parse.rkt"
                      "class-method-result.rkt")
-         (only-in racket/vector
-                  vector-member)
+         "vector-member.rkt"
          "treelist.rkt"
+         "mutable-treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -47,6 +47,7 @@
       (hash? v)
       (set? v)
       (vector? v)
+      (mutable-treelist? v)
       (range? v)
       (MembershipTestable? v)))
 
@@ -84,12 +85,12 @@
                                    k)
   (define direct-contains-id (container-static-info #'#%contains))
   (define contains-id (or direct-contains-id
-                             (if static?
-                                 (raise-syntax-error #f
-                                                     (string-append "specialization not known" statically-str)
-                                                     self-stx
-                                                     form2-in)
-                                 #'general-contains)))
+                          (if static?
+                              (raise-syntax-error #f
+                                                  (string-append "specialization not known" statically-str)
+                                                  self-stx
+                                                  form2-in)
+                              #'general-contains)))
   (k contains-id form1 form2))
 
 (define-for-syntax (build-contains contains-id form1 form2 mode orig-stxes)
@@ -125,7 +126,7 @@
       (lambda (key) (syntax-local-static-info form2 key))
       (lambda (contains-id form1 form2)
         (build-contains contains-id form1 form2 mode
-                           (list form1 self-stx form2-in)))))
+                        (list form1 self-stx form2-in)))))
    'left))
 
 (define-repetition-syntax in
@@ -135,8 +136,8 @@
    'automatic
    (lambda (form1 form2 self-stx [mode 'normal])
      (define static? (is-static-context? self-stx))
-     (syntax-parse form1
-       [form1-info::repetition-info
+     (syntax-parse form2
+       [form2-info::repetition-info
         (build-compound-repetition
          self-stx
          (list form1 form2)
@@ -145,11 +146,11 @@
             form1 form2 self-stx form2
             static?
             (lambda (key)
-              (repetition-static-info-lookup #'form1-info.element-static-infos key))
+              (repetition-static-info-lookup #'form2-info.element-static-infos key))
             (lambda (contains-id form1 form2)
               (values
                (build-contains contains-id form1 form2 mode
-                                  (list form1 self-stx form2))
+                               (list form1 self-stx form2))
                #'())))))]))
    'left))
 
@@ -158,15 +159,17 @@
 (define (general-contains v1 v2)
   (cond
     [(treelist? v1)
-     (treelist-member? v1 v2)]
+     (treelist-member? v1 v2 equal-always?)]
     [(list? v1)
-     (and (member v1 v2) #t)]
+     (and (member v2 v1 equal-always?) #t)]
     [(hash? v1)
      (hash-has-key? v1 v2)]
     [(set? v1)
      (hash-has-key? (set-ht v1) v2)]
     [(vector? v1)
-     (and (vector-member v1 v2) #t)]
+     (and (vector-member v2 v1 equal-always?) #t)]
+    [(mutable-treelist? v1)
+     (mutable-treelist-member? v1 v2 equal-always?)]
     [(range? v1)
      (Range.contains v1 v2)]
     [else

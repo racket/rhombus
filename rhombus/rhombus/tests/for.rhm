@@ -2,21 +2,6 @@
 import:
   "version_guard.rhm"
 
-check:
-  0.. ~is_a Sequence
-  (0..) is_a Listable ~is #false
-  0..2 ~is_a Sequence
-  0..2 ~is_a Listable
-  0..=2 ~is_a Sequence
-  0..=2 ~is_a Listable
-  -2.. ~is_a Sequence
-  (-2..) is_a Listable ~is #false
-  -2..0 ~is_a Sequence
-  -2..0 ~is_a Listable
-  -2..=0 ~is_a Sequence
-  -2..=0 ~is_a Listable
-  [& -2..0, & 0..=2] ~is [-2, -1, 0, 1, 2]
-
 block:
   def mutable accum = []
   check:

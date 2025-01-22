@@ -211,20 +211,59 @@ check:
   [x, ...]
   ~is []
 
-check:
-  Array.append() ~is_now Array()
-  Array.append(Array(1)) ~is_now Array(1)
-  Array.append(Array(1), Array(2)) ~is_now Array(1, 2)
-  Array.append(Array(1), Array(2), Array(3)) ~is_now Array(1, 2, 3)
-  Array.append(Array(1), Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
+block:
+  use_static
+  check:
+    Array.append() ~is_now Array()
+    Array.append(Array(1)) ~is_now Array(1)
+    Array.append(Array(1), Array(2)) ~is_now Array(1, 2)
+    Array.append(Array(1), Array(2), Array(3)) ~is_now Array(1, 2, 3)
+    Array.append(Array(1), Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
+  check:
+    Array(1).append() ~is_now Array(1)
+    Array(1) ++ Array(2) ~is_now Array(1, 2)
+    Array(1).append(Array(2)) ~is_now Array(1, 2)
+    Array(1).append(Array(2), Array(3)) ~is_now Array(1, 2, 3)
+    Array(1).append(Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
 
 check:
-  Array(10, 20, 30).contains(20) ~is #true
-  Array(10, 20, 30).contains(2) ~is #false
-  20 in Array(10, 20, 30) ~is #true
-  2 in Array(10, 20, 30) ~is #false
-  20 !in Array(10, 20, 30) ~is #false
-  2 !in Array(10, 20, 30) ~is #true
+  dynamic(Array(1)).append() ~is_now Array(1)
+  dynamic(Array(1)) ++ Array(2) ~is_now Array(1, 2)
+  dynamic(Array(1)).append(Array(2)) ~is_now Array(1, 2)
+  dynamic(Array(1)).append(Array(2), Array(3)) ~is_now Array(1, 2, 3)
+  dynamic(Array(1)).append(Array(2), Array(3), Array(4)) ~is_now Array(1, 2, 3, 4)
+
+block:
+  use_static
+  check:
+    Array(10, 20, 30).contains(20) ~is #true
+    Array(10, 20, 30).contains(2) ~is #false
+    20 in Array(10, 20, 30) ~is #true
+    2 in Array(10, 20, 30) ~is #false
+    20 !in Array(10, 20, 30) ~is #false
+    2 !in Array(10, 20, 30) ~is #true
+
+check:
+  dynamic(Array(10, 20, 30)).contains(20) ~is #true
+  dynamic(Array(10, 20, 30)).contains(2) ~is #false
+  20 in dynamic(Array(10, 20, 30)) ~is #true
+  2 in dynamic(Array(10, 20, 30)) ~is #false
+  20 !in dynamic(Array(10, 20, 30)) ~is #false
+  2 !in dynamic(Array(10, 20, 30)) ~is #true
+
+block:
+  let bx = Box(1)
+  let bx_copy = bx.copy()
+  block:
+    use_static
+    check:
+      bx_copy in Array(bx) ~is #false
+      Array(bx).contains(bx_copy) ~is #false
+      Array(bx).contains(bx_copy, fun (x, y): x is_now y) ~is #true
+  check:
+    bx_copy in dynamic(Array(bx)) ~is #false
+    dynamic(Array(bx)).contains(bx_copy) ~is #false
+    dynamic(Array(bx)).contains(bx_copy, fun (x, y): x is_now y) ~is #true
 
 check:
   10 :: Array
@@ -466,6 +505,28 @@ check:
   ("oops" :~ Array).append() ~throws values(
     "Array.append: " ++ error.annot_msg(),
     error.annot("Array").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Array) ++ Array(1, 2, 3) ~throws values(
+    "Array.append: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  1 in ("oops" :~ Array) ~throws values(
+    "Array.contains: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Array).contains(1) ~throws values(
+    "Array.contains: " ++ error.annot_msg(),
+    error.annot("Array").msg,
+    error.val("oops").msg,
+  )
+  Array(1, 2, 3).contains(1, "oops") ~throws values(
+    "Array.contains: " ++ error.annot_msg(),
+    error.annot("Function.of_arity(2)").msg,
     error.val("oops").msg,
   )
 

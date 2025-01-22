@@ -13,6 +13,13 @@ value. A @deftech{pair list} is a @tech{listable} value that is
 constructed with pairs and the empty pair list; every non-empty pair
 list is a pair, a pair is a pair list only if its ``rest'' is a list.
 
+A pair list is @tech{indexable} using @brackets to access a list
+element by position---in @math{O(N)} time---via @rhombus(#%index). A
+pair list also works with the @rhombus(++) operator to append pair
+lists. A pair list supports @tech{membership tests} using the
+@rhombus(in) operator. A pair list can be used as @tech{sequence}, in
+which case it supplies its elements in order.
+
 @doc(
   ~nonterminal:
     fst_annot: :: annot
@@ -431,11 +438,13 @@ list is a pair, a pair is a pair list only if its ``rest'' is a list.
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
  equality. Searching the list takes @math{O(N)} time (multiplied by the
- cost of @rhombus(eqls)) to find an element as position @math{N}.
+ cost of @rhombus(eqls)) to find an element as position @math{N}. See
+ also @rhombus(in).
 
 @examples(
   PairList[1, 2, 3].contains(2)
   PairList[1, 2, 3].contains(200)
+  2 in PairList[1, 2, 3]
 )
 
 }

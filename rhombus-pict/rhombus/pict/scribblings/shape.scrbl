@@ -302,21 +302,30 @@
 
 @doc(
   fun animate(
-    ~children: children :: List.of(Pict) = [],
-    proc :: (((~any) -> StaticPict)
-               && Function.of_arity(1 + children.length())),
+    ~dependencies: dependencies :: List.of(Pict) = [],
+    snapshot :: (((~any) -> StaticPict)
+                   && Function.of_arity(1 + children.length())),
     ~extent: extent :: NonnegReal = 0.5,
     ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
              = bend.fast_middle,
-    ~sustain_edge: sustain_edge :: TimeOrder = #'before
+    ~sustain_edge: sustain_edge :: TimeOrder = #'after
   ) :: Pict
 ){
 
- Creates an @tech{animated pict}. The @rhombus(proc) should accept a
- @rhombus(Real.in(), ~annot) as its first argument and produce a
- @rhombus(StaticPict, ~annot). The @rhombus(proc) is called with the
- elements of @rhombus(children) as additional argument, but each of those
- elements can be adjusted through @rhombus(Pict.replace).
+ Creates an @tech{animated pict}. The @rhombus(snapshot) function should
+ accept a @rhombus(Real.in(), ~annot) as its first argument and produce a
+ @rhombus(StaticPict, ~annot). When @rhombus(Pict.snapshot) is called on
+ the result @rhombus(p, ~var) from @rhombus(animate), the supplied
+ @rhombus(snapshot) function is called. The pict produced by
+ @rhombus(snapshot) is wrapped as a sole child of a new pict whose identity
+ is the same as @rhombus(p, ~var); see also @secref("identity").
+
+ The @rhombus(dependencies) list determines both the @tech{children} and
+ @tech{dependencies} of @rhombus(animate)'s result. The
+ @rhombus(snapshot) function is called with the elements of
+ @rhombus(dependencies) as additional arguments, except that each of
+ those elements is potentially adjusted through @rhombus(Pict.replace)
+ before they are passed to @rhombus(snapshot).
 
  The resulting pict's @tech{duration} is 1, and the @tech{extent} of
  that duration is determined by the @rhombus(extent) argument. Before the
@@ -372,22 +381,28 @@
 
 
 @doc(
-  fun rebuildable(~children: children :: List.of(Pict) = [],
+  fun rebuildable(~dependencies: dependencies :: List.of(Pict) = [],
                   ~config: config :: maybe(Map) = #false,
-                  proc :: (((~any) -> Pict)
-                             && Function.of_arity(children.length()
-                                                    + (if config | 1 | 0))))
+                  rebuild :: (((~any) -> Pict)
+                                && Function.of_arity(children.length()
+                                                       + (if config | 1 | 0))))
     :: Pict
 ){
 
  Creates a pict that is the same as the result of
- @rhombus(proc(& children)) or @rhombus(proc(& children, config)),
- but where @rhombus(children) contains picts that can be adjusted via
- @rhombus(Pict.rebuild), and where @rhombus(config) can be updated
- by @rhombus(Pict.rebuild), in which case @rhombus(proc) is called with a
- list of replacements for the picts in @rhombus(children) and (if
- applicable) a replacement @rhombus(config).
- 
+ @rhombus(rebuild(& dependencies)) or
+ @rhombus(rebuild(& dependencies, config)), but where
+ @rhombus(dependencies) contains picts that can be adjusted via
+ @rhombus(Pict.rebuild), and where @rhombus(config) can be updated by
+ @rhombus(Pict.rebuild). When @rhombus(rebuild) is called, its result is
+ wrapped as the sole child of a new pict whose identity is the same as
+ the result of @rhombus(rebuildable) itself; see also
+ @secref("identity").
+
+ The given @rhombus(dependencies) list determines the
+ @tech{dependencies} of the result pict, but the result from
+ @rhombus(proc) determines the @tech{children} of the result pict.
+
 }
 
 

@@ -23,7 +23,7 @@ expression for the key within @brackets. Mutable maps can be
 updated with a combination of @brackets and @tech{assignment operators}
 such as @rhombus(:=) (but use @rhombus(++) to functionally update an
 immutable map). These uses of square brackets are implemented by
-@rhombus(#%index).  A map is also supports @tech{membership tests} via
+@rhombus(#%index). A map also supports @tech{membership tests} via
 @rhombus(in), which checks for keys (not values) the same as @rhombus(Map.has_key).
 A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
@@ -581,6 +581,7 @@ in an unspecified order.
 @examples(
   Map.has_key({"a": 1, "b": 2}, "a")
   Map.has_key({"a": 1, "b": 2}, "c")
+  Map.contains({"a": 1, "b": 2}, "a")
   "a" in {"a": 1, "b": 2}
 )
 

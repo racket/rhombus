@@ -264,9 +264,16 @@
   operator (! (v :: Any)) :: Boolean
   operator_order:
     ~order: logical_negation
-  expr.macro '$expr !in $expr'
-  expr.macro '$expr !is_now $expr'
-  expr.macro '$expr !is_a $annot'
+  non_target:
+    expr.macro '$expr !in $expr'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(in, ~repet)) $repet'
+  non_target:
+    expr.macro '$expr !is_now $expr'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(is_now, ~repet)) $repet'
+  non_target:
+    expr.macro '$expr !is_a $annot'
   operator_order:
     ~order: equivalence
 ){

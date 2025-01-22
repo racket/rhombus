@@ -151,7 +151,7 @@
       (parse-not form1 tail #f))
     'left)
    (repetition-infix-operator
-    (lambda () (order-quote member_access))
+    (lambda () (order-quote equivalence))
     '()
     'macro
     (lambda (form1 tail)

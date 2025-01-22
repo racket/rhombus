@@ -4,8 +4,15 @@ import:
   draw open
 
 def r = rectangle(~width: 50)
+def r2 = r.launder()
 def c = circle(~size: 40)
+def c2 = c.launder()
 def t = text("hi")
+
+def big_r = r.scale(2)
+def big_c = c.scale(2)
+
+def r_then_c = switch(big_r, big_c)
 
 fun image_of(p :~ Pict):
   let bm = Bitmap([math.exact(math.ceiling(p.width)),
@@ -40,7 +47,11 @@ fun build2(p :~ Pict) :~ Pict:
 fun swell(p :~ StaticPict) :~ Pict:
   animate(fun (n, p :~ Pict):
             p.scale(1 + n),
-          ~children: [p])
+          ~dependencies: [p])
+
+def swell_r = swell(r)
+def swell_c = swell(c)
+def swell_r_then_c = switch(swell_r, swell_c)
 
 fun build3(p :~ Pict) :~ Pict:
   overlay(& sequential(p, t))
@@ -50,7 +61,39 @@ check:
   image_of(build2(r).replace(r, c)) ~is image_of(build2(c))
   image_of(swell(r).replace(r, c)) ~is image_of(swell(c))
   image_of(swell(r).snapshot(0, 0.5).replace(r, c)) ~is image_of(swell(c).snapshot(0, 0.5))
+  image_of(swell(r).snapshot(0, 0.5, ~rebuild_prompt: #false).replace(r, c)) ~is image_of(swell(c).snapshot(0, 0.5))
   image_of(swell(r).replace(r, c).snapshot(0, 0.5)) ~is image_of(swell(c).snapshot(0, 0.5))
   image_of(build3(r).replace(r, c)) ~is image_of(build3(c))
   image_of(build3(r).snapshot(1, 0).replace(r, c)) ~is image_of(build3(c).snapshot(1, 0))
   image_of(build3(r).replace(r, c).snapshot(1, 0)) ~is image_of(build3(c).snapshot(1, 0))
+  swell(r).snapshot(0, 0.5).replace(r, c).find_rebuilt(r) ~is #false
+  image_of(swell(big_r).snapshot(0, 0.5).replace(r, c).find_rebuilt(big_r)) ~is image_of(big_c)
+  image_of(swell(big_r).snapshot(0, 0.5, ~rebuild_prompt: #false).replace(r, c).find_rebuilt(big_r)) ~is image_of(big_c)
+  swell(r).snapshot(0, 0.5).replace(r, c).find_rebuilt(c) ~is c
+  image_of(swell(big_r).snapshot(0, 0.5).replace(r, c).replace(big_r, r)) ~is image_of(swell(r).snapshot(0, 0.5))
+  image_of(swell(big_r).snapshot(0, 0.5, ~rebuild_prompt: #false).replace(r, c).replace(big_r, r)) ~is image_of(swell(r).snapshot(0, 0.5))
+
+check:
+  image_of(r_then_c.replace(c, r).find_rebuilt(big_c)) ~is image_of(big_r)
+  image_of(r_then_c.replace(c, c2).replace(c2, r).find_rebuilt(big_c)) ~is image_of(big_r)
+  swell_c.replace(c, r).snapshot().find_rebuilt(swell_c) ~is_a Pict
+  swell_r_then_c.replace(c, r).find_rebuilt(swell_c) ~is_a Pict
+  swell_c.replace(c, r).snapshot().find_rebuilt(swell_c) ~is_a Pict
+  swell_r_then_c.snapshot(0).replace(r, c).find_rebuilt(swell_r) ~is_a Pict
+  swell_r_then_c.replace(r, c).snapshot(0).find_rebuilt(swell_r) ~is_a Pict
+  swell_r_then_c.snapshot(0).replace(c, r).find_rebuilt(swell_c) ~is #false
+  swell_r_then_c.replace(c, r).snapshot(0).find_rebuilt(swell_c) ~is #false
+  swell_r_then_c.snapshot(1).replace(c, r).find_rebuilt(swell_c) ~is_a Pict
+  swell_r_then_c.replace(c, r).snapshot(1).find_rebuilt(swell_c) ~is_a Pict
+  swell_r_then_c.sustain().snapshot(2).replace(c, r).find_rebuilt(swell_c) ~is_a Pict
+  swell_r_then_c.replace(c, r).sustain().snapshot(2).find_rebuilt(swell_c) ~is_a Pict
+  switch(swell_r_then_c.replace(c, r).snapshot(1), r).snapshot(0).find_rebuilt(swell_c) ~is_a Pict
+  switch(r, swell_r_then_c.replace(c, r).snapshot(1)).snapshot(1).replace(c, c2).find_rebuilt(swell_c) ~is_a Pict
+  switch(r, swell_r_then_c.replace(c, r).snapshot(1)).snapshot(1).replace(c, c2).find_rebuilt(swell_r_then_c) ~is_a Pict
+  switch(r, swell_r_then_c.replace(c, r).snapshot(1)).snapshot(1).replace(r, c).find_rebuilt(swell_r_then_c) ~is_a Pict
+  r_then_c.replace(c, c2).find_rebuilt(big_c) ~is_a Pict
+  r_then_c.replace(c, swell_c).snapshot(1).replace(c, c2).snapshot(0).find_rebuilt(big_c) ~is_a Pict
+  big_c.replace(c, swell_c).snapshot(0).find_rebuilt(big_c) ~is_a Pict
+  big_c.replace(c, swell_c).snapshot(0).replace(c, swell_r).snapshot(0).find_rebuilt(big_c) ~is_a Pict
+  r_then_c.replace(r, swell_r).snapshot(0).replace(r, swell_c).snapshot(0).find_rebuilt(big_r) ~is_a Pict
+  r_then_c.replace(c, swell_c).snapshot(1).replace(c, swell_r).snapshot(0).find_rebuilt(big_c) ~is_a Pict

@@ -251,6 +251,7 @@
   def statinfo_meta.index_get_key :: Identifier
   def statinfo_meta.index_set_key :: Identifier
   def statinfo_meta.append_key :: Identifier
+  def statinfo_meta.contains_key :: Identifier
   def statinfo_meta.dot_provider_key :: Identifier
   def statinfo_meta.sequence_constructor_key :: Identifier
   def statinfo_meta.sequence_element_key :: Identifier
@@ -297,6 +298,11 @@
         append the result of another expression. For a boxed identifier,
         the application will be guarded by a check to ensure that both
         arguments share the same @rhombus(append, ~datum) implementation.}
+
+  @item{@rhombus(statinfo_meta.contains_key): An identifier bound to a
+        function to call (instead of falling back to a generic dynamic
+        dispatch) when the expression is used with @rhombus(in) to
+        check whether an element is included.}
 
   @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
         bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to

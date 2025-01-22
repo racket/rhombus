@@ -30,7 +30,7 @@ check:
   {"a": 1, #'~b: 2}
   ~is Map(["a", 1], [#'~b, 2])
 
-check:  
+check:
   {"a": 0; 1, #'~b: -2; -3; 2}
   ~is Map(["a", 1], [#'~b, 2])
 
@@ -229,6 +229,16 @@ block:
     dynamic({"a": 1, "b": 2}).append()["a"] ~is 1
     dynamic({"a": 1, "b": 2}).append({"a": 2})["a"] ~is 2
     dynamic({"a": 1, "b": 2}).append({"a": 2}, {"a": 3})["a"] ~is 3
+  check:
+    "a" in dynamic({"a": 1, "b": 2}) ~is #true
+    "b" in dynamic({"a": 1, "b": 2}) ~is #true
+    1 in dynamic({"a": 1, "b": 2}) ~is #false
+    "a" !in dynamic({"a": 1, "b": 2}) ~is #false
+    1 !in dynamic({"a": 1, "b": 2}) ~is #true
+    dynamic({"a": 1, "b": 2}).contains("a") ~is #true
+    dynamic({"a": 1, "b": 2}).has_key("a") ~is #true
+    dynamic({"a": 1, "b": 2}).contains(1) ~is #false
+    dynamic({"a": 1, "b": 2}).has_key(1) ~is #false
 
 // See also tests in "rest-args.rhm"
 block:
@@ -1452,5 +1462,27 @@ check:
   ("oops" :~ Map).append() ~throws values(
     "Map.append: " ++ error.annot_msg(),
     error.annot("Map").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Map) ++ {"a": 1, "b": 2} ~throws values(
+    "Map.append: " ++ error.annot_msg(),
+    error.annot("Map").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  "a" in ("oops" :~ Map) ~throws values(
+    "Map.contains: " ++ error.annot_msg(),
+    error.annot("ReadableMap").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Map).contains("a") ~throws values(
+    "Map.contains: " ++ error.annot_msg(),
+    error.annot("ReadableMap").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Map).has_key("a") ~throws values(
+    "Map.has_key: " ++ error.annot_msg(),
+    error.annot("ReadableMap").msg,
     error.val("oops").msg,
   )

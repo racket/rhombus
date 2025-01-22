@@ -4,6 +4,7 @@ import:
   rhombus/scribble/manual open:
     only_space spacer.typeset
 
+// TODO make "pretty" checks more automatic
 expr.macro 'check_spacer:
               $(pattern:
                   kind ~multi
@@ -34,7 +35,13 @@ defn.macro 'def_unquote $name: $context_expr':
       kind ~term
     | '$('$')t':
         unless t.property(#'#{typeset-space-name}) == context
-        | println("at", t, t.srcloc(), t.property(#'#{typeset-space-name}), "expected", context)
+        | println(
+            ~out: stderr,
+            t.srcloc()!!.to_report_string() ++ ":", "wrong space for term",
+            "\n  term:", t,
+            "\n  got:", t.property(#'#{typeset-space-name}),
+            "\n  expected:", context,
+        )
         match_when t.property(#'#{typeset-space-name}) == context
     unquote_bind.macro '$name':
       '_ :: Term'
@@ -84,21 +91,10 @@ def_unquote.full veneer_clause
 def_unquote.full reducer
 def_unquote.full impo
 def_unquote.full expo
+def_unquote.full for_clause
 def_unquote.full pattern_clause
 def_unquote.full syntax_class_clause
 def_unquote.full key_comp
-
-// NOTE Test cases should be duplicated in a "very pretty" style to
-// reveal potential `.relocate` problems.  If you can't figure out
-// which term is missing its intended space, uncomment and use the
-// `debug` macro.
-#//
-unquote_bind.macro 'debug':
-  '«pattern:
-      kind ~term
-    | '$('$')t':
-        println(t.property(#'#{typeset-space-name}))
-    »'
 
 check_spacer:
   def pi = 3 + 0.1 + 0.04
@@ -1092,29 +1088,28 @@ check_spacer:
     skip_when v == "b"
     v
   $(expr.full) $reducer:
-    $for_body $for_body: [$datum, $datum, $datum]
+    $(for_clause.full) $bind $expr [$datum, $datum, $datum]
     $for_body $for_body $for_body $datum
     $body
 
   for List:
-    each v:
-      [
-        "a",
-        "b",
-        "c"
-      ]
+    each v in [
+      "a",
+      "b",
+      "c"
+    ]
     skip_when v
       == "b"
     v
 
 check_spacer:
   for:
-    each v in ["a", "b", "c"]
+    each v: ["a", "b", "c"]
     skip_when v == "b"
     v
     ~into List
   $(expr.full):
-    $for_body $for_body: [$datum, $datum, $datum]
+    $(for_clause.full) $bind: [$datum, $datum, $datum]
     $for_body $for_body $for_body $datum
     $body
     $none $reducer

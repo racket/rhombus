@@ -32,7 +32,7 @@ def keep_with_attrs = { #'div, #'span, #'a }
 def keeps = { #'html, #'body, #'table, #'tr, #'td, #'p, #'blockquote, #'h2 }
 def skip_attr = { "tocset", "versionbox" }
 
-fun filter(html):  
+fun filter(html):
   fun filter_body([body, ...]):
     Syntax.make_sequence(
       for List (body: [body, ...]):
@@ -50,16 +50,16 @@ fun filter(html):
     | []
     | '{ $key: $val, ... }'
   fun has_skip_attr(PairList[PairList[key, val], ...]):
-    any(key == #'class && skip_attr[to_string(val)], ...)
+    any(key == #'class && to_string(val) in skip_attr, ...)
   match html
   | PairList[key, attrs, body, ...]:
       cond
-      | keep_with_attrs[key]:
+      | key in keep_with_attrs:
           if has_skip_attr(attrs)
           | '$key $(filter_attrs(attrs))'
           | '$key $(filter_attrs(attrs)):
                $(filter_body([body, ...]))'
-      | keeps[key]:
+      | key in keeps:
           '$key:
              $(filter_body([body, ...]))'
       | ~else:

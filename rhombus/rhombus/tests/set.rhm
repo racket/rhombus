@@ -1140,14 +1140,6 @@ block:
       ) ~is Set.by(equals){}
 
 check:
-  0 in ("oops" :~ Set)
-  ~throws values(
-    "Set.contains: " ++ error.annot_msg(),
-    error.annot("ReadableSet").msg,
-    error.val("oops").msg,
-  )
-
-check:
   ("oops" :~ MutableSet).add(0)
   ~throws values(
     "MutableSet.add: " ++ error.annot_msg(),
@@ -1164,6 +1156,18 @@ check:
   ("oops" :~ Set).append() ~throws values(
     "Set.append: " ++ error.annot_msg(),
     error.annot("Set").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  0 in ("oops" :~ Set) ~throws values(
+    "Set.contains: " ++ error.annot_msg(),
+    error.annot("ReadableSet").msg,
+    error.val("oops").msg,
+  )
+  ("oops" :~ Set).contains(0) ~throws values(
+    "Set.contains: " ++ error.annot_msg(),
+    error.annot("ReadableSet").msg,
     error.val("oops").msg,
   )
 

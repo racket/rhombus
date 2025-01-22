@@ -187,9 +187,13 @@ Strings are @tech{comparable}, which means that generic operations like
  Checks whether @rhombus(str) contains @rhombus(substr) as a substring.
  The @rhombus(String.find) function reports the first position in
  @rhombus(str) where @rhombus(substr) starts, if @rhombus(substr) is
- found. The @rhombus(String.starts_with) and @rhombus(String.ends_with)
- functions return @rhombus(#true) only when @rhombus(substr) is at the
- start or end of @rhombus(str), respectively.
+ found, while @rhombus(String.contains) reports only whether it was
+ found. The @rhombus(String.starts_with) and
+ @rhombus(String.ends_with) functions return @rhombus(#true) only when
+ @rhombus(substr) is at the start or end of @rhombus(str),
+ respectively. Note that strings do @emph{not} implement
+ @rhombus(MembershipTestable, ~class), because
+ @rhombus(String.contains) finds a substring instead of character.
 
 @examples(
   String.contains("howdy", "how")

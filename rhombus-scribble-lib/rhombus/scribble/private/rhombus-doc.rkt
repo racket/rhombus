@@ -616,7 +616,6 @@
              #:with tail #'())
     (pattern (~seq head:identifier (~seq (op |.|) tail-elem:identifier) ...)
              #:with tail #'(tail-elem ...))))
-     
 
 (define-for-syntax (method-extract-name stx space-name #:property? [property? #f])
   (syntax-parse stx
@@ -774,7 +773,8 @@
 
 (define-doc operator
   "operator"
-  #f
+  (lambda (stx)
+    '(#f rhombus/repet))
   (lambda (stx space-name)
     (syntax-parse stx
       #:datum-literals (group parens)
