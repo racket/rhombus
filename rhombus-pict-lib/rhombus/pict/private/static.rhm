@@ -484,7 +484,7 @@ class StaticPict(private _handle,
     static_pict(rkt.clip(_handle), this, _instances, METHOD(clip))
 
   override method freeze(~scale: scale :: Real = 2.0):
-    static_pict(rkt.freeze(_handle), this, _instances, METHOD(freeze, ~scale: scale))
+    static_pict(rkt.freeze(draw_handle, ~scale: scale), this, _instances, METHOD(freeze, ~scale: scale))
   
   override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict:
