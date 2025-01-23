@@ -445,7 +445,6 @@ class AnimPict(_identity_f,
   override method snapshot(epoch :: Int = 0,
                            n :: Real.in(0, 1) = 0,
                            ~rebuild_prompt: rebuild_prompt :: Any.to_boolean = #true) :~ Pict:
-    let e = get_epoch(epoch)
     fun animate_result(p :: StaticPict):
       if rebuild_prompt
       | static_instances(this, p,
@@ -454,7 +453,8 @@ class AnimPict(_identity_f,
       | static_instances(this, p,
                          ~dependencies: [this],
                          ~rebuild: fun ([p :~ Pict]):
-                                     p.snapshot(epoch, n, ~rebuild_prompt: rebuild_prompt))
+                                     p.snapshot(epoch, n, ~rebuild_prompt: #false))
+    let e = get_epoch(epoch)
     cond
     | e:
         animate_result(PictEpoch.pict(e, n))
@@ -704,14 +704,14 @@ class AnimPict(_identity_f,
     anim_pict_adjust(this, fun (p :~ Pict): p.clip())
 
   override method freeze(~scale: scale :: Real = 2.0):
-    snapshot().freeze(~scale: scale)
+    snapshot(~rebuild_prompt: #false).freeze(~scale: scale)
 
   override time_insert(at_epoch :: Int, n_epochs :: NonnegInt = 1):
     if at_epoch < 0 || at_epoch >= duration || n_epochs == 0
     | this
     | let pre = time_pad(~after: at_epoch - duration)
       let post = time_pad(~before: -at_epoch)
-      let mid = snapshot(at_epoch, 0).sustain(n_epochs-1)
+      let mid = snapshot(at_epoch, 0, ~rebuild_prompt: #false).sustain(n_epochs-1)
       switch(pre, mid, post)
 
   override method epoch_set_extent(i :: Int, extent :: NonnegReal):

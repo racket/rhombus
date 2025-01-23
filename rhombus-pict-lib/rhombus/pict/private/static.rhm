@@ -243,7 +243,7 @@ class Pict():
   abstract method time_insert(at_epoch :: Int, n_epochs :: Int = 1) :~ Pict
 
   method instantaneous() :~ Pict:
-    let p = snapshot()
+    let p = snapshot(~rebuild_prompt: #false)
     Pict.time_clip(pict_animate(fun (n, p): if n .= 0 | p | nothing,
                                 [p],
                                 0 /* extent */))
@@ -406,7 +406,7 @@ class StaticPict(private _handle,
     let rebuild:
       if rebuild_prompt
       | fun (p): p
-      | METHOD(snapshot, epoch, n, ~rebuild_prompt: rebuild_prompt)
+      | METHOD(snapshot, epoch, n, ~rebuild_prompt: #false)
     if epoch == 0
     | static_pict(_handle, this, _instances, rebuild)
     | static_pict(rkt.ghost(_handle), this, _instances, rebuild)
