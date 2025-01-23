@@ -8,7 +8,7 @@
 @title{Arrays}
 
 An @deftech{array} is @tech{indexable} using @brackets to access an array element
-by position (in constant time) via @rhombus(#%index), and it also support element
+by position (in constant time) via @rhombus(#%index), and it also supports element
 assignment via @brackets and @rhombus(:=). An array also
 works with the @rhombus(++) operator to append arrays.
 An array supports @tech{membership tests} using the @rhombus(in) operator.

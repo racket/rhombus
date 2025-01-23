@@ -438,7 +438,7 @@ which case it supplies its elements in order.
  Returns @rhombus(#true) if @rhombus(lst) has an element equal to
  @rhombus(v), @rhombus(#false) otherwise, where @rhombus(eqls) determines
  equality. Searching the list takes @math{O(N)} time (multiplied by the
- cost of @rhombus(eqls)) to find an element as position @math{N}. See
+ cost of @rhombus(eqls)) to find an element at position @math{N}. See
  also @rhombus(in).
 
 @examples(
@@ -457,9 +457,9 @@ which case it supplies its elements in order.
     :: maybe(NonnegInt)
 ){
 
- Like @rhombus(List.find) and @rhombus(List.find) , but for @tech{pair
+ Like @rhombus(List.find) and @rhombus(List.find), but for @tech{pair
   lists}. Searching the list takes @math{O(N)} time (multiplied by the
- cost of @rhombus(pred)) to find an element as position @math{N}.
+ cost of @rhombus(pred)) to find an element at position @math{N}.
 
 @examples(
   PairList[1, 2, 3].find((_ mod 2 .= 0))
