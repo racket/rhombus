@@ -341,6 +341,12 @@ class AnimPict(_identity_f,
     | #false
     | _epochs[i]
 
+  override method paragraph_end_bounds(): _before.paragraph_end_bounds()
+  override method set_paragraph_end_bounds(dx :: Real, dy :: Real,
+                                           width :: Real, height :: Real,
+                                           ascent :: Real, descent :: Real):
+    anim_pict_adjust(this, fun (p :~ Pict): p.set_paragraph_end_bounds(dx, dy, width, height, ascent, descent))
+
   private method maybe_sustain(max_epoch) :~ Pict:
     cond
     | _sustaining && max_epoch >= _duration && _duration > 0:

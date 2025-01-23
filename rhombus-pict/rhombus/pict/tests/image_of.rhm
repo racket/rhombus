@@ -1,0 +1,14 @@
+#lang rhombus/static
+import:
+  pict open
+  draw open
+
+export:
+  image_of
+
+fun image_of(p :~ Pict):
+  let bm = Bitmap([math.exact(math.ceiling(p.width)),
+                   math.exact(math.ceiling(p.height))])
+  let dc = bm.make_dc()
+  p.draw(dc)
+  bm.argb_pixels().snapshot()

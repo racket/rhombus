@@ -1,7 +1,7 @@
 #lang rhombus/static
 import:
   pict open
-  draw open
+  "image_of.rhm" open
 
 def r = rectangle(~width: 50)
 def r2 = r.launder()
@@ -13,13 +13,6 @@ def big_r = r.scale(2)
 def big_c = c.scale(2)
 
 def r_then_c = switch(big_r, big_c)
-
-fun image_of(p :~ Pict):
-  let bm = Bitmap([math.exact(math.ceiling(p.width)),
-                   math.exact(math.ceiling(p.height))])
-  let dc = bm.make_dc()
-  p.draw(dc)
-  bm.argb_pixels().snapshot()
 
 check:
   image_of(c) ~is image_of(c)

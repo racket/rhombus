@@ -6,6 +6,7 @@
       rhombus open
       pict open
       draw
+      pict/rhombus.rhombus
     "pict_diagram.rhm".pict_diagram
     "pict_eval.rhm" open
     "timeline.rhm" open)
@@ -66,6 +67,12 @@ the bottom line's baseline.
                 stack(~horiz: #'left, hello, world),
                 epilog))
 )
+
+To support muli-line ``paragraphs'' of text, a pict can further have a
+nested bounding box as reported by @rhombus(Pict.paragraph_end_bounds).
+Those nested bounds are rarely used directly, but the
+@rhombus(rhombusblock) form takes advantage of them to compose escapes
+in a nested context.
 
 The width and height components of a pict are called its
 @deftech{bounding box}, but a pict's drawing is not actually constrained
