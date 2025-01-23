@@ -213,3 +213,8 @@ block:
                                                               Pair(PairList["@"], "x"),
                                                               empty_raw,
                                                               empty_raw)
+
+check:
+  let g = 'a'.relocate_span([' a b '])
+  '| $g | c'.to_source_string()
+  ~is "| a b | c"

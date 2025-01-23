@@ -818,6 +818,7 @@
       (cons (relocate-one (car stxes)
                           zero-width-loc
                           #:prefix? #t
+                          #:suffix? (null? (cdr stxes))
                           "")
             (let loop ([stxes (cdr stxes)])
               (cond
