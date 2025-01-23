@@ -14,6 +14,7 @@
     ~sep: sep :: Real = 0,
     ~vert: vert_align :: VertAlignment = #'center,
     ~order: order :: OverlayOrder = #'front,
+    ~attach: attach :: HorizAttachment = #'line,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~epoch: epoch_align :: EpochAlignment = #'center,
     pict :: Pict, ...
@@ -34,6 +35,11 @@
  front-to-back order of picts can matter for the combined image. The
  @rhombus(order) argument determines the order of each pict added to the
  right of the combined image.
+
+ If @rhombus(attach) is @rhombus(#'paragraph) instead of line, then each
+ @rhombus(pict) is positioned relative to the preceding @rhombus(pict)'s
+ paragraph-end bounds, if any, instead of relative to the preceding
+ @rhombus(pict) itself. See @rhombus(Pict.paragraph_end_bounds).
 
  The picts are first made concurrent via @rhombus(concurrent), passing
  along @rhombus(duration_align) and @rhombus(epoch_align).
@@ -608,6 +614,16 @@
 ){
 
  Options for overlaying.
+
+}
+
+@doc(
+  enum HorizAttachment:
+    line
+    paragraph
+){
+
+ Options for combining with @rhombus(beside).
 
 }
 

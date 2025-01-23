@@ -1,0 +1,32 @@
+#lang rhombus/static
+import:
+  pict open
+  pict/rhombus open
+  "image_of.rhm" open
+
+// make sure multiple instances of the same pict do not get confused
+block:
+  let a = text("a")
+  check: image_of(beside(stack(a, a), a, ~attach: #'paragraph))
+         ~is image_of(stack.left(a, beside(a, a)))
+  check: image_of(beside(beside(a, a), a, ~attach: #'paragraph))
+         ~is image_of(beside(a, a, a))
+  check: image_of(beside(stack(a, a, ~order: #'back), a, ~attach: #'paragraph, ~order: #'back))
+         ~is image_of(stack.left(a, beside(a, a)))
+  check: image_of(beside(beside(a, a, ~order: #'back), a, ~attach: #'paragraph, ~order: #'back))
+         ~is image_of(beside(a, a, a))
+
+block:
+  let a = text("a")
+  let c = circle(~size: 15, ~fill: "red")
+  let r = stack(rectangle(~width: 30, ~height: 10, ~fill: "blue"),
+                rectangle(~width: 30, ~height: 10, ~fill: "green"))
+  let rx = r.pad(~left: -15)
+  check: image_of(beside(c, rx))
+         ~is image_of(overlay.left(c, r))
+  check: image_of(beside(c, rx, ~order: #'back))
+         ~is image_of(overlay.left(r, c))
+  check: image_of(beside(beside(c, rx), a, ~vert: #'baseline, ~attach: #'paragraph))
+         ~is image_of(overlay.left(c, beside(r, a, ~vert: #'baseline)))
+  check: image_of(beside(beside(~vert: #'top, c, rx, ~order: #'back), a, ~vert: #'baseline, ~attach: #'paragraph, ~order: #'back))
+         ~is image_of(overlay.top_left(beside(r, a, ~vert: #'baseline), c))

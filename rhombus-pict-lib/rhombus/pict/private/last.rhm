@@ -1,0 +1,81 @@
+#lang rhombus/static
+import:
+  lib("pict/main.rkt") as rkt
+
+export:
+  rkt_set_pict_last
+  rkt_last_box
+  rkt_set_last_box
+  unique_last_last
+  rkt_last_append
+
+fun rkt_set_pict_last(hand, last_hand):
+  rkt.#{pict}(rkt.#{pict-draw}(hand),
+              rkt.#{pict-width}(hand),
+              rkt.#{pict-height}(hand),
+              rkt.#{pict-ascent}(hand),
+              rkt.#{pict-descent}(hand),
+              rkt.#{pict-children}(hand),
+              rkt.#{pict-panbox}(hand),
+              last_hand)
+
+fun
+| handle_path(p1, p2 :: Pair):
+    Pair.cons(p1, p2)
+| handle_path(p1, p2):
+    PairList[p1, p2]
+
+fun
+| path_end(PairList[p]):
+    p
+| path_end(Pair(_, rest)):
+    path_end(rest)
+| path_end(p):
+    p
+
+fun rkt_last_box(handle):
+  let last_handle = rkt.#{pict-last}(handle)
+  if last_handle
+  | let (x, y) = rkt.#{lt-find}(handle, last_handle)
+    let handle = path_end(last_handle)
+    values(x, y,
+           rkt.#{pict-width}(handle), rkt.#{pict-height}(handle),
+           rkt.#{pict-ascent}(handle), rkt.#{pict-descent}(handle))
+  | values(0, 0,
+           rkt.#{pict-width}(handle), rkt.#{pict-height}(handle),
+           rkt.#{pict-ascent}(handle), rkt.#{pict-descent}(handle))
+
+fun rkt_set_last_box(handle, dx, dy, width, height, ascent, descent):
+  let blank = rkt.blank(width, height, ascent, descent)
+  rkt_set_pict_last(rkt.#{pin-over}(handle, dx, dy, blank), blank)
+
+// ensure that last handle is unique so that automatic
+// `pict-last` support in append operations isn't broken by
+// having the same handle twice
+fun unique_last_last([handle, ..., last_handle]):
+  [handle, ..., rkt.inset(last_handle, 0, 0, 0, 0)]
+
+fun
+| rkt_last_append(rkt_append, sep, [h1, h2]):
+    let last_handle = rkt.#{pict-last}(h1)
+    if last_handle
+    | let (x, y) = rkt.#{lt-find}(h1, last_handle)
+      let last_p = path_end(last_handle)
+      let last_p_distinct = rkt.inset(last_p, 0, 0, 0, 0)
+      let h2_distinct = rkt.inset(h2, 0, 0, 0, 0)
+      let p = rkt_append(sep, last_p_distinct, h2_distinct)
+      let (ldx, ldy) = rkt.#{lt-find}(p, last_p_distinct)
+      let (dx, dy) = rkt.#{lt-find}(p, h2_distinct)
+      let x = x + (dx - ldx)
+      let y = y + (dy - ldy)
+      let new_h = rkt.#{lt-superimpose}(if x >= 0 && y >= 0
+                                        | h1
+                                        | rkt.inset(h1, math.max(0, -x), math.max(0, -y), 0, 0),
+                                        rkt.inset(h2, math.max(0, x), math.max(0, y), 0, 0))
+      let last_handle2 = rkt.#{pict-last}(h2)
+      if last_handle2
+      | rkt_set_pict_last(new_h, handle_path(h2, last_handle2))
+      | rkt_set_pict_last(new_h, h2)
+    | rkt_append(sep, h1, h2)
+| rkt_last_append(rkt_append, sep, [h1, h2, h3, ...]):
+    rkt_last_append(rkt_append, sep, [rkt_last_append(rkt_append, sep, [h1, h2]), h3, ...])

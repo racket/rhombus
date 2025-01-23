@@ -1,5 +1,4 @@
 #lang rhombus/static/and_meta
-
 import:
   rhombus/draw:
     expose:
@@ -9,6 +8,7 @@ import:
     expose #{pict?}
   lib("file/convertible.rkt") as fileconv
   lib("pict/convert.rkt") as pictconv
+  "last.rhm" open
 
 export:
   Color
@@ -20,6 +20,7 @@ export:
   DurationAlignment
   TimeAlignment
   OverlayOrder
+  HorizAttachment
   TimeOrder
   ConnectStyle
   ArcDirection
@@ -97,6 +98,7 @@ enum EpochAlignment: early center stretch late
 enum DurationAlignment: sustain pad
 enum TimeAlignment: ~is_a Int; start sync insert end
 enum OverlayOrder: front back
+enum HorizAttachment: line paragraph
 enum TimeOrder: before after
 enum ConnectStyle: line arrow arrows
 enum ArcDirection: cw ccw
@@ -158,6 +160,11 @@ class Pict():
 
   abstract property children :~ List.of(Pict)
   abstract property _children_starts :~ List.of(Int)
+
+  abstract method paragraph_end_bounds() :~ values(Real, Real, Real, Real, Real, Real)
+  abstract method set_paragraph_end_bounds(dx :: Real, dy :: Real,
+                                           width :: Real, height :: Real,
+                                           ascent :: Real, descent :: Real) :~ Pict
 
   abstract method draw(dc :: DC,
                        ~dx: dx :: Real = 0,
@@ -386,6 +393,13 @@ class StaticPict(private _handle,
   override property duration: 1
   override method epoch_extent(i :: Int): 0
 
+  override method paragraph_end_bounds(): rkt_last_box(_handle)
+  override method set_paragraph_end_bounds(dx :: Real, dy :: Real,
+                                           width :: Real, height :: Real,
+                                           ascent :: Real, descent :: Real):
+    let new_handle = rkt_set_last_box(_handle, dx, dy, width, height, ascent, descent)
+    static_pict(new_handle, this, _instances, METHOD(set_paragraph_end_bounds, dx, dy, width, height, ascent, descent))
+
   override method snapshot(epoch :: Int = 0,
                            n :: Real.in(0, 1) = 0,
                            ~rebuild_prompt: rebuild_prompt = #true):
@@ -484,7 +498,7 @@ class StaticPict(private _handle,
     static_pict(rkt.clip(_handle), this, _instances, METHOD(clip))
 
   override method freeze(~scale: scale :: Real = 2.0):
-    static_pict(rkt.freeze(_handle), this, _instances, METHOD(freeze, ~scale: scale))
+    static_pict(rkt.freeze(draw_handle, ~scale: scale), this, _instances, METHOD(freeze, ~scale: scale))
   
   override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict:
@@ -588,6 +602,12 @@ class NothingPict():
   | epoch_extent(i :: Int): 0
   | epoch_extent(i :: Int, extent :: NonnegReal): this
 
+  override method paragraph_end_bounds(): values(0, 0, 0, 0, 0)
+  override method set_paragraph_end_bounds(dx :: Real, dy :: Real,
+                                           width :: Real, height :: Real,
+                                           ascent :: Real, descent :: Real):
+    this
+
   override method snapshot(epoch :: Int = 0,
                            n :: Real.in(0, 1) = 0,
                            ~rebuild_prompt: _ = #true):
@@ -683,6 +703,7 @@ def default_font = draw.Font()
 fun beside(~sep: sep ::Real = 0,
            ~vert: vert :: VertAlignment = #'center,
            ~order: order :: OverlayOrder = #'front,
+           ~attach: attach :: HorizAttachment = #'line,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain,
            p :: Pict, ...) :~ Pict:
@@ -694,24 +715,26 @@ fun beside(~sep: sep ::Real = 0,
     | [p :: _StaticPict, ...]:
         let children = [p, ...]
         let all_instances = [p._instances, ...]
+        let rkt_append:
+          match vert
+          | #'top: rkt.#{ht-append}
+          | #'topline: rkt.#{htl-append}
+          | #'center: rkt.#{hc-append}
+          | #'baseline: rkt.#{hbl-append}
+          | #'bottom: rkt.#{hb-append}
         let new_handle:
           if order == #'front
-          | match vert
-            | #'top: rkt.#{ht-append}(sep, p.handle, ...)
-            | #'topline: rkt.#{htl-append}(sep, p.handle, ...)
-            | #'center: rkt.#{hc-append}(sep, p.handle, ...)
-            | #'baseline: rkt.#{hbl-append}(sep, p.handle, ...)
-            | #'bottom: rkt.#{hb-append}(sep, p.handle, ...)
-          | let [g, ...] = [rkt.launder(rkt.ghost(p.handle)), ...]
+          | if attach == #'line
+            | let [handle, ...]: unique_last_last([p.handle, ...])
+              rkt_append(sep, handle, ...)
+            | rkt_last_append(rkt_append, sep, [p.handle, ...])
+          | let gs: [rkt.launder(rkt.ghost(p.handle)), ...]
             let g_hand:
-              match vert
-              | #'top: rkt.#{ht-append}(sep, g, ...)
-              | #'topline: rkt.#{htl-append}(sep, g, ...)
-              | #'center: rkt.#{hc-append}(sep, g, ...)
-              | #'baseline: rkt.#{hbl-append}(sep, g, ...)
-              | #'bottom: rkt.#{hb-append}(sep, g, ...)
-            for values(hand = g_hand) (p_hand: [p.handle, ...],
-                                       g: [g, ...]):
+              if attach == #'line
+              | rkt_append(sep, & gs)
+              | rkt_last_append(rkt_append, sep, gs)
+            for values(hand = g_hand) (p_hand in [p.handle, ...],
+                                       g in gs):
               rkt.#{pin-under}(hand, g, rkt.#{lt-find}, p_hand)
         static_pict(new_handle, children, all_instances, retry)
     | ps:
@@ -747,10 +770,11 @@ fun stack(~sep: sep :: Real = 0,
         let all_instances = [p._instances, ...]
         let new_handle:
           if order == #'front
-          | match horiz
-            | #'left: rkt.#{vl-append}(sep, p.handle, ...)
-            | #'center: rkt.#{vc-append}(sep, p.handle, ...)
-            | #'right: rkt.#{vr-append}(sep, p.handle, ...)
+          | let [p_handle, ...]: unique_last_last([p.handle, ...])
+            match horiz
+            | #'left: rkt.#{vl-append}(sep, p_handle, ...)
+            | #'center: rkt.#{vc-append}(sep, p_handle, ...)
+            | #'right: rkt.#{vr-append}(sep, p_handle, ...)
           | let [g, ...] = [rkt.launder(rkt.ghost(p.handle)), ...]
             let g_hand:
               match horiz

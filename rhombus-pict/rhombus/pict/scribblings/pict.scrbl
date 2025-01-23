@@ -691,6 +691,39 @@
 }
 
 @doc(
+  method (pict :: Pict).paragraph_end_bounds()
+    :: values(Real, Real, Real, Real, Real, Real)
+  method (pict :: Pict).set_paragraph_end_bounds(
+    dx :: Real,
+    dy :: Real,
+    width :: Real,
+    height :: Real,
+    ascent :: Real,
+    descent :: Real
+  ) :: Pict
+){
+
+ Gets or sets bounds relative to @rhombus(pict)'s @tech{bounding box}
+ that specify a nested @tech{bounding box} for composition via
+ @rhombus(beside) in @rhombus(#'paragraph) attach mode. The results from
+ @rhombus(Pict.paragraph_end_bounds) are in the same order as the
+ arguments to @rhombus(Pict.set_paragraph_end_bounds), which describe an
+ offset and a bounding box at that offset.
+
+ For most pict constructions, the paragraph-end bounding box will be the
+ same as the pict's overall bounding box with a zero offset.
+
+ Whenever multiple picts are combined using @rhombus(stack) or
+ @rhombus(beside), the paragraph-end bounding box of the last pict
+ provided to @rhombus(stack) or @rhombus(beside) is used for the result
+ pict's paragraph-end bounds. A @rhombus(beside) combination in
+ @rhombus(#'paragraph) attach mode will then append relative to that last
+ pict in the composition, instead of to the composition as a whole.
+
+}
+
+
+@doc(
   method (pict :: Pict).metadata() :: Map
   method (pict :: Pict).set_metadata(metadata :: Map) :: Pict
 ){

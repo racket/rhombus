@@ -1,0 +1,34 @@
+#lang rhombus/static
+import:
+  pict open
+  pict/rhombus open
+  "image_of.rhm" open
+
+check:
+  image_of(rhombusblock(
+             f(1,
+               #,(rhombusblock(
+                    block:
+                      3
+                  )))
+           ))
+
+  ~is image_of(rhombusblock(
+                 f(1,
+                   block:
+                     3)
+               ))
+
+check:
+  image_of(rhombusblock(
+             f(1,
+               g(#,(rhombusblock(
+                      block:
+                        3
+                    ))))
+           ))
+  ~is image_of(rhombusblock(
+                 f(1,
+                   g(block:
+                       3))
+               ))

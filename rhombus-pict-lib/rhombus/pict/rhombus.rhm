@@ -62,7 +62,7 @@ def (render_line,
                      match p
                      | PairList[a, ...]: List.append(flatten(a), ...)
                      | a: [a]
-                   beside.baseline(& flatten(elems))
+                   beside(& flatten(elems), ~vert: #'topline, ~attach: #'paragraph)
                ~render_lines:
                  fun (lines):
                    stack.left(& PairList.to_list(lines))
