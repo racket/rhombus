@@ -200,9 +200,11 @@
 (define-for-syntax (add-span-and-syntax-static-info orig-stx e)
   (syntax-parse orig-stx
     [(form-id arg . _)
-     (relocate+reraw
-      (datum->syntax #f (list #'form-id #'arg))
-      (wrap-static-info* e (get-syntax-static-infos)))]))
+     (wrap-static-info*
+      (relocate+reraw
+       (respan (datum->syntax #f (list #'form-id #'arg)))
+       e)
+      (get-syntax-static-infos))]))
 
 (define-syntax literal
   (expression-transformer
