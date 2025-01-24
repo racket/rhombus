@@ -4,6 +4,8 @@ check:
   1 is_a Int ~is #true
   1 !is_a Int ~is #false
   1 !is_a Flonum ~is #true
+  1 is_a !Int ~is #false
+  1 is_a !Flonum ~is #true
 
 // check for sensible precedence of `is_a` mixed with expression
 check:

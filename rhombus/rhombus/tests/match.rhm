@@ -69,6 +69,12 @@ check:
   0 matches (i :: Int when i mod 3 == 0) ~is #true
   1 matches (i :: Int unless i mod 3 == 0) ~is #true
   [1, 2, 3] matches ([x, ...] when math.sum(x, ...) == 6) ~is #true
+  0 !matches (i :: Int when i mod 3 == 0) ~is #false
+  1 !matches (i :: Int unless i mod 3 == 0) ~is #false
+  [1, 2, 3] !matches ([x, ...] when math.sum(x, ...) == 6) ~is #false
+  0 matches !(i :: Int when i mod 3 == 0) ~is #false
+  1 matches !(i :: Int unless i mod 3 == 0) ~is #false
+  [1, 2, 3] matches !([x, ...] when math.sum(x, ...) == 6) ~is #false
 
 // make sure static info propagates
 block:

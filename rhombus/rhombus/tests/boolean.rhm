@@ -37,6 +37,16 @@ check:
   1 is_a String || 2 is_a Int ~is #true
   1 is_a String || 2 is_a String ~is #false
 
+check:
+  [1, 2, 3] matches [_ :: Int, ...] && [2, 3, 4] matches [_, _, _] ~is #true
+  [1, 2, 3] matches [_ :: Int, ...] || [2, 3, 4] matches [_, _, _] ~is #true
+  [1, 2, 3] matches [_ :: Int, ...] && [2, 3, 4] !matches [_, _, _] ~is #false
+  [1, 2, 3] matches [_ :: Int, ...] || [2, 3, 4] !matches [_, _, _] ~is #true
+  [1, 2, 3] !matches [_ :: Int, ...] && [2, 3, 4] matches [_, _, _] ~is #false
+  [1, 2, 3] !matches [_ :: Int, ...] || [2, 3, 4] matches [_, _, _] ~is #true
+  [1, 2, 3] !matches [_ :: Int, ...] && [2, 3, 4] !matches [_, _, _] ~is #false
+  [1, 2, 3] !matches [_ :: Int, ...] || [2, 3, 4] !matches [_, _, _] ~is #false
+
 block:
   def [x, ...] = [#true, #true, #false]
   def [y, ...] = [#true, #false, #false]

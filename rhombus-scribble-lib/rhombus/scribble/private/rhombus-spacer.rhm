@@ -282,14 +282,16 @@ spacer.bridge fun(self, tail, context, esc):
   ~in: ~expr ~defn ~entry_point
   let (adjust_self, find_name):
     match get_space(self)
-    | #'#{rhombus/entry_point}: values(values, #false)
+    | #'#{rhombus/entry_point}:
+        values(values, #false)
     | ~else:
         let mutable has_name = #false
         values(
           fun (self):
             spacer.set(self, if has_name | #'~defn | #'~expr),
           fun (name):
-            unless has_name | has_name := !(name matches '')
+            unless has_name
+            | has_name := name !matches ''
         )
   let new_tail = adjust_fun(tail, esc, ~find_name: find_name)
   let new_self = adjust_self(self)
