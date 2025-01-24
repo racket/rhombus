@@ -68,6 +68,12 @@ check:
   { 1, 2 } is_a MembershipTestable ~is #true
   Array(1, 2) is_a MembershipTestable ~is #true
   [1, 2] is_a MembershipTestable ~is #true
+  MutableList[1, 2] is_a MembershipTestable ~is #true
+  PairList[1, 2] is_a MembershipTestable ~is #true
+  0..2 is_a MembershipTestable ~is #true
+  0..=2 is_a MembershipTestable ~is #true
+  (0..) is_a MembershipTestable ~is #true
+  (..) is_a MembershipTestable ~is #true
 
   "apple" is_a MembershipTestable ~is #false
   #"apple" is_a MembershipTestable ~is #false
@@ -79,4 +85,3 @@ check:
     error.annot("MembershipTestable").msg,
     "#'apple",
   )
-

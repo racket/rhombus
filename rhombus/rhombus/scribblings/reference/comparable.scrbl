@@ -33,8 +33,8 @@ implement @rhombus(Comparable, ~class).
 ){
 
  Compares @rhombus(v1) and @rhombus(v2), which uses a primitive
- comparison operation for real numbers, characters, strings, byte string,
- symbols, and keywords, or it calls the @rhombus(compare_to, ~datum)
+ comparison operation for real numbers, characters, strings, byte strings,
+ symbols, keywords, and paths, or it calls the @rhombus(compare_to, ~datum)
  method for a @rhombus(Comparable, ~class) instance.
 
  See also @rhombus(.<), @rhombus(.>), @rhombus(.<=), @rhombus(.>=),

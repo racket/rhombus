@@ -6,7 +6,9 @@
 @title{Sequences}
 
 A @deftech{sequence} supplies elements to a @rhombus(for) iteration.
-Lists, maps, sets, and arrays are sequences, and new kinds of sequences
+@tech{Lists}, @tech{mutable lists}, @tech{pair lists}, @tech{maps},
+@tech{sets}, @tech{arrays}, @tech{strings}, @tech{byte strings}, and
+sequenceable @tech{ranges} are sequences, and new kinds of sequences
 can be defined by calling @rhombus(Sequence.make),
 @rhombus(Sequence.instantiable), or implementing
 @rhombus(Sequenceable, ~class).

@@ -9,9 +9,9 @@
 @title{Appendables}
 
 An @deftech{appendable} value is one that supports @rhombus(++). @tech{Maps},
-@tech{lists}, @tech{arrays}, @tech{sets}, @tech{strings}, and @tech{byte
- strings} are all appendable, as are instances of classes that implement
-@rhombus(Appendable, ~class).
+@tech{lists}, @tech{pair lists}, @tech{arrays}, @tech{sets},
+@tech{strings}, and @tech{byte strings} are all appendable, as are
+instances of classes that implement @rhombus(Appendable, ~class).
 
 @doc(
   ~nonterminal:
@@ -29,7 +29,8 @@ An @deftech{appendable} value is one that supports @rhombus(++). @tech{Maps},
   operator ((v1 :: ReadableString) ++ (v2 :: ReadableString))
     :: String
   operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: MutableBytes
-  operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any:
+  operator ((v1 :: Appendable) ++ (v2 :: Appendable)) :: Any
+  operator_order:
     ~order: concatenation
 ){
 

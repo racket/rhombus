@@ -112,6 +112,8 @@ check:
   { 1, 2 } is_a Indexable ~is #false
   Array(1, 2) is_a Indexable ~is #true
   [1, 2] is_a Indexable ~is #true
+  MutableList[1, 2] is_a Indexable ~is #true
+  PairList[1, 2] is_a Indexable ~is #true
   "apple" is_a Indexable ~is #true
   #"apple" is_a Indexable ~is #true
 
@@ -121,6 +123,8 @@ check:
   { 1, 2 } is_a MutableIndexable ~is #false
   Array(1, 2) is_a MutableIndexable ~is #true
   [1, 2] is_a MutableIndexable ~is #false
+  MutableList[1, 2] is_a MutableIndexable ~is #true
+  PairList[1, 2] is_a MutableIndexable ~is #false
   "apple" is_a MutableIndexable ~is #false
   #"apple" is_a MutableIndexable ~is #false
 
