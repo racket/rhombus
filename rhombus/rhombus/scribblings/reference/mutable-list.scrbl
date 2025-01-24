@@ -388,9 +388,9 @@ and it is not managed by a lock.
     :: maybe(NonnegInt)
 ){
 
- Like @rhombus(List.find) and @rhombus(List.find), but for
+ Like @rhombus(List.find) and @rhombus(List.index), but for
  @tech{mutable lists}. Searching the list takes @math{O(N)} time
- (multiplied by the cost of @rhombus(pred)) to find an element as
+ (multiplied by the cost of @rhombus(pred)) to find an element at
  position @math{N}.
 
 @examples(

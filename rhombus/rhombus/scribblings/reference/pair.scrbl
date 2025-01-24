@@ -457,7 +457,7 @@ which case it supplies its elements in order.
     :: maybe(NonnegInt)
 ){
 
- Like @rhombus(List.find) and @rhombus(List.find), but for @tech{pair
+ Like @rhombus(List.find) and @rhombus(List.index), but for @tech{pair
   lists}. Searching the list takes @math{O(N)} time (multiplied by the
  cost of @rhombus(pred)) to find an element at position @math{N}.
 
