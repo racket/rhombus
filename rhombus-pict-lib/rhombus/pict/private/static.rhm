@@ -1744,11 +1744,11 @@ fun pin(q :: Pict,
     | p
   recur pin_on(p :~ Pict = p, q :~ Pict = q,
                at :~ Find = at, using :~ Find = using,
-               time = time):
+               time = time, on_dt = 0):
     match time
     | dt :: Int:
         let new_q = q.time_pad(~before: dt)
-        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start, on_dt)
     | #'insert:
         cond
         | p is_a NothingPict:
@@ -1764,17 +1764,18 @@ fun pin(q :: Pict,
             let new_p = switch(pre, mid, post)
             let q_dt = dt + 1
             let new_q = q.time_pad(~before: q_dt)
-            pin_on(new_p, new_q, at.delay(q_dt), using.delay(q_dt), #'start)
+            pin_on(new_p, new_q, at.delay(q_dt), using.delay(q_dt), #'start, on_dt)
     | #'sync:
         let dt = at.start_in(p)
         let new_q = q.time_pad(~before: dt)
-        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start, on_dt)
     | #'end:
         let dt = p.duration
         let new_q = q.time_pad(~before: dt)
-        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start)
+        pin_on(p, new_q, at.delay(dt), using.delay(dt), #'start, on_dt)
     | ~else:
         recur retry(ps = [p, q], dt = 0, n = 0):
+          let dt = dt + on_dt
           match ps
           | [_ :: NothingPict, _]:
               nothing
@@ -1799,14 +1800,14 @@ fun pin(q :: Pict,
                             [p, q],
                             [p._instances, q._instances],
                             ~dependencies: [p, q, at, using],
-                            fun ([p, q, at, using]): pin_on(p, q, at, using, time))
+                            fun ([p, q, at, using]): pin_on(p, q, at, using, time, dt))
               | p
           | [p, q]:
               convert([p, q], epoch, duration,
                       retry,
                       ~dependencies: [p, q, at, using],
                       ~rebuild: fun ([p, q, at, using]):
-                                  pin_on(p, q, at, using, time))
+                                  pin_on(p, q, at, using, time, dt))
 
 // ------------------------------------------------------------
 
