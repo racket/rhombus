@@ -7,7 +7,7 @@
       pict open
       draw)
 
-@title(~tag: "identity"){Pict Identity, Children, and Dependencies}
+@title(~tag: "identity"){Pict Identity and Dependencies}
 
 Every predefined pict constructor or update method creates a pict that
 has a fresh identity. The @rhombus(==) operation on picts compares them

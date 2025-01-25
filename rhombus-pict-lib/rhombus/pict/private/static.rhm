@@ -65,8 +65,6 @@ export:
 
   explain_bbox
 
-  animate_map
-
 module private:
   export:
     Pict
@@ -82,6 +80,7 @@ module private:
     set_animate
     genident
     METHOD
+    do_convert
 
 enum ColorMode:
   ~is_a Color
@@ -171,7 +170,7 @@ class Pict():
                        ~dy: dy :: Real = 0) :~ Void
   abstract method drawer() :~ Function.of_arity(1, ~dx, ~dy)
 
-  abstract method launder() :~ Pict
+  abstract method launder(~rebuild_prompt: rebuild_prompt = #false) :~ Pict
   abstract method ghost(do_ghost = #true) :~ Pict
   abstract method refocus(to_p :: Pict) :~ Pict
 
@@ -244,7 +243,7 @@ class Pict():
 
   method instantaneous() :~ Pict:
     let p = snapshot(~rebuild_prompt: #false)
-    Pict.time_clip(pict_animate(fun (n, p): if n .= 0 | p | nothing,
+    Pict.time_clip(pict_animate(fun (n, ~deps: [p]): if n .= 0 | p | nothing,
                                 [p],
                                 0 /* extent */))
 
@@ -427,8 +426,10 @@ class StaticPict(private _handle,
     for List (c in children):
       0
 
-  override method launder() :~ Pict:
-    static_pict(rkt.launder(_handle), [], empty_instances, METHOD(launder))
+  override method launder(~rebuild_prompt: rebuild_prompt = #false) :~ Pict:
+    if rebuild_prompt
+    | static_pict(rkt.launder(_handle), [], empty_instances, fun (p): p)
+    | static_pict(rkt.launder(_handle), this, empty_instances, METHOD(launder))
 
   override method ghost(do_ghost = #true) :~ Pict:
     if do_ghost
@@ -564,18 +565,9 @@ def mutable do_convert = (fun (p): error("convert not ready"))
 fun convert(p :~ List.of(Pict), epoch, duration, combine, non_sustain_combine = combine,
             ~dependencies: dependencies = #false,
             ~rebuild: rebuild = #false) :~ Pict:
-  do_convert(p, epoch, duration, combine, non_sustain_combine, dependencies, rebuild)
+  do_convert(p, epoch, duration, combine, non_sustain_combine, dependencies, #false, rebuild)
 fun set_convert(proc):
   do_convert := proc
-
-fun animate_map(p :~ List.of(Pict),
-                ~combine: combine :: Function.of_arity(3) described_as (List.of(Pict), Int, Real.in(0, 1)) -> Pict,
-                ~duration: duration :: DurationAlignment = #'sustain,
-                ~epoch: epoch :: EpochAlignment = #'center,
-                ~non_sustain_combine: non_sustain_combine
-                                        :: Function.of_arity(3) described_as (List.of(Pict), Int, Real.in(0, 1)) -> Pict
-                                        = combine) :~ Pict:
-  do_convert(p, epoch, duration, combine, non_sustain_combine, #false, #false)
 
 // used by `sequential` and `concurrent`
 class ContainerPict(private ps :~ List.of(Pict)):
@@ -613,7 +605,7 @@ class NothingPict():
                            ~rebuild_prompt: _ = #true):
     this
 
-  override method launder(): this
+  override method launder(~rebuild_prompt = #false): this
   override method ghost(do_ghost = #true): this
   override method refocus(to_p :: Pict):
     error(~who: #'refocus, "cannot refocus nothing")
