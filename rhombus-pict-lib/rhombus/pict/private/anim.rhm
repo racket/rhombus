@@ -83,7 +83,7 @@ fun animate(~deps: children :: List.of(Pict) = [],
     | proc :: ((Any, ~deps: Any) -> ~any): proc(i, ~deps: children)
     | proc :: ((Any, ~config: Any) -> ~any): proc(i, ~config: config)
     | proc :: ((Any, ~deps: Any, ~config: Any) -> ~any): proc(i, ~deps: children, ~config: config)
-  AnimPict(~children: children,
+  AnimPict(~dependencies: children,
            ~config: config,
            if config
            | fun (i, & [a, ..., config]):
@@ -495,7 +495,7 @@ class AnimPict(_identity_f,
                     {},
                     rebuild)
         | p
-  | (~children: children :~ List,
+  | (~dependencies: children :~ List,
      ~config: config,
      proc,
      ~extent: extent :~ NonnegReal,
@@ -516,8 +516,8 @@ class AnimPict(_identity_f,
                   1,
                   #true,
                   before,
-                  children,
-                  #false, // dependencies
+                  before.children, // finable children
+                  children, // replaceable dependencies
                   config,
                   [],
                   {},

@@ -123,7 +123,7 @@
 ){
 
  Returns a descendant of @rhombus(pict) (by recursively checking
- @tech{children}) that has the same identity as @rhombus(orig), or
+ @tech{findable children}) that has the same identity as @rhombus(orig), or
  returns @rhombus(#false) no such pict can be found.
 
  See @rhombus("identity") for more information about pict identity and
@@ -152,8 +152,8 @@
  the result of @rhombus(rebuildable) itself; see also
  @secref("identity").
 
- The given @rhombus(deps) list determines the @tech{dependencies} of the
+ The given @rhombus(deps) list determines the @tech{replaceable dependencies} of the
  result pict, but the result from @rhombus(proc) determines the
- @tech{children} of the result pict.
+ @tech{findable children}.
 
 }
