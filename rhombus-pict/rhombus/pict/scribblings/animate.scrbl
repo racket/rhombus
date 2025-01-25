@@ -35,12 +35,13 @@
  @rhombus(snapshot) is wrapped as a sole child of a new pict whose identity
  is the same as @rhombus(p, ~var); see also @secref("identity").
 
- The @rhombus(deps) list determines both the @tech{children} and
- @tech{dependencies} of @rhombus(animate)'s result. The
- @rhombus(snapshot) function is called with the elements of
+ The @rhombus(deps) list determines the
+ @tech{replaceable dependencies} of @rhombus(animate)'s result,
+ while a @rhombus(snapshot) result determines the @tech{findable children}. The
+ @rhombus(snapshot) function is called with
  @rhombus(deps) as an optional @rhombus(~deps) argument, except that each
- of those elements is potentially adjusted through @rhombus(Pict.rebuild)
- or @rhombus(Pict.replace) before they are passed to @rhombus(snapshot).
+ pict in @rhombus(deps) is potentially adjusted through @rhombus(Pict.rebuild)
+ or @rhombus(Pict.replace) before it is passed back to @rhombus(snapshot).
  The @rhombus(config) argument similarly provides a map that can be
  passed back to @rhombus(snapshot) as a @rhombus(~config) argument,
  possibly adjusted through @rhombus(Pict.rebuild) or

@@ -317,3 +317,23 @@ durations by padding instead of sustaining. Sometimes, the choice is better
 associated with a pict than at a combination, and pict can be made
 nonsustaining through @rhombus(Pict.nonsustaining), which causes
 a sustain on the pict to be the same as time padding.
+
+@section{Snapshots and Convenience Accessors}
+
+An @tech{animated pict} does not have a unique bounding box, since its
+width, height, and other properties can change over time. Nevertheless,
+properties like @rhombus(Pict.width) and @rhombus(Pict.height) can be
+access from an animated pict. The result in that case corresponds to a
+snapshot of the pict at the start of its time box, i.e., at time
+@rhombus(0) within epoch @rhombus(0).
+
+The @rhombus(Pict.snapshot) method explicitly converts an animated pict
+to a static pict that shows the animate pict's representation at a
+specific epoch and time. The @rhombus(Pict.snapshot) method accepts a
+number in the inclusive range @rhombus(Int.in(0, 1), ~annot) for the
+time within an epoch, which means that there are two different ways to
+get a snapshot at boundary times: @rhombus(1) within epoch
+@rhombus(N, ~var) and @rhombus(0) with epoch @rhombus(N-1, ~var). Those
+two results can be understood as a result infinitesimally before or
+after the instant, allowing both side of a discontinuity in the timeline
+(e.g., the point where a static pict becomes a ghost).

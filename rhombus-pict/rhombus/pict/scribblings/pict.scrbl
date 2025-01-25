@@ -255,7 +255,7 @@
   property (pict :: Pict).children :: List.of(Pict)
 ){
 
- Produces the @tech{children} pf @rhombus(pict): a list of component
+ Produces the @tech{findable children} pf @rhombus(pict): a list of component
  @tech{picts} that were combined to construct @rhombus(pict). Those picts
  can be located within @rhombus(pict) using a @tech{finder}.
 
@@ -281,10 +281,11 @@
  Returns a @tech{pict} that is the same as @rhombus(pict), but with a
  fresh identity and hiding the identity of any component inside
  @rhombus(pict) from a @tech{finder} or the result of the @rhombus(Pict.children)
- property.
+ property. That is, the result from @rhombus(Pict.launder) has no
+ @tech{findable children} other than itself.
 
  If @rhombus(rebuild_prompt) is true, then the result pict also has no
- replaceable @tech{dependencies}.
+ @tech{replaceable dependencies}.
 
  See also @secref("identity").
 
