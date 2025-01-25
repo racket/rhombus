@@ -26,6 +26,7 @@ import:
       set_switch
       genident
       METHOD
+      do_convert
   lib("pict/main.rkt") as rkt
 
 export:
@@ -33,6 +34,7 @@ export:
 
   animate
   rebuildable
+  animate_map
   sequential
   concurrent
   switch
@@ -60,33 +62,60 @@ annot.macro 'named($name, $ann)':
   | '$arrow && $arity ...':
       '($arity ... && Function.all_of(~name: $name, $arrow))'.relocate_span([ann])
 
-fun animate(~dependencies: children :: List.of(Pict) = [],
-            proc :: named("animate function",
-                          ((~any) -> StaticPict)
-                            && Function.of_arity(1 + children.length())),
+fun animate(~deps: children :: List.of(Pict) = [],
+            ~config: config :: maybe(Map) = #false,
+            proc :: (
+              Function.all_of((Any) -> StaticPict, ~name: "animate function")
+                || Function.all_of((Any, ~deps: Any) -> StaticPict, ~name: "animate function")
+                || Function.all_of((Any, ~config: Any) -> StaticPict, ~name: "animate function")
+                || Function.all_of((Any, ~deps: Any, ~config: Any) -> StaticPict, ~name: "animate function")
+            ) described_as (Real.in(0, 1) -> StaticPict
+                              || (Real.in(0, 1), ~deps: List.of(Pict)) -> StaticPict
+                              || (Real.in(0, 1), ~config: maybe(Map)) -> StaticPict
+                              || (Real.in(0, 1), ~deps: List.of(Pict), ~config: maybe(Map)) -> StaticPict),
             ~bend: bend :: Real.in(0, 1) -> Real.in(0, 1) = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
             ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
+  fun call(i, children, config):
+    let i = bend(i)
+    match proc
+    | proc :: ((Any) -> ~any): proc(i)
+    | proc :: ((Any, ~deps: Any) -> ~any): proc(i, ~deps: children)
+    | proc :: ((Any, ~config: Any) -> ~any): proc(i, ~config: config)
+    | proc :: ((Any, ~deps: Any, ~config: Any) -> ~any): proc(i, ~deps: children, ~config: config)
   AnimPict(~children: children,
-           fun (i, a, ...): proc(bend(i), a, ...),
+           ~config: config,
+           if config
+           | fun (i, & [a, ..., config]):
+               call(i, [a, ...], config)
+           | fun (i, a, ...):
+               call(i, [a, ...], #false),
            ~extent: extent,
            ~sustain_edge: sustain_edge)
 
-fun rebuildable(~dependencies: children :: List.of(Pict) = [],
+fun rebuildable(~deps: children :: List.of(Pict) = [],
                 ~config: config :: maybe(Map) = #false,
-                proc :: named("rebuildable function",
-                              ((~any) -> Pict)
-                                && Function.of_arity(children.length() + (if config | 1 | 0)))) :~ Pict:
-  let p = proc(& children ++ (if config | [config] | []))
+                proc :: (
+                  Function.all_of((~deps: Any) -> Pict, ~name: "rebuildable function")
+                    || Function.all_of((~config: Any) -> Pict, ~name: "rebuildable function")
+                    || Function.all_of((~deps: Any, ~config: Any) -> Pict, ~name: "rebuildable function")
+                ) described_as ((~deps: List.of(Pict)) -> Pict
+                                  || (~config: maybe(Map)) -> Pict
+                                  || (~deps: List.of(Pict), ~config: maybe(Map)) -> Pict)):
+  rebuildable_anim(children, config, proc)
+
+fun rebuildable_anim(children :~ List, config, proc):
+  let p:
+    match proc
+    | proc :: ((~deps: Any) -> ~any): proc(~deps: children)
+    | proc :: ((~config: Any) -> ~any): proc(~config: config)
+    | proc :: ((~deps: Any, ~config: Any) -> ~any): proc(~deps: children, ~config: config)
   let rebuild:
     if config
     | fun ([child, ..., config]):
-        rebuildable(~dependencies: [child, ...],
-                    ~config: config,
-                    proc)
+        rebuildable_anim([child, ...], config, proc)
     | fun (children):
-        rebuildable(~dependencies: children,
-                    proc)
+        rebuildable_anim(children, #false, proc)
   cond
   | p is_a StaticPict:
       static_instance([p], p,
@@ -99,8 +128,59 @@ fun rebuildable(~dependencies: children :: List.of(Pict) = [],
                      ~config: config,
                      ~rebuild: rebuild)
 
+fun animate_map(~deps: p :~ List.of(Pict),
+                ~config: config :: maybe(Map) = #false,
+                combine :: (
+                  Function.all_of((Any, Any, ~deps: Any) -> StaticPict, ~name: "animate map function")
+                    || Function.all_of((Any, Any, ~deps: Any, ~config: Any) -> StaticPict, ~name: "animate map function")
+                ) described_as ((~deps: List.of(StaticPict), Int, Real.in(0, 1)) -> StaticPict
+                                  || (~deps: List.of(StaticPict), Int, Real.in(0, 1), ~config: maybe(Map)) -> StaticPict),
+                ~duration: duration :: DurationAlignment = #'sustain,
+                ~epoch: epoch :: EpochAlignment = #'center,
+                ~non_sustain_combine:
+                  non_sustain_combine :: (
+                    maybe(Function.all_of((~deps: Any, Any, Any) -> Pict, ~name: "animate map function"))
+                      || maybe(Function.all_of((~deps: Any, Any, Any, ~config: Any) -> Pict, ~name: "animate map function"))
+                  ) described_as (maybe(
+                                    (~deps: List.of(StaticPict), Int, Real.in(0, 1)) -> Pict
+                                      || (~deps: List.of(StaticPict), Int, Real.in(0, 1), ~config: maybe(Map)) -> Pict)
+                                  )
+                    = #false) :~ Pict:
+  match !non_sustain_combine && p
+  | [_ :: StaticPict, ...]:
+      recur retry(children = p, config = config):
+        rebuildable_anim(children,
+                         config,
+                         fun (~deps: children, ~config: config):
+                           match children
+                           | [_ :: StaticPict, ...]:
+                               match combine
+                               | combine :: ((Any, Any, ~deps: Any) -> ~any):
+                                   combine(0, 0, ~deps: children)
+                               | combine :: ((Any, Any, ~deps: Any, ~config: Any) -> ~any):
+                                   combine(0, 0, ~deps: children, ~config: config)
+                           | ~else:
+                               animate_map(~deps: children,
+                                           ~config: config,
+                                           fun (~deps: children, _, _, ~config: config):
+                                             retry(children, config)))
+  | ~else:
+      fun cvt(proc):
+        fun call(children, i, n, config):
+          match proc
+          | proc :: ((Any, Any, ~deps: Any) -> ~any):
+              proc(~deps: children, i, n)
+          | proc :: ((Any, Any, ~deps: Any, ~config: Any) -> ~any):
+              proc(~deps: children, i, n, ~config: config)
+        if config
+        | fun ([child, ..., config], i, n):
+            call([child, ...], i, n, config)
+        | fun (children, i, n):
+            call(children, i, n, #false)
+      do_convert(p, epoch, duration, cvt(combine), cvt(non_sustain_combine || combine), #false, config, #false)
+
 set_animate(fun (proc, children, n = 0.5):
-              animate(proc, ~dependencies: children, ~extent: n))
+              animate(proc, ~deps: children, ~extent: n))
 
 class PictEpoch():
   nonfinal
@@ -416,15 +496,21 @@ class AnimPict(_identity_f,
                     rebuild)
         | p
   | (~children: children :~ List,
-     proc :~ Function.of_arity(1 + children.length()),
+     ~config: config,
+     proc,
      ~extent: extent :~ NonnegReal,
      ~sustain_edge: sustain_edge):
-      let n_children = children.length()
-      recur rebuild(children :~ List: children):
-        let before :~ Pict = proc(0, & children)
-        let after :~ Pict = proc(1, & children)
+      let has_config = config != #false
+      recur rebuild(children_plus_config :~ List = children ++ (if config | [config] | [])):
+        let (children, config):
+          if has_config
+          | let [c, ..., config] = children_plus_config
+            values([c, ...], config)
+          | values(children_plus_config, #false)
+        let before :~ Pict = proc(0, & children_plus_config)
+        let after :~ Pict = proc(1, & children_plus_config)
         anim_pict(genident(),
-                  [ProcPictEpoch(proc, children, before, after, extent, sustain_edge)],
+                  [ProcPictEpoch(proc, children_plus_config, before, after, extent, sustain_edge)],
                   [extent],
                   0,
                   1,
@@ -432,7 +518,7 @@ class AnimPict(_identity_f,
                   before,
                   children,
                   #false, // dependencies
-                  #false, // config
+                  config,
                   [],
                   {},
                   rebuild)
@@ -659,11 +745,14 @@ class AnimPict(_identity_f,
     | anim_pict_like(this, ~sustaining: #false,
                      ~rebuild: METHOD(nonsustaining))
 
-  override method launder() :~ AnimPict:
-    anim_pict_like(anim_pict_adjust(this, fun (p :~ StaticPict): p.launder()),
-                   ~children: [],
-                   ~identity: genident(),
-                   ~rebuild: METHOD(launder))
+  override method launder(~rebuild_prompt = #false) :~ AnimPict:
+    if rebuild_prompt
+    | anim_pict_like(anim_pict_adjust(this, fun (p :~ StaticPict): p.launder()),
+                     ~children: [],
+                     ~identity: genident(),
+                     ~rebuild: fun (p): p)
+    | anim_pict_adjust(this, fun (p :~ StaticPict): p.launder(),
+                       ~rebuild: METHOD(launder()))
 
   override method ghost(do_ghost = #true) :~ AnimPict:
     if do_ghost
@@ -1096,9 +1185,9 @@ class CombinePictEpoch(combine,
       metadata ++ orig.metadata()
 
 private.set_convert(
-  fun (ps :~ List, ealign, dalign, combine, pad_combine, dependencies, rebuild_in):
+  fun (ps :~ List, ealign, dalign, combine, pad_combine, dependencies, config, rebuild_in):
     // can assume that `nothing`s have been filtered out and `ps` is non-empty
-    recur rebuild (ps :~ List = ps):
+    recur rebuild (ps :~ List = ps, config = config):
       let ([p :~ _AnimPict, ...] && [p0 :~ _AnimPict, & _], m_duration):
         make_concurrent(for List (p in ps):
                           when p == nothing | error("nothing in convert!")
@@ -1120,10 +1209,14 @@ private.set_convert(
                   combine([mk(p), ...], 0, 0),
                 ps,
                 dependencies,
-                #false, // config
+                config,
                 0,
                 {},
-                rebuild_in || rebuild)
+                rebuild_in || (if config
+                               | fun ([p, ..., config]):
+                                   rebuild([p, ...], config)
+                               | fun (ps):
+                                   rebuild(ps, #false)))
 )
 
 fun switch(~splice: splice :: maybe(matching(TimeOrder)) = #false,

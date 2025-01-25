@@ -38,9 +38,9 @@ fun build2(p :~ Pict) :~ Pict:
   q
 
 fun swell(p :~ StaticPict) :~ Pict:
-  animate(fun (n, p :~ Pict):
+  animate(fun (n, ~deps: [p :~ Pict]):
             p.scale(1 + n),
-          ~dependencies: [p])
+          ~deps: [p])
 
 def swell_r = swell(r)
 def swell_c = swell(c)

@@ -224,7 +224,7 @@ fun para(~width: width = current_para_width(),
                                   ~align: align,
                                   p.handle, ...))
     | ps:
-        pict.animate_map(ps, ~combine: retry)
+        pict.animate_map(~deps: ps, fun (~deps: ps, epoch, n): retry(ps, epoch, n))
 
 fun item(~width: width = current_para_width(),
          ~full: full = #false,

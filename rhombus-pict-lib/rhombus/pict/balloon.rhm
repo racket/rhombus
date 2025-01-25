@@ -120,16 +120,16 @@ fun pin(content :: Pict,
               let content = content.time_pad(~before: dt)
               values(p, content, at.delay(dt))
           | ~else: values(p, content, at)
-        animate_map([p, content],
+        animate_map(~deps: [p, content],
                     ~epoch: epoch_a,
                     ~duration: duration,
-                    ~combine: fun ([p :: Pict, ...], epoch, n):
-                                retry_balloon([p, ...], at, epoch, n),
+                    fun (~deps: [p :: Pict, ...], epoch, n):
+                      retry_balloon([p, ...], at, epoch, n),
                     ~non_sustain_combine:
                       // padding (as opposed to sustain) drops the balloon
                       // image, but keeps the content intact/findable; the
                       // content takes care of its own pad vs. sustain
-                      fun ([p :~ Pict, content :~ Pict], epoch, n):
+                      fun (~deps: [p :~ Pict, content :~ Pict], epoch, n):
                         if content == nothing
                         | p
                         | let pg = p.ghost()
@@ -168,12 +168,13 @@ fun note(content :: Pict,
                               #{#:line-width}: line_width)
         Pict.from_handle(build([content.handle]), [content], build)
     | ~else:
-        animate_map(contents,
+        animate_map(~deps: contents,
                     ~epoch: epoch_a,
                     ~duration: duration,
-                    ~combine: retry,
+                    fun (~deps: contents, epoch, n):
+                      retry(contents, epoch, n),
                     ~non_sustain_combine:
-                      fun ([content :~ Pict], epoch, n):
+                      fun (~deps: [content :~ Pict], epoch, n):
                         let cg = content.ghost()
                         let b :~ Pict = retry([cg], epoch, n)
                         let b = b.ghost()

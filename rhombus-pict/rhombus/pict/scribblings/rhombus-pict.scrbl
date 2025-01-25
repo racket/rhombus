@@ -28,6 +28,8 @@ and steps concurrent to other animated picts provided in the same
 @include_section("pict.scrbl")
 @include_section("shape.scrbl")
 @include_section("combine.scrbl")
+@include_section("animate.scrbl")
+@include_section("rebuild.scrbl")
 @include_section("find.scrbl")
 @include_section("text.scrbl")
 @include_section("radial.scrbl")
