@@ -4,7 +4,7 @@
 
 @title{Printables}
 
-Any value is @deftech{printable}. Implementing the @rhombus(Printable)
+Any value is @deftech{printable}. Implementing the @rhombus(Printable, ~class)
 interface customizes the way that instances of a class print.
 
 @doc(

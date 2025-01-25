@@ -4,6 +4,10 @@
 
 @title(~tag: "Equatables"){Equatables}
 
+Any value is @deftech{equatable}. Implementing the @rhombus(Equatable, ~class)
+interface customizes the way that instances of a class are compared for
+@rhombus(==) and hashed for maps and sets that use @rhombus(==, ~key_comp).
+
 @doc(
   interface Equatable
 ){
@@ -11,7 +15,7 @@
 @provided_interface_and_namespace_only()
 
  An interface that a class can implement (publicly or privately) to
- customize the way its objects are compared for @rhombus(==) and hashed 
+ customize the way its objects are compared for @rhombus(==) and hashed
  for maps and sets that use @rhombus(==, ~key_comp). The interface has
  two methods:
 

@@ -54,6 +54,7 @@
 
 (define (comparable? v)
   (or (real? v)
+      (char? v)
       (string? v)
       (bytes? v)
       (symbol? v)

@@ -199,7 +199,7 @@
                         end-suffix))]
           [else
            (define-values (pfx raw sfx) (sequence l
-                                                  (or bracketed? keep-prefix?)
+                                                  (or bracketed? use-prefix?)
                                                   (or bracketed? keep-suffix?)))
            (if bracketed?
                (values init-prefix
@@ -223,7 +223,7 @@
     (cond
       [(syntax-opaque-raw-property g)
        => (lambda (raw-in)
-            (define prefix (out (and keep-prefix?
+            (define prefix (out (and use-prefix?
                                      (raw-cons
                                       (syntax-raw-prefix-property g)
                                       (and (not inner?)

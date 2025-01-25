@@ -69,6 +69,8 @@ check:
   { 1: 2 } is_a Appendable ~is #true
   { 1, 2 } is_a Appendable ~is #true
   [1, 2] is_a Appendable ~is #true
+  MutableList[1, 2] is_a Appendable ~is #false
+  PairList[1, 2] is_a Appendable ~is #true
   Array(1, 2) is_a Appendable ~is #true
   "apple" is_a Appendable ~is #true
   #"apple" is_a Appendable ~is #true
@@ -87,7 +89,7 @@ check:
       error.val(MutableMap{ 1: 2 }).msg,
   )
   (MutableSet{ 1, 2 } :~ Appendable)
-    ++ MutableSet{ 3, 4 } ~throws values(      
+    ++ MutableSet{ 3, 4 } ~throws values(
       "Appendable.append: " ++ error.annot_msg(),
       error.annot("Appendable").msg,
       error.val(MutableSet{1, 2}).msg,

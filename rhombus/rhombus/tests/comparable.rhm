@@ -262,10 +262,13 @@ check:
   1.0 is_a Comparable ~is #true
   #inf is_a Comparable ~is #true
   math.sqrt(-1) is_a Comparable ~is #false
+  Char"a" is_a Comparable ~is #true
   "apple" is_a Comparable ~is #true
+  Byte#"a" is_a Comparable ~is #true
   #"apple" is_a Comparable ~is #true
   #'apple is_a Comparable ~is #true
   #'~apple is_a Comparable ~is #true
+  Path("x/y") is_a Comparable ~is #true
 
 check:
   class NotComparable()

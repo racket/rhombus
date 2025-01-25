@@ -6,7 +6,6 @@
                      enforest/syntax-local
                      enforest/operator
                      "name-path-op.rkt")
-         "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
          "dotted-sequence-parse.rkt"
@@ -14,8 +13,9 @@
          "name-root-ref.rkt"
          "parse.rkt"
          "membership-testable.rkt"
-         (only-in "annotation.rkt" is_a)
          (only-in "arithmetic.rkt" is_now)
+         (only-in "annotation.rkt" is_a)
+         (only-in "match.rkt" matches)
          (submod "arithmetic.rkt" parse-not))
 
 (define-for-syntax (parse-not form1 tail repet?)
@@ -27,8 +27,9 @@
         (define mode
           (cond
             [(free-identifier=? #'op.name #'in) 'in]
-            [(free-identifier=? #'op.name #'is_a) 'is_a]
             [(free-identifier=? #'op.name #'is_now) 'is_now]
+            [(free-identifier=? #'op.name #'is_a) 'is_a]
+            [(free-identifier=? #'op.name #'matches) 'matches]
             [else #f]))
         (unless mode
           (raise-syntax-error #f "expected a negatable operator" #'self #'op))
@@ -50,11 +51,10 @@
                 [(~var form2 (:infix-op+repetition-use+tail #'self.name))
                  (values (apply-op form1 #'form2.parsed)
                          #'form2.tail)])])]
-          [(is_a)
+          [(is_a matches)
            ((operator-proc infix-op) form1 (cons #'op.name #'tail) 'invert)])])]
     [(self next . _)
      (raise-syntax-error #f "expected negatable operator" #'self #'next)]))
 
 (begin-for-syntax
   (set-parse-not! parse-not))
-

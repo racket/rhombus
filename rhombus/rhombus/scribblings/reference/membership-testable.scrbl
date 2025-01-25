@@ -9,10 +9,10 @@
 @title{Membership Tests}
 
 A @deftech{membership test} uses the @rhombus(in) operator to check
-whether an element is included in the value. @tech{Maps}, @tech{lists},
-@tech{arrays}, @tech{sets}, and @tech{ranges} all support membership
-tests, as do instances of classes that implement
-@rhombus(MembershipTestable, ~class).
+whether an element is included in the value. @tech{Maps},
+@tech{lists}, @tech{mutable lists}, @tech{pair lists}, @tech{arrays},
+@tech{sets}, and @tech{ranges} all support membership tests, as do
+instances of classes that implement @rhombus(MembershipTestable, ~class).
 
 @doc(
   ~nonterminal:
@@ -29,9 +29,10 @@ tests, as do instances of classes that implement
 ){
 
  Checks whether the result of @rhombus(elem_expr) is a member of the
- result of @rhombus(expr), where the latter is a value such as a set,
- map, array, list, or @rhombus(MembershipTestable, ~class) object that
- support @tech{membership tests}. The result is @rhombus(#true) for
+ result of @rhombus(expr), where the latter is a value such as a map,
+ list, mutable list, pair list, array, set, range, or
+ @rhombus(MembershipTestable, ~class) object that support
+ @tech{membership tests}. The result is @rhombus(#true) for
  @rhombus(in) if the element is present and @rhombus(#false) otherwise.
  The operator combination @rhombus(!in) inverts the result relative to
  @rhombus(in).

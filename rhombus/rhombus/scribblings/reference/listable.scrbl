@@ -11,8 +11,9 @@
 A @deftech{listable} value can be converted to a @tech{list} using a
 @rhombus(to_list) operation such as @rhombus(Listable.to_list). Lists
 are themselves listable, where @rhombus(List.to_list) just returns the
-same list. @tech{Pair lists}, @tech{array}s, and instances of classes
-that implement @rhombus(Listable, ~class) are also listable.
+same list. @tech{Mutable lists}, @tech{pair lists}, @tech{arrays},
+listable @tech{ranges}, and instances of classes that implement
+@rhombus(Listable, ~class) are also listable.
 
 List-splicing contexts generally allow listables, including in the
 construction of a list. As a result, if @nontermref(expr) produces a

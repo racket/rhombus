@@ -433,42 +433,6 @@
 }
 
 @doc(
-  fun animate_map(
-    picts :~ List.of(Pict),
-    ~combine: combine :: (List.of(Pict), Int, Real.in(0, 1)) -> Pict,
-    ~duration: duration_align :: DurationAlignment = #'sustain,
-    ~epoch: epoch_align :: EpochAlignment = #'center,
-    ~non_sustain_combine: non_sustain_combine :: Function.of_arity(3)
-                            = combine
-  ) :: Pict
-){
-
- Constructs a @tech{pict} by lifting an operation on @tech{static picts}
- to one on @tech{animated picts}. The @rhombus(combine) function is
- called as needed on a list of static picts corresponding to the input
- @rhombus(pict)s, and it should return a static pict. In addition to a
- list of list of static picts, @rhombus(combine) receives an integer epoch
- offset and a real number in 0 to 1 for a relative time within the epoch.
-
- The picts are first made concurrent via @rhombus(concurrent), passing
- along @rhombus(duration_align) and @rhombus(epoch_align).
-
-@examples(
-  ~eval: pict_eval
-  ~repl:
-    def sq_grow = animate(fun (n): sq.scale(1, 1 + n))
-    explain_anim(
-      animate_map([sq_grow],
-                  ~combine:
-                    fun ([sq :: Pict], i, n):
-                      stack(sq, text(str.f(sq.height,
-                                           ~precision: 1))))
-    )
-)
-
-}
-
-@doc(
   fun beside.top(~sep: sep :: Real = 0, pict :: Pict, ...) :: Pict
   fun beside.topline(~sep: sep :: Real = 0, pict :: Pict, ...) :: Pict
   fun beside.center(~sep: sep :: Real = 0, pict :: Pict, ...) :: Pict

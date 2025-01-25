@@ -282,3 +282,30 @@ block:
       "Sequence",
       "Box(\"really not a sequence\")",
     )
+
+check:
+  Posn(1, 2) is_a Sequence ~is #true
+  Posn3D(1, 2, 3) is_a Sequence ~is #true
+  Posn2(1, 2) is_a Sequence ~is #true
+  Posn3(1, 2) is_a Sequence ~is #true
+  Posn4(1, 2) is_a Sequence ~is #true
+
+  { 1: 2 } is_a Sequence ~is #true
+  { 1, 2 } is_a Sequence ~is #true
+  Array(1, 2) is_a Sequence ~is #true
+  [1, 2] is_a Sequence ~is #true
+  MutableList[1, 2] is_a Sequence ~is #true
+  PairList[1, 2] is_a Sequence ~is #true
+  0..2 is_a Sequence ~is #true
+  0..=2 is_a Sequence ~is #true
+  (0..) is_a Sequence ~is #true
+  (..) is_a Sequence ~is #false
+
+  "apple" is_a Sequence ~is #true
+  #"apple" is_a Sequence ~is #true
+  #'apple is_a Sequence ~is #false
+
+  // FIXME non-negative integers are Racket sequences
+  -5 is_a Sequence ~is #false
+  0 is_a Sequence ~is #true
+  5 is_a Sequence ~is #true

@@ -1122,7 +1122,7 @@ class's name.
 
 @doc(
   fun Syntax.relocate_split(
-    [stx :: Term, ...] && NonemptyList,
+    [stx :: Term, ...] :: NonemptyList,
     like_stx :: Syntax
   ) :: List.of(Term)
 ){

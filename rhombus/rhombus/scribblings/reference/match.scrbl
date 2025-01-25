@@ -118,11 +118,16 @@
 
 @doc(
   expr.macro '$expr matches $bind'
+  non_target:
+    expr.macro '$expr !matches $bind'
+  operator_order:
+    ~order: equivalence
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr) matches
  @rhombus(bind), @rhombus(#false) otherwise. Equivalent to
- @rhombus(expr is_a matching(bind)).
+ @rhombus(expr is_a matching(bind)). The operator combination
+ @rhombus(!matches) inverts the test.
 
 @examples(
   [1, 2, 3] matches [_, _, _]

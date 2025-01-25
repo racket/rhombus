@@ -8,11 +8,11 @@
 
 @title{Indexables}
 
-An @deftech{indexable} value is one that supports @brackets afterward to
-extract an element at the index within @brackets. @tech{Maps},
-@tech{lists}, @tech{arrays}, @tech{strings}, and @tech{byte
- strings} are all indexable, as are instances of classes that implement
-@rhombus(Indexable, ~class).
+An @deftech{indexable} value is one that supports @brackets afterward
+to extract an element at the index within @brackets. @tech{Maps},
+@tech{lists}, @tech{mutable lists}, @tech{pair lists}, @tech{arrays},
+@tech{strings}, and @tech{byte strings} are all indexable, as are
+instances of classes that implement @rhombus(Indexable, ~class).
 
 @doc(
   ~nonterminal:
@@ -28,17 +28,19 @@ extract an element at the index within @brackets. @tech{Maps},
 ){
 
  Without an @rhombus(assign_op), accesses an element of an
- @tech{indexable}, such as a map, array, list, string, or
- @rhombus(Indexable, ~class) object. The element is accessed from
- the value produced by @rhombus(expr) at the index or key produced by
- @rhombus(at_expr). The access form also works as a @tech{repetition}
- given repetitions for a collection and an index.
+ @tech{indexable} object, such as a map, list, mutable list, pair
+ list, array, string, byte string, or @rhombus(Indexable, ~class)
+ object. The element is accessed from the value produced by
+ @rhombus(expr) at the index or key produced by @rhombus(at_expr). The
+ access form also works as a @tech{repetition} given repetitions for a
+ collection and an index.
 
- With an @rhombus(assign_op), for a mutable indexable object (such as an
- array, map, set, or @rhombus(MutableIndexable, ~class) object), the index
- element is assigned to the value based on the operator and
- @rhombus(rhs_expr). The expression result is @rhombus(#void) in the case
- of @rhombus(:=) as @rhombus(assign_op).
+ With an @rhombus(assign_op), for a mutable indexable object (such as
+ a mutable list, mutable array, mutable map, mutable byte string, or
+ @rhombus(MutableIndexable, ~class) object), the index element is
+ assigned to the value based on the operator and
+ @rhombus(rhs_expr). The expression result is @rhombus(#void) in the
+ case of @rhombus(:=) as @rhombus(assign_op).
 
  See also @rhombus(use_static).
 

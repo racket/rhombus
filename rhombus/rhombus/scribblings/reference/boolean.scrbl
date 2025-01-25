@@ -274,6 +274,8 @@
     repet.macro '$repet !#,(@rhombus(is_now, ~repet)) $repet'
   non_target:
     expr.macro '$expr !is_a $annot'
+  non_target:
+    expr.macro '$expr !matches $bind'
   operator_order:
     ~order: equivalence
 ){
@@ -282,8 +284,8 @@
  is @rhombus(#false), @rhombus(#false) otherwise.
 
  As an infix operator, @rhombus(!) modifies @rhombus(in),
- @rhombus(is_now), or @rhombus(is_a). Any other infix use of @rhombus(!)
- is an error.
+ @rhombus(is_now), @rhombus(is_a), or @rhombus(matches). Any other
+ infix use of @rhombus(!) is an error.
 
 @examples(
   !#false
