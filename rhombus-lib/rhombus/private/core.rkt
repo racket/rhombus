@@ -7,14 +7,13 @@
   #:info get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           shrubbery/private/lang)
+           (only-in (submod shrubbery reader)
+                    [get-info-proc shrubbery:get-info-proc]))
   (provide get-info-proc)
   (define (get-info-proc key default make-default)
     (case key
-      [(drracket:default-extension)
-       "rhm"]
+      [(drracket:default-extension) "rhm"]
       [(drracket:define-popup)
        (dynamic-require 'rhombus/private/define-popup
                         'define-popup)]
-      [else
-       (shrubbery-get-info-proc/mode key default make-default)])))
+      [else (shrubbery:get-info-proc key default make-default)])))

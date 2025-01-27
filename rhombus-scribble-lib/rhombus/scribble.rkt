@@ -36,7 +36,8 @@
   #:info get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           shrubbery/private/lang)
+           (only-in (submod shrubbery reader)
+                    [get-info-proc shrubbery:get-info-proc]))
   (provide read-proc
            read-syntax-proc
            get-info-proc)
@@ -46,15 +47,15 @@
     (list (parse-all in #:mode 'text #:source src)))
   (define (get-info-proc key default make-default)
     (case key
+      [(color-lexer)
+       (dynamic-require 'shrubbery/syntax-color
+                        'shrubbery-text-mode-lexer)]
       [(drracket:keystrokes)
-       (append (shrubbery-get-info-proc/mode key default make-default
-                                             #:mode 'text)
+       (append (shrubbery:get-info-proc key default make-default)
                (dynamic-require 'scribble/private/indentation 'keystrokes))]
       [(drracket:toolbar-buttons)
        (dynamic-require 'scribble/tools/drracket-buttons 'drracket-buttons)]
-      [else
-       (shrubbery-get-info-proc/mode key default make-default
-                                     #:mode 'text)])))
+      [else (shrubbery:get-info-proc key default make-default)])))
 
 (module configure-expand racket/base
   (require rhombus/expand-config)
