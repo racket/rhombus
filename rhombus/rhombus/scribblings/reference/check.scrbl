@@ -9,7 +9,7 @@
   ~hidden:
     import lib("racket/base.rkt").#{error-display-handler}
     #{error-display-handler}(fun (msg, exn):
-                               print(msg, Port.Output.current_error()))
+                               print(msg, ~out: Port.Output.current_error()))
 )
 
 @title{Unit Testing}
