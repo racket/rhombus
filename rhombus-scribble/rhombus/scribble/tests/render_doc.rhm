@@ -1,10 +1,8 @@
-#lang rhombus
+#lang rhombus/static
 import:
   rhombus/meta open
   rhombus/runtime_path
   rhombus/shrubbery
-  lib("racket/base.rkt")
-  lib("racket/file.rkt")
   lib("scribble/render.rkt").render
   lib("xml/main.rkt") as xml
   "doc.scrbl"
@@ -16,17 +14,16 @@ import:
 
 runtime_path.def doc_expect: "doc_expect.shrub"
 
-def dir = file.#{make-temporary-directory}()
-
-render(PairList[doc.doc],
-       PairList["doc"],
-       #{#:dest-dir}: dir)
-
 def html:
-  let in = base.#{open-input-file}(base.#{build-path}(dir, "doc.html"))
+  Closeable.let dir = filesystem.make_temporary(
+    ~as: #'directory,
+    ~make_name: fun (s): Path("render_doc" +& s),
+  )
+  render(PairList[doc.doc],
+         PairList["doc"],
+         #{#:dest-dir}: dir.path)
+  let in = Port.Input.open_file(dir.path.add("doc.html"))
   xml.#{xml->xexpr}(xml.#{document-element}(xml.#{read-xml}(in)))
-
-file.#{delete-directory/files}(dir)
 
 def keep_with_attrs = { #'div, #'span, #'a }
 def keeps = { #'html, #'body, #'table, #'tr, #'td, #'p, #'blockquote, #'h2 }
@@ -68,7 +65,7 @@ fun filter(html):
       '$html'
 
 fun read(expect):
-  let o = base.#{open-input-file}(expect)
+  let o = Port.Input.open_file(expect)
   shrubbery.read(o)
 
 #//
@@ -79,8 +76,8 @@ check:
   ~prints_like read(doc_expect)
 
 fun rewrite():
-  def o = base.#{open-output-file}(doc_expect,
-                                   ~exists: #'truncate)
+  let o = Port.Output.open_file(doc_expect,
+                                ~exists: #'truncate)
   println(~out: o, filter(html), ~pretty: #true)
   o.flush()
 

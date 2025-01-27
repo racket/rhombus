@@ -9,7 +9,7 @@
   ~hidden:
     import lib("racket/base.rkt").#{error-display-handler}
     #{error-display-handler}(fun (msg, exn):
-                               print(msg, Port.Output.current_error()))
+                               print(msg, ~out: stderr))
 )
 
 @title{Unit Testing}
@@ -81,7 +81,7 @@
 
  @item{In @rhombus(~prints) mode, evaluates the @rhombus(expected_expr)
   or @rhombus(expected_body) in a mode that captures output to
-  @rhombus(Port.Output.current()) to a string, then checks that there is
+  @rhombus(stdout) to a string, then checks that there is
   no exception and the output string is the same as the expected result.}
 
  @item{In @rhombus(~throws) mode, obtains one or more strings (as

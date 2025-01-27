@@ -242,8 +242,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 
 @doc(
-  method Port.Output.flush(out :: Port.Output = Port.Output.current())
-    :: Void
+  method Port.Output.flush(out :: Port.Output = stdout) :: Void
 ){
 
  Flushes the content of @rhombus(out)'s buffer.

@@ -90,9 +90,9 @@ class Subprocess(hand, output, input, error_output, desc, is_new):
 
 fun do_run(desc :: String,
            exe :: PathString,
-           ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-           ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-           ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current_error(),
+           ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+           ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+           ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
            ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
            arg, ...) :~ Subprocess:
   let (handle, o, i, e): rkt.subprocess(out != #'pipe && rkt_stream.#{if-stream-out}(#false, out),
@@ -123,9 +123,9 @@ fun do_run(desc :: String,
   sp
 
 fun run(exe :: PathString,
-        ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-        ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-        ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current_error(),
+        ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+        ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+        ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
         ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
         arg :: PathString || ReadableString, ...) :~ Subprocess:
   let exe: if Path.parent(exe) == #'relative
@@ -134,9 +134,9 @@ fun run(exe :: PathString,
   do_run(to_string(exe), exe, arg, ..., ~in: in, ~out: out, ~err: err, ~group: group)
 
 fun run_shell(command :: String,
-              ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-              ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-              ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current_error(),
+              ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+              ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+              ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
               ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group()) :~ Subprocess:
   let args = rkt_shell.#{shell-path/args}(#'#{subprocess.shell}, command)
   do_run(command, & args, ~in: in, ~out: out, ~err: err, ~group: group)
@@ -148,9 +148,9 @@ fun shell(command :: String):
 
 fun run_command(exe :: PathString,
                 command :: String,
-                ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-                ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-                ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current_error(),
+                ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+                ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+                ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
                 ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
                 arg :: PathString || ReadableString, ...) :~ Subprocess:
   unless system.type() == #'windows

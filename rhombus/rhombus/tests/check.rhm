@@ -14,7 +14,7 @@ fun check_error(thunk, is_ok, form_str, should_str):
   unless ok
   | print("`" ++ form_str ++ "` did not " ++ should_str
             ++ "\n" ++ str,
-          Port.Output.current_error())
+          ~out: stderr)
 
 expr.macro 'check_check:
               $what

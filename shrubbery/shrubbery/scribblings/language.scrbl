@@ -10,7 +10,7 @@
 
 @title[#:tag "language"]{Language and Parser API}
 
-@defmodulelang[shrubbery]
+@defmodulelang*[(shrubbery shrubbery/text)]
 
 The @racketmodname[shrubbery] meta-language is similar to the
 @racketmodname[s-exp] meta-language. It expects a module name after
@@ -58,6 +58,17 @@ A same-line module language for @racketmodname[shrubbery] is determined
 by using @racket[parse-all] in @racket['line] mode. As long as the
 resulting shrubbery is not empty, it is parsed in the same way that
 @racketmodname[rhombus] parses module names for @|rhm-import|.
+
+The @racketmodname[shrubbery/text] meta-language is similar to
+@racketmodname[shrubbery], but it parses the module in @racket['text]
+mode. For example,
+
+@codeblock|{
+ #lang shrubbery/text
+ @(1+2)
+}|
+
+prints @racketresult['(brackets (group (parens (group 1 (op +) 2))))].
 
 @section{Parsing API}
 
