@@ -25,9 +25,9 @@
 @doc(
   fun subprocess.run(
     program :: PathString,
-    ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-    ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-    ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current(),
+    ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+    ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+    ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
               = (if current_group_new() | #'new | #'same),
     arg :: PathString || ReadableString,
@@ -72,9 +72,9 @@
 @doc(
   fun subprocess.run_shell(
     command :: String,
-    ~in: in :: Port.Input || Subprocess.Pipe = Port.Input.current(),
-    ~out: out :: Port.Output || Subprocess.Pipe = Port.Output.current(),
-    ~err: err :: Port.Output || Subprocess.ErrorPipe = Port.Output.current(),
+    ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+    ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+    ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
               = (if current_group_new() | #'new | #'same)
   ) :: Subprocess

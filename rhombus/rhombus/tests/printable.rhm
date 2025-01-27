@@ -48,7 +48,7 @@ check:
                ]}
 
 check:
-  print(1, ~out: Port.Output.current())
+  print(1, ~out: stdout)
   ~prints "1"
 
 check:
@@ -56,7 +56,7 @@ check:
   ~prints "1\n"
 
 check:
-  println(1, ~out: Port.Output.current())
+  println(1, ~out: stdout)
   ~prints "1\n"
 
 check:
@@ -68,7 +68,7 @@ check:
   ~prints "1 2 \"apple\""
 
 check:
-  show(#'a, ~out: Port.Output.current())
+  show(#'a, ~out: stdout)
   ~prints "#'a"
 
 check:
@@ -76,7 +76,7 @@ check:
   ~prints "#'a\n"
 
 check:
-  showln(#'a, ~out: Port.Output.current())
+  showln(#'a, ~out: stdout)
   ~prints "#'a\n"
 
 check:

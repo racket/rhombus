@@ -60,7 +60,7 @@ interface customizes the way that instances of a class print.
 @doc(
   fun Printable.render(
     pd :: PrintDesc,
-    out :: Port.Output = Port.Output.current(),
+    out :: Port.Output = stdout,
     ~column: column :: NonnegInt = 0
   ) :: Void
 ){
