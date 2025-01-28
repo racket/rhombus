@@ -1,15 +1,17 @@
 #lang at-exp racket/base
-(require racket/symbol
+(require (for-syntax racket/base
+                     racket/syntax-srcloc
+                     syntax/parse/pre)
+         racket/symbol
+         rackunit/log
          syntax/modread
-         syntax/parse/pre
-         rackunit)
+         syntax/parse/pre)
 
-(define (get-module name . strs)
+(define (get-module name mod-str)
   (define mod-stx
     (check-module-form
      (with-module-reading-parameterization
        (lambda ()
-         (define mod-str (apply string-append "#lang rhombus\n" strs))
          (define in (open-input-string mod-str))
          (port-count-lines! in)
          (read-syntax name in)))
@@ -17,6 +19,25 @@
      (symbol->immutable-string name)))
   (parameterize ([compile-enforce-module-constants #t])
     (expand-syntax mod-stx)))
+
+(define-syntax (check-module stx)
+  (syntax-parse stx
+    [(_ name:identifier
+        (~seq #:is pred)
+        ...
+        str:string ...)
+     (define error-str
+       (string-append (srcloc->string (syntax-srcloc stx)) ": module content does not satisfy predicate"
+                      "\n  name: ~s"
+                      "\n  predicate: ~s"))
+     (define module-str
+       (apply string-append "#lang rhombus\n" (syntax->datum #'(str ...))))
+     #`(let ([mod-stx (get-module 'name '#,module-str)])
+         (let ([ok? (pred mod-stx)])
+           (test-log! ok?)
+           (unless ok?
+             (eprintf '#,error-str 'name pred)))
+         ...)]))
 
 (define (let-body stx)
   (syntax-parse stx
@@ -64,119 +85,119 @@
      #t]
     [_ #f]))
 
-(check-pred lambda-optimized?
-            @get-module['fun1]{
+@check-module[fun1
+              #:is lambda-optimized?]{
  fun f(x, ~b):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun2]{
+@check-module[fun2
+              #:is lambda-optimized?]{
  fun f(x, ~b, & _):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun3]{
+@check-module[fun3
+              #:is lambda-optimized?]{
  fun f(x, ~b, _, ...,):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun4]{
+@check-module[fun4
+              #:is lambda-optimized?]{
  fun f(x, ~b = 1):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun5]{
+@check-module[fun5
+              #:is lambda-optimized?]{
  fun f(x, ~b = 1, & _):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun6]{
+@check-module[fun6
+              #:is lambda-optimized?]{
  fun f(x, ~b = 1, _, ...,):
    b
 
  fun g():
    f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun1/namespaced]{
+@check-module[fun1/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun2/namespaced]{
+@check-module[fun2/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b, & _):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun3/namespaced]{
+@check-module[fun3/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b, _, ...,):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun4/namespaced]{
+@check-module[fun4/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b = 1):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun5/namespaced]{
+@check-module[fun5/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b = 1, & _):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
-(check-pred lambda-optimized?
-            @get-module['fun6/namespaced]{
+@check-module[fun6/namespaced
+              #:is lambda-optimized?]{
  namespace prefix
  fun prefix.f(x, ~b = 1, _, ...,):
    b
 
  fun g():
    prefix.f(1, ~b: 2)
- })
+}
 
 (define (lambda/kwrest-not-reduced? mod-stx)
   (define def (extract-def mod-stx 'f))
@@ -218,25 +239,25 @@
           (no-apply? (let-named #'proc)))]
     [_ #f]))
 
-(check-pred lambda/kwrest-not-reduced?
-            @get-module['fun/kwrest1]{
+@check-module[fun/kwrest1
+              #:is lambda/kwrest-not-reduced?]{
  fun f(~& kwrest):
    kwrest
- })
+}
 
-(let ([mod-stx @get-module['fun/kwrest2]{
-        fun f(& _, ~& kwrest):
-          kwrest
-        }])
-  (check-pred lambda/kwrest-not-reduced? mod-stx)
-  (check-pred lambda/kwrest-no-apply? mod-stx))
+@check-module[fun/kwrest2
+              #:is lambda/kwrest-not-reduced?
+              #:is lambda/kwrest-no-apply?]{
+ fun f(& _, ~& kwrest):
+   kwrest
+}
 
-(let ([mod-stx @get-module['fun/kwrest3]{
-        fun f(_, & _, ~& kwrest):
-          kwrest
-        }])
-  (check-pred lambda/kwrest-not-reduced? mod-stx)
-  (check-pred lambda/kwrest-no-apply? mod-stx))
+@check-module[fun/kwrest3
+              #:is lambda/kwrest-not-reduced?
+              #:is lambda/kwrest-no-apply?]{
+ fun f(_, & _, ~& kwrest):
+   kwrest
+}
 
 (define ((lambda/kwrest-opt-no-destructure? num-of-kws) mod-stx)
   (define def (extract-def mod-stx 'f))
@@ -262,17 +283,17 @@
              num-of-kws))]
     [_ #f]))
 
-(check-pred (lambda/kwrest-opt-no-destructure? 2)
-            @get-module['fun/kwrest-opt1]{
+@check-module[fun/kwrest-opt1
+              #:is (lambda/kwrest-opt-no-destructure? 2)]{
  fun f(~kw1 = 1, ~kw2 = 2, ~& _):
    kw1+kw2
- })
+}
 
-(check-pred (lambda/kwrest-opt-no-destructure? 2)
-            @get-module['fun/kwrest-opt2]{
+@check-module[fun/kwrest-opt2
+              #:is (lambda/kwrest-opt-no-destructure? 2)]{
  fun f(~kw1 = 1, ~kw2 = 2, & _, ~& _):
    kw1+kw2
- })
+}
 
 (define ((case-lambda-optimized? match-case) mod-stx)
   (define def (extract-def mod-stx 'f))
@@ -284,99 +305,99 @@
      (match-case #'fn)]
     [_ #f]))
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun1]{
+@check-module[case-fun1
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _] [(_ _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun2]{
+@check-module[case-fun2
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _] [(_ _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
- })
+}
 
 ;; FIXME these currently aren't as optimized as they can be
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun3]{
+@check-module[case-fun3
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, & bs): values(a, & bs)
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun4]{
+@check-module[case-fun4
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, ...): values(a, b, ...)
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun5]{
+@check-module[case-fun5
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, & cs): values(a, b, & cs)
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun6]{
+@check-module[case-fun6
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, c, ...): values(a, b, c, ...)
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun7]{
+@check-module[case-fun7
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, c, & ds): values(a, b, c, & ds)
- })
+}
 
-(check-pred (case-lambda-optimized?
-             (lambda (stx)
-               (syntax-parse stx
-                 [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
-                 [_ #f])))
-            @get-module['case-fun8]{
+@check-module[case-fun8
+              #:is (case-lambda-optimized?
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
+                          [_ #f])))]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, c, d, ...): values(a, b, c, d, ...)
- })
+}
 
 (define (case-lambda/kwrest-not-reduced? mod-stx)
   (lambda/kwrest-not-reduced? mod-stx))
@@ -384,24 +405,24 @@
 (define (case-lambda/kwrest-no-apply? mod-stx)
   (lambda/kwrest-no-apply? mod-stx))
 
-(check-pred case-lambda/kwrest-not-reduced?
-            @get-module['case-fun/kwrest1]{
+@check-module[case-fun/kwrest1
+              #:is case-lambda/kwrest-not-reduced?]{
  fun
  | f(~& kwrest): kwrest
- })
+}
 
-(let ([mod-stx @get-module['case-fun/kwrest2]{
-        fun
-        | f(& rest): rest
-        | f(~& kwrest): kwrest
-        }])
-  (check-pred case-lambda/kwrest-not-reduced? mod-stx)
-  (check-pred case-lambda/kwrest-no-apply? mod-stx))
+@check-module[case-fun/kwrest2
+              #:is case-lambda/kwrest-not-reduced?
+              #:is case-lambda/kwrest-no-apply?]{
+ fun
+ | f(& rest): rest
+ | f(~& kwrest): kwrest
+}
 
-(let ([mod-stx @get-module['case-fun/kwrest3]{
-        fun
-        | f(_, & rest): rest
-        | f(~& kwrest): kwrest
-        }])
-  (check-pred case-lambda/kwrest-not-reduced? mod-stx)
-  (check-pred case-lambda/kwrest-no-apply? mod-stx))
+@check-module[case-fun/kwrest3
+              #:is case-lambda/kwrest-not-reduced?
+              #:is case-lambda/kwrest-no-apply?]{
+ fun
+ | f(_, & rest): rest
+ | f(~& kwrest): kwrest
+}
