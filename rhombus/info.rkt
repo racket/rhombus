@@ -14,14 +14,13 @@
     "rhombus-gui"
     "rhombus-pict"
     "rhombus-scribble"))
-    
+
 (define implies '("rhombus-lib"))
 
 (define build-deps
   '("at-exp-lib"
     "math-lib"
     "racket-doc"
-    "rackunit-lib"
     "scribble-lib"
     "shrubbery"
     "shrubbery-lib"

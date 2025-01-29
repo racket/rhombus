@@ -1647,7 +1647,7 @@ fun connect(~on: p :: Pict,
     if p is_a _StaticPict
       && !(p is_a NothingPict)
       && (_Find.is_animated(from) || _Find.is_animated(to))
-    | pict_animate(fun (n, p): p, [p], 0 /* extent */)
+    | pict_animate(fun (n, ~deps: [p]): p, [p], 0 /* extent */)
     | p
   recur retry(p = p, label = label, from :~ Find = from, to :~ Find = to, dt = 0, n = 0):
     let label = (label != nothing) && label
@@ -1732,7 +1732,7 @@ fun pin(q :: Pict,
       && !(p is_a NothingPict)
       && q is_a _StaticPict
       && (_Find.is_animated(at) || _Find.is_animated(using))
-    | pict_animate(fun (n, p): p, [p], 0 /* extent */)
+    | pict_animate(fun (n, ~deps: [p]): p, [p], 0 /* extent */)
     | p
   recur pin_on(p :~ Pict = p, q :~ Pict = q,
                at :~ Find = at, using :~ Find = using,
