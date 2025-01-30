@@ -7,6 +7,7 @@
 
 @doc(
   expr.macro '$expr :: $annot'
+  repet.macro '$repet :: $annot'
 ){
 
  Checks that the value of @rhombus(expr) satisfies
@@ -69,6 +70,7 @@
 
 @doc(
   expr.macro '$expr :~ $annot'
+  repet.macro '$repet :~ $annot'
 ){
 
  Associates static information to the overall expression the same as
@@ -103,6 +105,9 @@
   expr.macro '$expr is_a $annot'
   non_target:
     expr.macro '$expr !is_a $annot'
+  repet.macro '$repet is_a $annot'
+  non_target:
+    repet.macro '$repet !is_a $annot'
   operator_order:
     ~order: equivalence
 ){

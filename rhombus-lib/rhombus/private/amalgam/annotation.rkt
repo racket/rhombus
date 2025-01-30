@@ -16,6 +16,7 @@
          "enforest.rkt"
          "annotation-operator.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "binding.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
@@ -31,11 +32,14 @@
          "order.rkt"
          "order-primitive.rkt")
 
-(provide is_a
-         (for-spaces (#f
+(provide (for-spaces (#f
+                      rhombus/repet
                       rhombus/bind)
                      ::
                      :~)
+         (for-spaces (#f
+                      rhombus/repet)
+                     is_a)
          (for-space rhombus/annot
 
                     None
@@ -460,6 +464,32 @@
          #'t.tail)]))
    'none))
 
+(define-for-syntax (make-annotation-apply-repetition-operator checked?)
+  (repetition-infix-operator
+   #f
+   `((default . weaker))
+   'macro
+   (lambda (form tail)
+     (syntax-parse tail
+       [(op::name . (~var t (:annotation-seq #'::)))
+        (define op-name (string->symbol (shrubbery-syntax->string #'op.name)))
+        (syntax-parse form
+          [rep::repetition-info
+           (build-annotated-expression
+            #'op.name #'t
+            checked? #'rep.body #'t.parsed
+            (lambda (tmp-id)
+              #`(raise-::-annotation-failure '#,op-name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
+            (lambda (body static-infos)
+              (values
+               (make-repetition-info #'op
+                                     #'rep.for-clausess
+                                     body
+                                     static-infos
+                                     #'rep.used-depth)
+               #'t.tail)))])]))
+   'none))
+
 (define-for-syntax (build-annotated-expression form-name orig-stx checked? form t-parsed build-fail k)
   (syntax-parse t-parsed
     [c-parsed::annotation-predicate-form
@@ -535,13 +565,40 @@
 
 (define-syntax ::
   (make-annotation-apply-expression-operator #t))
+(define-repetition-syntax ::
+  (make-annotation-apply-repetition-operator #t))
 (define-binding-syntax ::
   (make-annotation-apply-binding-operator #t))
 
 (define-syntax :~
   (make-annotation-apply-expression-operator #f))
+(define-repetition-syntax :~
+  (make-annotation-apply-repetition-operator #f))
 (define-binding-syntax :~
   (make-annotation-apply-binding-operator #f))
+
+(define-for-syntax (parse-is_a form tail mode)
+  (syntax-parse tail
+    [(op . (~var t (:annotation-seq #'is_a)))
+     (values
+      (syntax-parse #'t.parsed
+        [c-parsed::annotation-predicate-form
+         (let ([r #`(c-parsed.predicate #,form)])
+           (if (eq? mode 'invert)
+               #`(not #,r)
+               r))]
+        [c-parsed::annotation-binding-form
+         #:with arg-parsed::binding-form #'c-parsed.binding
+         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+         #:with arg-info::binding-info #'arg-impl.info
+         #`(let ([val-in (let ([arg-info.name-id #,form])
+                           arg-info.name-id)])
+             (arg-info.matcher-id val-in
+                                  arg-info.data
+                                  if/blocked
+                                  #,(eq? mode 'normal)
+                                  #,(not (eq? mode 'normal))))])
+      #'t.tail)]))
 
 (define-syntax is_a
   (expression-infix-operator
@@ -549,27 +606,27 @@
    '()
    'macro
    (lambda (form tail [mode 'normal])
+     (parse-is_a form tail mode))
+   'none))
+
+(define-repetition-syntax is_a
+  (repetition-infix-operator
+   (lambda () (order-quote equivalence))
+   '()
+   'macro
+   (lambda (form tail [mode 'normal])
      (syntax-parse tail
-       [(op . (~var t (:annotation-seq #'is_a)))
-        (values
-         (syntax-parse #'t.parsed
-           [c-parsed::annotation-predicate-form
-            (let ([r #`(c-parsed.predicate #,form)])
-              (if (eq? mode 'invert)
-                  #`(not #,r)
-                  r))]
-           [c-parsed::annotation-binding-form
-            #:with arg-parsed::binding-form #'c-parsed.binding
-            #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-            #:with arg-info::binding-info #'arg-impl.info
-            #`(let ([val-in (let ([arg-info.name-id #,form])
-                              arg-info.name-id)])
-                (arg-info.matcher-id val-in
-                                     arg-info.data
-                                     if/blocked
-                                     #,(eq? mode 'normal)
-                                     #,(not (eq? mode 'normal))))])
-         #'t.tail)]))
+       [(self . _)
+        (syntax-parse form
+          [rep::repetition-info
+           (define-values (body new-tail) (parse-is_a #'rep.body tail mode))
+           (values
+            (make-repetition-info #'self
+                                  #'rep.for-clausess
+                                  body
+                                  #'()
+                                  #'rep.used-depth)
+            new-tail)])]))
    'none))
 
 (define-syntax (annotation-predicate-infoer stx)

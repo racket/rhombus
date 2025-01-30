@@ -150,3 +150,16 @@ block:
   check "a" :: ns.Array ~throws "ns.Array"
   check "a" :: ns.Array.of_length(10) ~throws "ns.Array.of_length(10)"
   check "a" :: ns.Posn ~throws "ns.Posn"
+
+block:
+  use_static
+  let [x, ...] = [[], [2, 3], [4, 5, 6]]
+  check [x is_a List, ...] ~is [#true, #true, #true]
+  check [x is_a NonemptyList, ...] ~is [#false, #true, #true]
+  check [x is_a Int, ...] ~is [#false, #false, #false]
+  check [x !is_a List, ...] ~is [#false, #false, #false]
+  check [x !is_a NonemptyList, ...] ~is [#true, #false, #false]
+  check [x :: List, ...] ~is [[], [2, 3], [4, 5, 6]]
+  check [(x :: List).length(), ...] ~is [0, 2, 3]
+  check [x :~ List, ...] ~is [[], [2, 3], [4, 5, 6]]
+  check [(x :~ List).length(), ...] ~is [0, 2, 3]
