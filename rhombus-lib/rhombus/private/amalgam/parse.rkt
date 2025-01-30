@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/transformer
+                     enforest/implicit
                      shrubbery/property
                      "srcloc.rkt")
          "enforest.rkt"
@@ -56,6 +57,13 @@
                        install-normal-body?!)))
 
 (begin-for-syntax
+  ;; treating `:` as infix improves error messages in some spaces
+  (define (select-infix-implicit/block head)
+    (syntax-parse head
+      [((~and tag (~datum block)) . _)
+       (values '#%block #'tag)]
+      [_ (select-infix-implicit head)]))
+
   ;; Form at the top of a module:
   (define-rhombus-transform
     #:syntax-class :declaration
@@ -115,6 +123,7 @@
     #:in-space in-expression-space
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
+    #:select-infix-implicit select-infix-implicit/block
     #:check-result check-expression-result
     #:make-identifier-form make-identifier-expression
     #:relative-precedence expression-relative-precedence
@@ -137,6 +146,7 @@
     #:in-space in-binding-space
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
+    #:select-infix-implicit select-infix-implicit/block
     #:check-result check-binding-result
     #:make-identifier-form make-identifier-binding
     #:relative-precedence binding-relative-precedence

@@ -71,22 +71,46 @@
                 #'())]))))
 
 (define-syntax #%block
-  (expression-transformer
-   (lambda (stxes)
-     (syntax-parse stxes
-       [(_ b)
-        (raise-syntax-error #f
-                            "misplaced;\n not allowed as an expression by itself"
-                            #'b)]))))
+  (expression-prefix+infix-operator
+   (expression-transformer
+    (lambda (stxes)
+      (syntax-parse stxes
+        [(_ b)
+         (raise-syntax-error #f
+                             "misplaced;\n not allowed as an expression by itself"
+                             #'b)])))
+   (expression-infix-operator
+    #f
+    '((default . stronger))
+    'macro
+    (lambda (form stxes)
+      (syntax-parse stxes
+        [(_ b)
+         (raise-syntax-error #f
+                             "misplaced;\n not allowed after an expression as an expression by itself"
+                             #'b)]))
+    'left)))
 
 (define-binding-syntax #%block
-  (binding-transformer
-   (lambda (stxes)
-     (syntax-parse stxes
-       [(_ b)
-        (raise-syntax-error #f
-                            "misplaced;\n not allowed as a binding by itself"
-                            #'b)]))))
+  (binding-prefix+infix-operator
+   (binding-transformer
+    (lambda (stxes)
+      (syntax-parse stxes
+        [(_ b)
+         (raise-syntax-error #f
+                             "misplaced;\n not allowed as a binding by itself"
+                             #'b)])))
+   (expression-infix-operator
+    #f
+    '((default . stronger))
+    'macro
+    (lambda (form stxes)
+      (syntax-parse stxes
+        [(_ b)
+         (raise-syntax-error #f
+                             "misplaced;\n not allowed after a binding as a binding by itself"
+                             #'b)]))
+    'left)))
 
 (define-syntax #%literal
   (expression-transformer
