@@ -14,8 +14,9 @@ block:
     MutableList.for_each(lst, proc) ~method
     MutableList.filter(lst) ~method
     MutableList.contains(lst, val, [eql]) ~method
+    MutableList.index(lst, val, [eql]) ~method
     MutableList.find(lst, pred) ~method
-    MutableList.index(lst, pred) ~method
+    MutableList.find_index(lst, pred) ~method
     MutableList.remove(lst, val) ~method
     MutableList.delete(lst, i) ~method
     MutableList.insert(lst, i, val) ~method
@@ -211,6 +212,18 @@ check:
   dynamic(MutableList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 block:
+  use_static
+  check:
+    MutableList[1, 2, 3].index(2) ~is 1
+    MutableList[1, 2, 3].index(4) ~is #false
+    MutableList[1, 2, 3].index(-3, fun (x, y): x == -y) ~is 2
+    MutableList[1, 2, 3].index(-4, fun (x, y): x == -y) ~is #false
+
+check:
+  dynamic(MutableList[1, 2, 3]).index(1) ~is 0
+  dynamic(MutableList[1, 2, 3]).index(-1, fun (x, y): x == -y) ~is 0
+
+block:
   let bx = Box(1)
   let bx_copy = bx.copy()
   block:
@@ -228,9 +241,9 @@ check:
   MutableList[1, 2, 3].find(fun (x): x > 1) ~is 2
   MutableList[1, 2, 3].find(fun (x): x > 10) ~is #false
   dynamic(MutableList[1, 2, 3]).find(fun (x): x > 1) ~is 2
-  MutableList[1, 2, 3].index(fun (x): x > 1) ~is 1
-  MutableList[1, 2, 3].index(fun (x): x > 10) ~is #false
-  dynamic(MutableList[1, 2, 3]).index(fun (x): x > 1) ~is 1
+  MutableList[1, 2, 3].find_index(fun (x): x > 1) ~is 1
+  MutableList[1, 2, 3].find_index(fun (x): x > 10) ~is #false
+  dynamic(MutableList[1, 2, 3]).find_index(fun (x): x > 1) ~is 1
 
 check:
   (block: let l = MutableList[1, 2, 3]; l.remove(2); l) ~is_now MutableList[1, 3]

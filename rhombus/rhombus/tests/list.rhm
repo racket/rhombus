@@ -19,8 +19,9 @@ block:
     List.filter(lst) ~method
     List.partition(lst, proc) ~method
     List.contains(lst, val, [eql]) ~method
+    List.index(lst, v, [eql]) ~method
     List.find(lst, pred) ~method
-    List.index(lst, pred) ~method
+    List.find_index(lst, pred) ~method
     List.remove(lst, val) ~method
     List.delete(lst, i) ~method
     List.insert(lst, i, val) ~method
@@ -375,6 +376,18 @@ check:
   dynamic([1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 block:
+  use_static
+  check:
+    [1, 2, 3].index(2) ~is 1
+    [1, 2, 3].index(4) ~is #false
+    [1, 2, 3].index(-3, fun (x, y): x == -y) ~is 2
+    [1, 2, 3].index(-4, fun (x, y): x == -y) ~is #false
+
+check:
+  dynamic([1, 2, 3]).index(1) ~is 0
+  dynamic([1, 2, 3]).index(-1, fun (x, y): x == -y) ~is 0
+
+block:
   let bx = Box(1)
   let bx_copy = bx.copy()
   block:
@@ -392,9 +405,9 @@ check:
   [1, 2, 3].find(fun (x): x > 1) ~is 2
   [1, 2, 3].find(fun (x): x > 10) ~is #false
   dynamic([1, 2, 3]).find(fun (x): x > 1) ~is 2
-  [1, 2, 3].index(fun (x): x > 1) ~is 1
-  [1, 2, 3].index(fun (x): x > 10) ~is #false
-  dynamic([1, 2, 3]).index(fun (x): x > 1) ~is 1
+  [1, 2, 3].find_index(fun (x): x > 1) ~is 1
+  [1, 2, 3].find_index(fun (x): x > 10) ~is #false
+  dynamic([1, 2, 3]).find_index(fun (x): x > 1) ~is 1
 
 check:
   [1, 2, 3].remove(2) ~is [1, 3]

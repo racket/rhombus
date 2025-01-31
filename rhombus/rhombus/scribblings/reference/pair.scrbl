@@ -444,7 +444,26 @@ which case it supplies its elements in order.
 @examples(
   PairList[1, 2, 3].contains(2)
   PairList[1, 2, 3].contains(200)
+  PairList[10, 20, 30].contains(20.0, (_ .= _))
   2 in PairList[1, 2, 3]
+)
+
+}
+
+
+@doc(
+  method (lst :: PairList).index(v :: Any,
+                                 eqls :: Function.of_arity(2) = (_ == _))
+    :: maybe(Int)
+){
+
+ Like @rhombus(PairList.contains), but instead of returning
+ @rhombus(#true), returns the index of a found element.
+
+@examples(
+  PairList["a", "b", "c"].index("b")
+  PairList["a", "b", "c"].index("d")
+  PairList[10, 20, 30].index(20.0, (_ .= _))
 )
 
 }
@@ -453,7 +472,7 @@ which case it supplies its elements in order.
 @doc(
   method (lst :: PairList).find(pred :: Function.of_arity(1))
     :: Any
-  method (lst :: PairList).index(pred :: Function.of_arity(1))
+  method (lst :: PairList).find_index(pred :: Function.of_arity(1))
     :: maybe(NonnegInt)
 ){
 
@@ -464,8 +483,8 @@ which case it supplies its elements in order.
 @examples(
   PairList[1, 2, 3].find((_ mod 2 .= 0))
   PairList[1, 2, 3].find((_ mod 10 .= 9))
-  PairList[1, 2, 3].index((_ mod 2 .= 0))
-  PairList[1, 2, 3].index((_ mod 10 .= 9))
+  PairList[1, 2, 3].find_index((_ mod 2 .= 0))
+  PairList[1, 2, 3].find_index((_ mod 10 .= 9))
 )
 
 }

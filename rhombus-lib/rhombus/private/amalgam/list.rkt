@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "tag.rkt")
+         "../version-case.rkt"
          "treelist.rkt"
          (submod "treelist.rkt" unsafe)
          "mutable-treelist.rkt"
@@ -129,8 +130,9 @@
    drop_last
    sublist
    contains
-   find
    index
+   find
+   find_index
    remove
    map
    for_each
@@ -182,8 +184,9 @@
    drop
    drop_last
    contains
-   find
    index
+   find
+   find_index
    remove
    map
    for_each
@@ -224,8 +227,9 @@
    drop_last
    sublist
    contains
-   find
    index
+   find
+   find_index
    remove
    map
    for_each
@@ -1175,6 +1179,33 @@
   #:primitive (mutable-treelist-member?)
   (mutable-treelist-member? l v eql))
 
+(define/method (List.index l v [eql equal-always?])
+  #:primitive (treelist-index-of)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (meta-if-version-at-least
+   "8.15.0.6"
+   (treelist-index-of l v eql)
+   (begin
+     (check-treelist who l)
+     (check-function-of-arity 2 who eql)
+     (for/or ([vi (in-treelist l)]
+              [i (in-naturals)])
+       (and (eql v vi) i)))))
+
+(define/method (PairList.index l v [eql equal-always?])
+  (check-list who l)
+  (check-function-of-arity 2 who eql)
+  (for/or ([vi (in-list l)]
+           [i (in-naturals)])
+    (and (eql v vi) i)))
+
+(define/method (MutableList.index l v [eql equal-always?])
+  (check-mutable-treelist who l)
+  (check-function-of-arity 2 who eql)
+  (for/or ([vi (in-mutable-treelist l)]
+            [i (in-naturals)])
+    (and (eql v vi) i)))
+
 (define/method (List.find l pred)
   #:primitive (treelist-find)
   (treelist-find l pred))
@@ -1188,7 +1219,7 @@
   #:primitive (mutable-treelist-find)
   (mutable-treelist-find l pred))
 
-(define/method (List.index l pred)
+(define/method (List.find_index l pred)
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-treelist who l)
   (check-function-of-arity 1 who pred)
@@ -1196,7 +1227,7 @@
            [i (in-naturals)])
     (and (pred v) i)))
 
-(define/method (PairList.index l pred)
+(define/method (PairList.find_index l pred)
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-list who l)
   (check-function-of-arity 1 who pred)
@@ -1204,7 +1235,7 @@
            [i (in-naturals)])
     (and (pred v) i)))
 
-(define/method (MutableList.index l pred)
+(define/method (MutableList.find_index l pred)
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-mutable-treelist who l)
   (check-function-of-arity 1 who pred)

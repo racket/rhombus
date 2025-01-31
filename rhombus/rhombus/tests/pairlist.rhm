@@ -17,8 +17,9 @@ block:
     List.filter(lst) ~method
     List.partition(lst, proc) ~method
     PairList.contains(lst, val, [eql]) ~method
+    PairList.index(lst, val, [eql]) ~method
     PairList.find(lst, pred) ~method
-    PairList.index(lst, pred) ~method
+    PairList.find_index(lst, pred) ~method
     PairList.remove(lst, val) ~method
     PairList.reverse(lst) ~method
     PairList.append(lst, ...) ~method
@@ -328,6 +329,18 @@ check:
   dynamic(PairList[1, 2, 3]).contains(-1, fun (x, y): x == -y) ~is #true
 
 block:
+  use_static
+  check:
+    PairList[1, 2, 3].index(2) ~is 1
+    PairList[1, 2, 3].index(4) ~is #false
+    PairList[1, 2, 3].index(-3, fun (x, y): x == -y) ~is 2
+    PairList[1, 2, 3].index(-4, fun (x, y): x == -y) ~is #false
+
+check:
+  dynamic(PairList[1, 2, 3]).index(1) ~is 0
+  dynamic(PairList[1, 2, 3]).index(-1, fun (x, y): x == -y) ~is 0
+
+block:
   let bx = Box(1)
   let bx_copy = bx.copy()
   block:
@@ -345,9 +358,9 @@ check:
   PairList[1, 2, 3].find(fun (x): x > 1) ~is 2
   PairList[1, 2, 3].find(fun (x): x > 10) ~is #false
   dynamic(PairList[1, 2, 3]).find(fun (x): x > 1) ~is 2
-  PairList[1, 2, 3].index(fun (x): x > 1) ~is 1
-  PairList[1, 2, 3].index(fun (x): x > 10) ~is #false
-  dynamic(PairList[1, 2, 3]).index(fun (x): x > 1) ~is 1
+  PairList[1, 2, 3].find_index(fun (x): x > 1) ~is 1
+  PairList[1, 2, 3].find_index(fun (x): x > 10) ~is #false
+  dynamic(PairList[1, 2, 3]).find_index(fun (x): x > 1) ~is 1
 
 check:
   PairList[1, 2, 3].remove(2) ~is PairList[1, 3]
