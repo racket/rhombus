@@ -632,7 +632,7 @@
 (define-syntax (annotation-predicate-infoer stx)
   (syntax-parse stx
     [(_ static-infos (annotation-str predicate implied-static-infos left-infoer-id left-data))
-     #:with left-impl::binding-impl #`(left-infoer-id #,(static-infos-union #'implied-static-infos #'static-infos) left-data)
+     #:with left-impl::binding-impl #`(left-infoer-id #,(static-infos-and #'implied-static-infos #'static-infos) left-data)
      #:with left::binding-info #'left-impl.info
      (if (syntax-e #'predicate)
          (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
@@ -861,7 +861,7 @@
 (define-syntax (annotation-predicate-binding-infoer stx)
   (syntax-parse stx
     [(_ left-static-infos (arg predicate static-infos))
-     (define all-static-infos (static-infos-union #'static-infos #'left-static-infos))
+     (define all-static-infos (static-infos-and #'static-infos #'left-static-infos))
      (binding-info #'"<converted predicate>"
                    #'arg
                    all-static-infos

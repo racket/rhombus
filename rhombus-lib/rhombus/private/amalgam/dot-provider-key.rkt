@@ -19,9 +19,9 @@
 
 (define-static-info-key-syntax/provide #%dot-provider
   (static-info-key (lambda (a b)
-                     (merge-lists a b))
+                     (common-tail a b))
                    (lambda (a b)
-                     (common-tail a b))))
+                     (merge-lists a b))))
 
 (define-for-syntax (merge-lists a b)
   (let ([as (if (identifier? a) (list a) (syntax->list a))]

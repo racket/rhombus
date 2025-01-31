@@ -84,15 +84,15 @@ block:
   import:
     meta -1: rhombus/meta open
   check:
-    statinfo_meta.union() ~matches '()'
-    statinfo_meta.intersect() ~matches '()'
+    statinfo_meta.and() ~matches '()'
+    statinfo_meta.or() ~matches '()'
 
 block:
   use_static
-  expr.macro 'both ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
-    statinfo_meta.wrap(c, statinfo_meta.union(statinfo_meta.gather(a), statinfo_meta.gather(b)))
   expr.macro 'either ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
-    statinfo_meta.wrap(c, statinfo_meta.intersect(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+    statinfo_meta.wrap(c, statinfo_meta.or(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+  expr.macro 'both ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
+    statinfo_meta.wrap(c, statinfo_meta.and(statinfo_meta.gather(a), statinfo_meta.gather(b)))
   check (both ([]) ([]): [1])[0] ~is 1
   check (either ([]) ([]): [1])[0] ~is 1
   check (both ([]) ([]): "")[0] ~throws error.annot("List").msg
@@ -102,6 +102,6 @@ check:
   use_static
   import rhombus/meta open
   expr.macro 'either ($(a :: expr_meta.Parsed)) ($(b :: expr_meta.Parsed)): $c':
-    statinfo_meta.wrap(c, statinfo_meta.intersect(statinfo_meta.gather(a), statinfo_meta.gather(b)))
+    statinfo_meta.wrap(c, statinfo_meta.or(statinfo_meta.gather(a), statinfo_meta.gather(b)))
   (either ([]) (""): 0) ++ []
   ~throws "specialization not known"

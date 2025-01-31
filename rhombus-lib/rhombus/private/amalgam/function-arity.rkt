@@ -7,8 +7,8 @@
 
 (provide (for-syntax summarize-arity
                      shift-arity
-                     union-arity-summaries
-                     intersect-arity-summaries
+                     or-arity-summaries
+                     and-arity-summaries
                      check-arity))
 
 ;; A function arity description is one of
@@ -100,21 +100,21 @@
          (list (car norm-a) required-kws allowed-kws))]
     [else #f]))
 
-(define-for-syntax (union-arity-summaries as)
-  (combine-arity-summaries
-   as
-   (lambda (new-a a)
-     (list (bitwise-ior (car new-a) (car a))
-           (hash-intersect (cadr new-a) (cadr a))
-           (and (caddr new-a) (caddr a) (hash-union (caddr new-a) (caddr a)))))))
-
-(define-for-syntax (intersect-arity-summaries as)
+(define-for-syntax (or-arity-summaries as)
   (combine-arity-summaries
    as
    (lambda (new-a a)
      (list (bitwise-and (car new-a) (car a))
            (hash-union (cadr new-a) (cadr a))
            (and (caddr new-a) (caddr a) (hash-intersect (caddr new-a) (caddr a)))))))
+
+(define-for-syntax (and-arity-summaries as)
+  (combine-arity-summaries
+   as
+   (lambda (new-a a)
+     (list (bitwise-ior (car new-a) (car a))
+           (hash-intersect (cadr new-a) (cadr a))
+           (and (caddr new-a) (caddr a) (hash-union (caddr new-a) (caddr a)))))))
 
 ;; `kind` = #f => return boolean, `stx` and `fallback-stx` unused;
 ;; if `always?` is true, then report not just whether the arity might might,

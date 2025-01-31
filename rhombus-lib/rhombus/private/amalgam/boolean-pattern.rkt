@@ -40,7 +40,7 @@
     [(_ static-infos (lhs-i::binding-form rhs-i::binding-form))
      #:with lhs-impl::binding-impl #'(lhs-i.infoer-id static-infos lhs-i.data)
      #:with lhs::binding-info #'lhs-impl.info
-     #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-union #'lhs.static-infos #'static-infos) rhs-i.data)
+     #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-and #'lhs.static-infos #'static-infos) rhs-i.data)
      #:with rhs::binding-info #'rhs-impl.info
      #:with (lhs-bind-info ...) #'lhs.bind-infos
      (binding-info (annotation-string-and (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
@@ -106,7 +106,7 @@
      #:with rhs::binding-info #'rhs-impl.info
      (binding-info (annotation-string-or (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
-                   (static-infos-intersect #'lhs.static-infos #'rhs.static-infos)
+                   (static-infos-or #'lhs.static-infos #'rhs.static-infos)
                    #'()
                    #'or-matcher
                    #'()

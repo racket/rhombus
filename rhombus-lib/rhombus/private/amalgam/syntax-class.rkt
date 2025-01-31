@@ -21,7 +21,7 @@
          "parse.rkt"
          "pack.rkt"
          "parens.rkt"
-         (only-in "static-info.rkt" static-infos-intersect)
+         (only-in "static-info.rkt" static-infos-or)
          (rename-in "ellipsis.rkt"
                     [... rhombus...])
          "syntax-wrap.rkt")
@@ -673,8 +673,8 @@
                 (if (free-identifier=? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
                     (pattern-variable-unpack* a)
                     #'unpack-element*)]
-               [statinfos (static-infos-intersect (normalize-pvar-statinfos (pattern-variable-statinfos a))
-                                                  (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
+               [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
+                                              (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
 
 ;; When packing to communicate a match as a syntax-class attribute,
 ;; we don't want to discard syntax wraps, because those wraps are

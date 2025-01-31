@@ -34,12 +34,12 @@
            discard-static-infos
            relocate-wrapped
            static-info-lookup
-           static-infos-intersect
-           static-infos-union
-           static-info-identifier-union
-           static-info-identifier-intersect
-           static-infos-result-union
-           static-infos-result-intersect
+           static-infos-or
+           static-infos-and
+           static-info-identifier-or
+           static-info-identifier-and
+           static-infos-result-or
+           static-infos-result-and
            static-infos-remove
            get-empty-static-infos))
 
@@ -56,7 +56,7 @@
 
 (begin-for-syntax
   (property static-info (get-stxs))
-  (property static-info-key (union intersect))
+  (property static-info-key (or and))
 
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
@@ -186,8 +186,8 @@
          (provide id))]))
 
 (define-syntax #%indirect-static-info
-  (static-info-key (lambda (a b) (error "should not union indirect statinfos"))
-                   (lambda (a b) (error "should not intersect indirect statinfos"))))
+  (static-info-key (lambda (a b) (error "should not ``or'' indirect statinfos"))
+                   (lambda (a b) (error "should not ``and'' indirect statinfos"))))
 
 (define-syntax #%values
   (let ([merge (lambda (a b combine)
@@ -198,9 +198,9 @@
                        #f
                        (map combine as bs))))])
     (static-info-key (lambda (a b)
-                       (merge a b static-infos-union))
+                       (merge a b static-infos-or))
                      (lambda (a b)
-                       (merge a b static-infos-intersect)))))
+                       (merge a b static-infos-and)))))
 
 (define-for-syntax (make-static-info-getter stx)
   (define (->compact rhss)
@@ -281,7 +281,8 @@
                          [_ (list a)]))])
          e)))
 
-(define-for-syntax (static-infos-intersect as bs)
+;; note that `||` at the annotation level feels like "intersection" on statinfo tables
+(define-for-syntax (static-infos-or as bs)
   (cond
     [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) as]
     [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) bs]
@@ -302,9 +303,9 @@
                                         (let ([key (syntax-local-value* #'a-key static-info-key-ref)])
                                           (cond
                                             [key
-                                             ((static-info-key-intersect key) #'a-val #'b-val)]
+                                             ((static-info-key-or key) #'a-val #'b-val)]
                                             [else
-                                             (static-infos-result-intersect #'a-val #'b-val)]))]
+                                             (static-infos-result-or #'a-val #'b-val)]))]
                                        [_ #f]))]
                                   [_ #f]))]
                         #:when new-val)
@@ -312,7 +313,8 @@
                  [(a-key . _) (datum->syntax #f (list #'a-key new-val))])))
         #'()))]))
 
-(define-for-syntax (static-infos-union as bs)
+;; note that `&&` at the annotation level feels like "union" on statinfo tables
+(define-for-syntax (static-infos-and as bs)
   (cond
     [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) bs]
     [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) as]
@@ -337,9 +339,9 @@
                                           (list
                                            (cond
                                              [key
-                                              ((static-info-key-union key) #'a-val #'b-val)]
+                                              ((static-info-key-and key) #'a-val #'b-val)]
                                              [else
-                                              (static-infos-result-union #'a-val #'b-val)])))]
+                                              (static-infos-result-and #'a-val #'b-val)])))]
                                        [_ #f])))
                                  (if v
                                      (car v)
@@ -359,18 +361,19 @@
                                  [_ #f]))
              b))]))]))
 
-(define-for-syntax static-info-identifier-union
+(define-for-syntax static-info-identifier-and
   (lambda (a b)
+    ;; biased toward `a`
     a))
 
-(define-for-syntax static-info-identifier-intersect
+(define-for-syntax static-info-identifier-or
   (lambda (a b)
     (and (identifier? a)
          (identifier? b)
          (free-identifier=? a b)
          a)))
 
-(define-for-syntax (static-infos-result-union as bs)
+(define-for-syntax (static-infos-result-and as bs)
   ;; With `#:at_arities`, for now, we handle only the simple case that the masks coincide
   (syntax-parse as
     [(#:at_arities (a-mask a-results) ...)
@@ -379,7 +382,7 @@
         (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
             #`(#:at_arities #,(for/list ([a-results (in-list (syntax->list #'(a-results ...)))]
                                          [b-results (in-list (syntax->list #'(b-results ...)))])
-                                (static-infos-union a-results b-results)))
+                                (static-infos-and a-results b-results)))
             as)]
        [_
         as])]
@@ -387,9 +390,9 @@
      (syntax-parse bs
        [(#:at_arities (b-mask b-results) ...)
         as]
-       [_ (static-infos-union as bs)])]))
+       [_ (static-infos-and as bs)])]))
 
-(define-for-syntax (static-infos-result-intersect as bs)
+(define-for-syntax (static-infos-result-or as bs)
   ;; With `#:at_arities`, for now, we handle only the simple case that the masks coincide
   (syntax-parse as
     [(#:at_arities (a-mask a-results) ...)
@@ -398,7 +401,7 @@
         (if (equal? (syntax->datum #'(a-mask ...)) (syntax->datum #'(b-mask ...)))
             #`(#:at_arities #,(for/list ([a-results (in-list (syntax->list #'(a-results ...)))]
                                          [b-results (in-list (syntax->list #'(b-results ...)))])
-                                (static-infos-intersect a-results b-results)))
+                                (static-infos-or a-results b-results)))
             #f)]
        [_
         #f])]
@@ -406,7 +409,7 @@
      (syntax-parse bs
        [(#:at_arities (b-mask b-results) ...)
         #f]
-       [_ (static-infos-intersect as bs)])]))
+       [_ (static-infos-or as bs)])]))
 
 (define-for-syntax (static-infos-remove as key)
   (for/list ([a (in-list (if (syntax? as) (syntax->list as) as))]

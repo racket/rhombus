@@ -3,9 +3,9 @@
          "static-info.rkt")
 
 (define-static-info-key-syntax/provide #%index-get
-  (static-info-key static-info-identifier-union
-                   static-info-identifier-intersect))
+  (static-info-key static-info-identifier-or
+                   static-info-identifier-and))
 
 (define-static-info-key-syntax/provide #%index-set
-  (static-info-key static-info-identifier-union
-                   static-info-identifier-intersect))
+  (static-info-key static-info-identifier-or
+                   static-info-identifier-and))

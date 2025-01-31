@@ -13,13 +13,11 @@
 
 (define-static-info-key-syntax/provide #%compare
   (static-info-key (lambda (a b)
-                     a)
-                   (lambda (a b)
                      (cond
                        [(and (eq? '#:method (syntax-e a)) (eq? '#:method (syntax-e b)))
                         a]
                        [(or (identifier? a) (identifier? b))
-                        (static-info-identifier-intersect a b)]
+                        (static-info-identifier-or a b)]
                        [else
                         (let ([as (syntax->list a)]
                               [bs (syntax->list b)])
@@ -38,4 +36,6 @@
                                     (and (eq? (syntax-e #'a-op) (syntax-e #'b-op))
                                          (free-identifier=? #'a-id #'b-id))]
                                    [_ #false]))
-                               a))]))))
+                               a))]))
+                   (lambda (a b)
+                     a)))

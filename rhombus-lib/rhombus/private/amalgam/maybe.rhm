@@ -35,8 +35,8 @@ meta:
   fun demaybe_statinfos(statinfos):
     let maybe_statinfos = statinfo_meta.find(statinfos, statinfo_meta.maybe_key)
     if maybe_statinfos
-    | statinfo_meta.union(statinfos,
-                          statinfo_meta.unpack(maybe_statinfos))
+    | statinfo_meta.and(statinfos,
+                        statinfo_meta.unpack(maybe_statinfos))
     | statinfos
 
 expr.macro '$e !!':

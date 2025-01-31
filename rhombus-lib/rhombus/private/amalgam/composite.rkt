@@ -189,7 +189,7 @@
               [composite-static-infos (if (syntax-e #'bounds-key)
                                           #`((bounds-key (group #,min-len #,max-len)) . #,composite-static-infos)
                                           composite-static-infos)]
-              [composite-static-infos (static-infos-union composite-static-infos #'static-infos)]
+              [composite-static-infos (static-infos-and composite-static-infos #'static-infos)]
               [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos

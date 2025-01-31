@@ -322,7 +322,7 @@
 (define/arity (Port.Input.open_file path
                                     #:mode [mode 'binary])
   #:primitive (open-input-file)
-  #:static-infos ((#%call-result #,(static-infos-union
+  #:static-infos ((#%call-result #,(static-infos-and
                                     (get-input-port-static-infos)
                                     (get-file-stream-port-static-infos))))
   (open-input-file path #:mode mode))
@@ -357,7 +357,7 @@
                                      #:permissions [permissions #o666]
                                      #:replace_permissions [replace-permissions? #f])
   #:primitive (open-output-file)
-  #:static-infos ((#%call-result #,(static-infos-union
+  #:static-infos ((#%call-result #,(static-infos-and
                                     (get-output-port-static-infos)
                                     (get-file-stream-port-static-infos))))
   (define exists (->ExistsMode exists-in))
@@ -401,10 +401,10 @@
                               #:input_name [input-name 'pipe]
                               #:output_name [output-name 'pipe])
   #:primitive (make-pipe)
-  #:static-infos ((#%call-result ((#%values (#,(static-infos-union
+  #:static-infos ((#%call-result ((#%values (#,(static-infos-and
                                                 (get-input-port-static-infos)
                                                 (get-pipe-port-static-infos))
-                                             #,(static-infos-union
+                                             #,(static-infos-and
                                                 (get-output-port-static-infos)
                                                 (get-pipe-port-static-infos)))))))
   (make-pipe limit input-name output-name))

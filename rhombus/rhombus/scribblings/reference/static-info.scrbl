@@ -196,36 +196,49 @@
 }
 
 @doc(
-  fun statinfo_meta.union(statinfo_stx :: Syntax, ...) :: Syntax
-  fun statinfo_meta.intersect(statinfo_stx :: Syntax, ...) :: Syntax
+  fun statinfo_meta.and(statinfo_stx :: Syntax, ...) :: Syntax
+  fun statinfo_meta.or(statinfo_stx :: Syntax, ...) :: Syntax
 ){
 
  Takes static information in unpacked form and combines it into one set
  of static information in unpacked form, where the returned information
- is the union or intersection of all given information.
+ is the ``and'' or ``or'' of all given information.
+
+ An ``and'' combination corresponds to the @rhombus(&&, ~annot)
+ annotation operator; from the perspective of static-information keys and
+ values, it's like a union: any key that is in a @rhombus(statinfo_stx)
+ argument is included in the result, and if multiple
+ @rhombus(statinfo_stx) arguments have the key, the values associated
+ with those keys will be ``and''ed.
+
+ An ``or combination corresponds to the @rhombus(||, ~annot) annotation
+ operator; from the perspective of static-information keys and values,
+ it's like an intersection: only a key that is in all
+ @rhombus(statinfo_stx) arguments is included in the result, and the
+ value in each @rhombus(statinfo_stx) is ``or''ed for the result.
 
 }
 
 
 @doc(
   ~nonterminal:
-    union_func_expr: block expr
-    intersect_func_expr: block expr
+    and_func_expr: block expr
+    or_func_expr: block expr
 
   defn.macro '«statinfo.key $id:
                  $clause
                  ...»'
   grammar clause:
-    ~union: $union_func_expr
-    ~intersect: $intersect_func_expr
+    ~and: $and_func_expr
+    ~or: $or_func_expr
 ){
 
  Binds @rhombus(id) for use as a static info key identifier. Both
- @rhombus(union_func_expr) and @rhombus(intersect_func_expr) are
+ @rhombus(and_func_expr) and @rhombus(or_func_expr) are
  required, and they should each produce a function that accepts two
  syntax objects as values for static information keyed by @rhombus('id').
- The union operation is used, for example, on static information from
- annotations combined with @rhombus(&&, ~annot), and intersection is used
+ The @rhombus(~and) function is used, for example, on static information from
+ annotations combined with @rhombus(&&, ~annot), and the @rhombus(~or) function is used
  on static information from annotations combined with
  @rhombus(||, ~annot).
 
@@ -235,7 +248,7 @@
  @rhombus('id').
 
  When a static information key is not an identifier bound via
- @rhombus(statinfo.key, ~defn), then default union and intersection operations
+ @rhombus(statinfo.key, ~defn), then default @rhombus(~and) and @rhombus(~or) functions
  are used for the key's values. The default functions use the same merge
  operations as @rhombus(statinfo_meta.call_result_key), which means that
  they merge nested static information.

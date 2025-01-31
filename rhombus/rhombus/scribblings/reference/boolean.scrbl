@@ -87,8 +87,9 @@
 
  Creates an annotation that accepts a value satisfying either
  @rhombus(left_annot) or @rhombus(right_annot). The static information
- implied by the annotation is the intersection of information for
- @rhombus(left_annot) and @rhombus(right_annot).
+ implied by the annotation is the @rhombus(statinfo_meta.or) of information for
+ @rhombus(left_annot) and @rhombus(right_annot), which information for a key
+ must appear in both for the key to be part of the implied annotation.
 
  The annotations are checked in other. Either or both of
  @rhombus(left_annot) and @rhombus(right_annot) can be a @tech(~doc: guide_doc){converter
@@ -204,7 +205,7 @@
 
  When @rhombus(left_annot) and @rhombus(right_annot) are
  @tech(~doc: guide_doc){predicate annotations}, the static information
- implied by the annotation is the union of information for
+ implied by the annotation is the @rhombus(statinfo_meta.and) of information for
  @rhombus(left_annot) and @rhombus(right_annot), where information
  from @rhombus(right_annot) takes precedence in cases where both
  supply values for the same static-information key.

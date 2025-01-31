@@ -5,6 +5,6 @@
 
 (define-static-info-key-syntax/provide #%function-arity
   (static-info-key (lambda (a b)
-                     (union-arity-summaries (list (syntax->datum a) (syntax->datum b))))
+                     (or-arity-summaries (list (syntax->datum a) (syntax->datum b))))
                    (lambda (a b)
-                     (intersect-arity-summaries (list (syntax->datum a) (syntax->datum b))))))
+                     (and-arity-summaries (list (syntax->datum a) (syntax->datum b))))))
