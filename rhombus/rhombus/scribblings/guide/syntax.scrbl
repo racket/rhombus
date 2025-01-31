@@ -250,9 +250,10 @@ are several other predefined syntax classes, such as
 @rhombus(String, ~stxclass) to match a string literal, and
 @rhombus(Int, ~stxclass) to match an integer literal.
 
-Use @rhombus(Block, ~stxclass) to match a block and preserve its lexical
-context for the implicit @rhombus(#%body, ~datum) form (see
-@secref(~doc: ref_doc, "implicit")).
+Use @rhombus(Block, ~stxclass) to match the full content block, but also
+keep the enclosing @colon (preserve its source location and raw text),
+so that the bound identifier is a block as a single term instead of the
+block body as a sequence of groups.
 
 @examples(
   ~eval: syntax_eval

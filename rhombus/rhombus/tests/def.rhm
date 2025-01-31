@@ -102,16 +102,6 @@ check:
   str.length()
   ~throws "no such field or method (based on static information)"
 
-// check that `def` goes through `#%body`
-check:
-  macro '#%body: $_':
-    '"nothing"'
-  def something:
-    let more = "more"
-    "something " ++ "more"
-  something
-  ~is "nothing"
-
 // check that expansion of `def` does not end with an expression
 check:
   ~eval

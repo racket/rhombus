@@ -18,7 +18,6 @@
          (submod "syntax-class-primitive.rkt" for-syntax-class)
          (submod "syntax-object.rkt" for-quasiquote)
          (for-syntax racket/base)
-         "implicit.rkt" ;; needed for `#%body`
          "name-root.rkt"
          "name-start-syntax-class.rkt"
          "space.rkt"

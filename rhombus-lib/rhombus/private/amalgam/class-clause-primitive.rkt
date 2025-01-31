@@ -20,7 +20,6 @@
          "var-decl.rkt"
          (only-in "function.rkt" fun)
          (submod "function.rkt" for-method)
-         (only-in "implicit.rkt" #%body)
          "op-literal.rkt"
          "realm.rkt")
 

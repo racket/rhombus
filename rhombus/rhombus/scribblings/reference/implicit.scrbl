@@ -49,13 +49,6 @@ Here are all of the implicit forms:
  @item{@rhombus(#%alts) --- used for a block formed with
        @litchar{|} (by itself as a would-be parsed term); this
        implicit form is not bound by @rhombuslangname(rhombus)}
-
- @item{@rhombus(#%body) --- used by forms that contain a
-        @nontermref(body) sequence, such as @rhombus(block), the body of
-        @rhombus(fun), and the result part of a @rhombus(match)
-        clause; the lexical context of the @litchar{:} or @litchar{|}
-        that forms a block determines the @rhombus(#%body) binding
-        that is used}
 )
 
 
@@ -129,17 +122,5 @@ Here are all of the implicit forms:
   def (x) = 1+2
   x
 )
-
-}
-
-@doc(
-  expr.macro '#%body:
-                $body
-                ...'
-){
-
- Returns the result of the @rhombus(body) block, which may include local
- definitions. The @rhombus(body) sequence @emph{does not} implicitly use
- @rhombus(#%body) again.
 
 }

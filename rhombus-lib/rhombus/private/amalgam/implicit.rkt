@@ -10,7 +10,6 @@
          "entry-point.rkt"
          "immediate-callee.rkt"
          "parse.rkt"
-         (submod "parse.rkt" normal-body)
          (submod "function-parse.rkt" for-call)
          (submod "indexable.rkt" for-ref)
          (submod "list.rkt" for-binding)
@@ -27,7 +26,6 @@
          "arrow-annotation.rkt")
 
 (provide (for-space #f
-                    #%body
                     #%block
                     #%index
                     #%literal
@@ -59,16 +57,6 @@
 
 (module+ normal-literal
   (provide (for-syntax normal-literal?)))
-
-(define-syntax #%body
-  (expression-transformer
-   (lambda (stxes)
-     (syntax-parse stxes
-       [(_ (tag::block . body))
-        (values (datum->syntax #f
-                               (cons (datum->syntax #'here 'rhombus-body #'tag #'tag)
-                                     #'body))
-                #'())]))))
 
 (define-syntax #%block
   (expression-prefix+infix-operator
@@ -379,14 +367,9 @@
   (free-identifier=? (datum->syntax tag '#%call)
                      (expr-quote #%call)))
 
-(define-for-syntax (normal-body? tag)
-  (free-identifier=? (datum->syntax tag '#%body)
-                     (expr-quote #%body)))
-
 (define-for-syntax (normal-literal? lit)
   (free-identifier=? (datum->syntax lit '#%literal)
                      (expr-quote #%literal)))
 
 (begin-for-syntax
-  (install-normal-call?! normal-call?)
-  (install-normal-body?! normal-body?))
+  (install-normal-call?! normal-call?))

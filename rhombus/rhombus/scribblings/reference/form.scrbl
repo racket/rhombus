@@ -121,14 +121,8 @@ identifiers, expressions, or binding patterns.
 
  In syntax descriptions, @rhombus(body) is always used with ellipses
  afterward, meaning that definitions and expressions can be interleaved.
- In some cases, the expanded form of the @rhombus(body) sequence must ends
+ In some cases, the expanded form of the @rhombus(body) sequence must end
  with an expression to provide a result value.
-
- Unless noted otherwise, a @rhombus(body) sequence implicitly uses
- @rhombus(#%body). The context for the implicit @rhombus(#%body)
- binding is associated with the @litchar{:} delimiter that forms the
- enclosing block. Use the @rhombus(Block, ~stxclass) to match a block and
- preserve its context for referencing @rhombus(#%body).
 
 }
 
