@@ -214,11 +214,12 @@
        (raise-syntax-error #f
                            (format
                             (string-append
-                             "unbound or misplaced ~a;\n"
+                             "~a ~a;\n"
                              " the identifier is not bound as a macro,"
                              " and no infix operator appears afterward"
                              #;
                              ",\n and `~a` is not bound as an implicit infix ~a")
+                            (if (identifier-binding (in-space prev-form)) "misplaced" "unbound or misplaced")
                             form-kind
                             #;
                             adjacent-name

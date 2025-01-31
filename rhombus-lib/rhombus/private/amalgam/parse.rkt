@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/transformer
+                     enforest/implicit
                      shrubbery/property
                      "srcloc.rkt")
          "enforest.rkt"
@@ -51,11 +52,14 @@
 
                      rhombus-local-expand))
 
-(module+ normal-body
-  (provide (for-syntax (rename-out [normal-body? indirect-normal-body?])
-                       install-normal-body?!)))
-
 (begin-for-syntax
+  ;; treating `:` as infix improves error messages in some spaces
+  (define (select-infix-implicit/block head)
+    (syntax-parse head
+      [((~and tag (~datum block)) . _)
+       (values '#%block #'tag)]
+      [_ (select-infix-implicit head)]))
+
   ;; Form at the top of a module:
   (define-rhombus-transform
     #:syntax-class :declaration
@@ -115,6 +119,7 @@
     #:in-space in-expression-space
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
+    #:select-infix-implicit select-infix-implicit/block
     #:check-result check-expression-result
     #:make-identifier-form make-identifier-expression
     #:relative-precedence expression-relative-precedence
@@ -137,6 +142,7 @@
     #:in-space in-binding-space
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
+    #:select-infix-implicit select-infix-implicit/block
     #:check-result check-binding-result
     #:make-identifier-form make-identifier-binding
     #:relative-precedence binding-relative-precedence
@@ -210,18 +216,13 @@
           #:orig #,stx
           (rhombus-body-sequence . tail)))]))
 
-;; Similar to `rhombus-body`, but goes through `#%body`:
+;; Like `rhombus-body`, but potentially improves the error message
 (define-syntax (rhombus-body-at stx)
   (syntax-parse stx
+    [(_ tag)
+     (raise-syntax-error #f "block has no expressions" #'tag)]
     [(_ tag . tail)
-     (quasisyntax/loc #'tag
-       (rhombus-expression (group
-                            ;; dropping srcloc here, because it spans the
-                            ;; whole block content, and makes it look like
-                            ;; a binding refers to the whole block
-                            #,(datum->syntax #'tag '#%body #f #'tag)
-                            (#,(datum->syntax #f 'block #'tag #'tag)
-                             . tail))))]))
+     (datum->syntax #f (cons #'rhombus-body #'tail))]))
 
 ;; Like `(rhombus-expression (group _))`, but recognizes `block` forms
 (define-syntax (rhombus-body-expression stx)
@@ -287,14 +288,12 @@
       [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
 
 ;; If `e` is a block with a single group, and if the group is not a
-;; definition, then parse the expression.  This requires the base
-;; `#%body` binding; otherwise, go through the `#%body`.
+;; definition, then parse the expression
 (define-for-syntax (enforest-expression-block e)
   (syntax-parse e
     #:datum-literals (group)
     [(tag::block g)
-     #:when (and (normal-body? #'tag)
-                 (not (definition? #'g)))
+     #:when (not (definition? #'g))
      #:with g-e::expression #'g
      #'g-e.parsed]
     [(tag::block g ...) #'(rhombus-body-at tag g ...)]
@@ -309,8 +308,3 @@
     [(rhombus-expression . _)
      (rhombus-local-expand (enforest-rhombus-expression stx))]
     [_ stx]))
-
-(define-for-syntax normal-body? #f)
-
-(define-for-syntax (install-normal-body?! proc)
-  (set! normal-body? proc))

@@ -36,7 +36,6 @@
          (only-in (submod "function-parse.rkt" for-build)
                   :rhombus-kw-opt-binding
                   :rhombus-ret-annotation)
-         (only-in "implicit.rkt" #%body)
          "operator-compare.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
@@ -350,7 +349,6 @@
     #:literals (if-reverse-bridge)
     [(_ tst thn (if-reverse-bridge if-id els))
      #'(rhombus-expression (group if-id (parsed #:rhombus/expr tst)
-                                  ;; needs `#%body` implicit binding
                                   (alts (block (group (parsed #:rhombus/expr (let () thn))))
                                         (block els))))]
     [_

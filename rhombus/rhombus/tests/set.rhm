@@ -1174,4 +1174,4 @@ check:
 check:
   ~eval
   Set{1: 2}
-  ~throws "misplaced term" // as opposed to an error about `Set`
+  ~throws "misplaced" // as opposed to an error about `Set`

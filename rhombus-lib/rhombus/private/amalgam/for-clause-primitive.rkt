@@ -6,7 +6,6 @@
          "for-clause.rkt"
          "parens.rkt"
          "parse.rkt"
-         (only-in "implicit.rkt" #%body) ; for `block` in `:each-decl`
          (submod "membership-testable.rkt" in-operator))
 
 (provide (for-space rhombus/for_clause
