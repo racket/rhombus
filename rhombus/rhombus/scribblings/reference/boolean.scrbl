@@ -275,7 +275,11 @@
   non_target:
     expr.macro '$expr !is_a $annot'
   non_target:
+    repet.macro '$repet !#,(@rhombus(is_a, ~repet)) $annot'
+  non_target:
     expr.macro '$expr !matches $bind'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(matches, ~repet)) $bind'
   operator_order:
     ~order: equivalence
 ){

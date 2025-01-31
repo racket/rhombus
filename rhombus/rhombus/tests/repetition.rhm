@@ -186,13 +186,39 @@ block:
     [x in a, ...] ~is [#true, #false, #true]
     [x !in a, ...] ~is [#false, #true, #false]
 
-// `!is_now` as a repetition
+// `(!)is_now` as a repetition
 block:
   def [x, ...]:
     [Array(1, 2, 3), Array("foo", "bar", "baz"), ["not", "an", "array"]]
   check:
     [x is_now Array(1, 2, 3), ...] ~is [#true, #false, #false]
     [x !is_now Array(1, 2, 3), ...] ~is [#false, #true, #true]
+
+// `::`/`:~` as a repetition
+block:
+  use_static
+  def [x, ...] = [[], [1], [1, 2], [1, 2, 3]]
+  check:
+    [(x :: List).length(), ...] ~is [0, 1, 2, 3]
+    [(x :~ List).length(), ...] ~is [0, 1, 2, 3]
+
+// `(!)is_a` as a repetition
+block:
+  def [x, ...]:
+    [Array(1, 2, 3), Array("foo", "bar", "baz"), ["not", "an", "array"]]
+  check:
+    [x is_a Array, ...] ~is [#true, #true, #false]
+    [x !is_a Array, ...] ~is [#false, #false, #true]
+
+// `(!)matches as a repetition
+block:
+  def [x, ...]:
+    [Array(1, 2, 3), Array("foo", "bar", "baz"), ["not", "an", "array"]]
+  check:
+    [x matches Array(1, 2, 3), ...] ~is [#true, #false, #false]
+    [x matches Array(_, _, _), ...] ~is [#true, #true, #false]
+    [x !matches Array(1, 2, 3), ...] ~is [#false, #true, #true]
+    [x !matches Array(_, _, _), ...] ~is [#false, #false, #true]
 
 // dotted names as repetitions
 block:

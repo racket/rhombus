@@ -118,8 +118,11 @@
 
 @doc(
   expr.macro '$expr matches $bind'
+  repet.macro '$repet matches $bind'
   non_target:
     expr.macro '$expr !matches $bind'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(matches, ~repet)) $bind'
   operator_order:
     ~order: equivalence
 ){
@@ -127,7 +130,8 @@
  Produces @rhombus(#true) if the value of @rhombus(expr) matches
  @rhombus(bind), @rhombus(#false) otherwise. Equivalent to
  @rhombus(expr is_a matching(bind)). The operator combination
- @rhombus(!matches) inverts the test.
+ @rhombus(!matches) inverts the test. Either form works as a
+ @tech{repetition} given a repetition to match.
 
 @examples(
   [1, 2, 3] matches [_, _, _]
