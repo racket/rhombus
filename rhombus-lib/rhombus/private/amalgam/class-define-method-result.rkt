@@ -123,7 +123,7 @@
                                                    (map method-result-static-infos super-results)))])
                    (for/list ([infos (in-list (normalize-static-infos/values all-count infos))]
                               [all-static-infos (in-list all-static-infoss)])
-                     (static-infos-union infos all-static-infos)))
+                     (static-infos-and infos all-static-infos)))
                   #'()))]
      #:attr handler handler-stx
      #:attr handler-id (and handler-stx

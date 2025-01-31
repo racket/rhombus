@@ -31,8 +31,8 @@
               #`(if (rhombus-expression (group test ...))
                     #,(discard-static-infos thn-e)
                     #,(discard-static-infos els-e)))
-             (static-infos-intersect (extract-static-infos thn-e)
-                                     (extract-static-infos els-e)))
+             (static-infos-or (extract-static-infos thn-e)
+                                 (extract-static-infos els-e)))
             #'())]
           [_
            (raise-syntax-error #f
@@ -67,7 +67,7 @@
                  ...
                  [else #,(discard-static-infos els-e)]))
             (for/fold ([si (extract-static-infos els-e)]) ([rhs-e (in-list rhs-es)])
-              (static-infos-intersect si (extract-static-infos rhs-e)))))
+              (static-infos-or si (extract-static-infos rhs-e)))))
          #'())]
        [(form-id (_::alts
                   (_::block (group pred ... (tag::block rhs ...)))
@@ -84,7 +84,7 @@
                  ...
                  [else (cond-fallthrough 'form-id)]))
             (for/fold ([si (extract-static-infos (car rhs-es))]) ([rhs-e (in-list (cdr rhs-es))])
-              (static-infos-intersect si (extract-static-infos rhs-e)))))
+              (static-infos-or si (extract-static-infos rhs-e)))))
          #'())]
        [(form-id (_::block))
         (values

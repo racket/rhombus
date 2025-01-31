@@ -35,7 +35,8 @@ instances of classes that implement @rhombus(MembershipTestable, ~class).
  @tech{membership tests}. The result is @rhombus(#true) for
  @rhombus(in) if the element is present and @rhombus(#false) otherwise.
  The operator combination @rhombus(!in) inverts the result relative to
- @rhombus(in).
+ @rhombus(in). Either form works as a @tech{repetition} given
+ repetitions for a member and a collection.
 
  The @rhombus(in) operator is also recognized by @rhombus(for) and
  @rhombus(each, ~for_clause) as part of the syntax of iteration.

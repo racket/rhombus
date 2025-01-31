@@ -103,18 +103,19 @@
 
 @doc(
   expr.macro '$expr is_a $annot'
-  non_target:
-    expr.macro '$expr !is_a $annot'
   repet.macro '$repet is_a $annot'
   non_target:
-    repet.macro '$repet !is_a $annot'
+    expr.macro '$expr !is_a $annot'
+  non_target:
+    repet.macro '$repet !#,(@rhombus(is_a, ~repet)) $annot'
   operator_order:
     ~order: equivalence
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr)
  satisfies @rhombus(annot), @rhombus(#false) otherwise.
- The operator combination @rhombus(!is_a) inverts the test.
+ The operator combination @rhombus(!is_a) inverts the test. Either
+ form works as a @tech{repetition} given a repetition to test.
 
  If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}, only the matching
  component of the annotation is used, and the converting part is not

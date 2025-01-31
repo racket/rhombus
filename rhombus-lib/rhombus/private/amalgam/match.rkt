@@ -4,6 +4,7 @@
                      "srcloc.rkt"
                      "tag.rkt")
          "expression.rkt"
+         "repetition.rkt"
          "binding.rkt"
          "parse.rkt"
          "else-clause.rkt"
@@ -16,6 +17,7 @@
          "static-info.rkt"
          "order.rkt"
          "order-primitive.rkt"
+         "provide.rkt"
          "../version-case.rkt")
 
 ;; TEMP approximate `case/equal-always`
@@ -25,7 +27,9 @@
  (require (only-in racket/base [case case/equal-always])))
 
 (provide match
-         matches)
+         (for-spaces (#f
+                      rhombus/repet)
+                     matches))
 
 (begin-for-syntax
   (define-syntax-class :pattern-clause
@@ -179,28 +183,51 @@
 (define (match-fallthrough who v loc)
   (raise-srcloc-error who v loc))
 
+(define-for-syntax (parse-matches form tail mode)
+  (syntax-parse tail
+    [(op . tail)
+     #:with (~var t (:infix-op+binding+tail #'matches)) #`(#,group-tag . tail)
+     (values
+      (syntax-parse #'t.parsed
+        [b::binding-form
+         #:with b-impl::binding-impl #'(b.infoer-id () b.data)
+         #:with b-info::binding-info #'b-impl.info
+         #`(let ([val-in (let ([b-info.name-id #,form])
+                           b-info.name-id)])
+             (b-info.matcher-id val-in
+                                b-info.data
+                                if/blocked
+                                #,(eq? mode 'normal)
+                                #,(not (eq? mode 'normal))))])
+      #'t.tail)]))
+
 (define-syntax matches
   (expression-infix-operator
    (lambda () (order-quote equivalence))
    `()
    'macro
    (lambda (form tail [mode 'normal])
+     (parse-matches form tail mode))
+   'none))
+
+(define-repetition-syntax matches
+  (repetition-infix-operator
+   (lambda () (order-quote equivalence))
+   `()
+   'macro
+   (lambda (form tail [mode 'normal])
      (syntax-parse tail
-       [(op . tail)
-        #:with (~var t (:infix-op+binding+tail #'matches)) #`(#,group-tag . tail)
-        (values
-         (syntax-parse #'t.parsed
-           [b::binding-form
-            #:with b-impl::binding-impl #'(b.infoer-id () b.data)
-            #:with b-info::binding-info #'b-impl.info
-            (let ([r #`(let ([val #,form])
-                         (b-info.matcher-id val b-info.data if/blocked
-                                            #t
-                                            #f))])
-              (if (eq? mode 'invert)
-                  #`(not #,r)
-                  r))])
-         #'t.tail)]))
+       [(self . _)
+        (syntax-parse form
+          [rep::repetition-info
+           (define-values (body new-tail) (parse-matches #'rep.body tail mode))
+           (values
+            (make-repetition-info #'self
+                                  #'rep.for-clausess
+                                  body
+                                  #'()
+                                  #'rep.used-depth)
+            new-tail)])]))
    'none))
 
 ;; for precedence

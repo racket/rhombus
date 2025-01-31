@@ -27,14 +27,14 @@
                            (for/list ([str (in-list (syntax->list #'(str ...)))])
                              (string-append " || " (syntax-e str)))))
                    #'literal
-                   (static-infos-union
+                   (static-infos-and
                     (or (for/fold ([si (literal-static-infos #'datum0)])
                                   ([datum (in-list (syntax->list #'(datum ...)))])
                           #:break (not si)
                           (cond
                             [(literal-static-infos datum)
                              => (lambda (more-si)
-                                  (static-infos-intersect si more-si))]
+                                  (static-infos-or si more-si))]
                             [else #f]))
                         #'())
                     #'up-static-infos)

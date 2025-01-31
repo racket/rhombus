@@ -70,8 +70,8 @@
      [gather statinfo_meta.gather]
      [replace statinfo_meta.replace]
      [find statinfo_meta.find]
-     [union statinfo_meta.union]
-     [intersect statinfo_meta.intersect]
+     [or statinfo_meta.or]
+     [and statinfo_meta.and]
 
      function_arity_key
      call_result_key
@@ -305,13 +305,13 @@
     (define key (unpack-identifier who key-in))
     (static-info-lookup si key))
 
-  (define/arity (statinfo_meta.union . statinfos)
+  (define/arity (statinfo_meta.or . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-union))
+    (static-infos-merge who statinfos static-infos-or))
 
-  (define/arity (statinfo_meta.intersect . statinfos)
+  (define/arity (statinfo_meta.and . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-intersect)))
+    (static-infos-merge who statinfos static-infos-and)))
 
 (define-syntax-rule (define-key key id)
   (begin-for-syntax

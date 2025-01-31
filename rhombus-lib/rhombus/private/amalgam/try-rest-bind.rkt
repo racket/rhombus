@@ -68,7 +68,7 @@
     [(_ up-static-infos [static-infos head-mode rep-min rep-max as-treelist? rest-to-repetition bounds-key
                                       first-rest-infoer-id first-rest-data
                                       rest-rest-infoer-id rest-rest-data])
-     #:with all-static-infos (static-infos-union #'static-infos #'up-static-infos)
+     #:with all-static-infos (static-infos-and #'static-infos #'up-static-infos)
      #:with first-rest-impl::binding-impl #`(first-rest-infoer-id #,(if (memq (syntax-e #'head-mode)
                                                                               '(#:splice #:splice-repetition))
                                                                         #'all-static-infos
@@ -122,7 +122,7 @@
                                       (annotation-string-to-pattern
                                        (syntax-e #'rest-i.annotation-str)))))
                      #'rest
-                     (static-infos-union
+                     (static-infos-and
                       #`((bounds-key (group #,(+ head-min rest-min) #,(and head-max rest-max (+ head-max rest-max)))))
                       #'static-infos)
                      (append (syntax->list #'out-first-i-bind-infos)

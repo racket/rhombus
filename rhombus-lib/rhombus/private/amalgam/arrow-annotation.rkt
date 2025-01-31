@@ -363,7 +363,7 @@
            #:with (ab::binding-form ...) #'(a.binding ...)
            #:with ([_ arity . _] ...) #'(ab.data ...)
            #:with who 'function
-           (define all-arity (union-arity-summaries (syntax->datum #'(arity ...))))
+           (define all-arity (and-arity-summaries (syntax->datum #'(arity ...))))
            (define static-infos
              #`(#,@(if all-arity
                        #`((#%function-arity #,all-arity))

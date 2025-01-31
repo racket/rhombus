@@ -461,7 +461,7 @@
                                 . _))
                ...+))
      (build
-      (union-arity-summaries
+      (and-arity-summaries
        (for/list ([arg-kws (in-list (syntax->list #'((arg.kw ...) ...)))]
                   [rest? (in-list (syntax->list #'(rest.rest? ...)))]
                   [kw-rest? (in-list (syntax->list #'(rest.kwrest? ...)))])
@@ -637,7 +637,7 @@
                            (map (lambda (_) #'#f) (fcase-kws fc))
                            (syntax-e (fcase-rest-arg fc))
                            (syntax-e (fcase-kwrest-arg fc))))))
-    (define arity (union-arity-summaries (apply append arityss)))
+    (define arity (and-arity-summaries (apply append arityss)))
     (define shifted-arity
       (shift-arity arity (treelist-length (entry-point-adjustment-prefix-arguments adjustments))))
     (define kws? (pair? shifted-arity))
@@ -1199,7 +1199,7 @@
         (generate rands #f #f #f #f #'tag #'tail)]
        [else
         ;; anonymous-function shorthand
-        (define static-infos (static-infos-union
+        (define static-infos (static-infos-and
                               (cond
                                 [(syntax-local-static-info rator-in #'#%call-result)
                                  => (lambda (results)
@@ -1318,7 +1318,7 @@
                           #f
                           props-stx)))
          (define w-call-e (wrap-call call-e extra-rands))
-         (define result-static-infos (static-infos-union
+         (define result-static-infos (static-infos-and
                                       (cond
                                         [(and call-result?
                                               (rator-static-info #'#%call-result))

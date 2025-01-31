@@ -378,7 +378,7 @@
     [(_ up-static-infos [name-str hash? static-infos])
      (binding-info #'name-str
                    #'empty
-                   (static-infos-union #'static-infos #'up-static-infos)
+                   (static-infos-and #'static-infos #'up-static-infos)
                    #'()
                    #'empty-set-matcher
                    #'()

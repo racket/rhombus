@@ -3,5 +3,5 @@
          "static-info.rkt")
 
 (define-static-info-key-syntax/provide #%index-result
-  (static-info-key static-infos-union
-                   static-infos-intersect))
+  (static-info-key static-infos-or
+                   static-infos-and))

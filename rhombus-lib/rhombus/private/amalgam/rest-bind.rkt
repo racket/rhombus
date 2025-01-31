@@ -40,7 +40,7 @@
 (define-syntax (rest-bind-infoer stx)
   (syntax-parse stx
     [(_ up-static-infos [static-infos annot-prefix? rest-infoer-id rest-data])
-     #:with all-static-infos (static-infos-union #'static-infos #'up-static-infos)
+     #:with all-static-infos (static-infos-and #'static-infos #'up-static-infos)
      #:with rest-impl::binding-impl #'(rest-infoer-id all-static-infos rest-data)
      (if (syntax-e #'annot-prefix?)
          (annotation-str-update #'rest-impl.info

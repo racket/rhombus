@@ -656,7 +656,7 @@
     [(_ up-static-infos _)
      (binding-info "List.empty"
                    #'empty
-                   (static-infos-union (get-treelist-static-infos) #'up-static-infos)
+                   (static-infos-and (get-treelist-static-infos) #'up-static-infos)
                    #'()
                    #'treelist-empty-matcher
                    #'()
@@ -669,7 +669,7 @@
     [(_ up-static-infos _)
      (binding-info "PairList.empty"
                    #'empty
-                   (static-infos-union (get-list-static-infos) #'up-static-infos)
+                   (static-infos-and (get-list-static-infos) #'up-static-infos)
                    #'()
                    #'empty-matcher
                    #'()

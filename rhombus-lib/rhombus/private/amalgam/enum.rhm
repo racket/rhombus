@@ -107,7 +107,7 @@ meta:
           match parsed
           | Parsed.Annot([ann, ...]): statinfos ++ [unpack_statinfo(ann), ...]
           | ~else: statinfos
-      statinfo_meta.intersect(
+      statinfo_meta.or(
         & (match [sym, ...]
            | []: ann_statinfos
            | ~else: ann_statinfos.add(unpack_statinfo(parse_annot('Symbol'))))

@@ -37,7 +37,7 @@
                   [r-pred r.predicate])
               (lambda (v)
                 (and (l-pred v) (r-pred v))))
-          (static-infos-union #'r.static-infos #'l.static-infos))]
+          (static-infos-and #'r.static-infos #'l.static-infos))]
         [(l::annotation-binding-form r::annotation-binding-form)
          (annotation-binding-form
           (binding-form
@@ -52,7 +52,7 @@
     [(_ static-infos (right-val lhs-i::binding-form rhs-i::binding-form lhs-body rhs-body rhs-static-infos))
      #:with lhs-impl::binding-impl #'(lhs-i.infoer-id static-infos lhs-i.data)
      #:with lhs::binding-info #'lhs-impl.info
-     #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-union #'lhs.static-infos #'static-infos) rhs-i.data)
+     #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-and #'lhs.static-infos #'static-infos) rhs-i.data)
      #:with rhs::binding-info #'rhs-impl.info
      #:with (lhs-bind-info ...) #'lhs.bind-infos
      (binding-info (annotation-string-and (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
@@ -115,14 +115,14 @@
                   [r-pred r.predicate])
               (lambda (v)
                 (or (l-pred v) (r-pred v))))
-          (static-infos-intersect #'l.static-infos #'r.static-infos))]
+          (static-infos-or #'l.static-infos #'r.static-infos))]
         [(l::annotation-binding-form r::annotation-binding-form)
          (annotation-binding-form
           (binding-form
            #'or-infoer
            #'[result l.binding l.body l.static-infos r.binding r.body r.static-infos])
           #'result
-          (static-infos-intersect #'l.static-infos #'r.static-infos))])))
+          (static-infos-or #'l.static-infos #'r.static-infos))])))
    'left))
 
 (define-syntax (or-infoer stx)
@@ -132,10 +132,10 @@
      #:with lhs::binding-info #'lhs-impl.info
      #:with rhs-impl::binding-impl #'(rhs-i.infoer-id static-infos rhs-i.data)
      #:with rhs::binding-info #'rhs-impl.info
-     #:with result-static-infos (static-infos-intersect #'lhs-static-infos #'rhs-static-infos)
+     #:with result-static-infos (static-infos-or #'lhs-static-infos #'rhs-static-infos)
      (binding-info (annotation-string-or (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
-                   (static-infos-intersect #'lhs.static-infos #'rhs.static-infos)
+                   #'result-static-infos
                    #`((bind-id (0) . result-static-infos))
                    #'or-matcher
                    #'()

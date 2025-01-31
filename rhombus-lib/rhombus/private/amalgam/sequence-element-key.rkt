@@ -3,5 +3,5 @@
          "static-info.rkt")
 
 (define-static-info-key-syntax/provide #%sequence-element
-  (static-info-key static-infos-union
-                   static-infos-intersect))
+  (static-info-key static-infos-or
+                   static-infos-and))
