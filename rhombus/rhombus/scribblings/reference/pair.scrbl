@@ -81,14 +81,14 @@ which case it supplies its elements in order.
  Aliases for @rhombus(Pair) in expression and binding positions.
 
  Note that the difference between @rhombus(Pair.cons) and
- @rhombus(PairList.cons) is that @rhombus(PairList.cons) requires a list as is
- second argument, which means that it always forms a @tech{list}. In
+ @rhombus(PairList.cons) is that @rhombus(PairList.cons) requires a pair list as its
+ second argument, which means that it always forms a @tech{pair list}. In
  contrast, @rhombus(Pair.cons) allows any value as its second
- argument---but it creates a list if that argument is a list.
+ argument---but it creates a pair list if that argument is a pair list.
 
 @examples(
   Pair.cons(1, 2)
-  Pair.cons(1, [2, 3])
+  Pair.cons(1, PairList[2, 3])
 )
 
 }
