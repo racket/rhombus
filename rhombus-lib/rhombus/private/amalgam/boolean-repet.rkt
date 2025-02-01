@@ -11,10 +11,12 @@
 (provide all
          any)
 
-(define-for-syntax (combiner comb for/comb)
+(define-for-syntax (combiner comb for/comb 0-value)
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
+       [(_ (_::parens) . tail)
+        (values 0-value #'tail)]
        [(_ (_::parens g ...) . tail)
         (values
          (let loop ([gs #'(g ...)])
@@ -34,5 +36,5 @@
               (combine #'e.parsed #'tail)]))
          #'tail)]))))
 
-(define-syntax all (combiner #'and #'for/and))
-(define-syntax any (combiner #'or #'for/or))
+(define-syntax all (combiner #'and #'for/and #''#t))
+(define-syntax any (combiner #'or #'for/or #''#f))
