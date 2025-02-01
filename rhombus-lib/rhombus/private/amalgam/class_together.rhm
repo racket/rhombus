@@ -16,7 +16,7 @@ defn.macro 'together:
               ...':
   ~all_stx all_stx
   let [[id, ns_id, ann_id], ...]:
-    for List (defn: [defn, ...]):
+    for List (defn in [defn, ...]):
       match defn
       | '$((bound_as defn_meta.space: 'class')
              || (bound_as defn_meta.space: 'interface'))

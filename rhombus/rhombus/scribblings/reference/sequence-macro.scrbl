@@ -151,8 +151,8 @@
         '(($statinfo_meta.index_result_key,
            $(annot_meta.parse_to_packed_statinfo('Int'))))'
   ~repl:
-    for List (j: dynamic(Posn(1, 2))): j // uses `to_sequence`
-    for List (j: Posn(1, 2)): j // uses `sequence` expansion
+    for List (j in dynamic(Posn(1, 2))): j // uses `to_sequence`
+    for List (j in Posn(1, 2)): j // uses `sequence` expansion
 )
 
 }

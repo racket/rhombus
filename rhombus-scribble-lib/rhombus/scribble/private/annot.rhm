@@ -61,13 +61,13 @@ annot.macro 'StyleLike':
 fun convert_list(v):
   match v
   | l :: List:
-      for PairList(e: l): e
+      for PairList (e in l): e
   | ~else:
       v
 
 fun convert_list_of_lists(cells :~ List.of(List)):
-  for PairList(row: cells):
-    for PairList(cell: row):
+  for PairList (row in cells):
+    for PairList (cell in row):
       cell
 
 annot.macro 'PreContent':
@@ -117,7 +117,7 @@ annot.macro 'TagPrefix':
 fun convert_pre_content(v):
   match v
   | l :: List:
-      convert_pre_content(for PairList(e: l): e)
+      convert_pre_content(for PairList (e in l): e)
   | l :: PairList:
       recur loop(l = l):
         match l
@@ -137,7 +137,7 @@ fun convert_content(v):
   | e :: (Element || MultiargElement || TraverseElement || PartRelativeElement || DelayedElement):
       e
   | l :: List:
-      convert_content(for PairList(e: l): e)
+      convert_content(for PairList (e in l): e)
   | l :: PairList:
       recur loop(l = l):
         match l
@@ -153,7 +153,7 @@ fun convert_content(v):
 fun convert_pre_flow(v):
   match v
   | l :: List:
-      convert_pre_flow(for PairList(e: l): e)
+      convert_pre_flow(for PairList (e in l): e)
   | l :: PairList:
       recur loop(l = l):
         match l
@@ -173,7 +173,7 @@ fun convert_pre_flow(v):
 fun convert_pre_part(v):
   match v
   | l :: List:
-      convert_pre_part(for PairList(e: l): e)
+      convert_pre_part(for PairList (e in l): e)
   | l :: PairList:
       recur loop(l = l):
         match l

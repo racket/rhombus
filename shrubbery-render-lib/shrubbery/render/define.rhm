@@ -61,14 +61,14 @@ meta:
 
   fun nested([g, ...], builder, builder_stx, stxs, escape_op):
     let [new_g, ...] = [escape_group(g, escape_op), ...]
-    if (for all (new_g: [new_g, ...]):
+    if (for all (new_g in [new_g, ...]):
           is_literal_group(new_g))
     | literal_term(builder([extract_literal(new_g), ...], head_context(stxs)))
     | '$builder_stx([$new_g, ...], Syntax.literal_term($(head_context(stxs))))'
 
   fun nested_alts([b, ...], stxs, escape_op):
     let [new_b, ...] = [escape_term(b, escape_op), ...]
-    if (for all (new_b: [new_b, ...]):
+    if (for all (new_b in [new_b, ...]):
           is_literal_term(new_b))
     | literal_term(alts_syntax([extract_literal(new_b), ...], head_context(stxs)))
     | 'alts_syntax([$new_b, ...], Syntax.literal_term($(head_context(stxs))))'
@@ -118,7 +118,7 @@ meta:
             literal_term(proc(id))
         | ~else: literal_term(stxs)
     | ~else: literal_term(stxs)
-  
+
 fun sequence_cons_syntax(a, d, context):
   let a_r: Syntax.relocate(Syntax.make(a), context)
   match d
@@ -223,17 +223,17 @@ meta:
       | ': $_': #void
       | ~else: syntax_meta.error("expected a block", stx)
       let escape_op:
-        for values(escape_op = '#,') (opt: [opt, ...]):
+        for values(escape_op = '#,') (opt in [opt, ...]):
           match opt
           | '~escape: $(op :: Operator)': op
           | '$_: $body': escape_op
       let space:
-        for values(space = #false) (opt: [opt, ...]):
+        for values(space = #false) (opt in [opt, ...]):
           match opt
           | '~space: $space ...': [space.unwrap(), ...]
           | '$_: $body': space
       let [opt, ...]:
-        for List (opt: [opt, ...]):
+        for List (opt in [opt, ...]):
           skip_when:
             match opt
             | '~escape $_ ...': #true
@@ -245,7 +245,7 @@ meta:
          $(escape_top_term(self, spacer.adjust_term(fin_tail, space, escape_op), escape_op, escape_id))
        )'
     fun check_options(options :~ List):
-      for values(kws :~ Set = Set{}) (opt :~ Syntax: options):
+      for values(kws :~ Set = Set{}) (opt in options):
         match opt
         | '$(kw_stx && ('~inset' || '~indent' || '~prompt' || '~indent_from_block'
                           || '~spacer_info_box' || '~escape' || '~space')) $_ ...':
@@ -259,4 +259,3 @@ meta:
         check_options([option, ...])
         finish([option, ...], '$new_tail ...')
     | ~else: finish([], '$tail ...')
-

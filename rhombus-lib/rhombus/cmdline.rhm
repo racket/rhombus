@@ -106,11 +106,11 @@ expr.macro
     '$var := $var ++ {$key_expr: $expr}'
 | 'state':
     ~op_stx: self
-    lookup_state_var(self)    
-    
+    lookup_state_var(self)
+
 syntax_parameter.bridge multi_mode:
   #false
-    
+
 meta:
   fun parse_handler(stx,
                     ctr,
@@ -123,7 +123,7 @@ meta:
     when [arg, ...] == [] && [dots.seq, ...] != []
     | syntax_meta.error("no arguments before ellipses", stx, dots)
     let [[bind_string, from_string, statinfos], ...]:
-      for List (kind: [arg.kind, ...]):
+      for List (kind in [arg.kind, ...]):
         match kind
         | '$(k :: annot_meta.Parsed)':
             let (bind, expr, statinfos) = annot_meta.unpack_converter(k)
@@ -236,7 +236,7 @@ expr.macro
       #false, fun (): flag_to_key(str),
       ~multi_mode: syntax_parameter_meta.lookup('multi_mode'),
       #false,
-      [],      
+      [],
       ['[$str]',
        '#false']
     )
@@ -284,7 +284,7 @@ expr.macro 'multi: $flag_or_list; ...':
      syntax_parameter.relet multi_mode: #true
      build_multi(#'$who, [$flag_or_list, ...], [$(flag_or_list.srcloc()), ...])'
 
-fun build_multi(who, flag_or_lists, srclocs):  
+fun build_multi(who, flag_or_lists, srclocs):
   Multi(flatten(who, flag_or_lists, srclocs,
                 fun (v): v is_a Flag || v is_a Multi,
                 "flag, multi flag set, or list of valid elements"))
@@ -293,7 +293,7 @@ expr.macro 'once_each: $flag_or_list; ...':
   ~op_stx: who
   'build_once_each(#'$who, [$flag_or_list, ...], [$(flag_or_list.srcloc()), ...])'
 
-fun build_once_each(who, flag_or_lists, srclocs):  
+fun build_once_each(who, flag_or_lists, srclocs):
   OnceEach(flatten(who, flag_or_lists, srclocs,
                    fun (v): v is_a Flag || v is_a OnceEach,
                    "flag, once-each flag set, or list of valid elements"))
@@ -302,15 +302,15 @@ expr.macro 'once_any: $flag; ...':
   ~op_stx: who
   'build_once_any(#'$who, [$flag, ...], [$(flag.srcloc()), ...])'
 
-fun build_once_any(who, flag_or_lists, srclocs):  
+fun build_once_any(who, flag_or_lists, srclocs):
   OnceAny(flatten(who, flag_or_lists, srclocs,
                   fun (v): v is_a Flag || v is_a OnceAny,
                   "flag, once-any flag set, or list of valid elements"))
 
 fun flatten(who, args :~ List, srclocs :~ List, pred, desc, keep_srcloc = #false):
   List.append(
-    & for List (arg: args,
-                srcloc: srclocs):
+    & for List (arg in args,
+                srcloc in srclocs):
       cond
       | arg is_a List:
           let srclocs: for List (a in arg :~ List): srcloc
@@ -381,7 +381,7 @@ expr.macro
     ~op_stx: who
     '($(parse_parser(who, stx))).parse()'
 
-fun flatten_for_parse(who, elements, srclocs):  
+fun flatten_for_parse(who, elements, srclocs):
   flatten(who, elements, srclocs,
           fun (v): (v is_a Handler) || (v is_a Content),
           "args handler, flag, flag set (either multi, once-any, or once-each), help text, or list of valid elements",
@@ -389,7 +389,7 @@ fun flatten_for_parse(who, elements, srclocs):
 
 fun extract_args(who, element_and_srclocs :~ List):
   def args:
-    for values(args = #false) ([element, srcloc]: element_and_srclocs):
+    for values(args = #false) ([element, srcloc] in element_and_srclocs):
       if element is_a Handler && !(element is_a Flag)
       | when args
         | error(~who: who,
@@ -401,6 +401,6 @@ fun extract_args(who, element_and_srclocs :~ List):
   args || Handler({}, [], #false, fun (accum): accum)
 
 fun extract_flags(who, element_and_srclocs :~ List):
-  for List ([element, srcloc]: element_and_srclocs):
+  for List ([element, srcloc] in element_and_srclocs):
     skip_when element is_a Handler && !(element is_a Flag)
     element

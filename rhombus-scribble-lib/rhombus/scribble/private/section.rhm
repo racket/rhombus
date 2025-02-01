@@ -43,7 +43,7 @@ meta:
         let delta = len - orig_len
         let '($arg1, ...)' = args
         let [arg1, ...]:
-          for List (arg1: [arg1, ...]):
+          for List (arg1 in [arg1, ...]):
             let prefix = arg1.group_property(#'#{raw-prefix})
             let new_prefix:
               recur loop (prefix = prefix):

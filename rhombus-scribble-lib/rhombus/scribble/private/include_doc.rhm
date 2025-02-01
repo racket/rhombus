@@ -11,7 +11,7 @@ expr.macro 'include_doc($spec, ..., $body)':
   ~op_stx: self
   ~all_stx: stx
   let [[mod, id, ...], ...]:
-    for List (spec: [spec, ...]):
+    for List (spec in [spec, ...]):
       match spec
       | '$mod_t ...:
            $(id :: Identifier)
@@ -31,7 +31,7 @@ expr.macro 'include_doc($spec, ..., $body)':
                         stx,
                         id)
   fun lookup_id(mod_path :~ ModulePath, id :~ Identifier, ...) :~ List.of(DocSpec):
-    for List (id: [id, ...]):
+    for List (id in [id, ...]):
       let b = base.#{dynamic-require}(mod_path.s_exp(),
                                       id.unwrap(),
                                       bad_export(id))

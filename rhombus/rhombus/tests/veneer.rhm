@@ -135,7 +135,7 @@ veneer IdSet(this :~ Map):
   method add(id :~ Identifier) :~ IdSet:
     this ++ { id.unwrap(): id }
   method to_set():
-    for Set ((id, _): this):
+    for Set ((id, _) in this):
       id
 
 check:
@@ -152,7 +152,7 @@ veneer IdSet2(this :~ Map):
   method add(id :: Identifier) :: IdSet2:
     this ++ { id.unwrap(): id }
   method to_set():
-    for Set ((id, _): this):
+    for Set ((id, _) in this):
       id
 
 check:

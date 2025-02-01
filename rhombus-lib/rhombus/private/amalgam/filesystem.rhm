@@ -96,7 +96,7 @@ namespace filesystem:
       let files :~ PairList:
         rkt_error.local_error_adjust { #'#{directory-list}: who }:
           rkt.#{directory-list}(p, #{#:build?}: !onto_path && add_path)
-      for values (accum :~ List = accum) (file in files):
+      for values(accum :~ List = accum) (file in files):
         let file = (if onto_path | Path.add(onto_path, file) | file)
         keep_when keep(file)
         skip_when skip(file)
@@ -188,7 +188,7 @@ namespace filesystem:
         unless type(p)
         | make_one(p)
       maybe_make_one(
-        for values(p :~ Path = root) (next: [next, ...]):
+        for values(p :~ Path = root) (next in [next, ...]):
           maybe_make_one(p)
           p.add(next)
       )

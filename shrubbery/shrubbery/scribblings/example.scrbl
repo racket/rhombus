@@ -16,7 +16,8 @@ that's roughly a shorthand for starting a new indented line after the
 terminology, but that's enough to get a sense of the examples.
 
 @rhombusblock(
-  fun identity(x): x
+  fun identity(x):
+    x
 
   fun fib(n):
     match n
@@ -26,11 +27,12 @@ terminology, but that's enough to get a sense of the examples.
 
   fun print_sexp(v):
     match v
-    | []: print("()")
-    | [fst, & rst]:
+    | PairList[]:
+        print("()")
+    | PairList[fst, & rst]:
         print("(")
         print_sexp(fst)
-        for (v: rst):
+        for (v in rst):
           print(" ")
           print_sexp(v)
         print(")")
@@ -40,7 +42,8 @@ terminology, but that's enough to get a sense of the examples.
         print(" . ")
         print_sexp(snd)
         print(")")
-    | v: print_atom(v)
+    | v:
+        print_atom(v)
 )
 
 Forms like @rhombus(fun), @rhombus(match), and @rhombus(for) are not

@@ -216,7 +216,7 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
             match as
             | PairList(Pair(_, regexp :: _RX), & as):
                 let vars:
-                  for values(vars :~ Map = vars) ((k, v): regexp._vars):
+                  for values(vars :~ Map = vars) ((k, v) in regexp._vars):
                     vars ++ { k: v + di }
                 loop(vars, as, var_seq, di + regexp._num_captures)
             | PairList(_, & as):

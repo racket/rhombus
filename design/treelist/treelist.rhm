@@ -247,16 +247,13 @@ class TreeList(root :~ Node,
 
   // TODO chunk adding here by 32 and add whole nodes at a time?
   method add_all(els :~ Sequence) :~ TreeList:
-    for values(t :~ TreeList = this):
-      each:
-        el: els
+    for values(t :~ TreeList = this) (el in els):
       t.add(el)
 
   // TODO should be able to make this faster. At the least, we can grab whole leaf nodes at a time
   // rather than traverse once per element of represented vector
   method to_list() :~ List:
-    for List:
-      each idx in 0..size
+    for List (idx in 0..size):
       get(idx)
 
   method length() :~ Int:
@@ -375,7 +372,7 @@ class TreeList(root :~ Node,
             left && Node(a.children.set_in_copy(0, left),
                          block:
                            let sizes :~ Array: a.sizes
-                           for Array.of_length(sizes.length()) ():
+                           for Array.of_length(sizes.length()):
                              each n in sizes
                              n+1)
       let new_root = insert_left(root, height)
@@ -573,11 +570,11 @@ fun exec_concat_plan(slots :~ Array,
   | let plan :~ Array = plan
     def flattened_size:
       for values(sum = 0):
-        each node :~ Node: slots
+        each node :~ Node in slots
         sum + node.size
     def flattened:
       for Array.of_length(flattened_size):
-        each node :~ Node: slots
+        each node :~ Node in slots
         each child in node.children
         child
 

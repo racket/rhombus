@@ -51,10 +51,8 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
   let [[b_keep_statinfo, ...], ...]:
     // keep only last b's statinfos, since others are bound early
     let len = [[b_statinfo, ...], ...].length()
-    for List:
-      each:
-        statinfos: [[b_statinfo, ...], ...]
-        i: 0..
+    for List (statinfos in [[b_statinfo, ...], ...],
+              i in 0..):
       if i == len-1
       | statinfos
       | statinfos.map(fun (_): '()')

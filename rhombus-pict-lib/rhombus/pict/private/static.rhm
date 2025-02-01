@@ -41,7 +41,7 @@ export:
   nothing
 
   text
-  
+
   beside
   stack
   overlay
@@ -301,7 +301,7 @@ class Pict():
                   values(this, subst)
               | [dep, ...]:
                   let ([new_dep, ...], subst :~ Map):
-                    for values(new_deps :~ List = [], subst = subst) (dep: [dep, ...]):
+                    for values(new_deps :~ List = [], subst = subst) (dep in [dep, ...]):
                       let (new_dep, new_subst):
                         match dep
                         | dep :: Pict: dep._replace(pre_adjuster, adjuster, config_adjuster, subst)
@@ -501,7 +501,7 @@ class StaticPict(private _handle,
   override method freeze(~scale: scale :: Real = 2.0):
     let f_handle = rkt.#{lt-superimpose}(draw_handle, rkt.ghost(handle))
     static_pict(rkt.freeze(f_handle, ~scale: scale), this, _instances, METHOD(freeze, ~scale: scale))
-  
+
   override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict:
     convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0])
@@ -511,7 +511,7 @@ class StaticPict(private _handle,
     if before == 0 && after == 0
     | this
     | convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0])._time_pad(before, after)
-  override method sustain(n :: Int = 1) :~ Pict:  
+  override method sustain(n :: Int = 1) :~ Pict:
     if n == 0
     | this
     | convert([this], #'center, #'pad, fun (ps :~ List, dt, n): ps[0]).sustain(n)
@@ -626,10 +626,10 @@ class NothingPict():
 
   override method rotate(radians :: Real): this
   override method shear(horiz :: Real, vert :: Real): this
-                                           
+
   override method colorize(c :: (Color || String)): this
   override method line_width(w :: NonnegReal): this
-  
+
   override method alpha(n :: Real.in(0, 1)): this
 
   override method clip(): this
@@ -758,7 +758,7 @@ fun stack(~sep: sep :: Real = 0,
     | []:
         nothing
     | [p]: p
-    | [p :: _StaticPict, ...]:        
+    | [p :: _StaticPict, ...]:
         let children = [p, ...]
         let all_instances = [p._instances, ...]
         let new_handle:
@@ -774,8 +774,8 @@ fun stack(~sep: sep :: Real = 0,
               | #'left: rkt.#{vl-append}(sep, g, ...)
               | #'center: rkt.#{vc-append}(sep, g, ...)
               | #'right: rkt.#{vr-append}(sep, g, ...)
-            for values(hand = g_hand) (p_hand: [p.handle, ...],
-                                       g: [g, ...]):
+            for values(hand = g_hand) (p_hand in [p.handle, ...],
+                                       g in [g, ...]):
               rkt.#{pin-under}(hand, g, rkt.#{lt-find}, p_hand)
         static_pict(new_handle, children, all_instances,
                     fun (ps): retry(ps, dt, n))
@@ -865,8 +865,8 @@ fun overlay(~dx: dx :: maybe(Real) = #false,
                        math.min(min_y, y),
                        math.max(max_x, x),
                        math.max(max_y, y))
-            rkt.#{lt-superimpose}(& for List (p: ps,
-                                              i: 0..):
+            rkt.#{lt-superimpose}(& for List (p in ps,
+                                              i in 0..):
                                     let (x, y) = get_pt(p, i)
                                     rkt.inset(p, max_x - x, max_y - y, 0, 0))
         static_pict(build(ps), children, all_instances, retry)
@@ -1589,7 +1589,7 @@ def_find top: #{ct-find}
 def_find topline: #{ct-find}
 def_find baseline: #{cb-find}
 def_find bottom: #{cb-find}
-  
+
 def_find left_top: #{lt-find}
 def_find top_left: #{lt-find}
 def_find left_topline: #{ltl-find}

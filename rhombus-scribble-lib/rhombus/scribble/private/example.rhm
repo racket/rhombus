@@ -15,7 +15,7 @@ export:
 expr.macro 'examples($form, ...)':
   ~all_stx stx
   fun find_kw(want_kw):
-    for values(found_expr = #false) (form: [form, ...]):
+    for values(found_expr = #false) (form in [form, ...]):
       match form
       | '$(pattern:
              kind ~term
@@ -58,7 +58,7 @@ expr.macro 'examples($form, ...)':
       if spacer_info_box
       | ['~spacer_info_box: spacer_info_box']
       | []
-    for List ([tag, forms && [form, ...]]: split_forms,
+    for List ([tag, forms && [form, ...]] in split_forms,
               i: 0..):
       '(@examples_stanza(~label: $(if i == 0 | 'label' | '#false'),
                          ~eval: eval,

@@ -446,12 +446,12 @@ check:
   ~is ["apple", "banana"]
 
 check:
-  for values(sum = 0) (v: MutableList[1, 2, 3]):
+  for values(sum = 0) (v in MutableList[1, 2, 3]):
     sum + v
   ~is 6
 
 check:
-  for values(sum = 0) (v: dynamic(MutableList[1, 2, 3])):
+  for values(sum = 0) (v in dynamic(MutableList[1, 2, 3])):
     sum + v
   ~is 6
 

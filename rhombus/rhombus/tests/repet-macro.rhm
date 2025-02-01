@@ -26,10 +26,8 @@ repet.macro 'enumed($from, $(sub :: repet_meta.Parsed))':
   def (pred, si):
     annot_meta.unpack_predicate(match 'List' | '$(p :: annot_meta.Parsed)': p)
   repet_meta.pack_list('($self(),
-                         for List:
-                           each:
-                             elem: $expr
-                             i: $from..
+                         for List (elem in $expr,
+                                   i in $from..):
                            [i, elem],
                          $depth,
                          $use_depth,

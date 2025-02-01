@@ -103,7 +103,7 @@ check:
   ~is [11, 12, 13]
 
 // check is_static option
-  
+
 block:
   annot.macro 'MyStr':
     annot_meta.pack_predicate('fun (x): x is_a String',
@@ -155,7 +155,7 @@ dot.macro 'myint2_dot_provider $left $dot $right':
         // assumes a depth-1 `right`, too
         let '($_, $r_expr, $r_depth, $r_use_depth, $_)' = repet_meta.unpack_list(right)
         values(make('for List (v in ($expr :~ List),
-                               r_v: ($r_expr :~ List)):
+                               r_v in ($r_expr :~ List)):
                        v + r_v'),
                '$tail ...')
   | values(match right

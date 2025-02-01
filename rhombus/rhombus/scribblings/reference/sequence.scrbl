@@ -213,7 +213,7 @@ internal state, and the state can even be specific to a particular
       private override method to_sequence():
         [x, y]
   ~repl:
-    for List (i: Posn(10, 20)): i
+    for List (i in Posn(10, 20)): i
 )
 
 }

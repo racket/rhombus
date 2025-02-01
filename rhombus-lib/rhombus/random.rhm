@@ -68,8 +68,8 @@ statinfo.macro 'current':
 fun shuffle(l :: List, rnd :: Random = current()) :~ List:
   // Fisher-Yates shuffle
   let a = Array.make(l.length())
-  for (x: l,
-       i: 0..):
+  for (x in l,
+       i in 0..):
     let j = rnd.random(i+1)
     unless j == i
     | a[i] := a[j]

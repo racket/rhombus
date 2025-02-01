@@ -59,7 +59,7 @@ class Radial(~points,
                  ~line_width: line_width,
                  ~fill: fill,
                  ~bound: bound)
-  
+
 fun radial_path(Radial(~points: n,
                        ~width: width,
                        ~height: height,
@@ -75,23 +75,23 @@ fun radial_path(Radial(~points: n,
                        ~rotate: spin)) :~ draw.Path:
   let p = draw.Path()
   let pi = math.pi
-  
+
   // gets the point at mag@s in polar form, but then moves it orthogonal
   // to that vector by a `pinwheel` fraction
   fun arm(s, mag, pinwheel):
     cond
     | pinwheel .= 0:
         [mag * math.cos(s), mag * math.sin(s)]
-    | pinwheel > 0:      
+    | pinwheel > 0:
         [mag * math.cos(s) + pinwheel * mag * math.cos(s+pi/2), mag * math.sin(s) + pinwheel * mag * math.sin(s+pi/2)]
-    | pinwheel < 0:      
+    | pinwheel < 0:
         [mag * math.cos(s) - pinwheel * mag * math.cos(s-pi/2), mag * math.sin(s) - pinwheel * mag * math.sin(s-pi/2)]
   let xd = inner_radius * (1 + inner_pull)
   if flat_outer_edge
   | let step = 2 * math.pi / n
     p.move_to(arm(point_angle(0, n), outer_radius * 100 * math.cos(step/4), 0))
   | p.move_to(arm(point_angle(0, n), outer_radius * 100, 0))
-  for (i: 0..n):
+  for (i in 0..n):
     let s0 = point_angle(i, n)
     let e0 = point_angle(i + 1, n)
     let s = s0 + (e0 - s0) * outer_pause/2
@@ -134,7 +134,7 @@ fun radials_pict([r :: Radial, ...],
     fun scale(pa :~ draw.Path, xs, ys): pa.scale(xs, ys); pa
     let [pa, ...] = [scale(radial_path(r), r.width/width, r.height/height), ...]
     let all_pa :: draw.Path = [pa, ...][0]
-    for (pa: [pa, ...].rest):
+    for (pa in [pa, ...].rest):
       all_pa.append(pa)
     let p:
       dc(fun (dc :: draw.DC, x, y):
@@ -375,7 +375,7 @@ fun arrow_path(~length: length :: Real = 64,
   let tail_bottom_y = breadth - tail_top_y
   if tail .= 0
   | p.move_to([intersect_x, tail_top_y])
-  | p.move_to([0, tail_top_y])  
+  | p.move_to([0, tail_top_y])
     p.line_to([intersect_x, tail_top_y])
   p.line_to([a_x, 0])
   p.line_to([length, breadth/2])

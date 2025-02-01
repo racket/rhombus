@@ -13,10 +13,8 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                                          ...) $(r :: bind_meta.Result):
               $(body :: Block)':
   ~op_stx self_id
-  for:
-    each:
-      arg: [arg, ...]
-      expr: [arg.maybe_expr, ...]
+  for (arg in [arg, ...],
+       expr in [arg.maybe_expr, ...]):
     unless expr
     | syntax_meta.error("missing initial-value expression",
                         self_id,
@@ -27,17 +25,14 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
   // then we expand similar to Racket's named `let`. Otherwise, to avoid
   // duplicating the binding machinery for the initial call and recursive calls,
   // we'll expand in a way that uses `#{unsafe-undefined}` on the initial call
-  let all_immediate: for values(immed = #true):
-                       each info in [arg_info, ...]
+  let all_immediate: for values(immed = #true) (info in [arg_info, ...]):
                        immed && bind_meta.is_immediate(info)
   let ['($_, $a_name, $_, ...)', ...] = [bind_meta.unpack_info(arg_info), ...]
   let [arg_id, ...] = [Syntax.make_id(a_name +& "_arg"), ...]
   let [avail_id, ...] = [Syntax.make_id(a_name +& "_ready_arg"), ...]
-  let [recur_arg, ...] = (for List:
-                            each:
-                              kw: [arg.maybe_keyword, ...]
-                              id: [arg_id, ...]
-                              avail_id: [avail_id, ...]
+  let [recur_arg, ...] = (for List (kw in [arg.maybe_keyword, ...],
+                                    id in [arg_id, ...],
+                                    avail_id in [avail_id, ...]):
                             if kw
                             | '$kw: $id = $avail_id'
                             | '$id')
@@ -110,8 +105,7 @@ meta:
                           fun (): bad_result(#' $name,
                                              #%literal $annotation_string))'
       | let [arg, ...]:
-          for List:
-            each i in 0..count
+          for List (i in 0..count):
             Syntax.make_id("arg" +& i)
         'block:
            fun fail(): bad_result(#' $name, #%literal $annotation_string)

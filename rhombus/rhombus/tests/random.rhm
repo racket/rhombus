@@ -73,7 +73,7 @@ block:
       rng.random()
 
 check:
-  for (n: [2 ** 31, 2 ** 32, 2 ** 64, 10 ** 1000]):
+  for (n in [2 ** 31, 2 ** 32, 2 ** 64, 10 ** 1000]):
     let M = 64
     let hits = Array.make(M)
     for (i in 0..M*100):

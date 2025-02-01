@@ -12,7 +12,7 @@ import:
   lib("slideshow/main.rkt") as rkt
   lib("pict/main.rkt") as rkt_pict
   lib("slideshow/play.rkt") as rkt_play
-  lib("racket/string.rkt")  
+  lib("racket/string.rkt")
 
 export:
   all_from(.pict)
@@ -35,7 +35,7 @@ export:
   interactive
 
   is_printing
-  is_condensing  
+  is_condensing
 
   start_at_recent
   retract_recent
@@ -88,7 +88,7 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
                        #{#:skip-first?}: #true,
                        #{#:skip-last?}: #true,
                        fun (n): p.snapshot(-1, n).draw_handle)
-  for (i: 0..p.duration):
+  for (i in 0..p.duration):
     if rkt.#{condense?} && p.epoch_metadata(i).get(#'nonarchival, #false)
     | rkt.#{skip-slides}(1)
     | let extent = p.epoch_extent(i)
@@ -114,7 +114,7 @@ fun slide_pict(~title: title :: maybe(String || Pict) = #false,
   | assemble_slide(title, layout, p)
   | p
 
-fun assemble_slide(title, layout, p, ~lead_in = #false) :~ Pict:  
+fun assemble_slide(title, layout, p, ~lead_in = #false) :~ Pict:
   match title
   | _ :: pict.NothingPict:
       current_assembler()(#false, layout, p)
@@ -169,10 +169,10 @@ fun interactive(p :: Pict, callback :: Function.of_arity(1)) :~ Pict:
 
 fun is_printing():
   rkt.#{printing?}
-  
+
 fun is_condensing():
   rkt.#{condense?}
-  
+
 fun start_at_recent():
   rkt.#{start-at-recent-slide}()
 

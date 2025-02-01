@@ -84,7 +84,7 @@ fun align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
 
 fun is_slide_content(c):
   match c
-  | [c, ...]: for all (c: [c, ...]): is_slide_content(c)
+  | [c, ...]: for all (c in [c, ...]): is_slide_content(c)
   | p :: Pict: #true
   | p :: Next: #true
   | p :: Barrier: #true
@@ -187,7 +187,7 @@ fun align_content(sep, horiz, contents):
       prev(match horiz
            | #'left: p.pad(~right: width - p.width)
            | #'center: p.pad(~horiz: (width - p.width) / 2)
-           | #'right: p.pad(~left: width - p.width))      
+           | #'right: p.pad(~left: width - p.width))
   recur widen (w = width, sep = sep, cs :: List = recorded,
                widener = make_widener(width, horiz, values)):
     List.append(
@@ -209,6 +209,6 @@ fun align_content(sep, horiz, contents):
             let mid = widen(w, if align_sep == #'inherit | sep | align_sep, cs,
                             make_widener(w, horiz, widener))
             if align_sep == #'inherit
-            | mid            
+            | mid
             | [SetSep(sep, align_sep)] ++ mid ++ [SetSep(sep, sep)]
     )
