@@ -233,8 +233,8 @@ multiplying like the expression @rhombus(*) operator.
 
 @doc(
   rx.macro '$pat #%comp {$count}'
-  rx.macro '$pat #%comp {$min ..}'
-  rx.macro '$pat #%comp {$min .. $max}'
+  rx.macro '$pat #%comp {$min #,(@rhombus(.., ~at rhombus/rx))}'
+  rx.macro '$pat #%comp {$min #,(@rhombus(..=, ~at rhombus/rx)) $max}'
   operator_order:
     ~order: rx_repetition
 ){
@@ -246,9 +246,9 @@ multiplying like the expression @rhombus(*) operator.
  exact number of repetitions. If just @rhombus(min) is provided, then it
  specifies a minimum number of repetitions, and there is no maximum.
  Finally, @rhombus(min) and @rhombus(max) both can be specified.
- @margin_note{Write @rhombus(0 .. max) to provide only an upper bound.
-  Note that the expression form @rhombus(.. max) creates a range that
-  starts a @rhombus(#neginf), and the intent of requiring a @rhombus(min) for
+ @margin_note{Write @rhombus(0 #,(@rhombus(..=, ~at rhombus/rx)) max) to provide only an upper bound.
+  Note that the expression form @rhombus(..= max) creates a range that
+  starts at @rhombus(#neginf), and the intent of requiring a @rhombus(min) for
   a regexp repetition is to avoid suggesting that negative counts are
   possible.} A @rhombus(count), @rhombus(min), or @rhombus(max) must be a
  literal nonnegative integer.
@@ -262,10 +262,19 @@ multiplying like the expression @rhombus(*) operator.
     rx'any{2..}'.match("aa")
     rx'any{2..}'.match("aaa")
   ~repl:
-    rx'any{2..3}'.match("aa")
-    rx'any{2..3}'.match("aaa")
-    rx'any{2..3}'.match("aaaa")
+    rx'any{2..=3}'.match("aa")
+    rx'any{2..=3}'.match("aaa")
+    rx'any{2..=3}'.match("aaaa")
 )
+
+}
+
+@doc(
+  rx.macro '..'
+  rx.macro '..='
+){
+
+ Only allowed within a @braces repetition form.
 
 }
 

@@ -146,22 +146,22 @@ check:
   M rx'()?' "" ~is [""]
 
 check:
-  M rx'"x"{1..3}' "xy" ~is #false
-  P rx'"x"{1..3}' "xy" ~is ["x"]
-  P rx'"x"{1..3}' "ax" ~is ["x"]
-  M rx'"x"{1..3}' "" ~is #false
-  M rx'"x"{1..3}' "xx" ~is ["xx"]
-  M rx'"x"{1..3}' "xxx" ~is ["xxx"]
-  M rx'"x"{1..3}' "xxxx" ~is #false
-  M rx'"x"{1..3} "y"' "y" ~is #false
-  M rx'"x"{1..3} "y"' "xxxy" ~is ["xxxy"]
-  M rx'"x"{1..3} "xy"' "xxxy" ~is ["xxxy"]
-  M rx'"x"{1..3} ~possessive "y"' "xxxy" ~is ["xxxy"]
-  M rx'"x"{1..3} ~possessive "xy"' "xxxy" ~is #false
-  M rx'"x"{1..3} ~greedy $end: "x"*' "xxx" ~is ["xxx", ""]
-  M rx'"x"{1..3} ~nongreedy $end: "x"*' "xxx" ~is ["xxx", "xx"]
-  M rx'"x"{1..3} ~possessive $end: "x"*' "xxx" ~is ["xxx", ""]
-  M rx'"x"{0..3}' "" ~is [""]
+  M rx'"x"{1..=3}' "xy" ~is #false
+  P rx'"x"{1..=3}' "xy" ~is ["x"]
+  P rx'"x"{1..=3}' "ax" ~is ["x"]
+  M rx'"x"{1..=3}' "" ~is #false
+  M rx'"x"{1..=3}' "xx" ~is ["xx"]
+  M rx'"x"{1..=3}' "xxx" ~is ["xxx"]
+  M rx'"x"{1..=3}' "xxxx" ~is #false
+  M rx'"x"{1..=3} "y"' "y" ~is #false
+  M rx'"x"{1..=3} "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..=3} "xy"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..=3} ~possessive "y"' "xxxy" ~is ["xxxy"]
+  M rx'"x"{1..=3} ~possessive "xy"' "xxxy" ~is #false
+  M rx'"x"{1..=3} ~greedy $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"{1..=3} ~nongreedy $end: "x"*' "xxx" ~is ["xxx", "xx"]
+  M rx'"x"{1..=3} ~possessive $end: "x"*' "xxx" ~is ["xxx", ""]
+  M rx'"x"{0..=3}' "" ~is [""]
   M rx'"x"{2..}' "x" ~is #false
   M rx'"x"{2..}' "xx" ~is ["xx"]
   M rx'"x"{2..}' "xxxxx" ~is ["xxxxx"]
@@ -441,7 +441,7 @@ check_throws rx'(string: byte)' "byte string mode used in a context that require
 check_throws rx'[alpha-"q"]' "expected a single-character set for a range start"
 check_throws rx'()*' "repetition operand could match an empty string"
 check_throws rx'()+' "repetition operand could match an empty string"
-check_throws rx'(){1..2}' "repetition operand could match an empty string"
+check_throws rx'(){1..=2}' "repetition operand could match an empty string"
 check_throws rx'()* ~nongreedy' "repetition operand could match an empty string"
 check_throws rx'lookbehind(.*)' "pattern must match a bounded sequence"
 check_throws rx'($x: .*) $x *' "repetition operand could match an empty string"
