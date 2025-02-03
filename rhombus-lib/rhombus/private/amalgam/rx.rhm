@@ -93,6 +93,9 @@ export:
     names:
       #%literal #%comp #%parens #%juxtapose #%call #%brackets #%index
 
+    // recognized by `#%comp`
+    .. ..=
+
     // same as #%juxtapose, but supports continuing on the next line
     ++
 
@@ -345,15 +348,25 @@ rx.macro '.? $(g :: Greed) $()':
 
 rx.macro #%comp:
   ~order: rx_repetition
-| '$left #%comp $(self && '{$(min :: Int) ..}') $(g :: Greed) $()':
+| '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..')}') $(g :: Greed) $()':
     values(unary('repeat($min, #inf, $g.mode, $self)', left),
            '$g.tail ...')
-| '$left #%comp $(self && '{$(min :: Int) .. $(max :: Int)}') $(g :: Greed) $()':
+| '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..=') $(max :: Int)}') $(g :: Greed) $()':
     values(unary('repeat($min, $max, $g.mode, $self)', left),
            '$g.tail ...')
 | '$left #%comp $(self && '{$(count :: Int)}') $(g :: Greed) $()':
     values(unary('repeat($count, $count, $g.mode, $self)', left),
            '$g.tail ...')
+
+rx.macro '..':
+  ~stronger_than: ~other
+  ~op_stx: self
+  syntax_meta.error("misuse outside of a repetition pattern", self)
+
+rx.macro '..=':
+  ~stronger_than: ~other
+  ~op_stx: self
+  syntax_meta.error("misuse outside of a repetition pattern", self)
 
 rx.macro '.':
   ~same_as: $

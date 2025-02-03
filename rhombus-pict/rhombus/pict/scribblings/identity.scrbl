@@ -30,7 +30,7 @@ find them. The @rhombus(Pict.children) property of the result of
 
 Like a pict's width and height, it's findable location within another
 pict is technically a property of a static pict. A snapshot (via
-@rhombus(Pict.snapshot)) of a pict has an identity that is the same as
+@rhombus(Pict.snapshot)) of a pict by default has an identity that is the same as
 the original pict. Consequently, it is possible and convenient to find
 the location of (a snapshot of) an animated pict within the snapshot of
 another animated pict. In the same way that @rhombus(Pict.width) on an
