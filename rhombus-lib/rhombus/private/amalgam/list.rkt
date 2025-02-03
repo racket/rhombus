@@ -39,7 +39,8 @@
          "number.rkt"
          (submod "comparable.rkt" for-builtin)
          "list-last.rkt"
-         "maybe-list-tail.rkt")
+         "maybe-list-tail.rkt"
+         (submod "range.rkt" for-info))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -1595,3 +1596,6 @@
 
 (define-for-syntax (install-normal-call?! proc)
   (set! normal-call? proc))
+
+(begin-for-syntax
+  (install-get-treelist-static-infos! get-treelist-static-infos))

@@ -1,6 +1,7 @@
 #lang racket/base
 (require "treelist.rkt"
          "mutable-treelist.rkt"
+         (submod "range.rkt" for-listable)
          "annotation-failure.rkt")
 
 (provide prop:Listable Listable? Listable-ref
@@ -18,6 +19,7 @@
       (list? v)
       (vector? v)
       (mutable-treelist? v)
+      (list-range? v)
       (Listable? v)))
 
 (define (to-list who v)
@@ -26,6 +28,7 @@
     [(list? v) v]
     [(vector? v) (vector->list v)]
     [(mutable-treelist? v) (mutable-treelist->list v)]
+    [(list-range? v) (list-range->list v)]
     [(general-to-treelist who v) => treelist->list]
     [else #f]))
 
@@ -35,6 +38,7 @@
     [(list? v) (list->treelist v)]
     [(vector? v) (vector->treelist v)]
     [(mutable-treelist? v) (mutable-treelist-snapshot v)]
+    [(list-range? v) (list-range->treelist v)]
     [else (general-to-treelist who v)]))
 
 (define (general-to-treelist who v)

@@ -171,7 +171,7 @@
     [(mutable-treelist? v1)
      (mutable-treelist-member? v1 v2 equal-always?)]
     [(range? v1)
-     (Range.contains v1 v2)]
+     (range-contains? v1 v2)]
     [else
      (define in1 (contains-ref v1 #f))
      (unless in1
