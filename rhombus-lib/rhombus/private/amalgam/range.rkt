@@ -547,7 +547,7 @@
     (raise-annotation-failure who r "ListRange")))
 
 (define/method (Range.start r)
-  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  #:static-infos ((#%call-result #,(get-real-static-infos)))
   (check-range who r)
   (cond
     [(range-from-to? r) (range-from-to-start r)]
@@ -559,7 +559,7 @@
     [else -inf.0]))
 
 (define/method (Range.end r)
-  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  #:static-infos ((#%call-result #,(get-real-static-infos)))
   (check-range who r)
   (cond
     [(range-from-to? r) (range-from-to-end r)]
