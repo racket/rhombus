@@ -70,7 +70,7 @@ class Flag(flag_strs :~ List.of(String),
     ~who: who
     let self:
       super(defaults, args, repeat_last, handler)(flag_strs, help)
-    for (flag: flag_strs):
+    for (flag in flag_strs):
       unless (ok_flag_string(flag))
       | error(~who: who,
               "invalid flag string",
@@ -228,7 +228,7 @@ fun gather_flags(flags :~ List, args, init_state,
           | ~else: once_keys
         let state:
           for values(state :~ Map = state):
-            each (key, val): h.init
+            each (key, val) in h.init
             if state.has_key(key)
             | error(~who: who,
                     "duplicate default key",
@@ -412,7 +412,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
                   prs
               | _: [[#'inherit, flag]]
             first ++ flatten([rest, ...], mode)
-    for ([mode, flag]: mode_and_flags):
+    for ([mode, flag] in mode_and_flags):
       match flag
       | f :: Flag:
           match mode
@@ -421,8 +421,8 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
           | #'once_start: print("/ ")
           | #'once_continue: print("| ")
           | #'once_end: (if f.help | print("| ") | print("\\ "))
-          for (flag_str: f.flag_strs,
-               i: 0..):
+          for (flag_str in f.flag_strs,
+               i in 0..):
             when i > 0
             | print(", ")
             print(flag_str)
@@ -443,8 +443,8 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
       | t :: Text:
           unless t.placement == #'after_notation
           | println(t.text)
-    let any_multi = (for any ([mode, flag]: mode_and_flags): mode == #'multi)
-    let any_once = (for any ([mode, flag]: mode_and_flags): mode == #'once_start)
+    let any_multi = (for any ([mode, flag] in mode_and_flags): mode == #'multi)
+    let any_once = (for any ([mode, flag] in mode_and_flags): mode == #'once_start)
     when any_multi || any_once
     | println("")
     when any_multi
@@ -468,7 +468,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
       println(" Multiple single-letter flags can be combined after one `-`.")
       println(@str{ For example, `@(flag_str1)@(flag_str2[1])@(format_args(f1, " "))@(format_args(f2, " "))`}
                 ++ @str{ is the same as `@(flag_str1)@(format_args(f1, " ")) @(flag_str2)@(format_args(f2, " "))`.})
-    for ([mode, flag]: mode_and_flags):
+    for ([mode, flag] in mode_and_flags):
       match flag
       | t :: Text:
           when t.placement == #'after_notation

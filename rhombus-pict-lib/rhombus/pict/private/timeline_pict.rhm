@@ -38,12 +38,12 @@ fun tl_arrows(p :~ Pict, dot :~ Pict):
   let dy = dy - (q.height / 2)
   let q = connect(~on: q, Find.left(p, ~dy: dy), Find.left(q, ~dy: dy), ~style: #'arrow, ~arrow_size: 8)
   let q = connect(~on: q, Find.right(p, ~dy: dy), Find.right(q, ~dy: dy), ~style: #'arrow, ~arrow_size: 8)
-  q  
+  q
 
 fun stackx(a, b :~ Pict) :~ Pict:
   let p = stack(a, b)
   p.pad(~horiz: (b.width - p.width) / 2)
-                
+
 fun timeline(p_in :~ Pict, [t, ...],
              ~pre: pre = 0,
              ~post: post = 0,
@@ -56,7 +56,7 @@ fun timeline(p_in :~ Pict, [t, ...],
     | p_in.snapshot(math.exact(math.floor(t)),
                     t - math.floor(t))
     | nothing
-  let w: for values(w = 0) (t: [t, ...]):
+  let w: for values(w = 0) (t in [t, ...]):
            math.max(w, p_at_time(t, #true).width)
   fun center(p :~ Pict):
     p.pad(~horiz: (w - p.width) / 2)
@@ -70,7 +70,7 @@ fun timeline(p_in :~ Pict, [t, ...],
   let [lt_dot, ...]: [stackx(time_at(t), epochly(t_dot, t)), ...]
   let p :~ Pict:
     let sep = sep + w - dot.width
-    fun keep(p, keep): if keep | p | nothing  
+    fun keep(p, keep): if keep | p | nothing
     let tb = beside(~sep: sep, keep(lt_dot, t >= 0 && t < p_in.duration), ...)
     beside(~sep: sep,
            beside(~sep: sep, keep(lt_dot, t < 0), ...),
@@ -85,7 +85,7 @@ fun timeline(p_in :~ Pict, [t, ...],
            beside(~sep: sep, keep(lt_dot, t >= p_in.duration), ...))
   let p = tl_arrows(p, [t_dot, ...].first)
   let (p, _):
-    for values(p = p, prev = #false) (t_dot: [t_dot, ...]):
+    for values(p = p, prev = #false) (t_dot in [t_dot, ...]):
       values(if prev
              | connect(~on: p, Find.right(prev), Find.left(t_dot))
              | p,

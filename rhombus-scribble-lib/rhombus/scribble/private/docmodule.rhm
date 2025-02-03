@@ -22,9 +22,7 @@ meta:
     | '$(a :: Identifier)':
         a
     | '$(a :: Identifier) $('/ $(b :: Identifier)') ...':
-        String.append(to_string(a),
-                      & (for List (b: [b, ...]):
-                           "/" ++ to_string(b)))
+        String.append(to_string(a), "/" ++ to_string(b), ...)
           |> Syntax.make_id(_)
     | 'lib($str)':
         ['lib', str]
@@ -58,7 +56,8 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
        '#{#:require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
        expr_meta.pack_expr('@rhombusmodname($mod ...)'),
        '#{#:module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
-       option.form, ..., ...])
+       option.form, ..., ...]
+  )
 
 expr.macro 'rhombusmodname ($mod ...)':
   expr_meta.pack_s_exp(['racketmodlink',

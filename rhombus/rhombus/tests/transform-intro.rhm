@@ -35,8 +35,7 @@ expr.macro 'go $(x :: ident_meta.Parsed) $()':
   def res:
     match x.group
     | '$_ $(x :: Term)':
-        for all:
-          each [plain_x, flipped_x]: saved
+        for all ([plain_x, flipped_x] in saved):
           syntax_meta.equal_name_and_scopes(flipped_x, syntax_meta.flip_introduce(x))
   '$(res)'
 

@@ -530,7 +530,26 @@ it supplies its elements in order.
 @examples(
   [1, 2, 3].contains(2)
   [1, 2, 3].contains(200)
+  [10, 20, 30].contains(20.0, (_ .= _))
   2 in [1, 2, 3]
+)
+
+}
+
+
+@doc(
+  method (lst :: List).index(v :: Any,
+                             eqls :: Function.of_arity(2) = (_ == _))
+    :: maybe(Int)
+){
+
+ Like @rhombus(List.contains), but instead of returning @rhombus(#true),
+ returns the index of a found element.
+
+@examples(
+  ["a", "b", "c"].index("b")
+  ["a", "b", "c"].index("d")
+  [10, 20, 30].index(20.0, (_ .= _))
 )
 
 }
@@ -539,14 +558,14 @@ it supplies its elements in order.
 @doc(
   method (lst :: List).find(pred :: Function.of_arity(1))
     :: Any
-  method (lst :: List).index(pred :: Function.of_arity(1))
+  method (lst :: List).find_index(pred :: Function.of_arity(1))
     :: maybe(NonnegInt)
 ){
 
  The @rhombus(List.find) function finds the first element of
  @rhombus(lst) for which @rhombus(pred) returns a true value, or it
  returns @rhombus(#false) if no such element is found. The
- @rhombus(List.index) function is similar, but it returns the index of the
+ @rhombus(List.find_index) function is similar, but it returns the index of the
  found element instead of the element. Searching the list takes
  @math{O(N)} time (multiplied by the cost of @rhombus(pred)) to find an
  element at position @math{N}.
@@ -554,8 +573,8 @@ it supplies its elements in order.
 @examples(
   [1, 2, 3].find((_ mod 2 .= 0))
   [1, 2, 3].find((_ mod 10 .= 9))
-  [1, 2, 3].index((_ mod 2 .= 0))
-  [1, 2, 3].index((_ mod 10 .= 9))
+  [1, 2, 3].find_index((_ mod 2 .= 0))
+  [1, 2, 3].find_index((_ mod 10 .= 9))
 )
 
 }

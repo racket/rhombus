@@ -147,7 +147,7 @@ block:
   check filesystem.files(tmp, ~recur: #true, ~add_path: #true) ~is all_files.map(Path.add(tmp, _))
   check:
     filesystem.files(tmp, ~recur: #true, ~follow_links: #true)
-    ~is List.append(& for List(f: all_files):
+    ~is List.append(& for List (f in all_files):
                       if f == Path("dlink")
                       | [Path("dlink"), Path("dlink").add("y")]
                       | [f])
@@ -336,7 +336,7 @@ block:
       filesystem.delete(sub, ~recur: #true)
 
       check filesystem.copy(tmp, sub, ~recur: #true, ~follow_links: #false, ~keep_modify_seconds: #true) ~is #void
-      for (f: filesystem.files(sub, ~recur: #true)):
+      for (f in filesystem.files(sub, ~recur: #true)):
         check filesystem.type(sub.add(f)) ~is filesystem.type(tmp.add(f))
         when filesystem.file_exists(sub.add(f)) || filesystem.directory_exists(sub.add(f))
         | check filesystem.permissions(sub.add(f)) ~is filesystem.permissions(tmp.add(f))

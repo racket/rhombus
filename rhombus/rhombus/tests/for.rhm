@@ -434,6 +434,17 @@ check:
   ~is #true
 
 check:
+  for all (i in 0..10):
+    i < 10 && i
+  ~is 9
+
+check:
+  for all (i in 0..10):
+    break_when #true
+    i
+  ~is #true
+
+check:
   def mutable accum = []
   [for any:
      each i in 0..10
@@ -455,6 +466,17 @@ check:
   for any (i in 0..10):
     i == 5
   ~is #true
+
+check:
+  for any (i in 0..10):
+    i == 5 && i
+  ~is 5
+
+check:
+  for any (i in 0..10):
+    break_when #true
+    i
+  ~is #false
 
 check:
   ~eval

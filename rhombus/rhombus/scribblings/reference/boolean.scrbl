@@ -129,7 +129,8 @@
  @rhombus(any) supports repetition arguments, and it stops iterating
  through a repetition as soon as a non-@rhombus(#false) result is found.
  When the last @rhombus(expr_or_splice) is an @nontermref(expr), it is in
- tail position.
+ tail position. When no @rhombus(expr_or_splice) is provided, the result
+ is @rhombus(#false).
 
 @examples(
   def [x, ...] = [1, 2, 3, 4]
@@ -236,9 +237,10 @@
 ){
 
  The @rhombus(all, ~reducer) form as a @tech(~doc: guide_doc){reducer} is like
- @rhombus(&&): it stops an iteration as soon as a @rhombus(#false) value
- is produced for an element, and it otherwise returns the result of the
- last iteration.
+ @rhombus(&&): it stops an iteration as soon as @rhombus(#false)
+ is produced for an element and it returns @rhombus(#false), otherwise
+ it returns the result of the last iteration or @rhombus(#true) if no
+ iteration is done.
 
 @examples(
   for all (i in 0..10):
@@ -251,7 +253,8 @@
  @rhombus(all) supports repetition arguments, and it stops iterating
  through a repetition as soon as a @rhombus(#false) result is found. When
  the last @rhombus(expr_or_splice) is a @nontermref(expr), it is in tail
- position.
+ position. When no @rhombus(expr_or_splice) is provided, the result is
+ @rhombus(#true).
 
 @examples(
   def [x, ...] = [1, 2, 3, 4]

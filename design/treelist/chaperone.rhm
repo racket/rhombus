@@ -15,7 +15,7 @@ def tl = #{chaperone-treelist}(orig,
                                                      | error(#'oops, "insert negative rejected")
                                                      | v,
                                fun (orig, other):
-                                 for values(tl = orig) (e : #{in-treelist}(other)):
+                                 for values(tl = orig) (e in #{in-treelist}(other)):
                                    #{treelist-add}(orig, e))
 
 check:

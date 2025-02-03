@@ -219,7 +219,7 @@
         annot_meta.unpack_predicate(p)
       repet_meta.pack_list(
         '($stx,
-          for List (elem: $expr, i: $from ..): [i, elem],
+          for List (elem in $expr, i in $from ..): [i, elem],
           $depth,
           $use_depth,
           $si)'

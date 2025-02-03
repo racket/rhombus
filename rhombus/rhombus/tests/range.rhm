@@ -616,7 +616,7 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x: Range.step_by(rge, 2)):
+      for List (x in Range.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
@@ -648,7 +648,7 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x: Range.step_by(rge, 2)):
+      for List (x in Range.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
@@ -689,7 +689,7 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x: Range.step_by(rge, 2)):
+      for List (x in Range.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
@@ -721,14 +721,14 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x: Range.step_by(rge, 2)):
+      for List (x in Range.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
 block:
   use_static
   check:
-    for List (x: 0..,
+    for List (x in 0..,
               _ in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
@@ -745,7 +745,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x: rge,
+      for List (x in rge,
                 _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
@@ -765,7 +765,7 @@ block:
         x
       ~is [0, 2, 4, 6, 8]
     check:
-      for List (x: Range.step_by(rge, 2),
+      for List (x in Range.step_by(rge, 2),
                 _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
@@ -784,7 +784,7 @@ block:
   block:
     def rge = dynamic(0..)
     check:
-      for List (x: rge,
+      for List (x in rge,
                 _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
@@ -804,7 +804,7 @@ block:
         x
       ~is [0, 2, 4, 6, 8]
     check:
-      for List (x: Range.step_by(rge, 2),
+      for List (x in Range.step_by(rge, 2),
                 _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
@@ -878,7 +878,7 @@ block:
       error.val("oops").msg,
     )
   check:
-    for List (x: Range.step_by("oops", 2)):
+    for List (x in Range.step_by("oops", 2)):
       x
     ~throws values(
       "Range.step_by: " ++ error.annot_msg(),
@@ -1656,7 +1656,7 @@ block:
     [sequence_to_list((x..y).to_sequence()), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_to_list((x..=y).to_sequence()), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
   fun sequence_take(xs :: Sequence, num :: NonnegInt):
-    for List (x: xs,
+    for List (x in xs,
               _ in 0..num):
       x
   check:

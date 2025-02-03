@@ -41,7 +41,7 @@
   ~defn:
     for_clause.macro 'each_in_three $id':
       'def three: 3
-       each $id: 0..three'
+       each $id in 0..three'
   ~repl:
     for List:
       each_in_three i

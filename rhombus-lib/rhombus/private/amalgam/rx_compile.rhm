@@ -86,7 +86,7 @@ meta:
       | '$('unicode' || 'not_unicode')($cat)': values(1, 1, captures)
       | 'charset($cs)': values(1, 1, captures)
       | 'sequence($ast, ...)':
-          for values(min = 0, max = 0, captures = captures) (ast: [ast, ...]):
+          for values(min = 0, max = 0, captures = captures) (ast in [ast, ...]):
             let (amin, amax, captures) = check_count(ast, captures)
             values(min + amin, max + amax, captures)
       | 'repeat($min, $max, $mode, $op)($ast)':
@@ -177,7 +177,7 @@ meta:
                               cs)
           elem
       | 'sequence($ast, ...)':
-          for values(elem = #'any) (ast: [ast, ...]):
+          for values(elem = #'any) (ast in [ast, ...]):
             let new_elem = infer_element(ast, imposed)
             cond
             | elem == #'any:
@@ -422,7 +422,7 @@ meta:
             | ~else:
                 // Note: we won't create a `[:` combination, because `:`
                 // is earlier in ASCII than `[`
-                String.append(& for List ([s, e]: cs.int_ranges()):
+                String.append(& for List ([s, e] in cs.int_ranges()):
                                 let s = Char.from_int(s)
                                 let e = Char.from_int(e)
                                 cond

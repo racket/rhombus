@@ -15,16 +15,16 @@ import:
   - make rrbtree construction smarter
   - largescale real world use (shplait?)
 */
-  
+
 export:
   TreeList
-  
+
 def BITS = 5
 def MAX_WIDTH = 2 ** BITS
 def MASK = MAX_WIDTH - 1
 def MAX_ERROR = 2
 
-      
+
 macro 'radix($index, $height)':
   '((($index) bits.(>>) (BITS * ($height))) bits.and MASK)'
 
@@ -118,8 +118,8 @@ class Node(children :~ Array.now_of(Node || Any) = Array(), sizes :~ maybe(Array
 
 def empty_node = Node(Array())
 
-macro 'leaf($args)':
-  'Node(Array($args))'
+macro 'leaf($arg, ...)':
+  'Node(Array($arg, ...))'
 
 class TreeList(root :~ Node,
                size :~ NonnegInt,
@@ -173,7 +173,7 @@ class TreeList(root :~ Node,
             values(node[node_pos], node, node_pos + 1),
       ~recur_args:
         (pos + 1, next_node, next_node_pos))'
-    
+
   private override describe(mode, recur):
     PrintDesc.list("TreeList[", List.map(to_list(), recur), "]")
 
@@ -188,7 +188,7 @@ class TreeList(root :~ Node,
 
   private override hash_code(recur):
     recur(root)
-    
+
   override get(index :~ Int):
     let (node :~ Node, pos :~ Int) = node_for(index)
     node[pos]
@@ -247,16 +247,13 @@ class TreeList(root :~ Node,
 
   // TODO chunk adding here by 32 and add whole nodes at a time?
   method add_all(els :~ Sequence) :~ TreeList:
-    for values(t :~ TreeList = this):
-      each:
-        el: els
+    for values(t :~ TreeList = this) (el in els):
       t.add(el)
 
-  // TODO should be able to make this faster. At the least, we can grab whole leaf nodes at a time 
+  // TODO should be able to make this faster. At the least, we can grab whole leaf nodes at a time
   // rather than traverse once per element of represented vector
   method to_list() :~ List:
-    for List:
-      each idx in 0..size
+    for List (idx in 0..size):
       get(idx)
 
   method length() :~ Int:
@@ -317,7 +314,7 @@ class TreeList(root :~ Node,
               new_children[0] := new_child
 
               def size0 = size_subtree(new_child, depth-1)
-              def new_len = node.size - branch_index    
+              def new_len = node.size - branch_index
               def new_sizes = Array.make(new_len)
 
               cond
@@ -338,8 +335,8 @@ class TreeList(root :~ Node,
                 each i in branch_index .. (node.sizes :~ Array.now_of(Int)).length()
                 (node.sizes :~ Array.now_of(Int))[i] - index
               def new_child = drop(node.get(branch_index), subindex, depth - 1)
-                
-              new_children[0] := new_child  
+
+              new_children[0] := new_child
               Node(new_children, new_sizes)
 
         squash(new_root, size - pos, height)
@@ -375,7 +372,7 @@ class TreeList(root :~ Node,
             left && Node(a.children.set_in_copy(0, left),
                          block:
                            let sizes :~ Array: a.sizes
-                           for Array.of_length(sizes.length()) ():
+                           for Array.of_length(sizes.length()):
                              each n in sizes
                              n+1)
       let new_root = insert_left(root, height)
@@ -388,7 +385,7 @@ class TreeList(root :~ Node,
 
   private override method append(rhs :~ TreeList) :~ TreeList:
     concat(rhs)
-    
+
   method concat(rhs :~ TreeList) :~ TreeList:
     cond
     | size == 0: rhs
@@ -534,7 +531,7 @@ fun concat_plan(slots :~ Array) :~ maybe(Array):
 
   def optimal_node_len = (child_count + MAX_WIDTH - 1) div MAX_WIDTH
   def target_node_len = optimal_node_len + MAX_ERROR
-  
+
   if target_node_len >= plan.length()
   | #false
   | distribute(plan, target_node_len, plan.length())
@@ -558,7 +555,7 @@ fun distribute(plan :~ Array, target :~ Int, count :~ Int, node_idx :~ Int = 0) 
 
     distribute(plan, target, count - 1, i - 1)
 
-           
+
 fun short_node(plan :~ Array, i :~ Int) :~ Int:
   if plan[i] < MAX_WIDTH - 1
   | i
@@ -573,27 +570,27 @@ fun exec_concat_plan(slots :~ Array,
   | let plan :~ Array = plan
     def flattened_size:
       for values(sum = 0):
-        each node :~ Node: slots
+        each node :~ Node in slots
         sum + node.size
     def flattened:
       for Array.of_length(flattened_size):
-        each node :~ Node: slots
+        each node :~ Node in slots
         each child in node.children
         child
 
     def new_slots = Array.make(plan.length())
     for values(sum = 0):
       each i in 0..plan.length()
-              
+
       let new_sum = sum + plan[i]
       let new_node:
         for Array.of_length(new_sum - sum):
           each j in sum .. new_sum
           flattened[j]
       new_slots[i] :=  set_sizes(new_node, height - 1)
-      
+
       new_sum
-             
+
     new_slots
 
 fun size_subtree(node :~ Node, height :~ Int):
@@ -607,7 +604,7 @@ fun size_subtree(node :~ Node, height :~ Int):
 
 
 /* helper functions */
-                      
+
 fun scan_sizes(sizes :~ Array.now_of(Int), target_index, i = 0) :~ Int:
   if sizes[i] .<= target_index
   | scan_sizes(sizes, target_index, i + 1)
@@ -649,14 +646,14 @@ fun new_branch(el, height):
   if height == 0
   | leaf(el)
   | Node(Array(new_branch(el, height - 1)))
-    
+
 
 fun
 | from() :~ TreeList: TreeList[]
 | from(s :~ Sequence) :~ TreeList:
     for values(v :~ TreeList = TreeList[]) (el in s):
       v.add(el)
-                   
+
 module test:
   macro 'checkP $msg:
            $body':
@@ -670,7 +667,7 @@ module test:
   | list_from(s :: Sequence) :~ List:
       for List (i in s): i
 
-  /* Node tests */ 
+  /* Node tests */
   let leaf_n :~ Node = Node(Array(1, 2, 3, 4))
   let internal_balanced_n :~ Node = Node(Array(Node(array_from(0..32)),
                                                Node(array_from(32..64)),
@@ -683,7 +680,7 @@ module test:
   check: //balanced
     leaf_n.balanced ~is #true
     internal_balanced_n.balanced ~is !internal_unbalanced_n.balanced
-         
+
   check: //size
     leaf_n.size ~is 4
     internal_balanced_n.size ~is 3
@@ -785,7 +782,7 @@ module test:
     small_ub.set(0, -1) ~is TreeList[-1, 2, 3, 4, 5]
     medium_ub.set(0, -1).get(0) ~is -1
     large_ub.set(0, -1).get(0) ~is -1
-    
+
 
   check: // set in the middle
     empty.set(1, -1) ~throws ""
@@ -795,7 +792,7 @@ module test:
     small_ub.set(1, -1) ~is TreeList[1, -1, 3, 4, 5]
     medium_ub.set(500, -1).get(500) ~is -1
     large_ub.set((MAX_WIDTH ** 4) div 2, -1).get((MAX_WIDTH ** 4) div 2) ~is -1
-    
+
   check: // set at the end
     empty.set(100000, -1) ~throws ""
     small.set(4, -1) ~is TreeList[1, 2, 3, 4, -1]

@@ -77,7 +77,7 @@
     expr.macro 'sptt_step_result [$new_accum, $_]':
       '$new_accum'
   ~repl:
-    for sum_pos_to_20 (a: [6, -4, 3]): a
+    for sum_pos_to_20 (a in [6, -4, 3]): a
     for sum_pos_to_20 (a in 3..): a
 )
 

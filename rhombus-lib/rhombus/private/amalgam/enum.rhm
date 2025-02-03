@@ -47,8 +47,8 @@ meta:
       let '$(ann :: annot_meta.Parsed)' = ann
       ann
     let ([parsed, ...], _):
-      for values (parseds :~ List = [],
-                  seen :~ Set = Set.by(===){}):
+      for values(parseds :~ List = [],
+                 seen :~ Set = Set.by(===){}):
         each c in [clause, ...]
         match c
         | (pattern:
@@ -67,7 +67,7 @@ meta:
         | '$(sym :: Identifier) ...':
             let new_syms = [sym, ...]
             let seen:
-              for values (seen :~ Set = seen):
+              for values(seen :~ Set = seen):
                 each sym in new_syms
                 when sym.unwrap() in seen
                 | syntax_meta.error("duplicate enum identifier",
@@ -87,7 +87,7 @@ meta:
                               stx,
                               c)
     let [sym, ...]:
-      for values (syms :~ List = []):
+      for values(syms :~ List = []):
         each parsed in [parsed, ...]
         match parsed
         | Parsed.Symbol([sym, ...]): syms ++ [sym, ...]
@@ -102,7 +102,7 @@ meta:
             let (_, _, statinfo) = annot_meta.unpack_converter(ann)
             statinfo
       let ann_statinfos:
-        for values (statinfos :~ List = []):
+        for values(statinfos :~ List = []):
           each parsed in [parsed, ...]
           match parsed
           | Parsed.Annot([ann, ...]): statinfos ++ [unpack_statinfo(ann), ...]

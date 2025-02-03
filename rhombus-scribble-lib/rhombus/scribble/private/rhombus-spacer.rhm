@@ -1314,7 +1314,7 @@ spacer.bridge enum(self, tail, context, esc):
       let [new_clause, ...]:
         match body
         | ': $clause; ...':
-            for List (clause: [clause, ...]):
+            for List (clause in [clause, ...]):
               match clause
               | '$(tag && '~is_a'): $(b :: Block)':
                  '$tag $(spacer.adjust_term(b, #'~annot, esc))'.relocate_group(clause)

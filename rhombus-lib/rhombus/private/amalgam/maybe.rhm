@@ -145,7 +145,7 @@ fun definitely_failed(who, srcloc):
 fun check_definitely_at_depth(who, v, depth, srcloc):
   if depth == 0
   | v || definitely_failed(who, srcloc)
-  | for (e: (v :~ List)):
+  | for (e in (v :~ List)):
       check_definitely_at_depth(who, e, depth-1, srcloc)
   v
 

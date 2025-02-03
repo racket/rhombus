@@ -236,7 +236,7 @@ class LikePictEpoch(e :~ PictEpoch,
     e.metadata()
 
 class NothingBeforePictEpoch():
-  extends LikePictEpoch  
+  extends LikePictEpoch
   override before() :~ PictEpoch:
     StaticPictEpoch(nothing)
 
@@ -758,7 +758,7 @@ class AnimPict(_identity_f,
     if do_ghost
     | anim_pict_adjust(this, fun (p :~ Pict): p.ghost())
     | this
-    
+
   override method refocus(to_p :: Pict) :~ AnimPict:
     anim_pict_adjust(this, fun (p :~ StaticPict): p.refocus(to_p),
                      ~dependencies: [this, to_p],
@@ -785,7 +785,7 @@ class AnimPict(_identity_f,
     anim_pict_adjust(this, fun (p :~ Pict): p.colorize(c))
   override method line_width(w :: NonnegReal) :~ Pict:
     anim_pict_adjust(this, fun (p :~ Pict): p.line_width(w))
-  
+
   override method alpha(n :: Real.in(0, 1)) :~ Pict:
     anim_pict_adjust(this, fun (p :~ Pict): p.alpha(n))
 
@@ -902,9 +902,9 @@ fun anim_pict_adjust(this :~ AnimPict,
                  ~identity:
                    genident(),
                  ~epochs:
-                   let [e, ...] = this._epochs  
+                   let [e, ...] = this._epochs
                    [AdjustEpoch(e, adjust, this),
-                    ...],                       
+                    ...],
                  ~before:
                    adjust(static_instances(this, this._before)),
                  ~dependencies:
@@ -936,7 +936,7 @@ fun merge_anim_epochs([p :~ _AnimPict, ...], dalign):
 fun merge_epochs([p :~ Pict, ...], dalign):
   // get nothings out of the way, then put them back
   let [something_p, ...]:
-    for List (p: [p, ...]):
+    for List (p in [p, ...]):
       skip_when p == nothing
       p
   let (something_ps :~ List, m_duration_start, m_duration, m_epoch_extents):
@@ -1042,7 +1042,7 @@ fun make_sequential(ps :~ List.of(AnimPict),
   let extents = MutableMap{}
   fun bump_extents(p :~ AnimPict, offset, extents :~ MutableMap):
     fun bump(epoch):
-      extents[offset + epoch] := extents.get(offset + epoch, 0) + p.epoch_extent(epoch)    
+      extents[offset + epoch] := extents.get(offset + epoch, 0) + p.epoch_extent(epoch)
     bump(0)
     when p.duration != 1 | bump(p.duration - 1)
     let next_splice = mode == #'splice
@@ -1054,7 +1054,7 @@ fun make_sequential(ps :~ List.of(AnimPict),
     | bump_extents(p, adjust_offset(p, offset, splice), extents)
   let used_extents = MutableMap{}
   let (accum, starts_accum, t, _):
-    for values(accum :~ List = [], starts_accum :~ List = [], offset = 0, splice = #false):          
+    for values(accum :~ List = [], starts_accum :~ List = [], offset = 0, splice = #false):
       each p in ps
       if p == nothing
       | values(if keep_nothing | accum.add(p) | accum,
@@ -1112,13 +1112,13 @@ fun make_concurrent(ps :~ List.of(AnimPict),
         merge_epochs([p, ...], dalign)
       // due to merging, each non-nothing pict has the same shape for its list of epochs
       let ps:
-        for List (p :~ _AnimPict: ps):
+        for List (p :~ _AnimPict in ps):
           if p == nothing
           | p
           | anim_pict_like(p,
                            ~epochs:
-                             for List (e: p._epochs,
-                                       i: 0..):
+                             for List (e in p._epochs,
+                                       i in 0..):
                                let extent = p._epoch_extents[i]
                                if extent .= 0
                                | e
@@ -1179,7 +1179,7 @@ class CombinePictEpoch(combine,
     [CombinePictEpoch(combine, pad_combine, dt, orig_picts, orig_sustainings, [pre, ...]),
      math.max(pre_extent, ...),
      CombinePictEpoch(combine, pad_combine, dt+1, orig_picts, orig_sustainings, [post, ...]),
-     math.max(post_extent, ...)]     
+     math.max(post_extent, ...)]
   override metadata():
     for values(metadata :~ Map = {}) (orig in origs):
       metadata ++ orig.metadata()
@@ -1223,7 +1223,7 @@ fun switch(~splice: splice :: maybe(matching(TimeOrder)) = #false,
            ~join: join :: SequentialJoin = if splice | #'splice | #'step,
            p :: Pict, ...) :~ Pict:
   let orig_ps = [p, ...]
-  let ps = (for List (p: [p, ...]):
+  let ps = (for List (p in [p, ...]):
               skip_when p == nothing
               if p is_a AnimPict
               | p

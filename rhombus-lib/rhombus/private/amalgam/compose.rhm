@@ -38,7 +38,7 @@ meta:
     let res = statinfo_meta.lookup(left, statinfo_meta.call_result_key)
     let res :~ List = if res | statinfo_meta.unpack_call_result(res) | []
     let res_info:
-      for any ([mask, res_info]: res):
+      for any ([mask, res_info] in res):
         (mask bits.and ret_mask) != 0 && res_info
     let e = 'rkt . $(if one | 'compose1' | 'compose')($left, $right)'
     let e:

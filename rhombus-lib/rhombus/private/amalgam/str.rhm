@@ -14,7 +14,7 @@ export:
 
 fun str(elems :: List) :~ String:
   let o = Port.Output.open_string()
-  for (elem: elems):
+  for (elem in elems):
     print(elem, ~out: o)
   o.get_string()
 

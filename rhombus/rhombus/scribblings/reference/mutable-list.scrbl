@@ -375,7 +375,27 @@ and it is not managed by a lock.
   def l = MutableList[1, 2, 3]
   l.contains(2)
   l.contains(200)
+  l.contains(-2, (fun (a, b): math.abs(a) == math.abs(b)))
   2 in l
+)
+
+}
+
+
+@doc(
+  method (lst :: MutableList).index(v :: Any,
+                                    eqls :: Function.of_arity(2) = (_ == _))
+    :: maybe(Int)
+){
+
+ Like @rhombus(MutableList.contains), but instead of returning @rhombus(#true),
+ returns the index of a found element.
+
+@examples(
+  def l = MutableList["a", "b", "c"]
+  l.index("b")
+  l.index("d")
+  l.index("B", fun (a, b): Char.downcase(a[0]) == Char.downcase(b[0]))
 )
 
 }
@@ -384,7 +404,7 @@ and it is not managed by a lock.
 @doc(
   method (lst :: MutableList).find(pred :: Function.of_arity(1))
     :: Any
-  method (lst :: MutableList).index(pred :: Function.of_arity(1))
+  method (lst :: MutableList).find_index(pred :: Function.of_arity(1))
     :: maybe(NonnegInt)
 ){
 
@@ -397,8 +417,8 @@ and it is not managed by a lock.
   def l = MutableList[1, 2, 3]
   l.find((_ mod 2 .= 0))
   l.find((_ mod 10 .= 9))
-  l.index((_ mod 2 .= 0))
-  l.index((_ mod 10 .= 9))
+  l.find_index((_ mod 2 .= 0))
+  l.find_index((_ mod 10 .= 9))
 )
 
 }

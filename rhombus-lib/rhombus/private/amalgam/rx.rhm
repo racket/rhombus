@@ -505,8 +505,8 @@ meta:
           | ast
         let rkt_rx = compile(ast, vars, num_captures, stx, #false)
         let [[var, index], ...]:
-          for List (var: [var, ...],
-                    i: 0..):
+          for List (var in [var, ...],
+                    i in 0..):
             keep_when var is_a Identifier
             [var, i]
         bind_meta.pack('(rx_infoer,

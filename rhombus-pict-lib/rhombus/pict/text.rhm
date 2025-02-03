@@ -66,7 +66,7 @@ fun is_text_content(c):
   match c
   | s :: String: #true
   | p :: Pict: #true
-  | [c, ...]: for all (c: [c, ...]): is_text_content(c)
+  | [c, ...]: for all (c in [c, ...]): is_text_content(c)
   | ~else: #false
 
 fun flatten_string(who, c, font) :~ Pict:
