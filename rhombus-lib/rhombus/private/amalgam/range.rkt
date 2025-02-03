@@ -83,6 +83,8 @@
    end
    includes_start
    includes_end
+   is_empty
+   canonicalize
    contains
    encloses
    is_connected
@@ -581,6 +583,41 @@
   (or (range-from-to-inclusive? r)
       (range-from-exclusive-to-inclusive? r)
       (range-to-inclusive? r)))
+
+(define/method (Range.is_empty r)
+  (check-range who r)
+  (cond
+    [(range-from-to? r)
+     (eqv? (range-from-to-start r)
+           (range-from-to-end r))]
+    [(range-from-exclusive-to-inclusive? r)
+     (eqv? (range-from-exclusive-to-inclusive-start r)
+           (range-from-exclusive-to-inclusive-end r))]
+    [else #f]))
+
+(define/method (Range.canonicalize r)
+  #:static-infos ((#%call-result #,(get-range-static-infos)))
+  (check-range who r)
+  (cond
+    [(range-from-to? r) r]
+    [(range-from-to-inclusive? r)
+     (unsafe-range-from-to (range-from-to-inclusive-start r)
+                           (add1 (range-from-to-inclusive-end r)))]
+    [(range-from? r) r]
+    [(range-from-exclusive-to? r)
+     ;; invariant for `<..` ensures that `start` cannot be equal to `end`
+     ;; see `check-start-end/not-equal`
+     (unsafe-range-from-to (add1 (range-from-exclusive-to-start r))
+                           (range-from-exclusive-to-end r))]
+    [(range-from-exclusive-to-inclusive? r)
+     (unsafe-range-from-to (add1 (range-from-exclusive-to-inclusive-start r))
+                           (add1 (range-from-exclusive-to-inclusive-end r)))]
+    [(range-from-exclusive? r)
+     (unsafe-range-from (add1 (range-from-exclusive-start r)))]
+    [(range-to? r) r]
+    [(range-to-inclusive? r)
+     (unsafe-range-to (add1 (range-to-inclusive-end r)))]
+    [else r]))
 
 ;; NOTE The following implementation borrows from Rebellion, but does
 ;; so in a way that doesn't use cuts and therefore doesn't allocate.
