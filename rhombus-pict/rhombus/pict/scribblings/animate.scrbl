@@ -190,12 +190,18 @@
  animation at time @math{t} @math{=} @rhombus(epoch + n).
 
  If @rhombus(rebuild_prompt) is @rhombus(#false), then a rebuilding
- operation on the result pict via @rhombus(Pict.build) is propagated to
+ operation on the result pict via @rhombus(Pict.rebuild) is propagated to
  the original @rhombus(pict), and a snapshot of the rebuilt
  @rhombus(pict) is taken for the overall rebuild result. If
  @rhombus(rebuild_prompt) is a true value, then then a rebuilding
  operation rebuilds in the initial snapshot, instead of taking a snapshot
  of a rebuilt @rhombus(pict).
+
+ The result snapshot's identity is the same as the identity of
+ @rhombus(pict) if @rhombus(rebuild_prompt) is @rhombus(#true). If
+ @rhombus(rebuild_prompt) is @rhombus(#false), the result identity is
+ fresh and it depends on @rhombus(pict), but the snapshot is also
+ findable as @rhombus(pict). See also @secref("identity").
 
 @examples(
   ~eval: pict_eval

@@ -101,7 +101,7 @@ fun rebuildable(~deps: children :: List.of(Pict) = [],
                     || Function.all_of((~deps: Any, ~config: Any) -> Pict, ~name: "rebuildable function")
                 ) described_as ((~deps: List.of(Pict)) -> Pict
                                   || (~config: maybe(Map)) -> Pict
-                                  || (~deps: List.of(Pict), ~config: maybe(Map)) -> Pict)):
+                                  || (~deps: List.of(Pict), ~config: maybe(Map)) -> Pict)) :~ Pict:
   rebuildable_anim(children, config, proc)
 
 fun rebuildable_anim(children :~ List, config, proc):
@@ -537,6 +537,7 @@ class AnimPict(_identity_f,
                          ~dependencies: [p],
                          ~rebuild: fun ([p :~ Pict]): p)
       | static_instances(this, p,
+                         ~identity: genident(),
                          ~dependencies: [this],
                          ~rebuild: fun ([p :~ Pict]):
                                      p.snapshot(epoch, n, ~rebuild_prompt: #false))
@@ -855,9 +856,10 @@ class AnimPict(_identity_f,
 
 fun static_instances(p :~ _AnimPict, as_p :~ StaticPict,
                      ~dependencies: dependencies = #false,
-                     ~rebuild: rebuild = fun (p): p):
+                     ~rebuild: rebuild = fun (p): p,
+                     ~identity: identity = p._identity_f):
   static_instance([p], as_p,
-                  ~identity: p._identity_f,
+                  ~identity: identity,
                   ~dependencies: dependencies,
                   ~rebuild: rebuild)
 
