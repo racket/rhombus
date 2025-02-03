@@ -15,11 +15,9 @@
          "compound-repetition.rkt"
          "static-info.rkt"
          "parse.rkt"
-         (prefix-in rhombus-a: "arithmetic.rkt")
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "treelist.rkt"
-         (submod "list.rkt" for-listable)
          "realm.rkt"
          "annotation-failure.rkt"
          "number.rkt"
@@ -54,7 +52,16 @@
 
 (module+ for-container
   (provide range?
-           Range.contains))
+           range-contains?))
+
+(module+ for-listable
+  (provide list-range?
+           list-range->list
+           list-range->treelist))
+
+(module+ for-info
+  (provide (for-syntax (rename-out [get-treelist-static-infos indirect-get-treelist-static-infos])
+                       install-get-treelist-static-infos!)))
 
 (define-primitive-class Range range
   #:lift-declaration
@@ -390,8 +397,7 @@
                                            (~parse start #'start)
                                            (~parse end #'end)
                                            (~parse check-start-end #'check-start-end/not-equal)))
-        (~optional (~seq #:->sequence ->sequence
-                         (~optional (~seq #:->list ->list)))))
+        (~optional (~seq #:->sequence ->sequence)))
      #:with range-method-table (datum->syntax
                                 #'range
                                 (string->symbol
@@ -444,8 +450,7 @@
                                      (pretty-text 'op-str)
                                      (~? (~@ (pretty-text " ")
                                              (PrintDesc-doc (recur (name-end v)))))))
-          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r))))
-          (~? (~@ #:property prop:Listable (vector (lambda (r) (->list r)))))))
+          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r))))))
      (syntax-local-lift-module-end-declaration
       #'(define-primitive-class Name name
           #:existing
@@ -479,8 +484,7 @@
 (struct list-range sequence-range () #:authentic)
 
 (define-range list-range range-from-to Range.from_to ".." #:both
-  #:->sequence range-from-to->sequence
-  #:->list range-from-to->list)
+  #:->sequence range-from-to->sequence)
 
 (define (range-from-to->sequence r [step #f])
   (define start (range-from-to-start r))
@@ -492,12 +496,17 @@
 (define (range-from-to->list r)
   (define start (range-from-to-start r))
   (define end (range-from-to-end r))
+  (for/list ([i (in-range start end)])
+    i))
+
+(define (range-from-to->treelist r)
+  (define start (range-from-to-start r))
+  (define end (range-from-to-end r))
   (for/treelist ([i (in-range start end)])
     i))
 
 (define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" #:both
-  #:->sequence range-from-to-inclusive->sequence
-  #:->list range-from-to-inclusive->list)
+  #:->sequence range-from-to-inclusive->sequence)
 
 (define (range-from-to-inclusive->sequence r [step #f])
   (define start (range-from-to-inclusive-start r))
@@ -507,6 +516,12 @@
   (range-sequence start (step->inc step) cont?))
 
 (define (range-from-to-inclusive->list r)
+  (define start (range-from-to-inclusive-start r))
+  (define end (range-from-to-inclusive-end r))
+  (for/list ([i (in-inclusive-range start end)])
+    i))
+
+(define (range-from-to-inclusive->treelist r)
   (define start (range-from-to-inclusive-start r))
   (define end (range-from-to-inclusive-end r))
   (for/treelist ([i (in-inclusive-range start end)])
@@ -686,15 +701,18 @@
            (not other-upper?)
            (= point other-point))))
 
-(define/method (Range.contains r i)
-  (check-range who r)
-  (check-int who i)
+(define (range-contains? r i)
   (define-values (start in-start? end in-end?)
     (range-explode r))
   (and (bound<? start in-start?
                 i #f)
        (bound<? i #t
                 end (not in-end?))))
+
+(define/method (Range.contains r i)
+  (check-range who r)
+  (check-int who i)
+  (range-contains? r i))
 
 (define (range-encloses? r other-r)
   (define-values (start in-start? end in-end?)
@@ -1047,9 +1065,22 @@
                pos
                #,(if step-expr #'step #''1))))])
 
-(define/method (Range.to_list r)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
-  (check-list-range who r)
+(define (list-range->list r)
   (cond
     [(range-from-to? r) (range-from-to->list r)]
     [else (range-from-to-inclusive->list r)]))
+
+(define (list-range->treelist r)
+  (cond
+    [(range-from-to? r) (range-from-to->treelist r)]
+    [else (range-from-to-inclusive->treelist r)]))
+
+(define/method (Range.to_list r)
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (check-list-range who r)
+  (list-range->treelist r))
+
+(define-for-syntax get-treelist-static-infos #f)
+
+(define-for-syntax (install-get-treelist-static-infos! get-static-infos)
+  (set! get-treelist-static-infos get-static-infos))
