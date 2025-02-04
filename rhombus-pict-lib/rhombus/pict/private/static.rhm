@@ -38,6 +38,8 @@ export:
     rename:
       StaticPict_public as StaticPict
 
+  PictIdentity
+
   nothing
 
   text
@@ -79,6 +81,7 @@ module private:
     set_switch
     set_animate
     genident
+    PictIdentity
     METHOD
     do_convert
 
@@ -108,15 +111,27 @@ def empty_instances = []
 
 annot.delayed_declare SnapshotPict
 
-class PictIdentity(mutable gen):
+class PictIdentity(mutable desc):
+  opaque
   implements Printable
   override describe(mode, recur):
     PrintDesc.list("PictIdentity(",
                    [recur(Equatable.identity_hash(this))],
                    ")")
+  method description():
+    let base :~ List:
+      recur loop (desc = desc) :~ List:
+        match desc
+        | #false: []
+        | desc :: String: [repr(desc)]
+        | desc :: PictIdentity: loop(desc.desc)
+        | [d, ...]: List.append(loop(d), ...)
+        | ~else: [repr(desc)]
+    let me = to_string(Equatable.identity_hash(this))
+    base ++ [me]
 
-fun genident():
-  PictIdentity(#false)
+fun genident(desc = #false):
+  PictIdentity(desc)
 
 expr.macro 'METHOD($name, $arg, ...)':
   'fun (this :~ _Pict): this . $name($arg, ...)'
@@ -142,9 +157,12 @@ class Pict():
   private implements Printable
   private override describe(mode, recur):
     PrintDesc.special(snapshot().draw_handle, ~mode: #'print,
-                      "Pict(...)")
+                      PrintDesc.list("Pict(",
+                                     description(),
+                                     ")"))
+  abstract method description() :~ String
 
-  abstract property _identity
+  abstract property identity
 
   abstract property width :~ Real
   abstract property height :~ Real
@@ -174,11 +192,9 @@ class Pict():
   abstract method ghost(do_ghost = #true) :~ Pict
   abstract method refocus(to_p :: Pict) :~ Pict
 
-  abstract protected method
-  | _pad(amt :: Real) :~ Pict
-  | _pad(h_amt :: Real, v_amt :: Real) :~ Pict
-  | _pad(left_amt :: Real, top_amt :: Real,
-         right_amt :: Real, bottom_amt :: Real) :~ Pict
+  abstract protected method _pad(left_amt :: Real, top_amt :: Real,
+                                 right_amt :: Real, bottom_amt :: Real,
+                                 desc) :~ Pict
   method pad(around :: Real = 0,
              ~horiz: horiz :: Real = around,
              ~vert: vert :: Real = around,
@@ -186,15 +202,18 @@ class Pict():
              ~top: top :: Real = vert,
              ~right: right :: Real = horiz,
              ~bottom: bottom :: Real = vert) :~ Pict:
-    _pad(left, top, right, bottom)
+    _pad(left, top, right, bottom, #false)
 
   method translate(dx :: Real, dy :: Real) :~ Pict:
     if dy .= 0
-    | _pad(dx, 0, -dx, 0)
+    | _pad(dx, 0, -dx, 0, #false)
     | // can't use `pad`, because we don't want to change the ascent or descent
       pin(this,
           ~on: blank(~width: width, ~height: height, ~ascent: ascent, ~descent: descent),
           ~at: Find.abs(dx, dy))
+
+  method set_description(desc :: String) :~ Pict:
+    _pad(0, 0, 0, 0, desc)
 
   abstract method
   | scale(amt :: Real) :~ Pict
@@ -263,7 +282,7 @@ class Pict():
     let (p, _) = _replace(fun (p): p,
                           fun (p): p,
                           fun (c): c,
-                          Map.by(===){ from._identity : to })
+                          Map.by(===){ from.identity : to })
     p
 
   method configure(key, val) :~ Pict:
@@ -279,8 +298,8 @@ class Pict():
                                _children, _dependencies, _config,
                                _rebuild):
     cond
-    | _identity in subst:
-        values(subst[_identity], subst)
+    | identity in subst:
+        values(subst[identity], subst)
     | ~else:
         let new = pre_adjuster(this)
         cond
@@ -292,8 +311,8 @@ class Pict():
                     error.annot("Pict"),
                     error.val(~label: "function", pre_adjuster),
                     error.val(~label: "result", new))
-            let new = Pict._identify_as(new, _identity)
-            values(new, subst ++ { _identity: new })
+            let new = Pict._identify_as(new, identity)
+            values(new, subst ++ { identity: new })
         | ~else:
             let (new, subst :~ Map):
               match  _dependencies || _children:
@@ -343,19 +362,19 @@ class Pict():
                       error.annot("Pict"),
                       error.val(~label: "function", adjuster),
                       error.val(~label: "result", new))
-              let new = Pict._identify_as(new, _identity)
-              values(new, subst ++ { _identity: new })
+              let new = Pict._identify_as(new, identity)
+              values(new, subst ++ { identity: new })
 
   abstract protected method _identify_as(identity)
 
   method find_rebuilt(p :: Pict) :~ maybe(Pict):
-    if p._identity == _identity
+    if p.identity == identity
     | this
     | for any (c in children):
         c.find_rebuilt(p)
 
 class StaticPict(private _handle,
-                 private _identity_f,
+                 private _identity_f :~ PictIdentity,
                  private _children :~ Pict || List,
                  private _dependencies :~ maybe(List),
                  private _config :~ maybe(Map),
@@ -372,8 +391,10 @@ class StaticPict(private _handle,
   | (): super()(rkt.blank(), genident(), [], #false, #false, empty_instances, #false, {})
   | (children, rebuild): super()(rkt.blank(), genident(), children, #false, #false, empty_instances, rebuild, {})
 
+  override method description(): _identity_f.description()
+
   property handle: _handle
-  override property _identity: _identity_f
+  override property identity: _identity_f
   override property width: rkt.#{pict-width}(_handle)
   override property height: rkt.#{pict-height}(_handle)
   override property ascent: rkt.#{pict-ascent}(_handle)
@@ -452,15 +473,12 @@ class StaticPict(private _handle,
                 error.val(~label: "pict", to_p),
                 error.val(~label: "within pict", this))
 
-  override method
-  | _pad(amt :: Real):
-      static_pict(rkt.inset(_handle, amt), this, _instances, METHOD(_pad, amt))
-  | _pad(h_amt :: Real, v_amt :: Real):
-      static_pict(rkt.inset(_handle, h_amt, v_amt), this, _instances, METHOD(_pad, h_amt, v_amt))
-  | _pad(left :: Real, top :: Real,
-         right :: Real, bottom :: Real):
-      static_pict(rkt.inset(_handle, left, top, right, bottom), this, _instances,
-                  METHOD(_pad, left, top, right, bottom))
+  override method _pad(left :: Real, top :: Real,
+                       right :: Real, bottom :: Real,
+                       desc):
+    static_pict(rkt.inset(_handle, left, top, right, bottom), this, _instances,
+                METHOD(_pad, left, top, right, bottom, desc),
+                ~desc: desc || this.identity)
 
   override method drop_baseline(amt :: Real) :~ Pict:
     static_pict(rkt_adjust_ascent_descent(_handle, 0, -amt), this, _instances,
@@ -559,14 +577,16 @@ fun static_pict(handle, children, instances, rebuild = #false,
                 ~dependencies: dependencies = #false,
                 ~config: config = #false,
                 ~metadata: metadata = {},
-                ~identity: identity = genident()) :~ StaticPict:
+                ~desc: desc = match children | s :: _StaticPict: s._identity_f | ~else: #false,
+                ~identity: identity = genident(desc)) :~ StaticPict:
   _StaticPict()(handle, identity, children, dependencies, config, instances, rebuild, metadata)
 
-def mutable do_convert = (fun (p): error("convert not ready"))
+def mutable do_convert = (fun (_, ...): error("convert not ready"))
 fun convert(p :~ List.of(Pict), epoch, duration, combine, non_sustain_combine = combine,
             ~dependencies: dependencies = #false,
-            ~rebuild: rebuild = #false) :~ Pict:
-  do_convert(p, epoch, duration, combine, non_sustain_combine, dependencies, #false, rebuild)
+            ~rebuild: rebuild = #false,
+            ~desc: desc = #false) :~ Pict:
+  do_convert(p, epoch, duration, combine, non_sustain_combine, dependencies, #false, desc, rebuild)
 fun set_convert(proc):
   do_convert := proc
 
@@ -584,7 +604,12 @@ class NothingPict():
   extends StaticPict
   constructor (): super()()
 
-  override property _identity: #false
+  private implements Printable
+  private override describe(mode, recur): "NothingPict()"
+
+  override method description(): "nothing"
+
+  override property identity: #false
   override property width: 0
   override property height: 0
   override property ascent: 0
@@ -611,11 +636,10 @@ class NothingPict():
   override method refocus(to_p :: Pict):
     error(~who: #'refocus, "cannot refocus nothing")
 
-  override method
-  | _pad(amt :: Real): this
-  | _pad(h_amt :: Real, v_amt :: Real): this
-  | _pad(left_amt :: Real, top_amt :: Real,
-         right_amt :: Real, bottom_amt :: Real): this
+  override method _pad(left_amt :: Real, top_amt :: Real,
+                       right_amt :: Real, bottom_amt :: Real,
+                       desc):
+    this
 
   override method drop_baseline(amt :: Real): this
   override method drop_topline(amt :: Real): this
@@ -675,7 +699,7 @@ fun static_instance([p :: Pict, ...], as_p :: _StaticPict,
   if as_p == nothing
   | as_p
   | let handle: rkt.inset(as_p.handle, 0) // fresh identity
-    static_pict(handle, as_p, as_p._instances ++ [Pair(p._identity, handle), ...], rebuild,
+    static_pict(handle, as_p, as_p._instances ++ [Pair(p.identity, handle), ...], rebuild,
                 ~identity: identity,
                 ~dependencies: dependencies,
                 ~config: config)
@@ -685,7 +709,7 @@ fun find_instance(p :: _StaticPict, q :~ Pict):
     for any (inst in instances):
       match inst
       | Pair(key, handle):
-          key === q._identity && handle
+          key === q.identity && handle
       | ~else:
           loop(inst)
 
@@ -706,6 +730,7 @@ fun beside(~sep: sep ::Real = 0,
         nothing
     | [p]: p
     | [p :: _StaticPict, ...]:
+        let desc = ["beside", p.identity, ...]
         let children = [p, ...]
         let all_instances = [p._instances, ...]
         let rkt_append:
@@ -729,9 +754,12 @@ fun beside(~sep: sep ::Real = 0,
             for values(hand = g_hand) (p_hand in [p.handle, ...],
                                        g in gs):
               rkt.#{pin-under}(hand, g, rkt.#{lt-find}, p_hand)
-        static_pict(new_handle, children, all_instances, retry)
-    | ps:
-        convert(ps, epoch, duration, fun(ps, dt, n): retry(ps))
+        static_pict(new_handle, children, all_instances, retry,
+                    ~desc: desc)
+    | ps && [p :~ Pict, ...]:
+        let desc = ["beside", p.identity, ...]
+        convert(ps, epoch, duration, fun(ps, dt, n): retry(ps),
+                ~desc: desc)
 
 namespace beside:
   export:
@@ -759,6 +787,7 @@ fun stack(~sep: sep :: Real = 0,
         nothing
     | [p]: p
     | [p :: _StaticPict, ...]:
+        let desc = ["stack", p.identity, ...]
         let children = [p, ...]
         let all_instances = [p._instances, ...]
         let new_handle:
@@ -778,9 +807,12 @@ fun stack(~sep: sep :: Real = 0,
                                        g in [g, ...]):
               rkt.#{pin-under}(hand, g, rkt.#{lt-find}, p_hand)
         static_pict(new_handle, children, all_instances,
-                    fun (ps): retry(ps, dt, n))
-    | ps:
-        convert(ps, epoch, duration, retry)
+                    fun (ps): retry(ps, dt, n),
+                    ~desc: desc)
+    | ps && [p :~ Pict, ...]:
+        let desc = ["stack", p.identity, ...]
+        convert(ps, epoch, duration, retry,
+                ~desc: desc)
 
 namespace stack:
   export:
@@ -809,6 +841,7 @@ fun overlay(~dx: dx :: maybe(Real) = #false,
         nothing
     | [p]: p
     | [p :: _StaticPict, ...]:
+        let desc = ["overlay", p.identity, ...]
         let children = [p, ...]
         let all_instances = [p._instances, ...]
         let ps = [p._handle, ...]
@@ -869,9 +902,12 @@ fun overlay(~dx: dx :: maybe(Real) = #false,
                                               i in 0..):
                                     let (x, y) = get_pt(p, i)
                                     rkt.inset(p, max_x - x, max_y - y, 0, 0))
-        static_pict(build(ps), children, all_instances, retry)
-    | ps:
-        convert(ps, epoch, duration, fun (ps, dt, n): retry(ps))
+        static_pict(build(ps), children, all_instances, retry,
+                    ~desc: desc)
+    | ps && [p :~ Pict, ...]:
+        let desc = ["overlay", p.identity, ...]
+        convert(ps, epoch, duration, fun (ps, dt, n): retry(ps),
+                ~desc: desc)
 
 namespace overlay:
   export:
@@ -946,14 +982,16 @@ namespace overlay:
 
 fun text(content :: String,
          ~font: font :: draw.Font = default_font) :~ Pict:
-  static_pict(rkt.text(content, font.handle), [], empty_instances)
+  static_pict(rkt.text(content, font.handle), [], empty_instances,
+              ~desc: content)
 
 fun blank(size = 0,
           ~width: width :: Real = size,
           ~height: height :: Real = size,
           ~ascent: ascent :: Real = height,
           ~descent: descent :: Real = 0) :~ StaticPict:
-  static_pict(rkt.blank(width, height, ascent, descent), [], empty_instances)
+  static_pict(rkt.blank(width, height, ascent, descent), [], empty_instances,
+              ~desc: "blank")
 
 fun make_dc_pict(draw_it, w, h, a, d, line, line_width, fill):
   rkt.dc(fun (dc_handle, dx, dy):
@@ -1041,7 +1079,8 @@ fun extract_auto_sizes(around, width, height, resize):
   values(resize(w, h),
          resize(h, w))
 
-fun do_around(~around: around,
+fun do_around(~desc: desc,
+              ~around: around,
               ~width: width,
               ~height: height,
               ~resize: resize,
@@ -1066,8 +1105,9 @@ fun do_around(~around: around,
                 | rkt.#{cc-superimpose}(r, around._handle)
                 | rkt.#{cc-superimpose}(around._handle, r)
               static_pict(new_handle, around, around._instances,
-                          fun (around): retry(around, #false, ghosted))
-          | ~else: static_pict(r, [], empty_instances)
+                          fun (around): retry(around, #false, ghosted),
+                          ~desc: desc)
+          | ~else: static_pict(r, [], empty_instances, ~desc: desc)
         match refocus
         | #false: r
         | #'around: (if around | r.refocus(around) | r)
@@ -1080,14 +1120,17 @@ fun do_around(~around: around,
                     fun ([around], dt, n): retry(around, refocus, #true),
                     ~dependencies: [around, refocus],
                     ~rebuild: fun ([around, refocus]):
-                                retry(around, refocus, #true))
+                                retry(around, refocus, #true),
+                    ~desc: desc)
         | ~else:
             convert([around], epoch, duration,
                     fun ([around], dt, n): retry(around, refocus, #false),
                     fun ([around], dt, n): retry(around, refocus, #true),
-                    ~rebuild: fun ([around]): retry(around, refocus, #false))
+                    ~rebuild: fun ([around]): retry(around, refocus, #false),
+                    ~desc: desc)
 
-fun do_rectangle(~around: around,
+fun do_rectangle(~desc: desc,
+                 ~around: around,
                  ~width: width,
                  ~height: height,
                  ~resize: resize,
@@ -1099,7 +1142,8 @@ fun do_rectangle(~around: around,
                  ~refocus: refocus,
                  ~epoch: epoch,
                  ~duration: duration):
-  do_around(~around: around,
+  do_around(~desc: desc,
+            ~around: around,
             ~width: width,
             ~height: height,
             ~resize: resize,
@@ -1150,7 +1194,8 @@ fun rectangle(~around: around :: maybe(Pict) = #false,
               ~refocus: refocus :: maybe(Refocus) = #'around,
               ~epoch: epoch :: EpochAlignment = #'center,
               ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  do_rectangle(~around: around,
+  do_rectangle(~desc: "rectangle",
+               ~around: around,
                ~width: width,
                ~height: height,
                ~resize: fun (d, other): d,
@@ -1173,7 +1218,8 @@ fun square(~around: around :: maybe(Pict) = #false,
            ~refocus: refocus :: maybe(Refocus) = #'around,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  do_rectangle(~around: around,
+  do_rectangle(~desc: "square",
+               ~around: around,
                ~width: size,
                ~height: size,
                ~resize: fun (d, other): math.max(d, other),
@@ -1186,7 +1232,8 @@ fun square(~around: around :: maybe(Pict) = #false,
                ~epoch: epoch,
                ~duration: duration)
 
-fun do_ellipse(~around: around,
+fun do_ellipse(~desc: desc,
+               ~around: around,
                ~width: width,
                ~height: height,
                ~resize: resize,
@@ -1200,7 +1247,8 @@ fun do_ellipse(~around: around,
                ~refocus: refocus,
                ~epoch: epoch,
                ~duration: duration):
-  do_around(~around: around,
+  do_around(~desc: desc,
+            ~around: around,
             ~width: width,
             ~height: height,
             ~resize: resize,
@@ -1248,7 +1296,8 @@ fun ellipse(~around: around :: maybe(Pict) = #false,
             ~refocus: refocus :: maybe(Refocus) = #'around,
             ~epoch: epoch :: EpochAlignment = #'center,
             ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  do_ellipse(~around: around,
+  do_ellipse(~desc: "ellipse",
+             ~around: around,
              ~width: width,
              ~height: height,
              ~resize: fun (d, other): d,
@@ -1275,7 +1324,8 @@ fun circle(~around: around :: maybe(Pict) = #false,
            ~refocus: refocus :: maybe(Refocus) = #'around,
            ~epoch: epoch :: EpochAlignment = #'center,
            ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-  do_ellipse(~around: around,
+  do_ellipse(~desc: "circle",
+             ~around: around,
              ~width: size,
              ~height: size,
              ~resize: fun (d, other): math.max(d, other),
@@ -1318,7 +1368,8 @@ fun triangle(~around: around :: maybe(Pict) = #false,
              ~refocus: refocus :: maybe(Refocus) = #'around,
              ~epoch: epoch :: EpochAlignment = #'center,
              ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
-   do_around(~around: around,
+   do_around(~desc: "triangle",
+             ~around: around,
              ~width: width,
              ~height: height,
              ~resize: fun (d, other): math.max(d, other),
@@ -1339,6 +1390,7 @@ fun bitmap(path :: Path || String) :~ Pict:
   static_pict(rkt.bitmap(path), [], empty_instances)
 
 fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
+       ~desc: desc = "dc",
        ~width: width :: Real,
        ~height: height :: Real,
        ~ascent: ascent :: Real = height,
@@ -1355,7 +1407,8 @@ fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
                            line_width,
                            fill),
               [],
-              empty_instances)
+              empty_instances,
+              ~desc: desc)
 
 // ------------------------------------------------------------
 
@@ -1419,7 +1472,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
 
   method start_in(p :: Pict) :~ Int:
     fun loop (p :~ Pict, delta):
-      if p._identity == q._identity
+      if p.identity == q.identity
       | delta
       | for any (c: p.children,
                  start: (p :~ _Pict)._children_starts):
@@ -1650,7 +1703,7 @@ fun connect(~on: p :: Pict,
       && (_Find.is_animated(from) || _Find.is_animated(to))
     | pict_animate(fun (n, ~deps: [p]): p, [p], 0 /* extent */)
     | p
-  recur retry(p = p, label = label, from :~ Find = from, to :~ Find = to, dt = 0, n = 0):
+  recur retry(p :~ Pict = p, label = label, from :~ Find = from, to :~ Find = to, dt = 0, n = 0):
     let label = (label != nothing) && label
     let children = [p] ++ if label | [label] | []
     let dependencies = children ++ [from, to]
@@ -1658,6 +1711,7 @@ fun connect(~on: p :: Pict,
       if label
       | fun ([p, label, from, to]): retry(p, label, from, to, dt, n)
       | fun ([p, from, to]): retry(p, #false, from, to, dt, n)
+    let desc: p.identity
     match [p, label]
     | [_ :: NothingPict, _]:
         nothing
@@ -1700,7 +1754,8 @@ fun connect(~on: p :: Pict,
                         children,
                         p._instances ++ (if label_handle | _StaticPict._instances(label) | []),
                         ~dependencies: dependencies,
-                        rebuild)
+                        rebuild,
+                        ~desc: desc)
         | ~else:
             if find_mode == #'maybe
             | p
@@ -1713,7 +1768,8 @@ fun connect(~on: p :: Pict,
                 fun (ps :~ List, dt, n): retry(ps[0], label && ps[1], from, to, 0, 0),
                 fun (ps :~ List, dt, n): ps[0],
                 ~dependencies: dependencies,
-                ~rebuild: rebuild)
+                ~rebuild: rebuild,
+                ~desc: desc)
 
 def mutable switch = #false
 fun set_switch(proc):
@@ -1775,6 +1831,7 @@ fun pin(q :: Pict,
           | [p, _ :: NothingPict]:
               p
           | [p :: _StaticPict, q :: _StaticPict]:
+              let desc = ["pin", p.identity, q.identity]
               let (at_x, at_y): at.maybe_in(p, dt, n)
               when !at_x && find_mode == #'always
               | error(~who: #'pin,
@@ -1793,14 +1850,17 @@ fun pin(q :: Pict,
                             [p, q],
                             [p._instances, q._instances],
                             ~dependencies: [p, q, at, using],
-                            fun ([p, q, at, using]): pin_on(p, q, at, using, time, dt))
+                            fun ([p, q, at, using]): pin_on(p, q, at, using, time, dt),
+                            ~desc: desc)
               | p
-          | [p, q]:
+          | [p :~ Pict, q :~ Pict]:
+              let desc = ["pin", p.identity, q.identity]
               convert([p, q], epoch, duration,
                       retry,
                       ~dependencies: [p, q, at, using],
                       ~rebuild: fun ([p, q, at, using]):
-                                  pin_on(p, q, at, using, time, dt))
+                                  pin_on(p, q, at, using, time, dt),
+                      ~desc: desc)
 
 // ------------------------------------------------------------
 
@@ -1856,7 +1916,10 @@ fun table(rows :: List.of(List.of(Pict)),
       let r = build(picts)
       if !hline && !vline && !line_c
       | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...], build)
-        p._pad(& if ins is_a List | ins | [ins])
+        match ins
+        | [h, v]: p._pad(h, v, h, v, #false)
+        | [l, t, r, b]: p._pad(l, t, r, b, #false)
+        | ~else: p._pad(ins, ins, ins, ins, #false)
       | let picts = [& picts]
         let col_length = rows.length()
         let ws:

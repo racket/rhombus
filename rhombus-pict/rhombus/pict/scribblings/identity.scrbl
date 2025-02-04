@@ -10,11 +10,14 @@
 @title(~tag: "identity"){Pict Findable and Replaceable Identity}
 
 Every predefined pict constructor or update method creates a pict that
-has a fresh identity. The @rhombus(==) operation on picts compares them
-by this identity. As noted in @secref("static-pict"), pict identity can
-be used to find or replace a pict @rhombus(p, ~var) within another pict
+has a fresh identity for the purpose of 
+to find or replace a pict @rhombus(p, ~var) within another pict
 @rhombus(q, ~var) when @rhombus(q, ~var) is constructed from
-@rhombus(p, ~var). The @deftech{findable children} of a pict, as reported by the
+@rhombus(p, ~var) (as introduced in @secref("static-pict")).
+@margin_note{The @rhombus(==) operation on picts @emph{does not} compare
+picts by this identity. Use @rhombus(Pict.identity) to extract a pict's
+identity as used for finding it in another pict.}
+The @deftech{findable children} of a pict, as reported by the
 @rhombus(Pict.children) property, are the immediate picts of
 @rhombus(q, ~var) that were used to construct it, and recurring through
 @rhombus(Pict.children) properties from @rhombus(q, ~var) reaches all

@@ -412,19 +412,28 @@
 }
 
 @doc(
-  method (pict :: Pict).epoch_metadata(i :: Int) :: Map
-  method (pict :: Pict).epoch_set_metadata(i :: Int,
-                                           metadata :: Map) :: Pict
+  property (pict :: Pict).identity :: PictIdentity
+  class PictIdentity():
+    ~no_constructor
+  method (ident :: PictIdentity).description() :: List.of(String)
+  method (pict :: Pict).set_description(desc :: Any) :: Pict
+  method (pict :: Pict).description() :: List.of(String)
 ){
 
- Gets metadata registered for an epoch within a pict, or returns a
- @tech{pict} that is like @rhombus(pict) but with the given metadata for
- the given epoch.
+ The @rhombus(Pict.identity) property returns an object representing the
+ identity of a pict for the purpose of finding it in other picts. See
+ @secref("identity") for more information about pict identity.
 
- When picts are combined through operations like @rhombus(beside) or
- @rhombus(overlay), the combination's metadata is formed by merging
- metadata maps from the combined picts, and later picts in the
- combination take precedence.
+ An identity has a description that is used by @rhombus(to_string) for a
+ pict, which can be helpful for debugging. A pict's description is
+ normally synthesized automatically, but it can be configured through
+ @rhombus(Pict.set_description). A description provided to
+ @rhombus(Pict.set_description) is most useful as a string, another
+ pict's identity, a list of such values, or @rhombus(#false) to suppress
+ a debugging description.
+
+ The @rhombus(Pict.description) method is a shorthand for getting the
+ description of @rhombus(pict)'s identity.
 
 }
 
