@@ -1544,7 +1544,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
 
 def nth_ok:
   let (mask, req_kws, allow_kws) = Function.arity(rkt.#{lt-find})
-  !allow_kws || allow_kws!!.contains(#'~nth)
+  !allow_kws || (allow_kws!!).contains(#'~nth)
 
 fun offset(proc, dx, dy, dx_w, dy_h):
   fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1), nth):
