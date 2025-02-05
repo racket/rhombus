@@ -33,7 +33,8 @@
          "treelist.rkt"
          "static-info.rkt"
          "rx-object.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         (submod "range.rkt" for-substring))
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -454,11 +455,17 @@
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (string->immutable-string (make-string n c)))
 
+(define (substring/range who str r)
+  (check-readable-string who str)
+  (define-values (start end)
+    (range-canonical-start+end who "string" r str 0 (string-length str)))
+  (substring str start end))
+
 (define/method String.substring
   #:primitive (substring)
   #:static-infos ((#%call-result #,(get-string-static-infos)))
   (case-lambda
-    [(str start) (string->immutable-string (substring str start))]
+    [(str r) (string->immutable-string (substring/range who str r))]
     [(str start end) (string->immutable-string (substring str start end))]))
 
 (define/method String.append

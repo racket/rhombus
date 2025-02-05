@@ -16,7 +16,8 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "number.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         (submod "range.rkt" for-substring))
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -72,6 +73,10 @@
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
 
+(define (check-bytes who b)
+  (unless (bytes? b)
+    (raise-annotation-failure who b "Bytes")))
+
 (define/method (Bytes.get b i)
   #:primitive (bytes-ref)
   (bytes-ref b i))
@@ -102,11 +107,17 @@
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (bytes-length bstr))
 
+(define (subbytes/range who bstr r)
+  (check-bytes who bstr)
+  (define-values (start end)
+    (range-canonical-start+end who "byte string" r bstr 0 (bytes-length bstr)))
+  (subbytes bstr start end))
+
 (define/method Bytes.subbytes
   #:primitive (subbytes)
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (case-lambda
-    [(bstr start) (subbytes bstr start)]
+    [(bstr r) (subbytes/range who bstr r)]
     [(bstr start end) (subbytes bstr start end)]))
 
 (define-syntax (define-string stx)

@@ -62,11 +62,13 @@
 
  The @rhombus(RX.match_range) and @rhombus(RX.match_range_in) methods
  are like @rhombus(RX.match) and @rhombus(RX.match_in), but the resulting
- @rhombus(RXMatch, ~annot) object reports @rhombus(Range) results instead
- of @rhombus(String) or @rhombus(Bytes) results. Range results are in
+ @rhombus(RXMatch, ~annot) object reports @rhombus(Range, ~annot) results instead
+ of @rhombus(String, ~annot) or @rhombus(Bytes, ~annot) results. Range results are in
  terms of the start of the input, so if @rhombus(start) is not
  @rhombus(0), matching ranges will have only values of @rhombus(start)
- and greater.
+ and greater. Such ranges can be used with @rhombus(String.substring)
+ or @rhombus(Bytes.subbytes) to obtain results that would have been
+ produced by @rhombus(RX.match) and @rhombus(RX.match_in).
 
  The @rhombus(RX.is_match) and @rhombus(RX.is_match_in) methods are like
  @rhombus(RX.match) and @rhombus(RX.match_in), but report just a boolean

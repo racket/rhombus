@@ -118,17 +118,25 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
+  method (bstr :: Bytes).subbytes(rge :: Range)
+    :: MutableBytes
   method (bstr :: Bytes).subbytes(start :: NonnegInt,
-                                  end :: NonnegInt = Bytes.length(bstr))
+                                  end :: NonnegInt)
     :: MutableBytes
 ){
 
- Returns the substring of @rhombus(bstr) from @rhombus(start) (inclusive)
- to @rhombus(end) (exclusive).
+ When given two arguments, returns the substring of @rhombus(bstr)
+ from @rhombus(start) (inclusive) to @rhombus(end) (exclusive).
+
+ When given one argument, @rhombus(rge) is used to derive
+ @rhombus(start) and @rhombus(end) as in @rhombus(String.substring).
 
 @examples(
   #"hello".subbytes(2, 4)
-  #"hello".subbytes(2)
+  #"hello".subbytes(2..=4)
+  #"hello".subbytes(2..)
+  #"hello".subbytes(..4)
+  #"hello".subbytes(..)
 )
 
 }
