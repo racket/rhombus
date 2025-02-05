@@ -499,16 +499,28 @@ it supplies its elements in order.
 }
 
 @doc(
-  method (lst :: List).sublist(n :: NonnegInt, m :: NonnegInt) :: List
+  method (lst :: List).sublist(rge :: Range)
+    :: List
+  method (lst :: List).sublist(start :: NonnegInt,
+                               end :: NonnegInt)
+    :: List
 ){
 
- Returns a sublist of @rhombus(lst) containing elements from index
- @rhombus(n) (inclusive) to @rhombus(m) (exclusive), equivalent to
- @rhombus(lst.drop(n).take(m-n)).
+ When given two arguments, returns a sublist of @rhombus(lst)
+ containing elements from index @rhombus(start) (inclusive) to
+ @rhombus(end) (exclusive), equivalent to
+ @rhombus(lst.drop(start).take(end - start)).
+
+ When given one argument, @rhombus(rge) is used to derive
+ @rhombus(start) and @rhombus(end) as in @rhombus(String.substring).
 
 @examples(
   [1, 2, 3, 4, 5].sublist(1, 3)
   [1, 2, 3, 4, 5].drop(1).take(3-1)
+  [1, 2, 3, 4, 5].sublist(1..=3)
+  [1, 2, 3, 4, 5].sublist(1..)
+  [1, 2, 3, 4, 5].sublist(..3)
+  [1, 2, 3, 4, 5].sublist(..)
 )
 
 

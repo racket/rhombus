@@ -31,7 +31,7 @@ block:
     List.drop_last(lst, n) ~method
     List.take(lst, n) ~method
     List.take_last(lst, n) ~method
-    List.sublist(lst, n, m) ~method
+    List.sublist(lst, start, [end]) ~method
     List.sort(lst, [is_less]) ~method
     List.iota(n)
     List.to_list(lst) ~method
@@ -435,8 +435,16 @@ check:
   List.take([1, 2, 3], 2) ~is [1, 2]
   [1, 2, 3].take_last(2) ~is [2, 3]
   List.take_last([1, 2, 3], 2) ~is [2, 3]
-  [1, 2, 3, 4, 5, 6].sublist(2, 5) ~is [3, 4, 5]
-  List.sublist([1, 2, 3, 4, 5, 6], 2, 5) ~is [3, 4, 5]
+  [1, 2, 3, 4, 5, 6].sublist(2, 4) ~is [3, 4]
+  List.sublist([1, 2, 3, 4, 5, 6], 2, 4) ~is [3, 4]
+  [1, 2, 3, 4, 5, 6].sublist(2..=4) ~is [3, 4, 5]
+  List.sublist([1, 2, 3, 4, 5, 6], 2..=4) ~is [3, 4, 5]
+  [1, 2, 3, 4, 5, 6].sublist(2..) ~is [3, 4, 5, 6]
+  List.sublist([1, 2, 3, 4, 5, 6], 2..) ~is [3, 4, 5, 6]
+  [1, 2, 3, 4, 5, 6].sublist(..4) ~is [1, 2, 3, 4]
+  List.sublist([1, 2, 3, 4, 5, 6], ..4) ~is [1, 2, 3, 4]
+  [1, 2, 3, 4, 5, 6].sublist(..) ~is [1, 2, 3, 4, 5, 6]
+  List.sublist([1, 2, 3, 4, 5, 6], ..) ~is [1, 2, 3, 4, 5, 6]
 
 check:
   [1, 2, 3].sort() ~is [1, 2, 3]

@@ -59,6 +59,9 @@
            list-range->list
            list-range->treelist))
 
+(module+ for-substring
+  (provide range-canonical-start+end))
+
 (module+ for-info
   (provide (for-syntax (rename-out [get-treelist-static-infos indirect-get-treelist-static-infos])
                        install-get-treelist-static-infos!)))
@@ -633,6 +636,45 @@
     [(range-to-inclusive? r)
      (unsafe-range-to (add1 (range-to-inclusive-end r)))]
     [else r]))
+
+;; used by `substring` and alike, resembling `raise-range-error`
+(define (range-canonical-start+end who type r in-val in-start in-end)
+  (define-values (start end)
+    (cond
+      [(range-from-to? r)
+       (values (range-from-to-start r)
+               (range-from-to-end r))]
+      [(range-from-to-inclusive? r)
+       (values (range-from-to-inclusive-start r)
+               (add1 (range-from-to-inclusive-end r)))]
+      [(range-from? r)
+       (values (range-from-start r) in-end)]
+      [(range-from-exclusive-to? r)
+       (values (add1 (range-from-exclusive-to-start r))
+               (range-from-exclusive-to-end r))]
+      [(range-from-exclusive-to-inclusive? r)
+       (values (add1 (range-from-exclusive-to-inclusive-start r))
+               (add1 (range-from-exclusive-to-inclusive-end r)))]
+      [(range-from-exclusive? r)
+       (values (add1 (range-from-exclusive-start r)) in-end)]
+      [(range-to? r)
+       (values in-start (range-to-end r))]
+      [(range-to-inclusive? r)
+       (values in-start (add1 (range-to-inclusive-end r)))]
+      [(range-full? r)
+       (values in-start in-end)]
+      [else
+       (raise-annotation-failure who r "Range")]))
+  (unless (and (in-start . <= . start)
+               (end . <= . in-end))
+    (raise-arguments-error* who rhombus-realm
+                            (string-append "derived range is invalid"
+                                           ";\n derived range must be enclosed by valid range")
+                            "given range" r
+                            "derived range" (unsafe-range-from-to start end)
+                            "valid range" (unsafe-range-from-to in-start in-end)
+                            type in-val))
+  (values start end))
 
 ;; NOTE The following implementation borrows from Rebellion, but does
 ;; so in a way that doesn't use cuts and therefore doesn't allocate.

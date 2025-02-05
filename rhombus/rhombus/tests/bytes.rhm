@@ -42,8 +42,11 @@ block:
     )
     #"hello".append(#" world") ~is_now #"hello world"
     #"hello".append(#" world", #" and bye") ~is_now #"hello world and bye"
-    #"hello".subbytes(1) ~is_now #"ello"
-    #"hello".subbytes(1, 4) ~is_now #"ell"
+    #"hello".subbytes(1, 3) ~is_now #"el"
+    #"hello".subbytes(1..=3) ~is_now #"ell"
+    #"hello".subbytes(1..) ~is_now #"ello"
+    #"hello".subbytes(..3) ~is_now #"hel"
+    #"hello".subbytes(..) ~is_now #"hello"
     #"hello".copy() ~is_now #"hello"
     #"hello".copy() == #"hello" ~is #false
     (block:
@@ -70,8 +73,11 @@ check:
   dynamic(#"hello").append(#" world") ~is_now #"hello world"
   dynamic(#"hello").append(#" world", #" and bye") ~is_now #"hello world and bye"
   dynamic(#"hello").get(0) ~is Byte#"h"
-  dynamic(#"hello").subbytes(1) ~is_now #"ello"
-  dynamic(#"hello").subbytes(1, 4) ~is_now #"ell"
+  dynamic(#"hello").subbytes(1, 3) ~is_now #"el"
+  dynamic(#"hello").subbytes(1..=3) ~is_now #"ell"
+  dynamic(#"hello").subbytes(1..) ~is_now #"ello"
+  dynamic(#"hello").subbytes(..3) ~is_now #"hel"
+  dynamic(#"hello").subbytes(..) ~is_now #"hello"
   dynamic(#"hello").copy() ~is_now #"hello"
   (block:
      let s = #"hello".copy()
@@ -106,8 +112,11 @@ check:
 
 check:
   Bytes.length(#"hello") ~is 5
-  Bytes.subbytes(#"hello", 1) ~is_now #"ello"
-  Bytes.subbytes(#"hello", 1, 4) ~is_now #"ell"
+  Bytes.subbytes(#"hello", 1, 3) ~is_now #"el"
+  Bytes.subbytes(#"hello", 1..=3) ~is_now #"ell"
+  Bytes.subbytes(#"hello", 1..) ~is_now #"ello"
+  Bytes.subbytes(#"hello", ..3) ~is_now #"hel"
+  Bytes.subbytes(#"hello", ..) ~is_now #"hello"
   Bytes.copy(#"hello") ~is_now #"hello"
   Bytes.utf8_string(#"h\303\211llo") ~is "hÉllo"
   Bytes.utf8_string(#"h\303\211llo", #false, 3) ~is "llo"

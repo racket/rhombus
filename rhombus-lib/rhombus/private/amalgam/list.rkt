@@ -40,6 +40,7 @@
          (submod "comparable.rkt" for-builtin)
          "list-last.rkt"
          "maybe-list-tail.rkt"
+         (submod "range.rkt" for-substring)
          (submod "range.rkt" for-info))
 
 (provide (for-spaces (rhombus/namespace
@@ -1065,10 +1066,18 @@
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (treelist-drop-right l n))
 
-(define/method (List.sublist l start end)
+(define (treelist-sublist/range who lst r)
+  (check-treelist who lst)
+  (define-values (start end)
+    (range-canonical-start+end who "list" r lst 0 (treelist-length lst)))
+  (treelist-sublist lst start end))
+
+(define/method List.sublist
   #:primitive (treelist-sublist)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
-  (treelist-sublist l start end))
+  (case-lambda
+    [(lst r) (treelist-sublist/range who lst r)]
+    [(lst start end) (treelist-sublist lst start end)]))
 
 (define (raise-list-count who what l len n)
   (raise-arguments-error* who rhombus-realm
@@ -1136,9 +1145,17 @@
   #:primitive (mutable-treelist-drop-right!)
   (mutable-treelist-drop-right! l n))
 
-(define/method (MutableList.sublist l start end)
+(define (mutable-treelist-sublist!/range who lst r)
+  (check-mutable-treelist who lst)
+  (define-values (start end)
+    (range-canonical-start+end who "mutable list" r lst 0 (mutable-treelist-length lst)))
+  (mutable-treelist-sublist! lst start end))
+
+(define/method MutableList.sublist
   #:primitive (mutable-treelist-sublist!)
-  (mutable-treelist-sublist! l start end))
+  (case-lambda
+    [(lst r) (mutable-treelist-sublist!/range who lst r)]
+    [(lst start end) (mutable-treelist-sublist! lst start end)]))
 
 (define/method (List.remove l v)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
