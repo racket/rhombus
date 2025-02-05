@@ -1452,23 +1452,24 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
           dt,
           #false)
 
-  method
-  | in(p :: Pict):
-      in(p, 0, 0)
-  | in(p :: Pict, epoch :: Int, n :: Real.in(0, 1)):
-      let (x, y) = find(p, q, epoch, n)
-      if x
-      | values(x, y)
-      | error(~who: #'#{Find.in},
-              "cannot find pict",
-              error.val(~label: "pict", q),
-              error.val(~label: "in pict", p))
+  method in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
+            ~nth: nth :: NonnegInt || matching(#'unique) = #'unique):
+    let (x, y) = find(p, q, epoch, n, nth)
+    if x
+    | values(x, y)
+    | error(~who: #'#{Find.in},
+            if y
+            | "pict location is ambigious"
+            | "cannot find pict",
+            error.val(~label: "pict", q),
+            error.val(~label: "in pict", p))
 
-  method
-  | maybe_in(p :: Pict):
-      maybe_in(p, 0, 0)
-  | maybe_in(p :: Pict, epoch :: Int, n :: Real.in(0, 1)):
-      find(p, q, epoch, n)
+  method maybe_in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
+                  ~nth: nth :: NonnegInt || matching(#'unique) = #'unique):
+    let (x, y) = find(p, q, epoch, n, nth)
+    if x
+    | values(x, y)
+    | values(#false, #false)
 
   method start_in(p :: Pict) :~ Int:
     fun loop (p :~ Pict, delta):
@@ -1495,7 +1496,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
   method delay(dt :: Int) :~ Find:
     if is_animated
     | _Find(q,
-            fun (p, q, epoch, n): find(p, q, epoch - dt, n),
+            fun (p, q, epoch, n, nth): find(p, q, epoch - dt, n, nth),
             t_find_or_dt,
             #true)
     | this
@@ -1538,8 +1539,12 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
     right_baseline baseline_right
     right_bottom bottom_right
 
+def nth_ok:
+  let (mask, req_kws, allow_kws) = Function.arity(rkt.#{lt-find})
+  !allow_kws || allow_kws!!.contains(#'~nth)
+
 fun offset(proc, dx, dy, dx_w, dy_h):
-  fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1)):
+  fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1), nth):
     cond
     | q == nothing:
         #false
@@ -1553,30 +1558,47 @@ fun offset(proc, dx, dy, dx_w, dy_h):
           | let (l, t) = rkt.#{lt-find}(p_handle, q_handle)
             let (r, b) = rkt.#{rb-find}(p_handle, q_handle)
             values((r - l) * dx_w, (b - t) * dy_h)
+        fun fail(x :: Exn.Fail):
+          if x.message.contains("ambiguous")
+          | values(#false, #'ambigious)
+          | values(#false, #false)
         match q
         | q :: StaticPict:
             try:
               let q_handle = find_instance(p, q) || q.handle
-              let (x, y) = proc(p.handle, q_handle)
+              let (x, y):
+                if nth_ok
+                | proc(p.handle, q_handle, ~nth: nth)
+                | proc(p.handle, q_handle)
               let (dx_w, dy_h) = size_shift(p.handle, q_handle)
               values(x + dx + dx_w, y + dy + dy_h)
-              ~catch x:
-                values(#false, #false)
+              ~catch x :: Exn.Fail:
+                fail(x)
         | ~else:
             let q_handle = find_instance(p, q)
             if q_handle
-            | let (x, y) = proc(p.handle, q_handle)
-              let (dx_w, dy_h) = size_shift(p.handle, q_handle)
-              values(x + dx + dx_w, y + dy + dy_h)
+            | try:
+                let (x, y):
+                  if nth_ok
+                  | proc(p.handle, q_handle, ~nth: nth)
+                  | proc(p.handle, q_handle)
+                let (dx_w, dy_h) = size_shift(p.handle, q_handle)
+                values(x + dx + dx_w, y + dy + dy_h)
+                ~catch x :: Exn.Fail:
+                  fail(x)
             | values(#false, #false)
 
 fun abs(dx :: Real, dy :: Real, ~dt: dt :: Int = 0) :: Find:
-  _Find(#false, fun (p, q, epoch, n): values(dx, dy), dt, #false)
+  fun find (p, q, epoch, n, nth):
+    if nth == 0 || nth == #'unique
+    | values(dx, dy)
+    | values(#false, #false)
+  _Find(#false, find, dt, #false)
 
 fun animate(xy_proc :: Function.of_arity(2) || Function.of_arity(3),
             ~time_box: t_proc :: Function.of_arity(1) = fun (p): 0) :: Find:
   _Find(#false,
-        fun (p, q, epoch, n):
+        fun (p, q, epoch, n, nth):
           call_with_values(
             fun ():
               match xy_proc
@@ -1606,22 +1628,22 @@ fun interpolate(from :: Find,
                 to :: Find,
                 ~bend: bend :: Real.in(0, 1) -> Real.in(0, 1) = rkt.#{fast-middle}) :: Find:
   _Find(#false,
-        fun (p, q, epoch, n):
+        fun (p, q, epoch, n, nth):
           let i_n:
             cond
             | epoch < 0: 0
             | epoch >= 1: 1
             | ~else: bend(n)
           cond
-          | i_n .= 0: from.in(p, epoch, n)
-          | i_n .= 1: to.in(p, epoch, n)
+          | i_n .= 0: from.in(p, epoch, n, ~nth: nth)
+          | i_n .= 1: to.in(p, epoch, n, ~nth: nth)
           | ~else:
-              let (from_x, from_y) = from.maybe_in(p, epoch, n)
-              let (to_x, to_y) = to.maybe_in(p, epoch, n)
+              let (from_x, from_y) = from.maybe_in(p, epoch, n, ~nth: nth)
+              let (to_x, to_y) = to.maybe_in(p, epoch, n, ~nth: nth)
               if from_x && to_x
               | values(from_x * (1 - i_n) + to_x * i_n,
                        from_y * (1 - i_n) + to_y * i_n)
-              | values(#false, #false),
+              | values(#false, from_y || to_y),
         fun (p):
           from.start_in(p),
         #true)
@@ -1833,9 +1855,11 @@ fun pin(q :: Pict,
           | [p :: _StaticPict, q :: _StaticPict]:
               let desc = ["pin", p.identity, q.identity]
               let (at_x, at_y): at.maybe_in(p, dt, n)
-              when !at_x && find_mode == #'always
+              when !at_x && (at_y || find_mode == #'always)
               | error(~who: #'pin,
-                      "cannot find pict",
+                      if at_y
+                      | "pict location is ambigious"
+                      | "cannot find pict",
                       error.val(~label: "finder", at),
                       error.val(~label: "in pict", p))
               let (dx, dy) = using.in(q, dt, n)

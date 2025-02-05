@@ -100,16 +100,17 @@
 
 
 @doc(
-  method (finder :: Find).in(pict :: Pict) :: values(Real, Real)
-  method (finder :: Find).in(pict :: Pict,
-                             epoch :: Int, n :: RealIn(0, 1))
-    :: values(Real, Real)
+  method (finder :: Find).in(
+    pict :: Pict,
+    epoch :: Int = 0, n :: RealIn(0, 1) = 0,
+    ~nth: nth :: NonnegInt || matching(#'unique) = #'unique
+  ) :: values(Real, Real)
 ){
 
  Applies @rhombus(finder) to @rhombus(pict) to get an x-offset and
  y-offset. An exception is thrown is a needed component pict cannot be
- found in @rhombus(pict). Calling @rhombus(Find.in) with one argument
- is a shorthand for calling it with @rhombus(0) for the last two arguments.
+ found in @rhombus(pict) or if it is found at multiple locations
+ within @rhombus(pict).
 
  If @rhombus(pict) is an animated picture, then the search corresponds
  to finding within @rhombus(Pict.snapshot(pict, epoch, n)). When a finder for an
@@ -121,16 +122,16 @@
 
 
 @doc(
-  method (finder :: Find).maybe_in(pict :: Pict)
-    :: values(Real || False, Real || False)
-  method (finder :: Find).maybe_in(pict :: Pict,
-                                   epoch :: Int, n :: RealIn(0, 1))
-    :: values(Real || False, Real || False)
+  method (finder :: Find).maybe_in(
+    pict :: Pict,
+    epoch :: Int = 0, n :: RealIn(0, 1) = 0,
+    ~nth: nth :: NonnegInt || matching(#'unique) = #'unique
+  ) :: values(Real, Real)
 ){
 
  Like @rhombus(Find.in), but if a location cannot be found in
- @rhombus(pict), returns two @rhombus(#false)s instead of throwing an
- exception.
+ @rhombus(pict) of the the location is ambiguous, returns two
+ @rhombus(#false)s instead of throwing an exception.
 
 }
 
