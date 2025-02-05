@@ -287,7 +287,7 @@
  If @rhombus(rebuild_prompt) is true, then the result pict also has no
  @tech{replaceable dependencies}.
 
- See also @secref("identity").
+ See also @secref("identity") and @rhombus(Pict.blank).
 
 @examples(
   ~eval: pict_eval
@@ -318,6 +318,8 @@
  former works even without having to bind an intermediate variable if
  @rhombus(pict) is replaced with a more complex expression.
 
+ See also @rhombus(Pict.blank).
+
 @examples(
   ~eval: pict_eval
   ~repl:
@@ -328,6 +330,21 @@
 )
 
 }
+
+
+@doc(
+  method (pict :: Pict).blank(
+    ~rebuild_prompt: rebuild_prompt = #true
+  ) :: Pict
+){
+
+ Equivalent to
+ @rhombus(pict.ghost().launder(~rebuild_prompt: rebuild_prompt)) --- where
+ @rhombus(rebuild_prompt) defaults to @rhombus(#true), in contrast to the
+ @rhombus(#false) default for @rhombus(Pict.launder).
+
+}
+
 
 @doc(
   method (pict :: Pict).refocus(subpict :: Pict) :: Pict

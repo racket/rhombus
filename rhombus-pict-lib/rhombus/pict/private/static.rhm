@@ -192,6 +192,9 @@ class Pict():
   abstract method ghost(do_ghost = #true) :~ Pict
   abstract method refocus(to_p :: Pict) :~ Pict
 
+  method blank(~rebuild_prompt: rebuild_prompt = #true) :~ Pict:
+    this.launder(~rebuild_prompt: rebuild_prompt).ghost()
+
   abstract protected method _pad(left_amt :: Real, top_amt :: Real,
                                  right_amt :: Real, bottom_amt :: Real,
                                  desc) :~ Pict
@@ -209,7 +212,7 @@ class Pict():
     | _pad(dx, 0, -dx, 0, #false)
     | // can't use `pad`, because we don't want to change the ascent or descent
       pin(this,
-          ~on: blank(~width: width, ~height: height, ~ascent: ascent, ~descent: descent),
+          ~on: blank(),
           ~at: Find.abs(dx, dy))
 
   method set_description(desc :: String) :~ Pict:
