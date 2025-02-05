@@ -199,13 +199,13 @@ interface DC:
 
   property
   | transformation :: Transformation:
-      let Array([xx, yx, xy, yy, x0, y0], x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
+      let Array(Array(xx, yx, xy, yy, x0, y0), x, y, sx, sy, rot) =  rkt.send handle.#{get-transformation}()
       let t = Transformation(xx, yx, xy, yy, x0, y0)
       if x .= 0 && y .= 0 && sx .= 1 && sy .= 1 && rot >= 0
       | t
       | t.translate(x, y).scale(sx, sy).rotate(rot)
   | transformation := t :: Transformation:
-      rkt.send handle.#{set-transformation}(Array([t.xx, t.yx, t.yx, t.yy, t.x0, t.y0], 0, 0, 1, 1, 0))
+      rkt.send handle.#{set-transformation}(Array(Array(t.xx, t.yx, t.yx, t.yy, t.x0, t.y0), 0, 0, 1, 1, 0))
 
   property
   | layered_transformation :: LayeredTransformation:

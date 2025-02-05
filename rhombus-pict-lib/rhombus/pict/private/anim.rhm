@@ -25,6 +25,7 @@ import:
       set_animate
       set_switch
       genident
+      PictIdentity
       METHOD
       do_convert
   lib("pict/main.rkt") as rkt
@@ -75,7 +76,8 @@ fun animate(~deps: children :: List.of(Pict) = [],
                               || (Real.in(0, 1), ~deps: List.of(Pict), ~config: maybe(Map)) -> StaticPict),
             ~bend: bend :: Real.in(0, 1) -> Real.in(0, 1) = rkt.#{fast-middle},
             ~extent: extent :: NonnegReal = 0.5,
-            ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after) :~ Pict:
+            ~sustain_edge: sustain_edge :: matching(TimeOrder) = #'after,
+            ~desc: desc = #false) :~ Pict:
   fun call(i, children, config):
     let i = bend(i)
     match proc
@@ -91,7 +93,8 @@ fun animate(~deps: children :: List.of(Pict) = [],
            | fun (i, a, ...):
                call(i, [a, ...], #false),
            ~extent: extent,
-           ~sustain_edge: sustain_edge)
+           ~sustain_edge: sustain_edge,
+           ~desc: desc)
 
 fun rebuildable(~deps: children :: List.of(Pict) = [],
                 ~config: config :: maybe(Map) = #false,
@@ -145,7 +148,8 @@ fun animate_map(~deps: p :~ List.of(Pict),
                                     (~deps: List.of(StaticPict), Int, Real.in(0, 1)) -> Pict
                                       || (~deps: List.of(StaticPict), Int, Real.in(0, 1), ~config: maybe(Map)) -> Pict)
                                   )
-                    = #false) :~ Pict:
+                    = #false,
+                ~desc: desc = #false) :~ Pict:
   match !non_sustain_combine && p
   | [_ :: StaticPict, ...]:
       recur retry(children = p, config = config):
@@ -177,7 +181,7 @@ fun animate_map(~deps: p :~ List.of(Pict),
             call([child, ...], i, n, config)
         | fun (children, i, n):
             call(children, i, n, #false)
-      do_convert(p, epoch, duration, cvt(combine), cvt(non_sustain_combine || combine), #false, config, #false)
+      do_convert(p, epoch, duration, cvt(combine), cvt(non_sustain_combine || combine), #false, config, desc, #false)
 
 set_animate(fun (proc, children, n = 0.5):
               animate(proc, ~deps: children, ~extent: n))
@@ -358,7 +362,7 @@ class TransitionPictEpoch(epochs :~ List.of(PictEpoch),
 expr.macro 'AMETHOD($name, $arg, ...)':
   'fun (this :~ _AnimPict): this . $name($arg, ...)'
 
-class AnimPict(_identity_f,
+class AnimPict(_identity_f :~ PictIdentity,
                _epochs :~ List.of(PictEpoch),
                _epoch_extents :~ List.of(Real), // parallel to `_epochs`
                _duration_start :~ Int,  // index into `_epoch` for time box start
@@ -379,6 +383,8 @@ class AnimPict(_identity_f,
   extends Pict
   internal _AnimPict
 
+  override method description(): _identity_f.description()
+
   // If `_duration` is non-negative, then elements
   // `_duration_start` (inclusive) through `_duration_start+_duration` (exclusive)
   // must exist in `_epochs`. If `_duration` is 0, `_duration_start` must still exist.
@@ -386,7 +392,7 @@ class AnimPict(_identity_f,
   // `_duration_start+_duration` (inclusive) through `_duration_start` (exclusive)
   // must exist in `_epochs`.
 
-  override property _identity: _identity_f
+  override property identity: _identity_f
 
   override property width: _before.width
   override property height: _before.height
@@ -499,7 +505,8 @@ class AnimPict(_identity_f,
      ~config: config,
      proc,
      ~extent: extent :~ NonnegReal,
-     ~sustain_edge: sustain_edge):
+     ~sustain_edge: sustain_edge,
+     ~desc: desc):
       let has_config = config != #false
       recur rebuild(children_plus_config :~ List = children ++ (if config | [config] | [])):
         let (children, config):
@@ -509,7 +516,7 @@ class AnimPict(_identity_f,
           | values(children_plus_config, #false)
         let before :~ Pict = proc(0, & children_plus_config)
         let after :~ Pict = proc(1, & children_plus_config)
-        anim_pict(genident(),
+        anim_pict(genident(desc),
                   [ProcPictEpoch(proc, children_plus_config, before, after, extent, sustain_edge)],
                   [extent],
                   0,
@@ -537,7 +544,7 @@ class AnimPict(_identity_f,
                          ~dependencies: [p],
                          ~rebuild: fun ([p :~ Pict]): p)
       | static_instances(this, p,
-                         ~identity: genident(),
+                         ~identity: genident(_identity_f),
                          ~dependencies: [this],
                          ~rebuild: fun ([p :~ Pict]):
                                      p.snapshot(epoch, n, ~rebuild_prompt: #false))
@@ -558,13 +565,9 @@ class AnimPict(_identity_f,
           | animate_result(e.pict(0))
           | loop(n-1, e.after())
 
-  override method
-  | _pad(amt :: Real) :~ AnimPict:
-      _pad(amt, amt, amt, amt)
-  | _pad(horiz :: Real, vert :: Real) :~ AnimPict:
-      _pad(horiz, vert, horiz, vert)
-  | _pad(left :: Real, top :: Real, right :: Real, bottom :: Real) :~ AnimPict:
-      anim_pict_adjust(this, fun (p :~ Pict): p._pad(left, top, right, bottom))
+  override method _pad(left :: Real, top :: Real, right :: Real, bottom :: Real, desc) :~ AnimPict:
+    anim_pict_adjust(this, fun (p :~ Pict): p._pad(left, top, right, bottom, desc),
+                     ~identity: genident(desc || this._identity_f))
 
   override method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ AnimPict:
@@ -750,7 +753,7 @@ class AnimPict(_identity_f,
     if rebuild_prompt
     | anim_pict_like(anim_pict_adjust(this, fun (p :~ StaticPict): p.launder()),
                      ~children: [],
-                     ~identity: genident(),
+                     ~identity: genident(_identity_f),
                      ~rebuild: fun (p): p)
     | anim_pict_adjust(this, fun (p :~ StaticPict): p.launder(),
                        ~rebuild: METHOD(launder()))
@@ -899,10 +902,11 @@ fun anim_pict_like(this :~ _AnimPict,
 fun anim_pict_adjust(this :~ AnimPict,
                      ~dependencies: dependencies = #false,
                      adjust,
-                     ~rebuild: rebuild = adjust) :~ AnimPict:
+                     ~rebuild: rebuild = adjust,
+                     ~identity: identity = genident(this._identity_f)) :~ AnimPict:
   anim_pict_like(this,
                  ~identity:
-                   genident(),
+                   identity,
                  ~epochs:
                    let [e, ...] = this._epochs
                    [AdjustEpoch(e, adjust, this),
@@ -1187,7 +1191,7 @@ class CombinePictEpoch(combine,
       metadata ++ orig.metadata()
 
 private.set_convert(
-  fun (ps :~ List, ealign, dalign, combine, pad_combine, dependencies, config, rebuild_in):
+  fun (ps :~ List, ealign, dalign, combine, pad_combine, dependencies, config, desc, rebuild_in):
     // can assume that `nothing`s have been filtered out and `ps` is non-empty
     recur rebuild (ps :~ List = ps, config = config):
       let ([p :~ _AnimPict, ...] && [p0 :~ _AnimPict, & _], m_duration):
@@ -1198,7 +1202,7 @@ private.set_convert(
                           | p,
                         ~epoch: ealign,
                         ~duration: dalign)
-      anim_pict(genident(), for List (i in 0..p0._epochs.length()):
+      anim_pict(genident(desc), for List (i in 0..p0._epochs.length()):
                   let dt = i - p0._duration_start
                   CombinePictEpoch(combine, pad_combine, dt, [p, ...], [p._sustaining, ...], [p._epochs[i], ...]),
                 p0._epoch_extents,

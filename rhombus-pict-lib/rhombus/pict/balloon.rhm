@@ -70,7 +70,9 @@ fun pin(content :: Pict,
         cond
         | !at_x:
             if find_mode == #'always
-            | error(~who: #'#{balloon.pin}, "cannot find pict",
+            | let (x0, y0) = at.maybe_in(p, epoch, n, ~nth: 0)
+              error(~who: #'#{balloon.pin},
+                    if x0 | "pict location is ambgiuous" | "cannot find pict",
                     error.val(~label: "finder", at),
                     error.val(~label: "within pict", p))
             | p

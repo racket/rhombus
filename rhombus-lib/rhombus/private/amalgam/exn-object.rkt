@@ -11,6 +11,7 @@
          (submod "pair.rkt" for-static-info)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info)
+         (submod "string.rkt" static-infos)
          "annotation-failure.rkt"
          "name-root.rkt")
 
@@ -29,7 +30,7 @@
   #:class
   #:transparent
   #:fields
-  ([(message)]
+  ([(message) #,(get-string-static-infos)]
    [(marks continuation-marks)])
   #:namespace-fields
   (Fail
