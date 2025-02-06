@@ -14,6 +14,8 @@ import:
 
 export:
   current_font
+  current_font_to_tt
+  current_font_to_roman
   current_para_width
   current_line_sep
 
@@ -59,6 +61,14 @@ module ly:
 Parameter.def current_font :: draw.Font:
   draw.Font()
 
+Parameter.def current_font_to_tt :: (draw.Font -> draw.Font):
+  fun (font :~ draw.Font):
+    (font :~ draw.Font) with (kind = #'modern, name = #false)
+
+Parameter.def current_font_to_roman :: (draw.Font -> draw.Font):
+  fun (font :~ draw.Font):
+    (font :~ draw.Font) with (kind = #'roman, name = #false)
+
 annot.macro 'TextContent':
   'satisfying(is_text_content)'
 
@@ -89,10 +99,10 @@ fun current_font_as_italic():
    (current_font() :~ draw.Font) with (style = #'italic)
 
 fun current_font_as_tt():
-   (current_font() :~ draw.Font) with (kind = #'modern, name = #false)
+   current_font_to_tt()(current_font())
 
 fun current_font_as_roman():
-   (current_font() :~ draw.Font) with (kind = #'roman, name = #false)
+   current_font_to_roman()(current_font())
 
 fun current_font_as_underline():
    (current_font() :~ draw.Font) with (has_underline = #true)
