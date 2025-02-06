@@ -61,8 +61,12 @@ paragraph typesetting.
 ){
 
  Similar to @rhombus(t), but starts with @rhombus(current_font()) and
- adds boldness, italicness, underlinedness, fixed-widthness, or serifness to obstain the
+ adds boldness, italicness, underlinedness, fixed-widthness, or serifness to obtain the
  font for converting strings.
+
+ The @rhombus(current_font_to_tt) and @rhombus(current_font_to_roman)
+ parameters determine how a font is adjusted to make it fixed-width or
+ seriffed.
 
 @examples(
   ~eval: pict_eval
@@ -120,8 +124,8 @@ paragraph typesetting.
 
  Macros that @rhombus(parameterize) @rhombus(content_expr)s or
  @rhombus(body)s to adjust the @rhombus(current_font) parameter in the
- sameway as @rhombus(bold), @rhombus(italic), @rhombus(tt), or
- @rhombus(romanly). For the forms with @rhombus(content_expr)s, the
+ same way as @rhombus(bold), @rhombus(italic), @rhombus(tt), or
+ @rhombus(roman). For the forms with @rhombus(content_expr)s, the
  results of the expressions are passed on to @rhombus(t). For the forms
  with @rhombus(body)s, the result is the result of the @rhombus(body)
  sequence.
@@ -264,6 +268,17 @@ paragraph typesetting.
 
  The default font used by functions from @rhombusmodname(pict/text) for
  formatting text, including by @rhombus(t) and @rhombus(para).
+
+}
+
+@doc(
+  Parameter.def current_font_to_tt :: (draw.Font -> draw.Font)
+  Parameter.def current_font_to_roman :: (draw.Font -> draw.Font)
+){
+
+ Font adjusters used by @rhombus(tt), @rhombus(roman), @rhombus(ttly),
+ and @rhombus(romanly) to modify a font to change it to a fixed-width or
+ serif one.
 
 }
 
