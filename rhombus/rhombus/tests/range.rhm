@@ -25,9 +25,9 @@ block:
     Range.span(rge, other, ...) ~method
     Range.gap(rge, other) ~method
     Range.intersect(rge, ...) ~method
-    Range.to_sequence(rge) ~method SequenceRange
-    Range.step_by(rge, step) ~method SequenceRange
-    Range.to_list(rge) ~method ListRange
+    SequenceRange.to_sequence(rge) ~method
+    SequenceRange.step_by(rge, step) ~method
+    ListRange.to_list(rge) ~method
 
 // basic sanity checks
 block:
@@ -621,6 +621,18 @@ check:
   0..=5 ~is_a Listable
   0.. ~is_a Sequence
   0.. ~is_a !Listable
+  0 <.. 5 ~is_a !Sequence
+  0 <.. 5 ~is_a !Listable
+  0 <..= 5 ~is_a !Sequence
+  0 <..= 5 ~is_a !Listable
+  0 <.. ~is_a !Sequence
+  0 <.. ~is_a !Listable
+  ..5 ~is_a !Sequence
+  ..5 ~is_a !Listable
+  ..=5 ~is_a !Sequence
+  ..=5 ~is_a !Listable
+  .. ~is_a !Sequence
+  .. ~is_a !Listable
 
 check:
   0..2 ~is_a Sequence
@@ -639,6 +651,10 @@ block:
   use_static
   check:
     for List (x in 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x in (0..5).to_sequence()):
       x
     ~is [0, 1, 2, 3, 4]
   check:
@@ -664,7 +680,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x in Range.to_sequence(rge)):
+      for List (x in SequenceRange.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4]
     check:
@@ -672,13 +688,17 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x in Range.step_by(rge, 2)):
+      for List (x in SequenceRange.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
 block:
   check:
     for List (x in dynamic(0..5)):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x in dynamic(0..5).to_sequence()):
       x
     ~is [0, 1, 2, 3, 4]
   check:
@@ -696,7 +716,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x in Range.to_sequence(rge)):
+      for List (x in SequenceRange.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4]
     check:
@@ -704,7 +724,7 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x in Range.step_by(rge, 2)):
+      for List (x in SequenceRange.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
@@ -712,6 +732,10 @@ block:
   use_static
   check:
     for List (x in 0..=5):
+      x
+    ~is [0, 1, 2, 3, 4, 5]
+  check:
+    for List (x in (0..=5).to_sequence()):
       x
     ~is [0, 1, 2, 3, 4, 5]
   check:
@@ -737,7 +761,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x in Range.to_sequence(rge)):
+      for List (x in SequenceRange.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
@@ -745,13 +769,17 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x in Range.step_by(rge, 2)):
+      for List (x in SequenceRange.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
 block:
   check:
     for List (x in dynamic(0..=5)):
+      x
+    ~is [0, 1, 2, 3, 4, 5]
+  check:
+    for List (x in dynamic(0..=5).to_sequence()):
       x
     ~is [0, 1, 2, 3, 4, 5]
   check:
@@ -769,7 +797,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
-      for List (x in Range.to_sequence(rge)):
+      for List (x in SequenceRange.to_sequence(rge)):
         x
       ~is [0, 1, 2, 3, 4, 5]
     check:
@@ -777,7 +805,7 @@ block:
         x
       ~is [0, 2, 4]
     check:
-      for List (x in Range.step_by(rge, 2)):
+      for List (x in SequenceRange.step_by(rge, 2)):
         x
       ~is [0, 2, 4]
 
@@ -785,6 +813,11 @@ block:
   use_static
   check:
     for List (x in 0..,
+              _ in 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x in (0..).to_sequence(),
               _ in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
@@ -811,7 +844,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x in Range.to_sequence(rge),
+      for List (x in SequenceRange.to_sequence(rge),
                 _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
@@ -821,7 +854,7 @@ block:
         x
       ~is [0, 2, 4, 6, 8]
     check:
-      for List (x in Range.step_by(rge, 2),
+      for List (x in SequenceRange.step_by(rge, 2),
                 _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
@@ -829,6 +862,11 @@ block:
 block:
   check:
     for List (x in dynamic(0..),
+              _ in 0..5):
+      x
+    ~is [0, 1, 2, 3, 4]
+  check:
+    for List (x in dynamic(0..).to_sequence(),
               _ in 0..5):
       x
     ~is [0, 1, 2, 3, 4]
@@ -850,7 +888,7 @@ block:
         x
       ~is [0, 1, 2, 3, 4]
     check:
-      for List (x in Range.to_sequence(rge),
+      for List (x in SequenceRange.to_sequence(rge),
                 _ in 0..5):
         x
       ~is [0, 1, 2, 3, 4]
@@ -860,52 +898,92 @@ block:
         x
       ~is [0, 2, 4, 6, 8]
     check:
-      for List (x in Range.step_by(rge, 2),
+      for List (x in SequenceRange.step_by(rge, 2),
                 _ in 0..5):
         x
       ~is [0, 2, 4, 6, 8]
+
+check:
+  ~eval
+  use_static
+  (..).to_sequence()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  dynamic(..).to_sequence()
+  ~throws "no such field or method"
 
 // listables
 check:
   [& 0..5] ~is [0, 1, 2, 3, 4]
   [& 0..=5] ~is [0, 1, 2, 3, 4, 5]
+  [& -2..0, & 0..=2] ~is [-2, -1, 0, 1, 2]
 
 check:
-  [& -2..0, & 0..=2] ~is [-2, -1, 0, 1, 2]
+  PairList[& 0..5] ~is PairList[0, 1, 2, 3, 4]
+  PairList[& 0..=5] ~is PairList[0, 1, 2, 3, 4, 5]
+  PairList[& -2..0, & 0..=2] ~is PairList[-2, -1, 0, 1, 2]
 
 block:
   use_static
   check:
+    (0..5).to_list() ~is [0, 1, 2, 3, 4]
+    (0..=5).to_list() ~is [0, 1, 2, 3, 4, 5]
+  check:
     (0..5).to_list().length() ~is 5
     (0..=5).to_list().length() ~is 6
+
+check:
+  dynamic(0..5).to_list() ~is [0, 1, 2, 3, 4]
+  dynamic(0..=5).to_list() ~is [0, 1, 2, 3, 4, 5]
+
+check:
+  ~eval
+  use_static
+  (0..).to_list()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  (..).to_list()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  dynamic(0..).to_list()
+  ~throws "no such field or method"
+
+check:
+  dynamic(..).to_list()
+  ~throws "no such field or method"
 
 // errors
 block:
   check:
-    Range.to_sequence("oops")
+    SequenceRange.to_sequence("oops")
     ~throws values(
-      "Range.to_sequence: " ++ error.annot_msg(),
+      "SequenceRange.to_sequence: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
   check:
     ("oops" :~ SequenceRange).to_sequence()
     ~throws values(
-      "Range.to_sequence: " ++ error.annot_msg(),
+      "SequenceRange.to_sequence: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
   check:
-    Range.step_by("oops", 2)
+    SequenceRange.step_by("oops", 2)
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
   check:
     ("oops" :~ SequenceRange).step_by(2)
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
@@ -913,15 +991,15 @@ block:
     for List (x in "oops" :~ SequenceRange):
       x
     ~throws values(
-      "Range.to_sequence: " ++ error.annot_msg(),
+      "SequenceRange.to_sequence: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
   check:
-    for List (x in Range.to_sequence("oops")):
+    for List (x in SequenceRange.to_sequence("oops")):
       x
     ~throws values(
-      "Range.to_sequence: " ++ error.annot_msg(),
+      "SequenceRange.to_sequence: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
@@ -929,15 +1007,15 @@ block:
     for List (x in ("oops" :~ SequenceRange).to_sequence()):
       x
     ~throws values(
-      "Range.to_sequence: " ++ error.annot_msg(),
+      "SequenceRange.to_sequence: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
   check:
-    for List (x in Range.step_by("oops", 2)):
+    for List (x in SequenceRange.step_by("oops", 2)):
       x
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
@@ -945,23 +1023,23 @@ block:
     for List (x in ("oops" :~ SequenceRange).step_by(2)):
       x
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
       error.val("oops").msg,
     )
 
 block:
   check:
-    Range.to_list("oops")
+    ListRange.to_list("oops")
     ~throws values(
-      "Range.to_list: " ++ error.annot_msg(),
+      "ListRange.to_list: " ++ error.annot_msg(),
       error.annot("ListRange").msg,
       error.val("oops").msg,
     )
   check:
     ("oops" :~ ListRange).to_list()
     ~throws values(
-      "Range.to_list: " ++ error.annot_msg(),
+      "ListRange.to_list: " ++ error.annot_msg(),
       error.annot("ListRange").msg,
       error.val("oops").msg,
     )
@@ -1054,7 +1132,7 @@ block:
     for List (i in (0..5).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("PosInt").msg,
       error.val("oops").msg
     )
@@ -1086,7 +1164,7 @@ block:
     for List (i in (0..=5).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("PosInt").msg,
       error.val("oops").msg
     )
@@ -1102,7 +1180,7 @@ block:
     for List (i in (0..).step_by("oops")):
       i
     ~throws values(
-      "Range.step_by: " ++ error.annot_msg(),
+      "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("PosInt").msg,
       error.val("oops").msg
     )

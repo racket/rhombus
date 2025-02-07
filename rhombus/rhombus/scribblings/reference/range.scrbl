@@ -492,7 +492,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method Range.to_list(rge :: ListRange) :: List
+  method (rge :: ListRange).to_list() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list} of
@@ -502,7 +502,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method Range.to_sequence(rge :: SequenceRange) :: Sequence
+  method (rge :: SequenceRange).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -512,8 +512,7 @@ operator, which is the same as @rhombus(Range.contains).
 }
 
 @doc(
-  method Range.step_by(rge :: SequenceRange, step :: PosInt)
-    :: Sequence
+  method (rge :: SequenceRange).step_by(step :: PosInt) :: Sequence
 ){
 
  Returns a @tech{sequence} of integers in @rhombus(rge) in order,

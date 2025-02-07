@@ -36,8 +36,7 @@
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
-                     Range)
-         (for-spaces (rhombus/annot)
+                     Range
                      SequenceRange
                      ListRange)
          (for-spaces (#f
@@ -83,9 +82,10 @@
    [to Range.to]
    [to_inclusive Range.to_inclusive]
    [full Range.full]
-   [to_sequence Range.to_sequence]
-   [step_by Range.step_by]
-   [to_list Range.to_list])
+   ;; TEMP to be removed
+   [to_sequence SequenceRange.to_sequence]
+   [step_by SequenceRange.step_by]
+   [to_list ListRange.to_list])
   #:properties
   ()
   #:methods
@@ -104,7 +104,7 @@
    intersect))
 
 (define-static-info-getter get-sequence-range-static-infos/sequence
-  (#%sequence-constructor Range.to_sequence/optimize)
+  (#%sequence-constructor SequenceRange.to_sequence/optimize)
   (#%sequence-element #,(get-int-static-infos))
   #,@(get-range-static-infos))
 
@@ -117,12 +117,12 @@
   #:parent #f range
   #:fields ()
   #:namespace-fields
-  (#:no-methods)
+  ()
   #:properties
   ()
   #:methods
-  ([to_sequence Range.to_sequence]
-   [step_by Range.step_by]))
+  (to_sequence
+   step_by))
 
 (define-primitive-class ListRange list-range
   #:lift-declaration
@@ -133,11 +133,11 @@
   #:parent #f sequence-range
   #:fields ()
   #:namespace-fields
-  (#:no-methods)
+  ()
   #:properties
   ()
   #:methods
-  ([to_list Range.to_list]))
+  (to_list))
 
 (define-values-for-syntax (..-expr-prefix ..-repet-prefix)
   (make-expression&repetition-prefix-operator
@@ -929,12 +929,12 @@
              #f #f
              #f)]))
 
-(define-sequence-syntax Range.to_sequence/optimize
-  (lambda () #'Range.to_sequence)
+(define-sequence-syntax SequenceRange.to_sequence/optimize
+  (lambda () #'SequenceRange.to_sequence)
   (lambda (stx)
     (syntax-parse stx
       [[(id) (_ range-expr/statinfo)]
-       (define who 'Range.to_sequence)
+       (define who 'SequenceRange.to_sequence)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define-values (range-who start-expr end-expr type)
          (sequence-range-normalize/inline range-expr))
@@ -943,7 +943,7 @@
            (range-sequence/optimize #'id who range-expr))]
       [_ #f])))
 
-(define/method (Range.to_sequence r)
+(define/method (SequenceRange.to_sequence r)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
                                   (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
@@ -952,12 +952,12 @@
     [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r)]
     [else (range-from->sequence r)]))
 
-(define-sequence-syntax Range.step_by/optimize
-  (lambda () #'Range.step_by)
+(define-sequence-syntax SequenceRange.step_by/optimize
+  (lambda () #'SequenceRange.step_by)
   (lambda (stx)
     (syntax-parse stx
       [[(id) (_ range-expr/statinfo step-expr/statinfo)]
-       (define who 'Range.step_by)
+       (define who 'SequenceRange.step_by)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define step-who who)
        (define step-expr (unwrap-static-infos #'step-expr/statinfo))
@@ -972,11 +972,11 @@
                                     #:step-expr step-expr))]
       [_ #f])))
 
-(define-static-info-syntax Range.step_by/optimize
+(define-static-info-syntax SequenceRange.step_by/optimize
   (#%call-result ((#%sequence-constructor #t)
                   (#%sequence-element #,(get-int-static-infos)))))
 
-(define/method #:direct-id Range.step_by/optimize (Range.step_by r step)
+(define/method #:direct-id SequenceRange.step_by/optimize (SequenceRange.step_by r step)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
                                   (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
@@ -1117,7 +1117,7 @@
     [(range-from-to? r) (range-from-to->treelist r)]
     [else (range-from-to-inclusive->treelist r)]))
 
-(define/method (Range.to_list r)
+(define/method (ListRange.to_list r)
   #:static-infos ((#%call-result #,(get-treelist-static-infos)))
   (check-list-range who r)
   (list-range->treelist r))
