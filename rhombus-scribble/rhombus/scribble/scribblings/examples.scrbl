@@ -16,6 +16,7 @@
     ~eval: $evaluator_expr
     ~indent: $indentation_expr
     ~spacer_info_box: $box_expr
+    ~escape: $op
 
   grammar chunk:
     ~defn:
@@ -123,6 +124,10 @@
  binding information for linking methods after a @rhombus(.). By default,
  an box specific to the evaluator is created or found (if the @rhombus(~eval)
  option is present) in a weak table.
+
+ The @rhombus(~escape) option selects an alternate escape for rendering
+ expression---needed, for example, if the example itself involves a
+ @rhombus(#,) escape.
 
 }
 
