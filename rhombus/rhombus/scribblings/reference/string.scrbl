@@ -53,7 +53,7 @@ Strings are @tech{comparable}, which means that generic operations like
   fun repr(v :: Any) :: String
 ){
 
- The @rhombus(to_string) function coerces @rhombus(v)  to a string.
+ The @rhombus(to_string) function coerces @rhombus(v) to a string.
 
  The string form of a value corresponds to the way that @rhombus(print)
  would print, which means that strings, symbols, identifiers, and
@@ -153,17 +153,32 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   method String.substring(str :: ReadableString,
+                          rge :: Range)
+    :: String
+  method String.substring(str :: ReadableString,
                           start :: NonnegInt,
-                          end :: NonnegInt = String.length(str))
+                          end :: NonnegInt)
     :: String
 ){
 
- Returns the substring of @rhombus(str) from @rhombus(start) (inclusive)
- to @rhombus(end) (exclusive).
+ When given two arguments, returns the substring of @rhombus(str) from
+ @rhombus(start) (inclusive) to @rhombus(end) (exclusive).
+
+ When given one argument, @rhombus(rge) is used to derive
+ @rhombus(start) and @rhombus(end). The @rhombus(rge) range is first
+ canonicalized in the sense of @rhombus(Range.canonicalize), then
+ @rhombus(0) or @rhombus(str.length()) is added as the starting
+ or ending point if @rhombus(rge) lacks one (i.e.,
+ @rhombus(rge.start()) or @rhombus(rge.end()) is @rhombus(#neginf) or
+ @rhombus(#inf)). The derived range's starting and ending points are
+ then taken as @rhombus(start) and @rhombus(end).
 
 @examples(
   String.substring("hello", 2, 4)
-  String.substring("hello", 2)
+  "hello".substring(2..=4)
+  "hello".substring(2..)
+  "hello".substring(..4)
+  "hello".substring(..)
 )
 
 }

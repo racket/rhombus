@@ -293,6 +293,73 @@ operator, which is the same as @rhombus(Range.contains).
 
 }
 
+@doc(
+  method (rge :: Range).is_empty() :: Boolean
+){
+
+ Returns @rhombus(#true) if @rhombus(rge) is an @deftech{empty range},
+ @rhombus(#false) otherwise. An empty range is empty
+ ``by definition,'' meaning that its lower bound is ``equal to'' its
+ upper bound, and therefore it cannot have anything at all in the
+ range that it represents. By contrast, a range may have no integers
+ even if its lower bound is strictly ``less than'' its upper bound
+ (but it may well have real numbers, in principle); in such case, use
+ @rhombus(rge.canonicalize().is_empty()) to check for its
+ ``emptiness.''
+
+@examples(
+  (3..4).is_empty()
+  (3..=3).is_empty()
+  (3..3).is_empty()
+  (3 <..= 3).is_empty()
+  (3 <.. 4).is_empty()
+  (3 <.. 4).canonicalize().is_empty()
+)
+
+}
+
+@doc(
+  method (rge :: Range).canonicalize() :: Range
+){
+
+ Returns the canonical form of @rhombus(rge) with respect to the
+ discrete domain of integers. The canonical form has and only has all
+ integers that @rhombus(rge) has, and is guaranteed to be in one of
+ the following forms:
+
+@itemlist(
+
+ @item{@rhombus(#,(@rhombus(start, ~var)) .. #,(@rhombus(end, ~var))),
+  if @rhombus(rge.start()) and @rhombus(rge.end()) are both integers;}
+
+ @item{@rhombus(#,(@rhombus(start, ~var)) ..), if @rhombus(rge.start())
+  is an integer and @rhombus(rge.end()) is @rhombus(#inf);}
+
+ @item{@rhombus(.. #,(@rhombus(end, ~var))), if @rhombus(rge.start())
+  is @rhombus(#neginf) and @rhombus(rge.end()) is an integer; or}
+
+ @item{@rhombus(..), if @rhombus(rge.start()) is @rhombus(#neginf) and
+  @rhombus(rge.end()) is @rhombus(#inf).}
+
+)
+
+ Furthermore, if @rhombus(rge) is already in canonical form, it is
+ returned as-is.
+
+@examples(
+  (1..5).canonicalize()
+  (1..).canonicalize()
+  (..5).canonicalize()
+  (..).canonicalize()
+  (1..=5).canonicalize()
+  (..=5).canonicalize()
+  (1 <.. 5).canonicalize()
+  (1 <..).canonicalize()
+  (1 <..= 5).canonicalize()
+)
+
+}
+
 
 @doc(
   method (rge :: Range).contains(int :: Int) :: Boolean
@@ -425,7 +492,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method Range.to_list(rge :: ListRange) :: List
+  method (rge :: ListRange).to_list() :: List
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list} of
@@ -435,7 +502,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method Range.to_sequence(rge :: SequenceRange) :: Sequence
+  method (rge :: SequenceRange).to_sequence() :: Sequence
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -445,8 +512,7 @@ operator, which is the same as @rhombus(Range.contains).
 }
 
 @doc(
-  method Range.step_by(rge :: SequenceRange, step :: PosInt)
-    :: Sequence
+  method (rge :: SequenceRange).step_by(step :: PosInt) :: Sequence
 ){
 
  Returns a @tech{sequence} of integers in @rhombus(rge) in order,

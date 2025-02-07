@@ -14,7 +14,10 @@ export:
 
 expr.macro 'examples($form, ...)':
   ~all_stx stx
-  fun find_kw(want_kw):
+  fun find_kw(want_kw,
+              ~get: get = (fun (form, tail):
+                             let ': $(eval_expr :: Group)' = tail
+                             eval_expr)):
     for values(found_expr = #false) (form in [form, ...]):
       match form
       | '$(pattern:
@@ -25,19 +28,22 @@ expr.macro 'examples($form, ...)':
                | syntax_meta.error("duplicate `~" +& kw.unwrap() +& "` clause",
                                    stx, form))
            $tail':
-          let ': $(eval_expr :: Group)' = tail
-          eval_expr
+          get(form, tail)
       | ~else: found_expr
   let label = find_kw(#'~label)
   let eval = find_kw(#'~eval)
   let indent = find_kw(#'~indent)
+  let escape = find_kw(#'~escape, ~get: fun (form, tail):
+                                          match form
+                                          | '~escape: $(op :: Operator)':
+                                              op)
   let spacer_info_box = find_kw(#'~spacer_info_box)
   let [new_form, ...]:
     let split_forms :~ List:
       recur split(forms = [form, ...]):
         match forms
         | []: []
-        | ['$('~eval' || '~label' || '~indent' || '~spacer_info_box'): $_', & rest]:
+        | ['$('~eval' || '~label' || '~indent' || '~spacer_info_box' || '~escape'): $_', & rest]:
             split(rest)
         | ['$(tag && ('~defn' || '~repl' || '~hidden' || '~result')): $g; ...', & rest]:
             [[tag, [g, ...]], & split(rest)]
@@ -63,6 +69,7 @@ expr.macro 'examples($form, ...)':
       '(@examples_stanza(~label: $(if i == 0 | 'label' | '#false'),
                          ~eval: eval,
                          ~indent: indent,
+                         ~escape: $(escape || '#,'),
                          $info_box, ...
                          $(match tag
                            | '~defn': '~no_prompt'

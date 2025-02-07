@@ -15,11 +15,9 @@
          "compound-repetition.rkt"
          "static-info.rkt"
          "parse.rkt"
-         (prefix-in rhombus-a: "arithmetic.rkt")
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "treelist.rkt"
-         (submod "list.rkt" for-listable)
          "realm.rkt"
          "annotation-failure.rkt"
          "number.rkt"
@@ -38,8 +36,7 @@
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
-                     Range)
-         (for-spaces (rhombus/annot)
+                     Range
                      SequenceRange
                      ListRange)
          (for-spaces (#f
@@ -52,7 +49,19 @@
 
 (module+ for-container
   (provide range?
-           Range.contains))
+           range-contains?))
+
+(module+ for-listable
+  (provide list-range?
+           list-range->list
+           list-range->treelist))
+
+(module+ for-substring
+  (provide range-canonical-start+end))
+
+(module+ for-info
+  (provide (for-syntax (rename-out [get-treelist-static-infos indirect-get-treelist-static-infos])
+                       install-get-treelist-static-infos!)))
 
 (define-primitive-class Range range
   #:lift-declaration
@@ -71,9 +80,10 @@
    [to Range.to]
    [to_inclusive Range.to_inclusive]
    [full Range.full]
-   [to_sequence Range.to_sequence]
-   [step_by Range.step_by]
-   [to_list Range.to_list])
+   ;; TEMP to be removed
+   [to_sequence SequenceRange.to_sequence]
+   [step_by SequenceRange.step_by]
+   [to_list ListRange.to_list])
   #:properties
   ()
   #:methods
@@ -81,6 +91,8 @@
    end
    includes_start
    includes_end
+   is_empty
+   canonicalize
    contains
    encloses
    is_connected
@@ -90,7 +102,7 @@
    intersect))
 
 (define-static-info-getter get-sequence-range-static-infos/sequence
-  (#%sequence-constructor Range.to_sequence/optimize)
+  (#%sequence-constructor SequenceRange.to_sequence/optimize)
   (#%sequence-element #,(get-int-static-infos))
   #,@(get-range-static-infos))
 
@@ -103,12 +115,12 @@
   #:parent #f range
   #:fields ()
   #:namespace-fields
-  (#:no-methods)
+  ()
   #:properties
   ()
   #:methods
-  ([to_sequence Range.to_sequence]
-   [step_by Range.step_by]))
+  (to_sequence
+   step_by))
 
 (define-primitive-class ListRange list-range
   #:lift-declaration
@@ -119,11 +131,11 @@
   #:parent #f sequence-range
   #:fields ()
   #:namespace-fields
-  (#:no-methods)
+  ()
   #:properties
   ()
   #:methods
-  ([to_list Range.to_list]))
+  (to_list))
 
 (define-values-for-syntax (..-expr-prefix ..-repet-prefix)
   (make-expression&repetition-prefix-operator
@@ -386,8 +398,7 @@
                                            (~parse start #'start)
                                            (~parse end #'end)
                                            (~parse check-start-end #'check-start-end/not-equal)))
-        (~optional (~seq #:->sequence ->sequence
-                         (~optional (~seq #:->list ->list)))))
+        (~optional (~seq #:->sequence ->sequence)))
      #:with range-method-table (datum->syntax
                                 #'range
                                 (string->symbol
@@ -440,8 +451,7 @@
                                      (pretty-text 'op-str)
                                      (~? (~@ (pretty-text " ")
                                              (PrintDesc-doc (recur (name-end v)))))))
-          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r))))
-          (~? (~@ #:property prop:Listable (vector (lambda (r) (->list r)))))))
+          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r))))))
      (syntax-local-lift-module-end-declaration
       #'(define-primitive-class Name name
           #:existing
@@ -475,8 +485,7 @@
 (struct list-range sequence-range () #:authentic)
 
 (define-range list-range range-from-to Range.from_to ".." #:both
-  #:->sequence range-from-to->sequence
-  #:->list range-from-to->list)
+  #:->sequence range-from-to->sequence)
 
 (define (range-from-to->sequence r [step #f])
   (define start (range-from-to-start r))
@@ -488,12 +497,17 @@
 (define (range-from-to->list r)
   (define start (range-from-to-start r))
   (define end (range-from-to-end r))
+  (for/list ([i (in-range start end)])
+    i))
+
+(define (range-from-to->treelist r)
+  (define start (range-from-to-start r))
+  (define end (range-from-to-end r))
   (for/treelist ([i (in-range start end)])
     i))
 
 (define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" #:both
-  #:->sequence range-from-to-inclusive->sequence
-  #:->list range-from-to-inclusive->list)
+  #:->sequence range-from-to-inclusive->sequence)
 
 (define (range-from-to-inclusive->sequence r [step #f])
   (define start (range-from-to-inclusive-start r))
@@ -503,6 +517,12 @@
   (range-sequence start (step->inc step) cont?))
 
 (define (range-from-to-inclusive->list r)
+  (define start (range-from-to-inclusive-start r))
+  (define end (range-from-to-inclusive-end r))
+  (for/list ([i (in-inclusive-range start end)])
+    i))
+
+(define (range-from-to-inclusive->treelist r)
   (define start (range-from-to-inclusive-start r))
   (define end (range-from-to-inclusive-end r))
   (for/treelist ([i (in-inclusive-range start end)])
@@ -580,6 +600,80 @@
       (range-from-exclusive-to-inclusive? r)
       (range-to-inclusive? r)))
 
+(define/method (Range.is_empty r)
+  (check-range who r)
+  (cond
+    [(range-from-to? r)
+     (eqv? (range-from-to-start r)
+           (range-from-to-end r))]
+    [(range-from-exclusive-to-inclusive? r)
+     (eqv? (range-from-exclusive-to-inclusive-start r)
+           (range-from-exclusive-to-inclusive-end r))]
+    [else #f]))
+
+(define/method (Range.canonicalize r)
+  #:static-infos ((#%call-result #,(get-range-static-infos)))
+  (check-range who r)
+  (cond
+    [(range-from-to? r) r]
+    [(range-from-to-inclusive? r)
+     (unsafe-range-from-to (range-from-to-inclusive-start r)
+                           (add1 (range-from-to-inclusive-end r)))]
+    [(range-from? r) r]
+    [(range-from-exclusive-to? r)
+     ;; invariant for `<..` ensures that `start` cannot be equal to `end`
+     ;; see `check-start-end/not-equal`
+     (unsafe-range-from-to (add1 (range-from-exclusive-to-start r))
+                           (range-from-exclusive-to-end r))]
+    [(range-from-exclusive-to-inclusive? r)
+     (unsafe-range-from-to (add1 (range-from-exclusive-to-inclusive-start r))
+                           (add1 (range-from-exclusive-to-inclusive-end r)))]
+    [(range-from-exclusive? r)
+     (unsafe-range-from (add1 (range-from-exclusive-start r)))]
+    [(range-to? r) r]
+    [(range-to-inclusive? r)
+     (unsafe-range-to (add1 (range-to-inclusive-end r)))]
+    [else r]))
+
+;; used by `substring` and alike, resembling `raise-range-error`
+(define (range-canonical-start+end who type r in-val in-start in-end)
+  (define-values (start end)
+    (cond
+      [(range-from-to? r)
+       (values (range-from-to-start r)
+               (range-from-to-end r))]
+      [(range-from-to-inclusive? r)
+       (values (range-from-to-inclusive-start r)
+               (add1 (range-from-to-inclusive-end r)))]
+      [(range-from? r)
+       (values (range-from-start r) in-end)]
+      [(range-from-exclusive-to? r)
+       (values (add1 (range-from-exclusive-to-start r))
+               (range-from-exclusive-to-end r))]
+      [(range-from-exclusive-to-inclusive? r)
+       (values (add1 (range-from-exclusive-to-inclusive-start r))
+               (add1 (range-from-exclusive-to-inclusive-end r)))]
+      [(range-from-exclusive? r)
+       (values (add1 (range-from-exclusive-start r)) in-end)]
+      [(range-to? r)
+       (values in-start (range-to-end r))]
+      [(range-to-inclusive? r)
+       (values in-start (add1 (range-to-inclusive-end r)))]
+      [(range-full? r)
+       (values in-start in-end)]
+      [else
+       (raise-annotation-failure who r "Range")]))
+  (unless (and (in-start . <= . start)
+               (end . <= . in-end))
+    (raise-arguments-error* who rhombus-realm
+                            (string-append "derived range is invalid"
+                                           ";\n derived range must be enclosed by valid range")
+                            "given range" r
+                            "derived range" (unsafe-range-from-to start end)
+                            "valid range" (unsafe-range-from-to in-start in-end)
+                            type in-val))
+  (values start end))
+
 ;; NOTE The following implementation borrows from Rebellion, but does
 ;; so in a way that doesn't use cuts and therefore doesn't allocate.
 (define (range-explode r)
@@ -647,15 +741,18 @@
            (not other-upper?)
            (= point other-point))))
 
-(define/method (Range.contains r i)
-  (check-range who r)
-  (check-int who i)
+(define (range-contains? r i)
   (define-values (start in-start? end in-end?)
     (range-explode r))
   (and (bound<? start in-start?
                 i #f)
        (bound<? i #t
                 end (not in-end?))))
+
+(define/method (Range.contains r i)
+  (check-range who r)
+  (check-int who i)
+  (range-contains? r i))
 
 (define (range-encloses? r other-r)
   (define-values (start in-start? end in-end?)
@@ -830,12 +927,12 @@
              #f #f
              #f)]))
 
-(define-sequence-syntax Range.to_sequence/optimize
-  (lambda () #'Range.to_sequence)
+(define-sequence-syntax SequenceRange.to_sequence/optimize
+  (lambda () #'SequenceRange.to_sequence)
   (lambda (stx)
     (syntax-parse stx
       [[(id) (_ range-expr/statinfo)]
-       (define who 'Range.to_sequence)
+       (define who 'SequenceRange.to_sequence)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define-values (range-who start-expr end-expr type)
          (sequence-range-normalize/inline range-expr))
@@ -844,7 +941,7 @@
            (range-sequence/optimize #'id who range-expr))]
       [_ #f])))
 
-(define/method (Range.to_sequence r)
+(define/method (SequenceRange.to_sequence r)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
                                   (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
@@ -853,12 +950,12 @@
     [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r)]
     [else (range-from->sequence r)]))
 
-(define-sequence-syntax Range.step_by/optimize
-  (lambda () #'Range.step_by)
+(define-sequence-syntax SequenceRange.step_by/optimize
+  (lambda () #'SequenceRange.step_by)
   (lambda (stx)
     (syntax-parse stx
       [[(id) (_ range-expr/statinfo step-expr/statinfo)]
-       (define who 'Range.step_by)
+       (define who 'SequenceRange.step_by)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define step-who who)
        (define step-expr (unwrap-static-infos #'step-expr/statinfo))
@@ -873,11 +970,11 @@
                                     #:step-expr step-expr))]
       [_ #f])))
 
-(define-static-info-syntax Range.step_by/optimize
+(define-static-info-syntax SequenceRange.step_by/optimize
   (#%call-result ((#%sequence-constructor #t)
                   (#%sequence-element #,(get-int-static-infos)))))
 
-(define/method #:direct-id Range.step_by/optimize (Range.step_by r step)
+(define/method #:direct-id SequenceRange.step_by/optimize (SequenceRange.step_by r step)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
                                   (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
@@ -1008,9 +1105,22 @@
                pos
                #,(if step-expr #'step #''1))))])
 
-(define/method (Range.to_list r)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
-  (check-list-range who r)
+(define (list-range->list r)
   (cond
     [(range-from-to? r) (range-from-to->list r)]
     [else (range-from-to-inclusive->list r)]))
+
+(define (list-range->treelist r)
+  (cond
+    [(range-from-to? r) (range-from-to->treelist r)]
+    [else (range-from-to-inclusive->treelist r)]))
+
+(define/method (ListRange.to_list r)
+  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  (check-list-range who r)
+  (list-range->treelist r))
+
+(define-for-syntax get-treelist-static-infos #f)
+
+(define-for-syntax (install-get-treelist-static-infos! get-static-infos)
+  (set! get-treelist-static-infos get-static-infos))

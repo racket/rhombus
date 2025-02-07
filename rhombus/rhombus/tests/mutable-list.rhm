@@ -26,7 +26,7 @@ block:
     MutableList.drop_last(lst, n) ~method
     MutableList.take(lst, n) ~method
     MutableList.take_last(lst, n) ~method
-    MutableList.sublist(lst, n, m) ~method
+    MutableList.sublist(lst, start, [end]) ~method
     MutableList.sort(lst, [is_less]) ~method
     MutableList.to_list(lst) ~method
     MutableList.to_sequence(lst) ~method
@@ -267,7 +267,11 @@ check:
   (block: let l = MutableList[1, 2, 3]; l.drop_last(2); l) ~is_now MutableList[1]
   (block: let l = MutableList[1, 2, 3]; l.take(2); l) ~is_now MutableList[1, 2]
   (block: let l = MutableList[1, 2, 3]; l.take_last(2); l) ~is_now MutableList[2, 3]
-  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2, 5); l) ~is_now MutableList[3, 4, 5]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2, 4); l) ~is_now MutableList[3, 4]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2..=4); l) ~is_now MutableList[3, 4, 5]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(2..); l) ~is_now MutableList[3, 4, 5, 6]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(..4); l) ~is_now MutableList[1, 2, 3, 4]
+  (block: let l = MutableList[1, 2, 3, 4, 5, 6]; l.sublist(..); l) ~is_now MutableList[1, 2, 3, 4, 5, 6]
 
 check:
   (block: let l = MutableList[1, 2, 3]; l.sort(); l) ~is_now MutableList[1, 2, 3]

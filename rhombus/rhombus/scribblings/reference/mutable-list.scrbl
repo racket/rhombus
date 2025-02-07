@@ -341,20 +341,48 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).sublist(n :: NonnegInt, m :: NonnegInt)
+  method (mlst :: MutableList).sublist(rge :: Range)
+    :: Void
+  method (mlst :: MutableList).sublist(start :: NonnegInt,
+                                       end :: NonnegInt)
     :: Void
 ){
 
- Modifies @rhombus(mlst) to keep only elements from index
- @rhombus(n) (inclusive) to @rhombus(m) (exclusive), equivalent to
- @rhombus(mlst.drop(n)) followed by @rhombus(mlst.take(m-n)).
+ When given two arguments, modifies @rhombus(mlst) to keep only
+ elements from index @rhombus(start) (inclusive) to @rhombus(end)
+ (exclusive), equivalent to @rhombus(mlst.drop(start)) followed by
+ @rhombus(mlst.take(end - start)).
+
+ When given one argument, @rhombus(rge) is used to derive
+ @rhombus(start) and @rhombus(end) as in @rhombus(String.substring).
 
 @examples(
-  def l = MutableList[1, 2, 3, 4, 5]
-  l.sublist(1, 3)
-  l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.sublist(1, 3)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.drop(1)
+    l.take(3-1)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.sublist(1..=3)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.sublist(1..)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.sublist(..3)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.sublist(..)
+    l
 )
-
 
 }
 

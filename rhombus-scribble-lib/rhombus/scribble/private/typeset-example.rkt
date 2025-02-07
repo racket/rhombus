@@ -42,7 +42,7 @@
 
 (define-syntax (typeset-examples stx)
   (syntax-parse stx
-    #:datum-literals (parens group block)
+    #:datum-literals (parens group block op)
     [(_ (parens (~alt (~optional (group #:label (block label-expr))
                                  #:defaults ([label-expr #'(group (parsed #:rhombus/expr #f))]))
                       (~optional (group (~and #:no_prompt (~bind [no-prompt? #t])))
@@ -50,6 +50,7 @@
                       (~optional (group (~and eval-kw #:eval) (block eval-expr))
                                  #:defaults ([eval-expr #'(group (parsed #:rhombus/expr (make-rhombus-eval)))]))
                       (~optional (group (~and once-kw #:once)))
+                      (~optional (group #:escape (block (group escape-op))))
                       (~optional (group #:hidden (block hidden-expr))
                                  #:defaults ([hidden-expr #'(group (parsed #:rhombus/expr #f))]))
                       (~optional (group #:result_only (block result-only-expr))
@@ -69,7 +70,8 @@
            [(group t ...) (values #'(block (group t ...)) #f)]))
        #`(rhombus-expression
           (group rhombusblock_etc
-                 (parens (group #:prompt (block (group (parsed #:rhombus/expr
+                 (parens (group #:escape (block (group (~? escape-op (op |#,|)))))
+                         (group #:prompt (block (group (parsed #:rhombus/expr
                                                                '#,(if (attribute no-prompt?) "" "> ")))))
                          (group #:indent (block (group (parsed #:rhombus/expr
                                                                (+ '#,(if (attribute no-prompt?) 0 2)
