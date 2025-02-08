@@ -28,6 +28,7 @@ block:
     MutableList.take_last(lst, n) ~method
     MutableList.sublist(lst, start, [end]) ~method
     MutableList.sort(lst, [is_less]) ~method
+    MutableList.copy(lst) ~method
     MutableList.to_list(lst) ~method
     MutableList.to_sequence(lst) ~method
 
@@ -288,6 +289,53 @@ check:
   use_static
   MutableList().contains("no such thing")
   ~is #false
+
+block:
+  use_static
+  def l = MutableList[1, 2, 3]
+  def l_copy = l.copy()
+  check l_copy ~is_now MutableList[1, 2, 3]
+  check l_copy ~is_now MutableList[& l]
+  check l_copy === l ~is #false
+  check l_copy === l.copy() ~is #false
+
+block:
+  def l = MutableList[1, 2, 3]
+  def l_copy = dynamic(l).copy()
+  check l_copy ~is_now MutableList[1, 2, 3]
+  check l_copy ~is_now MutableList[& l]
+  check l_copy === l ~is #false
+  check l_copy === dynamic(l).copy() ~is #false
+
+block:
+  use_static
+  def l = MutableList[1, 2, 3]
+  def l_snapshot = l.snapshot()
+  check l_snapshot ~is [1, 2, 3]
+  check l_snapshot ~is [& l]
+  check l_snapshot === l.snapshot() ~is #false
+
+block:
+  use_static
+  def l = MutableList[1, 2, 3]
+  def l_snapshot = l.to_list()
+  check l_snapshot ~is [1, 2, 3]
+  check l_snapshot ~is [& l]
+  check l_snapshot === l.to_list() ~is #false
+
+block:
+  def l = MutableList[1, 2, 3]
+  def l_snapshot = dynamic(l).snapshot()
+  check l_snapshot ~is [1, 2, 3]
+  check l_snapshot ~is [& l]
+  check l_snapshot === dynamic(l).snapshot() ~is #false
+
+block:
+  def l = MutableList[1, 2, 3]
+  def l_snapshot = dynamic(l).to_list()
+  check l_snapshot ~is [1, 2, 3]
+  check l_snapshot ~is [& l]
+  check l_snapshot === dynamic(l).to_list() ~is #false
 
 block:
   use_static

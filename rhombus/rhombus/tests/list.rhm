@@ -34,6 +34,7 @@ block:
     List.sublist(lst, start, [end]) ~method
     List.sort(lst, [is_less]) ~method
     List.iota(n)
+    List.copy(lst) ~method
     List.to_list(lst) ~method
     List.to_sequence(lst) ~method
 
@@ -484,10 +485,32 @@ check:
   ~is #false
 
 block:
+  use_static
+  def l = [1, 2, 3]
+  def l_copy = l.copy()
+  check l_copy ~is_now MutableList[1, 2, 3]
+  check l_copy ~is_now MutableList[& l]
+  check l_copy === l.copy() ~is #false
+
+block:
+  def l = [1, 2, 3]
+  def l_copy = dynamic(l).copy()
+  check l_copy ~is_now MutableList[1, 2, 3]
+  check l_copy ~is_now MutableList[& l]
+  check l_copy === dynamic(l).copy() ~is #false
+
+block:
+  use_static
   def l = [1, 2, 3]
   def l2 = l ++ l
   check l.to_list() === l ~is #true
   check l2.to_list() === l2 ~is #true
+
+block:
+  def l = [1, 2, 3]
+  def l2 = l ++ l
+  check dynamic(l).to_list() === l ~is #true
+  check dynamic(l2).to_list() === l2 ~is #true
 
 block:
   use_static

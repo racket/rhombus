@@ -537,6 +537,20 @@ and it is not managed by a lock.
 
 
 @doc(
+  method (mlst :: MutableList).copy() :: MutableList
+){
+
+ Equivalent to @rhombus(MutableList[& mlst]), creates a new @tech{mutable
+  list} with the same elements as @rhombus(mlst).
+
+@examples(
+  MutableList[1, 2, 3].copy()
+)
+
+}
+
+
+@doc(
   method (mlst :: MutableList).to_list() :: List
   method (mlst :: MutableList).snapshot() :: List
 ){
