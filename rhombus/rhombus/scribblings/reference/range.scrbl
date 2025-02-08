@@ -312,8 +312,8 @@ operator, which is the same as @rhombus(Range.contains).
   (3..=3).is_empty()
   (3..3).is_empty()
   (3 <..= 3).is_empty()
-  (3 <.. 4).is_empty()
-  (3 <.. 4).canonicalize().is_empty()
+  (3 <..< 4).is_empty()
+  (3 <..< 4).canonicalize().is_empty()
 )
 
 }
@@ -353,8 +353,8 @@ operator, which is the same as @rhombus(Range.contains).
   (..).canonicalize()
   (1..=5).canonicalize()
   (..=5).canonicalize()
-  (1 <.. 5).canonicalize()
-  (1 <..).canonicalize()
+  (1 <..< 5).canonicalize()
+  (1 <..<).canonicalize()
   (1 <..= 5).canonicalize()
 )
 
