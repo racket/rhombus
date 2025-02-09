@@ -168,10 +168,10 @@ fun command_line_parser(
               cond
               | args.repeat_last:
                   when line.length() < args.args.length() - 1
-                  | throw_wrong_args(~who: to_string(exe_who), args, line, #false, #false)
+                  | throw_wrong_args(~who: program_name(exe_who), args, line, #false, #false)
               | ~else:
                   when line.length() != args.args.length()
-                  | throw_wrong_args(~who: to_string(exe_who), args, line, #false, #false)
+                  | throw_wrong_args(~who: program_name(exe_who), args, line, #false, #false)
               args.handler(state, & line)
             match line
             | []:
@@ -184,7 +184,7 @@ fun command_line_parser(
                       let (state, once, line, is_final):
                         apply_flag(first, first, long_flags.get(first, #false), state, [rest, ...],
                                    once_keys, once, #false,
-                                   ~who: to_string(exe_who))
+                                   ~who: program_name(exe_who))
                       if is_final
                       | finish(state, line)
                       | parse(state, once, line)
@@ -195,7 +195,7 @@ fun command_line_parser(
                           let flag = first[0] +& first[i]
                           apply_flag(flag, first, short_flags.get(flag, #false), state, line,
                                      once_keys, once, is_final,
-                                     ~who: to_string(exe_who))
+                                     ~who: program_name(exe_who))
                       if is_final
                       | finish(state, line)
                       | parse(state, once, line)
@@ -263,6 +263,17 @@ fun gather_flags(flags :~ List, args, init_state,
         setup(fs.choices, state, long_flags, short_flags, once_keys, Symbol.gen())
     | ~else:
         values(state, long_flags, short_flags, once_keys)
+
+fun program_name(exe_who):
+  match exe_who
+  | p :: Path:
+      match p.name()
+      | name :: Path:
+          Path.Element.string(name)
+      | ~else:
+          p.string()
+  | ~else:
+      exe_who
 
 fun apply_flag(flag_str, first, flag, state, line :~ List,
                once_keys :~ Map, once :~ Map, is_final,
@@ -371,7 +382,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
     | ~else: " [<option> ...]"
   let args_str:
     format_args(args, " ")
-  println(@str{usage: @exe_who@options_str@args_str})
+  println(@str{usage: @(program_name(exe_who))@(options_str)@(args_str)})
   when min_flags > 0
   | println("")
     if max_flags == 1
