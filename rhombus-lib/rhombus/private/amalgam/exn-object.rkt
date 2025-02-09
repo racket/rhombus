@@ -3,17 +3,14 @@
                      syntax/parse/pre)
          "provide.rkt"
          "class-primitive.rkt"
-         "call-result-key.rkt"
-         "function-arity-key.rkt"
          "index-result-key.rkt"
-         "define-arity.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "pair.rkt" for-static-info)
          (submod "syntax-object.rkt" for-quasiquote)
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
          "annotation-failure.rkt"
-         "name-root.rkt")
+         (submod "print.rkt" for-exn))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -270,3 +267,49 @@
        [(exn:break:terminate? v) exn:break:terminate-method-table]
        [else exn:break-method-table])]
     [else exn-method-table]))
+
+(define (get-exn-name v)
+  (cond
+    [(exn:fail? v)
+     (cond
+       [(exn:fail:contract? v)
+        (cond
+          [(exn:fail:annot? v) 'Exn.Fail.Annot]
+          [(exn:fail:contract:arity? v) 'Exn.Fail.Contract.Arity]
+          [(exn:fail:contract:divide-by-zero? v) 'Exn.Fail.Contract.DivideByZero]
+          [(exn:fail:contract:non-fixnum-result? v) 'Exn.Fail.Contract.NonFixnumResult]
+          [(exn:fail:contract:continuation? v) 'Exn.Fail.Contract.Continuation]
+          [(exn:fail:contract:variable? v) 'Exn.Fail.Contract.Variable]
+          [else 'Exn.Fail.Contract])]
+       [(exn:fail:syntax? v)
+        (cond
+          [(exn:fail:syntax:unbound? v) 'Exn.Fail.Syntax.Unbound]
+          [(exn:fail:syntax:missing-module? v) 'Exn.Fail.Syntax.MissingModule]
+          [else 'Exn.Fail.Syntax])]
+       [(exn:fail:read? v)
+        (cond
+          [(exn:fail:read:eof? v) 'Exn.Fail.Read.EOF]
+          [(exn:fail:read:non-char? v) 'Exn.Fail.Read.NonChar]
+          [else 'Exn.Fail.Read])]
+       [(exn:fail:filesystem? v)
+        (cond
+          [(exn:fail:filesystem:exists? v) 'Exn.Fail.Filesystem.Exists]
+          [(exn:fail:filesystem:version? v) 'Exn.Fail.Filesystem.Version]
+          [(exn:fail:filesystem:errno? v) 'Exn.Fail.Filesystem.Errno]
+          [(exn:fail:filesystem:missing-module? v) 'Exn.Fail.Filesystem.MissingModule]
+          [else 'Exn.Fail.Filesystem])]
+       [(exn:fail:network? v)
+        (cond
+          [(exn:fail:network:errno? v) 'Exn.Fail.Network.Errno]
+          [else 'Exn.Fail.Network])]
+       [(exn:fail:out-of-memory? v) 'Exn.Fail.OutOfMemory]
+       [(exn:fail:unsupported? v) 'Exn.Fail.Unsupported]
+       [(exn:fail:user? v) 'Exn.Fail.User]
+       [else 'Exn.Fail])]
+    [(exn:break? v)
+     (cond
+       [(exn:break:hang-up? v) 'Exn.Break.HangUp]
+       [(exn:break:terminate? v) 'Exn.Break.Terminate]
+       [else 'Exn.Break])]
+    [else 'Exn]))
+(set-get-exn-name! get-exn-name)

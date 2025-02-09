@@ -50,6 +50,9 @@
            check-output-port
            check-mode))
 
+(module+ for-exn
+  (provide set-get-exn-name!))
+
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
 
@@ -204,6 +207,7 @@
     [(eof-object? v)
      (display "Port.eof" op)]
     [(namespace? v) (display "#<evaluator>" op)]
+    [(continuation-mark-set? v) (display "#<continuation-marks>" op)]
     [else (other v mode op)]))
 
 (define (write-shrubbery* v use-display use-write op)
@@ -240,6 +244,9 @@
 (define (pretty v mode ht)
   (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))
 
+(define get-exn-name (lambda (v) (object-name v)))
+(define (set-get-exn-name! proc) (set! get-exn-name proc))
+
 (define (pretty-other v mode ht)
   (define (display?) (eq? mode 'text))
   (define (print v) (pretty v 'expr ht))
@@ -269,9 +276,10 @@
       (lambda ()
         (pretty-listlike
          (pretty-concat
-          (pretty-write (if (srcloc? v)
-                            'Srcloc
-                            (object-name v)))
+          (pretty-write (cond
+                          [(srcloc? v) 'Srcloc]
+                          [(exn? v) (get-exn-name v)]
+                          [else (object-name v)]))
           (pretty-text "("))
          (cond
            [(print-field-shapes-ref v #f)
