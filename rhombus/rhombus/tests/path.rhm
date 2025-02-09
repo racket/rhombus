@@ -27,10 +27,10 @@ block:
 
 module path_help ~lang rhombus/and_meta:
   export:
-   check_annot
-   cross_p
-   cross_abs_p
-   root_p
+    check_annot
+    cross_p
+    cross_abs_p
+    root_p
 
   expr.macro
   | 'check_annot $c($args) . $m $tail ...':
@@ -277,3 +277,29 @@ block:
   check Path("X/Y").as_relative_to("x/z", ~normal_case: #false) ~is Path("X/Y")
   check_annot Path.as_relative_to(0, "x")
   check_annot Path.as_relative_to("x", 0)
+
+block:
+  check Path.Element(#"x") ~is Path("x")
+  check Path.Element.maybe(#"x") ~is Path("x")
+  match CrossPath.Convention.current()
+  | #'windows:
+      check Path.Element(#"x\\y") ~throws values("Path.Element",
+                                                 "cannot be converted to a path element")
+      check Path.Element.maybe(#"x\\y") ~is #false
+  | ~else:
+      check Path.Element(#"x/y") ~throws values("Path.Element",
+                                                "cannot be converted to a path element")
+      check Path.Element.maybe(#"x/y") ~is #false
+      check Path.Element(#"..") ~throws values("Path.Element",
+                                               "cannot be converted to a path element")
+      check Path.Element.maybe(#"..") ~is #false
+      check Path.Element(#".") ~throws values("Path.Element",
+                                              "cannot be converted to a path element")
+      check Path.Element.maybe(#".") ~is #false
+
+block:
+  def p = Path("x/")
+  check p.string() ~is "x/"
+  check Path.Element.string(p) ~is "x"
+  check p.bytes() ~is #"x/"
+  check Path.Element.bytes(p) ~is #"x"
