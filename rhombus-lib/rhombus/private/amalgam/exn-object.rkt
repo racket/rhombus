@@ -93,7 +93,7 @@
             (values msg marks srclocs)))
 
 (define-exn Annot exn:fail:annot
-  #:parent Exn.Fail.Annot exn:fail:contract
+  #:parent Contract exn:fail:contract
   #:fields ([(srclocs) ((#%index-result #,(get-srcloc-static-infos))
                         . #,(get-list-static-infos))])
   #:children ())
@@ -232,6 +232,7 @@
      (cond
        [(exn:fail:contract? v)
         (cond
+          [(exn:fail:annot? v) exn:fail:annot-method-table]
           [(exn:fail:contract:arity? v) exn:fail:contract:arity-method-table]
           [(exn:fail:contract:divide-by-zero? v) exn:fail:contract:divide-by-zero-method-table]
           [(exn:fail:contract:non-fixnum-result? v) exn:fail:contract:non-fixnum-result-method-table]
