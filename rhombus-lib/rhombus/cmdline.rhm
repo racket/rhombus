@@ -51,7 +51,7 @@ fun convert_lib_module_path(x):
   | [base, submod, ...]:
       cond
       | all(submod.length() != 0, ...):
-          ModulePath.try('lib($base) $(List.append(['!', Symbol.from_string(submod)], ...))')
+          ModulePath.maybe('lib($base) $('! $(Symbol.from_string(submod))') ...')
       | ~else: #false
   | ~else: #false
 

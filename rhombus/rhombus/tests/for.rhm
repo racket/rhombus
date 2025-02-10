@@ -601,8 +601,8 @@ check:
 // check `let` across clause boundary
 check:
   for List:
-    each num_str in ["1","2","3","4","5", "a"]
-    let num = String.to_number(num_str)
+    each num_str in ["1", "2", "3", "4", "5", "a"]
+    let num = String.maybe_to_number(num_str)
     skip_when !num
     num
   ~is [1, 2, 3, 4, 5]
@@ -620,9 +620,9 @@ version_guard.at_least "8.11.1.4":
   // combine `import` and `let` across clause boundary
   check:
     for List:
-      each num_str in ["1","2","3","4","5", "a"]
+      each num_str in ["1", "2", "3", "4", "5", "a"]
       import: rhombus.List as L
-      let num = String.to_number(num_str)
+      let num = String.maybe_to_number(num_str)
       skip_when !num
       L(num)
     ~is [[1], [2], [3], [4], [5]]

@@ -15,6 +15,8 @@ block:
     String.ends_with(str, substr) ~method ReadableString
     String.to_string(str) ~method ReadableString
     ReadableString.to_string(str) ~method
+    String.maybe_to_int(str) ~method ReadableString
+    String.maybe_to_number(str) ~method ReadableString
     String.to_int(str) ~method ReadableString
     String.to_number(str) ~method ReadableString
     String.substring(str, start, [end]) ~method ReadableString
@@ -62,9 +64,19 @@ block:
     )
     "hello".append(" world") ~is "hello world"
     "hello".append(" world", " and bye") ~is "hello world and bye"
-    "hello".to_int() ~is #false
+    "hello".maybe_to_int() ~is #false
+    "17".maybe_to_int() ~is 17
+    "hello".maybe_to_number() ~is #false
+    "4.35".maybe_to_number() ~is 4.35
+    "hello".to_int() ~throws values(
+      "String.to_int: string does not parse as an integer",
+      error.val("hello", ~label: "string").msg,
+    )
     "17".to_int() ~is 17
-    "hello".to_number() ~is #false
+    "hello".to_number() ~throws values(
+      "String.to_number: string does not parse as a number",
+      error.val("hello", ~label: "string").msg,
+    )
     "4.35".to_number() ~is 4.35
     "hello".upcase() ~is "HELLO"
     "Hello".downcase() ~is "hello"
@@ -127,10 +139,19 @@ check:
   dynamic("hello" ++ " ") ++ #"world" ~throws "cannot append a string and other value"
   dynamic("hello").append(" world") ~is "hello world"
   dynamic("hello").append(" world", " and bye") ~is "hello world and bye"
-  dynamic("hello").to_int() ~is #false
+  dynamic("hello").maybe_to_int() ~is #false
+  dynamic("17").maybe_to_int() ~is 17
+  dynamic("hello").maybe_to_number() ~is #false
+  dynamic("4.35").maybe_to_number() ~is 4.35
+  dynamic("hello").to_int() ~throws values(
+    "String.to_int: string does not parse as an integer",
+    error.val("hello", ~label: "string").msg,
+  )
   dynamic("17").to_int() ~is 17
-  dynamic("hello").to_number() ~is #false
-  dynamic("4.35").to_number() ~is 4.35
+  dynamic("hello").to_number() ~throws values(
+    "String.to_number: string does not parse as a number",
+    error.val("hello", ~label: "string").msg,
+  )
   dynamic("hello").upcase() ~is "HELLO"
   dynamic("Hello").downcase() ~is "hello"
   dynamic("hello").locale_upcase() ~is_a String
@@ -170,6 +191,8 @@ check:
 
 check:
   String.length("hello") ~is 5
+  String.maybe_to_int("17") ~is 17
+  String.maybe_to_number("4.35") ~is 4.35
   String.to_int("17") ~is 17
   String.to_number("4.35") ~is 4.35
   String.upcase("hello") ~is "HELLO"
@@ -521,4 +544,22 @@ block:
   check f("10") ~is 10
   check f("1") ~is [1]
   check f("10.0") ~is { 10.0 }
+  check f("10".copy()) ~is #false
+  check f("1".copy()) ~is #false
+  check f("10.0".copy()) ~is #false
   check f(10.0) ~is #false
+
+// check result info for `(maybe_)to_{int,number}` methods
+block:
+  use_static
+  def int_str = "1"
+  check:
+    int_str.to_int() < dynamic(2) ~is #true
+    int_str.maybe_to_int()!! < dynamic(2) ~is #true
+
+block:
+  use_static
+  def num_str = "1.0"
+  check:
+    num_str.to_number() < dynamic(2.0) ~is #true
+    num_str.maybe_to_number()!! < dynamic(2.0) ~is #true

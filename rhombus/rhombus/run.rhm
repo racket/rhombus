@@ -12,7 +12,7 @@ fun file_to_mod_path(str :: String):
   match str.split("!")
   | [base, submod, ...]:
       all(submod.length() != 0, ...)
-        && ModulePath.try('file($base) $(List.append(['!', Symbol.from_string(submod)], ...))')
+        && ModulePath.maybe('file($base) $('! $(Symbol.from_string(submod))') ...')
   | ~else: #false
 
 // Keys for `args` map

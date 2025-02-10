@@ -67,7 +67,7 @@
   #:just-annot
   #:fields ()
   #:namespace-fields
-  ([try ModulePath.try])
+  ([maybe ModulePath.maybe])
   #:properties
   ()
   #:methods
@@ -257,6 +257,6 @@
   #:static-infos ((#%call-result #,(get-module-path-static-infos)))
   (parse-ModulePath who stx #f))
 
-(define/arity (ModulePath.try stx)
+(define/arity (ModulePath.maybe stx)
   #:static-infos ((#%call-result ((#%maybe #,(get-module-path-static-infos)))))
   (parse-ModulePath who stx #t))
