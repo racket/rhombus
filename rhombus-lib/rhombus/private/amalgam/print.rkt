@@ -176,15 +176,22 @@
          (display ")" op))])]
     [(and (procedure? v)
           (not (printer-ref v #f)))
+     (define kind (cond
+                    [(continuation? v) "continuation"]
+                    [(parameter? v) "context-parameter"]
+                    [else "function"]))
      (define name (object-name v))
-     (cond
-       [name
-        (concat
-         (display "#<function:" op)
-         (display name op)
-         (display ">" op))]
-       [else
-        (display "#<function>" op)])]
+     (concat
+      (display "#<" op)
+      (cond
+        [name
+         (concat
+          (display kind op)
+          (display ":" op)
+          (display name op))]
+        [else
+         (display kind op)])
+      (display ">" op))]
     [(symbol? v)
      (cond
        [(display?)
@@ -206,9 +213,26 @@
      (display (syntax->datum v) op)]
     [(eof-object? v)
      (display "Port.eof" op)]
-    [(namespace? v) (display "#<evaluator>" op)]
-    [(continuation-mark-set? v) (display "#<continuation-marks>" op)]
-    [else (other v mode op)]))
+    [(namespace? v)
+     (display "#<evaluator>" op)]
+    [(continuation-prompt-tag? v)
+     (cond
+       [(eq? v (default-continuation-prompt-tag))
+        (display "Continuation.PromptTag.default" op)]
+       [else
+        (define name (object-name v))
+        (cond
+          [name
+           (concat
+            (display "Continuation.PromptTag.make(#'" op)
+            (write-shrubbery* name display write op)
+            (display ")" op))]
+          [else
+           (display "Continuation.PromptTag.make()" op)])])]
+    [(continuation-mark-set? v)
+     (display "#<continuation-marks>" op)]
+    [else
+     (other v mode op)]))
 
 (define (write-shrubbery* v use-display use-write op)
   (cond

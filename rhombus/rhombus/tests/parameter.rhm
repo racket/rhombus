@@ -66,3 +66,16 @@ block:
   Parameter.def p :~ String = #'oops
   check p() ~is #'oops
   check p(#'no) ~is #void
+
+check:
+  Parameter.def p = #false
+  repr(p)
+  ~is "#<context-parameter:p>"
+
+check:
+  repr(Parameter.make(#false))
+  ~is "#<context-parameter:parameter>"
+
+check:
+  repr(Parameter.make(#false, ~name: #'p))
+  ~is "#<context-parameter:p>"
