@@ -156,7 +156,7 @@
 }
 
 @doc(
-  fun Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...)
+  fun Obs.combine(f :: Function, obs :: Obs, ...)
     :: Obs
   fun Obs.combine({key: obs :: Obs, ...})
     :: Obs
