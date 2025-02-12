@@ -239,7 +239,8 @@
    sort
    to_list
    snapshot
-   to_sequence))
+   to_sequence
+   copy))
 
 (define-name-root NonemptyList
   #:fields
@@ -982,6 +983,11 @@
   #:primitive (treelist-copy)
   #:static-infos ((#%call-result #,(get-mutable-treelist-static-infos)))
   (treelist-copy lst))
+
+(define/method (MutableList.copy lst)
+  #:primitive (mutable-treelist-copy)
+  #:static-infos ((#%call-result #,(get-mutable-treelist-static-infos)))
+  (mutable-treelist-copy lst))
 
 (define-sequence-syntax MutableList.to_sequence/optimize
   (lambda () #'MutableList.to_sequence)

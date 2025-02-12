@@ -166,6 +166,33 @@ Paths are @tech{comparable}, which means that generic operations like
 
 
 @doc(
+  fun Path.Element(bstr :: Bytes) :: Path.Element
+  fun Path.Element.maybe(bstr :: Bytes) :: maybe(Path.Element)
+){
+
+ Constructs a path element (in the sense of
+ @rhombus(Path.Element, ~annot)) given a byte string. If
+ @rhombus(bstr) does not correspond to such a path element,
+ the @rhombus(Exn.Fail.Contract, ~class) exception is thrown in the
+ case of @rhombus(Path.Element), or @rhombus(#false) is returned in
+ the case of @rhombus(Path.Element.maybe).
+
+}
+
+
+@doc(
+  fun Path.Element.string(path :: Path.Element) :: String
+  fun Path.Element.bytes(path :: Path.Element) :: Bytes
+){
+
+ Like @rhombus(Path.string) and @rhombus(Path.bytes), except that
+ trailing path separators are removed. On Windows, any
+ @litchar{\\?\REL} encoding prefix is also removed.
+
+}
+
+
+@doc(
   method Path.add(path :: PathString || CrossPath || Path.Dot,
                   part :: PathString || CrossPath || Path.Dot,
                   ...)

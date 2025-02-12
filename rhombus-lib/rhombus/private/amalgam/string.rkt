@@ -19,6 +19,8 @@
          "append-key.rkt"
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
+         "maybe-key.rkt"
+         "realm.rkt"
          "define-arity.rkt"
          "binding.rkt"
          (submod "literal.rkt" for-info)
@@ -103,6 +105,8 @@
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
+   [maybe_to_int String.maybe_to_int]
+   [maybe_to_number String.maybe_to_number]
    [to_int String.to_int]
    [to_number String.to_number]
    [to_string String.to_string]
@@ -148,6 +152,8 @@
    [utf8_bytes String.utf8_bytes]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
+   [maybe_to_int String.maybe_to_int]
+   [maybe_to_number String.maybe_to_number]
    [to_int String.to_int]
    [to_number String.to_number]
    [to_string String.to_string]
@@ -300,29 +306,50 @@
   (check-readable-string who s)
   (string->immutable-string s))
 
-(define/method (String.to_int s)
-  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
-  (check-readable-string who s)
+;; FIXME these should use shrubbery lexeme syntax
+(define (rhombus-string->int s)
   (define n (string->number s))
   (and (exact-integer? n)
        n))
 
-(define/method (String.to_number s)
+(define (rhombus-string->number s)
+  (string->number s))
+
+(define/method (String.maybe_to_int s)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (check-readable-string who s)
+  (rhombus-string->int s))
+
+(define/method (String.maybe_to_number s)
   #:static-infos ((#%call-result ((#%maybe #,(get-number-static-infos)))))
   (check-readable-string who s)
-  (string->number s))
+  (rhombus-string->number s))
+
+(define/method (String.to_int s)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (check-readable-string who s)
+  (or (rhombus-string->int s)
+      (raise-arguments-error* who rhombus-realm "string does not parse as an integer"
+                              "string" s)))
+
+(define/method (String.to_number s)
+  #:static-infos ((#%call-result #,(get-number-static-infos)))
+  (check-readable-string who s)
+  (or (rhombus-string->number s)
+      (raise-arguments-error* who rhombus-realm "string does not parse as a number"
+                              "string" s)))
 
 (define-annotation-syntax String.to_int
   (make-identifier-binding-annotation
    (lambda (stx)
-     (values (binding-form #'from-string-infoer #`(x String.to_int #,(shrubbery-syntax->string stx)))
+     (values (binding-form #'from-string-infoer #`(x rhombus-string->int #,(shrubbery-syntax->string stx)))
              #'x
              (get-int-static-infos)))))
 
 (define-annotation-syntax String.to_number
   (make-identifier-binding-annotation
    (lambda (stx)
-     (values (binding-form #'from-string-infoer #`(x String.to_number  #,(shrubbery-syntax->string stx)))
+     (values (binding-form #'from-string-infoer #`(x rhombus-string->number  #,(shrubbery-syntax->string stx)))
              #'x
              (get-real-static-infos)))))
 
@@ -343,7 +370,7 @@
   (syntax-parse stx
     [(_ arg-id (x v cvt) IF success fail)
      #'(begin
-         (define v (and (string? arg-id) (cvt arg-id)))
+         (define v (and (immutable-string? arg-id) (cvt arg-id)))
          (IF v success fail))]))
 
 (define-syntax (from-string-committer stx)

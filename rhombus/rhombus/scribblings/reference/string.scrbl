@@ -361,26 +361,33 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 
-
-
 @doc(
-  method String.to_int(str :: ReadableString) :: maybe(Int)
+  method String.to_int(str :: ReadableString) :: Int
   annot.macro 'String.to_int'
+  method String.maybe_to_int(str :: ReadableString) :: maybe(Int)
 ){
 
- The @rhombus(String.to_int) function parses @rhombus(str) as an integer, returning @rhombus(#false) if the
- string does not parse as an integer, otherwise returning the integer
- value.
+ The @rhombus(String.to_int) function parses @rhombus(str) as an
+ integer and returns the integer value. If @rhombus(str) does not
+ parse as an integer, the @rhombus(Exn.Fail.Contract, ~class)
+ exception is thrown. The @rhombus(String.maybe_to_int) function is
+ like @rhombus(String.to_int), but it returns @rhombus(#false) if
+ @rhombus(str) does not parse as an integer.
 
 @examples(
   String.to_int("-42")
-  String.to_int("42.0")
-  String.to_int("forty-two")
+  ~error:
+    String.to_int("42.0")
+  String.maybe_to_int("42.0")
+  ~error:
+    String.to_int("forty-two")
+  String.maybe_to_int("forty-two")
   "100".to_int()
+  "100".maybe_to_int()
 )
 
  The @rhombus(String.to_int, ~annot) @tech(~doc: guide_doc){converter annotation} is
- satisfied by a string that can be converted to an integer via
+ satisfied by an immutable string that can be converted to an integer via
  @rhombus(String.to_int), and it converts to that integer.
 
 @examples(
@@ -394,24 +401,31 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.to_number(str :: ReadableString) :: maybe(Number)
+  method String.to_number(str :: ReadableString) :: Number
   annot.macro 'String.to_number'
+  method String.maybe_to_number(str :: ReadableString) :: maybe(Number)
 ){
 
- The @rhombus(String.to_number) function @rhombus(str) as a number, returning @rhombus(#false) if the
- string does not parse as a number, otherwise returning the number
- value.
+ The @rhombus(String.to_number) function parses @rhombus(str) as a
+ number and returns the number value. If @rhombus(str) does not
+ parse as a number, the @rhombus(Exn.Fail.Contract, ~class)
+ exception is thrown. The @rhombus(String.maybe_to_number) function is
+ like @rhombus(String.to_number), but it returns @rhombus(#false) if
+ @rhombus(str) does not parse as a number.
 
 @examples(
   String.to_number("-42")
   String.to_number("42.0")
-  String.to_number("forty-two")
+  ~error:
+    String.to_number("forty-two")
+  String.maybe_to_number("forty-two")
   "3/4".to_number()
+  "3/4".maybe_to_number()
 )
 
  The @rhombus(String.to_number, ~annot) @tech(~doc: guide_doc){converter annotation} is
- satisfied by a string that can be converted to an integer via
- @rhombus(String.to_int), and it converts to that integer.
+ satisfied by an immutable string that can be converted to a number via
+ @rhombus(String.to_number), and it converts to that number.
 
 @examples(
   def n :: String.to_number = "42.0"

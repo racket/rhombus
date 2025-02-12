@@ -50,6 +50,9 @@
            check-output-port
            check-mode))
 
+(module+ for-exn
+  (provide set-get-exn-name!))
+
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
 
@@ -173,15 +176,22 @@
          (display ")" op))])]
     [(and (procedure? v)
           (not (printer-ref v #f)))
+     (define kind (cond
+                    [(continuation? v) "continuation"]
+                    [(parameter? v) "context-parameter"]
+                    [else "function"]))
      (define name (object-name v))
-     (cond
-       [name
-        (concat
-         (display "#<function:" op)
-         (display name op)
-         (display ">" op))]
-       [else
-        (display "#<function>" op)])]
+     (concat
+      (display "#<" op)
+      (cond
+        [name
+         (concat
+          (display kind op)
+          (display ":" op)
+          (display name op))]
+        [else
+         (display kind op)])
+      (display ">" op))]
     [(symbol? v)
      (cond
        [(display?)
@@ -203,8 +213,26 @@
      (display (syntax->datum v) op)]
     [(eof-object? v)
      (display "Port.eof" op)]
-    [(namespace? v) (display "#<evaluator>" op)]
-    [else (other v mode op)]))
+    [(namespace? v)
+     (display "#<evaluator>" op)]
+    [(continuation-prompt-tag? v)
+     (cond
+       [(eq? v (default-continuation-prompt-tag))
+        (display "Continuation.PromptTag.default" op)]
+       [else
+        (define name (object-name v))
+        (cond
+          [name
+           (concat
+            (display "Continuation.PromptTag.make(#'" op)
+            (write-shrubbery* name display write op)
+            (display ")" op))]
+          [else
+           (display "Continuation.PromptTag.make()" op)])])]
+    [(continuation-mark-set? v)
+     (display "#<continuation-marks>" op)]
+    [else
+     (other v mode op)]))
 
 (define (write-shrubbery* v use-display use-write op)
   (cond
@@ -240,6 +268,9 @@
 (define (pretty v mode ht)
   (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))
 
+(define get-exn-name (lambda (v) (object-name v)))
+(define (set-get-exn-name! proc) (set! get-exn-name proc))
+
 (define (pretty-other v mode ht)
   (define (display?) (eq? mode 'text))
   (define (print v) (pretty v 'expr ht))
@@ -269,9 +300,10 @@
       (lambda ()
         (pretty-listlike
          (pretty-concat
-          (pretty-write (if (srcloc? v)
-                            'Srcloc
-                            (object-name v)))
+          (pretty-write (cond
+                          [(srcloc? v) 'Srcloc]
+                          [(exn? v) (get-exn-name v)]
+                          [else (object-name v)]))
           (pretty-text "("))
          (cond
            [(print-field-shapes-ref v #f)

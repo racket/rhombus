@@ -4,6 +4,7 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     ModulePath(s)
+    ModulePath.maybe(s)
     ModulePath.s_exp(mod) ~method
 
 // syntax form
@@ -49,8 +50,8 @@ check:
   ModulePath('parent') ~is ModulePath 'parent'
   ModulePath('parent!x') ~is ModulePath 'parent ! x'
   ModulePath('parent!x!y') ~is ModulePath 'parent ! x ! y'
-  ModulePath.try('lib("m")') ~is ModulePath 'lib("m/main.rhm")'
-  ModulePath.try('lib("m ?")') ~is #false
+  ModulePath.maybe('lib("m")') ~is ModulePath 'lib("m/main.rhm")'
+  ModulePath.maybe('lib("m ?")') ~is #false
 
 // method
 block:

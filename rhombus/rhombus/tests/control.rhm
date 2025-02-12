@@ -293,3 +293,32 @@ version_guard.at_least "8.15.0.3":
     ~throws values(
       "Continuation.capture: cannot capture past continuation barrier",
     )
+
+check:
+  repr(Continuation.capture k:
+         k)
+  ~is "#<continuation>"
+
+check:
+  repr(Continuation.PromptTag.default)
+  ~is "Continuation.PromptTag.default"
+
+check:
+  repr(Continuation.PromptTag.make())
+  ~is "Continuation.PromptTag.make()"
+
+check:
+  repr(Continuation.PromptTag.make(#'name))
+  ~is "Continuation.PromptTag.make(#'name)"
+
+check:
+  repr(Continuation.PromptTag.make("name"))
+  ~is "Continuation.PromptTag.make(#'name)"
+
+check:
+  repr(Continuation.PromptTag.make("weird name"))
+  ~is "Continuation.PromptTag.make(#'#{|weird name|})"
+
+check:
+  repr(Continuation.Marks.current())
+  ~is "#<continuation-marks>"

@@ -690,7 +690,7 @@ it supplies its elements in order.
   method (lst :: List).copy() :: MutableList
 ){
 
- Equivalent to @rhombus(MutableList(& lst)), creates a new @tech{mutable
+ Equivalent to @rhombus(MutableList[& lst]), creates a new @tech{mutable
   list} with the same elements as @rhombus(lst).
 
 @examples(

@@ -2,20 +2,17 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
-	 racket/path
+         racket/path
          "provide.rkt"
          "class-primitive.rkt"
-         "annotation-failure.rkt"
          "call-result-key.rkt"
          "define-arity.rkt"
          "compare-key.rkt"
          "index-result-key.rkt"
          "maybe-key.rkt"
          "static-info.rkt"
-         "annotation-failure.rkt"
          "enum.rkt"
          "name-root.rkt"
-         "realm.rkt"
          "rhombus-primitive.rkt"
          "parens.rkt"
          "parse.rkt"
@@ -196,9 +193,6 @@
        (absolute-path? v)
        (not (complete-path? v))))
 
-(define (path-dot? v)
-  (or (eq? v 'same) (eq? v 'up)))
-
 (define (path-directory? s)
   (and (path? s)
        (let-values ([(base name dir?) (split-path s)])
@@ -214,7 +208,7 @@
   (identifier-annotation path-is-relative? #,(get-path-static-infos)))
 
 (define-annotation-syntax Path.DriveRelative
-  (identifier-annotation path-is-absolute? #,(get-path-static-infos)))
+  (identifier-annotation path-is-drive-relative? #,(get-path-static-infos)))
 
 (define-name-root Path.Element
   #:fields

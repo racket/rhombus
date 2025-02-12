@@ -53,6 +53,24 @@ block:
     v.index ~is 75
     v is_a Exn ~is #true
 
+block:
+  def v = Exn.Fail.Annot("annot", Continuation.Marks.current(), PairList[Srcloc(1, 2, 3, 4, 5)])
+  check:
+    match v
+    | Exn.Fail.Annot(a, b, srcs): srcs[0].line
+    ~is 2
+  check:
+    use_static
+    v.srclocs[0].line
+    ~is 2
+  check:
+    dynamic(v).srclocs[0].line
+    ~is 2
+
+check:
+  repr(Exn.Fail.Annot("annot", Continuation.Marks.current(), PairList[Srcloc(1, 2, 3, 4, 5)]))
+  ~is "Exn.Fail.Annot(\"annot\", #<continuation-marks>, PairList[Srcloc(1, 2, 3, 4, 5)])"
+
 check:
   error(~who: #'example, "~a oops")
   ~throws "~a oops"
