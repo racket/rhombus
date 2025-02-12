@@ -132,6 +132,7 @@
     ~prompt: $body: ....
     ~indent_from_block: $body; ...
     ~spacer_info_box: $body; ...
+    ~number_from: $body; ...
 ){
 
  Like @rhombus(rhombusblock), but supports @rhombus(option)s:
@@ -171,6 +172,11 @@
   bindings that associates an annotation with an identifier, that
   association can persist for later blocks. The default is for each block
   to collect independent spacer information.}
+
+ @item{@rhombus(~number_from): If the @rhombus(body) sequence after
+  @rhombus(~number_from) produces a value other than @rhombus(#false), it
+  must be a number to write to the left of the first line of rendered
+  output, and subsequent lines are numbered accordingly.}
 
 )
 

@@ -169,7 +169,8 @@
                         #:indent [indent-amt 0]
                         #:prompt [prompt ""]
                         #:indent_from_block [indent-from-block? #t]
-                        #:spacer_info_box [info-box #f])
+                        #:spacer_info_box [info-box #f]
+                        #:number_from [number-from #f])
     ;; Go back to a string, then parse again using the
     ;; colorer. Why didn't we use a string to start with?
     ;; Because having `rhombusblock` work on implicitly quoted syntax
@@ -376,28 +377,40 @@
                            (cons (cons (car l) (car r))
                                  (cdr r))])))
     (define indent (whitespace indent-amt))
-    (define (make-line elements #:first? first?)
-      (render-line (if (zero? indent-amt)
-                       elements
-                       (cons (cond
-                               [first?
-                                (define len (string-length prompt))
-                                (list (whitespace (- indent-amt (min len indent-amt)))
-                                      (render 'plain (string->immutable-string
-                                                      (substring prompt 0 (min len indent-amt)))))]
-                               [else indent])
-                             elements))))
+    (define (make-line elements #:first? first? #:i i #:len len)
+      (render-line (append
+                    (if number-from
+                        (list (render 'lineno
+                                      (let ([n (+ i number-from)]
+                                            [max-n (+ (sub1 len) number-from)])
+                                        (define s (number->string n))
+                                        (define max-s (number->string max-n))
+                                        (string-append
+                                         (make-string (- (string-length max-s) (string-length s)) #\space)
+                                         s
+                                         " "))))
+                        null)
+                    (if (zero? indent-amt)
+                        elements
+                        (cons (cond
+                                [first?
+                                 (define len (string-length prompt))
+                                 (list (whitespace (- indent-amt (min len indent-amt)))
+                                       (render 'plain (string->immutable-string
+                                                       (substring prompt 0 (min len indent-amt)))))]
+                                [else indent])
+                              elements)))))
     (cond
       [(null? elementss)
        (render-lines null)]
       [(null? (cdr elementss))
        (render-lines
-        (list (make-line (car elementss) #:first? #t)))]
+        (list (make-line (car elementss) #:first? #t #:i 0 #:len 1)))]
       [else
        (render-lines
         (for/list ([elements (in-list elementss)]
                    [i (in-naturals)])
-          (make-line elements #:first? (zero? i))))]))
+          (make-line elements #:first? (zero? i) #:i i #:len (length elementss))))]))
 
   (values render_line
           render_block))

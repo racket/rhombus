@@ -17,7 +17,8 @@
                   plain
                   nested-flow
                   resolve-get
-                  resolve-get/tentative)
+                  resolve-get/tentative
+                  color-property)
          (submod scribble/racket id-element)
          (only-in scribble/search
                   find-racket-tag)
@@ -65,6 +66,7 @@
                          [(result) result-color]
                          [(error) error-color]
                          [(comment) comment-color]
+                         [(lineno) (style #f (list (color-property "blue")))]
                          [else tt-style])
                 (if (eq? kind 'meta)
                     str
@@ -230,13 +232,15 @@
                               #:indent [indent-amt 0]
                               #:prompt [prompt ""]
                               #:indent_from_block [indent-from-block? #t]
-                              #:spacer_info_box [info-box #f])
+                              #:spacer_info_box [info-box #f]
+                              #:number_from [number-from #f])
   (define output-block
     (render_code_block stx
                        #:indent indent-amt
                        #:prompt prompt
                        #:indent_from_block indent-from-block?
-                       #:spacer_info_box info-box))
+                       #:spacer_info_box info-box
+                       #:number_from number-from))
   (if inset?
       (nested-flow (style 'code-inset null) (list output-block))
       output-block))
