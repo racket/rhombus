@@ -641,3 +641,15 @@ block:
         #true
   check Fruit(10).hello(10) ~is #true
   check Fruit(10).hello(9) ~throws "no matching case for arguments"
+
+block:
+  interface DDDD:
+    method ppp(arg): arg
+  class F():
+    implements DDDD
+  fun get_intf_fun(a :: DDDD):
+    a.ppp(_)
+  fun get_class_fun(a :: F):
+    a.ppp(_)
+  check get_intf_fun(F())(10) ~is 10
+  check get_class_fun(F())(10) ~is 10
