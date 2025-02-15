@@ -34,7 +34,7 @@
                      #%quotes)
          (for-space rhombus/unquote_bind
                     _
-                    /!/))
+                    !/!))
 
 (module+ convert
   (begin-for-syntax
@@ -92,7 +92,7 @@
     (pattern (op id)
              #:when (not any-id?)
              #:when (free-identifier=? (in-unquote-binding-space #'id)
-                                       (unquote-bind-quote /!/)))
+                                       (unquote-bind-quote !/!)))
     (pattern (_::parens (group (~var _ (:cut any-id?))))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
@@ -319,7 +319,7 @@
                         (cons dots ps) can-be-empty? #f #f
                         #t
                         splice?)))]
-           ;; `$ /!/` within a sequence
+           ;; `$ !/!` within a sequence
            [((op (~var $-id (:$ in-space))) (~var _ (:cut tail-any-escape?)) . gs)
             (loop #'gs #f #f #f
                   (append (or pend-idrs '()) idrs)
@@ -726,7 +726,7 @@
         (values #`(#,(syntax/loc #'form-id _) () () ())
                 #'tail)]))))
 
-(define-unquote-binding-syntax /!/
+(define-unquote-binding-syntax !/!
   (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx

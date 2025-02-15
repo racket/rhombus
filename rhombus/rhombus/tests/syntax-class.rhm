@@ -1270,7 +1270,7 @@ block:
 
 block:
   syntax_class Cutting
-  | '1 $ /!/ 2'
+  | '1 $ !/! 2'
   check:
     match '1 2'
     | '$(c :: Cutting)': c
