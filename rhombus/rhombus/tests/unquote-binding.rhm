@@ -57,31 +57,61 @@ check:
 
 check:
   match '1 2'
-  | '1 $ /!/ 2': "yes"
+  | '1 $match.cut 2': "yes"
   | ~else: "no"
   ~is "yes"
 
 check:
   match '1 2'
-  | '1 $ /!/ 3': "yes"
+  | '1 $match.cut 3': "yes"
   | ~else: "no"
   ~throws "expected the literal 3"
 
 check:
   match '1 2'
-  | '1 $((/!/)) 3': "yes"
+  | '1 $((match.cut)) 3': "yes"
   | ~else: "no"
   ~throws "expected the literal 3"
 
 check:
+  match '1 2'
+  | '$(match.delimit '1 $match.cut 3')': "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '1 3'
+  | '$(match.delimit '1 $match.cut 3')': "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
+  match '1 3'
+  | '$(match.delimit '1 3')': "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
   match '1 (2 3)'
-  | '1 $(! '(2 $ /!/ 3)')': "yes"
+  | '1 $(! '(2 $match.cut 3)')': "yes"
   | ~else: "no"
   ~is "no"
 
 check:
   match '1 (2 4)'
-  | '1 $(! '(2 /!/ 3)')': "yes"
+  | '1 $(! '(2 $match.cut 3)')': "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
+  match '1 1'
+  | '$(match.commit '1 ...') 1': "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '1 2'
+  | '$(match.commit '1 ...') 2': "yes"
   | ~else: "no"
   ~is "yes"
 

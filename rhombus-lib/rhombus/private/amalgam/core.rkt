@@ -122,6 +122,7 @@
         "quasiquote.rkt"
         "dollar.rkt"
         "unquote-binding-primitive.rkt"
+        "match-ns.rkt"
         "rest-marker.rkt"
         "ellipsis.rkt"
         "apostrophe.rkt"

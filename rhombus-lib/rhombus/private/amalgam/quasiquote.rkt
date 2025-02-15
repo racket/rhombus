@@ -3,8 +3,10 @@
                      syntax/parse/pre
                      shrubbery/print
                      shrubbery/property
+                     enforest/hier-name-parse
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "name-path-op.rkt")
          syntax/parse/pre
          "provide.rkt"
          "parse.rkt"
@@ -25,7 +27,10 @@
          "unquote-binding-identifier.rkt"
          "tag.rkt" ; for use in `~parse`
          "sequence-pattern.rkt"
-         "syntax-wrap.rkt")
+         "syntax-wrap.rkt"
+         "dotted-sequence-parse.rkt"
+         "name-root-space.rkt"
+         "name-root-ref.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -33,8 +38,11 @@
                       rhombus/unquote_bind)
                      #%quotes)
          (for-space rhombus/unquote_bind
-                    _
-                    /!/))
+                    _))
+
+(module+ for-match-ns
+ (provide (for-space rhombus/unquote_bind
+                     cut)))
 
 (module+ convert
   (begin-for-syntax
@@ -87,13 +95,14 @@
                         (not (unquote-binding-id? #'term))
                         (free-identifier=? (in-unquote-binding-space #'term)
                                            (unquote-bind-quote _)))))  
-  (define-syntax-class (:cut any-id?)
+  (define-splicing-syntax-class (:cut dotted?)
     #:datum-literals (op)
-    (pattern (op id)
-             #:when (not any-id?)
-             #:when (free-identifier=? (in-unquote-binding-space #'id)
-                                       (unquote-bind-quote /!/)))
-    (pattern (_::parens (group (~var _ (:cut any-id?))))))
+    (pattern seq::dotted-operator-or-identifier-sequence             
+             #:when (not dotted?)
+             #:with (~var name (:hier-name-seq in-name-root-space in-unquote-binding-space name-path-op name-root-ref)) #'seq
+             #:when (free-identifier=? (in-unquote-binding-space #'name.name)
+                                       (unquote-bind-quote cut)))
+    (pattern (_::parens (group (~var _ (:cut dotted?))))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
     (pattern (~seq (~var _ (:$ in-space)) (~var || (:esc dotted? #f)) (~var || (:... in-space)))))
@@ -319,7 +328,7 @@
                         (cons dots ps) can-be-empty? #f #f
                         #t
                         splice?)))]
-           ;; `$ /!/` within a sequence
+           ;; `$ cut` within a sequence
            [((op (~var $-id (:$ in-space))) (~var _ (:cut tail-any-escape?)) . gs)
             (loop #'gs #f #f #f
                   (append (or pend-idrs '()) idrs)
@@ -726,7 +735,7 @@
         (values #`(#,(syntax/loc #'form-id _) () () ())
                 #'tail)]))))
 
-(define-unquote-binding-syntax /!/
+(define-unquote-binding-syntax cut
   (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx

@@ -491,30 +491,56 @@ class's name.
 @doc(
   ~nonterminal:
     stx_bind: def bind ~defn
-  unquote_bind.macro '/!/ $stx_bind'
+  unquote_bind.macro 'match.cut'
+  unquote_bind.macro 'match.delimit $stx_bind'
+  unquote_bind.macro 'match.commit $stx_bind'
 ){
 
- An unquote binding operator for use with @rhombus($, ~bind) that
- establishes a @deftech{cut} for syntax matching. A @tech{cut} prevents
- backtracking in the case that pattern after the cut fails to match, and
- instead leads to an immediate match failure, which typically implies an
- immediate error.
+ Unquote binding forms for use with @rhombus($, ~bind) that control
+ backtracking search for a match:
 
- A @tech{cut} can only appear within a term sequence pattern. When a cut
- is used within a pattern in a @tech{syntax class}, then the syntax class
- delimits the cut; that is, failure implies a non-match of the syntax
- class, and not necessarily a failure of a match context using the syntax
- class. When a cut appears within @rhombus(!, ~unquote_bind), the
+@itemlist(
+
+ @item{The @rhombus(match.cut, ~unquote_bind) form prevents backtracking
+  in the case that pattern after the cut fails to match, and instead leads
+  to an immediate match failure, which typically implies an immediate
+  error.}
+
+ @item{The @rhombus(match.delimit, ~unquote_bind) form delimits cuts
+  within @rhombus(stx_bind), causing match failure there to backtrack as
+  allowed outside the @rhombus(match.delimit, ~unquote_bind) form.}
+
+ @item{The @rhombus(match.commit, ~unquote_bind) form causes the first
+  found match to @rhombus(stx_bind) to be the only considered match,
+  meaning that backtracking will not try alternative matches to
+  @rhombus(stx_bind).}
+
+)
+
+ The @rhombus(match.cut) form can only appear within a term sequence
+ pattern. When @rhombus(match.cut) is used within a pattern in a
+ @tech{syntax class}, then the syntax class delimits the cut; that is,
+ failure implies a non-match of the syntax class, and not necessarily a
+ failure of a match context using the syntax class. When
+ @rhombus(match.cut) appears within @rhombus(!, ~unquote_bind), the
  @rhombus(!, ~unquote_bind) operator delimits the cut, so that failure
  counts as success for the @rhombus(!, ~unquote_bind) form.
 
 @examples(
   match '1 2'
-  | '1 $ /!/ 2': "ok"
+  | '1 $match.cut 2': "ok"
   ~error:
     match '1 3'
-    | '1 $ /!/ 2': "ok"
+    | '1 $match.cut 2': "ok"
     | '1 3': "does not get here"
+  match '1 3'
+  | '$(match.delimit '1 $match.cut 2')': "ok"
+  | '1 3': "else"
+  match '1 1 3'
+  | '$(match.commit '1 ...') $x': x
+  ~error:
+    match '1 1 1'
+    | '$(match.commit '1 ...') $x': x
 )
 
 }
