@@ -50,7 +50,8 @@
 
 ;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
 ;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
-;; matched literally, and plain identifiers are implemented in
+;; matched literally, `cut` "quasiquote.rkt" so it can be handled
+;; specially where allowed, and plain identifiers are implemented in
 ;; "unquote-binding-identifier.rkt"
 
 (define-unquote-binding-syntax #%parens
@@ -558,7 +559,10 @@
      (syntax-parse (and (eq? (current-unquote-binding-kind) 'term1)
                         (normalize-id form))
        [#f #'#f]
-       [(pat _ _ _) #'((~not pat) () () ())]))))
+       [(pat _ _ _)
+        (when (is-sequence-pattern? #'pat)
+          (raise-syntax-error #f "only allowed before a term pattern" stx))
+        #'((~not (~delimit-cut pat)) () () ())]))))
 
 (define-unquote-binding-syntax #%literal
   (unquote-binding-transformer

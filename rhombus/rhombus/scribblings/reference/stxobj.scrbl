@@ -488,6 +488,37 @@ class's name.
 
 }
 
+@doc(
+  ~nonterminal:
+    stx_bind: def bind ~defn
+  unquote_bind.macro '/!/ $stx_bind'
+){
+
+ An unquote binding operator for use with @rhombus($, ~bind) that
+ establishes a @deftech{cut} for syntax matching. A @tech{cut} prevents
+ backtracking in the case that pattern after the cut fails to match, and
+ instead leads to an immediate match failure, which typically implies an
+ immediate error.
+
+ A @tech{cut} can only appear within a term sequence pattern. When a cut
+ is used within a pattern in a @tech{syntax class}, then the syntax class
+ delimits the cut; that is, failure implies a non-match of the syntax
+ class, and not necessarily a failure of a match context using the syntax
+ class. When a cut appears within @rhombus(!, ~unquote_bind), the
+ @rhombus(!, ~unquote_bind) operator delimits the cut, so that failure
+ counts as success for the @rhombus(!, ~unquote_bind) form.
+
+@examples(
+  match '1 2'
+  | '1 $ /!/ 2': "ok"
+  ~error:
+    match '1 3'
+    | '1 $ /!/ 2': "ok"
+    | '1 3': "does not get here"
+)
+
+}
+
 
 @doc(
   ~also_meta

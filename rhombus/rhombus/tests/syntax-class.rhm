@@ -1239,3 +1239,44 @@ block:
     match '~opt_a: 10; ~opt_b'
     | '$(v :: Options)': v.o
     ~matches { #'a: '10; ~opt_b' }
+
+
+namespace HasNS:
+  export NS
+
+  namespace NS
+
+  syntax_class NS.Arithmeticn
+  | '$x + $y'
+
+  check:
+    match '1+2'
+    | '$(exp :: NS.Arithmeticn)': exp.x
+    ~matches '1'
+
+block:
+  import .HasNS.NS
+  check:
+    match '1+2'
+    | '$(exp :: NS.Arithmeticn)': exp.x
+    ~matches '1'
+
+block:
+  import .HasNS.NS open
+  check:
+    match '1+2'
+    | '$(exp :: Arithmeticn)': exp.x
+    ~matches '1'
+
+block:
+  syntax_class Cutting
+  | '1 $ /!/ 2'
+  check:
+    match '1 2'
+    | '$(c :: Cutting)': c
+    ~matches '1 2'
+  check:
+    match '1 3'
+    | '$(c :: Cutting)': c
+    | ~else: "other"
+    ~is "other"

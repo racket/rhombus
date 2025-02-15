@@ -18,6 +18,7 @@
          "pattern-variable.rkt"
          "definition.rkt"
          "name-root.rkt"
+         "dotted-sequence-parse.rkt"
          "parse.rkt"
          "pack.rkt"
          "parens.rkt"
@@ -39,19 +40,26 @@
 
 (define-for-syntax (parse-syntax-class stx #:for-together? [for-together? #f])
   (syntax-parse stx
-    [(form-id class-name args::class-args
+    [(form-id name-seq::dotted-identifier-sequence args::class-args
               (_::alts alt ...))
+     #:with full-name::dotted-identifier #'name-seq
+     #:with class-name #'full-name.name
+     #:with name-extends #'full-name.extends
      (build-syntax-class stx (syntax->list #'(alt ...)) null
                          #:define-class? #t
                          #:class/inline-name #'class-name
+                         #:name-extends #'name-extends
                          #:class-formals #'args.formals
                          #:class-arity #'args.arity
                          #:for-together? for-together?)]
-    [(form-id class-name args::class-args
+    [(form-id name-seq::dotted-identifier-sequence args::class-args
               ;; syntax-class clauses are implemented in "syntax-class-clause-primitive.rkt"
               (_::block clause::syntax-class-clause ...)
               ;; patterns can be spliced by one of the macros
               (~optional (_::alts alt ...)))
+     #:with full-name::dotted-identifier #'name-seq
+     #:with class-name #'full-name.name
+     #:with name-extends #'full-name.extends
      (define parsed-clauses (syntax->list #'(clause.parsed ...)))
      (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
        (extract-clauses stx
@@ -61,6 +69,7 @@
      (build-syntax-class stx pattern-alts parsed-clauses
                          #:define-class? #t
                          #:class/inline-name #'class-name
+                         #:name-extends #'name-extends
                          #:class-formals #'args.formals
                          #:class-arity #'args.arity
                          #:kind-kw kind-kw
@@ -147,6 +156,7 @@
                                        track-stxes
                                        #:define-class? [define-class? #f]
                                        #:class/inline-name [class/inline-name #f]
+                                       #:name-extends [name-extends #f]
                                        #:class-formals [class-formals #'#f]
                                        #:class-arity [class-arity #'#f]
                                        #:kind-kw [kind-kw #f]
@@ -239,18 +249,19 @@
         (list
          ;; return a list of definitions
          (track-all
-          #`(define-syntax #,(in-syntax-class-space class-name)
-              (rhombus-syntax-class '#,kind
-                                    (quote-syntax #,internal-class-name)
-                                    (quote-syntax #,(for/list ([var (in-list attributes)])
-                                                      (pattern-variable->list var #:keep-id? #f)))
-                                    #,splicing?
-                                    '#,class-arity
-                                    '#,swap-root
-                                    #f
-                                    #,(if (null? attributes)
-                                          #f
-                                          #`(gensym '#,class-name)))))
+          (build-syntax-definition/maybe-extension
+           'rhombus/stxclass class-name name-extends
+           #`(rhombus-syntax-class '#,kind
+                                   (quote-syntax #,internal-class-name)
+                                   (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                     (pattern-variable->list var #:keep-id? #f)))
+                                   #,splicing?
+                                   '#,class-arity
+                                   '#,swap-root
+                                   #f
+                                   #,(if (null? attributes)
+                                         #f
+                                         #`(gensym '#,class-name)))))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
                                  class-name)

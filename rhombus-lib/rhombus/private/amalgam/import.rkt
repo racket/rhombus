@@ -101,7 +101,7 @@
 
   (define name-root-portal-ref
     (make-name-root-ref #:non-portal-ref (lambda (ns id tail)
-                                           (values ns (list* #'dotted-path. id tail)))))
+                                           (values ns (datum->syntax #f (list* #'dotted-path. id tail))))))
 
   (define-rhombus-enforest
     #:syntax-class :import

@@ -50,6 +50,41 @@ check:
   #void
   ~throws "does not satisfy annotation"
 
+check:
+  match '1 2'
+  | '1 $(! '3')': "yes"
+  ~is "yes"
+
+check:
+  match '1 2'
+  | '1 $ /!/ 2': "yes"
+  | ~else: "no"
+  ~is "yes"
+
+check:
+  match '1 2'
+  | '1 $ /!/ 3': "yes"
+  | ~else: "no"
+  ~throws "expected the literal 3"
+
+check:
+  match '1 2'
+  | '1 $((/!/)) 3': "yes"
+  | ~else: "no"
+  ~throws "expected the literal 3"
+
+check:
+  match '1 (2 3)'
+  | '1 $(! '(2 $ /!/ 3)')': "yes"
+  | ~else: "no"
+  ~is "no"
+
+check:
+  match '1 (2 4)'
+  | '1 $(! '(2 /!/ 3)')': "yes"
+  | ~else: "no"
+  ~is "yes"
+
 block:
   def a = "top a"
   check:
