@@ -491,7 +491,7 @@ class's name.
 @doc(
   ~nonterminal:
     stx_bind: def bind ~defn
-  unquote_bind.macro '!/! $stx_bind'
+  unquote_bind.macro '/!/ $stx_bind'
 ){
 
  An unquote binding operator for use with @rhombus($, ~bind) that
@@ -510,10 +510,10 @@ class's name.
 
 @examples(
   match '1 2'
-  | '1 $ !/! 2': "ok"
+  | '1 $ /!/ 2': "ok"
   ~error:
     match '1 3'
-    | '1 $ !/! 2': "ok"
+    | '1 $ /!/ 2': "ok"
     | '1 3': "does not get here"
 )
 
