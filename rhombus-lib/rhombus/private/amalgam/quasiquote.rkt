@@ -33,7 +33,8 @@
                       rhombus/unquote_bind)
                      #%quotes)
          (for-space rhombus/unquote_bind
-                    _))
+                    _
+                    /!/))
 
 (module+ convert
   (begin-for-syntax
@@ -85,7 +86,14 @@
                         (not (identifier? #'term))
                         (not (unquote-binding-id? #'term))
                         (free-identifier=? (in-unquote-binding-space #'term)
-                                           (unquote-bind-quote _)))))
+                                           (unquote-bind-quote _)))))  
+  (define-syntax-class (:cut any-id?)
+    #:datum-literals (op)
+    (pattern (op id)
+             #:when (not any-id?)
+             #:when (free-identifier=? (in-unquote-binding-space #'id)
+                                       (unquote-bind-quote /!/)))
+    (pattern (_::parens (group (~var _ (:cut any-id?))))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
     (pattern (~seq (~var _ (:$ in-space)) (~var || (:esc dotted? #f)) (~var || (:... in-space)))))
@@ -311,6 +319,15 @@
                         (cons dots ps) can-be-empty? #f #f
                         #t
                         splice?)))]
+           ;; `$ /!/` within a sequence
+           [((op (~var $-id (:$ in-space))) (~var _ (:cut tail-any-escape?)) . gs)
+            (loop #'gs #f #f #f
+                  (append (or pend-idrs '()) idrs)
+                  (append (or pend-sidrs '()) sidrs)
+                  (append (or pend-vars '()) vars)
+                  (cons #'~! ps) really-can-be-empty? #f #f
+                  needs-group-check?
+                  splice?)]
            ;; `$esc` within a sequence
            [((op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (define could-tail? (or (and (not tail) (not splice?)) as-tail?))
@@ -353,7 +370,7 @@
                      really-can-be-empty? #t #f
                      #t
                      splice?)])]
-           ;; `...` not following something
+           ;; `$` with nothing afterward
            [((op (~var $-id (:$ in-space))))
             (raise-syntax-error #f
                                 "misplaced escape"
@@ -708,6 +725,13 @@
        [(form-id . tail)
         (values #`(#,(syntax/loc #'form-id _) () () ())
                 #'tail)]))))
+
+(define-unquote-binding-syntax /!/
+  (unquote-binding-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(self . tail)
+        (raise-syntax-error #f "incompatible with this context" #'self)]))))
 
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]

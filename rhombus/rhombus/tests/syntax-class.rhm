@@ -1267,4 +1267,16 @@ block:
     match '1+2'
     | '$(exp :: Arithmeticn)': exp.x
     ~matches '1'
-  
+
+block:
+  syntax_class Cutting
+  | '1 $ /!/ 2'
+  check:
+    match '1 2'
+    | '$(c :: Cutting)': c
+    ~matches '1 2'
+  check:
+    match '1 3'
+    | '$(c :: Cutting)': c
+    | ~else: "other"
+    ~is "other"
