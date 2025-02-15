@@ -12,14 +12,14 @@
 @doc(
   ~nonterminal:
     id_bind: def bind ~defn
-    stxclass_id: block id
+    stxclass_id_name: namespace id_name ~defn
     rest_id: block id
     field_to_root_id: block id
     root_to_field_id: block id
     syntax_pattern: #%quotes pattern
     bind_maybe_kw_opt: fun ~defn
 
-  defn.macro 'syntax_class $stxclass_id $maybe_args:
+  defn.macro 'syntax_class $stxclass_id_name $maybe_args:
                 $class_clause
                 ...
               | $pattern_case
@@ -49,7 +49,7 @@
     $body
 ){
 
- Defines a @deftech{syntax class} @rhombus(stxclass_id) that can be used in syntax patterns with
+ Defines a @deftech{syntax class} @rhombus(stxclass_id_name) that can be used in syntax patterns with
  @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
  case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
  arguments; an @rhombus(id_bind) is like a @rhombus(bind_maybe_kw_opt) for
@@ -110,9 +110,9 @@
  @rhombus(#,(@rhombus(id, ~var)).#,(@rhombus(var, ~var))).
  When a field is a repetition, it can only be accessed statically---that is,
  when the @rhombus(id, ~var) in @rhombus(#,(@rhombus(id, ~var)).#,(@rhombus(var, ~var)))
- is bound as a pattern variable annotated with @rhombus(stxclass_id),
+ is bound as a pattern variable annotated with @rhombus(stxclass_id_name),
  or via @rhombus(#,(@nontermref(expr)).#,(@rhombus(var, ~var))) when
- @nontermref(expr) has the static information of @rhombus(Syntax.matched_of(stxclass_id), ~annot).
+ @nontermref(expr) has the static information of @rhombus(Syntax.matched_of(stxclass_id_name), ~annot).
  When a syntax object with fields for a syntax class is used to produce another
  system object (e.g., the syntax object is used in a template to make a larger
  syntax object), fields are not associated with any part of the new syntax object;
