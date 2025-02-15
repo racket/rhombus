@@ -45,6 +45,11 @@
                     group_option_sequence
                     term_option_sequence))
 
+(module+ for-match-ns
+  (provide (for-space rhombus/unquote_bind
+                      delimit
+                      commit)))
+                    
 (module+ for-parse-pattern
   (provide (for-syntax parse-pattern)))
 
@@ -563,6 +568,28 @@
         (when (is-sequence-pattern? #'pat)
           (raise-syntax-error #f "only allowed before a term pattern" stx))
         #'((~not (~delimit-cut pat)) () () ())]))))
+
+(define-for-syntax (make-match-operator stxparse-op)
+  (unquote-binding-prefix-operator
+   (lambda () (order-quote logical_negation))
+   `()
+   'automatic
+   (lambda (form stx)
+     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term1)
+                        (normalize-id form))
+       [#f #'#f]
+       [(pat idrs sidrs vars)
+        (with-syntax ([stxparse-op stxparse-op])
+          #`(#,(if (is-sequence-pattern? #'pat)
+                   #'(~seq (stxparse-op pat))
+                   #'(stxparse-op pat))
+             idrs sidrs vars))]))))
+
+(define-unquote-binding-syntax delimit
+  (make-match-operator #'~delimit-cut))
+  
+(define-unquote-binding-syntax commit
+  (make-match-operator #'~commit))
 
 (define-unquote-binding-syntax #%literal
   (unquote-binding-transformer
