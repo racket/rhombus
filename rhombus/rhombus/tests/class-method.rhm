@@ -633,3 +633,11 @@ check:
       O(5)
   A.m(A()).v
   ~is 5
+
+block:
+  class Fruit(price):
+    method
+    | hello(a when a == price):
+        #true
+  check Fruit(10).hello(10) ~is #true
+  check Fruit(10).hello(9) ~throws "no matching case for arguments"
