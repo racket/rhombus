@@ -733,36 +733,36 @@
                           ;; of expansion errors.
                           #`((lambda (try-next)
                                #,(wrap-adapted-arguments
-                                  (add-who
-                                   outer-who function-name
-                                   #`(nested-bindings
-                                      #,function-name
-                                      try-next
-                                      argument-binding-failure
-                                      (this-arg-id arg-info arg #f)
-                                      ...
-                                      maybe-match-rest ...
-                                      maybe-match-kwrest ...
-                                      (begin
-                                        (arg-info.committer-id this-arg-id arg-info.evidence-ids arg-info.data)
-                                        ...
-                                        maybe-commit-rest ...
-                                        maybe-commit-kwrest ...
-                                        (arg-info.binder-id this-arg-id arg-info.evidence-ids arg-info.data)
-                                        ...
-                                        maybe-bind-rest ...
-                                        maybe-bind-kwrest ...
-                                        (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                                        ... ...
-                                        maybe-static-info-rest
-                                        ...
-                                        maybe-static-info-kwrest
-                                        ...
-                                        #,(wrap-expression
-                                           ((entry-point-adjustment-wrap-body adjustments)
-                                            arity
-                                            #`(parsed
-                                               #:rhombus/expr
+                                  (wrap-expression
+                                   ((entry-point-adjustment-wrap-body adjustments)
+                                    arity
+                                    #`(parsed
+                                       #:rhombus/expr
+                                       #,(add-who
+                                          outer-who function-name
+                                          #`(nested-bindings
+                                             #,function-name
+                                             try-next
+                                             argument-binding-failure
+                                             (this-arg-id arg-info arg #f)
+                                             ...
+                                             maybe-match-rest ...
+                                             maybe-match-kwrest ...
+                                             (begin
+                                               (arg-info.committer-id this-arg-id arg-info.evidence-ids arg-info.data)
+                                               ...
+                                               maybe-commit-rest ...
+                                               maybe-commit-kwrest ...
+                                               (arg-info.binder-id this-arg-id arg-info.evidence-ids arg-info.data)
+                                               ...
+                                               maybe-bind-rest ...
+                                               maybe-bind-kwrest ...
+                                               (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                               ... ...
+                                               maybe-static-info-rest
+                                               ...
+                                               maybe-static-info-kwrest
+                                               ...
                                                #,(add-annotation-check
                                                   function-name main-converter main-annot-str
                                                   (add-annotation-check
@@ -1215,9 +1215,14 @@
                              (or srcloc
                                  (respan (datum->syntax #f (list rator-in #'args))))
                              #`(lambda (#,@formals)
-                                 (anonymous-body-call #,rator-in args #,rands #,extra-args tag
-                                                      #,static? #,rator-stx #,srcloc #,rator-kind
-                                                      #,rator-arity)))]
+                                 #,(wrap-call
+                                    #`(anonymous-body-call #,(wrap-rator rator-in extra-args) args #,rands
+                                                           #,(for/list ([extra-arg (in-list extra-args)])
+                                                               (discard-static-infos (wrap-extra-rand extra-arg extra-args)))
+                                                           tag
+                                                           #,static? #,rator-stx #,srcloc #,rator-kind
+                                                           #,rator-arity)
+                                    extra-args)))]
                        [fun (if (null? (syntax-e static-infos))
                                 fun
                                 (wrap-static-info fun #'#%call-result static-infos))]
@@ -1229,7 +1234,9 @@
 (define-syntax (anonymous-body-call stx)
   ;; continue parsing a function call that was put into an anonymous-function body
   (syntax-parse stx
-    [(_ rator-in args rands extra-args tag
+    [(_ rator-in args rands
+        extra-args
+        tag
         static? rator-stx srcloc rator-kind
         rator-arity)
      (define-values (call-e ignored-tail ignored-to-anonymous-function?)
