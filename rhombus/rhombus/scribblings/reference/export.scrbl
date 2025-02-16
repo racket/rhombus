@@ -50,9 +50,9 @@
  @rhombus(export) form that has a block containing the single
  @rhombus(export_clause).
 
- An @rhombus(export_item) can be an identifier, operator, other export
+ An @rhombus(export_item) can be an identifier, operator, or other export
  form, such as @rhombus(all_from, ~expo).
- It can also be a sequence @rhombus(export_item)s within a
+ It can also be a sequence of @rhombus(export_item)s within a
  group, since @rhombus(#%juxtapose, ~expo) is defined as an
  export form.
 
@@ -184,7 +184,7 @@
  Modifies exports to apply at @rhombus(phase) more than the enclosing
  context's phase, where @rhombus(phase) defaults to @rhombus(1).
 
- This modifier is valid only immediately within a modules, and not
+ This modifier is valid only immediately within a module, and not
  within @rhombus(namespace) forms.
 
 }
@@ -195,7 +195,7 @@
 
  Modifies exports to apply at the label phase.
 
- This modifier is valid only immediately within a modules, and not
+ This modifier is valid only immediately within a module, and not
  within @rhombus(namespace) forms.
 
 }
@@ -222,8 +222,8 @@
   expo.macro '$id_name . ($op)'
 ){
 
-  In an export clause, @rhombus(., ~expo) can be used only to form a
-  and @rhombus(id_name) or @rhombus(op_name)
+  In an export clause, @rhombus(., ~expo) can be used only to form an
+  @rhombus(id_name) or @rhombus(op_name)
   as described for @rhombus(export). It can also be used to form an
   @rhombus(id_name) for @rhombus(all_from, ~expo).
 

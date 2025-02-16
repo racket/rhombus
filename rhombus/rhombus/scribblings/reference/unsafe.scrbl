@@ -13,7 +13,7 @@
   decl.macro 'use_unsafe'
 ){
 
- When included a module, causes the module to be compiled in unsafe
+ When included by a module, causes the module to be compiled in unsafe
  mode, which may skip annotation checks on primitive operation to
  potentially improve performance. If a skipped check would have failed,
  however, the resulting behavior is unspecified and may lead to a crash

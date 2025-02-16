@@ -43,8 +43,8 @@ Here are all of the implicit forms:
 
  @item{@rhombus(#%block) --- used for a block formed with
        @litchar{:} (by itself as a would-be parsed term); this
-       implicit form is bound by @rhombuslangname(rhombus) to
-       as an expression or binding to always report an error}
+       implicit form is bound by @rhombuslangname(rhombus) as
+       an expression or binding to always report an error}
 
  @item{@rhombus(#%alts) --- used for a block formed with
        @litchar{|} (by itself as a would-be parsed term); this

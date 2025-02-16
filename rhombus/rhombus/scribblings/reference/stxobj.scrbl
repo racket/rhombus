@@ -27,7 +27,7 @@ the case of parsing a syntax object as a Rhombus expression via
 Racket expression. Pattern matching and functions like
 @rhombus(Syntax.unwrap) treat parsed terms as opaque.
 
-An quoted sequence of terms using @quotes is parsed as an
+A quoted sequence of terms using @quotes is parsed as an
 implicit use of the @rhombus(#%quotes) form, which is normally
 bound to create a syntax object. For example, @rhombus('1.000')
 is a syntax object that wraps the number @rhombus(1.0).

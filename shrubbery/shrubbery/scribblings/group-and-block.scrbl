@@ -148,8 +148,8 @@ of those forms. There is no problem if a @litchar{(}, @litchar{[}, or
 @litchar("{"), appears between one @litchar{'} as an opener and another
 @litchar{'} as an opener; otherwise, two consecutive @litchar{'}s
 intended as openers would instead be parsed as an opener and a closer.
-To disambiguate, @litchar{«} can be used immediately after immediately
-after an opener @litchar{'}, and then @litchar{»} must be used just before the
+To disambiguate, @litchar{«} can be used immediately after an opener
+@litchar{'}, and then @litchar{»} must be used just before the
 closing @litchar{'}. The @litchar{«} and @litchar{»} are @emph{not}
 preserved in the parsed representation.
 
@@ -648,7 +648,7 @@ used:
  @item{When @litchar{#//} appears completely on its own line (possibly with
    whitespace and non-group comments), then its indentation does not
    matter. It comments out the next group or alternative—which might
-   be a single-line group, multi-line group, or @litchar{\} alternative.},
+   be a single-line group, multi-line group, or @litchar{|} alternative.},
 
  @item{When @litchar{#//} appears at the start of a group with more tokens
    afterward on the same line, it determines that group's indentation,

@@ -12,7 +12,7 @@ pair lists:
 
 @itemlist(
 
- @item{A shrubbery document as a sequence of group is represented as a
+ @item{A shrubbery document as a sequence of groups is represented as a
    list that starts @rhombus(multi), and the rest of the list is
    a sequence of groups.}
 
@@ -20,7 +20,7 @@ pair lists:
    the rest of the list is a sequence of terms.}
 
  @item{Atom terms are represented as ``themselves'' within a group,
-   including identifiers a symbols, except that an operator is
+   including identifiers and symbols, except that an operator is
    represented as a 2-element list that is @rhombus(op) followed by the operator name
    as a symbol.}
 
