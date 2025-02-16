@@ -54,7 +54,7 @@ parameter's value using @rhombus(parameterize).
  parameter as a function with one argument. The @rhombus(guard) filter
  is @emph{not} applied to @rhombus(initial_val).
 
- A context parameter acts a function that returns the parameter's value
+ A context parameter acts as a function that returns the parameter's value
  in the current dynamic context when it is called with zero arguments,
  and it mutates the parameter's value when called with one argument.
 

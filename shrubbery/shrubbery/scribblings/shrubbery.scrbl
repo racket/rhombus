@@ -6,7 +6,7 @@
 
 @title{Shrubbery Notation}
 
-Shrubbery notation is a set of text-level convention that build toward a
+Shrubbery notation is a set of text-level conventions that build toward a
 full programming language, such as
 @seclink(~doc: ModulePath 'lib("rhombus/scribblings/rhombus.scrbl")', "top"){Rhombus}.
 The notation is line- and indentation-sensitive, and it is intended to partially group
