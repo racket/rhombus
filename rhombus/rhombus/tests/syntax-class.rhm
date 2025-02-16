@@ -1208,6 +1208,24 @@ check:
       [mp.elem, ...]
   ~matches ['a', 'b', 'c']
 
+block:
+  syntax_class.together:
+    syntax_class One
+    | '1'
+    | '1 $(_ :: Two)'
+    syntax_class Two
+    | '2'
+    | '2 $(_ :: One)'
+  check:
+    match '1 2 1 2 1 2'
+    | '$(_ :: One)': "one"
+    | '$(_ :: Two)': "two"
+    ~is "one"
+  check:
+    match '2 1 2 1 2 1'
+    | '$(_ :: One)': "one"
+    | '$(_ :: Two)': "two"
+    ~is "two"
 
 // field name in root-swapped syntax class should not be
 // confused with a pattern variable using the syntax
