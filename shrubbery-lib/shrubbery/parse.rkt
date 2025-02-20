@@ -324,7 +324,7 @@
                          (group-state-count? sg)))
               (define next-line? (next-line?* rest-l last-line))
               (define bar-column
-                (if next-line?
+                (if (or next-line? (null? rest-l))
                     (group-state-column sg)
                     (column+ (token-column (car rest-l)) (cont-delta-column (group-state-delta sg)))))
               ;; In top level or immediately in opener-closer:
