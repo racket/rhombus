@@ -107,7 +107,7 @@
     (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ (_::block (group op::syntax-class-id . rest)) ...)
+        [(_ (_::block (group op::syntax-class-id . rest) ...))
          (define decls
            (for/list ([g (in-list (syntax->list #'((op . rest) ...)))])
              (parse-syntax-class g #:for-together? #t)))

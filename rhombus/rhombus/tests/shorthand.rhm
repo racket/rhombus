@@ -47,3 +47,26 @@ block:
   check source (_ ++ _) ~is "(_ ++ _)"
   check source [1, 2, 3].map(_) ~is "[1, 2, 3].map(_)"
   check source List.map([1, 2, 3], _) ~is "List.map([1, 2, 3], _)"
+
+// shorthands should be statically `Function`s
+check:
+  use_static
+  def add1 = (_ + 1)
+  add1.map([1, 2, 3])
+  ~is [2, 3, 4]
+
+check:
+  use_static
+  (_ + 1).map([1, 2, 3])
+  ~is [2, 3, 4]
+
+check:
+  use_static
+  def add1 = math.sum(_, 1)
+  add1.map([1, 2, 3])
+  ~is [2, 3, 4]
+
+check:
+  use_static
+  math.sum(_, 1).map([1, 2, 3])
+  ~is [2, 3, 4]

@@ -10,7 +10,7 @@
 
 In general, documented bindings are shown in a blue box where the bound
 name is in @bold{boldface}. For example, documentation for
-@rhombus(my_contract) could appear as follows:
+@rhombus(my_constant) could appear as follows:
 
 @nested(~style: #'inset){
 @doc(
@@ -197,7 +197,7 @@ as metavariabales in italic) and field-accessor functions (where defined
 names are shown as boldface).
 
 For example, a class @rhombus(Lure) with fields @rhombus(weight) and
-@rhombus(color) that can be access via @rhombus(Lure.weight) and
+@rhombus(color) that can be accessed via @rhombus(Lure.weight) and
 @rhombus(Lure.color) would be documented as follows:
 
 @nested(~style: #'inset){

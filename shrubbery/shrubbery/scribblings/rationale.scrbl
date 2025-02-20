@@ -62,7 +62,7 @@ Latin-1 extension of ASCII to avoid reserving additional ASCII
 characters.
 
 Making whitespace and comment lines ignored in all contexts means that
-they can be freely added without intefering with grouping. The
+they can be freely added without interfering with grouping. The
 @litchar{\} continuation operator is somewhat unusual in that it skips
 blank and comment lines to continue, as opposed to requiring @litchar{\}
 on every continuing line; that, too, allows extra blank and comment

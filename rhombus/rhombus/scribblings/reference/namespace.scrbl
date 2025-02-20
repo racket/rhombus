@@ -18,7 +18,7 @@ A namespace is extended though definition forms that use a
 operators are allowed, the operator to define can be a
 @litchar{.}-separated sequence of identifiers followed by a @litchar{.}
 and a parenthesized operator. When using a form like @rhombus(expr.macro)
-to extends a namespace, the @litchar{.}-separated sequence must be
+to extend a namespace, the @litchar{.}-separated sequence must be
 surrounded by pair of parentheses.
 
 A namespace contains bindings that are in any @tech{space}, while the
@@ -60,7 +60,7 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
  When @rhombus(~open) is supplied in place of @rhombus(id_name), then
  instead of defining a visible namespace, a private namespace name is
  created and also imported with @rhombus(import) to bind all the exported
- name in the enclosing scope. The names are bound using the same
+ names in the enclosing scope. The names are bound using the same
  identifiers as listed in the namespace's @rhombus(export), but without
  scopes created by @rhombus(namespace) to isolate other bindings within
  the namespace.
