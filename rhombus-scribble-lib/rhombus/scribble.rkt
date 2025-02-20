@@ -52,6 +52,8 @@
                (dynamic-require 'scribble/private/indentation 'keystrokes))]
       [(drracket:toolbar-buttons)
        (dynamic-require 'scribble/tools/drracket-buttons 'drracket-buttons)]
+      [(drracket:default-extension)
+       "scrbl"]
       [else
        (shrubbery-get-info-proc/mode key default make-default
                                      #:mode 'text)])))
