@@ -66,11 +66,13 @@
                          [(result) result-color]
                          [(error) error-color]
                          [(comment) comment-color]
-                         [(lineno) (style #f (list (color-property "blue")))]
+                         [(lineno) (style 'smaller (list (color-property "blue")))]
                          [else tt-style])
                 (if (eq? kind 'meta)
                     str
-                    (keep-spaces str))))
+                    (keep-spaces (if (eq? kind 'lineno)
+                                     (string-append str " ")
+                                     str)))))
    #:render_in_space (lambda (space-name
                               #:prefix [prefix-str #f]
                               str
