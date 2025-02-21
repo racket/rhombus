@@ -24,16 +24,16 @@
          #:render_lines render-lines
          #:rendered_shape element-shape
          #:is_rendered element*?)
-  (define tt-space (whitespace 1))
-  (define tt-comma (render 'meta ", "))
-  (define tt-semicolon (render 'meta "; "))
-  (define res-comma (render 'result ", "))
-  (define res-semicolon (render 'result "; "))
-
   (define (render_line stx-in
                        #:space [space-name-in #f]
                        #:spacer_info_box [info-box #f]
                        #:content [content #f])
+    (define tt-space (whitespace 1))
+    (define tt-comma (render 'meta ", "))
+    (define tt-semicolon (render 'meta "; "))
+    (define res-comma (render 'result ", "))
+    (define res-semicolon (render 'result "; "))
+
     (define stx (replace-name-refs (syntax-parse stx-in
                                      #:datum-literals (multi)
                                      [(multi g) #'g]
