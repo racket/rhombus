@@ -140,7 +140,10 @@
                                [(id . tail)
                                 (values (make-repetition-info (list #'id)
                                                               for-clausess
-                                                              for-body
+                                                              (syntax-property
+                                                               for-body
+                                                               'disappeared-use
+                                                               (syntax-local-introduce #'id))
                                                               (element-get-static-infos)
                                                               0)
                                         #'tail)])))))))
