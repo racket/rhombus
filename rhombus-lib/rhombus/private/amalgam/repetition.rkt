@@ -49,6 +49,8 @@
 
             make-repetition-info
 
+            repetition-relative-precedence
+
             repetition-static-info-lookup))
 
 (begin-for-syntax
@@ -119,7 +121,8 @@
     #:prefix-operator-ref repetition-prefix-operator-ref
     #:infix-operator-ref repetition-infix-operator-ref
     #:check-result check-repetition-result
-    #:make-identifier-form identifier-repetition-use/maybe)
+    #:make-identifier-form identifier-repetition-use/maybe
+    #:relative-precedence repetition-relative-precedence)
 
   (define (make-expression+repetition for-clausess for-body element-get-static-infos
                                       #:expr-handler [expr-handler (lambda (stx fail) (fail))]

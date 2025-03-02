@@ -474,3 +474,85 @@ block:
   check:
     [x*2 < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
     [(x times_two) < dynamic(5), ...] ~is [#true, #true, #false, #false, #false]
+
+// check handling of precedence in different cases
+block:
+  let [x, ...] = [1, 2, 3, 4, 5]
+  operator (x add y):
+    ~weaker_than: *
+    x+y
+  check:
+    2 add 1*2 ~is 4
+    [2 add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator (two_add y):
+    ~weaker_than: *
+    2+y
+  check:
+    two_add 1*2 ~is 4
+    [two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator ((x) add_two):
+    ~weaker_than: *
+    x+2
+  check:
+    1*2 add_two ~is 4
+    [x*2 add_two, ...] ~is [4, 6, 8, 10, 12]
+  operator add_two_add:
+    ~weaker_than: *
+  | (add_two_add y): 2+y
+  | (x add_two_add y): x+y
+  check:
+    add_two_add 1*2 ~is 4
+    2 add_two_add 1*2 ~is 4
+    [add_two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+    [2 add_two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator two_add_two:
+    ~weaker_than: *
+  | (two_add_two y): 2+y
+  | ((x) two_add_two): x+2
+  check:
+    two_add_two 1*2 ~is 4
+    1*2 two_add_two ~is 4
+    [two_add_two x*2, ...] ~is [4, 6, 8, 10, 12]
+    [x*2 two_add_two, ...] ~is [4, 6, 8, 10, 12]
+
+// check handling of order in different cases
+block:
+  import:
+    rhombus/meta.addition
+  let [x, ...] = [1, 2, 3, 4, 5]
+  operator (x add y):
+    ~order: addition
+    x+y
+  check:
+    2 add 1*2 ~is 4
+    [2 add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator (two_add y):
+    ~order: addition
+    2+y
+  check:
+    two_add 1*2 ~is 4
+    [two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator ((x) add_two):
+    ~order: addition
+    x+2
+  check:
+    1*2 add_two ~is 4
+    [x*2 add_two, ...] ~is [4, 6, 8, 10, 12]
+  operator add_two_add:
+    ~order: addition
+  | (add_two_add y): 2+y
+  | (x add_two_add y): x+y
+  check:
+    add_two_add 1*2 ~is 4
+    2 add_two_add 1*2 ~is 4
+    [add_two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+    [2 add_two_add x*2, ...] ~is [4, 6, 8, 10, 12]
+  operator two_add_two:
+    ~order: addition
+  | (two_add_two y): 2+y
+  | ((x) two_add_two): x+2
+  check:
+    two_add_two 1*2 ~is 4
+    1*2 two_add_two ~is 4
+    [two_add_two x*2, ...] ~is [4, 6, 8, 10, 12]
+    [x*2 two_add_two, ...] ~is [4, 6, 8, 10, 12]

@@ -72,8 +72,8 @@ check:
   PairList[1, 2] is_a MembershipTestable ~is #true
   0..2 is_a MembershipTestable ~is #true
   0..=2 is_a MembershipTestable ~is #true
-  (0..) is_a MembershipTestable ~is #true
-  (..) is_a MembershipTestable ~is #true
+  0.. is_a MembershipTestable ~is #true
+  .. is_a MembershipTestable ~is #true
 
   "apple" is_a MembershipTestable ~is #false
   #"apple" is_a MembershipTestable ~is #false

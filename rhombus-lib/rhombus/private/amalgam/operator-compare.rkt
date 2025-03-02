@@ -1,8 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/syntax-local
-                     enforest/operator
                      enforest/hier-name-parse
                      "pack.rkt"
                      "annotation-failure.rkt"
@@ -10,7 +8,7 @@
                      "dotted-sequence.rkt")
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "parens.rkt")
+         "ends-parse.rkt")
 
 (provide
  (for-syntax extract-name
@@ -53,7 +51,7 @@
   (define (check-mode who mode)
     (unless (or (eq? mode 'prefix) (eq? mode 'infix))
       (raise-annotation-failure who mode "matching(#'prefix || #'infix)")))
-  
+
   (define (get-relative-precedence who left-mode left-stx right-stx
                                    space-sym relative-precedence)
     (check-mode who left-mode)
@@ -64,25 +62,14 @@
       [(weaker) 'weaker]
       [else #f]))
 
-  (define (ends-parse? who left-mode left-stx tail
+  (define (ends-parse? who left-mode left-stx tail-in
                        space-sym relative-precedence infix-operator-ref)
     (check-mode who left-mode)
     (define left-id (extract-name who left-stx space-sym))
-    (define g (or (unpack-tail tail #f #f)
-                  (raise-annotation-failure who tail "Sequence")))
+    (define tail (or (unpack-tail tail-in #f #f)
+                     (raise-annotation-failure who tail-in "Sequence")))
     (define in-space (if space-sym
                          (make-interned-syntax-introducer space-sym)
                          (lambda (x) x)))
-    (define (compare name)
-      (define rel (relative-precedence left-mode left-id 'infix name))
-      (eq? rel 'stronger))
-    (syntax-parse g
-      #:datum-literals (group)
-      [() #t]
-      [(~var name (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref/maybe))
-       (compare #'name.name)]
-      [((tag::parens . _) . _) (compare (datum->syntax #'tag '#%call))]
-      [((tag::brackets . _) . _) (compare (datum->syntax #'tag '#%index))]
-      [((tag::braces . _) . _) (compare (datum->syntax #'tag '#%braces))]
-      [((tag::quotes . _) . _) (compare (datum->syntax #'tag '#%quotes))]
-      [_ #f])))
+    (do-ends-parse? left-mode left-id tail
+                    in-space relative-precedence infix-operator-ref)))

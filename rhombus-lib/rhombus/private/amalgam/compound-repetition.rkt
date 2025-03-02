@@ -1,12 +1,14 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "tag.rkt")
          "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
          "static-info.rkt"
-         "order.rkt")
+         "order.rkt"
+         "ends-parse.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
                      make-expression&repetition-infix-operator
@@ -47,7 +49,9 @@
       (values repet tail))
     (define (mixfix-exp stx)
       (syntax-parse stx
-        [(_)
+        [(self::name . more)
+         #:when (do-ends-parse? 'prefix #'self.name #'more
+                                in-expression-space expression-relative-precedence expression-infix-operator-ref)
          (nofix-exp stx)]
         [(self . more)
          #:with (~var rhs (:prefix-op+expression+tail #'self)) #`(#,group-tag . more)
@@ -55,7 +59,9 @@
          (values expr #'rhs.tail)]))
     (define (mixfix-rep stx)
       (syntax-parse stx
-        [(_)
+        [(self::name . more)
+         #:when (do-ends-parse? 'prefix #'self.name #'more
+                                in-repetition-space repetition-relative-precedence repetition-infix-operator-ref)
          (nofix-rep stx)]
         [(self . more)
          #:with (~var rhs (:prefix-op+repetition-use+tail #'self)) #`(#,group-tag . more)
@@ -120,7 +126,9 @@
          (values repet #'tail)]))
     (define (mixfix-exp form stx)
       (syntax-parse stx
-        [(_)
+        [(self::name . more)
+         #:when (do-ends-parse? 'infix #'self.name #'more
+                                in-expression-space expression-relative-precedence expression-infix-operator-ref)
          (postfix-exp form stx)]
         [(self . more)
          #:with (~var rhs (:infix-op+expression+tail #'self)) #`(#,group-tag . more)
@@ -128,7 +136,9 @@
          (values expr #'rhs.tail)]))
     (define (mixfix-rep form stx)
       (syntax-parse stx
-        [(_)
+        [(self::name . more)
+         #:when (do-ends-parse? 'infix #'self.name #'more
+                                in-repetition-space repetition-relative-precedence repetition-infix-operator-ref)
          (postfix-rep form stx)]
         [(self . more)
          #:with (~var rhs (:infix-op+repetition-use+tail #'self)) #`(#,group-tag . more)
@@ -148,9 +158,11 @@
      (expression-infix-operator order prec protocol final-exp assc)
      (repetition-infix-operator order (add-repet-space prec) protocol final-rep assc)))
 
-  (define (add-repet-space get-prec)
+  (define (add-repet-space prec)
     (lambda ()
-      (for/list ([p (in-list (get-prec))])
+      (for/list ([p (in-list (if (procedure? prec)
+                                 (prec)
+                                 prec))])
         (if (and (identifier? (car p))
                  (not (bound-identifier=? (car p) (in-order-space (car p)))))
             (cons (in-repetition-space (car p)) (cdr p))

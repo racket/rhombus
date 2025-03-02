@@ -2,8 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     "srcloc.rkt"
-                     "pack.rkt")
+                     "srcloc.rkt")
          "expression.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -20,7 +19,7 @@
          "static-info.rkt"
          (submod "literal.rkt" for-info)
          "is-static.rkt"
-         "operator-compare.rkt"
+         "ends-parse.rkt"
          (only-in "op-literal.rkt"
                   :_-expr)
          "arrow-annotation.rkt")
@@ -218,8 +217,8 @@
    (lambda (stx static-infoss op-mode op-stx)
      (syntax-parse stx
        [(_ (~and head (_::parens arg)) . tail)
-        #:when (ends-parse? 'parens op-mode op-stx (pack-tail #'tail)
-                            #f expression-relative-precedence expression-infix-operator-ref)
+        #:when (do-ends-parse? op-mode op-stx #'tail
+                               in-expression-space expression-relative-precedence expression-infix-operator-ref)
         (syntax-parse #'arg
           ;; check for anonymous-function shorthand:
           [(_ ... _::_-expr . _)

@@ -564,7 +564,7 @@
                               (attribute main-ret.converter)
                               (attribute main-ret.annot-str)
                               #'main-ret.static-infos
-                              #'(~? options.order ())
+                              #'(~? options.order-name ())
                               #'(~? options.prec ())
                               #'(~? options.assc ())
                               #'(~? options.reflect-name #f)
