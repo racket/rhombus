@@ -1,9 +1,9 @@
 #lang racket/base
 (require racket/pretty
+         racket/syntax-srcloc
          "lex.rkt"
          (rename-in "private/column.rkt"
                     [column+ lex:column+])
-         "srcloc.rkt"
          "print.rkt"
          "private/property.rkt"
          "private/at-space.rkt")

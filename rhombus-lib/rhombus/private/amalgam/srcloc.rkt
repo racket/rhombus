@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/symbol
-         shrubbery/srcloc
+         racket/syntax-srcloc
          shrubbery/property
          shrubbery/print)
 
