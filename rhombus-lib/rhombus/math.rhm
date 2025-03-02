@@ -1,8 +1,0 @@
-#lang rhombus
-
-import:
-  lib("racket/math.rkt"):
-    expose: pi
-
-export:
-  pi
