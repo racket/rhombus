@@ -5,9 +5,15 @@ import:
 
 export:
   magic_move
+  NoncommonMode
+
+enum NoncommonMode:
+  switch
+  fade
 
 fun magic_move(all_pre :: Pict, post :: Pict,
-               ~cross_fade: cross_fade :: Any.to_boolean = #false,
+               ~join: join :: SequentialJoin = #'step,
+               ~other: other :: NoncommonMode = #'switch,
                ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
                ~extent: extent :: NonnegReal = 0.5) :~ Pict:
   rebuildable(
@@ -67,7 +73,7 @@ fun magic_move(all_pre :: Pict, post :: Pict,
                         cond
                         | child.identity in common_via_pre:
                             move(child, 1, common_via_post)
-                        | cross_fade && child in pre_tops:
+                        | other == #'fade && child in pre_tops:
                             animate(fun (n): child.snapshot(0, n).alpha(math.max(1-2*n, 0)),
                                     ~bend: values)
                         | ~else:
@@ -78,7 +84,7 @@ fun magic_move(all_pre :: Pict, post :: Pict,
                                      cond
                                      | child.identity in common_via_post:
                                          move(child, -1, common_via_pre)
-                                     | cross_fade && child in post_tops:
+                                     | other == #'fade && child in post_tops:
                                          animate(fun (n): child.snapshot(0, n).alpha(math.max(0, 2 * (n - 0.5))),
                                                  ~bend: values)
                                      | ~else:
@@ -100,7 +106,7 @@ fun magic_move(all_pre :: Pict, post :: Pict,
       switch(switch(all_pre.time_pad(~after: -1),
                     p),
              post,
-             ~join: #'splice)
+             ~join: join)
   )
 
 fun translate_drawing(child :~ Pict, dx, dy, sx, sy):

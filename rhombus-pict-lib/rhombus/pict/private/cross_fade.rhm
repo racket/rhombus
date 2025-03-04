@@ -5,6 +5,11 @@ import:
 
 export:
   cross_fade
+  CrossFit
+
+enum CrossFit:
+  none
+  scale
 
 // Interpolation on `from` and `to` picts at fraction `n`
 // (ranges 0 to 1) assuming that `from` and `to` are not
@@ -53,7 +58,7 @@ fun static_interpolate(from :: Pict, to :: Pict, n,
 
 // Animation of interpolation between `from` and `to`
 fun cross_fade(from :: StaticPict, to :: StaticPict,
-               ~scale: do_scale = #false,
+               ~fit: fit :: CrossFit = #'none,
                ~extent: extent :: NonnegReal = 0.5,
                ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
                ~horiz: horiz :: HorizAlignment = #'center,
@@ -83,7 +88,7 @@ fun cross_fade(from :: StaticPict, to :: StaticPict,
             ~deps: [from, to],
             fun (_, _, ~deps: [from, to]):
               static_interpolate(from, to, n,
-                                 ~scale: do_scale,
+                                 ~scale: fit == #'scale,
                                  ~horiz: horiz,
                                  ~vert: vert,
                                  ~order: order)

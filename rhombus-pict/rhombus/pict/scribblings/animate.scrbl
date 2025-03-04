@@ -417,7 +417,7 @@
   fun cross_fade(
     from :: StaticPict,
     to :: StaticPict,
-    ~scale: do_scale = #false,
+    ~fit: fit :: CrossFit = #'none,
     ~horiz: horiz_align :: HorizAlignment = (if dx || dy | #'left | #'center),
     ~vert: vert_align :: VertAlignment = (if dx || dy | #'top | #'center),
     ~order: order :: OverlayOrder = #'front,
@@ -434,13 +434,14 @@
  @rhombus(to) fades in. The resulting pict has a @tech{duration} of
  @rhombus(1), so @rhombus(Pict.sustain) may be useful on the result.
 
- If @rhombus(do_scale) is a true value, then @rhombus(from) and
- @rhombus(to) are scaled to fit the bounding box as they fade out and in.
- By default, @rhombus(from) and @rhombus(to) are unscaled, and they are
+ If @rhombus(fit) is @rhombus(#'none), @rhombus(from) and @rhombus(to)
+ are unscaled for intermediate points in the fade, and they are
  positioned relative to the bounding box using @rhombus(overlay) with
  @rhombus(horiz_align) and @rhombus(vert_align). The @rhombus(order)
  argument is also used as for @rhombus(overlay).
-
+ If @rhombus(fit) is @rhombus(#'scale), then @rhombus(from) and
+ @rhombus(to) are scaled to fit the bounding box as they fade out and in.
+ 
  The cross fade takes @rhombus(extent) seconds. The @rhombus(bender)
  argument maps time within the epoch to an interpolation point, the same
  as with @rhombus(animate).
@@ -455,7 +456,7 @@
   ~repl:
     explain_anim(cross_fade(circle(~size: 15), square(~size: 25)))
     explain_anim(cross_fade(circle(~size: 15), square(~size: 25),
-                            ~scale: #true))
+                            ~fit: #'scale))
     explain_anim(cross_fade(circle(~size: 15), square(~size: 25),
                             ~horiz: #'left))
 )
@@ -467,23 +468,25 @@
   fun magic_move(
     from :: Pict,
     to :: Pict,
-    ~cross_fade: do_cross_fade = #false,
+    ~join: join :: SequentialJoin = #'step,
+    ~other: other :: NoncommonMode = #'switch,
     ~extent: extent :: NonnegReal = 0.5,
     ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
              = bend.fast_middle,                 
   ) :: Pict
 ){
 
- Creates a pict similar to @rhombus(switch(from, to, ~join: #'splice)),
+ Creates a pict similar to @rhombus(switch(from, to, ~join: join)),
  but the spliced epoch is adjusted so that @tech{findable children}
  common to both @rhombus(from) and @rhombus(to) are moved and scaled from
  their positions and scales in @rhombus(from) to their positions and
  scales in @rhombus(to).
 
- Other elements not common to @rhombus(from) and @rhombus(to) appear in
- the first or second half of the animation, depending on whether they are
- only in @rhombus(from) or only in @rhombus(to). If @rhombus(cross_fade)
- is true, then non-common element fade out and in.
+ If @rhombus(other) is @rhombus(#'switch) elements not common to
+ @rhombus(from) and @rhombus(to) appear in the first or second half of
+ the animation, depending on whether they are only in @rhombus(from) or
+ only in @rhombus(to). If @rhombus(other) is @rhombus(#'fade), then
+ non-common element fade out and in.
 
  The move takes @rhombus(extent) seconds, and the @rhombus(bender)
  argument maps time the same as with @rhombus(animate).
@@ -498,10 +501,30 @@
     pre
     def post = beside(~sep: 5, cr, tri, sq)
     post
-    explain_anim(magic_move(pre, post).sustain(), ~steps: 7, ~end: 1)
-    explain_anim(magic_move(pre, post, ~cross_fade: #true).sustain(),
-                 ~steps: 7, ~end: 1)
+    explain_anim(magic_move(pre, post), ~steps: 7, ~end: 1)
+    explain_anim(magic_move(pre, post, ~other: #'fade), ~steps: 7, ~end: 1)
 )
+
+}
+
+@doc(
+  enum CrossFit:
+    none
+    scale
+){
+
+ Fit mode for @rhombus(cross_fade).
+
+}
+
+@doc(
+  enum NoncommonMode:
+    switch
+    fade
+){
+
+ Mode for elements not common to ``from'' and ``to'' for
+ @rhombus(magic_move).
 
 }
 
