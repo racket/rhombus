@@ -33,7 +33,10 @@ export:
   ArrowBoundingBoxMode
   arrow arrow_path
 
-annot.macro 'BoundingBoxMode': 'Any.of(#'unit, #'shrink, #'stretch)'
+enum BoundingBoxMode:
+  unit
+  shrink
+  stretch
 
 class Radial(~points,
              ~width,
@@ -388,7 +391,10 @@ fun arrow_path(~length: length :: Real = 64,
   p.rotate(spin)
   p
 
-annot.macro 'ArrowBoundingBoxMode': 'Any.of(#'unit, #'shrink, #'line)'
+enum ArrowBoundingBoxMode:
+  unit
+  shrink
+  line
 
 fun arrow(~length: length :: Real = 64,
           ~breadth: breadth :: Real = length,

@@ -346,20 +346,24 @@
 
 
 @doc(
-  annot.macro 'BoundingBoxMode'
+  enum BoundingBoxMode:
+    unit
+    shrink
+    stretch
 ){
 
- Satisfied by a bounding-box mode: @rhombus(#'unit),
- @rhombus(#'shrink), or @rhombus(#'stretch).
+ A bounding-box mode for @rhombus(radial_pict) and similar functions.
 
 }
 
 @doc(
-  annot.macro 'ArrowBoundingBoxMode'
+  enum ArrowBoundingBoxMode:
+    unit
+    shrink
+    line    
 ){
 
- Satisfied by a bounding-box mode for @rhombus(arrow): @rhombus(#'unit),
- @rhombus(#'shrink), or @rhombus(#'line).
+ Bounding-box mode for @rhombus(arrow).
 
 }
 
