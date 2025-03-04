@@ -1,0 +1,110 @@
+#lang rhombus/static
+import:
+  "static.rhm" open
+  "anim.rhm" open
+
+export:
+  magic_move
+
+fun magic_move(all_pre :: Pict, post :: Pict,
+               ~cross_fade: cross_fade :: Any.to_boolean = #false,
+               ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
+               ~extent: extent :: NonnegReal = 0.5) :~ Pict:
+  rebuildable(
+    ~deps: [all_pre, post],
+    fun (~deps: [all_pre :: Pict, post :: Pict]):
+      let pre:
+        if all_pre.duration == 1
+        | all_pre
+        | all_pre.time_pad(~before: -(all_pre.duration - 1))
+      fun get_common(p :~ Pict, other_p :~ Pict) :~ values(Map, Set):
+        recur loop(p :~ Pict = p, accum = {}) :~ values(Map, Set):
+          for values(accum :~ Map = accum, tops :~ Set = Set{}) (child: p.children):
+            let (x, y) = Find(child).maybe_in(other_p)
+            if x
+            | values(accum ++ { child.identity: child },
+                     tops)
+            | let (new_accum, new_tops) = loop(child, accum)
+              if new_accum.length() == accum.length()
+              | values(accum, tops ++ { child })
+              | values(new_accum, tops ++ new_tops)
+      let (common_via_pre, pre_tops) = get_common(pre, post)
+      let (common_via_post, post_tops) = get_common(post, pre)
+      let pre_w = pre.width
+      let post_w = post.width
+      let pre_h = pre.height
+      let post_h = post.height
+      fun interpolate(pre, post, n): ((1 - n) * pre + n * post)
+      fun move(child :~ Pict, dir, other_common :~ Map) :~ Pict:
+        let (fx, fy) = Find.top_left(child).in(pre)
+        let (fx2, fy2) = Find.bottom_right(child).in(pre)
+        let fdx = (fx + fx2 - pre_w)/2
+        let fdy = (fy + fy2 - pre_h)/2
+        let (tx, ty) = Find.top_left(child).in(post)
+        let (tx2, ty2) = Find.bottom_right(child).in(post)
+        let tdx = (tx + tx2 - post_w)/2
+        let tdy = (ty + ty2 - post_h)/2
+        let fsx = (fx2 - fx) / child.width
+        let fsy = (fy2 - fy) / child.height
+        let tsx = (tx2 - tx) / child.width
+        let tsy = (ty2 - ty) / child.height
+        animate(~desc: ["move", child.identity],
+                ~bend: values,
+                fun (n):
+                  let child = child.snapshot(0, n)
+                  let sx = interpolate(fsx, tsx, n)
+                  let sy = interpolate(fsy, tsy, n)
+                  let dx = interpolate(fdx, tdx, n)
+                  let dy = interpolate(fdy, tdy, n)
+                  let child:
+                    if dir > 0
+                    | translate_drawing(child, (dx - fdx) / fsx, (dy - fdy) / fsy, sx / fsx, sy / fsy)
+                    | translate_drawing(child, (dx - tdx) / tsx, (dy - tdy) / tsy, sx / tsx, sy / tsy)
+                  child)
+      let new_pre:
+        pre.rebuild(~pre:
+                      fun (child :~ Pict):
+                        cond
+                        | child.identity in common_via_pre:
+                            move(child, 1, common_via_post)
+                        | cross_fade && child in pre_tops:
+                            animate(fun (n): child.snapshot(0, n).alpha(math.max(1-2*n, 0)),
+                                    ~bend: values)
+                        | ~else:
+                            child)
+      let new_post :~ Pict:
+        post.snapshot(0).rebuild(~pre:
+                                   fun (child :~ Pict):
+                                     cond
+                                     | child.identity in common_via_post:
+                                         move(child, -1, common_via_pre)
+                                     | cross_fade && child in post_tops:
+                                         animate(fun (n): child.snapshot(0, n).alpha(math.max(0, 2 * (n - 0.5))),
+                                                 ~bend: values)
+                                     | ~else:
+                                         child)
+      let p:
+        animate(fun (n):
+                  let w = interpolate(pre_w, post_w, n)
+                  let h = interpolate(pre_h, post_h, n)
+                  let p :~ Pict:
+                    if n .< 0.5
+                    | new_pre.snapshot(0, n)
+                    | new_post.snapshot(0, n)
+                  let p:
+                    p.pad(~horiz: (w - p.width) / 2,
+                          ~vert: (h - p.height) / 2)
+                  p,
+                ~bend: bender,
+                ~extent: extent)
+      switch(switch(all_pre.time_pad(~after: -1),
+                    p),
+             post,
+             ~join: #'splice)
+  )
+
+fun translate_drawing(child :~ Pict, dx, dy, sx, sy):
+  overlay.center(child.ghost(),
+                 child.launder()
+                   .scale(sx, sy)
+                   .translate(dx, dy))

@@ -6,8 +6,12 @@ import:
   "pict/private/static.rhm"
   "pict/private/anim.rhm"
   "pict/private/explain_anim.rhm"
+  "pict/private/cross_fade.rhm"
+  "pict/private/magic_move.rhm"
 
 export:
   all_from(.static)
   all_from(.anim)
   all_from(.explain_anim)
+  all_from(.cross_fade)
+  all_from(.magic_move)

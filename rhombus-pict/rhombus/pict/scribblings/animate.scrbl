@@ -54,7 +54,7 @@
  same as @rhombus(Pict.ghost(proc(1, & children))).
 
  The @rhombus(bender) function adjusts the argument that is passed to
- @rhombus(proc). If @rhombus(bender) is the identity function, then the
+ @rhombus(animate). If @rhombus(bender) is the identity function, then the
  number passed to @rhombus(proc) ranges from @rhombus(0) to @rhombus(1)
  linearly with animation time. The default @rhombus(bend.fast_middle)
  keeps the argument in the range @rhombus(0) to @rhombus(1), but it
@@ -413,6 +413,97 @@
 
 }
 
+@doc(
+  fun cross_fade(
+    from :: StaticPict,
+    to :: StaticPict,
+    ~scale: do_scale = #false,
+    ~horiz: horiz_align :: HorizAlignment = (if dx || dy | #'left | #'center),
+    ~vert: vert_align :: VertAlignment = (if dx || dy | #'top | #'center),
+    ~order: order :: OverlayOrder = #'front,
+    ~extent: extent :: NonnegReal = 0.5,
+    ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
+             = bend.fast_middle,                 
+  ) :: Pict
+){
+
+ Returns a @tech{pict} that starts with the same drawing and
+ @tech{bounding box} as @rhombus(from), but animates through @tech{epoch}
+ 0 to end up with the drawing and @tech{bounding box} of @rhombus(from).
+ Meanwhile @rhombus(from) fades out (via @rhombus(Pict.alpha)) and
+ @rhombus(to) fades in. The resulting pict has a @tech{duration} of
+ @rhombus(1), so @rhombus(Pict.sustain) may be useful on the result.
+
+ If @rhombus(do_scale) is a true value, then @rhombus(from) and
+ @rhombus(to) are scaled to fit the bounding box as they fade out and in.
+ By default, @rhombus(from) and @rhombus(to) are unscaled, and they are
+ positioned relative to the bounding box using @rhombus(overlay) with
+ @rhombus(horiz_align) and @rhombus(vert_align). The @rhombus(order)
+ argument is also used as for @rhombus(overlay).
+
+ The cross fade takes @rhombus(extent) seconds. The @rhombus(bender)
+ argument maps time within the epoch to an interpolation point, the same
+ as with @rhombus(animate).
+
+ When using @rhombus(cross_fade) plus @rhombus(Pict.snapshot) to compute
+ an interpolation between two picts, then @rhombus(bender) should
+ normally be @rhombus(values) so that the second argument to
+ @rhombus(Pict.snapshot) is the interpolation point.
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    explain_anim(cross_fade(circle(~size: 15), square(~size: 25)))
+    explain_anim(cross_fade(circle(~size: 15), square(~size: 25),
+                            ~scale: #true))
+    explain_anim(cross_fade(circle(~size: 15), square(~size: 25),
+                            ~horiz: #'left))
+)
+
+}
+
+
+@doc(
+  fun magic_move(
+    from :: Pict,
+    to :: Pict,
+    ~cross_fade: do_cross_fade = #false,
+    ~extent: extent :: NonnegReal = 0.5,
+    ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
+             = bend.fast_middle,                 
+  ) :: Pict
+){
+
+ Creates a pict similar to @rhombus(switch(from, to, ~join: #'splice)),
+ but the spliced epoch is adjusted so that @tech{findable children}
+ common to both @rhombus(from) and @rhombus(to) are moved and scaled from
+ their positions and scales in @rhombus(from) to their positions and
+ scales in @rhombus(to).
+
+ Other elements not common to @rhombus(from) and @rhombus(to) appear in
+ the first or second half of the animation, depending on whether they are
+ only in @rhombus(from) or only in @rhombus(to). If @rhombus(cross_fade)
+ is true, then non-common element fade out and in.
+
+ The move takes @rhombus(extent) seconds, and the @rhombus(bender)
+ argument maps time the same as with @rhombus(animate).
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def sq = square(~size: 18, ~fill: "lightblue")
+    def cr = circle(~size: 12, ~fill: "pink")
+    def tri = triangle(~width: 16, ~fill: "black")
+    def pre = beside(sq, cr).scale(1.5)
+    pre
+    def post = beside(~sep: 5, cr, tri, sq)
+    post
+    explain_anim(magic_move(pre, post).sustain(), ~steps: 7, ~end: 1)
+    explain_anim(magic_move(pre, post, ~cross_fade: #true).sustain(),
+                 ~steps: 7, ~end: 1)
+)
+
+}
 
 @doc(
   fun explain_anim(

@@ -1,0 +1,91 @@
+#lang rhombus/static
+import:
+  "static.rhm" open
+  "anim.rhm" open
+
+export:
+  cross_fade
+
+// Interpolation on `from` and `to` picts at fraction `n`
+// (ranges 0 to 1) assuming that `from` and `to` are not
+// changing shape. That is, we don't necessarily require
+// `from` and `to` to be static picts, but they're going
+// to be positioned relative to each other on the assumption
+// of static bounding boxes. Also, if `from` or `to` is
+// replaced, we assume replacement with somethign having the
+// same bounds.
+fun static_interpolate(from :: Pict, to :: Pict, n,
+                       ~scale: do_scale,
+                       ~horiz: horiz,
+                       ~vert: vert,
+                       ~order: order):
+  fun interpolate(a, b): a * (1-n) + b * n
+  let (adx, ady, aw, ah, aa, ad) = from.paragraph_end_bounds()
+  let (bdx, bdy, bw, bh, ba, bd) = to.paragraph_end_bounds()
+  let width = interpolate(from.width, to.width)
+  let height = interpolate(from.height, to.height)
+  let b = blank(~width: width,
+                ~height: height,
+                ~ascent: interpolate(from.ascent, to.ascent),
+                ~descent: interpolate(from.descent, to.descent))
+  let b = b.set_paragraph_end_bounds(interpolate(adx, bdx),
+                                     interpolate(ady, bdy),
+                                     interpolate(aw, bw),
+                                     interpolate(ah, bh),
+                                     interpolate(aa, ba),
+                                     interpolate(ad, bd))
+  fun maybe_scale(p :~ Pict) :~ Pict:
+    if do_scale
+    | let w = p.width
+      let h = p.height
+      if w .= width && h .= height
+      | p
+      | p.scale(if w .= 0 | w | width/w,
+                if h .= 0 | h | height/h)
+    | p
+  overlay(b,
+          maybe_scale(from).alpha(1 - n),
+          maybe_scale(to).alpha(n),
+          ~horiz: horiz,
+          ~vert: vert,
+          ~order: order)
+    .refocus(b)
+
+// Animation of interpolation between `from` and `to`
+fun cross_fade(from :: StaticPict, to :: StaticPict,
+               ~scale: do_scale = #false,
+               ~extent: extent :: NonnegReal = 0.5,
+               ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
+               ~horiz: horiz :: HorizAlignment = #'center,
+               ~vert: vert :: VertAlignment = #'center,
+               ~order: order :: OverlayOrder = #'front):
+  animate(
+    ~bend: bender,
+    ~extent: extent,
+    ~deps: [from, to],
+    fun (n, ~deps: [from :: Pict, to :: Pict]):
+      // Shortcuts for 0 or 1 are just a performance tweak.
+      // They arent neecssary if the rest is implemented right.
+      cond
+      | n .= 0:
+          from
+      | n .= 1:
+          to
+      | ~else:
+          // When we get here at first, then `from` and `to`
+          // are certainly static picts. But a snapshot
+          // is taken, and if we allow replacements in the
+          // snapshot, then `from` or `to`  might be replaced
+          // with an animated pict. Use `animate_map`
+          // to insert suitable lowering so we only have to
+          // think about static `from` and `to`
+          animate_map(
+            ~deps: [from, to],
+            fun (_, _, ~deps: [from, to]):
+              static_interpolate(from, to, n,
+                                 ~scale: do_scale,
+                                 ~horiz: horiz,
+                                 ~vert: vert,
+                                 ~order: order)
+          )
+  )
