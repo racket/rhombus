@@ -494,3 +494,11 @@ check:
   | '($(a :: Multi), 2, $(b :: Multi))':
       [a, b]
   ~matches ['1; 2', '3']
+
+check:
+  let '$alt; ...' = ''
+  'foo:
+     bar
+   | $alt
+   | ...'
+  ~matches 'foo: bar'

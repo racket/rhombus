@@ -18,7 +18,7 @@
     [else (for/list ([g (in-list (syntax->list l))])
             (convert-empty-group (sub1 at-depth) g))]))
 
-(define (convert-empty-alts at-depth l)
+(define (convert-empty-alts at-depth l just-after-block?)
   (cond
     [(zero? at-depth)
      (define u (cdr (syntax-e l)))
@@ -26,8 +26,12 @@
        [(or (null? u)
             (and (syntax? u) (null? (syntax-e u))))
         (define a (car (syntax-e l)))
-        (list (datum->syntax a 'block a a))]
-       [else l])]
+        (if just-after-block?
+            null
+            (list (datum->syntax a 'block a a)))]
+       [else (if just-after-block?
+                 (list l)
+                 l)])]
     [else (for/list ([g (in-list (syntax->list l))])
             (convert-empty-alts (sub1 at-depth) g))]))
 

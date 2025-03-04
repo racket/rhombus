@@ -146,7 +146,7 @@
                                    #:repetition-mode? [repetition-mode? #f]
                                    #:make-describe-op [make-describe-op (lambda (e name) e)]
                                    #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
-  (let convert ([e orig-e] [empty-ok? splice?] [as-tail? as-tail?] [splice? splice?] [outer-gs #f] [handle-gs #f])
+  (let convert ([e orig-e] [empty-ok? splice?] [as-tail? as-tail?] [splice? splice?] [outer-gs #f] [handle-gs #f] [after-block? #f])
     (syntax-parse e
       #:datum-literals (group parens brackets braces block quotes multi alts)
       ;; `$esc` as a group at the non-tail of a group sequence
@@ -186,7 +186,7 @@
        #:when (not splice?)
        ;; Special case: for a single group with (), [], {}, '', or block, if the group
        ;; can be empty, allow a match/construction with zero groups
-       (define-values (p new-idrs new-sidrs new-vars can-be-empty?) (convert #'g #t as-tail? #f #'() #f))
+       (define-values (p new-idrs new-sidrs new-vars can-be-empty?) (convert #'g #t as-tail? #f #'() #f #f))
        (if can-be-empty?
            (handle-maybe-empty-sole-group #'tag p new-idrs new-sidrs new-vars)
            (values (no-srcloc #`(#,(make-datum #'tag) #,@(if (consumes-outer? p)
@@ -204,11 +204,16 @@
                                  [vars '()]  ; list of `[,id . ,depth] for visible subset of `idrs` and `sidrs`
                                  [ps '()] [can-be-empty? #t] [pend-is-splice? #f] [tail #f]
                                  [needs-group-check? #f]
-                                 [splice? splice?])
+                                 [splice? splice?]
+                                 [just-after-block? #f])
          (define really-can-be-empty? (and can-be-empty? (or pend-is-splice? (not pend-idrs))))
          (define (simple gs)
            (syntax-parse gs
              [(g . gs)
+              (define next-after-block? (syntax-parse #'g
+                                          #:datum-literals (block)
+                                          [(block . _) #t]
+                                          [_ #f]))
               (define-values (p/tail new-ids new-sidrs new-vars nested-can-be-empty?)
                 (convert #'g #f #f #f #'gs (lambda ()
                                              (loop #'gs null null null
@@ -217,7 +222,9 @@
                                                    null
                                                    null #f #f #f
                                                    #f
-                                                   #f))))
+                                                   #f
+                                                   next-after-block?))
+                         just-after-block?))
               (cond
                 [(consumes-outer? p/tail)
                  (define tail (consumes-outer-p p/tail))
@@ -233,7 +240,8 @@
                        (append (or pend-vars '()) vars)
                        (cons p/tail ps) really-can-be-empty? #f #f
                        needs-group-check?
-                       splice?)])]))
+                       splice?
+                       next-after-block?)])]))
          (define (finish ps tail idrs sidrs vars can-be-empty? needs-group-check?)
            (define (ps+tail) (let ([ps (if tail (append ps tail) ps)])
                                (if repetition-mode?
@@ -241,7 +249,7 @@
                                    ps)))
            (cond
              [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
-              (handle-maybe-empty-alts #'tag (ps+tail) idrs sidrs vars)]
+              (handle-maybe-empty-alts #'tag (ps+tail) idrs sidrs vars after-block?)]
              [(and (eq? (syntax-e #'tag) 'group) (or (and needs-group-check? allow-flatten? (not splice?))
                                                      (and can-be-empty? (not empty-ok?))))
               (handle-maybe-misformed-group #'tag ps tail idrs sidrs vars can-be-empty? empty-ok?)]
@@ -280,7 +288,8 @@
                   ps really-can-be-empty? #f id
                   ;; tail escape is responsible for making sure it's valid
                   needs-group-check?
-                  splice?)]
+                  splice?
+                  #f)]
            ;; `$var ...` as a whole group within a sequence of groups => block tail repetition
            [((~var op (:block-tail-repetition in-space tail-any-escape?)))
             #:when (or tail-any-escape?
@@ -292,7 +301,8 @@
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id
                   #f
-                  splice?)]
+                  splice?
+                  #f)]
            ;; `$var ...` not at the end of a sequence (of terms or groups)
            [((~var op (:list-repetition in-space repetition-mode?)) . gs)
             (unless pend-idrs
@@ -317,7 +327,8 @@
                       vars
                       (cons dots ps) can-be-empty? #t #f
                       #t
-                      splice?)
+                      splice?
+                      #f)
                 (let ([ps (if (eq? (syntax-e #'tag) 'group)
                               (improve-repetition-constraints ps #'gs)
                               ps)])
@@ -327,7 +338,8 @@
                         (append new-pend-vars vars)
                         (cons dots ps) can-be-empty? #f #f
                         #t
-                        splice?)))]
+                        splice?
+                        #f)))]
            ;; `$ cut` within a sequence
            [((op (~var $-id (:$ in-space))) (~var _ (:cut tail-any-escape?)) . gs)
             (loop #'gs #f #f #f
@@ -336,7 +348,8 @@
                   (append (or pend-vars '()) vars)
                   (cons #'~! ps) really-can-be-empty? #f #f
                   needs-group-check?
-                  splice?)]
+                  splice?
+                  #f)]
            ;; `$esc` within a sequence
            [((op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (define could-tail? (or (and (not tail) (not splice?)) as-tail?))
@@ -360,6 +373,7 @@
                                           null
                                           #t #f #f
                                           #t
+                                          #f
                                           #f)))))
             (cond
               [pat-as-tail?
@@ -378,7 +392,8 @@
                      (cons pat ps)
                      really-can-be-empty? #t #f
                      #t
-                     splice?)])]
+                     splice?
+                     #f)])]
            ;; `$` with nothing afterward
            [((op (~var $-id (:$ in-space))))
             (raise-syntax-error #f
@@ -591,7 +606,7 @@
                             vars
                             #f))
                   ;; handle-maybe-empty-alts
-                  (lambda (tag ps idrs sidrs vars)
+                  (lambda (tag ps idrs sidrs vars just-aftre-block?)
                     ;; if `(tag . ps)` would match `(alts)`, then let it match `(block)`
                     (values #`(~or* (#,(make-datum tag) . #,ps)
                                     (~and ((~datum block))
@@ -823,11 +838,16 @@
                                  vars
                                  #f))
                        ;; handle-maybe-empty-alts
-                       (lambda (tag ts idrs sidrs vars)
+                       (lambda (tag ts idrs sidrs vars after-block?)
                          ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
+                         ;; --- unless this `alts` is after a block, in which case produce ``
                          (define id (car (generate-temporaries '(alts))))
-                         (values id
-                                 (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts))))]
+                         (values (if after-block?
+                                     (no-srcloc #`(#,(quote-syntax ~@) #,id (... ...)))
+                                     id)
+                                 (cons #`[#,(if after-block? #`(#,id (... ...)) id)
+                                          (convert-empty-alts 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts)))
+                                                              #,after-block?)]
                                        idrs)
                                  sidrs
                                  vars
