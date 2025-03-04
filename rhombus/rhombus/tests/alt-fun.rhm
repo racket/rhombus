@@ -366,16 +366,33 @@ check:
   bind(1, 2, ~arg3: 3)
   bind(1, 2, 3)
   ~prints "commit arg1"
-    ++ "\n" ++ "commit arg2"
-    ++ "\n" ++ "commit kwrest"
     ++ "\n" ++ "bind arg1"
+    ++ "\n" ++ "commit arg2"
     ++ "\n" ++ "bind arg2"
+    ++ "\n" ++ "commit kwrest"
     ++ "\n" ++ "bind kwrest"
     ++ "\n" ++ "commit arg1"
-    ++ "\n" ++ "commit rest"
     ++ "\n" ++ "bind arg1"
+    ++ "\n" ++ "commit rest"
     ++ "\n" ++ "bind rest"
     ++ "\n"
+
+// make sure earlier bindings are available in a
+// `|` function clause (i.e., match commit is not
+// deferred to the point where the case is selected)
+block:
+  fun
+  | hello(a, b when a == b):
+      println("42")
+  fun
+  | goodbye(a, b when a == b):
+      println("0")
+  | goodbye(x, y):
+      println("1")
+  check hello(1, 1) ~prints "42\n"
+  check hello(1, 2) ~throws "no matching case"
+  check goodbye(1, 1) ~prints "0\n"
+  check goodbye(1, 2) ~prints "1\n"
 
 // check constraint on keyword arguments
 check:

@@ -11,7 +11,7 @@
 
 (define-syntax (nested-bindings stx)
   (syntax-parse stx
-    [(_ who try-next failure
+    [(_ who try-next eager-bind? failure
         (arg-id arg-info arg-pat arg-default) ...
         body)
      (for/foldr ([next #'(let () body)])
@@ -32,7 +32,7 @@
               (arg.matcher-id arg-id
                               arg.data
                               if/blocked
-                              #,(if (syntax-e #'try-next)
+                              #,(if (not (syntax-e #'eager-bind?))
                                     next
                                     #`(begin
                                         (arg.committer-id arg-id arg.evidence-ids arg.data)

@@ -111,6 +111,7 @@
              match
              try-next
              #f ; failure
+             #t ; eager-bind?
              (#,val-id b-info #,b #f)
              (begin
                (b-info.committer-id #,val-id b-info.evidence-ids b-info.data)
