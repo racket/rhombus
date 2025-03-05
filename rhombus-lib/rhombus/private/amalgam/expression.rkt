@@ -62,15 +62,29 @@
 
   (define (make-identifier-expression id)
     (unless (identifier-binding id)
-      (when (or (syntax-local-value* (in-defn-space id)
-                                     (lambda (v)
-                                       (or (definition-transformer-ref v)
-                                           (definition-sequence-transformer-ref v))))
-                (syntax-local-value* (in-decl-space id)
-                                     (lambda (v)
-                                       (or (declaration-transformer-ref v)
-                                           (nestable-declaration-transformer-ref v)))))
-        (raise-syntax-error #f "misuse as an expression" id))
+      (define alt-v
+        (or (syntax-local-value* (in-defn-space id)
+                                 (lambda (v)
+                                   (or (definition-transformer-ref v)
+                                       (definition-sequence-transformer-ref v))))
+            (syntax-local-value* (in-decl-space id)
+                                 (lambda (v)
+                                   (or (nestable-declaration-transformer-ref v)
+                                       (declaration-transformer-ref v))))))
+      (when alt-v
+        (raise-syntax-error #f
+                            (string-append
+                             "misuse as an expression"
+                             (cond
+                               [(nestable-declaration-transformer-ref alt-v)
+                                ";\n allowed only in a declaration context"]
+                               [(declaration-transformer-ref alt-v)
+                                ";\n allowed only in a non-nested declaration context"]
+                               [(or (definition-transformer-ref alt-v)
+                                    (definition-sequence-transformer-ref alt-v))
+                                ";\n allowed only in a definition context"]
+                               [else ""]))
+                            id))
       (when early-unbound?
         ;; within a module, report unbound identifiers early;
         ;; otherwise, enforestation may continue and assume an

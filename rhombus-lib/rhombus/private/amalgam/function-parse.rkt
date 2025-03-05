@@ -1112,6 +1112,11 @@
     (pattern (group kw:keyword (_::block exp)))
     (pattern (group kw:keyword (btag::block g ...))
              #:with exp #`(#,group-tag (parsed #:rhombus/expr (rhombus-body-at btag g ...))))
+    (pattern (group kw:keyword . _)
+             #:with exp #'#f
+             #:do [(raise-syntax-error #f
+                                       "expected a `:` block after an argument keyword"
+                                       #'kw)])
     (pattern exp
              #:with kw #'#f)))
 
