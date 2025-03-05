@@ -60,5 +60,12 @@ block:
   check get_exn(#'terminate) ~is_a Exn.Break.Terminate
 
 block:
+  let th:
+    thread:
+      Thread.sleep(100)
+  check th.kill() ~is #void
+  check th.wait() ~is #void
+
+block:
   check Evt.always.sync() ~is Evt.always
   check Evt.never.sync(~timeout: 0) ~is #false

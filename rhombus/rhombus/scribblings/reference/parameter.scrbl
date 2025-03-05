@@ -37,6 +37,8 @@ parameter's value using @rhombus(parameterize).
 
   defn.macro 'Parameter.def $id_name $maybe_annot = $expr'
   defn.macro 'Parameter.def $id_name $maybe_annot:
+                $option
+                ...
                 $body
                 ...'
 
@@ -44,6 +46,10 @@ parameter's value using @rhombus(parameterize).
     #,(@rhombus(::, ~bind)) $annot
     #,(@rhombus(:~, ~bind)) $annot
     #,(epsilon)
+
+  grammar option:
+    ~name $id_name
+    ~name: $id_name
 ){
 
  The @rhombus(Parameter.make) function creates a @tech{context parameter} whose initial value is
@@ -66,6 +72,9 @@ parameter's value using @rhombus(parameterize).
  @rhombus(Parameter.make). If an annotation is provided with either
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), static information from
  the annotation is associated with the result of calling @rhombus(id_name).
+
+ The @rhombus(~name) option in @rhombus(Parameter.def) is like the
+ @rhombus(~name) option for @rhombus(fun, ~defn).
 
 @examples(
   ~defn:

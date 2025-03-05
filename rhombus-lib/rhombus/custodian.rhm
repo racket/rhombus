@@ -1,0 +1,48 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  Custodian
+
+def custs = WeakMutableMap.by(===)()
+
+class Custodian(private _handle):
+  opaque
+  internal _Custodian
+  constructor (~parent: parent :: Custodian = current()):
+    let self = super(rkt.#{make-custodian}(parent._handle))
+    custs[self._handle] := self
+    self
+
+  property handle: _handle
+
+  method shutdown_all():
+    rkt.#{custodian-shutdown-all}(_handle)
+  method is_shutdown():
+    rkt.#{custodian-shut-down?}(_handle)
+
+  class Box(private _handle):
+    opaque
+    constructor (v,
+                 ~custodian: c :: Custodian = current()):
+      super(rkt.#{make-custodian-box}(_Custodian._handle(c), v))
+    property value: rkt.#{custodian-box-value}(_handle)
+
+  export:
+    current
+    Box
+
+def current:
+  rkt.#{make-derived-parameter}(rkt.#{current-custodian},
+                                fun (v :: Custodian):
+                                  ~name: Custodian.current
+                                  _Custodian._handle(v),
+                                fun (hand):
+                                  custs.get(hand,
+                                            fun ():
+                                              let c = _Custodian(hand)
+                                              custs[hand] := c
+                                              c),
+                                #'#{Custodian.current},
+                                #'rhombus)

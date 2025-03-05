@@ -5,6 +5,7 @@ import:
   lib("racket/tcp.rkt")
   lib("racket/udp.rkt") as rkt
   lib("rhombus/private/amalgam.rkt")!evt open
+  lib("rhombus/private/amalgam.rkt")!error_adjust open
 
 export:
   TCP
@@ -31,15 +32,20 @@ class TCPListener(_handle):
                ~port: port :: ListenPortNumber = 0,
                ~reuse: reuse = #false,
                ~max_allow_wait: max_allow_wait :: NonnegInt = 4):
-    super(tcp.#{tcp-listen}(port, max_allow_wait, reuse, host))
+    ~who: who
+    local_error_adjust { #'#{tcp-listen}: who }:
+      super(tcp.#{tcp-listen}(port, max_allow_wait, reuse, host))
 
   method accept(~wait: wait :: NetworkWait = #'all)
-    :~ values(Port.Input, Port.Output):
+    :~ values(Port.Input && Port.FileStream, Port.Output && Port.FileStream):
+      ~who: who
       match wait
       | #'all:
-          tcp.#{tcp-accept}(_handle)
+          local_error_adjust { #'#{tcp-accept}: who }:
+            tcp.#{tcp-accept}(_handle)
       | #'enable_break:
-          tcp.#{tcp-accept/enable-break}(_handle)
+          local_error_adjust { #'#{tcp-accept/enable-break}: who }:
+            tcp.#{tcp-accept/enable-break}(_handle)
 
   method accept_ready():
     tcp.#{tcp-accept-ready?}(_handle)
@@ -67,12 +73,15 @@ namespace TCP:
               ~local_host: local_host :: maybe(String) = #false,
               ~local_port: local_port :: maybe(PortNumber) = #false,
               ~wait: wait :: NetworkWait = #'all)
-    :~ values(Port.Input, Port.Output):
+    :~ values(Port.Input && Port.FileStream, Port.Output && Port.FileStream):
+      ~who: who
       match wait
       | #'all:
-          tcp.#{tcp-connect}(host, port, local_host, local_port)
+          local_error_adjust { #'#{tcp-connect}: who }:
+            tcp.#{tcp-connect}(host, port, local_host, local_port)
       | #'enable_break:
-          tcp.#{tcp-connect/enable-break}(host, port, local_host, local_port)
+          local_error_adjust { #'#{tcp-connect/enable-break}: who }:
+            tcp.#{tcp-connect/enable-break}(host, port, local_host, local_port)
 
   fun listen(~host: host :: maybe(String) = #false,
              ~port: port :: ListenPortNumber = 0,
@@ -106,25 +115,33 @@ class UDP(_handle):
 
   constructor (~family_host: family_host :: maybe(String) = #false,
                ~family_port: family_port :: maybe(PortNumber) = #false):
-    _UDP(rkt.#{udp-open-socket}(family_host, family_port))
+    ~who: who
+    local_error_adjust { #'#{udp-open-socket}: who }:
+      _UDP(rkt.#{udp-open-socket}(family_host, family_port))
 
   method bind(~host: host :: maybe(String) = #false,
               ~port: port :: ListenPortNumber = 0,
               ~reuse: reuse = #false):
-    rkt.#{udp-bind!}(_handle, host, port, reuse)
+    ~who: who
+    local_error_adjust { #'#{udp-bind!}: who }:
+      rkt.#{udp-bind!}(_handle, host, port, reuse)
 
   method receive(bytes :: MutableBytes,
                  start_pos :: NonnegInt = 0,
                  end_pos :: NonnegInt = bytes.length(),
                  ~wait: wait :: Port.WaitMode && !matching(#'all) = #'some)
     :~ values(maybe(NonnegInt), maybe(String), maybe(PortNumber)):
+      ~who: who
       match wait
       | #'some:
-          rkt.#{udp-receive!}(_handle, bytes, start_pos, end_pos)
+          local_error_adjust { #'#{udp-receive!}: who }:
+            rkt.#{udp-receive!}(_handle, bytes, start_pos, end_pos)
       | #'none:
-          rkt.#{udp-receive!*}(_handle, bytes, start_pos, end_pos)
+          local_error_adjust { #'#{udp-receive!*}: who }:
+            rkt.#{udp-receive!*}(_handle, bytes, start_pos, end_pos)
       | #'enable_break:
-          rkt.#{udp-receive!/enable-break}(_handle, bytes, start_pos, end_pos)
+          local_error_adjust { #'#{udp-receive!/enable-break}: who }:
+            rkt.#{udp-receive!/enable-break}(_handle, bytes, start_pos, end_pos)
 
   method send_to(~host: host :: String,
                  ~port: port :: PortNumber,
@@ -132,17 +149,23 @@ class UDP(_handle):
                  start_pos :: NonnegInt = 0,
                  end_pos :: NonnegInt = bytes.length(),
                  ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
+    ~who: who
     match wait
     | #'all:
-        rkt.#{udp-send-to}(_handle, host, port, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send-to}: who }:
+          rkt.#{udp-send-to}(_handle, host, port, bytes, start_pos, end_pos)
     | #'none:
-        rkt.#{udp-send-to*}(_handle, host, port, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send-to*}: who }:
+          rkt.#{udp-send-to*}(_handle, host, port, bytes, start_pos, end_pos)
     | #'enable_break:
-        rkt.#{udp-send-to/enable-break}(_handle, host, port, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send-to/enable-break}: who }:
+          rkt.#{udp-send-to/enable-break}(_handle, host, port, bytes, start_pos, end_pos)
 
   method receive_evt(bytes :: MutableBytes,
                      start_pos :: NonnegInt = 0,
                      end_pos :: NonnegInt = bytes.length()) :~ Evt:
+    ~who: who
+    local_error_adjust { #'#{udp-receive!-evt}: who }:
       ReceiveEvt(rkt.#{udp-receive!-evt}(_handle, bytes, start_pos, end_pos))
 
   method send_to_evt(~host: host :: String,
@@ -150,28 +173,38 @@ class UDP(_handle):
                      bytes :: Bytes,
                      start_pos :: NonnegInt = 0,
                      end_pos :: NonnegInt = bytes.length()) :~ Evt:
-    SendEvt(rkt.#{udp-send-to-evt}(_handle, host, port, bytes, start_pos, end_pos))
+    ~who: who
+    local_error_adjust { #'#{udp-send-to-evt}: who }:
+      SendEvt(rkt.#{udp-send-to-evt}(_handle, host, port, bytes, start_pos, end_pos))
 
   method connect(~host: host :: String,
                  ~port: port :: PortNumber):
-    rkt.#{udp-connect!}(_handle, host, port)
+    ~who: who
+    local_error_adjust { #'#{udp-connect!}: who }:
+      rkt.#{udp-connect!}(_handle, host, port)
 
   method send(bytes :: Bytes,
               start_pos :: NonnegInt = 0,
               end_pos :: NonnegInt = bytes.length(),
               ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
+    ~who: who
     match wait
     | #'all:
-        rkt.#{udp-send}(_handle, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send}: who }:
+          rkt.#{udp-send}(_handle, bytes, start_pos, end_pos)
     | #'some:
-        rkt.#{udp-send*}(_handle, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send*}: who }:
+          rkt.#{udp-send*}(_handle, bytes, start_pos, end_pos)
     | #'enable_break:
-        rkt.#{udp-send/enable-break}(_handle, bytes, start_pos, end_pos)
+        local_error_adjust { #'#{udp-send/enable-break}: who }:
+          rkt.#{udp-send/enable-break}(_handle, bytes, start_pos, end_pos)
 
   method send_evt(bytes :: Bytes,
                   start_pos :: NonnegInt = 0,
                   end_pos :: NonnegInt = bytes.length()) :~ Evt:
-    SendEvt(rkt.#{udp-send-evt}(_handle, bytes, start_pos, end_pos))
+    ~who: who
+    local_error_adjust { #'#{udp-send-evt}: who }:
+      SendEvt(rkt.#{udp-send-evt}(_handle, bytes, start_pos, end_pos))
 
   override method close():
     rkt.#{udp-close}(_handle)

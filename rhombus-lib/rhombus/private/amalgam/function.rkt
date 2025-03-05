@@ -41,7 +41,8 @@
          "rhombus-primitive.rkt"
          (submod "module.rkt" for-module+)
          (submod "arrow-annotation.rkt" for-arrow-annot)
-         "name-prefix.rkt")
+         "name-prefix.rkt"
+         "extract-name.rkt")
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -623,27 +624,6 @@
                              fun)])
                (wrap-function-static-info fun))
              #'())]))
-
-(define-for-syntax (extract-name reflect-name-stx stx)
-  (cond
-    [(not reflect-name-stx) #f]
-    [else
-     (syntax-parse reflect-name-stx
-       #:datum-literals (group)
-       [(group _ (_::block (group n::dotted-operator-or-identifier-sequence)))
-        (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
-       [(group _ n::dotted-operator-or-identifier-sequence)
-        (build-dot-symbol (syntax->list #'n) #:skip-dots? #t)]
-       [_ (raise-syntax-error #f "expected a name" stx reflect-name-stx)])]))
-
-(define-for-syntax (extract-who who-stx stx)
-  (cond
-    [(not who-stx) #f]
-    [else
-     (syntax-parse who-stx
-       #:datum-literals (group)
-       [(group _ (_::block (group n::name))) #'n.name]
-       [(group _ n::name) #'n.name])]))
 
 (define-for-syntax (filter-whos rhss-stx)
   (datum->syntax

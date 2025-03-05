@@ -14,6 +14,8 @@
          (submod "equal.rkt" for-parse)
          "dotted-sequence-parse.rkt"
          "parse.rkt"
+         "extract-name.rkt"
+         "name-prefix.rkt"
          "call-result-key.rkt")
 
 (provide (for-spaces (rhombus/namespace
@@ -43,11 +45,13 @@
       (syntax-parse stx
         [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
-         (build-parameter-definition #'(any ...) #'(rhombus-expression (group rhs ...)))]
-        [(_ any ...+ (b-tag::block g ...))
-         (build-parameter-definition #'(any ...) #'(rhombus-body-at b-tag g ...))]))))
+         (build-parameter-definition #'(any ...) #'(rhombus-expression (group rhs ...)) stx #f name-prefix)]
+        [(_ any ...+ (b-tag::block
+                      (~optional (~and name-option (group #:name . _)))
+                      g ...))
+         (build-parameter-definition #'(any ...) #'(rhombus-body-at b-tag g ...) stx (attribute name-option) name-prefix)]))))
 
-(define-for-syntax (build-parameter-definition lhs rhs)
+(define-for-syntax (build-parameter-definition lhs rhs stx name-option name-prefix)
   (with-syntax ([(name extends converter annotation-str static-infos)
                  (syntax-parse (respan lhs)
                    [(name::dotted-identifier-sequence annot::inline-annotation)
@@ -57,16 +61,18 @@
                              #'annot.converter #'annot.annotation-str #'annot.static-infos)])]
                    [name::dotted-identifier
                     (list #'name.name #'name.extends #f #f #'())])])
-    (append
-     (build-definitions/maybe-extension
-      #f #'name #'extend
-      #`(make-parameter #,rhs
-                        #,(if (syntax-e #'converter)
-                              #`(lambda (v)
-                                  (converter v 'name (lambda (v who)
-                                                       (raise-annotation-failure who v 'annotation-str))))
-                              #f)
-                        'name))
-     (if (null? (syntax-e #'static-infos))
-         null
-         #`((define-static-info-syntax name (#%call-result static-infos)))))))
+    (with-syntax ([reflect-name (or (extract-name name-option stx)
+                                    (add-name-prefix name-prefix #'name))])
+      (append
+       (build-definitions/maybe-extension
+        #f #'name #'extend
+        #`(make-parameter #,rhs
+                          #,(if (syntax-e #'converter)
+                                #`(lambda (v)
+                                    (converter v 'name (lambda (v who)
+                                                         (raise-annotation-failure who v 'annotation-str))))
+                                #f)
+                          'reflect-name))
+       (if (null? (syntax-e #'static-infos))
+           null
+           #`((define-static-info-syntax name (#%call-result static-infos))))))))

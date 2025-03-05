@@ -19,7 +19,7 @@ expr.macro 'thread: $(body :: Block)':
 
 namespace ~open:
   export: Thread
-  class Thread(hand):
+  class Thread(private hand):
     opaque
     internal _Thread
     implements evt.Evt
@@ -35,6 +35,8 @@ namespace ~open:
                                 | #'interrupt: #false
                                 | #'hang_up: #'#{hang-up}
                                 | #'terminate: #'terminate)
+    method kill():
+      rkt.#{kill-thread}(hand)
 
     export:
       from_handle
@@ -58,7 +60,7 @@ namespace ~open:
 
 namespace ~open:
   export: Semaphore
-  class Semaphore(hand):
+  class Semaphore(private hand):
     opaque
     internal _Semaphore
     implements evt.Evt

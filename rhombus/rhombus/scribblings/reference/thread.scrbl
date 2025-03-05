@@ -35,7 +35,7 @@ synchronization result is just the thread object itself.
 }
 
 @doc(
-  method (th :: Thread).wait()
+  method (th :: Thread).wait() :: Void
 ){
 
  Blocks until the thread @rhombus(th) terminates.
@@ -43,7 +43,7 @@ synchronization result is just the thread object itself.
 }
 
 @doc(
-  method (th :: Thread).break(kind :: Thread.Break = #'interrupt)
+  method (th :: Thread).break(kind :: Thread.Break = #'interrupt) :: Void
   enum Thread.Break:
     interrupt
     hang_up
@@ -54,9 +54,20 @@ synchronization result is just the thread object itself.
  @rhombus(th), assuming that it has not yet terminated. If @rhombus(kind)
  is @rhombus(#'hang_up) or @rhombus(#'terminate), then the exception is
  more specifically @rhombus(Exn.Break.HangUp) or
- @rhombus(Exn.Break.Termminate), respectively.
+ @rhombus(Exn.Break.Terminate), respectively.
 
 }
+
+
+@doc(
+  method (th :: Thread).kill() :: Void
+){
+
+ Terminates the thread @rhombus(th). If the thread has already
+ terminated, then @rhombus(Thread.kill) has no effect.
+
+}
+
 
 @doc(
   property (th :: Thread).handle

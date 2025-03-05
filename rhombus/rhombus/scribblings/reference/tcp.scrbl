@@ -36,7 +36,8 @@
     ~local_host: local_host :: maybe(String) = #false,
     ~local_port: local_port :: maybe(PortNumber) = #false,
     ~wait: wait :: NetworkWait = #'all
-  ) :: values(Port.Input && TCP.Port, Port.Output && TCP.Port)
+  ) :: values(Port.Input && Port.FileStream && TCP.Port,
+              Port.Output && Port.FileStream && TCP.Port)
 ){
 
  Connects as a client to a TCP server at @rhombus(host) and
@@ -97,7 +98,8 @@
 @doc(
   method (lnr :: TCPListener).accept(
     ~wait: wait :: NetworkWait = #'all
-  ) :: values(Port.Input && TCP.Port, Port.Output && TCP.Port)
+  ) :: values(Port.Input && Port.FileStream && TCP.Port,
+              Port.Output && Port.FileStream && TCP.Port)
   method (lnr :: TCPListener).accept_ready() :: Boolean
   method (lnr :: TCPListener).accept_evt() :: Evt
 ){

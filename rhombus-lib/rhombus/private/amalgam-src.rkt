@@ -105,6 +105,9 @@
 (module+ doc_spec
   (bounce "amalgam/doc_spec.rhm"))
 
+(module+ error_adjust
+  (bounce "amalgam/error-adjust.rkt"))
+
 (module+ rx
   (bounce "amalgam/rx.rhm"))
 
