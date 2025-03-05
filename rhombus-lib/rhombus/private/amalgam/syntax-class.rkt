@@ -681,9 +681,20 @@
                 ;; keeping the same unpack, if possible, enables optimizations for
                 ;; tail repetitions; otherwise, the term is sufficiently normalized
                 ;; by matching that we can just use `unpack-element*`
-                (if (free-identifier=? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
-                    (pattern-variable-unpack* a)
-                    #'unpack-element*)]
+                (let ()
+                  (define (same-unpack? a b)
+                    (cond
+                      [(and (identifier? a) (identifier? b)) (free-identifier=? a b)]
+                      [(or (identifier? a) (identifier? b)) #f]
+                      [else
+                       (define as (syntax->list a))
+                       (define bs (syntax->list a))
+                       (cond
+                         [(and as bs (= (length as) (length bs))) (andmap same-unpack? as bs)]
+                         [else (eq? (syntax-e a) (syntax-e b))])]))
+                  (if (same-unpack? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
+                      (pattern-variable-unpack* a)
+                      #'unpack-element*))]
                [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
                                               (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
 

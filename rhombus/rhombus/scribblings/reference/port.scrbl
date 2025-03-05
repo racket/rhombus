@@ -149,7 +149,7 @@ output; it is possible for an object to be both an input and output port.
 }
 
 @doc(
-  fun Port.Output.open_input_output_file(
+  fun Port.open_input_output_file(
     path :: PathString,
     ~exists: exists_flag :: Port.Output.ExistsMode = #'error,
     ~mode: mode :: Port.Mode = #'binary,
@@ -217,7 +217,7 @@ output; it is possible for an object to be both an input and output port.
 ){
 
  Modes used for methods like @rhombus(Port.Input.read_bytes_to) and
- @rhombus(Port.Output.write_bytes_to) to determine how they block to wait
+ @rhombus(Port.Output.write_bytes) to determine how they block to wait
  for input or output.
 
 }

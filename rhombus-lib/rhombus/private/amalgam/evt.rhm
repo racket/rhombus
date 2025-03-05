@@ -1,0 +1,48 @@
+#lang rhombus/private/amalgam/core
+import:
+  lib("racket/base.rkt")
+  "maybe.rhm" open
+  "evt.rkt".#{set-evt!}
+
+// Implement minimal `Evt` layer for amalgam
+
+export:
+  Evt
+  _Evt
+  __Evt
+  ProgressEvt
+  CommitEvt
+
+// implement `Evt` and also private-implement `_Evt`, because
+// `_Evt` provides access to internal details of an `Evt` implementation
+interface _Evt:
+  property sync_handle
+  internal __Evt
+
+interface Evt:
+  property handle
+  method sync(~timeout: timeout :: maybe(NonnegReal) = #false,
+              ~enable_break: enable_break = #false,
+              evt :: Evt, ...):
+    fun h(e :~ Evt):
+      match e
+      | e :: __Evt: e.sync_handle
+      | ~else: e.handle
+
+    if enable_break
+    | base.#{sync/timeout/enable-break}(timeout, h(this), h(evt), ...)
+    | base.#{sync/timeout}(timeout, h(this), h(evt), ...)
+
+class ProgressEvt(hand):
+  implements Evt
+  private implements _Evt
+  internal _ProgressEvt
+  opaque
+  override property handle: hand
+  private override property sync_handle: base.#{wrap-evt}(hand, fun (v): this)
+
+interface CommitEvt
+
+#{set-evt!}(fun (v): ProgressEvt(v),
+            fun (v): v is_a ProgressEvt && Evt.handle(v),
+            fun (v): v is_a CommitEvt && Evt.handle(v))

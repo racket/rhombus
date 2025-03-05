@@ -1,0 +1,237 @@
+#lang rhombus/static/and_meta
+
+import:
+  lib("racket/base.rkt")
+  lib("racket/tcp.rkt")
+  lib("racket/udp.rkt") as rkt
+  lib("rhombus/private/amalgam.rkt")!evt open
+
+export:
+  TCP
+  TCPListener
+  UDP
+
+  PortNumber
+  ListenPortNumber
+  NetworkWait
+
+annot.macro 'PortNumber': 'Int.in(1, 65535)'
+annot.macro 'ListenPortNumber': 'Int.in(0, 65535)'
+
+enum NetworkWait:
+  all
+  enable_break
+
+// TCP ----------------------------------------
+
+class TCPListener(_handle):
+  opaque
+  implements Closeable
+  constructor (~host: host :: maybe(String) = #false,
+               ~port: port :: ListenPortNumber = 0,
+               ~reuse: reuse = #false,
+               ~max_allow_wait: max_allow_wait :: NonnegInt = 4):
+    super(tcp.#{tcp-listen}(port, max_allow_wait, reuse, host))
+
+  method accept(~wait: wait :: NetworkWait = #'all)
+    :~ values(Port.Input, Port.Output):
+      match wait
+      | #'all:
+          tcp.#{tcp-accept}(_handle)
+      | #'enable_break:
+          tcp.#{tcp-accept/enable-break}(_handle)
+
+  method accept_ready():
+    tcp.#{tcp-accept-ready?}(_handle)
+
+  method accept_evt() :~ Evt:
+    AcceptEvt(tcp.#{tcp-accept-evt}(_handle))
+
+  method addresses() :~ values(String, PortNumber):
+    let (h, p, _, _) = tcp.#{tcp-addresses}(_handle, #true)
+    values(to_string(h), p)
+
+  override close():
+    tcp.#{tcp-close}(_handle)
+
+namespace TCP:
+  export:
+    connect
+    listen
+    abandon
+    addresses
+    Port
+
+  fun connect(~host: host :: String,
+              ~port: port :: PortNumber,
+              ~local_host: local_host :: maybe(String) = #false,
+              ~local_port: local_port :: maybe(PortNumber) = #false,
+              ~wait: wait :: NetworkWait = #'all)
+    :~ values(Port.Input, Port.Output):
+      match wait
+      | #'all:
+          tcp.#{tcp-connect}(host, port, local_host, local_port)
+      | #'enable_break:
+          tcp.#{tcp-connect/enable-break}(host, port, local_host, local_port)
+
+  fun listen(~host: host :: maybe(String) = #false,
+             ~port: port :: ListenPortNumber = 0,
+             ~reuse: reuse = #false,
+             ~max_allow_wait: max_allow_wait :: NonnegInt = 4) :~ TCPListener:
+    TCPListener(~host: host, ~port: port, ~max_allow_wait: max_allow_wait, ~reuse: reuse)
+
+  annot.macro 'Port':
+    'satisfying(tcp.#{tcp-port?})'
+
+  fun abandon(port :: Port described_as TCP.Port):
+    tcp.#{tcp-abandon-port}(port)
+
+  fun addresses(port :: Port described_as TCP.Port) :~ values(String, PortNumber, String, ListenPortNumber):
+    let (h, p, ph, pp) = tcp.#{tcp-addresses}(port, #true)
+    values(to_string(h), p, to_string(ph), pp)
+
+class AcceptEvt(_handle):
+  implements Evt
+  opaque
+  override property handle: _handle
+
+// UDP ----------------------------------------
+
+class UDP(_handle):
+  opaque
+  internal _UDP
+  implements Closeable
+
+  property handle: _handle
+
+  constructor (~family_host: family_host :: maybe(String) = #false,
+               ~family_port: family_port :: maybe(PortNumber) = #false):
+    _UDP(rkt.#{udp-open-socket}(family_host, family_port))
+
+  method bind(~host: host :: maybe(String) = #false,
+              ~port: port :: ListenPortNumber = 0,
+              ~reuse: reuse = #false):
+    rkt.#{udp-bind!}(_handle, host, port, reuse)
+
+  method receive(bytes :: MutableBytes,
+                 start_pos :: NonnegInt = 0,
+                 end_pos :: NonnegInt = bytes.length(),
+                 ~wait: wait :: Port.WaitMode && !matching(#'all) = #'some)
+    :~ values(maybe(NonnegInt), maybe(String), maybe(PortNumber)):
+      match wait
+      | #'some:
+          rkt.#{udp-receive!}(_handle, bytes, start_pos, end_pos)
+      | #'none:
+          rkt.#{udp-receive!*}(_handle, bytes, start_pos, end_pos)
+      | #'enable_break:
+          rkt.#{udp-receive!/enable-break}(_handle, bytes, start_pos, end_pos)
+
+  method send_to(~host: host :: String,
+                 ~port: port :: PortNumber,
+                 bytes :: Bytes,
+                 start_pos :: NonnegInt = 0,
+                 end_pos :: NonnegInt = bytes.length(),
+                 ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
+    match wait
+    | #'all:
+        rkt.#{udp-send-to}(_handle, host, port, bytes, start_pos, end_pos)
+    | #'none:
+        rkt.#{udp-send-to*}(_handle, host, port, bytes, start_pos, end_pos)
+    | #'enable_break:
+        rkt.#{udp-send-to/enable-break}(_handle, host, port, bytes, start_pos, end_pos)
+
+  method receive_evt(bytes :: MutableBytes,
+                     start_pos :: NonnegInt = 0,
+                     end_pos :: NonnegInt = bytes.length()) :~ Evt:
+      ReceiveEvt(rkt.#{udp-receive!-evt}(_handle, bytes, start_pos, end_pos))
+
+  method send_to_evt(~host: host :: String,
+                     ~port: port :: PortNumber,
+                     bytes :: Bytes,
+                     start_pos :: NonnegInt = 0,
+                     end_pos :: NonnegInt = bytes.length()) :~ Evt:
+    SendEvt(rkt.#{udp-send-to-evt}(_handle, host, port, bytes, start_pos, end_pos))
+
+  method connect(~host: host :: String,
+                 ~port: port :: PortNumber):
+    rkt.#{udp-connect!}(_handle, host, port)
+
+  method send(bytes :: Bytes,
+              start_pos :: NonnegInt = 0,
+              end_pos :: NonnegInt = bytes.length(),
+              ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
+    match wait
+    | #'all:
+        rkt.#{udp-send}(_handle, bytes, start_pos, end_pos)
+    | #'some:
+        rkt.#{udp-send*}(_handle, bytes, start_pos, end_pos)
+    | #'enable_break:
+        rkt.#{udp-send/enable-break}(_handle, bytes, start_pos, end_pos)
+
+  method send_evt(bytes :: Bytes,
+                  start_pos :: NonnegInt = 0,
+                  end_pos :: NonnegInt = bytes.length()) :~ Evt:
+    SendEvt(rkt.#{udp-send-evt}(_handle, bytes, start_pos, end_pos))
+
+  override method close():
+    rkt.#{udp-close}(_handle)
+
+  method is_bound():
+    rkt.#{udp-bound?}(_handle)
+
+  method is_connected():
+    rkt.#{udp-connected?}(_handle)
+
+  method addresses() :~ values(String, ListenPortNumber, String, ListenPortNumber):
+    let (h, p, ph, pp) = rkt.#{udp-addresses}(_handle, #true)
+    values(to_string(h), p, to_string(ph), pp)
+
+  method send_ready_evt() :~ Evt:
+    SendReadyEvt(rkt.#{udp-send-ready-evt}(_handle))
+
+  method receive_ready_evt() :~ Evt:
+    ReceiveReadyEvt(rkt.#{udp-receive-ready-evt}(_handle))
+
+  property | ttl :: Byte: rkt.#{udp-ttl}(_handle)
+           | ttl := (n :: Byte): rkt.#{udp-set-ttl!}(_handle, n)
+
+  method multicast_join_group(~address: addr :: String,
+                              ~host: host :: maybe(String)):
+    rkt.#{udp-multicast-join-group!}(_handle, addr, host)
+
+  method multicast_leave_group(~address: addr :: String,
+                               ~host: host :: maybe(String)):
+    rkt.#{udp-multicast-leave-group!}(_handle, addr, host)
+
+  property | multicast_interface :~ String: to_string(rkt.#{udp-multicast-interface}(_handle))
+           | multicast_interface := (intf :: maybe(String)): rkt.#{udp-multicast-set-interface!}(_handle, intf)
+
+  property | multicast_loopback_on :~ Boolean: rkt.#{udp-multicast-loopback?}(_handle)
+           | multicast_loopback_on := (on :: Any): rkt.#{udp-multicast-set-loopback!}(_handle, on)
+
+  property | multicast_ttl :~ Byte: rkt.#{udp-multicast-ttl}(_handle)
+           | multicast_ttl := (n :: Byte): rkt.#{udp-multicast-set-ttl!}(_handle, n)
+
+  class SendEvt(_handle):
+    implements Evt
+    opaque
+    override property handle: _handle
+
+  class ReceiveEvt(_handle):
+    implements Evt
+    opaque
+    override property handle: _handle
+
+  class SendReadyEvt(_handle):
+    implements Evt
+    private implements _Evt
+    opaque
+    override property handle: _handle
+    private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)
+
+  class ReceiveReadyEvt(_handle):
+    implements Evt
+    private implements _Evt
+    opaque
+    override property handle: _handle
+    private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)

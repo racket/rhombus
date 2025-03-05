@@ -11,6 +11,9 @@ block:
   check s.poll() ~is #true
   check Semaphore.from_handle(s.handle).post() ~is #void
   check s.poll() ~is #true
+  check s.post() ~is #void
+  check s ~is_a Evt
+  check s.sync() ~is s
 
 block:
   let mutable v = 0
@@ -19,6 +22,8 @@ block:
   check th.wait() ~is #void
   check Thread.from_handle(th.handle).wait() ~is #void
   check v ~is 1
+  check th ~is_a Evt
+  check th.sync() ~is th
 
 block:
   let mutable v = 0
@@ -53,3 +58,7 @@ block:
   check get_exn(#'interrupt) ~is_a Exn.Break
   check get_exn(#'hang_up) ~is_a Exn.Break.HangUp
   check get_exn(#'terminate) ~is_a Exn.Break.Terminate
+
+block:
+  check Evt.always.sync() ~is Evt.always
+  check Evt.never.sync(~timeout: 0) ~is #false

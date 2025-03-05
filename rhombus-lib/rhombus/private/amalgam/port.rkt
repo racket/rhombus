@@ -25,7 +25,8 @@
          "port-using.rkt"
          "rename-parameter.rkt"
          "rhombus-primitive.rkt"
-         "error-adjust.rkt")
+         "error-adjust.rkt"
+         "evt.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -638,17 +639,18 @@
 (define/method (Port.Input.Progress.evt port)
   (unless (input-progress-port? port)
     (raise-annotation-failure who port "Input.Port.Progress"))
-  (port-progress-evt port))
+  (wrap-progress-evt (port-progress-evt port)))
 
 (define/method (Port.Input.Progress.commit port amt progress evt)
   #:primitive (port-commit-peeked)
   (unless (input-progress-port? port)
     (raise-annotation-failure who port "Input.Port.Progress"))
-  (port-commit-peeked amt progress evt port))
+  (port-commit-peeked amt (extract-progress-evt progress) (extract-commit-evt evt) port))
 
 (define/method (Port.Input.Progress.is_evt port evt)
-  #:primitive (progress-evt?)
-  (progress-evt? evt port))
+  (unless (input-progress-port? port)
+    (raise-annotation-failure who port "Input.Port.Progress"))
+  (progress-evt? (extract-progress-evt who evt) port))
 
 (define/method (Port.Output.close port)
   #:primitive (close-output-port)

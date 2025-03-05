@@ -13,3 +13,4 @@ Most of Rhombus's concurrency facilities are provided by the
 
 @include_section("thread.scrbl")
 @include_section("semaphore.scrbl")
+@include_section("evt.scrbl")

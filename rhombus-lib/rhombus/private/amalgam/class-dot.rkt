@@ -403,7 +403,7 @@
      (define proc (if (negative? mask)
                       #`(lambda (#,@args #,@kw-formal-args . rest)
                           #,(check (car args))
-                          (apply #,@(make-rator (car args)) #,@args #,@kw-args rest))
+                          (apply #,(make-rator (car args)) #,@args #,@kw-args rest))
                       #`(lambda (#,@args #,@kw-formal-args)
                           #,(check (car args))
                           (#,(make-rator (car args)) #,@args #,@kw-args))))

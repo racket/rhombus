@@ -1,11 +1,18 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/base.rkt") as rkt
+  lib("rhombus/private/amalgam.rkt")!evt
 
 export:
   thread
   Thread
   Semaphore
+  except_space class:
+    evt.ProgressEvt
+    evt.CommitEvt
+  Evt
+  only_space annot:
+    evt.Evt
 
 expr.macro 'thread: $(body :: Block)':
   'Thread(fun () $body)'
@@ -15,9 +22,12 @@ namespace ~open:
   class Thread(hand):
     opaque
     internal _Thread
+    implements evt.Evt
+    private implements evt._Evt
     constructor (thunk :: Function.of_arity(0)):
       super(rkt.thread(thunk))
-    property handle: hand
+    override property handle: hand
+    private override property sync_handle: rkt.#{wrap-evt}(hand, fun (v): this)
     method wait():
       rkt.#{thread-wait}(hand)
     method break(kind :: Thread.Break = #'interrupt):
@@ -28,7 +38,11 @@ namespace ~open:
 
     export:
       from_handle
+      sleep
       Break
+
+    fun sleep(n :: NonnegReal):
+      rkt.sleep(n)
 
   fun from_handle(hand) :: Thread:
     ~who: who
@@ -47,9 +61,12 @@ namespace ~open:
   class Semaphore(hand):
     opaque
     internal _Semaphore
+    implements evt.Evt
+    private implements evt._Evt
     constructor (init :: NonnegInt = 0):
       super(rkt.#{make-semaphore}(init))
-    property handle: hand
+    override property handle: hand
+    private override property sync_handle: rkt.#{wrap-evt}(hand, fun (v): this)
     method post():
       rkt.#{semaphore-post}(hand)
     method wait():
@@ -65,3 +82,27 @@ namespace ~open:
     unless rkt.#{semaphore?}(hand)
     | error(~who: who, "not a semaphore handle")
     _Semaphore(hand)
+
+class AlwaysEvt():
+  implements evt.Evt
+  private implements evt._Evt
+  opaque
+  override property handle: rkt.#{always-evt}
+  private override property sync_handle: rkt.#{wrap-evt}(rkt.#{always-evt}, fun (b): this)
+
+class NeverEvt():
+  implements evt.Evt
+  private implements evt._Evt
+  opaque
+  override property handle: rkt.#{never-evt}
+  private override property sync_handle: rkt.#{wrap-evt}(rkt.#{never-evt}, fun (b): this)
+
+namespace Evt:
+  export:
+    rename:
+      evt.Evt.sync as sync
+    always
+    never
+
+  def always = AlwaysEvt()
+  def never = NeverEvt()

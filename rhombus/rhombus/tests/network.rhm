@@ -1,0 +1,118 @@
+#lang rhombus/static
+import:
+  rhombus/network open
+  rhombus/thread open
+
+block:
+  Closeable.let l1 = TCP.listen(~port: 0)
+
+  check l1 ~is_a TCPListener
+  let (_, portno) = l1.addresses()
+  check portno ~is_a PortNumber
+  check l1 is_a TCP.Port ~is #false
+
+  block:
+    Closeable.let (i, o) = TCP.connect(~host: "localhost", ~port: portno)
+    check i ~is_a Port.Input
+    check i ~is_a TCP.Port
+    check o ~is_a Port.Output
+    check o ~is_a TCP.Port
+
+    block:
+      let (h, p, sh, sp) = TCP.addresses(i)
+      check sp ~is portno
+      check h ~is_a String
+      check sh ~is_a String
+      let (_, p2, _, sp2) = TCP.addresses(o)
+      check sp ~is portno
+      check p ~is p2
+
+    Closeable.let (si, so) = l1.accept()
+    check si ~is_a Port.Input
+    check so ~is_a Port.Output
+
+    o.write_string("hello")
+    o.flush()
+    check si.read_string(5) ~is "hello"
+
+    so.write_string("howdy")
+    so.flush()
+    check i.read_string(5) ~is "howdy"
+
+  check l1.accept_ready() ~is #false
+
+  block:
+    Closeable.let (i, o) = TCP.connect(~host: "localhost", ~port: portno)
+    check:
+      l1.accept_ready() || (for any (i in 0..5):
+                              Thread.sleep(0.1)
+                              l1.accept_ready())
+      ~is #true
+
+    Closeable.let (si, so): let PairList[si, so] = l1.accept_evt().sync()
+                            values(si, so)
+    check si ~is_a Port.Input
+    check so ~is_a Port.Output
+
+    TCP.abandon(i)
+    TCP.abandon(o)
+    TCP.abandon(si)
+    TCP.abandon(so)
+
+block:
+  Closeable.let u = UDP()
+
+  check u.is_bound() ~is #false
+  check u.is_connected() ~is #false
+
+  u.bind()
+  check u.is_bound() ~is #true
+
+  let (self_host, portno, _, _) = u.addresses()
+  check portno ~is_a PortNumber
+
+  Closeable.let u2 = UDP()
+
+  check u2.send_to(~host: "localhost", ~port: portno, #"hellogram") ~is #void
+  check u.is_bound() ~is #true
+  let (self_host2, portno2, _, _) = u2.addresses()
+
+  let bstr = Bytes.make(100)
+  let (len, from_host, from_portno) = u.receive(bstr)
+  check len ~is 9
+  check from_portno ~is portno2
+  check bstr.subbytes(0, 9) ~is_now #"hellogram"
+
+  check u2.send_to_evt(~host: "localhost", ~port: portno, #"more").sync() ~is #void
+  check u.receive_ready_evt().sync() ~is_a Evt
+  check u.receive_evt(bstr).sync() ~is PairList[4, from_host, from_portno]
+
+  check u2.connect(~host: "localhost", ~port: portno) ~is #void
+  check u2.is_connected() ~is #true
+
+  check u2.send(#"higram") ~is #void
+  check u.receive(bstr) ~is values(6, from_host, from_portno)
+  check bstr.subbytes(0, 6) ~is_now #"higram"
+
+  check u2.send_ready_evt().sync() ~is_a Evt
+  check u2.receive_ready_evt().sync(~timeout: 0) ~is #false
+
+  check u2.send_evt(#"more").sync() ~is #void
+  check u.receive_ready_evt().sync() ~is_a Evt
+  check u.receive_evt(bstr).sync() ~is PairList[4, from_host, from_portno]
+
+  check u.ttl ~is_a Int
+  check u.ttl := u.ttl ~is #void
+
+  check u.multicast_interface ~is "0.0.0.0"
+  check u.multicast_interface := "0.0.0.0" ~is #void
+
+  check u.multicast_loopback_on ~is_a Boolean
+  check u.multicast_loopback_on := #false ~is #void
+  check u.multicast_loopback_on ~is #false
+
+  check u.multicast_ttl ~is_a Byte
+  check u.multicast_ttl := 10 ~is #void
+
+  check u.multicast_join_group(~address: "233.252.0.0", ~host: "0.0.0.0") ~is #void
+  check u.multicast_leave_group(~address: "233.252.0.0", ~host: "0.0.0.0") ~is #void

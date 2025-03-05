@@ -1,6 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      rhombus/thread open)
 
 @title{Input Ports}
 
@@ -317,7 +319,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
     ~end: end :: NonnegInt = bytes.length(),
     ~skip_bytes: skip :: NonnegInt = 0,
     ~wait: wait :: Port.WaitMode = #'all,
-    ~progress: progress :: maybe(Evt) = #false
+    ~progress: progress :: maybe(ProgressEvt) = #false
   ) :: NonnegInt || Port.EOF
 ){
 
@@ -389,12 +391,12 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 }
 
 @doc(
-  method (port :: Port.Input.Progress).evt() :: Evt
-  method (port :: Port.Input.Progress).is_evt(e :: Evt) :: Boolean
+  method (port :: Port.Input.Progress).evt() :: ProgressEvt
+  method (port :: Port.Input.Progress).is_evt(e :: ProgressEvt) :: Boolean
 ){
 
- The @rhombus(Port.Input.Progress.evt) method returns a a synchronizable
- evt that becomes ready for synchronization when data is read from
+ The @rhombus(Port.Input.Progress.evt) method returns a a @tech{synchronizable
+ event} that becomes ready for synchronization when data is read from
  @rhombus(port). The @rhombus(Port.Input.Progress.evt) method check whether
  @rhombus(e) belongs to @rhombus(port).
 
@@ -404,8 +406,8 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (port :: Port.Input.Progress).commit(
     amt :: NonnegInt,
-    progress :: Evt,
-    evt :: Evt
+    progress :: ProgressEvt,
+    evt :: CommitEvt
   ) :: Boolean
 ){
 

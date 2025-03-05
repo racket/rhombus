@@ -113,3 +113,7 @@
 
 (module+ deserialize-set
   (bounce (submod "amalgam/set.rkt" deserialize)))
+
+(module+ evt
+  (bounce "amalgam/evt.rkt")
+  (bounce "amalgam/evt.rhm"))

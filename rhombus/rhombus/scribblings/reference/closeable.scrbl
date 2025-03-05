@@ -14,16 +14,29 @@ object after subsequent definitions and expressions. Implementing the
 @doc(
   ~nonterminal:
     rhs_expr: block expr
-  defn.sequence_macro 'Closeable.let $bind = $rhs_expr
+    rhs_body: block body
+  defn.sequence_macro 'Closeable.let $binds = $rhs_expr
                        $body
                        ...'
+  defn.sequence_macro 'Closeable.let $binds: $rhs_body ...
+                       $body
+                       ...'
+  grammar binds:
+    $bind
+    ($bind, ...)
 ){
 
- Evaluates @rhombus(rhs_expr) to get a @rhombus(Closeable, ~class) object and defines
+ Evaluates @rhombus(rhs_expr) or the @rhombus(rhs_body) sequence
+ to get a @rhombus(Closeable, ~class) object and defines
  @rhombus(bind) as the result for use in the @rhombus(body) sequence
  (which must be non-empty). After the @rhombus(body) sequence completes,
  the object is closed with its @rhombus(close, ~datum) method before returning the
  results of the @rhombus(body) sequence.
+
+ If @rhombus(binds) is a parenthesized sequence of @rhombus(bind) forms,
+ then @rhombus(rhs_expr) or the @rhombus(rhs_body) sequence must produce
+ the corresponding number of values, and each value must be a
+ @rhombus(Closeable, ~class) object.
 
  The @rhombus(rhs_expr) is evaluated with breaks disabled like the
  @rhombus(~initially) part of @rhombus(try). If control escapes from the

@@ -6,6 +6,16 @@ import:
 export:
   Closeable
 
+meta:
+  syntax_class RHS:
+    kind: ~group
+    fields: e
+  | '$(bound_as expr_meta.space: '=') $(rhs :: expr_meta.Parsed)':
+      field e = rhs
+  | ': $(b :: Block)':
+      match_def '$(rhs :: expr_meta.Parsed)' = 'block $b'
+      field e = rhs
+
 namespace Closeable:
   export:
     close
@@ -15,28 +25,39 @@ namespace Closeable:
     v.close()
     #void
 
-  defn.sequence_macro 'clet $bind ... $(bound_as expr_meta.space: '=') $(rhs :: expr_meta.Parsed)
+  defn.sequence_macro 'clet $bind_seq ... $(rhs :: RHS)
                        $body0
                        $body
                        ...':
     ~op_stx: self
-    def rhs_statinfo = statinfo_meta.gather(rhs)
-    def resource = Syntax.make_temp_id("resource")
-    def resource_with_statinfo = statinfo_meta.wrap(resource, rhs_statinfo)
+    let rhs = rhs.e
+    let [bind, ...]:
+      match '$bind_seq ...'
+      | '($bind, ...)': [bind, ...]
+      | ~else: ['$bind_seq ...']
+    let rhs_statinfo = statinfo_meta.gather(rhs)
+    let [tmp, ...] = [Syntax.make_temp_id(bind), ...]
+    let [resource, ...] = [Syntax.make_temp_id(bind), ...]
+    let all_resources = 'values($resource, ...)'
+    let all_resources_with_statinfo = statinfo_meta.wrap(all_resources, rhs_statinfo)
     values(
       '
         block:
           def mutable $resource = #false
+          ...
           try:
             ~initially:
-              $resource := ($rhs $('::'.relocate(self)) Closeable)
+              let ($tmp, ...) = $rhs
+              $resource := ($tmp $('::'.relocate(self)) Closeable)
+              ...
             Continuation.barrier:
-              let $bind ... = $resource_with_statinfo
+              let $bind_seq ... = $all_resources_with_statinfo
               block:
                 $body0
                 $body
                 ...
             ~finally:
               ($resource :~ Closeable).close()
+              ...
       ',
       '')
