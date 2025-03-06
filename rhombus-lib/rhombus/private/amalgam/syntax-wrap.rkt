@@ -28,6 +28,7 @@
 #;
 (begin
   (struct syntax-wrap (stx key attribs)
+    #:transparent
     #:guard (lambda (s k a name)
               (unless (syntax? s)
                 (error "bad syntax wrap"))
@@ -67,7 +68,18 @@
   (define (syntax*? v)
     (syntax? v)))
 
-(define (maybe-syntax-wrap stx key attribs)
+(define (maybe-syntax-wrap stx depth key attribs)
   (cond
+    [(depth . > . 0)
+     (define (rotate-hash stx ht)
+       ;; convert a hash of lists to a list of hashes
+       (for/fold ([hts (for/list ([e (in-list stx)]) #hasheq())]) ([(k vs+d) (in-hash ht)])
+         (define d (cdr vs+d))
+         (for/list ([ht (in-list hts)]
+                    [v (in-list (car vs+d))])
+           (hash-set ht k (cons v d)))))
+     (for/list ([e (in-list stx)]
+                [a (in-list (rotate-hash stx attribs))])
+       (maybe-syntax-wrap e (sub1 depth) key a))]
     [(syntax*? stx) (syntax-wrap (syntax-unwrap stx) key attribs)]
     [else stx]))

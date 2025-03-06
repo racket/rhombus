@@ -697,12 +697,3 @@
                       #'unpack-element*))]
                [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
                                               (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
-
-;; When packing to communicate a match as a syntax-class attribute,
-;; we don't want to discard syntax wraps, because those wraps are
-;; useful when a syntax-class field itself is from a syntax class
-(define-for-syntax (keep-syntax-wrap unpack*)
-  (case (syntax-e unpack*)
-    [(unpack-term* unpack-multi-as-term* unpack-group*)
-     (quote-syntax unpack-element*)]
-    [else unpack*]))

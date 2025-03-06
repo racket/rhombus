@@ -558,13 +558,13 @@
                         #:datum-literals (maybe-syntax-wrap)
                         [(id (pack (syntax stx) depth))
                          #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]
-                        [(id ((~and msw maybe-syntax-wrap) (pack (syntax stx) depth) . msw-tail))
-                         #`(id (msw (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))) . msw-tail))]
+                        [(id ((~and msw maybe-syntax-wrap) (pack (syntax stx) depth) m-depth . msw-tail))
+                         #`(id (msw (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))) #,(add1 (syntax-e #'m-depth)) . msw-tail))]
                         ;; If not `syntax`, then something like `attribute`, which doesn't need deepening
                         [(id (pack-nothing* val depth))
                          #`(id (pack-nothing* val #,(add1 (syntax-e #'depth))))]
-                        [(id ((~and msw maybe-syntax-wrap) (pack-nothing* val depth) . msw-tail))
-                         #`(id (msw (pack-nothing* val #,(add1 (syntax-e #'depth))) . msw-tail))])))
+                        [(id ((~and msw maybe-syntax-wrap) (pack-nothing* val depth) m-depth . msw-tail))
+                         #`(id (msw (pack-nothing* val #,(add1 (syntax-e #'depth))) #,(add1 (syntax-e #'m-depth)) . msw-tail))])))
                   ;; deepen-syntax-escape
                   (lambda (sidr)
                     (deepen-pattern-variable-bind sidr))

@@ -1298,3 +1298,11 @@ block:
     | '$(c :: Cutting)': c
     | ~else: "other"
     ~is "other"
+
+block:
+  syntax_class Bar
+  | '($y, ...)'
+  syntax_class Foo
+  | '($(x :: Bar), ...)'
+  let '$(foo :: Foo)' = '((1, 2), (3, 4), (5, 6))'
+  check [foo.x.y, ..., ...] ~matches ['1', '2', '3', '4', '5', '6']

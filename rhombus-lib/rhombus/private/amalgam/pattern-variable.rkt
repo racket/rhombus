@@ -20,14 +20,16 @@
          "syntax-class-attributes-key.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "pack.rkt")
 
 (provide (for-syntax make-pattern-variable-bind
                      deepen-pattern-variable-bind
                      extract-pattern-variable-bind-id-and-depth
                      normalize-pvar-statinfos
                      get-syntax-class-static-infos
-                     build-wrap-syntax-for-attributes))
+                     build-wrap-syntax-for-attributes
+                     keep-syntax-wrap))
 
 (define-for-syntax (make-pattern-variable-bind name-id temp-id unpack* depth
                                                #:statinfos [statinfos (get-syntax-static-infos)]
@@ -111,6 +113,7 @@
                                 (wrap-static-info* temp-id (get-syntax-static-infos))
                                 (wrap-static-info* #`(maybe-syntax-wrap
                                                       (syntax-unwrap #,temp-id)
+                                                      0
                                                       (quote #,key)
                                                       #,(build-attribute-hash attributes))
                                                    statinfos))
@@ -155,6 +158,7 @@
         [else
          #`(maybe-syntax-wrap
             elem
+            0
             (quote #,key)
             #,(build-attribute-hash (datum->syntax #f attrs) #:vars attr-tmps))])
       (lambda () statinfos)
@@ -164,8 +168,9 @@
 (define-for-syntax (build-wrap-syntax-for-attributes base-stx key attributes)
   (cond
     [(and key (pair? (syntax-e attributes)))
-     ;; some patterns in "quasiquote.rkt" rely on the #`(maybe-syntax-wrap #,base-stx . _) shape
+     ;; some patterns in "quasiquote.rkt" rely on the #`(maybe-syntax-wrap #,base-stx #,depth . _) shape
      #`(maybe-syntax-wrap #,base-stx
+                          0
                           (quote #,key)
                           #,(build-attribute-hash attributes))]
     [else base-stx]))
@@ -214,7 +219,7 @@
             (define var-depth (pattern-variable-depth attr))
             (syntax-parse form1
               [form-rep-info::repetition-info
-               (define e #`(#,(pattern-variable-unpack* attr)
+               (define e #`(#,(keep-syntax-wrap (pattern-variable-unpack* attr))
                             #'$
                             (car (hash-ref (syntax-wrap-attribs form-rep-info.body)
                                            (quote #,(pattern-variable-sym attr))))
@@ -303,3 +308,12 @@
   (if (eq? pvar-sis 'stx)
       (get-syntax-static-infos)
       pvar-sis))
+
+;; When packing to communicate a match as a syntax-class attribute,
+;; we don't want to discard syntax wraps, because those wraps are
+;; useful when a syntax-class field itself is from a syntax class
+(define-for-syntax (keep-syntax-wrap unpack*)
+  (case (syntax-e unpack*)
+    [(unpack-term* unpack-multi-as-term* unpack-group*)
+     (quote-syntax unpack-element*)]
+    [else unpack*]))
