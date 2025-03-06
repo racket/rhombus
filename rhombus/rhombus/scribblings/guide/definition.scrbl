@@ -95,9 +95,13 @@ the annotation and context. In the case of @rhombus(flip), this check is
 unlikely to matter, but if a programmer uses @rhombus(::, ~bind) everywhere to
 try to get maximum checking and maximum guarantees, it's easy to create
 expensive function boundaries. Rhombus programmers are encouraged to use
-@rhombus(:~, ~bind) when the goal is to hint for better performance, and use
+@rhombus(:~, ~bind) when the goal is to hint for better static checking or performance, and use
 @rhombus(::, ~bind) only where a defensive check is needed, such as for the
 arguments of an exported function.
+
+@margin_note{Use @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/static)))
+ or @rhombus(use_static) to enable static errors for mismatches that are
+ apparent based on annotations.}
 
 The use of @rhombus(:~, ~bind) or @rhombus(::, ~bind) as above is not specific to
 @rhombus(fun). The @rhombus(:~, ~bind) and @rhombus(::, ~bind) binding operators work
@@ -212,6 +216,11 @@ visible before the @rhombus(let) form.
   def after = 3
   get_after()  // prints 3
 )
+
+Normally, @rhombus(let) is used for local definitions, while
+@rhombus(def) is used for module-level definitions. Using @rhombus(let)
+for module-level definitions can constrain exporting and hide
+definitions from a REPL.
 
 The identifier @rhombus(_, ~bind) is similar to @rhombus(Posn) and
 @rhombus(:~, ~bind) in the sense that it's a binding operator. As a

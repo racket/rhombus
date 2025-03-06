@@ -5,7 +5,7 @@
 @title(~tag: "conditional"){Conditionals and Pattern-Matching Dispatch}
 
 The @rhombus(&&) and @rhombus(||) operators are short-circuiting ``and''
-and ''or'' forms. As in Racket, @rhombus(||) returns the first
+and ''or'' forms. The @rhombus(||) operator returns the first
 non-@rhombus(#false) value, and @rhombus(&&) returns the last
 non-@rhombus(#false) value.
 
@@ -23,8 +23,8 @@ the @rhombus(===) operator reports object equality. Comparison
 operators are non-associative and have no precedence relationship with
 each other.
 
-The @rhombus(if) form expects a test expression followed by an
-alts-block with two @litchar{|}s. The first @litchar{|} holds the
+The @rhombus(if) form expects a test expression followed by
+alternatives with two @litchar{|}s. The first @litchar{|} holds the
 ``then'' branch, and the second @litchar{|} holds the ``else'' branch:
 
 @examples(
@@ -35,8 +35,8 @@ alts-block with two @litchar{|}s. The first @litchar{|} holds the
 
 Although an @rhombus(if) could be nested further in the ``else'' branch
 to implement an ``if'' ... ``else if'' ... ``else if'' ... combination,
-the @rhombus(cond) form supports that combination better. It expects an
-alts-block where each @litchar{|} has a test expression followed by a
+the @rhombus(cond) form supports that combination better. It expects
+alternatives where each @litchar{|} has a test expression followed by a
 block. Evaluating the @rhombus(cond) form dispatches to the block after
 first test that produces a non-@rhombus(#false) value. The
 @rhombus(~else) keyword can be used in place of a last test.
@@ -53,22 +53,16 @@ first test that produces a non-@rhombus(#false) value. The
 )
 
 If there's no @rhombus(~else) case and no matching case, then
-@rhombus(cond) reports an error at run time (unlike Racket, which
-returns void in that case). Note that @rhombus(~else) is a keyword, and
-not an identifier. If it were an identifier, then @rhombus(else) might
-get bound in some context to @rhombus(#false), which would be confusing.
-As another special case, @rhombus(_) is allowed in place of
-@rhombus(else); although it is possible to bind @rhombus(_), it takes
-special effort because @rhombus(_) is a binding operator.
+@rhombus(cond) reports an error at run time.
 
 Although @rhombus(cond) is better than @rhombus(if) for @rhombus(fib),
 the @rhombus(match) form is even better. The @rhombus(match) form
-expects an expression and then an alts-block where each @litchar{|} has
+expects an expression and then alternatives where each @litchar{|} has
 a binding pattern followed by a block. The @rhombus(match) form
-evaluates that first expression, and dispatches to the first block whose
+evaluates that first expression, and then it dispatches to the first block whose
 pattern accepts the expression's value. Similar to @rhombus(cond),
 @rhombus(match) supports @rhombus(~else) in place of a final binding
-pattern, but using the binding operator @rhombus(_) is more common.
+pattern, but using the binding operator @rhombus(_) also works.
 
 @examples(
   ~defn:

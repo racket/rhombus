@@ -334,7 +334,7 @@
   terms that is spliced within a group. This is the default mode of a
   syntax class when no @rhombus(kind) is specified.}
 
- @item{@rhombus(~group): each pattern case represents a @tech(~doc: guide_doc){group},
+ @item{@rhombus(~group): each pattern case represents a @tech(~doc: shrub_doc){group},
   and the syntax class can be used in the same places as
   @rhombus(Group, ~stxclass) (i.e., at the end of an enclosing group).}
 

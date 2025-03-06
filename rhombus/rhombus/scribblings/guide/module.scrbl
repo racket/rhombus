@@ -1,6 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      rhombus/measure)
 
 @title(~tag: "Modules"){Modules, Variables, and Functions}
 
@@ -18,7 +20,7 @@ expression at the top of a module, then its value gets printed out.
 
 @margin_note_block{If you have installed the @pkg{rhombus} package, then
  you can run Rhombus modules in DrRacket or by supplying the file path to
- @exec{racket} on the command line.}
+ @exec{rhombus} or @exec{racket} on the command line.}
 
 Ways to define names in a module include @rhombus(def) and
 @rhombus(fun). The @rhombus(def) form defines an immutable variable, and
@@ -49,7 +51,7 @@ parentheses.
  its own line.
 
  To get a Rhombus read-eval-print loop on the
- command line, use @exec{racket -I rhombus}. The rules for single-line
+ command line, use @exec{rhombus} or @exec{racket -I rhombus}. The rules for single-line
  and multi-line input are the same as in DrRacket's interactions area.
  Use can use the @litchar{,enter} command to load a module and evaluate
  additional expressions in the context of that module's body.}
@@ -128,24 +130,23 @@ determines the default import prefix.
 
 @rhombusblock(
   import:
-    rhombus/math
+    rhombus/measure
 
-  math.pi  // prints 3.141592653589793
+  measure.cpu_milliseconds()  // prints a number
 )
 
 @margin_note_block{Technically, the use of @litchar{.} with an import name as a hierarchical reference is not
-the same as the @rhombus(.) operator described in the next section. We stick with
-@rhombus(/, ~impo) for module paths to avoid overloading @litchar{.} further.}
+the same as the @rhombus(.) operator described in the next section.}
 
-The default file suffix for unquoted module paths is
+The default file suffix for an unquoted module path is
 @filepath{.rhm}. To reference a Racket module, use a
 @rhombus(lib, ~impo) path with a @filepath{.rkt} suffix.
 
 @rhombusblock(
   import:
-    lib("racket/math.rkt")
+    lib("racket/math.rkt") as rkt_math
 
-  math.pi  // prints 3.141592653589793
+  rkt_math.pi  // prints 3.141592653589793
 )
 
 There's a lot more to the syntax of @rhombus(import) and

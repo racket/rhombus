@@ -24,7 +24,7 @@ colon:
 )
 
 The @rhombus(fun) form can be used in an expression position and
-without a function name, in which case it behaves like λ and produces
+without a function name, in which case it behaves produces
 an anonymous function value.
 
 @examples(

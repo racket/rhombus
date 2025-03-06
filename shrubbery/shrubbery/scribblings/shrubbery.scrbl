@@ -18,9 +18,7 @@ parsing is consistent with the shrubbery's lines and indentation.
 @table_of_contents()
 
 @include_section("example.scrbl")
-@include_section("group-and-block.scrbl")
-@include_section("token-parsing.scrbl")
-@include_section("at-parsing.scrbl")
+@include_section("spec.scrbl")
 @include_section("parsed-representation.scrbl")
 @include_section("language.scrbl")
 @include_section("meta.scrbl")

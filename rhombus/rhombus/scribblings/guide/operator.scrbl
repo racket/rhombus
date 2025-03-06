@@ -128,7 +128,19 @@ grouped on lines however is convenient.
 
 Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
 @rhombus(~stronger_than), or @rhombus(~same_as) to declare a precedence
-relationship for operators not otherwise mentioned.
+relationship for operators not otherwise mentioned. Instead of listing
+individual operators, a order order such as
+@rhombus(arithmetic, ~operator_order) can be used to generalize the
+declaration.
+
+@examples(
+  ~eval: op_eval
+  ~defn:
+    operator (x <> y):
+      ~weaker_than: arithmetic
+      ~associativity: ~right
+      Posn(x, y)
+)
 
 When multiple cases for an operator are provided using @vbar, then only
 the first case for prefix, infix, or postfix can have options.
@@ -142,7 +154,7 @@ associativity that applies to all cases. Similar to this notation for
   ~eval: op_eval
   ~defn:
     operator <> :: Posn:
-      ~weaker_than: * / + -
+      ~weaker_than: arithmetic
       ~associativity: ~right
     | (x <> y):
         Posn(x, y)
