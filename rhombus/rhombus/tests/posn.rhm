@@ -1,0 +1,9 @@
+#lang rhombus
+
+export:
+  make_posn
+
+class Posn(x, y)
+
+fun make_posn(x, y):
+  Posn(x, y)

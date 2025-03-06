@@ -3,4 +3,4 @@
 (provide version)
 
 ;; keep in sync with package version at "../../../info.rkt"
-(define version "0.33")
+(define version "0.34")

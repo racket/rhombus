@@ -3,7 +3,8 @@
                      syntax/parse/pre)
          racket/string
          racket/syntax-srcloc
-         rhombus/parse
+         (only-in rhombus/parse
+                  rhombus-expression)
          racket/sandbox
          file/convertible
          racket/port

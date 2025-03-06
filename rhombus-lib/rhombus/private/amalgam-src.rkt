@@ -120,3 +120,6 @@
 (module+ evt
   (bounce "amalgam/evt.rkt")
   (bounce "amalgam/evt.rhm"))
+
+(module+ dot
+  (bounce (submod "amalgam/dot.rkt" for-external)))

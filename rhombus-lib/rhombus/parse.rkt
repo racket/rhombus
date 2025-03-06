@@ -1,5 +1,11 @@
 #lang racket/base
+(require (rename-in (submod "private/amalgam.rkt" parse)
+                    [rhombus-expression parse:rhombus-expression]))
 
-(require (submod "private/amalgam.rkt" parse))
+(provide rhombus-expression
+         rhombus-top)
 
-(provide (all-from-out (submod "private/amalgam.rkt" parse)))
+(define-syntax-rule (rhombus-expression e)
+  ;; an expression may expand to `(begin (quote-syntax statinfo) expr)`,
+  ;; so make sure that's not spliced in a definition context
+  (let () (parse:rhombus-expression e)))

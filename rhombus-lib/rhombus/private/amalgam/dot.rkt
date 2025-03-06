@@ -47,6 +47,10 @@
             parse-dot-expr
             parse-dot-repet)))
 
+(module+ for-external
+  (provide dot-lookup-by-name
+           dot-assign-by-name))
+
 (begin-for-syntax
   (property dot-provider (handler))
 
