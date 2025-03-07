@@ -37,3 +37,7 @@
 @doc(~include rhombus/scribble/private/block: tabular){
 
 }
+
+@doc(~include rhombus/scribble/private/block: Cell){
+
+}

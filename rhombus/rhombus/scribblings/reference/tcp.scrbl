@@ -77,7 +77,7 @@
   ) :: TCPListener
 ){
 
- A @rhombus(TCPListener, ~class) represents a TCP listener for a server
+ A @rhombus(TCPListener, ~class) represents a @deftech{TCP listener} for a server
  that can accept connections via @rhombus(TCPListener.accept).
 
  If @rhombus(host) is not @rhombus(#false), it determines the IP

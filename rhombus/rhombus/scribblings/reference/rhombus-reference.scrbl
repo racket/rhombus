@@ -4,9 +4,10 @@
 
 @title(~style: #'toc){Rhombus Reference}
 
-For a general overview of the language, see @docref(guide_doc).
-
-For details on Rhombus's metaprograming facilities, see @docref(meta_doc).
+For a general overview of the Rhombus language, see @docref(guide_doc).
+This document defines Rhombus language bindings in terms of the syntax and
+evaluation concepts described in @docref(model_doc).
+For more Rhombus bindings that support metaprograming, see @docref(meta_doc).
 
 @docmodule(~lang,
            ~use_sources: lib("rhombus/private/amalgam.rkt")!core

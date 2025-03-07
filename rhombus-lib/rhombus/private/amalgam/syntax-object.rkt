@@ -70,6 +70,9 @@
   (literal
    literal_term
    literal_group
+   literal_local
+   literal_local_term
+   literal_local_group
    [make Syntax.make]
    [make_op Syntax.make_op]
    [make_group Syntax.make_group]
@@ -229,6 +232,30 @@
        #:datum-literals (group)
        [(_ ((~or* _::parens _::quotes) g) . tail)
         (values (add-span-and-syntax-static-info stx #'(quote-syntax g)) #'tail)]))))
+
+(define-syntax literal_local
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (~and ((~or* _::parens _::quotes) . _) gs) . tail)
+        (values (add-span-and-syntax-static-info stx #`(quote-syntax #,(pack-tagged-multi #'gs) #:local)) #'tail)]))))
+
+(define-syntax literal_local_term
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ ((~or* _::parens _::quotes) (group term)) . tail)
+        (values (add-span-and-syntax-static-info stx #'(quote-syntax term #:local)) #'tail)]))))
+
+(define-syntax literal_local_group
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ ((~or* _::parens _::quotes) g) . tail)
+        (values (add-span-and-syntax-static-info stx #'(quote-syntax g #:local)) #'tail)]))))
 
 ;; ----------------------------------------
 

@@ -1,0 +1,82 @@
+#lang rhombus/and_meta
+import:
+  rhombus/scribble/manual open
+
+export:
+  prog_steps
+
+macro 'prog_steps:
+         $(cont_tag && '~cont')
+         ... ~once
+         ~step:
+           $(obj_tag && '~obj'):
+             $obj
+             ...
+           ... ~once
+           ~defn:
+             $def
+             ...
+           ... ~once
+           ~expr:
+             $prog
+             ...
+         ...':
+  '_prog_steps([#' $cont_tag, ...] != [],
+               [#' $obj_tag, ..., ...] != [],
+               [rhombusblock_etc(~inset: #false):
+                  $obj
+                  ...
+                  ...,
+                ...],
+               [rhombusblock_etc(~inset: #false):
+                  $def
+                  ...
+                  ...,
+                ...],
+               [rhombusblock_etc(~inset: #false):
+                  $prog
+                  ...,
+                ...])'
+
+fun flow(es):
+  nested(es)
+fun to_flow(e):
+  nested([e])
+
+
+fun _prog_steps(is_cont, has_objs, objs :: List, defs :: List, progs :: List):
+  let spc = hspace(1)
+  tabular(
+    ~column_properties: [#'top],
+    List.append(
+      & for List (i in 0..,
+                  obj in objs,
+                  def in defs,
+                  prog in progs):
+        [& if (i > 0) | [[spc, spc, spc, spc, spc, spc]] | [],
+         & (if has_objs
+            | [[spc,
+                to_flow(if (i > 0 || is_cont)
+                        | "→"
+                        | " "),
+                spc,
+                to_flow("objects:"),
+                spc,
+                flow([obj])]]
+            | []),
+         [spc,
+          to_flow(if (i > 0 || is_cont) && !has_objs
+                  | "→"
+                  | " "),
+          spc,
+          to_flow("defined:"),
+          spc,
+          flow([def])],
+         [spc,
+          spc,
+          spc,
+          to_flow("evaluate:"),
+          spc,
+          flow([prog])]]
+    )
+  )

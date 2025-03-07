@@ -807,8 +807,13 @@ class's name.
  notation used to describe the syntax object, such as using @litchar{;}
  versus @litchar{,} to separate groups.
 
- Metadata, such as raw source text, is preserved for the
- @rhombus(term) sequence.
+ Metadata, such as raw source text, is preserved for the @rhombus(term)
+ sequence. Most @tech(~doc: model_doc){scopes} are also preserved, but
+ the syntax object's @tech(~doc: model_doc){scope sets} are pruned to
+ omit the scope for any binding form that appears between the
+ @rhombus(Syntax.literal) form and the enclosing top-level context,
+ module body, or @tech(~doc: model_doc){phase level} crossing, whichever
+ is closer.
 
 @examples(
   Syntax.literal 'x'
@@ -831,6 +836,21 @@ class's name.
  is a term or group syntax object. No metadata is preserved for the group
  containing the term in the case of @rhombus(Syntax.literal_term), which
  can be a small but useful savings in some contexts.
+
+}
+
+@doc(
+  expr.macro '«Syntax.literal_local '$term ...; ...'»'
+  expr.macro 'Syntax.literal_local ($term ..., ...)'
+  expr.macro '«Syntax.literal_local_term '$term'»'
+  expr.macro 'Syntax.literal_local_term ($term)'
+  expr.macro '«Syntax.literal_local_group '$term ...'»'
+  expr.macro 'Syntax.literal_local_group ($term ...)'
+){
+
+ Like @rhombus(Syntax.literal_local), @rhombus(Syntax.literal_term), and
+ @rhombus(Syntax.literal_group), but without pruning any
+ @tech(~doc: model_doc){scopes}.
 
 }
 

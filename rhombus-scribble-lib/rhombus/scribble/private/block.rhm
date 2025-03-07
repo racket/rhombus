@@ -16,6 +16,7 @@ export:
   item
   verbatim
   tabular
+  Cell
 
 fun para(~style: style :: maybe(StyleLike) = #false,
          pre_content :: PreContent) :: FlowBlock:

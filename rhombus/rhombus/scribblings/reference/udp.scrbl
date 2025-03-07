@@ -15,7 +15,7 @@
     )
 ){
 
- A @rhombus(UDP, ~class) object represents a UDP socket.
+ A @rhombus(UDP, ~class) object represents a @deftech{UDP socket}.
 
  Since @rhombus(UDP, ~class) implements @rhombus(Closeable, ~class), the
  @rhombus(UDP) constructor can be used with @rhombus(Closeable.let).
