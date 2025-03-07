@@ -91,7 +91,7 @@
 ){
 
  Binds @rhombus(id_name) as a @deftech{class} name in several
- @tech{spaces} (except as suppressed with @rhombus(class_clause)s such as
+ @tech(~doc: meta_doc){spaces} (except as suppressed with @rhombus(class_clause)s such as
  @rhombus(expression ~none, ~class_clause)):
 
 @itemlist(
@@ -205,7 +205,7 @@
  later fields of the class, methods of the class, or properties of the class. All fields
  added through a @rhombus(field, ~class_clause) clause without @rhombus(immutable, ~class_clause) are mutable, and they
  can be updated in a custom constructor (form example) using
- @tech{assignment operators} such as @rhombus(:=). The
+ @tech(~doc: meta_doc){assignment operators} such as @rhombus(:=). The
  @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form can appear any number of times as a
  @rhombus(class_clause), with or without a
  @rhombus(private, ~class_clause) or @rhombus(protected, ~class_clause) prefix.
@@ -536,7 +536,7 @@
  @tech(~doc: guide_doc){property}, which is like a method in that using the property evaluates a
  block. However, the property is used either as an expression, which is
  analogous to calling a method with no arguments, or as the left-hand
- side of an @tech{assignment operator} like @rhombus(:=) form, which is
+ side of an @tech(~doc: meta_doc){assignment operator} like @rhombus(:=) form, which is
  analogous to calling a method with
  the right-hand side of @rhombus(:=) as the method argument. A property
  always supports a reference form, but it supports assignment only when

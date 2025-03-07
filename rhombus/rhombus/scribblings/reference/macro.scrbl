@@ -87,7 +87,7 @@
  @rhombus($('$')) can be used to define @rhombus($). A
  @rhombus(defined_name) cannot be @rhombus(()) for a @rhombus(macro)
  definition. The @rhombus(defined_name) is bound in the
- @rhombus(expr, ~space) @tech{space}.
+ @rhombus(expr, ~space) @tech(~doc: meta_doc){space}.
 
  As an expression or @tech{entry point}, @rhombus(macro) is a shorthand
  for a function that expects a syntax object to match, as explained
@@ -152,10 +152,10 @@
  @rhombus(option) keywords can appear. The options
  @rhombus(~weaker_than), @rhombus(~stronger_than), @rhombus(~same_as),
  @rhombus(~same_on_left_as), and @rhombus(~same_on_right_as) declare
- an name's precedence relative to other names or @tech{operator orders}, where @rhombus(~other)
+ an name's precedence relative to other names or @tech(~doc: meta_doc){operator orders}, where @rhombus(~other)
  stands for any operator not otherwise mentioned. The
  @rhombus(~associativity) option is allowed only with an infix
- @rhombus(macro_pattern). The @rhombus(~order) option selects a @tech{operator order}
+ @rhombus(macro_pattern). The @rhombus(~order) option selects a @tech(~doc: meta_doc){operator order}
  for the operator, which defines precedence relationships to other operator orders and a default
  associativity, but precedence and associativity options within @rhombus(macro, ~defn) override
  the ones defined with the operator order. The @rhombus(~op_stx) option binds an
@@ -209,7 +209,7 @@
     converter('ListLike[1, 2, 3].more')
 )
 
- The @rhombus(macro) form does not define an @tech{assignment operator}
+ The @rhombus(macro) form does not define an @tech(~doc: meta_doc){assignment operator}
  that works with mutable targets. To define an assignment operator, use
  @rhombus(assign.macro), instead.
 

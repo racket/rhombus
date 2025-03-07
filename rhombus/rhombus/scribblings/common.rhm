@@ -36,6 +36,7 @@ export:
   shrub_doc
   guide_doc
   ref_doc
+  meta_doc
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @whn is
@@ -94,3 +95,4 @@ fun shrublink(tag, content):
 
 def guide_doc = ModulePath'lib("rhombus/scribblings/rhombus.scrbl")'
 def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'
+def meta_doc = ModulePath'lib("rhombus/scribblings/meta/rhombus-meta.scrbl")'

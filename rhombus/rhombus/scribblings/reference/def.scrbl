@@ -31,7 +31,7 @@
  @rhombus(rhs_expr) or @rhombus(body) and propagated to
  @rhombus(lhs_bind) as described in @secref(~doc: guide_doc, "static-info-rules")).
 
- An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and
+ An identifier is bound in the @rhombus(expr, ~space) @tech(~doc: meta_doc){space}, and
  most binding operators also create bindings in the
  @rhombus(expr, ~space) space.
 

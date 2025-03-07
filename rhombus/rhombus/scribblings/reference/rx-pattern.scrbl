@@ -28,7 +28,7 @@ multiplying like the expression @rhombus(*) operator.
   space.enforest rx
 ){
 
- The @tech{space} for pattern operators that can be used within
+ The @tech(~doc: meta_doc){space} for pattern operators that can be used within
  @rhombus(rx) and @rhombus(rx_in) forms.
 
 }
@@ -692,7 +692,7 @@ multiplying like the expression @rhombus(*) operator.
       rx_disjunction
 ){
 
- @tech{Operator orders} for @tech{regexp} and @tech{character set}
+ @tech(~doc: meta_doc){Operator orders} for @tech{regexp} and @tech{character set}
  operators.
 
 }

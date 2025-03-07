@@ -48,7 +48,7 @@
  that implements @rhombus(Sequenceable, ~class) as the non-optimizing implementation.
 
  The input @rhombus(pattern) is matched to @rhombus(each_id ...: each_expr) where
- @rhombus(each_expr) is a @tech{parsed} expression for the right-hand side of
+ @rhombus(each_expr) is a @tech(~doc: ref_doc){parsed} expression for the right-hand side of
  @rhombus(each, ~for_clause), and the number of @rhombus(each_id)s reflects
  the number of expected result values. The result of the @rhombus(body)
  sequence must be either @rhombus(#false), in which case the

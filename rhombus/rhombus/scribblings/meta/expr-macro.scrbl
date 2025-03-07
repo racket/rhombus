@@ -116,7 +116,7 @@
 ){
 
  Syntax classes that match by parsing expressions. The value of the
- binding in each case is an opaque syntax object that represents the @tech{parsed}
+ binding in each case is an opaque syntax object that represents the @tech(~doc: ref_doc){parsed}
  expression form, while the @rhombus(group) field holds a syntax object
  for the original terms that were parsed.
 
@@ -216,7 +216,7 @@
   fun expr_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
- Converts a tree of terms, which can include @tech{parsed} terms, into a
+ Converts a tree of terms, which can include @tech(~doc: ref_doc){parsed} terms, into a
  new parsed term representing a Racket parenthesized form. The intent is
  that the result is a Racket form to be used in a Rhombus context.
 
@@ -224,7 +224,7 @@
  and arbitrary nestings of them within lists). Each syntax object must
  contain a single term.
 
- Any @tech{parsed} form as a leaf of @rhombus(tree) is exposed directly
+ Any @tech(~doc: ref_doc){parsed} form as a leaf of @rhombus(tree) is exposed directly
  in the parenthesized sequence, which enables the construction of parsed
  terms that combine other parsed terms.
 
@@ -242,7 +242,7 @@
 ){
 
  Converts a syntax object, which can be a multi-term syntax object, into
- an @tech{parsed} term, but one that represents a run-time expression with
+ an @tech(~doc: ref_doc){parsed} term, but one that represents a run-time expression with
  delayed parsing. The function is intended for use in combination with
  @rhombus(expr_meta.pack_s_exp).
 

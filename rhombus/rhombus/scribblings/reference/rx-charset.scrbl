@@ -28,7 +28,7 @@ bytes to match for a byte-mode @tech{regexp}.
   space.enforest rx_charset
 ){
 
- The @tech{space} for character set operators that can be used within
+ The @tech(~doc: meta_doc){space} for character set operators that can be used within
  @brackets in a regexp pattern.
 
 }

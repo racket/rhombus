@@ -104,7 +104,7 @@ normally bound to implement @tech{function} calls.
  conversion. The @rhombus(|>) operator declares weaker precedence than
  all other operators.
 
- Alternatively, the right-hand side can be an @tech{immediate callee},
+ Alternatively, the right-hand side can be an @tech(~doc: meta_doc){immediate callee},
  in which case the static information for @rhombus(arg_expr) is
  supplied to it.
 

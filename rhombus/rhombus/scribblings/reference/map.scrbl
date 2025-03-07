@@ -20,7 +20,7 @@ implicit use of the @rhombus(#%braces) form.
 
 A map is @tech{indexable} using @brackets after a map expression with an
 expression for the key within @brackets. Mutable maps can be
-updated with a combination of @brackets and @tech{assignment operators}
+updated with a combination of @brackets and @tech(~doc: meta_doc){assignment operators}
 such as @rhombus(:=) (but use @rhombus(++) to functionally update an
 immutable map). These uses of square brackets are implemented by
 @rhombus(#%index). A map also supports @tech{membership tests} via
@@ -125,7 +125,7 @@ in an unspecified order.
  or set. When @rhombus(& map_expr) or @rhombus(& set_expr) appears among
  the content, the immutable map or immutable set produced by @rhombus(map_expr) or
  @rhombus(set_expr) is included in the result map or set. This
- inclusion respects the @tech{map configuration} specified by the
+ inclusion respects the @tech(~doc: meta_doc){map configuration} specified by the
  construction.
 
  Mappings or elements are added to the result map or set left-to-right,
@@ -337,7 +337,7 @@ in an unspecified order.
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
- that can be updated using an @tech{assignment operator} like @rhombus(:=).
+ that can be updated using an @tech(~doc: meta_doc){assignment operator} like @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for constructing
  mutable maps, only immutable maps.
@@ -439,7 +439,7 @@ in an unspecified order.
  (but without the special optimization for adding a single key). When a key has a value in
  multiple given maps, the rightmost value is used.
 
- Even when @rhombus(another_mp) uses a different @tech{map
+ Even when @rhombus(another_mp) uses a different @tech(~doc: meta_doc){map
   configuration} than @rhombus(mp), the configuration of @rhombus(mp) is
  preserved for the result. Conceptually, in the binary case, each
  key--value mapping from the right map is added to the left map.

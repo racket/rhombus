@@ -27,7 +27,7 @@
  @rhombus(assign.macro), too.
 
  The left-hand input to the macro is not a parsed expression, but
- instead a @tech{parsed} value that encapsulates both a mutator and
+ instead a @tech(~doc: ref_doc){parsed} value that encapsulates both a mutator and
  accessor for the target mutable component. The expansion of the macro
  can use another assignment operator, or it can use
  @rhombus(assign_meta.unpack_left) to extract functions for the target
@@ -95,7 +95,7 @@
 ){
 
  Converts a syntax object, which can be a multi-term syntax object, into
- an @tech{parsed} term that represents an expression to implement an
+ an @tech(~doc: ref_doc){parsed} term that represents an expression to implement an
  assignment operator's expansion.
 
  See @rhombus(assign.macro) for an example.
@@ -120,7 +120,7 @@
  inferred name (if needed) for the right-hand value.
 
  The value of a binding using @rhombus(assign_meta.AssignParsed, ~stxclass)
- is an opaque syntax object that represents the @tech{parsed}
+ is an opaque syntax object that represents the @tech(~doc: ref_doc){parsed}
  assignment as an expression, while the @rhombus(group) field holds a
  syntax object for the original terms that were parsed. The result also
  has a @rhombus(tail) field that contains the remaining unparsed input.

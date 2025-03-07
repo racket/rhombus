@@ -154,7 +154,7 @@
 
  A completed delayed annotation need not be declared in the same module
  or definition context, which is why @rhombus(annot.delayed_complete)
- allows an @rhombus(id_name). See @secref("namespaces") form more
+ allows an @rhombus(id_name). See @secref(~doc: ref_doc, "namespaces") form more
  information on @rhombus(id_name).
 
  If a value is tested against a delayed annotation @rhombus(id) before

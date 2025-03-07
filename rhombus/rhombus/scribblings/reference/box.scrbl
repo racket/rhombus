@@ -10,7 +10,7 @@ accessed from a box @rhombus(bx, ~var) as
 @rhombus(#,(@rhombus(bx, ~var)).value) or set to the value of
 @nontermref(expr) using
 @rhombus(#,(@rhombus(bx, ~var)).value := #,(@nontermref(expr)))
-or other @tech{assignment operators} like @rhombus(:=). The function
+or other @tech(~doc: meta_doc){assignment operators} like @rhombus(:=). The function
 @rhombus(Box.value) can also be directly used.
 
 A box is normally mutable, but immutable boxes can originate from

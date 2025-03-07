@@ -106,7 +106,7 @@ Here are all of the implicit forms:
  takes precedence over parsing the parenthesized sequence as an
  @rhombus(expr). See @rhombus(_) for more information.
 
- The @tech{entry point} and @tech{immediate callee} bindings allow
+ The @tech{entry point} and @tech(~doc: meta_doc){immediate callee} bindings allow
  parentheses to be used around such forms, and they allow the function
  shorthand to cooperate in those positions.
 

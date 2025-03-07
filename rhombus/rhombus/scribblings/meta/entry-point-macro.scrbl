@@ -15,7 +15,7 @@
 ){
 
  The @tech{space} for bindings of identifiers that can be used in
- @tech{entry point} positions, such as within
+ @tech(~doc: ref_doc){entry point} positions, such as within
  @rhombus(method, ~class_clause).
 
 }
@@ -39,7 +39,7 @@
 ){
 
  Like @rhombus(defn.macro), but defines an identifier as an
- @tech{entry point} form in the @rhombus(entry_point, ~space)
+ @tech(~doc: ref_doc){entry point} form in the @rhombus(entry_point, ~space)
  @tech{space}. Also, in addition to the @rhombus(~op_stx) option, the
  @rhombus(~mode) and/or @rhombus(~adjustment) ``options'' can be
  specified---and they are effectively required to detect the mode mode of
@@ -51,7 +51,7 @@
 @itemlist(
 
  @item{@rhombus(#'shape): gets an encoding of information about the
-  to-be-generated function as a @tech{map}. The @rhombus(adj_id) specified
+  to-be-generated function as a @tech(~doc: ref_doc){map}. The @rhombus(adj_id) specified
   by @rhombus(~adjustment) is bound to @rhombus(#false). This mode of
   expansion is sometimes used before the @rhombus(#'function) mode.
 
@@ -157,7 +157,7 @@
  The @rhombus(entry_point_meta.pack) function packs an expression for a
  function as a result for a @rhombus(entry_point.macro) expansion,
  distinguishing it from an unpacked syntax objects that represents
- expansion to another @tech{entry point} form. The
+ expansion to another @tech(~doc: ref_doc){entry point} form. The
  @rhombus(entry_point_meta.unpack) function is the inverse of
  @rhombus(entry_point_meta.pack).
 

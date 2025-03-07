@@ -21,7 +21,7 @@ See also @secref("Equatables").
  equality comparison for its instances by implementing the
  @rhombus(Equatable, ~class) interface.
 
- The @rhombus(==, ~key_comp) map configuration can be used with forms like
+ The @rhombus(==, ~key_comp) @tech(~doc: meta_doc){map configuration} can be used with forms like
  the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
  annotation constructor to specify the default equality and hashing
  functions for map keys. The @rhombus(Map.by(==), ~annot) annotation, for
@@ -49,7 +49,7 @@ See also @secref("Equatables").
  modifying one has the same effect as modifying the other. Interned
  values like symbols are @rhombus(===) when they are @rhombus(==).
 
- The @rhombus(===, ~key_comp) map configuration can be used with forms
+ The @rhombus(===, ~key_comp) @tech(~doc: meta_doc){map configuration} can be used with forms
  like the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
  annotation constructor to specify key equality with @rhombus(===) and a
  corresponding hashing function.
@@ -120,7 +120,7 @@ See also @secref("Equatables").
  equivalent to an immutable map or set, even if they have the same
  content.
 
- The @rhombus(is_now, ~key_comp) map configuration can be used with forms
+ The @rhombus(is_now, ~key_comp) @tech(~doc: meta_doc){map configuration} can be used with forms
  like the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
  annotation constructor to specify key equality with @rhombus(is_now) and a
  corresponding hashing function. Beware, however, that mutating a key after
@@ -150,7 +150,7 @@ See also @secref("Equatables").
  are either equal via @rhombus(===) or are two numbers that are
  @rhombus(==). This comparison is primarily intended for comparing
  numbers, and especially via @rhombus(is_same_number_or_object, ~key_comp) as a
- map configuration for equating map keys, where
+ @tech(~doc: meta_doc){map configuration} for equating map keys, where
  @rhombus(is_same_number_or_object, ~key_comp) can be slightly more efficient
  than @rhombus(==).
 

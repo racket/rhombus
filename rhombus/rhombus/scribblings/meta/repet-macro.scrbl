@@ -12,7 +12,7 @@
   space.transform repet
 ){
 
- The @tech{space} for bindings of @tech{repetitions}.
+ The @tech{space} for bindings of @tech(~doc: ref_doc){repetitions}.
 
 }
 

@@ -21,7 +21,7 @@ and a parenthesized operator. When using a form like @rhombus(expr.macro)
 to extend a namespace, the @litchar{.}-separated sequence must be
 surrounded by pair of parentheses.
 
-A namespace contains bindings that are in any @tech{space}, while the
+A namespace contains bindings that are in any @tech(~doc: meta_doc){space}, while the
 namespace name itself is bound in the @rhombus(namespace, ~space) space. In a
 given context, a dotted reference through a namespace takes precedence
 over interpreting the namespace identifier instead in the context's
@@ -55,7 +55,7 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
  @rhombus(id_name#,(rhombus(., ~datum))#,(rhombus(name, ~var))). The name
  @rhombus(id_name) also works with @rhombus(import). The @rhombus(id)
  at the end of @rhombus(id_name) is bound in the @rhombus(namespace, ~space)
- @tech{space}.
+ @tech(~doc: meta_doc){space}.
 
  When @rhombus(~open) is supplied in place of @rhombus(id_name), then
  instead of defining a visible namespace, a private namespace name is

@@ -209,7 +209,7 @@
 ){
 
  Modifies an @rhombus(export) clause to include bindings only in the
- specifically listed @tech{spaces} or only in the spaces not specifically
+ specifically listed @tech(~doc: meta_doc){spaces} or only in the spaces not specifically
  listed.
 
 }

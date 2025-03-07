@@ -12,7 +12,7 @@ An identifier can have different meanings in different contexts, such as
 expression versus binding, because an identifier can be bound in a
 specific @deftech{space}. Example spaces include
 @rhombus(expr, ~space) and @rhombus(bind, ~space), which
-generally correspond to a @tech{namespace} that provides a binding
+generally correspond to a @tech(~doc: ref_doc){namespace} that provides a binding
 form for the space.
 Binding forms like @rhombus(def), @rhombus(expr.macro), and
 @rhombus(bind.macro) bind an identifier in the corresponding space.
@@ -92,7 +92,7 @@ driver and macro-definitions forms.
  @rhombus(reflection, ~space_meta_clause).
 
  Besides being defined as a space, @rhombus(space_id) is
- defined as a @tech{namespace}. Among the
+ defined as a @tech(~doc: ref_doc){namespace}. Among the
  @rhombus(space_clause_or_body_or_export)s, @rhombus(nestable_body)
  forms can add definitions and exports to the namespace, the same as for
  @rhombus(namespace). However, the namespace is particularly intended to
@@ -112,7 +112,7 @@ driver and macro-definitions forms.
  @rhombus(space_meta_clause_or_body) forms in the body of a
  @rhombus(meta_namespace, ~space_clause) clause are implicitly shifted to
  compile time, as if wrapped by @rhombus(meta). The meta namespace is
- particularly intended to export @tech{syntax class}es with names
+ particularly intended to export @tech(~doc: ref_doc){syntax class}es with names
  specified by @rhombus(parse_syntax_class, ~space_meta_clause),
  @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause), and
  @rhombus(parse_infix_more_syntax_class, ~space_meta_clause) clauses. If

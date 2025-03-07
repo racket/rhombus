@@ -140,7 +140,7 @@
 
  Each @rhombus(arity_mask) has a bit set for each number of arguments
  where the associated @rhombus(statinfo_stx) describes the function
- result. For example, a @tech(~doc: guide_doc){property} or @tech{context parameter}
+ result. For example, a @tech(~doc: guide_doc){property} or @tech(~doc: ref_doc){context parameter}
  function may have a result that depends on the number of argument it
  receives. A mask of @rhombus(-1) indicates a result that applies for any
  number of arguments. Each @rhombus(statinfo_stx) represents static
@@ -318,7 +318,7 @@
         check whether an element is included.}
 
   @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
-        bound by @rhombus(dot.macro) @rhombus(dot.macro_more_static) to
+        bound by @rhombus(dot.macro) to
         implement the expression's behavior as a @tech(~doc: guide_doc){dot provider},
         a packed sequence of such identifiers, or a packed sequence mixing
         identifiers and packed sequences of identifiers. In the case of an overall
@@ -351,18 +351,18 @@
         if no maximum size is known.}
 
   @item{@rhombus(statinfo_meta.pairlist_bounds_key): Like
-        @rhombus(statinfo_meta.list_bounds_key), but for a @tech{pair list}.}
+        @rhombus(statinfo_meta.list_bounds_key), but for a @tech(~doc: ref_doc){pair list}.}
 
   @item{@rhombus(statinfo_meta.maybe_key): Packed static
         information that applies to a non-@rhombus(#false) value. This
         information is exposed by @rhombus(!!), for example.}
 
   @item{@rhombus(statinfo_meta.flonum_key): A boolean indicating whether
-        the value is a @tech{flonum}. Normally, this key is only present if it
+        the value is a @tech(~doc: ref_doc){flonum}. Normally, this key is only present if it
         has a @rhombus(#true) value.}
 
   @item{@rhombus(statinfo_meta.fixnum_key): A boolean indicating whether
-        the value is a @tech{fixnum}. Normally, this key is only present if it
+        the value is a @tech(~doc: ref_doc){fixnum}. Normally, this key is only present if it
         has a @rhombus(#true) value.}
 
   @item{@rhombus(statinfo_meta.values_key): A packed group of

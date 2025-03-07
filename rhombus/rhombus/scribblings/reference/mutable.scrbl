@@ -15,7 +15,7 @@
 ){
 
  Binds @rhombus(id) so that its value can be changed using an
- @tech{assignment operator} such as @rhombus(:=).
+ @tech(~doc: meta_doc){assignment operator} such as @rhombus(:=).
 
  If an @rhombus(annot) is present using @rhombus(::, ~bind), then the
  value of every assignment to @rhombus(id) must satisfy the annotation,
@@ -44,7 +44,7 @@
   expr.macro '$id := $expr'
 ){
 
- An @tech{assignment operator} that changes the value of @rhombus(id)
+ An @tech(~doc: meta_doc){assignment operator} that changes the value of @rhombus(id)
  to the result of @rhombus(expr) and returns @rhombus(#void). The
  @rhombus(id) must be bound with @rhombus(mutable, ~bind).
 

@@ -2,9 +2,11 @@
 @(import:
     "common.rhm" open)
 
-@title(~style: #'toc){The Rhombus Reference}
+@title(~style: #'toc){Rhombus Reference}
 
 For a general overview of the language, see @docref(guide_doc).
+
+For details on Rhombus's metaprograming facilities, see @docref(meta_doc).
 
 @docmodule(~lang,
            ~use_sources: lib("rhombus/private/amalgam.rkt")!core
@@ -14,11 +16,7 @@ For a general overview of the language, see @docref(guide_doc).
 
 @margin_note_block{Unless otherwise specified at the start of a section, the
  bindings described in this manual are exported by the
- @rhombuslangname(rhombus) language.
-
- The bindings described in @secref("meta_and_macros"), in particular, are
- not provided by @rhombuslangname(rhombus), but are instead provided by
- @rhombusmodname(rhombus/meta) or @rhombuslangname(rhombus/and_meta).}
+ @rhombuslangname(rhombus) language.}
 
 @table_of_contents()
 
@@ -40,5 +38,3 @@ For a general overview of the language, see @docref(guide_doc).
 @include_section("concurrency.scrbl")
 @include_section("security.scrbl")
 @include_section("runtime.scrbl")
-
-@include_section("meta-lib.scrbl")

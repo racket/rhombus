@@ -87,7 +87,7 @@ identifiers, expressions, or binding patterns.
 ){
 
  In syntax descriptions, @rhombus(immediate_callee) stands for an
- @tech{immediate callee}, which is syntactically an immediate
+ @tech(~doc: meta_doc){immediate callee}, which is syntactically an immediate
  function. The @rhombus(fun, ~immediate_callee) expression form also
  works as an immediate-callee form, as well as the
  @rhombus(#%parens, ~immediate_callee) form when used with
@@ -255,7 +255,7 @@ identifiers, expressions, or binding patterns.
  identifier that is defined as an equality and hashing configuration for a
  map's keys.
 
- The map configurations exported by @rhombuslangname(rhombus) are
+ The @tech(~doc: meta_doc){map configurations} exported by @rhombuslangname(rhombus) are
  @rhombus(==, ~key_comp) (the default), @rhombus(===, ~key_comp),
  @rhombus(is_now, ~key_comp), and @rhombus(is_same_number_or_object, ~key_comp).
  New configurations can be defined with @top_rhombus(key_comp.def).

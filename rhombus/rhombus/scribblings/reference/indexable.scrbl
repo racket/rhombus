@@ -112,7 +112,7 @@ instances of classes that implement @rhombus(Indexable, ~class).
  @item{@rhombus(#,(@rhombus(set, ~datum))(#,(@rhombus(index, ~var)), #,(@rhombus(val, ~var))))
   --- takes an @rhombus(index, ~var) and new @rhombus(val, ~var), which are the second and
   third arguments to @rhombus(#%index). Those arguments are normally written
-  within @brackets and after an assignment operator like @rhombus(:=),
+  within @brackets and after an @tech(~doc: meta_doc){assignment operator} like @rhombus(:=),
   respectively. The result must be @rhombus(#void).}
 
 )

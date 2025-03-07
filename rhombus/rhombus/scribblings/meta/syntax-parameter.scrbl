@@ -9,7 +9,7 @@
 @title(~tag: "ref-syntax-parameter"){Syntax Parameters}
 
 A @deftech{syntax context parameter} (or just @deftech{syntax
- parameter}) is analogous to a @tech{context parameter}, but for
+ parameter}) is analogous to a @tech(~doc: ref_doc){context parameter}, but for
 macro-expansion contexts instead of evaluation contexts. While a context
 parameter communicates to a more nested evaluation context, even if that
 context is not lexically nested, a syntax parameter communicates to a

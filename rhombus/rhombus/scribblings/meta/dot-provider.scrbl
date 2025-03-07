@@ -111,7 +111,7 @@
  expression that has the class's or interface's annotation. The macro can also be
  triggered by @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)) for a class,
  interface, or veneer @rhombus(name, ~var) (more specifically, for the
- defined @tech{namespace}), in which case the @rhombus(obj_expr) is
+ defined @tech(~doc: ref_doc){namespace}), in which case the @rhombus(obj_expr) is
  checked to be a correct instance.
 
  The pattern for @rhombus(dot, ~class_clause) is constrained to have an

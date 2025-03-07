@@ -21,7 +21,7 @@ name is in @bold{boldface}. For example, documentation for
 
 The syntactic category of a binding is shown to the right within the
 box, and it is shown as ``value'' in the example above. That syntactic
-category implies a @tech{space} for the binding, and it determines how
+category implies a @tech(~doc: meta_doc){space} for the binding, and it determines how
 the rest of the entry should be interpreted. In the case of value
 bindings, documentation is written as the start of a @rhombus(def) form.
 Functions are typically documented using a @rhombus(fun) form:
@@ -79,7 +79,7 @@ sequences, not values. So, @rhombus(0), @rhombus(0 + 1), and
 @rhombus(2) does not.
 
 When a syntactic form is an operator, then precedence or an
-@tech{operator order} for the operator is shown by keywords such as
+@tech(~doc: meta_doc){operator order} for the operator is shown by keywords such as
 @rhombus(~order), @rhombus(~weaker_than), or @rhombus(~stronger_than),
 as in a @rhombus(macro, ~defn) form. Unless otherwise documented, a
 prefix operator's precedence corresponds to

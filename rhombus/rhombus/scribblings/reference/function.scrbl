@@ -116,7 +116,7 @@ form or @rhombus(fun) expression form, but see also
 ){
 
  Binds @rhombus(id_name) as a function in the @rhombus(expr, ~space)
- @tech{space}. Note that when @rhombus(id_name) is not supplied,
+ @tech(~doc: meta_doc){space}. Note that when @rhombus(id_name) is not supplied,
  @rhombus(fun, ~expr) is an expression form instead of a definition form.
 
  The first case for the definition form shown above is subsumed by the
@@ -450,7 +450,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
   immediate_callee.macro 'fun $args_and_body'
 ){
 
- The @tech{entry point} and @tech{immediate callee} forms of
+ The @tech{entry point} and @tech(~doc: meta_doc){immediate callee} forms of
  @rhombus(fun, ~entry_point) have the same syntax and behavior as the
  expression form of @rhombus(fun).
 
@@ -463,7 +463,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  Besides @rhombus(fun, ~entry_point), the @rhombus(macro, ~entry_point) form is
  also bound as entry point.
 
- A binding as an @tech{immediate callee} allows a form to work and
+ A binding as an @tech(~doc: meta_doc){immediate callee} allows a form to work and
  cooperate with contexts such as the right-hand side of the @rhombus(|>)
  operator to improve static-information propagation.
 

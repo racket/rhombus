@@ -10,7 +10,7 @@ expression syntax that is built on
 macro-extensible in the same way as Racket.
 
 This document is a general guide to Rhombus. For complete specification,
-see @docref(ref_doc).
+see @docref(ref_doc) and @docref(meta_doc).
 
 @table_of_contents()
 

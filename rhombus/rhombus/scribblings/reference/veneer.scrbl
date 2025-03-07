@@ -61,7 +61,7 @@
  static-mode context (see @rhombus(use_static)). Using a veneer
  annotation in a dynamic-mode context is a syntax error.
 
- The veneer's @rhombus(id_name) is bound in several @tech{spaces}:
+ The veneer's @rhombus(id_name) is bound in several @tech(~doc: meta_doc){spaces}:
 
 @itemlist(
 

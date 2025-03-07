@@ -2,7 +2,12 @@
 @(import:
     "common.rhm" open)
 
-@title(~style: #'toc, ~tag: "meta_and_macros"){Meta and Macros}
+@title{Rhombus Metaprogramming Reference}
+
+See @docref(ref_doc) for information on the base Rhombus language,
+including basic metaprogramming support in the form of
+@tech(~doc: ref_doc){syntax objects} and the @rhombus(macro) form. This
+document defines the rest of Rhombus's metaprogramming facilities.
 
 @docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!#{core-meta},
            rhombus/meta)
@@ -33,19 +38,8 @@ alternative to starting with @rhombuslangname(rhombus) and importing
 
 @include_section("meta.scrbl")
 @include_section("space.scrbl")
-@include_section("namespace-macro.scrbl")
-@include_section("defn-macro.scrbl")
-@include_section("decl-macro.scrbl")
-@include_section("expr-macro.scrbl")
-@include_section("assign-macro.scrbl")
-@include_section("bind-macro.scrbl")
-@include_section("annotation-macro.scrbl")
-@include_section("static-info.scrbl")
-@include_section("dot-provider.scrbl")
-@include_section("repet-macro.scrbl")
-@include_section("operator-order.scrbl")
+@include_section("macro-main.scrbl")
 @include_section("macro-more.scrbl")
-@include_section("stxobj-meta.scrbl")
-@include_section("syntax-parameter.scrbl")
-@include_section("stxobj-map.scrbl")
+@include_section("stxobj.scrbl")
+@include_section("operator-order.scrbl")
 @include_section("doc.scrbl")

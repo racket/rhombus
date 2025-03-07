@@ -1,0 +1,5 @@
+#lang rhombus
+import:
+  "../macro.rhm"
+export:
+  all_from(.macro)

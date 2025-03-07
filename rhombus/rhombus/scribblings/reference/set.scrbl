@@ -193,7 +193,7 @@ it supplies its elements in an unspecified order.
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
- that can be updated using an @tech{assignment operator} like @rhombus(:=).
+ that can be updated using an @tech(~doc: meta_doc){assignment operator} like @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for construction
  mutable sets, only immutable sets.
@@ -299,8 +299,8 @@ it supplies its elements in an unspecified order.
  Functionally appends @rhombus(st) and @rhombus(another_st)s, like the @rhombus(++) operator
  (but without the special optimization for adding a single element).
 
- Even when @rhombus(another_st) uses a different @tech{map
-  configuration} than @rhombus(st), the map configuration of @rhombus(st)
+ Even when @rhombus(another_st) uses a different @tech(~doc: meta_doc){map
+  configuration} than @rhombus(st), the @tech(~doc: meta_doc){map configuration} of @rhombus(st)
  is preserved in the result set. Conceptually, in the binary case, each
  element from the right set is added to the left set.
 
@@ -329,8 +329,8 @@ it supplies its elements in an unspecified order.
 
  Returns the intersection of @rhombus(st) and @rhombus(another_st)s.
 
- Even when some @rhombus(another_st) uses a different @tech{map
-  configuration} than @rhombus(st), the map configuration of @rhombus(st)
+ Even when some @rhombus(another_st) uses a different @tech(~doc: meta_doc){map
+  configuration} than @rhombus(st), the @tech(~doc: meta_doc){map configuration} of @rhombus(st)
  is preserved in the result set.
 
 @examples(
