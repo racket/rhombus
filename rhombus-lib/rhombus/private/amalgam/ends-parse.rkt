@@ -20,6 +20,5 @@
      (compare #'name.name)]
     [((tag::parens . _) . _) (compare (datum->syntax #'tag '#%call))]
     [((tag::brackets . _) . _) (compare (datum->syntax #'tag '#%index))]
-    [((tag::braces . _) . _) (compare (datum->syntax #'tag '#%braces))]
-    [((tag::quotes . _) . _) (compare (datum->syntax #'tag '#%quotes))]
+    [((tag::braces . _) . _) (compare (datum->syntax #'tag '#%comp))]
     [_ #f]))

@@ -380,3 +380,84 @@ check:
     ~more
   ~is 4
 
+block:
+  expr.macro 'ends_parse
+                $(pattern
+                  | '~prefix': field mode = #'prefix
+                  | '~infix': field mode = #'infix)
+                $(name :: Name)
+                $(tail :: Sequence)':
+    let res = expr_meta.ends_parse(mode, name, tail)
+    '#%literal $res'
+  expr.macro '#%parens ($_, ...)':
+    syntax_meta.error("should not get here")
+  expr.macro '#%brackets [$_, ...]':
+    syntax_meta.error("should not get here")
+  expr.macro '#%braces {$_, ...}':
+    syntax_meta.error("should not get here")
+  expr.macro '«#%quotes '$_; ...'»':
+    syntax_meta.error("should not get here")
+  expr.macro '$left #%call ($_, ...)':
+    syntax_meta.error("should not get here")
+  expr.macro '$left #%index [$_, ...]':
+    syntax_meta.error("should not get here")
+  expr.macro '$left #%comp {$_, ...}':
+    syntax_meta.error("should not get here")
+  expr.macro weak:
+    ~stronger_than:
+      #%parens
+      #%brackets
+      #%braces
+      #%quotes
+    ~weaker_than:
+      #%call
+      #%index
+      #%comp
+      very_strong
+  | 'weak $right':
+      syntax_meta.error("should not get here")
+  | '$left weak $right':
+      syntax_meta.error("should not get here")
+  expr.macro strong:
+    ~weaker_than:
+      #%parens
+      #%brackets
+      #%braces
+      #%quotes
+    ~stronger_than:
+      #%call
+      #%index
+      #%comp
+      weak
+  | 'strong $right':
+      syntax_meta.error("should not get here")
+  | '$left strong $right':
+      syntax_meta.error("should not get here")
+  check:
+    ends_parse ~prefix weak ~is #true
+    ends_parse ~prefix weak () ~is #false
+    ends_parse ~prefix weak [] ~is #false
+    ends_parse ~prefix weak {} ~is #false
+    ends_parse ~prefix weak '' ~is #false
+    ends_parse ~prefix weak strong ~is #false
+  check:
+    ends_parse ~infix weak ~is #true
+    ends_parse ~infix weak () ~is #false
+    ends_parse ~infix weak [] ~is #false
+    ends_parse ~infix weak {} ~is #false
+    ends_parse ~infix weak '' ~is #false
+    ends_parse ~infix weak strong ~is #false
+  check:
+    ends_parse ~prefix strong ~is #true
+    ends_parse ~prefix strong () ~is #true
+    ends_parse ~prefix strong [] ~is #true
+    ends_parse ~prefix strong {} ~is #true
+    ends_parse ~prefix strong '' ~is #false
+    ends_parse ~prefix strong weak ~is #true
+  check:
+    ends_parse ~infix strong ~is #true
+    ends_parse ~infix strong () ~is #true
+    ends_parse ~infix strong [] ~is #true
+    ends_parse ~infix strong {} ~is #true
+    ends_parse ~infix strong '' ~is #false
+    ends_parse ~infix strong weak ~is #true
