@@ -83,6 +83,7 @@
                    #'id
                    #'() ; forget enclosing  static-infos, since we can't enforce them on mutation
                    #'((id (0)))
+                   #'empty-oncer
                    #'mutable-identifier-succeed
                    #'()
                    #'mutable-commit

@@ -107,11 +107,16 @@
                        #'dot-providers)]))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
-  (lambda (arg predicate-stxs)
-    #`(and #,@(for/list ([acc (in-list accessors)]
-                         [pred (in-list predicate-stxs)])
-                #`(#,pred (#,acc #,arg))))))
-
+  (lambda (predicate-stxs)
+    (with-syntax ([(pred ...) (generate-temporaries predicate-stxs)]
+                  [(pred-stx ...) predicate-stxs]
+                  [(acc ...) accessors])
+      #`(let ([pred pred-stx]
+              ...)
+          (lambda (arg)
+            (and (pred (acc arg))
+                 ...))))))
+  
 (define-for-syntax (make-class-instance-converter constructor)
   (lambda (arg-id build-convert-stxs kws accessors)
     (define orig-args (generate-temporaries accessors))

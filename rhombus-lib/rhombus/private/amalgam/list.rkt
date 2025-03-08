@@ -479,14 +479,19 @@
   (parse-*list-binding stx generate-treelist-binding make-treelist-rest-selector (get-treelist-static-infos)
                        #t #'in-treelist #'#%treelist-bounds))
 
+(define-for-syntax (make-list-annotation-make-predicate in-form-stx)
+  (lambda (predicate-stxs)
+    #`(let ([pred #,(car predicate-stxs)])
+        (lambda (arg)
+          (for/and ([e (#,in-form-stx arg)])
+            (pred e))))))
+
 (define-annotation-constructor (List List.of)
   ()
   #'treelist? #,(get-treelist-static-infos)
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-treelist #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  (make-list-annotation-make-predicate #'in-treelist)
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'treelist-build-convert #'())
@@ -502,8 +507,8 @@
           (unless (pred v)
             (raise-reelementer-error 'List '#,what idx v '#,(car annot-strs)))
           (values v state)))
-    #`(lambda (lst)
-        (let ([pred #,(car predicate-stxes)])
+    #`(let ([pred #,(car predicate-stxes)])
+        (lambda (lst)       
           (chaperone-treelist lst
                               #:state #f
                               #:ref (lambda (lst idx v state)
@@ -532,9 +537,7 @@
   #'list? #,(get-list-static-infos)
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-list #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  (make-list-annotation-make-predicate #'in-list)
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'list-build-convert #'())
@@ -544,9 +547,7 @@
   #'mutable-treelist? #,(get-mutable-treelist-static-infos)
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-mutable-treelist #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  (make-list-annotation-make-predicate #'in-mutable-treelist)
   (lambda (static-infoss)
     ;; no static info, since mutable and content is checked only initially
     #'())
@@ -564,8 +565,8 @@
           (unless (pred v)
             (raise-reelementer-error 'MutableList '#,what idx v '#,(car annot-strs)))
           v))
-    #`(lambda (mlst)
-        (let ([pred #,(car predicate-stxes)])
+    #`(let ([pred #,(car predicate-stxes)])
+        (lambda (mlst)        
           (chaperone-mutable-treelist mlst
                                       #:ref #,(make-reelementer "current")
                                       #:set #,(make-reelementer "new")
@@ -659,6 +660,7 @@
                    #'empty
                    (static-infos-and (get-treelist-static-infos) #'up-static-infos)
                    #'()
+                   #'empty-oncer
                    #'treelist-empty-matcher
                    #'()
                    #'literal-commit-nothing
@@ -672,6 +674,7 @@
                    #'empty
                    (static-infos-and (get-list-static-infos) #'up-static-infos)
                    #'()
+                   #'empty-oncer
                    #'empty-matcher
                    #'()
                    #'literal-commit-nothing
@@ -704,9 +707,7 @@
                         #,@(get-treelist-static-infos))
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-treelist #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  (make-list-annotation-make-predicate #'in-treelist)
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'treelist-build-convert #'())
@@ -717,9 +718,7 @@
                     #,@(get-list-static-infos))
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([e (in-list #,arg-id)])
-        (#,(car predicate-stxs) e)))
+  (make-list-annotation-make-predicate #'in-list)
   (lambda (static-infoss)
     #`((#%index-result #,(car static-infoss))))
   #'list-build-convert #'())

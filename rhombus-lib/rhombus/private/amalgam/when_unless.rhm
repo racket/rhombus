@@ -19,7 +19,7 @@ bind.macro '$bind unless $expr ...':
 
 bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
   let a_info = bind_meta.get_info(bind, static_info)
-  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_, $_)':
+  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_, $_, $_)':
     bind_meta.unpack_info(a_info)
   let '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)' = a_var_info
   let ann = Syntax.unwrap(a_ann) +& " when " +& expr_g.to_source_string()
@@ -27,15 +27,21 @@ bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
     $a_name,
     $a_static_info,
     (($a_var_id, [$a_var_use, ..., ~no_let], ()), ...), // drop static info, because we bind it manually
+    when_oncer,
     when_matcher,
     (),
     when_committer,
     when_binder,
     ($a_info, $expr_g))'
 
+bind.oncer 'when_oncer(($a_info, $expr_g))':
+  let '($_, $_, $_, $a_var_info, $a_oncer, $a_matcher, $a_evidence, $a_committer, $a_binder, $a_data)':
+    bind_meta.unpack_info(a_info)
+  '$a_oncer($a_data)'
+
 bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
                            $IF, $success, $failure)':
-  let '($_, $_, $_, $a_var_info, $a_matcher, $a_evidence, $a_committer, $a_binder, $a_data)':
+  let '($_, $_, $_, $a_var_info, $a_oncer, $a_matcher, $a_evidence, $a_committer, $a_binder, $a_data)':
     bind_meta.unpack_info(a_info)
   let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
   '«$a_matcher($in_id, $a_data, $IF,

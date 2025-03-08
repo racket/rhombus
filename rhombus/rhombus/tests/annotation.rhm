@@ -163,3 +163,32 @@ block:
   check [(x :: List).length(), ...] ~is [0, 2, 3]
   check [x :~ List, ...] ~is [[], [2, 3], [4, 5, 6]]
   check [(x :~ List).length(), ...] ~is [0, 2, 3]
+
+check:
+  fun f(x :: Any.of(block: println("now"); 1),
+        ...):
+    #'ok
+  f(1, 1)
+  f()
+  f(1, 1, 1, 1, 1)
+  ~prints "now\nnow\nnow\n"
+
+block:
+  fun f(x :: Real.in(0, block:
+                          println("now")
+                          10),
+        ...):
+    "ok"
+  check f() ~prints "now\n"
+  check f(0) ~prints "now\n"
+  check f(0, 1) ~prints "now\n"
+
+block:
+  fun f(x :: satisfying(block:
+                          println("now")
+                          fun (x): #true),
+        ...):
+    "ok"
+  check f() ~prints "now\n"
+  check f(0) ~prints "now\n"
+  check f(0, 1) ~prints "now\n"

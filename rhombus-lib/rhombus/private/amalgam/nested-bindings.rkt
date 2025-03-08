@@ -29,6 +29,7 @@
                                    arg-id)
                              #'arg-id)
           #`(let ([arg-id arg-rhs])
+              (arg.oncer-id arg.data)
               (arg.matcher-id arg-id
                               arg.data
                               if/blocked

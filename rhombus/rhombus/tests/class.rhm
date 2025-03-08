@@ -650,6 +650,26 @@ check:
   [Posn(1, 2).color, Posn(1, 2).color]
   ~is ["red1", "red2"]
 
+block:
+  class Posn(x, y)
+  fun f(x :: Posn.of(Any.of(block: println("now"); 1),
+                     Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(Posn(1, 2)) ~prints "now\nthen\n"
+  check f(Posn(1, 2)) ~prints "now\nthen\n"
+  check f(Posn(1, 2), Posn(1, 2)) ~prints "now\nthen\n"
+
+block:
+  class Posn(mutable x, mutable y)
+  fun f(x :: Posn.now_of(Any.of(block: println("now"); 1),
+                         Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(Posn(1, 2)) ~prints "now\nthen\n"
+  check f(Posn(1, 2)) ~prints "now\nthen\n"
+  check f(Posn(1, 2), Posn(1, 2)) ~prints "now\nthen\n"
+
 // Make sure static info flows through field and method
 // references without `this.`
 check:

@@ -106,6 +106,7 @@
      (append
       (top-level-decls #'(lhs-i.bind-id ...))
       (list
+       #`(lhs-i.oncer-id lhs-i.data)
        #`(define tmp-id (let ([lhs-i.name-id #,(discard-static-infos #'rhs)])
                           lhs-i.name-id))
        #`(lhs-i.matcher-id tmp-id
@@ -150,6 +151,9 @@
      (append
       (top-level-decls #'(lhs-i.bind-id ... ...))
       (list
+       #`(begin
+           (lhs-i.oncer-id lhs-i.data)
+           ...)
        #`(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
                                        (values lhs-i.name-id ...)))
        #`(begin

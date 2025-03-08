@@ -39,6 +39,7 @@
                         #'())
                     #'up-static-infos)
                    #'()
+                   #'empty-oncer
                    #'literal-matcher
                    #'()
                    #'literal-commit-nothing

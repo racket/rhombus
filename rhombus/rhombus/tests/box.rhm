@@ -188,3 +188,15 @@ check:
     error.annot("MutableBox").msg,
     error.val(Box.snapshot(Box(1))).msg,
   )
+
+block:
+  fun f(x :: Box.now_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...]
+  check f(Box(1), Box(1)) ~prints "now\n"
+  check f(Box(1)) ~prints "now\n"
+
+block:
+  fun f(x :: Box.later_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...]
+  check f(Box(1), Box(1)) ~prints "now\n"
+  check f(Box(1)) ~prints "now\n"

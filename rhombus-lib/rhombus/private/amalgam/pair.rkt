@@ -73,9 +73,12 @@
   #'pair? #,(get-pair-static-infos)
   2
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(and (#,(car predicate-stxs) (car #,arg-id))
-           (#,(cadr predicate-stxs) (cdr #,arg-id))))
+  (lambda (predicate-stxs)
+    #`(let ([car-pred #,(car predicate-stxs)]
+            [cdr-pred #,(cadr predicate-stxs)])
+        (lambda (arg)
+          (and (car-pred (car arg))
+               (cdr-pred (cdr arg))))))
   (lambda (static-infoss)
     #`((car #,(car static-infoss))
        (cdr #,(cadr static-infoss))))

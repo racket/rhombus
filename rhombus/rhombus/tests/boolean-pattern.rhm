@@ -58,6 +58,7 @@ check:
           $name,
           $si,
           $defs,
+          $oncer,
           $matcher,
           $evidence,
           $committer,
@@ -68,30 +69,43 @@ check:
       $name,
       $si,
       $defs,
+      printed_oncer,
       printed_matcher,
       $evidence,
       printed_committer,
       printed_binder,
-      [$pat, $matcher, $committer, $binder, $data])'
-  bind.matcher 'printed_matcher($arg, [$pat, $matcher, $_, $_, $data],
+      [$pat, $oncer, $matcher, $committer, $binder, $data])'
+  bind.oncer 'printed_oncer([$pat, $oncer, $_, $_, $_, $data])':
+    'println(#%literal $("oncer: " +& pat))
+     $oncer($data)'
+  bind.matcher 'printed_matcher($arg, [$pat, $_, $matcher, $_, $_, $data],
                                 $IF, $success, $fail)':
     'block:
        println(#%literal $("matcher: " +& pat))
        $matcher($arg, $data,
                 $IF, $success, $fail)'
-  bind.committer 'printed_committer($arg, $evidence, [$pat, $_, $committer, $_, $data])':
+  bind.committer 'printed_committer($arg, $evidence, [$pat, $_, $_, $committer, $_, $data])':
     'println(#%literal $("committer: " +& pat))
      $committer($arg, $evidence, $data)'
-  bind.binder 'printed_binder($arg, $evidence, [$pat, $_, $_, $binder, $data])':
+  bind.binder 'printed_binder($arg, $evidence, [$pat, $_, $_, $_, $binder, $data])':
     'println(#%literal $("binder: " +& pat))
      $binder($arg, $evidence, $data)'
   def printed([]) || printed([_]) || printed([_, _]) = []
   def printed([]) || printed([_]) || printed([_, _]) = [1]
   def printed([]) || printed([_]) || printed([_, _]) = [1, 2]
   #void
-  ~prints "matcher: []"
+  ~prints "oncer: []"
+    ++ "\n" ++ "oncer: [_]"
+    ++ "\n" ++ "oncer: [_, _]"
+    ++ "\n" ++ "matcher: []"
+    ++ "\n" ++ "oncer: []"
+    ++ "\n" ++ "oncer: [_]"
+    ++ "\n" ++ "oncer: [_, _]"
     ++ "\n" ++ "matcher: []"
     ++ "\n" ++ "matcher: [_]"
+    ++ "\n" ++ "oncer: []"
+    ++ "\n" ++ "oncer: [_]"
+    ++ "\n" ++ "oncer: [_, _]"
     ++ "\n" ++ "matcher: []"
     ++ "\n" ++ "matcher: [_]"
     ++ "\n" ++ "matcher: [_, _]"

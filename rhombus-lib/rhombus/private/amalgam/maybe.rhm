@@ -153,7 +153,7 @@ bind.macro '$b !!':
 bind.infoer 'definitely_infoer($statinfos, $b)':
   let b_info = bind_meta.get_info(b, demaybe_statinfos(statinfos))
   let '($b_ann, $b_name, $b_s_infos, $b_var_infos,
-        $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
     bind_meta.unpack_info(b_info)
   let b_ann_str :~ String = b_ann.unwrap()
   let ann:
@@ -164,20 +164,24 @@ bind.infoer 'definitely_infoer($statinfos, $b)':
     $b_name,
     $b_s_infos,
     $b_var_infos,
+    definitely_oncer,
     definitely_matcher,
     $b_evidence,
     definitely_committer,
     definitely_binder,
-    ($b_matcher, $b_committer, $b_binder, $b_data))'
+    ($b_oncer, $b_matcher, $b_committer, $b_binder, $b_data))'
 
-bind.matcher 'definitely_matcher($in_id, ($b_matcher, $_, $_, $b_data),
+bind.oncer 'definitely_oncer(($b_oncer, $_, $_, $_, $b_data))':
+  '$b_oncer($b_data)'
+
+bind.matcher 'definitely_matcher($in_id, ($_, $b_matcher, $_, $_, $b_data),
                                  $IF, $success, $failure)':
   '$IF $in_id
    | $b_matcher($in_id, $b_data, $IF, $success, $failure)
    | $failure'
 
-bind.committer 'definitely_committer($in_id, $evidence, ($_, $b_committer, $_, $b_data))':
+bind.committer 'definitely_committer($in_id, $evidence, ($_, $_, $b_committer, $_, $b_data))':
   '$b_committer($in_id, $evidence, $b_data)'
 
-bind.binder 'definitely_binder($in_id, $evidence, ($_, $_, $b_binder, $b_data))':
+bind.binder 'definitely_binder($in_id, $evidence, ($_, $_, $_, $b_binder, $b_data))':
   '$b_binder($in_id, $evidence, $b_data)'

@@ -388,15 +388,67 @@
 (define-syntax (arrow-infoer stx)
   (syntax-parse stx
     [(_ in-static-infos (result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest static-infos))
-     (binding-info "function"
-                   #'function
-                   #'static-infos
-                   #'((result (0) . static-infos))
-                   #'arrow-matcher
-                   #'()
-                   #'arrow-committer
-                   #'arrow-binder
-                   #'(result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest))]))
+     (syntax-parse #'rhs
+       [([rhs-i::binding-form . rhs-tail] ...)
+        #:with (rhs-impl::binding-impl ...) #`((rhs-i.infoer-id () rhs-i.data) ...)
+        (with-syntax ([rest (syntax-parse #'rest
+                              [(name a-i::binding-form . a-rest)
+                               #:with a-impl::binding-impl #`(a-i.infoer-id () a-i.data)
+                               #'(name a-impl.info . a-rest)]
+                              [_ #'rest])]
+                      [kw-rest (syntax-parse #'kw-rest
+                                 [(name a-i::binding-form . a-rest)
+                                  #:with a-impl::binding-impl #`(a-i.infoer-id () a-i.data)
+                                  #'(name a-impl.info . a-rest)]
+                                 [_ #'kw-rest])]
+                      [res-rest (syntax-parse #'res-rest
+                                  [(name a-i::binding-form . a-rest)
+                                   #:with a-impl::binding-impl #`(a-i.infoer-id () a-i.data)
+                                   #'(name a-impl.info . a-rest)]
+                                  [_ #'res-rest])])
+          (binding-info "function"
+                        #'function
+                        #'static-infos
+                        #'((result (0) . static-infos))
+                        #'arrow-oncer
+                        #'arrow-matcher
+                        #'()
+                        #'arrow-committer
+                        #'arrow-binder
+                        #'(result-id arity who-expr lhss rest kw-rest kw-rest-first? ([rhs-impl.info . rhs-tail] ...) res-rest)))])]))
+
+(define-syntax (arrow-oncer stx)
+  (syntax-parse stx
+    [(_ (result-id arity who-expr
+                   ([lhs::binding-info . _] ...)
+                   rest
+                   kw-rest
+                   kw-rest-first?
+                   ([rhs::binding-info . _] ...)
+                   res-rest))
+     (with-syntax ([(rest-once ...)
+                    (syntax-parse #'rest
+                      [(name a::binding-info . a-rest)
+                       #'((a.oncer-id a.data))]
+                      [_ #'()])]
+                   [(kw-rest-once ...)
+                    (syntax-parse #'kw-rest
+                      [(name a::binding-info . a-rest)
+                       #'((a.oncer-id a.data))]
+                      [_ #'()])]
+                   [(res-rest-once ...)
+                    (syntax-parse #'res-rest
+                      [(name a::binding-info . a-rest)
+                       #'((a.oncer-id a.data))]
+                      [_ #'()])])
+       #'(begin
+           (lhs.oncer-id lhs.data)
+           ...
+           (rhs.oncer-id rhs.data)
+           ...
+           rest-once ...
+           kw-rest-once ...
+           res-rest-once ...))]))
 
 (define-syntax (arrow-matcher stx)
   (syntax-parse stx
@@ -431,10 +483,8 @@
                 rest
                 kw-rest
                 kw-rest-first?
-                ([rhs-i::binding-form rhs-body rhs-static-infos rhs-name rhs-str] ...)
+                ([rhs::binding-info rhs-body rhs-static-infos rhs-name rhs-str] ...)
                 res-rest)
-     #:with (rhs-impl::binding-impl ...) #`((rhs-i.infoer-id () rhs-i.data) ...)
-     #:with (rhs::binding-info ...) #'(rhs-impl.info ...)
      #:with (((lhs-bind-id lhs-bind-use . lhs-bind-static-infos) ...) ...) #'(lhs.bind-infos ...)
      #:with (((rhs-bind-id rhs-bind-use . rhs-bind-static-infos) ...) ...) #'(rhs.bind-infos ...)
      #:with (lhs-arg-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs.name-id ...)))])
@@ -487,9 +537,7 @@
              [#:any (if check-always?
                         (any-result)
                         (list #'apply #'rest-arg-id #'(rest-id) #'([(rest-id) () (success-k rest-arg-id)])))]
-             [(name a-i::binding-form a-body a-static-infos whole? a-str)
-              #:with a-impl::binding-impl #`(a-i.infoer-id () a-i.data)
-              #:with a::binding-info #'a-impl.info
+             [(name a::binding-info a-body a-static-infos whole? a-str)
               #:with ((a-bind-id a-bind-use . a-bind-static-infos) ...) #'a.bind-infos
               #:with rest-list-id (or (and (syntax-e #'name) #'name) #'rest-list)
               (cond
@@ -540,9 +588,7 @@
                                        #'(kws-arg-id kw-vals-arg-id) #'(kws-id kw-vals-id) #'keyword-apply
                                        #'()
                                        #'([(kws-id kw-vals-id) () (success-k kws-arg-id kw-vals-arg-id)]))]
-                          [(name a-i::binding-form a-body a-static-infos a-str)
-                           #:with a-impl::binding-impl #`(a-i.infoer-id () a-i.data)
-                           #:with a::binding-info #'a-impl.info
+                          [(name a::binding-info a-body a-static-infos a-str)
                            #:with ((a-bind-id a-bind-use . a-bind-static-infos) ...) #'a.bind-infos
                            #:with kw-rest-map-id (or (and (syntax-e #'name) #'name) #'kw-rest-map)
                            (define kws (for/list ([kw (in-list (syntax->list #'(lhs-kw ...)))]
@@ -681,6 +727,7 @@
                    #'function
                    #'static-infos
                    #'((result (0) . static-infos))
+                   #'empty-oncer
                    #'all-of-matcher
                    #'()
                    #'all-of-committer

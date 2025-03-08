@@ -1486,3 +1486,39 @@ check:
     error.annot("ReadableMap").msg,
     error.val("oops").msg,
   )
+
+block:
+  fun f(x :: Map.of(Any.of(block: println("now"); 1),
+                    Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f({1: 2}) ~prints "now\nthen\n"
+  check f({1: 2}) ~prints "now\nthen\n"
+  check f({1: 2}, {1: 2}) ~prints "now\nthen\n"
+
+block:
+  fun f(x :: MutableMap.now_of(Any.of(block: println("now"); 1),
+                               Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(MutableMap{1: 2}) ~prints "now\nthen\n"
+  check f(MutableMap{1: 2}) ~prints "now\nthen\n"
+  check f(MutableMap{1: 2}, MutableMap{1: 2}) ~prints "now\nthen\n"
+
+block:
+  fun f(x :: MutableMap.later_of(Any.of(block: println("now"); 1),
+                                 Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(MutableMap{1: 2}) ~prints "now\nthen\n"
+  check f(MutableMap{1: 2}) ~prints "now\nthen\n"
+  check f(MutableMap{1: 2}, MutableMap{1: 2}) ~prints "now\nthen\n"
+
+block:
+  fun f(x :: Map.by(===).of(Any.of(block: println("now"); 1),
+                            Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(Map.by(===){1: 2}) ~prints "now\nthen\n"
+  check f(Map.by(===){1: 2}) ~prints "now\nthen\n"
+  check f(Map.by(===){1: 2}, Map.by(===){1: 2}) ~prints "now\nthen\n"

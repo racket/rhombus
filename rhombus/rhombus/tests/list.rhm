@@ -867,3 +867,42 @@ block:
     list_bounds(matching([x, y, ...] where: x = [y, ...].length)) ~is [1, #false]
     list_bounds(matching([_, & [x, y, ...] where: x = [y, ...].length, _])) ~is [3, #false]
     list_bounds(NonemptyList) ~is [1, #false]
+
+block:
+  fun f(x :: List.of(Any.of(block: println("now"); 1))):
+    x
+  check f([1, 1, 1]) ~prints "now\n"
+  check f([1, 1, 1]) ~prints "now\n"
+  check f([]) ~prints "now\n"
+  
+block:
+  fun f(x :: List.later_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...][0]
+  check f([1, 1, 1]) ~prints "now\n"
+  check f([]) ~prints "now\n"
+  check f([1, 1, 1])[1] ~prints "now\n"
+  check f([1, 1, 1], [1])[1] ~prints "now\n"
+  check:
+    let lst = f([1, 1, 1])
+    [lst[1], lst[2]]
+    ~prints "now\n"
+
+block:
+  fun f(x :: MutableList.now_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...][0]
+  check f(MutableList[1, 1, 1]) ~prints "now\n"
+  check f(MutableList[1, 1, 1]) ~prints "now\n"
+  check f(MutableList[1, 1, 1], MutableList[1]) ~prints "now\n"
+  check f(MutableList[]) ~prints "now\n"
+  
+block:
+  fun f(x :: MutableList.later_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...][0]
+  check f(MutableList[1, 1, 1]) ~prints "now\n"
+  check f(MutableList[1, 1, 1], MutableList[]) ~prints "now\n"
+  check f(MutableList[]) ~prints "now\n"
+  check f(MutableList[1, 1, 1])[1] ~prints "now\n"
+  check:
+    let lst = f(MutableList[1, 1, 1])
+    [lst[1], lst[2]]
+    ~prints "now\n"

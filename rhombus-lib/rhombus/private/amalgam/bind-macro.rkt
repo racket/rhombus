@@ -48,6 +48,7 @@
   #:fields
   (macro
    infoer
+   oncer
    matcher
    committer
    binder))
@@ -145,12 +146,13 @@
                                                 (group unpacked-uses)
                                                 (group unpacked-static-infos)))
                                  ...))
+                  (group chain-to-oncer)
                   (group chain-to-matcher)
                   #,(unpack-evidence-tree #'b.evidence-ids)
                   (group chain-to-committer)
                   (group chain-to-binder)
                   (group (parsed #:rhombus/bind/info/chain
-                                 (b.matcher-id b.committer-id b.binder-id b.data)))))]))
+                                 (b.oncer-id b.matcher-id b.committer-id b.binder-id b.data)))))]))
 
   (define/arity (bind_meta.pack stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -240,6 +242,39 @@
                               'who
                               (rhombus-body-at block-tag body ...))))])])])))])])))
 
+(define-defn-syntax oncer
+  (definition-transformer
+    (lambda (stx name-prefix)
+      (syntax-parse stx
+        #:datum-literals (group)
+        [(form-id (_::quotes (group builder-id:identifier . _))
+                  . _)
+         (list
+          #`(define-syntax builder-id
+              (oncer-rhs #,stx)))]))))
+
+(begin-for-syntax
+  (define-syntax (oncer-rhs stx)
+    (syntax-parse stx
+      [(_ orig-stx)
+       (syntax-parse #'orig-stx
+         #:datum-literals (group)
+         [(form-id (_::quotes (group builder-id:identifier
+                                     (_::parens data-pattern)))
+                   (block-tag::block body ...))
+          (define-values (converted-pattern idrs sidrs vars can-be-empty?) (convert-pattern #'data-pattern))
+          (with-syntax ([((id id-ref . _) ...) idrs]
+                        [(((sid ...) sid-ref . _) ...) sidrs])
+            #`(lambda (stx)
+                (syntax-parse stx
+                  [(_ data)
+                   (syntax-parse #'(group data)
+                     [#,converted-pattern
+                      (let* ([id id-ref] ...)
+                        (let-syntaxes ([(sid ...) sid-ref] ...)
+                          (unwrap-block
+                           (rhombus-body-at block-tag body ...))))])])))])])))
+
 (define-defn-syntax matcher
   (definition-transformer
     (lambda (stx name-prefix)
@@ -306,13 +341,28 @@
   (definition-transformer
     (lambda (stx name-prefix) (list (parse-if-bridge stx)))))
 
+(define-for-syntax (parse-chain-to-oncer rhombus stx)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(_ (_::parens (group (parsed #:rhombus/bind/info/chain
+                                  (oncer-id matcher-id committer-id binder-id data)))))
+     #'(oncer-id data)]))
+
+(define-syntax chain-to-oncer
+  (expression-transformer
+   (lambda (stx) (values (parse-chain-to-oncer #'rhombus-body stx) #'()))))
+
+(define-defn-syntax chain-to-oncer
+  (definition-transformer
+    (lambda (stx name-prefix) (list (parse-chain-to-oncer #'rhombus-body-sequence stx)))))
+
 (define-for-syntax (parse-chain-to-matcher rhombus stx)
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
     #:datum-literals (group)
     [(_ (_::parens (group arg-id:identifier)
                    (group (parsed #:rhombus/bind/info/chain
-                                  (matcher-id committer-id binder-id data)))
+                                  (oncer-id matcher-id committer-id binder-id data)))
                    (group if-id)
                    (group success ...)
                    (group fail ...)))
@@ -364,7 +414,7 @@
     [(_ (_::parens (group arg-id:identifier)
                    e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
-                                  (matcher-id committer-id binder-id data)))))
+                                  (oncer-id matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
      #`(committer-id arg-id e.packed data)]))
 
@@ -383,7 +433,7 @@
     [(_ (_::parens (group arg-id:identifier)
                    e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
-                                  (matcher-id committer-id binder-id data)))))
+                                  (oncer-id matcher-id committer-id binder-id data)))))
      #:with rhombus rhombus
      #`(binder-id arg-id e.packed data)]))
 
@@ -412,24 +462,27 @@
   (let loop ([stx (unpack-term stx who #f)])
     (syntax-parse stx
       #:datum-literals (parsed group)
-      #:literals (chain-to-matcher
+      #:literals (chain-to-oncer
+                  chain-to-matcher
                   chain-to-committer
                   chain-to-binder)
       [(_::parens name-str-g
                   name-id-g
                   static-infos-g
                   bind-ids-g
+                  (group chain-to-oncer)
                   (group chain-to-matcher)
                   evidence-ids-g
                   (group chain-to-committer)
                   (group chain-to-binder)
                   (group (parsed #:rhombus/bind/info/chain
-                                 (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
+                                 (orig-oncer-id orig-matcher-id orig-committer-id orig-binder-id orig-data))))
        ;; hacky: remove indirection to get back to Racket forms
        (loop #'(parens name-str-g
                        name-id-g
                        static-infos-g
                        bind-ids-g
+                       (group orig-oncer-id)
                        (group orig-matcher-id)
                        evidence-ids-g
                        (group orig-committer-id)
@@ -439,6 +492,7 @@
                   (group name-id:identifier)
                   (group static-infos)
                   (group bind-ids)
+                  (group oncer-id:identifier)
                   (group matcher-id:identifier)
                   e::unpacked-evidence-id-tree
                   (group committer-id:identifier)
@@ -457,6 +511,7 @@
                      #'name-id
                      (pack-static-infos who #'static-infos)
                      #'((bind-id packed-bind-uses . packed-bind-static-infos) ...)
+                     #'oncer-id
                      #'matcher-id
                      #'e.packed
                      #'committer-id

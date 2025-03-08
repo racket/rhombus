@@ -378,6 +378,7 @@
                    #'val
                    #'()
                    #'((val (~repeat ())))
+                   #'empty-oncer
                    #'converter-matcher
                    #'(convert-committer)
                    #'converter-committer
@@ -470,6 +471,7 @@
                              "converter annotation not allowed without a `converter` clause"
                              #'ann-op-name (respan #'ann-terms)))
        (list
+        #'(arg-info.oncer-id arg-info.data)
         #`(define (name-convert v who)
             (arg-info.matcher-id v
                                  arg-info.data

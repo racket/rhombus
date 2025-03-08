@@ -47,11 +47,19 @@
                    #'lhs.name-id
                    #'rhs.static-infos ; presumably includes `lhs.static-infos` as passed to `rhs-id.infoer-id`
                    #'(lhs-bind-info ... . rhs.bind-infos)
+                   #'and-oncer
                    #'and-matcher
                    #'(lhs.evidence-ids rhs.evidence-ids)
                    #'and-committer
                    #'and-binder
                    #'(lhs rhs))]))
+
+(define-syntax (and-oncer stx)
+  (syntax-parse stx
+    [(_ (lhs::binding-info rhs::binding-info))
+     #'(begin
+         (lhs.oncer-id lhs.data)
+         (rhs.oncer-id rhs.data))]))
 
 (define-syntax (and-matcher stx)
   (syntax-parse stx
@@ -108,11 +116,19 @@
                    #'lhs.name-id
                    (static-infos-or #'lhs.static-infos #'rhs.static-infos)
                    #'()
+                   #'or-oncer
                    #'or-matcher
                    #'()
                    #'or-committer
                    #'or-binder
                    #'(lhs rhs))]))
+
+(define-syntax (or-oncer stx)
+  (syntax-parse stx
+    [(_ (lhs::binding-info rhs::binding-info))
+     #'(begin
+         (lhs.oncer-id lhs.data)
+         (rhs.oncer-id rhs.data))]))
 
 (define-syntax (or-matcher stx)
   (syntax-parse stx
@@ -160,11 +176,17 @@
                    #'info.name-id
                    #'static-infos
                    #'()
+                   #'not-oncer
                    #'not-matcher
                    #'()
                    #'not-committer
                    #'not-binder
                    #'info)]))
+
+(define-syntax (not-oncer stx)
+  (syntax-parse stx
+    [(_ info::binding-info)
+     #'(info.oncer-id info.data)]))
 
 (define-syntax (not-matcher stx)
   (syntax-parse stx

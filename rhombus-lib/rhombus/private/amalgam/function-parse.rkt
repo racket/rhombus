@@ -271,24 +271,29 @@
                         #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
                                 (converter
-                                 #`(lambda (arg ... success-k fail-k)
-                                     #,(for/foldr ([next #'(success-k arg ...)])
-                                                  ([arg (in-list (syntax->list #'(arg ...)))]
-                                                   [arg-impl-info (in-list (syntax->list #'(arg-impl.info ...)))]
-                                                   [body (in-list (syntax->list #'(c-parsed.body ...)))])
-                                         (syntax-parse arg-impl-info
-                                           [arg-info::binding-info
-                                            #`(arg-info.matcher-id #,arg
-                                                                   arg-info.data
-                                                                   if/blocked
-                                                                   (begin
-                                                                     (arg-info.committer-id #,arg arg-info.evidence-ids arg-info.data)
-                                                                     (arg-info.binder-id #,arg arg-info.evidence-ids arg-info.data)
-                                                                     (define-static-info-syntax/maybe arg-info.bind-id
-                                                                       arg-info.bind-static-info ...)
-                                                                     ...
-                                                                     (let ([#,arg #,body]) #,next))
-                                                                   (fail-k))])))
+                                 #`(let ()
+                                     #,@(for/list ([arg-impl-info (in-list (syntax->list #'(arg-impl.info ...)))])
+                                          (syntax-parse arg-impl-info
+                                            [arg-info::binding-info
+                                             #'(arg-info.oncer-id arg-info.data)]))
+                                     (lambda (arg ... success-k fail-k)
+                                       #,(for/foldr ([next #'(success-k arg ...)])
+                                                    ([arg (in-list (syntax->list #'(arg ...)))]
+                                                     [arg-impl-info (in-list (syntax->list #'(arg-impl.info ...)))]
+                                                     [body (in-list (syntax->list #'(c-parsed.body ...)))])
+                                           (syntax-parse arg-impl-info
+                                             [arg-info::binding-info
+                                              #`(arg-info.matcher-id #,arg
+                                                                     arg-info.data
+                                                                     if/blocked
+                                                                     (begin
+                                                                       (arg-info.committer-id #,arg arg-info.evidence-ids arg-info.data)
+                                                                       (arg-info.binder-id #,arg arg-info.evidence-ids arg-info.data)
+                                                                       (define-static-info-syntax/maybe arg-info.bind-id
+                                                                         arg-info.bind-static-info ...)
+                                                                       ...
+                                                                       (let ([#,arg #,body]) #,next))
+                                                                     (fail-k))]))))
                                  #f
                                  cnt))]))]
              #:with static-infos sis
@@ -317,18 +322,20 @@
                         #:with arg-info::binding-info #'arg-impl.info
                         (values #'c-parsed.static-infos
                                 (converter
-                                 #'(lambda (v success-k fail-k)
-                                     (arg-info.matcher-id v
-                                                          arg-info.data
-                                                          if/blocked
-                                                          (begin
-                                                            (arg-info.committer-id v arg-info.evidence-ids arg-info.data)
-                                                            (arg-info.binder-id v arg-info.evidence-ids arg-info.data)
-                                                            (define-static-info-syntax/maybe arg-info.bind-id
-                                                              arg-info.bind-static-info ...)
-                                                            ...
-                                                            (success-k c-parsed.body))
-                                                          (fail-k)))
+                                 #'(let ()
+                                     (arg-info.oncer-id arg-info.data)
+                                     (lambda (v success-k fail-k)
+                                       (arg-info.matcher-id v
+                                                            arg-info.data
+                                                            if/blocked
+                                                            (begin
+                                                              (arg-info.committer-id v arg-info.evidence-ids arg-info.data)
+                                                              (arg-info.binder-id v arg-info.evidence-ids arg-info.data)
+                                                              (define-static-info-syntax/maybe arg-info.bind-id
+                                                                arg-info.bind-static-info ...)
+                                                              ...
+                                                              (success-k c-parsed.body))
+                                                            (fail-k))))
                                  #f
                                  1))]))]
              #:with static-infos sis

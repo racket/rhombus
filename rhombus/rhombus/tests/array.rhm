@@ -559,3 +559,23 @@ version_guard.at_least "8.14.0.7":
       error.annot("NonnegInt").msg,
       error.val(-1).msg,
     )
+
+block:
+  fun f(x :: Array.now_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...][0]
+  check f(Array(1, 1, 1)) ~prints "now\n"
+  check f(Array(1, 1, 1)) ~prints "now\n"
+  check f(Array(1, 1, 1), Array(1)) ~prints "now\n"
+  check f(Array()) ~prints "now\n"
+
+block:
+  fun f(x :: Array.later_of(Any.of(block: println("now"); 1)), ...):
+    [x, ...][0]
+  check f(Array(1, 1, 1)) ~prints "now\n"
+  check f(Array(1, 1, 1), Array()) ~prints "now\n"
+  check f(Array()) ~prints "now\n"
+  check f(Array(1, 1, 1))[1] ~prints "now\n"
+  check:
+    let lst = f(Array(1, 1, 1))
+    [lst[1], lst[2]]
+    ~prints "now\n"

@@ -549,11 +549,15 @@ bind.infoer 'rx_infoer($static_info, [$rkt_rx, [[$var, $index], ...], $src_str])
     rx_match,
     (),
     (($var, [], ()), ...),
+    rx_oncer,
     rx_matcher,
     $rx_matched,
     rx_committer,
     rx_binder,
     [$rkt_rx, $rx_matched, [[$var, $index], ...]])'
+
+bind.oncer 'rx_oncer($info)':
+  ''
 
 bind.matcher 'rx_matcher($rhs, [$rkt_rx, $rx_matched, $_], $IF, $success, $failure)':
   'def $rx_matched = base.#{regexp-match}($rkt_rx, $rhs)

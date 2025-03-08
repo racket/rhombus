@@ -381,11 +381,14 @@ check:
       printed,
       (),
       (),
+      printed_oncer,
       printed_matcher,
       (),
       printed_committer,
       printed_binder,
       $id)'
+  bind.oncer 'printed_oncer($id)':
+    ''
   bind.matcher 'printed_matcher($_, $id, $IF, $success, $failure)':
     '$IF #true
      | $success

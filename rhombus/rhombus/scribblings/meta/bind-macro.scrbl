@@ -145,6 +145,7 @@
       [#,(@rhombus(var_use, ~var)), ...],
       ((#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...)),
      ...),
+    #,(@rhombus(oncer_id, ~var)),
     #,(@rhombus(matcher_id, ~var)),
     #,(@rhombus(evidence_id_tree)),
     #,(@rhombus(committer_id, ~var)),
@@ -191,7 +192,7 @@
 
  )
 
- The @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
+ The @rhombus(oncer_id, ~var), @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var) identifiers provide
  the ``continuation'' of the binder's expansion to generate a matching
  expression and a definition sequence. Each identifier in @rhombus(evidence_id_tree)

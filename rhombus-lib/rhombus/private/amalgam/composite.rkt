@@ -245,20 +245,39 @@
                      #'composite
                      all-composite-static-infos
                      #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
+                     #'composite-oncer
                      #'composite-matcher
                      #`(#,tmp-ids a-info.evidence-ids ... #,rest-evidence-ids)
                      #'composite-committer
                      #'composite-binder
                      #`(predicate steppers accessors #,tmp-ids
-                                  (a-info.name-id ...) (a-info.matcher-id ...)
+                                  (a-info.name-id ...) (a-info.oncer-id ...) (a-info.matcher-id ...)
                                   (a-info.committer-id ...) (a-info.binder-id ...) (a-info.data ...)
                                   #,new-rest-data)))]))
+
+(define-syntax (composite-oncer stx)
+  (syntax-parse stx
+    [(_ (predicate steppers accessors tmp-ids
+                   name-ids (oncer-id ...) matcher-ids committer-ids binder-ids (data ...)
+                   rest-data))
+     (with-syntax ([(rest-once ...)
+                    (syntax-parse #'rest-data
+                      [#f #'()]
+                      [(rest-tmp-id rest-accessor
+                                    rest-to-repetition no-rest-map?
+                                    rest-repetition? rest-info::binding-info rest-seq-tmp-ids)
+                       #'((rest-info.oncer-id rest-info.data))])])
+       #`(begin
+           (oncer-id data)
+           ...
+           rest-once
+           ...))]))
 
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
     [(_ c-arg-id
         (predicate steppers accessors tmp-ids
-                   name-ids matcher-ids committer-ids binder-ids datas
+                   name-ids oncer-ids matcher-ids committer-ids binder-ids datas
                    rest-data)
         IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
@@ -313,7 +332,7 @@
 (define-syntax (composite-committer stx)
   (syntax-parse stx
     [(_ c-arg-id all-evidence-ids (predicate steppers accessors (tmp-id ...)
-                                             name-ids matcher-ids (committer-id ...) binder-ids (data ...)
+                                             name-ids oncer-ids matcher-ids (committer-id ...) binder-ids (data ...)
                                              rest-data))
      #:with ((tmp-id/evidence ...) evidence-ids ... (rest-tmp-id/evidence rest-evidence-ids)) #'all-evidence-ids
      #`(begin
@@ -332,7 +351,7 @@
 (define-syntax (composite-binder stx)
   (syntax-parse stx
     [(_ c-arg-id all-evidence-ids (predicate steppers accessors (tmp-id ...)
-                                             name-ids matcher-ids committer-ids (binder-id ...) (data ...)
+                                             name-ids oncer-ids matcher-ids committer-ids (binder-id ...) (data ...)
                                              rest-data))
      #:with ((tmp-id/evidence ...) evidence-ids ... (rest-tmp-id/evidence rest-evidence-ids)) #'all-evidence-ids
      #`(begin

@@ -338,6 +338,7 @@
                    #'empty
                    (static-infos-and #'static-infos #'up-static-infos)
                    #'()
+                   #'empty-oncer
                    #'empty-map-matcher
                    #'()
                    #'literal-commit-nothing
@@ -438,11 +439,14 @@
                                   (key-comp-map-pair-build-id mapper)
                                   (key-comp-map-for-form-id mapper)))))))
 
-(define-for-syntax map-annotation-make-predicate
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([(k v) (in-immutable-hash #,arg-id)])
-        (and (#,(car predicate-stxs) k)
-             (#,(cadr predicate-stxs) v)))))
+(define-for-syntax (make-map-annotation-make-predicate in-form-stx)
+  (lambda (predicate-stxs)
+    #`(let ([key-pred #,(car predicate-stxs)]
+            [val-pred #,(cadr predicate-stxs)])
+        (lambda (arg)
+          (for/and ([(k v) (#,in-form-stx arg)])
+            (and (key-pred k)
+                 (val-pred v)))))))
 
 (define-for-syntax map-annotation-make-static-info
   (lambda (static-infoss)
@@ -455,17 +459,17 @@
   #'immutable-hash? #,(get-map-static-infos)
   2
   #f
-  map-annotation-make-predicate
+  (make-map-annotation-make-predicate #'in-immutable-hash)
   map-annotation-make-static-info
   #'map-build-convert #'(#hashalw()))
 
 (define-for-syntax (make-map-later-chaperoner who)
   (lambda (predicate-stxes annot-strs)
-    #`(lambda (ht)
-        (let ([k-pred #,(car predicate-stxes)]
-              [k-str #,(car annot-strs)]
+    #`(let ([k-pred #,(car predicate-stxes)]
+            [k-str #,(car annot-strs)]
               [v-pred #,(cadr predicate-stxes)]
               [v-str #,(cadr annot-strs)])
+        (lambda (ht)
           (chaperone-hash ht
                           ;; ref
                           (lambda (ht k)
@@ -511,7 +515,7 @@
                           (parse-annotation-of #'(of-id . tail)
                                                (key-comp-map?-id mapper) (get-map-static-infos)
                                                2 #f
-                                               map-annotation-make-predicate
+                                               (make-map-annotation-make-predicate #'in-immutable-hash)
                                                map-annotation-make-static-info
                                                #'map-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(form-id . tail)
@@ -594,10 +598,7 @@
   #'mutable-hash? #,(get-mutable-map-static-infos)
   2
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([(k v) (in-hash #,arg-id)])
-        (and (#,(car predicate-stxs) k)
-             (#,(cadr predicate-stxs) v))))
+  (make-map-annotation-make-predicate #'in-hash)
   (lambda (static-infoss)
     ;; no static info, since mutable and content is checked only initially
     #'())
@@ -931,20 +932,29 @@
                    #'composite-info.name-id
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
+                   #'map-oncer
                    #'map-matcher
                    #'composite-info.evidence-ids
                    #'map-committer
                    #'map-binder
                    #'(mode
                       keys defaults tmp-ids rest-tmp
-                      composite-info.matcher-id composite-info.committer-id composite-info.binder-id
+                      composite-info.oncer-id composite-info.matcher-id composite-info.committer-id composite-info.binder-id
                       composite-info.data))]))
+
+(define-syntax (map-oncer stx)
+  (syntax-parse stx
+    [(_ (mode
+            keys defaults tmp-ids rest-tmp
+            composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
+            composite-data))
+     #`(composite-oncer-id composite-data)]))
 
 (define-syntax (map-matcher stx)
   (syntax-parse stx
     [(_ arg-id ([desc pred filter]
                 keys defaults tmp-ids rest-tmp
-                composite-matcher-id composite-committer-id composite-binder-id
+                composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
                 composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
@@ -1005,7 +1015,7 @@
   (syntax-parse stx
     [(_ arg-id evidence-ids (mode
                                 keys defaults tmp-ids rest-tmp
-                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
                                 composite-data))
      #`(composite-committer-id 'map evidence-ids composite-data)]))
 
@@ -1013,7 +1023,7 @@
   (syntax-parse stx
     [(_ arg-id evidence-ids (mode
                                 keys defaults tmp-ids rest-tmp
-                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
                                 composite-data))
      #`(composite-binder-id 'map evidence-ids composite-data)]))
 

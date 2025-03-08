@@ -41,7 +41,8 @@
 
 (provide define-binding-syntax
          raise-binding-failure
-         always-succeed)
+         always-succeed
+         empty-oncer)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:
@@ -79,6 +80,7 @@
               name-id:identifier
               (~and static-infos ((:identifier _) ...))
               (~and bind-infos ((bind-id:identifier (~and bind-uses (bind-use ...)) (~and bind-static-info (:identifier _)) ...) ...))
+              oncer-id:identifier
               matcher-id:identifier
               evidence-ids::evidence-id-tree
               committer-id:identifier
@@ -97,16 +99,20 @@
                             data)))
 
   ;; puts pieces together into a `:binding-info`
-  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id evidence-ids committer-id binder-id data)
-    (datum->syntax #f (list annotation-str
-                            name-id
-                            static-infos
-                            bind-infos
-                            matcher-id
-                            evidence-ids
-                            committer-id
-                            binder-id
-                            data)))
+  (define binding-info
+    (case-lambda
+      [(annotation-str name-id static-infos bind-infos oncer-id matcher-id evidence-ids committer-id binder-id data)
+       (datum->syntax #f (list annotation-str
+                               name-id
+                               static-infos
+                               bind-infos
+                               oncer-id
+                               matcher-id
+                               evidence-ids
+                               committer-id
+                               binder-id
+                               data))]
+      [args (error 'binding-info "bad args: ~s" args)]))
 
   (define (make-identifier-binding id)
     (binding-form #'identifier-infoer
@@ -148,6 +154,7 @@
                        #'id
                        #'static-infos
                        #'((id ([#:repet ()] . maybe-prefix) . static-infos))
+                       #'empty-oncer
                        #'always-succeed
                        #'()
                        #'identifier-commit
@@ -155,6 +162,11 @@
                        (if prefix
                            #`[id #,prefix]
                            #'id))))]))
+
+(define-syntax (empty-oncer stx)
+  (syntax-parse stx
+    [(_ _)
+     #'(void)]))
 
 (define-syntax (always-succeed stx)
   (syntax-parse stx

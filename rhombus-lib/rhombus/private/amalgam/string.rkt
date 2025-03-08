@@ -360,6 +360,7 @@
                    #'s
                    #'()
                    #'((x (0)))
+                   #'empty-oncer
                    #'from-string-matcher
                    #'(v)
                    #'from-string-committer

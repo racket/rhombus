@@ -380,6 +380,7 @@
                    #'empty
                    (static-infos-and #'static-infos #'up-static-infos)
                    #'()
+                   #'empty-oncer
                    #'empty-set-matcher
                    #'()
                    #'literal-commit-nothing
@@ -577,20 +578,29 @@
                    #'composite-info.name-id
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
+                   #'set-oncer
                    #'set-matcher
                    #'composite-info.evidence-ids
                    #'set-committer
                    #'set-binder
                    #'(mode
                       keys rest-tmp
-                      composite-info.matcher-id composite-info.committer-id composite-info.binder-id
+                      composite-info.oncer-id composite-info.matcher-id composite-info.committer-id composite-info.binder-id
                       composite-info.data))]))
+
+(define-syntax (set-oncer stx)
+  (syntax-parse stx
+    [(_ (mode
+            keys rest-tmp
+            composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
+            composite-data))
+     #`(composite-oncer-id composite-data)]))
 
 (define-syntax (set-matcher stx)
   (syntax-parse stx
     [(_ arg-id ([desc pred filter]
                 keys rest-tmp
-                composite-matcher-id composite-binder-id composite-committer-id
+                composite-oncer-id composite-matcher-id composite-binder-id composite-committer-id
                 composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
@@ -617,7 +627,7 @@
   (syntax-parse stx
     [(_ arg-id evidence-ids (mode
                                 keys rest-tmp
-                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
                                 composite-data))
      #`(composite-committer-id 'set evidence-ids composite-data)]))
 
@@ -625,14 +635,16 @@
   (syntax-parse stx
     [(_ arg-id evidence-ids (mode
                                 keys rest-tmp
-                                composite-matcher-id composite-committer-id composite-binder-id
+                                composite-oncer-id composite-matcher-id composite-committer-id composite-binder-id
                                 composite-data))
      #`(composite-binder-id 'set evidence-ids composite-data)]))
 
-(define-for-syntax set-annotation-make-predicate
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([v (in-immutable-hash-keys (set-ht #,arg-id))])
-        (#,(car predicate-stxs) v))))
+(define-for-syntax (make-set-annotation-make-predicate in-form-stx)
+  (lambda (predicate-stxs)
+    #`(let ([pred #,(car predicate-stxs)])
+        (lambda (arg)
+          (for/and ([v (#,in-form-stx (set-ht arg))])
+            (pred v))))))
 
 (define-for-syntax set-annotation-make-static-info
   (lambda (static-infoss)
@@ -643,15 +655,15 @@
   #'immutable-set? #,(get-set-static-infos)
   1
   #f
-  set-annotation-make-predicate
+  (make-set-annotation-make-predicate #'in-immutable-hash-keys)
   set-annotation-make-static-info
   #'set-build-convert #'(#hashalw()))
 
 (define-for-syntax (make-set-later-chaperoner who)
   (lambda (predicate-stxes annot-strs)
-    #`(lambda (st)
-        (let ([k-pred #,(car predicate-stxes)]
-              [k-str #,(car annot-strs)])
+    #`(let ([k-pred #,(car predicate-stxes)]
+            [k-str #,(car annot-strs)])
+        (lambda (st)
           (chaperone-struct
            st
            set-ht
@@ -697,7 +709,7 @@
                           (parse-annotation-of #'(of-id . tail)
                                                (key-comp-set?-id mapper) (get-set-static-infos)
                                                1 #f
-                                               set-annotation-make-predicate
+                                               (make-set-annotation-make-predicate #'in-immutable-hash-keys)
                                                set-annotation-make-static-info
                                                #'set-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(form-id . tail)
@@ -785,9 +797,7 @@
   #'mutable-set? #,(get-mutable-set-static-infos)
   1
   #f
-  (lambda (arg-id predicate-stxs)
-    #`(for/and ([k (in-hash-keys (set-ht #,arg-id))])
-        (#,(car predicate-stxs) k)))
+  (make-set-annotation-make-predicate #'in-hash-keys)
   (lambda (static-infoss) #'())
   "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable set content"
   #'())

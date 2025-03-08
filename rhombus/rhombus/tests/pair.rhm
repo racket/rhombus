@@ -160,3 +160,19 @@ block:
 check:
   to_string(Pair(1, 2)) ~is "Pair(1, 2)"
   to_string(Pair(1, PairList[2, 3])) ~is "PairList[1, 2, 3]"
+
+block:
+  fun f(x :: Pair.of(Any.of(block: println("now"); 1),
+                     Any.of(block: println("then"); 2)),
+        ...):
+    #'ok
+  check f(Pair(1, 2)) ~prints "now\nthen\n"
+  check f(Pair(1, 2)) ~prints "now\nthen\n"
+  check f(Pair(1, 2), Pair(1, 2)) ~prints "now\nthen\n"
+
+block:
+  fun f(x :: PairList.of(Any.of(block: println("now"); 1))):
+    x
+  check f(PairList[1, 1, 1]) ~prints "now\n"
+  check f(PairList[1, 1, 1]) ~prints "now\n"
+  check f(PairList[]) ~prints "now\n"

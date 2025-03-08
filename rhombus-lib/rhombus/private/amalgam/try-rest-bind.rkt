@@ -127,6 +127,7 @@
                       #'static-infos)
                      (append (syntax->list #'out-first-i-bind-infos)
                              (syntax->list #'rest-i.bind-infos))
+                     #'try-rest-oncer
                      #'try-rest-matcher
                      #'evidence
                      #'try-rest-committer
@@ -139,11 +140,24 @@
                                                                             #'())
                                                                       rest-i.evidence-ids))
                         [#,head-min #,head-max #,sr-head-min #,sr-head-max #,rest-min #,rest-max]
-                        first-i.matcher-id first-i.evidence-ids first-i.committer-id first-i.binder-id first-i.data
+                        first-i.oncer-id first-i.matcher-id first-i.evidence-ids first-i.committer-id first-i.binder-id first-i.data
                         first-i.bind-infos #,(and (memq (syntax-e #'head-mode)
                                                         '(#:repetition #:splice-repetition))
                                                   (generate-temporaries #'(first-i.bind-id ...)))
-                        rest-i.matcher-id rest-i.evidence-ids rest-i.committer-id rest-i.binder-id rest-i.data)))]))
+                        rest-i.oncer-id rest-i.matcher-id rest-i.evidence-ids rest-i.committer-id rest-i.binder-id rest-i.data)))]))
+
+(define-syntax (try-rest-oncer stx)
+  (syntax-parse stx
+    [(_ (head-mode
+         as-treelist? rest-to-repetition no-rest-map?
+         _ prefix suffix (~and evidence-ids (first-evidence-ids rest-evidence-ids))
+         _
+         first-oncer-id first-matcher-id _ first-committer-id first-binder-id first-data
+         first-bind-infos first-seq-tmp-ids
+         rest-oncer-id rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
+     #`(begin
+         (first-oncer-id first-data)
+         (rest-oncer-id rest-data))]))
 
 (define-syntax (try-rest-matcher stx)
   (syntax-parse stx
@@ -151,9 +165,9 @@
                 as-treelist? rest-to-repetition no-rest-map?
                 evidence _ _ _
                 [head-min head-max sr-head-min sr-head-max rest-min rest-max]
-                first-matcher-id first-evidence-ids first-committer-id first-binder-id first-data
+                first-oncer-id first-matcher-id first-evidence-ids first-committer-id first-binder-id first-data
                 first-bind-infos first-seq-tmp-ids
-                rest-matcher-id rest-evidence-ids rest-committer-id rest-binder-id rest-data)
+                rest-oncer-id rest-matcher-id rest-evidence-ids rest-committer-id rest-binder-id rest-data)
         IF success fail)
      #:with ((first-bind-id first-bind-uses . _) ...) #'first-bind-infos
      #:with check-length (let ([t-min (+ (syntax-e #'head-min) (syntax-e #'rest-min))]
@@ -328,9 +342,9 @@
                          as-treelist? rest-to-repetition no-rest-map?
                          _ prefix suffix (~and evidence-ids (first-evidence-ids rest-evidence-ids))
                          _
-                         first-matcher-id _ first-committer-id first-binder-id first-data
+                         first-oncer-id first-matcher-id _ first-committer-id first-binder-id first-data
                          first-bind-infos first-seq-tmp-ids
-                         rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
+                         rest-oncer-id rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
      #`(begin
          (define-values (prefix suffix #,@(flatten-tree #'evidence-ids)) (vector->values evidence))
          #,(if (eq? (syntax-e #'head-mode) '#:splice)
@@ -344,9 +358,9 @@
                          as-treelist? rest-to-repetition no-rest-map?
                          _ prefix suffix (first-evidence-ids rest-evidence-ids)
                          _
-                         first-matcher-id _ first-committer-id first-binder-id first-data
+                         firts-oncer-id first-matcher-id _ first-committer-id first-binder-id first-data
                          first-bind-infos first-seq-tmp-ids
-                         rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
+                         rest-oncer-id rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
      #:with ((first-bind-id first-bind-uses first-bind-static-info ...) ...) #'first-bind-infos
      #`(begin
          #,@(if (eq? (syntax-e #'head-mode) '#:splice)

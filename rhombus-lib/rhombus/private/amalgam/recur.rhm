@@ -52,7 +52,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
                          [avail_id, & avail_ids],
                          [init_expr, & init_exprs],
                          inside):
-      let '($ann_str, $a_name, $sis, (($id, $_, $si), ...), $matcher, $evidence, $committer, $binder, $data)':
+      let '($ann_str, $a_name, $sis, (($id, $_, $si), ...), $oncer, $matcher, $evidence, $committer, $binder, $data)':
         bind_meta.unpack_info(arg_info)
       let next:
           '«block:
@@ -62,6 +62,7 @@ expr.macro 'recur $(name :: Identifier) ($(arg :: bind_meta.Argument),
               ...
               $(make_binds_plus_body(mode, arg_infos, arg_ids, avail_ids, init_exprs, inside))»'
       '«block:
+          $oncer($data)
           def $avail_id: $(match mode
                            | #'immediate: arg_id
                            | #'general:

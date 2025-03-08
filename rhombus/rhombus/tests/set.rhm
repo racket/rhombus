@@ -1175,3 +1175,36 @@ check:
   ~eval
   Set{1: 2}
   ~throws "misplaced" // as opposed to an error about `Set`
+
+
+block:
+  fun f(x :: Set.of(Any.of(block: println("now"); 1)),
+        ...):
+    #'ok
+  check f({1}) ~prints "now\n"
+  check f({1}) ~prints "now\n"
+  check f({1}, {1}) ~prints "now\n"
+
+block:
+  fun f(x :: MutableSet.now_of(Any.of(block: println("now"); 1)),
+        ...):
+    #'ok
+  check f(MutableSet{1}) ~prints "now\n"
+  check f(MutableSet{1}) ~prints "now\n"
+  check f(MutableSet{1}, MutableSet{1}) ~prints "now\n"
+
+block:
+  fun f(x :: MutableSet.later_of(Any.of(block: println("now"); 1)),
+        ...):
+    #'ok
+  check f(MutableSet{1}) ~prints "now\n"
+  check f(MutableSet{1}) ~prints "now\n"
+  check f(MutableSet{1}, MutableSet{1}) ~prints "now\n"
+
+block:
+  fun f(x :: Set.by(===).of(Any.of(block: println("now"); 1)),
+        ...):
+    #'ok
+  check f(Set.by(===){1}) ~prints "now\n"
+  check f(Set.by(===){1}) ~prints "now\n"
+  check f(Set.by(===){1}, Set.by(===){1}) ~prints "now\n"

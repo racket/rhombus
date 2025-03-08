@@ -37,6 +37,7 @@
                    #'ignored
                    #'static-infos
                    #'()
+                   #'empty-oncer
                    #'always-succeed
                    #'()
                    #'nothing-commit

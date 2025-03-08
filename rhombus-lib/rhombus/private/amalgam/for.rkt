@@ -321,6 +321,8 @@
         ()
         (begin
           matcher
+          (lhs-i.oncer-id lhs-i.data)
+          ...
           (lhs-i.matcher-id tmp-id
                             lhs-i.data
                             if/flattened

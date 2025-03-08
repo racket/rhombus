@@ -310,14 +310,16 @@
        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
        #:with arg::binding-info #'arg-impl.info
        #:with (tag g ...) rhs
-       #`(lambda (arg-id)
-           (arg.matcher-id arg-id arg.data
-                           if/blocked
-                           (let ()
-                             (arg.committer-id arg-id arg.evidence-ids arg.data)
-                             (arg.binder-id arg-id arg.evidence-ids arg.data)
-                             (rhombus-body-at tag g ...))
-                           (#,next arg-id)))])))
+       #`(let ()
+           (arg.oncer-id arg.data)
+           (lambda (arg-id)
+             (arg.matcher-id arg-id arg.data
+                             if/blocked
+                             (let ()
+                               (arg.committer-id arg-id arg.evidence-ids arg.data)
+                               (arg.binder-id arg-id arg.evidence-ids arg.data)
+                               (rhombus-body-at tag g ...))
+                             (#,next arg-id))))])))
 
 (define (always-true x) #t)
 

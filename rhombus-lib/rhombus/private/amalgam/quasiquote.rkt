@@ -1183,6 +1183,7 @@
                         ...
                         (sid ((#:repet sid-sequencers)) . sid-statinfos)
                         ...)
+                     #'empty-oncer
                      #'syntax-matcher
                      #'tmp-ids
                      #'syntax-committer
