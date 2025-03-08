@@ -1,0 +1,40 @@
+#lang rhombus
+
+block:
+  let m :: Map.of(Int, String) = { 1: "2", 3: "4" }
+  let mm = m.maybe
+
+  block:
+    use_static
+    check m.maybe ~is_a MapMaybe
+    check mm ~is_a MapMaybe
+    check mm ~is_a Indexable
+    check repr(mm) ~is @str{{1: "2", 3: "4"}.maybe}
+
+    check m.maybe[1] ~is "2"
+
+    check m[1].length() ~is 1
+    check m.maybe[1]!!.length() ~is 1
+    check mm[1]!!.length() ~is 1
+
+    check Map.maybe(m)[1] ~is "2"
+
+    check m.maybe[10] ~is #false
+    check m.maybe[10]!!.length() ~throws "actual value is false"
+
+  check dynamic(m).maybe[1] ~is "2"
+  check dynamic(m.maybe)[1] ~is "2"
+  check dynamic(m).maybe[10] ~is #false
+  check dynamic(m.maybe)[10] ~is #false
+
+  check dynamic(m).maybe.get(1) ~is "2"
+  check dynamic(m.maybe).get(1) ~is "2"
+  check dynamic(m).maybe.get(10) ~is #false
+  check dynamic(m.maybe).get(10) ~is #false
+
+block:
+  use_static
+  let m :: Map.of(Int, maybe(String)) = { 1: "2", 3: #false }
+  check m.maybe[1]!!.length() ~is 1
+  check m.maybe[3]!!.length() ~throws "actual value is false"
+  check m.maybe[10]!!.length() ~throws "actual value is false"

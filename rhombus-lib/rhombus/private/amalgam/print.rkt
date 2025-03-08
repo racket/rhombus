@@ -8,6 +8,7 @@
          "mutable-treelist.rkt"
          "provide.rkt"
          (submod "set.rkt" for-print)
+         (submod "map-maybe.rkt" for-print)
          "printer-property.rkt"
          "define-arity.rkt"
          "mutability.rkt"
@@ -479,6 +480,9 @@
             (list (print n))
             null))
       (pretty-text ")"))]
+    [(map-maybe? v)
+     (pretty-concat (print (map-maybe-ht v))
+                    (pretty-text ".maybe"))]
     [else
      (cond
        [(display?)

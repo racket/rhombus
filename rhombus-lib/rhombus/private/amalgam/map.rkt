@@ -25,8 +25,10 @@
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
          "values-key.rkt"
+         "maybe-key.rkt"
          "contains-key.rkt"
          "composite.rkt"
+         "index-property.rkt"
          (submod "list.rkt" for-compound-repetition)
          "parse.rkt"
          "realm.rkt"
@@ -48,7 +50,8 @@
          "key-comp.rkt"
          "key-comp-property.rkt"
          "number.rkt"
-         "same-hash.rkt")
+         "same-hash.rkt"
+         (submod "map-maybe.rkt" for-map))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -153,7 +156,7 @@
   ([empty empty-readable-map]
    #:no-methods)
   #:properties
-  ()
+  ([maybe Map.maybe extract-maybe-statinfo])
   #:methods
   ([length Map.length]
    [keys Map.keys]
@@ -190,7 +193,7 @@
    [later_of Map.later_of]
    [by Map.by])
   #:properties
-  ()
+  ([maybe Map.maybe extract-maybe-statinfo])
   #:methods
   (append
    remove
@@ -211,7 +214,7 @@
    [now_of MutableMap.now_of]
    [later_of MutableMap.later_of])
   #:properties
-  ()
+  ([maybe Map.maybe extract-maybe-statinfo])
   #:methods
   (set
    remove))

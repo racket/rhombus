@@ -101,6 +101,7 @@
         "map.rkt"
         "set.rkt"
         "key-comp-primitive.rkt"
+        "map-maybe.rkt"
         "indexable.rkt"
         "appendable.rkt"
         "comparable.rkt"

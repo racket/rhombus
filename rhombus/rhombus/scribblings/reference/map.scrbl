@@ -505,6 +505,8 @@ in an unspecified order.
  arguments to get a result, otherwise @rhombus(default) is returned as
  the result.
 
+ See also @rhombus(Map.maybe).
+
 @examples(
   Map.get({"a": 1, "b": 2}, "a")
   {"a": 1, "b": 2}["a"]
@@ -633,5 +635,35 @@ in an unspecified order.
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(mp)'s keys and values (as two result
  values) in an unspecified order.
+
+}
+
+@doc(
+  property Map.maybe(mp :: ReadableMap) :: MapMaybe
+  annot.macro 'MapMaybe'
+  method (mm :: MapMaybe).get(key :: Any) :: Any
+){
+
+ The @rhombus(Map.maybe) property produces a @rhombus(MapMaybe, ~annot)
+ value, and the @rhombus(MapMaybe.get) operation on that result is the
+ same as using @rhombus(Map.get) on the original map with
+ @rhombus(#false) as the default.
+
+ A @rhombus(MapMaybe, ~annot) object is @tech{indexable} using @brackets
+ to invoke the @rhombus(MapMaybe.get) operation. When the
+ @rhombus(Map.maybe) property is accessed as @rhombus(mp.maybe), and when
+ the map expression @rhombus(mp) has static information for its values,
+ then the @rhombus(mp.maybe) expression has static information as the
+ @rhombus(maybe, ~annot) of the map's values for its values.
+
+@examples(
+  ~repl:
+    def m = { 1: "a", 2: "b" }
+    ~error:
+      m[3]
+    m.maybe[3]
+    m.maybe[1]
+    m.maybe is_a MapMaybe
+)
 
 }

@@ -21,7 +21,8 @@
          "index-property.rkt"
          "mutability.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
-         "parens.rkt")
+         "parens.rkt"
+         (submod "map-maybe.rkt" for-print))
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -57,6 +58,7 @@
       (string? v)
       (bytes? v)
       (mutable-treelist? v)
+      (map-maybe? v)
       (Indexable? v)))
 
 (define-class-desc-syntax Indexable
