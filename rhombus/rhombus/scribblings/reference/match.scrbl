@@ -242,6 +242,8 @@
  enclosing context, such as conflicting interpretations of a @rhombus(=)
  by @rhombus(where) and @rhombus(def).
 
+ See also @rhombus(when, ~bind) and @rhombus(unless, ~bind).
+
 @examples(
   ~repl:
     def ([x, y, z] where sum = x+y+z) = [1, 2, 3]

@@ -146,6 +146,8 @@
  binding is not compatible for use with @rhombus(let), unless the set
  of names from @rhombus(bind) is empty.
 
+ See also @rhombus(where, ~bind).
+
 @examples(
   ~defn:
     fun classify(v):
