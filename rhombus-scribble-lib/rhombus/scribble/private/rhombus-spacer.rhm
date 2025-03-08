@@ -630,6 +630,8 @@ meta:
               ': $new_fld'.relocate(b)
             Syntax.make([#'alts, new_b]).relocate(a)
         | ~else: property
+    | '$(_ :: Name(esc)) ($_, ...) $_ ...':
+        adjust_method(property, esc)
     | ~else: adjust_field(property, esc)
 
 spacer.bridge property(self, tail, context, esc):
