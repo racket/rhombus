@@ -6,7 +6,7 @@
 
 Rhombus's use of @tech{shrubbery notation} makes it possible to provide
 convenient forms for matching and constructing syntactic terms. A
-@tech(~doc: ref_doc){syntax object} encapsulates shrubbery structure---enriched with
+@tech{syntax object} encapsulates shrubbery structure---enriched with
 binding information and metadata such as source locations---without
 requiring that the shrubbery parses as an existing form. Pieces of a
 syntax object can be extracted via pattern matching and then spliced
@@ -19,5 +19,5 @@ syntactic forms through macros.
 @include_section("expr-macro.scrbl")
 @include_section("defn-macro.scrbl")
 @include_section("bind-macro.scrbl")
-@include_section("annotation-vs-bind.scrbl")
+@include_section("custom-binding.scrbl")
 @include_section("syntax-class.scrbl")

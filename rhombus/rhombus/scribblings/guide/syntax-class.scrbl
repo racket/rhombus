@@ -11,7 +11,7 @@
     class Posn(x, y)
 )
 
-@title(~tag: "syntax-classes"){Syntax Patterns and Classes}
+@title(~tag: "syntax-classes"){Syntax Patterns and Syntax Classes}
 
 As shown in @secref("syntax"), a variable can be bound in a syntax
 pattern by escaping from the pattern with @rhombus($, ~bind). A

@@ -5,10 +5,7 @@
 
 @(def bind_eval = macro.make_macro_eval())
 
-@title(~tag: "annotation-macro-protocol"){Annotations as Converters}
-
-@margin_note_block{See @secref("annotation-vs-bind") for an introduction to
- the interaction of annotations and bindings.}
+@title(~tag: "annotation-convert"){Annotations as Converters}
 
 Unless otherwise specified, an @tech{annotation} is a @deftech{predicate
  annotation}. For example, @rhombus(String, ~annot) and @rhombus(ReadableString, ~annot) are
@@ -79,9 +76,9 @@ sorted.
 
 When a converting annotation is used in a position that depends only on
 whether it matches, such as with @rhombus(is_a), then the converting
-body is not used. In that case, the binding pattern is also used in
+body is not used.@margin_note{When used with @rhombus(is_a), the binding pattern is also used in
 match-only mode, so its ``committer'' and ``binder'' steps (as described
-in @secref("bind-macro-protocol")) are not used. When a further
+in @secref("bind-macro-protocol")) are not used.} When a further
 annotation wraps a converting annotation, however, the conversion must
 be computed to apply a predicate (even the @rhombus(Any, ~annot)
 predicate) or further conversion. The nested-annotation strategy is used
@@ -126,15 +123,6 @@ elements, rather than checking and converting separately.
     ~error:
       #"\316" :: UTF8BytesAsString
 )
-
-An annotation macro can create a convert annotation directly using
-@rhombus(annot_meta.pack_converter). When a macro parses annotations, it
-can use @rhombus(annot_meta.unpack_converter) to handle all forms of
-annotations, since predicate annotations can be automatically
-generalized to converter form. A converter annotation will not unpack
-with @rhombus(annot_meta.unpack_predicate). Use
-@rhombus(annot_meta.is_predicate) and @rhombus(annot_meta.is_converter)
-to detect annotation shapes and specialize transformations.
 
 
 @(close_eval(bind_eval))

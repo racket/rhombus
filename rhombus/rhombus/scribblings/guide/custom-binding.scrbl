@@ -5,11 +5,12 @@
 
 @(def method_eval = macro.make_macro_eval())
 
-@title(~tag: "custom-binding"){Binding and Annotation}
+@title(~tag: "custom-binding"){Class Binding and Annotation}
 
-When a @rhombus(constructor, ~class_clause) clause creates a constructor
-that is different enough from the default one, then the binding and
-annotation forms associated with the class name also should be updated.
+As noted in @secref("constructors"), when a
+@rhombus(constructor, ~class_clause) clause creates a constructor that
+has a different shape than the default one, then the class's binding and
+annotation also should be updated.
 The @rhombus(binding, ~class_clause) and
 @rhombus(annotation, ~class_clause) clause forms support that
 customization. Binding and annotation are customized by macros, and

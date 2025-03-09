@@ -45,7 +45,44 @@ annotations.
     ps[n].x
 )
 
-For details on the low-level annotation protocol, see @secref("annotation-macro").
+Annotations and binding patterns serve similar and interacting purposes.
+The @rhombus(:~, ~bind) and @rhombus(::, ~bind) binding operators put annotations to
+work in a binding. For the other direction, the @rhombus(matching, ~annot)
+annotation operator puts a binding form to work in a annotation.
 
+For example, suppose you want a annotation @rhombus(PersonList), which
+is a list of maps, and each map must at least relate @rhombus("name") to
+a @rhombus(String, ~bind) and @rhombus("location") to a @rhombus(Posn). The
+@rhombus(Map.of, ~annot) annotation combination cannot express a per-key
+specialization, but the @rhombus(Map) binding pattern can.
+
+@examples(
+  ~eval: macro_eval
+  ~hidden:
+    class Posn(x, y)
+  ~defn:
+    annot.macro 'PersonList':
+      'List.of(matching({"name": (_ :: String),
+                         "location": (_ :: Posn)}))'
+
+    def players :: PersonList:
+      [{"name": "alice", "location": Posn(1, 2)},
+       {"name": "bob", "location": Posn(3, 4)}]
+)
+
+As another example, here's how a @rhombus(ListOf) annotation constructor
+could be implemented if @rhombus(List.of, ~annot) did not exist already:
+
+@examples(
+  ~eval: macro_eval
+  ~defn:
+    annot.macro 'ListOf ($ann ...)':
+      'matching([_ :: ($ann ...), $('...')])'
+)
+
+At a lower level, the bridge between binding patterns and annotations is
+based on their shared use of @seclink("static-info"){static information}
+as described in the @seclink("bind-macro-protocol"){binding API} and the
+@seclink("annotation-macro"){annotation API}.
 
 @(close_eval(macro_eval))

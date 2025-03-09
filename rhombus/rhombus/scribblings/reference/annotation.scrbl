@@ -56,6 +56,9 @@
  asserting that something never returns, such as a function that
  always throws.
 
+ See @secref(~doc: guide_doc, "annotation-satisfying") for information
+ about the time that @rhombus(expr) is evaluated.
+
 @examples(
   "hello" is_a Any
   "hello" is_a Any.of("hello", "goodbye")
@@ -119,7 +122,7 @@
 
  If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}, only the matching
  component of the annotation is used, and the converting part is not
- used. See also @secref(~doc: guide_doc, "annotation-macro-protocol").
+ used. See also @secref(~doc: guide_doc, "annotation-convert").
 
 @examples(
   [1, 2, 3] is_a List
@@ -176,6 +179,9 @@
  Produces a @tech(~doc: guide_doc){predicate annotation} using the resulting function
  from @rhombus(pred_expr).
 
+ See @secref(~doc: guide_doc, "annotation-satisfying") for information
+ about the time that @rhombus(pred_expr) is evaluated.
+
 @examples(
   ~defn:
     fun is_multiple_of(n):
@@ -218,7 +224,7 @@
  supplied with @rhombus(::, ~bind), then the result of the @rhombus(body)
  sequence is checked against @rhombus(annot).
 
- See also @secref(~doc: guide_doc, "annotation-macro-protocol").
+ See also @secref(~doc: guide_doc, "annotation-convert").
 
 @examples(
   def x :: converting(fun (x :: Int): x + 1) = 11

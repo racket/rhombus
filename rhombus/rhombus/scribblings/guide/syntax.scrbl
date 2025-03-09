@@ -6,7 +6,7 @@
 
 @title(~tag: "syntax"){Syntax Objects}
 
-The @quotes form produces a @tech(~doc: ref_doc){syntax object}. The syntax object holds
+The @quotes form produces a @deftech{syntax object}. The syntax object holds
 an unparsed shrubbery, not a parsed Rhombus expression.
 
 @examples(

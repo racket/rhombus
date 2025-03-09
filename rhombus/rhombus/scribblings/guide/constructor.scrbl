@@ -122,5 +122,10 @@ constructor of @rhombus(Posn). Within that invocation of the
 @rhombus(Posn) constructor, calling @rhombus(super) produces an the
 instance of @rhombus(Posn3D), not merely a @rhombus(Posn) instance.
 
+When a @rhombus(constructor, ~class_clause) clause creates a constructor
+that is different enough from the default one, then ideally the binding and
+annotation forms associated with the class name also should be updated.
+We return to this point in @secref("custom-binding"), after introducing
+macros more generally.
 
 @(close_eval(method_eval))

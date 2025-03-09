@@ -111,7 +111,8 @@
  automatically packed via @rhombus(bind_meta.pack_info), so it should be
  a syntax object that is suitable to pack---which means that it encodes
  information about identifiers to be bound as well as further
- ``continuations'' in the form of a matcher transformer defined with
+ ``continuations'' in the form of a oncer transformer defined with
+ @rhombus(bind.oncer), a matcher transformer defined with
  @rhombus(bind.matcher), a committer transformer defined with
  @rhombus(bind.committer), and binder transformer defined with
  @rhombus(bind.binder).
@@ -261,6 +262,31 @@
  @rhombus(bind_meta.get_info) and reports whether the binding is
  immediate in the same sense as just a variable: the binding always
  matches, and no work is required to convert or unpack the matched value.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    data_pattern: #%quotes pattern
+  defn.macro '«bind.oncer '$id($data_pattern)':
+                 $body
+                 ...»'
+){
+
+ Defines @rhombus(id) as the oncer ``continuation'' of a binding form's
+ expansion. The result is an sequence of definitions for intermediate
+ variables for used by a matcher's expansion. The term matched to
+ @rhombus(data_pattern) is whatever data the infoer included at the end
+ of its result.
+
+ The definitions produced by a oncer should not use identifiers
+ supplied by a user of the binding form, because those names will not be
+ adjusted by @rhombus(let). Instead, those definitions should be deferred
+ to the binder function's result.
+
+ See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ examples.
 
 }
 

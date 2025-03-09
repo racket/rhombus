@@ -11,44 +11,19 @@
       rhombus/meta open
 )
 
-@title(~tag: "annotation-macro"){Annotations and Static Information}
+@title(~tag: "annotation-macro"){Annotation Low-Level Protocol}
 
-Annotations produce @tech{static information} when used with the @rhombus(::)
-binding or expression operator. Similar to binding macros, which can
-either be simple expansions or use lower-level machines, an annotation
-macro can use lower-level machinery to explicitly produce static
-information or manipulate static information produced by subannotation
-forms.
+With annotation constructors such as @rhombus(&&, ~annot),
+@rhombus(satisfying, ~annot), and @rhombus(converting, ~annot), most
+annotation macros can be implemented by rewriting into existing
+annotation forms as shown in @secref("bind-macro"). The
+@rhombus(annot.macro) form also supports a low-level protocol. A
+macro opts into the low-level protocol by returning a result build with
+@rhombus(annot_meta.pack_predicate) or @rhombus(annot_meta.pack_converter).
 
-The @rhombus(annot.macro) form
-defines an annotation. In the simplest case, the expansion of an
-annotation can be another annotation:
-
-@examples(
-  ~eval: ann_eval
-  ~defn:
-    annot.macro 'AlsoPosn':
-      'Posn'
-  ~repl:
-    Posn(1, 2) :: AlsoPosn
-)
-
-Note that @rhombus(annot.macro) defines only an annotation. To make
-@rhombus(AlsoPosn) also a binding operator, you can use @rhombus(bind.macro):
-
-@examples(
-  ~eval: ann_eval
-  ~defn:
-    bind.macro 'AlsoPosn ($x, $y)':
-      'Posn($x, $y)'
-  ~repl:
-    def AlsoPosn(x, y) = Posn(1, 2)
-    x
-)
-
-To define an annotation with explicit control over the associated
-predicate, use @rhombus(annot_meta.pack_predicate). This
-implementation if @rhombus(IsPosn) creates a new predicate that uses
+A simple predicate annotation can be implemented with just
+@rhombus(annot_meta.pack_predicate). The following
+implementation of @rhombus(IsPosn) creates a new predicate that uses
 @rhombus(is_a) with @rhombus(Posn), so it checks whether something is a
 @rhombus(Posn) instance, but it doesn't act as a @rhombus(Posn)-like
 binding form or constructor:
@@ -186,5 +161,13 @@ identifier or operator, not a more function-like pattern, because it's
 mean to define a constant association between a name and static
 information.
 
+An annotation macro can create a convert annotation directly using
+@rhombus(annot_meta.pack_converter). When a macro parses annotations, it
+can use @rhombus(annot_meta.unpack_converter) to handle all forms of
+annotations, since predicate annotations can be automatically
+generalized to converter form. A converter annotation will not unpack
+with @rhombus(annot_meta.unpack_predicate). Use
+@rhombus(annot_meta.is_predicate) and @rhombus(annot_meta.is_converter)
+to detect annotation shapes and specialize transformations.
 
 @(close_eval(ann_eval))

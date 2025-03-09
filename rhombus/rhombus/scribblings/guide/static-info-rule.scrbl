@@ -5,10 +5,10 @@
 @title(~tag: "static-info-rules"){Rules for Static Information}
 
 Exactly how static information is associated to expressions and
-bindings depends on the expression or binding form. So, it's not
+bindings depends on the expression or binding form. It's not
 possible to write down exhaustive rules for for Rhombus static
-information (in the same way that it's not possible to write down a
-full grammar, since the grammar can be extended via macros). A binding
+information---in the same way that it's not possible to write down a
+full grammar, since the grammar can be extended via macros. A binding
 or expression form's documentation should define what static
 information it associates with a name or expression.
 
@@ -17,10 +17,11 @@ Here's a summary of the static-information behavior of classes:
 @itemlist(
 
   @item{A class name bound by @rhombus(class) acts as a @tech(~doc: ref_doc){namespace}. It
-   provides field-accessor functions, as in @rhombus(Posn.x).}
+   provides field-accessor functions, as in @rhombus(Posn.x) in the case of
+   @rhombus(class Posn(x, y)).}
 
   @item{As an annotation, a class name turns any binding or
-   expression using the annotation into a dot provider. A class name
+   expression using the annotation into a @tech{dot provider}. A class name
    followed by @rhombus(.of) has the same effect; in addition, it associates
    any information implied by the argument annotations as static
    information for fields accessed from the binding or expression
@@ -37,8 +38,8 @@ Here's a summary of the static-information behavior of classes:
    provider to access @rhombus(x) and @rhombus(y).}
 
   @item{When a class field has an annotation, then that annotation's
-   static information is associated as result information for a field
-   accessor accessed through the @rhombus(.) operator. For example, @rhombus(Line.p1) gets the
+   static information is also associated as result information for a field
+   accessor function. For example, @rhombus(Line.p1) gets the
    @rhombus(Posn) annotation's static information as its call-result
    information, so @rhombus(Line.p1(e)) has that information, which means that
    @rhombus(Line.p1(e)) is a dot provider.}

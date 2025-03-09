@@ -14,14 +14,14 @@
 @title(~tag: "annotation"){Annotations and the Dot Operator}
 
 Besides classes defined with @rhombus(class), a few predefined
-annotations work with the @rhombus(:~, ~bind) and @rhombus(::, ~bind)
-annotation operators, including @rhombus(Int, ~annot) (meaning exact
+annotations work with the @rhombus(::, ~bind) and @rhombus(:~, ~bind)
+binding operators, including @rhombus(Int, ~annot) (meaning exact
 integer), @rhombus(Number, ~annot), @rhombus(String, ~annot),
 @rhombus(Keyword, ~annot), and @rhombus(Any, ~annot) (meaning any value).
 
-The @rhombus(:~) and @rhombus(::) operators also work in expression
+The @rhombus(::) and @rhombus(:~) operators also work in expression
 positions. In that case, the assertion or check is about the expression
-on the left-hand side of @rhombus(:~) or @rhombus(::). For @rhombus(::),
+on the left-hand side of @rhombus(::) or @rhombus(:~). For @rhombus(::),
 the left-hand expression must produce a value that satisfies the
 right-hand annotation, otherwise a run-time exception is thrown. The
 @rhombus(is_a) operator takes an annotation like @rhombus(::), but it
@@ -30,7 +30,7 @@ expression satisfies the annotation.
 
 @examples(
   ~eval: ann_eval
-  (flip(origin) :~ Posn).x
+  (flip(origin) :: Posn).x
   ~error:
     (1 :: Posn)
   origin is_a Posn
@@ -58,7 +58,7 @@ the @rhombus(.) operator can be chained for efficient access:
 @examples(
   ~eval: ann_eval
   ~defn:
-    class Line(p1 :~ Posn, p2 :~ Posn)
+    class Line(p1 :: Posn, p2 :: Posn)
     def l1 :: Line:
       Line(Posn(1, 2), Posn(3, 4))
   ~repl:
@@ -99,6 +99,9 @@ error. The @rhombus(use_dynamic) form binds
 @rhombus(#%dynamism, ~datum) to the default @rhombus(#%dynamism),
 which allows dynamic field lookup if the left-hand side is not a dot
 provider.
+
+@margin_note_block{Use @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/static)))
+ for @rhombus(use_static) as the default mode instead of @rhombus(use_dynamic).}
 
 @examples(
   ~eval: ann_eval

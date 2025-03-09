@@ -72,7 +72,6 @@
  function and @rhombus(annot_meta.unpack_predicate) are potentially
  useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
 
-
  The @rhombus(annot_meta.pack_predicate) function packs an expression
  for a predicate with static information into an
  annotation form as a syntax object. When the resulting annotation is
@@ -85,7 +84,7 @@
  the inverse of @rhombus(annot_meta.pack_predicate), returning two
  values: an expression and unpacked static information.
 
- See @secref(~doc: guide_doc, "annotation-macro") for more explanation and for
+ See @secref(~doc: guide_doc, "annotation-convert") for more explanation and for
  examples.
 
 }
@@ -124,7 +123,7 @@
  a @tech(~doc: guide_doc){predicate annotation}, automatically generalizing it to
  a converter annotation.
 
- See @secref(~doc: guide_doc, "annotation-macro-protocol") for more explanation.
+ See @secref(~doc: guide_doc, "annotation-convert") for more explanation.
 
 }
 

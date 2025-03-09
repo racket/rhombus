@@ -4,7 +4,7 @@
 
 @(def posn_eval = make_rhombus_eval())
 
-@title(~tag: "classes_and_patterns"){Classes and Patterns}
+@title(~tag: "classes_and_patterns"){Classes and Binding Patterns}
 
 In the same way that @rhombus(def) and @rhombus(fun) define variables
 and functions, @rhombus(class) defines a new @deftech{class}. By
@@ -90,27 +90,26 @@ argument is not a @rhombus(Posn) instance, and the error is from
       flip(0)
 )
 
-A run-time check implied by @rhombus(::, ~bind) can be expensive, depending on
-the annotation and context. In the case of @rhombus(flip), this check is
-unlikely to matter, but if a programmer uses @rhombus(::, ~bind) everywhere to
+Normally, @rhombus(::, ~bind) is preferred to @rhombus(:~, ~bind) with a
+class annotation, because the implied run-time check is inexpensive---and
+the check may subsume checks that are otherwise performed at uses of the binding, anyway.
+The run-time check for some other annotations can be expensive (such as
+an annotation created with @rhombus(List.of, ~annot) as described in
+@secref("list")). If a programmer uses @rhombus(::, ~bind) everywhere to
 try to get maximum checking and maximum guarantees, it's easy to create
 expensive function boundaries. Rhombus programmers are encouraged to use
-@rhombus(:~, ~bind) when the goal is to hint for better static checking or performance, and use
-@rhombus(::, ~bind) only where a defensive check is needed, such as for the
+@rhombus(:~, ~bind) when in doubt, but use
+@rhombus(::, ~bind) where a defensive check is needed, such as for the
 arguments of an exported function.
 
-@margin_note{Use @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/static)))
- or @rhombus(use_static) to enable static errors for mismatches that are
- apparent based on annotations.}
-
-The use of @rhombus(:~, ~bind) or @rhombus(::, ~bind) as above is not specific to
-@rhombus(fun). The @rhombus(:~, ~bind) and @rhombus(::, ~bind) binding operators work
-in any binding position, including the one for @rhombus(def):
+The use of @rhombus(::, ~bind) or @rhombus(:~, ~bind) as above is not specific to
+@rhombus(fun). The @rhombus(::, ~bind) and @rhombus(:~, ~bind) binding operators work
+in any @deftech{binding} position, including the one for @rhombus(def):
 
 @examples(
   ~eval: posn_eval
   ~defn:
-    def (flipped :~ Posn) = flip(Posn(1, 2))
+    def (flipped :: Posn) = flip(Posn(1, 2))
   ~repl:
     flipped.x
 )
@@ -172,7 +171,7 @@ themselves patterns. Here's a function that works only on the origin:
 )
 
 Finally, a function can have a result annotation, which is written with
-@rhombus(:~) or @rhombus(::) after the parentheses for the function's
+@rhombus(::) or @rhombus(:~) after the parentheses for the function's
 argument. With a @rhombus(::) result annotation, every return value from
 the function is checked against the annotation. Beware that a function's
 body does not count as being tail position when the function is declared
