@@ -6,6 +6,8 @@ import:
       DC
   lib("pict/main.rkt") as rkt:
     expose #{pict?}
+    except dc
+    rename #{unsafe-dc} as dc
   lib("file/convertible.rkt") as fileconv
   lib("pict/convert.rkt") as pictconv
   "last.rhm" open
