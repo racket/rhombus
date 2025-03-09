@@ -38,3 +38,32 @@ block:
   check m.maybe[1]!!.length() ~is 1
   check m.maybe[3]!!.length() ~throws "actual value is false"
   check m.maybe[10]!!.length() ~throws "actual value is false"
+
+check:
+  ~eval
+  use_static
+  def m :: Map.of(Int, maybe(String)) = { 1: "2", 3: #false }
+  m.maybe[1].length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def m :: Map.of(Int, maybe(String)) = { 1: "2", 3: #false }
+  m.maybe[3].length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def m :: Map.of(Int, maybe(String)) = { 1: "2", 3: #false }
+  m.maybe[10].length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  fun fake_map_maybe(v) :~ MapMaybe:
+    error("should have thrown")
+    v
+  let m :: Map.of(Int, String) = { 1: "2", 3: "4" }
+  fake_map_maybe(m)[1]!!.length()
+  ~throws "should have thrown"

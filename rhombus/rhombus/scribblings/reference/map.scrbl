@@ -656,6 +656,10 @@ in an unspecified order.
  then the @rhombus(mp.maybe) expression has static information as the
  @rhombus(maybe, ~annot) of the map's values for its values.
 
+ The combination @rhombus(mp.maybe[key]) (with the default implicit
+ @rhombus(#%index) form) is optimized in that no intermediate
+ @rhombus(MapMaybe, ~annot) value is constructed.
+
 @examples(
   ~repl:
     def m = { 1: "a", 2: "b" }
