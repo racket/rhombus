@@ -7,7 +7,8 @@
          (only-in "repetition.rkt"
                   identifier-repetition-use)
          "op-literal.rkt"
-         "function-arity.rkt")
+         "function-arity.rkt"
+         "static-info.rkt")
 
 (provide (for-syntax dot-parse-dispatch
                      set-parse-function-call!))
@@ -80,42 +81,50 @@
              proc)
            ;; return partially applied method
            (lambda (reloc)
-             (reloc #`(#,id #,lhs)))))
+             (reloc #`(#,id #,(discard-static-infos lhs))))))
+
+    (define (just-access mk)
+      (success-k (mk (discard-static-infos lhs)
+                     (extract-static-infos lhs)
+                     (lambda (e)
+                       (relocate+reraw
+                        (respan (datum->syntax #f (list lhs dot field-stx)))
+                        e)))
+                 tail))
 
     (define field
-      (let ([just-access
-             (lambda (mk)
-               (success-k (mk lhs
-                              (lambda (e)
-                                (relocate+reraw
-                                 (respan (datum->syntax #f (list lhs dot field-stx)))
-                                 e)))
-                          tail))])
-        (case-lambda
-          [(mk) (just-access mk)]
-          [(mk mk-set)
-           (syntax-parse tail
-             [assign::assign-op-seq
-              (define-values (assign-expr tail)
-                (build-assign
-                 (attribute assign.op)
-                 #'assign.op-name
-                 #'assign.name
-                 #`(lambda ()
-                     #,(mk lhs (lambda (e)
-                                 (relocate+reraw
-                                  (respan (datum->syntax #f (list lhs dot field-stx)))
-                                  e))))
-                 #`(lambda (v)
-                     #,(mk-set lhs #'v
-                               (lambda (e)
-                                 (relocate+reraw
-                                  (respan (datum->syntax #f (list lhs dot field-stx)))
-                                  e))))
-                 #'value
-                 #'assign.tail))
-              (success-k assign-expr tail)]
-             [_ (just-access mk)])])))
+      (case-lambda
+        [(mk)
+         (just-access mk)]
+        [(mk mk-set)
+         (syntax-parse tail
+           [assign::assign-op-seq
+            (define-values (assign-expr tail)
+              (build-assign
+               (attribute assign.op)
+               #'assign.op-name
+               #'assign.name
+               #`(lambda ()
+                   #,(mk #'lhs
+                         (extract-static-infos lhs)
+                         (lambda (e)
+                           (relocate+reraw
+                            (respan (datum->syntax #f (list lhs dot field-stx)))
+                            e))))
+               #`(lambda (v)
+                   #,(mk-set #'lhs
+                             #'v
+                             (lambda (e)
+                               (relocate+reraw
+                                (respan (datum->syntax #f (list lhs dot field-stx)))
+                                e))))
+               #'value
+               #'assign.tail))
+            (success-k #`(let ([lhs #,(discard-static-infos lhs)])
+                           #,assign-expr)
+                       tail)]
+           [_
+            (just-access mk)])]))
 
     (k (syntax-e field-stx) field ary nary repetition? fail-k)))
 

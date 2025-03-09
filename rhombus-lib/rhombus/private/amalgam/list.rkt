@@ -85,6 +85,18 @@
   (provide (for-syntax (rename-out [normal-call? indirect-normal-call?])
                        install-normal-call?!)))
 
+(define-for-syntax (extract-result-statinfo lhs-si)
+  (or (static-info-lookup lhs-si #'#%index-result)
+      #'()))
+
+(define-for-syntax (add-result-statinfo lhs-si base-si)
+  (define maybe-index-result
+    (static-info-lookup lhs-si #'#%index-result))
+  (if maybe-index-result
+      #`((#%index-result #,maybe-index-result)
+         #,@base-si)
+      base-si))
+
 (define-primitive-class List treelist
   #:lift-declaration
   #:constructor-arity -1
@@ -103,20 +115,11 @@
    [of List.of]
    [later_of List.later_of])
   #:properties
-  ([first List.first
-          (lambda (e)
-            (syntax-local-static-info e #'#%index-result))]
-   [last List.last
-         (lambda (e)
-           (syntax-local-static-info e #'#%index-result))]
+  ([first List.first extract-result-statinfo]
+   [last List.last extract-result-statinfo]
    [rest List.rest
-         (lambda (e)
-           (define maybe-index-result
-             (syntax-local-static-info e #'#%index-result))
-           (if maybe-index-result
-               #`((#%index-result #,maybe-index-result)
-                  . #,(get-treelist-static-infos))
-               (get-treelist-static-infos)))])
+         (lambda (lhs-si)
+           (add-result-statinfo lhs-si (get-treelist-static-infos)))])
   #:methods
   (length
    get
@@ -162,20 +165,11 @@
    [repet PairList.repet]
    [of PairList.of])
   #:properties
-  ([first PairList.first
-          (lambda (e)
-            (syntax-local-static-info e #'#%index-result))]
-   [last PairList.last
-         (lambda (e)
-           (syntax-local-static-info e #'#%index-result))]
+  ([first PairList.first extract-result-statinfo]
+   [last PairList.last extract-result-statinfo]
    [rest PairList.rest
-         (lambda (e)
-           (define maybe-index-result
-             (syntax-local-static-info e #'#%index-result))
-           (if maybe-index-result
-               #`((#%index-result #,maybe-index-result)
-                  . #,(get-list-static-infos))
-               (get-list-static-infos)))])
+         (lambda (lhs-si)
+           (add-result-statinfo lhs-si (get-list-static-infos)))])
   #:methods
   (length
    get

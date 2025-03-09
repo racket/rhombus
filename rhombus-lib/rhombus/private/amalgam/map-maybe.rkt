@@ -50,8 +50,8 @@
   #:methods
   ([get MapMaybe.get]))
 
-(define-for-syntax (extract-maybe-statinfo e)
-  (define si (syntax-local-static-info e #'#%index-result))
+(define-for-syntax (extract-maybe-statinfo lhs-si)
+  (define si (static-info-lookup lhs-si #'#%index-result))
   (define demaybed-si
     (cond
       [(not si) #f]

@@ -47,6 +47,13 @@ assign.macro '$left += $tail ...':
          '$right.tail ...')
 
 check:
+  Box(block: println("evaluated"); 1).value += 1 ~prints "evaluated\n"
+  Array(block: println("evaluated"); 1)[0] += 1 ~prints "evaluated\n"
+  MutableList[block: println("evaluated"); 1][0] += 1 ~prints "evaluated\n"
+  Bytes.make(block: println("evaluated"); 1, 1)[0] += 1 ~prints "evaluated\n"
+  MutableMap{0: block: println("evaluated"); 1}[0] += 1 ~prints "evaluated\n"
+
+check:
   x += 0 == x ~is #true
   x += 1 + 2 ~is 15
   x ~is 15

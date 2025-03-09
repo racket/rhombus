@@ -177,8 +177,9 @@
                            field-id)]
       [else
        (define (lookup)
-         (values (relocate+reraw (datum->syntax #f (list form1 dot field-id))
-                                 #`(dot-lookup-by-name #,form1 '#,field-id))
+         (values (relocate+reraw
+                  (datum->syntax #f (list form1 dot field-id))
+                  #`(dot-lookup-by-name #,(discard-static-infos form1) '#,field-id))
                  tail))
        (cond
          [for-repetition? (lookup)]
@@ -194,7 +195,7 @@
                                                 #`(lambda (v) (dot-assign-by-name lhs '#,field-id v))
                                                 #'field-id
                                                 #'assign.tail))
-             (values #`(let ([lhs #,form1])
+             (values #`(let ([lhs #,(discard-static-infos form1)])
                          #,assign-expr)
                      tail)]
             [_ (lookup)])])]))

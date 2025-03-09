@@ -37,8 +37,9 @@
    later_of)
   #:properties
   ([value Box.value #:mutator Box.value
-          (lambda (e)
-            (syntax-local-static-info e #'unbox))])
+          (lambda (lhs-si)
+            (or (static-info-lookup lhs-si #'unbox)
+                #'()))])
   #:methods
   (copy
    snapshot))

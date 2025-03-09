@@ -35,11 +35,13 @@
    of)
   #:properties
   ([first Pair.first
-          (lambda (e)
-            (syntax-local-static-info e #'car))]
+          (lambda (lhs-si)
+            (or (static-info-lookup lhs-si #'car)
+                #'()))]
    [rest Pair.rest
-         (lambda (e)
-           (syntax-local-static-info e #'cdr))])
+         (lambda (lhs-si)
+           (or (static-info-lookup lhs-si #'cdr)
+                #'()))])
   #:methods
   ())
 

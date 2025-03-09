@@ -53,7 +53,7 @@
        (syntax-parse #`(group . #,tail)
          [(~var e (:infix-op+expression+tail op-name))
           (values (build-assign/automatic (assign-infix-operator-assign-proc op) self-stx ref set rhs-name
-                                          #`(let ([#,rhs-name e.parsed])
+                                          #`(let ([#,rhs-name #,(discard-static-infos #'e.parsed)])
                                               #,rhs-name))
                   #'e.tail)])]
       [else
@@ -164,7 +164,7 @@
          (define-values (mv inside) (get-mv form1 self-stx))
          (relocate
           (respan (datum->syntax #f (list form1 self-stx form2)))
-          #`(let ([#,inside #,form2]) ; using `inside` here provides a name to `form2`
+          #`(let ([#,inside #,(discard-static-infos form2)]) ; using `inside` here provides a name to `form2`
               #,(build-assign/automatic proc
                                         self-stx
                                         #`(lambda ()

@@ -66,9 +66,10 @@
                                (ns-field ...)))
                    #:defaults ([(ns-field 1) '()]))
         #:properties
-        ([property property-proc
+        ([property property-accessor
                    (~optional (~seq #:mutator property-mutator))
-                   (~optional property-si #:defaults ([property-si #'#f]))]
+                   (~optional property-extract
+                              #:defaults ([property-extract #'extract-empty-statinfo]))]
          ...)
         #:methods
         ((~or* (~and [method mask name-method-proc method-proc]
@@ -114,11 +115,14 @@
            (define new? (eq? '#:new (syntax-e #'creation)))]
      #:with name? (datum->syntax #'name/rkt (string->symbol (format "~a?" (syntax-e #'name/rkt))))
      #:with (~var struct:name) (datum->syntax #'name/rkt (string->symbol (format "struct:~a" (syntax-e #'name/rkt))))
-     #:with ([prop prop-proc (~optional prop-mutator) prop-static-infos] ...)
+     #:with ([prop prop-accessor (~optional prop-mutator) prop-extract] ...)
      #`(#,@(if transparent?
-               #`([field Name.field (~? #`field-static-infos #f)] ...)
+               #`([field Name.field (~? (lambda (lhs-si)
+                                          #`field-static-infos)
+                                        extract-empty-statinfo)]
+                  ...)
                '())
-        [property property-proc (~? property-mutator) property-si] ...)
+        [property property-accessor (~? property-mutator) property-extract] ...)
      #:with name-dot-dispatch (datum->syntax #'name (string->symbol
                                                      (format "~a-dot-dispatch" (syntax-e #'name))))
      #:attr parent-dot-dispatch (and (syntax-e #'parent)
@@ -168,7 +172,7 @@
              #`(struct name/rkt (field ...)
                  #:property prop:field-name->accessor
                  (list* '()
-                        (hasheq (~@ 'prop prop-proc)
+                        (hasheq (~@ 'prop prop-accessor)
                                 ...
                                 (~@ 'method method-proc)
                                 ...
@@ -183,7 +187,7 @@
              #`(begin
                  (define name-method-table
                    (hash-add* (~? parent-method-table '#hasheq())
-                              (~@ 'prop prop-proc)
+                              (~@ 'prop prop-accessor)
                               ...
                               (~@ 'method method-proc)
                               ...
@@ -266,7 +270,7 @@
            #:fields
            #,(if (attribute no-methods)
                  #'(ns-field ...)
-                 #'(ns-field ... [prop prop-proc] ... [method name-method-proc] ...)))
+                 #'(ns-field ... [prop prop-accessor] ... [method name-method-proc] ...)))
 
          (define-syntax (get-name-field-list) #`field-list)
 
@@ -331,10 +335,12 @@
                    ;; let dot-provider dispatcher handle repetition construction:
                    (fail-k)]
                   [else
-                   (field-proc (lambda (e reloc)
-                                 (build-accessor-call (quote-syntax prop-proc) e reloc prop-static-infos))
-                               (~? (lambda (e rhs reloc)
-                                     (build-mutator-call (quote-syntax prop-mutator) e rhs reloc))))])]
+                   (field-proc (lambda (lhs lhs-si reloc)
+                                 (wrap-static-info*
+                                  (reloc #`(prop-accessor #,lhs))
+                                  (prop-extract lhs-si)))
+                               (~? (lambda (lhs rhs reloc)
+                                     (reloc #`(prop-mutator #,lhs #,rhs)))))])]
                ...
                [(method) method-dispatch]
                ...
@@ -347,18 +353,8 @@
            (dot-provider (dot-parse-dispatch name-dot-dispatch)))
          )]))
 
-(define-for-syntax (build-accessor-call rator rand reloc static-infos)
-  (define call (reloc #`(#,rator #,rand)))
-  (define maybe-static-infos
-    (if (procedure? static-infos)
-        (static-infos rand)
-        static-infos))
-  (if maybe-static-infos
-      (wrap-static-info* call maybe-static-infos)
-      call))
-
-(define-for-syntax (build-mutator-call rator rand rhs reloc)
-  (reloc #`(#,rator #,rand #,rhs)))
+(define-for-syntax (extract-empty-statinfo lhs-si)
+  #'())
 
 (define-for-syntax (add-dot-providers dot-provider dot-providers)
   (cons dot-provider
