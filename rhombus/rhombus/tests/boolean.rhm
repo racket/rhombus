@@ -88,3 +88,18 @@ check:
   ~eval
   1 ! = 2
   ~throws "expected a negatable operator"
+
+block:
+  use_static
+  fun f1(x :: maybe(String)):
+    (x || "a").length()
+  fun f2(x):
+    (x && "a")?.length()
+  #void
+
+check:
+  ~eval
+  use_static
+  fun (x :: maybe(String)):
+    (x && "a").length()
+  ~throws "based on static information"

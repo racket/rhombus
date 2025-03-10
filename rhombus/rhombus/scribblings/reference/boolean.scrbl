@@ -46,7 +46,15 @@
  @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
  position with respect to the @rhombus(||) form, if evaluated at all.
 
- The @rhombus(||) form can also serve as @tech{repetitions}.
+ The static information of a @rhombus(||) is the
+ @rhombus(statinfo_meta.or) of static information from
+ @rhombus(left_expr) and @rhombus(right_expr). Since a @rhombus(#false)
+ result from @rhombus(left_expr) is never returned, if
+ @rhombus(left_expr) has static information from
+ @rhombus(maybe(#,(@nontermref(annot))), ~annot), the static information
+ of @nontermref(annot) is used, instead.
+
+ The @rhombus(||) operator can also form a @tech{repetition}.
 
 }
 
@@ -157,7 +165,11 @@
  @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
  position with respect to the @rhombus(&&) form, if evaluated at all.
 
- The @rhombus(&&) form can also serve as @tech{repetitions}.
+ The static information of the @rhombus(&&) expression is like that of
+ @rhombus(maybe(#,(@nontermref(annot))), ~annot) if the static
+ information of @rhombus(right_expr) is like that of @nontermref(annot).
+
+ The @rhombus(&&) operator can also form a @tech{repetition}.
 
 }
 

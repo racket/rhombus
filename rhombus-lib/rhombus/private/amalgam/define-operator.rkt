@@ -112,6 +112,8 @@
                      #:defaults ([assoc #''left]))
           (~optional (~seq #:static-infos statinfos)
                      #:defaults ([statinfos #'()]))
+          (~optional (~seq #:merge-static-infos merge-statinfos)
+                     #:defaults ([merge-statinfos #'(lambda (l r s) s)]))
           (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
                      #:defaults ([flprim #'#f]
                                  [flonum-statinfos #'()]))
@@ -177,8 +179,8 @@
              #,(if (syntax-e #'flprim)
                    #`(if flonum?
                          #`flonum-statinfos
-                         #`statinfos)
-                   #`#`statinfos)))
+                         (merge-statinfos form1 form2 #`statinfos))
+                   #`(merge-statinfos form1 form2 #`statinfos))))
           assoc)])))
 
 (define-syntax (define-prefix stx)

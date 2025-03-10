@@ -70,7 +70,7 @@ class Brush(private _handle):
                ~stipple: stipple :: maybe(Bitmap) = #false,
                ~gradient: gradient :: maybe(LinearGradient || RadialGradient) = #false):
     let hand:
-      if stipple || gradient
+      if dynamic(stipple) || gradient
       | rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
                         stipple && (stipple :~ _Bitmap).handle,
                         match gradient

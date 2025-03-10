@@ -12,6 +12,8 @@
          "static-info.rkt"
          "flonum-key.rkt"
          "fixnum-key.rkt"
+         "maybe-key.rkt"
+         "static-info.rkt"
          "rhombus-primitive.rkt"
          "order.rkt"
          "order-primitive.rkt")
@@ -168,10 +170,23 @@
    not-repet-infix))
 
 (define-infix && and
-  #:order logical_conjunction)
+  #:order logical_conjunction
+  #:merge-static-infos (lambda (form1 form2 staticinfos)
+                         (define si (extract-static-infos form2))
+                         (if si
+                             #`((#%maybe #,si))
+                             #'())))
 
 (define-infix \|\| or
-  #:order logical_disjunction)
+  #:order logical_disjunction
+  #:merge-static-infos (lambda (form1 form2 staticinfos)
+                         (define (demaybe si)
+                           (define maybe-si (static-info-lookup si #'#%maybe))
+                           (if maybe-si
+                               (static-infos-and si maybe-si)
+                               si))
+                         (static-infos-or (demaybe (extract-static-infos form1))
+                                          (extract-static-infos form2))))
 
 (define-syntax (define-comp-infix stx)
   (syntax-parse stx

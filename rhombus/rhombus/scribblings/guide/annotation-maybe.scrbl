@@ -27,12 +27,11 @@ example, @rhombus(" " ++ last) is not statically resolved to string
 concatenation.
 
 The @rhombus(maybe, ~annot) annotation constructor is a shorthand for
-@rhombus(|| False, ~annot), but it also cooperates with operators such
-as @rhombus(!!), which returns its argument only if it is
-non-@rhombus(#false). If the argument to @rhombus(!!) has static
-information from @rhombus(maybe, ~annot), then the result from
-@rhombus(!!) has the static information of @rhombus(maybe, ~annot)'s
-argument.
+@rhombus(|| False, ~annot), but it also cooperates with operators like
+@rhombus(!!), which returns its argument only if it is
+non-@rhombus(#false) and throws an exception otherwise. If the argument to @rhombus(!!) has static
+information from @rhombus(maybe(#,(@rhombus(annot, ~var))), ~annot), then the result from
+@rhombus(!!) has the static information of @rhombus(annot, ~var).
 
 @examples(
   ~eval: ann_eval
@@ -61,4 +60,39 @@ non-@rhombus(#false) value.
   ~repl:
     len("apple")
     len(#false)
+)
+
+The @rhombus(||) operator similarly cooerates with @rhombus(maybe, ~annot) for
+the left-hand argument to @rhombus(||). Since a @rhombus(#false) result
+from the left-hand argument is never used as the result, if it has static
+information from @rhombus(maybe(#,(@rhombus(annot, ~var))), ~annot), then it can be
+treated as having the static information of @rhombus(annot, ~var).
+
+@examples(
+  ~eval: ann_eval
+  ~defn:
+    fun len(str :: maybe(String)) :: Int:
+      use_static
+      (str || "").length()
+  ~repl:
+    len("apple")
+    len(#false)
+)
+
+Along similar lines, the static information of a @rhombus(&&) expression
+corresponds to the static information of its right-hand argument, but
+adjusted in the same way as by @rhombus(maybe, ~annot).
+
+@margin_note_block{The @rhombus(&&) operator can serve the same role as
+ the elvis operator @litchar{?:} that is provided some other languages.}
+
+@examples(
+  ~eval: ann_eval
+  ~defn:
+    fun ms(name :: maybe(String)) :: maybe(String):
+      use_static
+      (name && "Ms. ")?.append(name)
+  ~repl:
+    ms("Smith")
+    ms(#false)
 )
