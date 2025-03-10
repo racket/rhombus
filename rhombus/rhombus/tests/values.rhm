@@ -7,7 +7,7 @@ block:
   let [x, ...] = [1, 2, 3]
   check values(x, ...) ~is values(1, 2, 3)
 
-check values(1, ~x: "oops") ~throws "does not accept keyword arguments"
+check values(1, ~x: "oops") ~throws "function does not accept keyword arguments"
 
 block:
   use_static

@@ -119,6 +119,14 @@
                  [(regexp-match-positions #rx"^not a procedure;\n expected a procedure that can be applied to arguments" msg)
                   => (lambda (m)
                        (rhombus (string-append "not a function" (substring msg (cdar m)))))]
+                 [(regexp-match-positions
+                   #rx"^procedure does not (accept keyword arguments|expect an argument with given keyword)\n  procedure:"
+                   msg)
+                  => (lambda (m)
+                       (rhombus (string-append "function does not " (substring msg (caadr m) (cdadr m)) "\n  function:" (substring msg (cdar m)))))]
+                 [(regexp-match-positions #rx"^required keyword argument not supplied\n  procedure:" msg)
+                  => (lambda (m)
+                       (rhombus (string-append "required keyword argument not supplied\n  function:" (substring msg (cdar m)))))]
                  [(regexp-match-positions #rx"^index is out of range.*?vector:" msg)
                   => (lambda (m)
                        (rhombus (string-append (regexp-replace* #rx"vector" (substring msg (caar m) (cdar m)) "array")

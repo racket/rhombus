@@ -456,3 +456,8 @@ block:
   let y = 7
   let h = 8
   check noop(& [9, 10, 11], ~x, ~y, ~z, ~w, ~h) ~is values(5, 7, {#'~z: 3, #'~w: 6, #'~h: 8}, [9, 10, 11])
+
+block:
+  fun f(x, ~y: y): #void
+  check f(1, ~y: 2, ~z: 3) ~throws "function call: function does not expect an argument with given keyword\n  function"
+  check f(1) ~throws "function call: required keyword argument not supplied\n  function"
