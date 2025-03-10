@@ -4,8 +4,8 @@
 
 @title{Rhombus}
 
-Rhombus is a general-purpose programming language that is easy to use for
-everyday tasks and uniquely customizable.
+Rhombus is a general-purpose programming language that is easy to use
+and uniquely customizable.
 
 @margin_note_block{Rhombus is built on @hyperlink("https://racket-lang.org"){Racket}, and
 it is extensible in the same way as Racket, but Rhombus uses a more
@@ -17,6 +17,7 @@ see @docref(model_doc), @docref(ref_doc), and @docref(meta_doc).
 
 @table_of_contents()
 
+@include_section("guide/quick.scrbl")
 @include_section("guide/overview.scrbl")
 @include_section("guide/datatype.scrbl")
 @include_section("guide/class-overview.scrbl")

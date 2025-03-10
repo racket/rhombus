@@ -20,7 +20,8 @@ expression at the top of a module, then its value gets printed out.
 
 @margin_note_block{If you have installed the @pkg{rhombus} package, then
  you can run Rhombus modules in DrRacket or by supplying the file path to
- @exec{rhombus} or @exec{racket} on the command line.}
+ @exec{rhombus} or @exec{racket} on the command line. See also
+ @secref("running").}
 
 Ways to define names in a module include @rhombus(def) and
 @rhombus(fun). The @rhombus(def) form defines an immutable variable, and

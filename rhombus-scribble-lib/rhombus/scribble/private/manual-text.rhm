@@ -16,6 +16,7 @@ export:
   filepath
   pkg
   exec
+  exec_flag
   hash_lang
 
 fun litchar :~ Element:
@@ -77,6 +78,10 @@ fun pkg(pre_content :: PreContent) :~ Element:
 fun exec(content :: Content) :~ Element:
   ~doc
   manual.exec(content)
+
+fun exec_flag(content :: Content) :~ Element:
+  ~doc
+  manual.elem(~style: #'#{no-break}, manual.exec(content))
 
 fun hash_lang() :~ Element:
   ~doc
