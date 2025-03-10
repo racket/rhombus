@@ -1,0 +1,23 @@
+#lang rhombus
+
+check values(1, 2) ~is values(1, 2)
+check values() ~is values()
+
+block:
+  let [x, ...] = [1, 2, 3]
+  check values(x, ...) ~is values(1, 2, 3)
+
+check values(1, ~x: "oops") ~throws "does not accept keyword arguments"
+
+block:
+  use_static
+  check values("apple")[0] ~is Char"a"
+  let (x, y) = values("apple", 0)
+  check x[0] ~is Char"a"
+  check y > y ~is #false
+
+block:
+  use_static
+  let [x :: String, ...] = ["a", "bc"]  
+  check values(x.length(), ...) ~is values(1, 2)  
+  check [values(x).length(), ...] ~is [1, 2]

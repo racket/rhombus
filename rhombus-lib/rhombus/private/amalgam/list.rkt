@@ -32,6 +32,7 @@
          "parse.rkt"
          "realm.rkt"
          "parens.rkt"
+         "simple-call.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "rest-bind.rkt"
@@ -80,10 +81,6 @@
            treelist? listable?
            to-treelist to-list
            (for-syntax get-treelist-static-infos)))
-
-(module+ normal-call
-  (provide (for-syntax (rename-out [normal-call? indirect-normal-call?])
-                       install-normal-call?!)))
 
 (define-for-syntax (extract-result-statinfo lhs-si)
   (or (static-info-lookup lhs-si #'#%index-result)
@@ -424,14 +421,18 @@
     (syntax-parse stx
       #:datum-literals (group)
       [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
-       #:when (normal-call? #'tag)
+       #:when (if repetition?
+                  (normal-call-repetition? #'tag)
+                  (normal-call? #'tag))
        (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
                          #:rep-for-form rep-for-form
                          #:rep-solo-for-form rep-solo-for-form
                          #:repetition? repetition?
                          #:span-form-name? #t)]
       [(form-id (tag::parens _ ... (group _::&-expr _ ...)) . tail)
-       #:when (normal-call? #'tag)
+       #:when (if repetition?
+                  (normal-call-repetition? #'tag)
+                  (normal-call? #'tag))
        (parse-*list-form stx build-form (get-static-infos) wrap-static-infos
                          #:rep-for-form rep-for-form
                          #:rep-solo-for-form rep-solo-for-form
@@ -1607,11 +1608,6 @@
       (raise-arguments-error* 'PairList rhombus-realm
                               "not a listable for splicing into a pair list"
                               "value" v)))
-
-(define-for-syntax normal-call? #f)
-
-(define-for-syntax (install-normal-call?! proc)
-  (set! normal-call? proc))
 
 (begin-for-syntax
   (install-get-treelist-static-infos! get-treelist-static-infos))

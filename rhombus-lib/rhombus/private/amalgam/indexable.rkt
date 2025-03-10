@@ -196,7 +196,11 @@
                        (syntax-local-static-info indexable key))))
         (define reloc-e (relocate (respan #`(#,indexable-in args)) e))
         (values (wrap-static-info* reloc-e result-static-infos)
-                #'tail)])]))
+                #'tail)])]
+    [(_ (~and args (head::brackets)) . tail)
+     (raise-syntax-error who "missing index expression" #'args)]
+    [(_ (~and args (head::brackets _ ...)) . tail)
+     (raise-syntax-error who "expected a single index expression, found multiple" #'args)]))
 
 (define indexable-get-who 'Indexable.get)
 (define indexable-set!-who 'MutableIndexable.set)

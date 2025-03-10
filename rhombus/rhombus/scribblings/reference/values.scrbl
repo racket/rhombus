@@ -6,15 +6,35 @@
 @title{Multiple Values}
 
 @doc(
-  fun values(v :: Any, ...)
+  expr.macro 'values'
+  expr.macro 'values(expr, ...)'
+  repet.macro 'values'
+  repet.macro 'values(repet, ...)'
 ){
 
- Returns the @rhombus(v)s as multiple result values.
-
- If only one @rhombus(v) is provided, the result is the same as just
- @rhombus(v). Any other number of values must be received by a context
- that is expecting multiple values, such as with a
+ A @rhombus(values) form by itself acts as a function that takes any
+ number of values and returns them as multiple result values. If only one
+ @rhombus(expr) is provided, the result is the same as just
+ @rhombus(expr), except that it is not in tail position with respect to
+ the @rhombus(values) form. Any other number of values must be received
+ by a context that is expecting multiple values, such as with a
  @rhombus(values, ~bind) binding pattern.
+
+ When @rhombus(values) is immediately called using the default
+ @rhombus(#%call) operator, then static information for the call
+ expression propagates static information for the @rhombus(expr)
+ arguments (using @rhombus(statinfo_meta.values_key)).
+
+ The @rhombus(values, ~repet) operator can also be used to form a
+ @tech{repetition}.
+
+@examples(
+  values("apple")
+  values("apple", 1)
+  block:
+    let (x, y) = values(1, 2)
+    [x, y]
+)
 
 }
 
@@ -28,6 +48,11 @@
  places where it's specifically recognized, normally to match multiple
  result values. For example, the @rhombus(lhs_bind) position of
  @rhombus(def) recognizes @rhombus(values, ~bind).
+
+ Plain parentheses as a binding (as implemented by the
+ @rhombus(#%parens, ~bind) form) work as an alias for
+ @rhombus(values, ~bind) in the places that recognize
+ @rhombus(values, ~bind).
 
 @examples(
   def values(x, y) = values(1, 2)
@@ -58,6 +83,7 @@
 
 @doc(
   reducer.macro 'values($id $maybe_annot $init, ...)'
+  reducer.macro 'fold($id $maybe_annot $init, ...)'
 
   grammar maybe_annot:
     #,(@rhombus(::, ~bind)) $annot
@@ -78,6 +104,16 @@
  for one iteration then serve as the values of the @rhombus(id)s
  for the next iteration. The values of the whole @rhombus(for) expression
  are the final values of the @rhombus(id)s.
+
+ The @rhombus(fold, ~reducer) reducer form is an alias for
+ @rhombus(values, ~reducer).
+
+@examples(
+  for fold(sum = 0) (i in 1..=10):
+    sum + i
+  for values(sum = 0, product = 1) (i in 1..=10):
+    values(sum + i, product * i )
+)
 
 }
 

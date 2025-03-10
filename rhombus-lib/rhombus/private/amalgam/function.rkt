@@ -13,7 +13,7 @@
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
-         (submod "implicit.rkt" normal-call)
+         "simple-call.rkt"
          (submod "implicit.rkt" normal-literal)
          "parens.rkt"
          "op-literal.rkt"
@@ -705,14 +705,7 @@
    (lambda (tail)
      (syntax-parse tail
        [(form-id (~and p (tag::parens arg-g ...)) . new-tail)
-        #:when (and (normal-call? #'tag)
-                    (for/and ([arg-g (in-list (syntax->list #'(arg-g ...)))])
-                      (syntax-parse arg-g
-                        #:datum-literals (group)
-                        [(group _::&-expr . _) #f]
-                        [(group _::~&-expr . _) #f]
-                        [(group _:keyword (~optional (_::block . _))) #f]
-                        [(group . _) #t])))
+        #:when (simple-call? tail #:ellipsis-ok? #t)
         (define es
           (let loop ([gs-stx #'(arg-g ...)])
             (syntax-parse gs-stx

@@ -12,7 +12,7 @@
          (submod "function-parse.rkt" for-call)
          (submod "indexable.rkt" for-ref)
          (submod "list.rkt" for-binding)
-         (submod "list.rkt" normal-call)
+         "simple-call.rkt"
          "setmap.rkt"
          "literal.rkt"
          "parens.rkt"
@@ -52,7 +52,8 @@
                     #%parens))
 
 (module+ normal-call
-  (provide (for-syntax normal-call?)))
+  (provide (for-syntax normal-call?
+                       normal-call-repetition?)))
 
 (module+ normal-literal
   (provide (for-syntax normal-literal?)))
@@ -366,9 +367,13 @@
   (free-identifier=? (datum->syntax tag '#%call)
                      (expr-quote #%call)))
 
+(define-for-syntax (normal-call-repetition? tag)
+  (free-identifier=? (in-repetition-space (datum->syntax tag '#%call))
+                     (repet-quote #%call)))
+
 (define-for-syntax (normal-literal? lit)
   (free-identifier=? (datum->syntax lit '#%literal)
                      (expr-quote #%literal)))
 
 (begin-for-syntax
-  (install-normal-call?! normal-call?))
+  (install-normal-call?! normal-call? normal-call-repetition?))

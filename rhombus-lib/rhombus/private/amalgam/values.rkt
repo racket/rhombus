@@ -4,6 +4,8 @@
                      "srcloc.rkt")
          "provide.rkt"
          "binding.rkt"
+         "expression.rkt"
+         "repetition.rkt"
          (submod "annotation.rkt" for-class)
          "reducer.rkt"
          "static-info.rkt"
@@ -12,18 +14,78 @@
          (submod "define-arity.rkt" for-info)
          "parens.rkt"
          "op-literal.rkt"
-         "var-decl.rkt")
+         "var-decl.rkt"
+         "simple-call.rkt"
+         "parse.rkt"
+         "compound-repetition.rkt")
 
-(provide (for-spaces (#f
-                      rhombus/bind
+(provide (for-spaces (rhombus/bind
                       rhombus/annot
                       rhombus/reducer
                       rhombus/statinfo)
                      values)
+         (for-spaces (rhombus/reducer)
+                     (rename-out [values fold]))
+         (for-spaces (#f
+                      rhombus/repet)
+                     (rename-out [rhombus-values values]))
          (for-spaces (#f
                       rhombus/statinfo)
                      (rename-out
                       [call-with-values call_with_values])))
+
+(define-syntax rhombus-values
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(head (_::parens g ...) . tail)
+        #:when (simple-call? stx)
+        (syntax-parse #'(g ...)
+          [(e::expression ...)
+           (define es (syntax->list #'(e.parsed ...)))
+           (cond
+             [(= 1 (length es))
+              (values (wrap-static-info*
+                       #`(values #,(discard-static-infos (car es)))
+                       (extract-static-infos (car es)))
+                      #'tail)]
+             [else
+              (values (wrap-static-info
+                       #`(values #,@(map discard-static-infos es))
+                       #'#%values
+                       (datum->syntax #f (map extract-static-infos es)))
+                      #'tail)])])]
+       [(head . tail)
+        (values (relocate-id #'head #'values)
+                #'tail)]))))
+
+(define-repetition-syntax rhombus-values
+  (repetition-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(head (_::parens g ...) . tail)
+        #:when (simple-call? stx #:repetition? #t)
+        (syntax-parse #'(g ...)
+          [(e::repetition ...)
+           (define es (syntax->list #'(e.parsed ...)))
+           (define sis
+             (for/list ([e (in-list es)])
+               (syntax-parse e
+                 [rep::repetition-info
+                  #'rep.element-static-infos])))
+           (values
+            (build-compound-repetition
+             #'head
+             es
+             (lambda new-content
+               (values #`(values #,@new-content)
+                       (if (= 1 (length sis))
+                           (car sis)
+                           #`((#%values #,sis))))))
+            #'tail)])]
+       [(head . tail)
+        (values (identifier-repetition-use (relocate-id #'head #'values))
+                #'tail)]))))
 
 (define-binding-syntax values
   (binding-prefix-operator
