@@ -16,7 +16,7 @@
 (define (make
          #:render render ; 'paren, 'meta, 'datum, 'value, 'result, 'comment, or shape from `rendered_shape`
          #:render_in_space render-in-space
-         #:render_via_result_annotation [render-via-result-annotation (lambda (id) #f)]
+         #:render_via_result_annotation [render-via-result-annotation (lambda (root rators field field-str) #f)]
          #:render_whitespace whitespace
          #:render_indentation indentation-whitespace
          #:render_line render-line
