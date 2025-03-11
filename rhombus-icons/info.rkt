@@ -5,6 +5,6 @@
 (define deps
   '("base"))
 
-(define pkg-desc "Rhombus logo in PNG form")
+(define pkg-desc "Rhombus logos and icons in prerendered forms")
 
 (define license '(Apache-2.0 OR MIT))
