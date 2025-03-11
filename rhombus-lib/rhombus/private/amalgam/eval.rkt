@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
+         "../version-case.rkt"
+         "treelist.rkt"
          "provide.rkt"
          "parse.rkt"
          "pack.rkt"
@@ -64,11 +66,42 @@
   (check-module-path who mod-path)
   (namespace-require (module-path-s-exp mod-path)))
 
-(define/arity (instantiate mod-path [name #f])
+(define/arity (instantiate mod-path [names #f])
   (check-module-path who mod-path)
-  (unless (or (not name) (symbol? name))
-    (raise-annotation-failure who name "maybe(Symbol)"))
-  (dynamic-require (module-path-s-exp-or-index-or-resolved mod-path) name))
+  (unless (or (not names)
+              (symbol? names)
+              (and (treelist? names)
+                   (not (treelist-empty? names))
+                   (for/and ([n (in-treelist names)])
+                     (symbol? n))))
+    (raise-annotation-failure who names "maybe(Symbol || NonemptyList.of(Symbol))"))
+  (define name (if (and (treelist? names)
+                        (= 1 (treelist-length names)))
+                   (treelist-ref names 0)
+                   names))
+  (define mod (module-path-s-exp-or-index-or-resolved mod-path))
+  (define (via-eval)
+    (define ns (variable-reference->empty-namespace
+                (eval #'(#%variable-reference))))
+    (namespace-require (module-path-s-exp mod-path))
+    (eval (namespace-syntax-introduce
+           #`(rhombus-top (group #,@(datum->syntax
+                                     #f
+                                     (if (treelist? name)
+                                         (cons
+                                          (treelist-ref name 0)
+                                          (apply
+                                           append
+                                           (for/list ([n (in-treelist (treelist-rest name))])
+                                             (list '(op |.|) n))))
+                                         (list name))))))))
+  (if (treelist? name)
+      (via-eval)
+      (meta-if-version-at-least
+       "8.16.0.3"
+       (dynamic-require mod name 'error via-eval)
+       (with-handlers ([exn:fail? (lambda (x) (via-eval))])
+         (dynamic-require mod name)))))
 
 (define/arity (module_is_declared mod-path
                                   #:load [load? #f])

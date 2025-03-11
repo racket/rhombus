@@ -8,3 +8,17 @@ block:
     Evaluator.make_rhombus()
     Evaluator.import(mod)
     Evaluator.current([ev])
+
+// expecting `Pair` exported as a plain function
+check: Evaluator.instantiate(ModulePath'rhombus', #'Pair)(1, 2)
+       ~is Pair(1, 2)
+
+// expecting `List` exported as syntax
+check: Evaluator.instantiate(ModulePath'rhombus', #'List)(1)
+       ~is [1]
+
+check: Evaluator.instantiate(ModulePath'rhombus', [#'List])(1)
+       ~is [1]
+
+check: Evaluator.instantiate(ModulePath'rhombus', [#'List, #'length])([1, 3])
+       ~is 2

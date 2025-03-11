@@ -13,6 +13,9 @@ but the @racketmodname[rhombus/dot] module provides a simpler and more
 convenient interface for dynamic access of object fields, methods, and
 properties.
 
+To dynamically access dotted names that (statically) go through Rhombus
+namespaces, see @secref["dynamic-require"].
+
 @defproc[(dynamic-dot-ref [obj any/c] [name symbol?]) any/c]{
 
  Accesses a field, method, or property @racket[name] from @racket[obj].

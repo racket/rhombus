@@ -36,6 +36,11 @@
  (void)
  (define error-syntax->name-handler (make-parameter (lambda (stx) #f))))
 
+(meta-if-version-at-least
+ "8.16.0.3"
+ (void)
+ (define error-module-path->string-handler (make-parameter (lambda (mp len) #f))))
+
 (define-syntax (define-install!+params stx)
   (syntax-parse stx
     #:literals (void)
@@ -173,6 +178,23 @@
               (and (identifier? #'head)
                    (name-of #'head))]
              [_ #f])))))
+
+  (error-module-path->string-handler
+   (lambda (mp len)
+     (define (to-string v)
+       (define op (open-output-bytes))
+       (rhombus:print v op 'expr #t)
+       (get-output-string op))
+     (let loop ([mp mp])
+       (cond
+         [(and (pair? mp) (eq? (car mp) 'lib))
+          (format "lib(~s)" (cadr mp))]
+         [(and (pair? mp) (eq? (car mp) 'file))
+          (format "file(~s)" (cadr mp))]
+         [(and (pair? mp) (eq? (car mp) 'submod))
+          (for/fold ([s (loop (cadr mp))]) ([p (in-list (cddr mp))])
+            (format "~a!~a" s (substring (to-string p) 2)))]
+         [else (to-string mp)]))))
 
   (current-report-configuration
    (hasheq 'literal-to-what (lambda (v)

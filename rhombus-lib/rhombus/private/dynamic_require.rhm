@@ -1,0 +1,35 @@
+#lang rhombus
+import:
+  rhombus/rx open
+
+// For use from Racket, arguments checked in Racket wrapper
+export:
+  dynamic_require
+
+fun dynamic_require(mp, name_or_names):
+  ~who: who
+  let mp:
+    match mp
+    | PairList(#'lib, s :: String):
+        ModulePath('lib($s)')
+    | PairList(#'file, s :: PathString):
+        ModulePath('file($s)')
+    | s :: Symbol:
+        let s = to_string(s)
+        let s:
+          cond
+          | rx'"."'.match_in(s):
+              s
+          | rx'"/"'.match_in(s):
+              s ++ ".rkt"
+          | ~else:
+              s ++ "/main.rkt"
+        ModulePath('lib($s)')
+    | s :: String:
+        ModulePath('$s')
+    | ~else:
+        error(~who: who,
+              "oops, unrecognized: " +& mp)
+  Evaluator.instantiate(mp, match name_or_names
+                            | names :: PairList: names.to_list()
+                            | name: name)

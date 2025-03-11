@@ -25,3 +25,4 @@ interoperating between the two languages.
 @include_section("racket-expr.scrbl")
 @include_section("parse.scrbl")
 @include_section("dot.scrbl")
+@include_section("dynamic-require.scrbl")

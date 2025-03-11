@@ -1,0 +1,12 @@
+#lang rhombus
+import:
+  rhombus/scribble/manual open
+  meta_label:
+    rhombus open
+
+export:
+  rhombus_class
+
+def rhombus_class = @rhombus(class)
+
+

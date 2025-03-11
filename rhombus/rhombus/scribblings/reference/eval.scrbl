@@ -70,8 +70,10 @@ by an evaluator, for example.
 }
 
 @doc(
-  fun Evaluator.instantiate(mod :: ModulePath,
-                            export_name :: maybe(Symbol) = #false) :: Any
+  fun Evaluator.instantiate(
+    mod :: ModulePath,
+    export_name :: maybe(Symbol || NonemptyList.of(Symbol)) = #false
+  ) :: Any
 ){
 
  In the current evaluator, loads @rhombus(mod) if it is not loaded
@@ -79,9 +81,17 @@ by an evaluator, for example.
  it is not instantiated already.
 
  If @rhombus(export_name) is @rhombus(#false), then the result is
- @rhombus(#void). Otherwise, the value exported by @rhombus(mod) as
+ @rhombus(#void). Otherwise, if @rhombus(export_name) is a list, then it
+ represents a dotted path (where dots are added) starting with an
+ exported name, or @rhombus(export_name) represents an exported name when
+ it is a symbol; either way, the value exported by @rhombus(mod) as
  @rhombus(export_name) is returned, or an exception is thrown if no such
  export is available.
+
+@examples(
+  Evaluator.instantiate(ModulePath'rhombus', #'List)(1)
+  Evaluator.instantiate(ModulePath'rhombus', [#'List, #'length])([1, 3])
+)
 
 }
 
