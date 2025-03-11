@@ -12,8 +12,9 @@ it is extensible in the same way as Racket, but Rhombus uses a more
 conventional expression syntax. No familiarity with Racket is required
 to use Rhombus.}
 
-This document is a general guide to Rhombus. For complete specification,
-see @docref(model_doc), @docref(ref_doc), and @docref(meta_doc).
+This document is a general guide to Rhombus. For more information, see
+@docref(ref_doc). For a complete specification of Rhombus, see also
+@docref(model_doc) and @docref(meta_doc).
 
 @table_of_contents()
 
@@ -25,3 +26,4 @@ see @docref(model_doc), @docref(ref_doc), and @docref(meta_doc).
 @include_section("guide/annotation-overview.scrbl")
 @include_section("guide/static-overview.scrbl")
 @include_section("guide/running.scrbl")
+@include_section("guide/racket.scrbl")

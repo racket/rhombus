@@ -43,6 +43,8 @@ the @rhombus(test, ~datum) submodule directly with
 
 @nested(~style: #'inset){@exec{racket prog.rhm'!'test}}
 
-or use Racket's @exec{raco test} tool as
+or use Racket's
+@seclink("test", ~doc: raco_doc, ~indirect: #true, @exec{raco test}) tool
+as
 
 @nested(~style: #'inset){@exec{raco test prog.rhm}}

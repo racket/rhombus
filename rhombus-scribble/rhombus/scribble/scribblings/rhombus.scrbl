@@ -194,3 +194,13 @@
  result of the @rhombus(body) sequence.
 
 }
+
+@doc(
+  expr.macro 'rhombusmodname ($module_path)'
+  expr.macro 'rhombuslangname ($module_path)'
+  expr.macro 'racketmodname ($module_path)'
+){
+
+ Form for referencing Rhombus modules, languages, and Racket modules.
+
+}
