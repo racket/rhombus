@@ -1,0 +1,3 @@
+#lang rhombus
+import "logo/main.rhm"
+export all_from(.main)

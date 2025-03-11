@@ -1,0 +1,208 @@
+#lang rhombus/static
+import:
+  rhombus/draw
+
+// Rhombus logo by John Clements
+
+export:
+  rename:
+    draw_rhombus_logo as draw
+    logo_size as size
+    the_blue as blue
+    the_red as red  
+  save_png
+  save_svg
+  to_pict
+  
+def the_blue = draw.Color(0x3e, 0x5b, 0xa9)
+def the_red = draw.Color(0x9f, 0x1d, 0x20)
+def the_white = draw.Color(0xff, 0xff, 0xff)
+
+// all heights are as a fraction of the total height.
+// all widths are as a fraction of the base width.
+
+def theta = 2*math.pi*(70/360)
+
+// height as a multiple of the base length
+// originally PRE-height / top-len
+def height_frac = math.sin(theta)
+
+// rightward displacement of the top
+// originally PRE-slant-x / top-len
+def slant_x_frac = math.cos(theta)
+
+// vertical thickness of the outer blue stripe
+// originally (/ PRE_stripe_height height)
+def stripe_height_frac = 0.20
+
+// width of the outer blue stripe
+// originally (/ PRE_stripe_width base_width)
+def stripe_width_frac = 0.25
+
+// vertical thickness of the white stripe inside the blue stripe
+// originally  #;(/ PRE_white_stripe_height height)
+def white_stripe_height_frac = 0.09
+
+// width of the white stripe inside the blue stripe
+// originally  #;(/ PRE_white_stripe_width base_width)
+def white_stripe_width_frac = 0.11
+
+// height from the top of the image to the lower right corner of the red quadrilateral
+// originially (/ PRE_red_right_drop height)
+def red_right_drop_frac = 0.5
+
+// height from the top of the image to the lower left corner of the red quadrilateral
+// originally (/ red_left_drop height)
+def red_left_drop_frac = 0.733
+
+// height from the top of the image to the top of the lower red triangle
+// originally (/ PRE_red_triangle_drop height)
+def red_triangle_drop_frac = 0.65
+
+// width of the lower red triangle
+// originally (/ red_triangle_width base_width)
+def red_triangle_width_frac = 0.550
+
+// amount by which the tip of the lower red triangle is moved to the right
+// originally (/ red_triangle_tip_jog base_width)
+def red_triangle_tip_jog_frac = 0.02
+
+
+// originally (- tr_x tl_x)
+def base_width = 350.0
+
+def red_triangle_tip_jog = red_triangle_tip_jog_frac * base_width
+
+def height = base_width * height_frac
+def slant_x = base_width * slant_x_frac
+
+def stripe_height = stripe_height_frac * height
+def stripe_width = stripe_width_frac * base_width
+
+def white_stripe_height = white_stripe_height_frac * height
+def white_stripe_width = white_stripe_width_frac * base_width
+
+def red_left_drop = red_left_drop_frac * height
+def red_right_drop = red_right_drop_frac * height
+
+def red_triangle_drop = red_triangle_drop_frac * height
+def red_triangle_width = red_triangle_width_frac * base_width
+
+def slope = height / slant_x
+
+def two_stripes_height =  stripe_height + white_stripe_height
+def two_stripes_width = stripe_width + white_stripe_width
+
+def full_width = base_width + slant_x
+
+def inner_box_width = base_width - two_stripes_width
+
+def margin = 0
+
+// given the distance from the top of the image, compute the leftward shift
+fun drop_to_slide(drop):
+  drop / slope
+
+// given a distance from the left side of the un-skewed figure
+// and a height from the top, return the posn of the skewed figure
+fun skew_posn(x,y):
+  [full_width - drop_to_slide(y) - (base_width - x), y]
+
+check skew_posn(0,0) ~is_now [slant_x,0]
+check skew_posn(base_width,0) ~is_now [full_width,0]
+check skew_posn(0,height) ~is_now [0.0,height]
+check skew_posn(base_width,height) ~is_now [base_width,height]
+
+// skew and shift for margin
+fun reposition(x,y):
+  match skew_posn(x,y)
+  | [x,y]: [x+margin,y+margin]
+
+def left_jog_1 = drop_to_slide(stripe_height)
+def left_jog_2 = drop_to_slide(two_stripes_height)
+
+// all positions are specified in an "un-slanted" frame, then slanted
+// by a call to skew_posn
+
+def whole_region_posns:
+  [reposition(0,0),
+   reposition(base_width,0),
+   reposition(base_width,height),
+   reposition(0,height)]
+
+def outer_blue_stripe_posns:
+  [reposition(0,0),
+   reposition(base_width,0),
+   reposition(base_width,height),
+   reposition(base_width - stripe_width, height),
+   reposition(base_width - stripe_width, stripe_height),
+   reposition(0,stripe_height)]
+
+def left_red_block_posns:
+  [reposition(0,two_stripes_height),
+   reposition(inner_box_width, two_stripes_height),
+   reposition(inner_box_width, red_right_drop),
+   reposition(0, red_left_drop)]
+
+def lower_red_triangle_posns:
+  [reposition(red_triangle_tip_jog + (inner_box_width), red_triangle_drop),
+   reposition(inner_box_width, height),
+   reposition(inner_box_width - red_triangle_width, height)]
+
+def logo_size = draw.Size(2 * margin + full_width,
+                          2 * margin + height)
+
+fun draw_rhombus_logo(dc :: draw.DC,
+                      ~dx: dx :: Real = 0,
+                      ~dy: dy :: Real = 0):
+  ~name draw
+  dc.save()
+          
+  dc.pen := draw.Pen.none
+
+  dc.brush := draw.Brush(~color: the_white)
+  dc.polygon(whole_region_posns,
+             ~dx: dx, ~dy: dy)
+
+  dc.brush := draw.Brush(~color: the_blue)
+  dc.polygon(outer_blue_stripe_posns,
+             ~dx: dx, ~dy: dy)
+
+  dc.brush := draw.Brush(~color: the_red)
+  dc.polygon(left_red_block_posns,
+             ~dx: dx, ~dy: dy)
+  dc.polygon(lower_red_triangle_posns,
+             ~dx: dx, ~dy: dy)
+
+  dc.restore()
+
+fun save_png(path :: PathString,
+             ~as_square: as_square = #false):
+  let dy = if as_square | 0.5 * (logo_size.width - logo_size.height) | 0
+  let bm = draw.Bitmap([math.exact(math.ceiling(logo_size.width)),
+                        math.exact(math.ceiling(logo_size.height + 2 *dy))],
+                       ~backing_scale: 2)
+  draw_rhombus_logo(bm.make_dc(), ~dx: 0, ~dy: dy)
+  bm.write(path, ~kind: #'png)
+
+fun save_svg(path :: PathString,
+             ~as_square: as_square = #false):
+  let dy = if as_square | 0.5 * (logo_size.width - logo_size.height) | 0
+  let dc = draw.SVGDC([logo_size.width,
+                       logo_size.height + 2 *dy],
+                      ~output: Path(path))
+  dc.start()
+  draw_rhombus_logo(dc, ~dx: 0, ~dy: dy)
+  dc.end()
+
+fun to_pict(dc :: ((draw.DC, Real, Real) -> ~any,
+                   ~width: Real,
+                   ~height: Real)
+              -> ~any):
+  dc(fun (dc, dx, dy):
+       draw_rhombus_logo(dc,
+                         ~dx: dx,
+                         ~dy: dy),
+     ~width: logo_size.width,
+     ~height: logo_size.height)
+  
