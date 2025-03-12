@@ -1,7 +1,6 @@
 #lang rhombus
 import:
   lib("racket/math.rkt").sqr
-  lib("math/main.rkt") as more_math
 
 use_static
 

@@ -19,7 +19,6 @@
 
 (define build-deps
   '("at-exp-lib"
-    "math-lib"
     "racket-doc"
     "scribble-lib"
     "shrubbery"
