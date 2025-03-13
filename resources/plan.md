@@ -141,7 +141,7 @@ identify such a result, the project will be declared a failure.
 Phase 3: Integration (months or years) (IN PROGRESS)
 ------------------- 
 
-GOAL AND OUTPUT: Complete language, libraries, and documentation, 
+GOAL AND OUTPUT: Essentially complete core language, libraries, and documentation, 
 including a name for the language. 
 
 PROCESS: This phase starts the attempt to port and adjust appropriate 

@@ -1,29 +1,31 @@
-This repository is the integration phase of the Rhombus project,
-which is about the design of a new language that is based on Racket.
+[Rhombus](https:://rhombus-lang.org) is a general-purpose programming
+language that is easy to use and uniquely customizable.
 
-Rhombus offers the same kind of language extensibility as Racket
-itself, but using conventional (infix) notation with the goal of
-making Racket technology more accessible. For an overview of Rhombus's
-goals and design, see
-
-* [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
-  or the [talk video](https://www.youtube.com/watch?v=hkiy1rmKA48)
+For an overview of Rhombus's goals and design, see
 
 * [Documentation](https://docs.racket-lang.org/rhombus@rhombus/index.html)
   as rendered by the Racket package-build service
 
-This repository also houses the packages that make up the current
+* [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
+  or the [talk video](https://www.youtube.com/watch?v=hkiy1rmKA48)
+
+This repository houses the Racket packages that make up the current
 Rhombus implementation.
 
 # Trying Rhombus
 
-Using [Racket](https://racket-lang.org), install the package `rhombus`
+The quickest route to trying Rhombus is the
+[snapshot Racket with Rhombus included]("https://users.cs.utah.edu/plt/rhombus-snapshots/").
+
+Alternatively, using [Racket](https://racket-lang.org), install the package `rhombus`
 through DrRacket's "Install Package..." menu item or on the command
 line with
 
 ```
 raco pkg install rhombus
 ```
+
+See also the [documentation Quick Start](https://docs.racket-lang.org/rhombus@rhombus/Quick_Start.html).
 
 # Other Resources
 
