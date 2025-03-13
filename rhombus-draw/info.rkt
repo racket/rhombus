@@ -12,7 +12,6 @@
     "rhombus-lib"
     "rhombus-scribble-lib"
     "at-exp-lib"
-    "math-lib"
     "draw-doc"))
 
 (define pkg-desc "Rhombus drawing library")
