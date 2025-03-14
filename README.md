@@ -33,12 +33,7 @@ See also the [documentation Quick Start](https://docs.racket-lang.org/rhombus@rh
 
 * [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
 
-* Older resources:
-   - [State of Rhombus](resources/state-of-rhombus.md) October 2021
-   - A summary of [possible goals](resources/goals.md)
-   - References to some [mailing list discussion](resources/refs.md)
-   - A summary of [potential syntax guidelines](resources/syntax-considerations.md)
-   - An index of syntax [prior art](resources/prior-art.md)
+* [Older resources](resources)
 
 # Participation
 

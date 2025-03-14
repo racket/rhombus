@@ -222,3 +222,5 @@ This section includes references on general parsing techniques. These don't dire
 
 [Design of the PLOT programming language](http://users.rcn.com/david-moon/PLOT/) by [David Moon](https://en.wikipedia.org/wiki/David_A._Moon).
 
+See also [this PR](https://github.com/racket/rhombus/issues/128).
+
