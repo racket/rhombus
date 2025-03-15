@@ -6,7 +6,7 @@
 
 The DrRacket programming environment supports Rhombus, and (as noted in
 @secref("running")) Racket tools more generally work on Rhombus
-programs. racket tools work because Rhombus is built on Racket's
+programs. Racket tools work because Rhombus is built on Racket's
 @hash_lang() mechanism.
 
 The @exec{rhombus} executable is a fairly thin wrapper around
