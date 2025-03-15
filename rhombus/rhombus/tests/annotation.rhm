@@ -192,3 +192,18 @@ block:
   check f() ~prints "now\n"
   check f(0) ~prints "now\n"
   check f(0, 1) ~prints "now\n"
+
+
+check:
+  use_static
+  class Posn(x, y)
+  fun access_x(p :: converting(fun(x :: Posn) :: Posn: x) && satisfying(fun(y :: Posn): #true)):
+    p.x
+  ~completes
+
+check:
+  use_static
+  class Posn(x, y)
+  fun access_x(p :: Posn && converting(fun(x :: Posn) :: Posn: x) && satisfying(fun(y :: Posn): #true)):
+    p.x
+  ~completes

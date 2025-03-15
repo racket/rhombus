@@ -44,7 +44,7 @@
            #'and-infoer
            #`[result l.binding r.binding l.body r.body r.static-infos])
           #'result
-          #'r.static-infos)])))
+          (static-infos-and #'r.static-infos #'l.static-infos))])))
    'left))
 
 (define-syntax (and-infoer stx)
