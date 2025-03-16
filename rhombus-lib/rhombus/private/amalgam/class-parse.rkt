@@ -314,24 +314,37 @@
                         stxes
                         parent-name)))
 
-(define (check-consistent-construction stxes mutables exposures defaults options
-                                       name given-constructor-rhs given-constructor-name expression-macro-rhs)
+(define (check-consistent-construction stxes mutables exposures defaults name
+                                       given-constructor-rhs given-constructor-name given-expression-macro-rhs)
   (when (for/or ([m (in-list mutables)]
                  [exposure (in-list exposures)]
                  [d (in-list defaults)])
           (and (not (syntax-e m))
                (not (eq? exposure 'public))
                (not (syntax-e d))))
-    (unless (hash-ref options 'constructor-rhs #f)
+    (unless (or given-constructor-rhs
+                (disabled-constructor? given-expression-macro-rhs))
       (raise-syntax-error #f
-                          (format "class needs a custom constructor to initialize ~a fields"
+                          (format (string-append "class needs a custom constructor to initialize ~a fields;"
+                                                 "\n alternatively, constructor or expression macro must be disabled")
                                   (for/or ([exposure (in-list exposures)]
                                            #:when (not (eq? 'public exposure)))
                                     exposure))
                           stxes)))
   (when (and given-constructor-rhs
-             expression-macro-rhs)
+             given-expression-macro-rhs)
     (cond
+      [(and (disabled-constructor? given-constructor-rhs)
+            (disabled-constructor? given-expression-macro-rhs))
+       (unless (eq? (syntax-e given-constructor-rhs)
+                    (syntax-e given-expression-macro-rhs))
+         (raise-syntax-error #f
+                             "constructor has a different disable mode than expression macro"
+                             stxes))]
+      [(disabled-constructor? given-constructor-rhs)
+       (raise-syntax-error #f
+                           "expression macro is given, but unnamed constructor is disabled"
+                           stxes)]
       [(not given-constructor-name)
        (raise-syntax-error #f
                            "unnamed constructor inaccessible due to expression macro"
@@ -406,9 +419,12 @@
                           ex))
     new-replaced-ht))
 
+(define (disabled-constructor? given-constructor-or-expression-macro-rhs)
+  (and given-constructor-or-expression-macro-rhs
+       (memq (syntax-e given-constructor-or-expression-macro-rhs) '(#:none #:error))))
+
 (define (constructor-as-expression? given-constructor-rhs)
-  (and given-constructor-rhs
-       (memq (syntax-e given-constructor-rhs) '(#:none #:error))))
+  (disabled-constructor? given-constructor-rhs))
 
 (define (field-to-field+keyword+default f arg)
   (values (field-desc-name f)

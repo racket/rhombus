@@ -1072,6 +1072,60 @@ check:
   10 :: Stubborn
   ~throws "cannot be used as an annotation"
 
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~error
+    expression ~error
+  Stubborn(0)
+  ~throws "cannot be used as an expression"
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~none
+    expression ~none
+  Stubborn(0)
+  ~throws "Stubborn: undefined"
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~error
+    expression ~none
+  ~throws "constructor has a different disable mode than expression macro"
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~none
+    expression ~error
+  ~throws "constructor has a different disable mode than expression macro"
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor ~error
+    expression ~none
+  ~throws "constructor has a different disable mode than expression macro"
+
+check:
+  ~eval
+  class Stubborn(x):
+    constructor (x):
+      super(x)
+    expression ~error
+  ~throws "unnamed constructor inaccessible due to expression macro"
+
+check:
+  ~eval
+  class Stubborn(x):
+    internal _Stubborn
+    constructor ~error
+    expression 'Stubborn[$x]':
+      '_Stubborn($x)'
+  ~throws "expression macro is given, but unnamed constructor is disabled"
+
 block:
   class Posn(x, mutable y):
     ~name Loc

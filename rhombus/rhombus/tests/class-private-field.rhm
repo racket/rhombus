@@ -4,7 +4,7 @@ import:
     rhombus expose: macro
 
 use_static
-  
+
 check:
   ~eval
   use_static
@@ -154,7 +154,7 @@ check:
     annotation:
       macro | '()' : '_Posn'
     annot.macro 'of{$x, $y}': '_Posn.of($x, Any, $y)'
-    export of            
+    export of
   class Posn3D(private weight, z):
     nonfinal
     extends Posn
@@ -165,7 +165,7 @@ check:
       weight
     binding 'Posn3D{$x, $y, $z}': 'Posn{$x, $y} && _Posn3D(_, $z)'
     annotation
-    | 'Posn3D' : '_Posn3D'      
+    | 'Posn3D' : '_Posn3D'
     annot.macro 'of{$x, $y, $z}': 'Posn.of{$x, $y} && _Posn3D.of(Any, $z)'
     export: of
   def p3 = Posn3D(1, 2, 3)
@@ -190,3 +190,28 @@ check:
   [_Posn.stamp(p),
    (p :~ _Posn).stamp]
   ~is [10, 10]
+
+check:
+  ~eval
+  class Posn(x, y, private dist)
+  ~throws "class needs a custom constructor to initialize private fields"
+
+check:
+  class Posn(x, y, private dist):
+    constructor: ~error
+  ~completes
+
+check:
+  class Posn(x, y, private dist):
+    constructor: ~none
+  ~completes
+
+check:
+  class Posn(x, y, private dist):
+    expression: ~error
+  ~completes
+
+check:
+  class Posn(x, y, private dist):
+    expression: ~none
+  ~completes

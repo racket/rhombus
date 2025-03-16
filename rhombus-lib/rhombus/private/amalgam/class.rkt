@@ -347,8 +347,8 @@
        (define constructor-annotation-strs (map syntax-e (syntax->list #'(constructor-field-annotation-str ...))))
 
        (define expose (make-expose #'scope-stx #'base-stx))
-       (check-consistent-construction stxes mutables exposures constructor-defaults options
-                                      #'name given-constructor-rhs
+       (check-consistent-construction stxes mutables exposures constructor-defaults #'name
+                                      given-constructor-rhs
                                       (and given-constructor-name
                                            (expose given-constructor-name))
                                       given-expression-macro-rhs)

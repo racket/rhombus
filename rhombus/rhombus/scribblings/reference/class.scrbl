@@ -172,9 +172,14 @@
  argument with a default, then all by-position arguments of the subclass
  must have a default. A @rhombus(default_expr) or @rhombus(default_body) can refer to earlier field
  names in the same @rhombus(class) to produce a default value. If a
- @rhombus(private) @rhombus(field_spec) lacks a @rhombus(=) and
+ @rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause)
+ @rhombus(field_spec) lacks a @rhombus(=) and
  default-value expression, then a custom constructor must be declared
- with @rhombus(constructor, ~class_clause).
+ with @rhombus(constructor, ~class_clause). Alternatively, the unnamed
+ @rhombus(constructor, ~class_clause) or @rhombus(expression, ~class_clause)
+ must be disabled with @rhombus(~error) or @rhombus(~none), in which case
+ the class can only be initiated with an @rhombus(internal, ~class_clause)
+ constructor.
 
  If a block follows a @rhombus(class) form's @rhombus(field_spec) sequence,
  the block contains a mixture of definitions, expressions, exports, and class clauses. A

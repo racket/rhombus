@@ -238,7 +238,7 @@ check:
     method m3(i :: I):
       i.m().n
     method m4():
-      n().n    
+      n().n
   let c = C()
   [c.m1(), c.m2(), c.m3(c), c.m4()]
   ~is [1, 1, 1, 10]
@@ -280,7 +280,7 @@ check:
     method m3(j :: J):
       j.m().n
     method m4():
-      n().n    
+      n().n
   let c = C()
   [c.m1(), c.m2(), c.m3(c), c.m4()]
   ~is [1, 1, 1, 10]
@@ -357,7 +357,7 @@ check:
 check:
   class Posn(x, y, protected dist):
     constructor (v):
-      super(v-1, 1, v)      
+      super(v-1, 1, v)
     method m():
       [x, y, dist]
   Posn(4).m()
@@ -367,6 +367,26 @@ check:
   ~eval
   class Posn(x, y, protected dist)
   ~throws "class needs a custom constructor to initialize protected fields"
+
+check:
+  class Posn(x, y, protected dist):
+    constructor: ~error
+  ~completes
+
+check:
+  class Posn(x, y, protected dist):
+    constructor: ~none
+  ~completes
+
+check:
+  class Posn(x, y, protected dist):
+    expression: ~error
+  ~completes
+
+check:
+  class Posn(x, y, protected dist):
+    expression: ~none
+  ~completes
 
 // mutable
 check:
@@ -516,4 +536,4 @@ check:
     method m4(j :: J):
       [j.i(), j.i2(), j.j()]
   #void
-  ~completes  
+  ~completes
