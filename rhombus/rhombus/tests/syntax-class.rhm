@@ -1306,3 +1306,39 @@ block:
   | '($(x :: Bar), ...)'
   let '$(foo :: Foo)' = '((1, 2), (3, 4), (5, 6))'
   check [foo.x.y, ..., ...] ~matches ['1', '2', '3', '4', '5', '6']
+
+check:
+  syntax_class Foo:
+  | '$_':
+      let x = 'ex'
+      println(x)
+  match '1'
+  | '$(f :: Foo)': "ok"
+  ~prints "ex\n"
+
+check:
+  syntax_class Foo:
+  | '$_':
+      def x = 'ex'
+      println(x)
+      match_def 'ex' = x
+  match '1'
+  | '$(f :: Foo)': "ok"
+  ~prints "ex\n"
+
+check:
+  ~eval
+  syntax_class Foo:
+  | '$_':
+      let x = 'ex'
+      match_def 'ex' = 'ex'
+  ~throws "not allowed in this context"
+
+check:
+  syntax_class Foo:
+  | '$_':
+      import lib("racket/base.rkt")
+      field result = base.cons(1, 2)
+  match '1'
+  | '$(f :: Foo)': f.result
+  ~is Pair(1, 2)

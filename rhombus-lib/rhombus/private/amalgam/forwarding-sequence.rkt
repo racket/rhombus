@@ -20,6 +20,7 @@
 
 (provide rhombus-module-forwarding-sequence
          rhombus-block-forwarding-sequence
+         rhombus-blocklet-forwarding-sequence
          rhombus-nested-forwarding-sequence
          rhombus-mixed-nested-forwarding-sequence
 
@@ -43,6 +44,13 @@
   (syntax-parse stx
     [(_ #:orig orig . tail)
      #`(sequence [(#:block #f orig) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
+
+(define-syntax (rhombus-blocklet-forwarding-sequence stx)
+  ;; Used like `rhombus-block-forwarding-sequence`, but where an expression is not
+  ;; required at the end
+  (syntax-parse stx
+    [(_ allow-forward? . tail)
+     #`(sequence [(#:blocklet allow-forward?) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (rhombus-nested-forwarding-sequence stx)
   ;; Used for something like `namespace`
@@ -153,6 +161,10 @@
          #:literals (begin define-values define-syntaxes rhombus-forward pop-forward #%require provide #%provide quote-syntax
                            define-syntax-parameter)
          [((~and tag rhombus-forward) sub-form ...)
+          (syntax-parse #'state
+            [(#:blocklet #f)
+             (raise-syntax-error #f "forward-only definition not allowed in this context" (maybe-respan #'form))]
+            [_ (void)])
           (define intro (let ([intro (syntax-local-make-definition-context-introducer (syntax-e #'tag))])
                           (lambda (stx)
                             (intro stx 'add))))
@@ -231,7 +243,7 @@
                 [((~and tag portal) id content) #`(tag #,(intro #'id) content)]
                 [_ (intro req)])))
           (syntax-parse #'new-state
-            [((~or #:block #:block-stop-at) . _)
+            [((~or #:block #:blocklet #:block-stop-at) . _)
              (for ([req (in-list reqs)])
                ;; unlike normal `require`, `syntax-local-lift-require` doesn't remove
                ;; use-site scopes, so we have to do that ourselves here

@@ -32,12 +32,13 @@
              #:when (free-identifier=? (in-binding-space #'name)
                                        (bind-quote rhombus-values)))))
 
-(define-for-syntax (make-def #:wrap-definition [wrap-definition values]
+(define-for-syntax (make-def #:make-wrap-definition [make-wrap-definition (lambda (stx) values)]
                              #:check-context [check-context void]
                              #:check-bind-uses [check-bind-uses void])
   (definition-transformer
     (lambda (stx name-prefix)
       (check-context stx)
+      (define wrap-definition (make-wrap-definition stx))
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block body ...)))
@@ -73,7 +74,13 @@
   (make-def))
 
 (define-defn-syntax rhombus-let
-  (make-def #:wrap-definition (lambda (defn) #`(rhombus-forward #,defn))
+  (make-def #:make-wrap-definition (lambda (stx)
+                                     (lambda (defn)
+                                       (syntax-parse stx
+                                         [(head . _)
+                                          (relocate+reraw stx
+                                                          #`(#,(relocate-id #'head #'rhombus-forward)
+                                                             #,defn))])))
             #:check-context (lambda (stx)
                               (when (eq? (syntax-local-context) 'top-level)
                                 (raise-syntax-error #f

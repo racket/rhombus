@@ -22,6 +22,7 @@
          "parse.rkt"
          "pack.rkt"
          "parens.rkt"
+         "forwarding-sequence.rkt"
          (only-in "static-info.rkt" static-infos-or)
          (rename-in "ellipsis.rkt"
                     [... rhombus...])
@@ -408,12 +409,17 @@
                [rev-attrs (reverse vars)]
                [desc #f]
                [defaults '()])
-      (define (accum-do) (if (null? rev-do)
-                             rev-body
-                             (list* #`[(rhombus-body-sequence #,@(reverse rev-do))] '#:do
-                                    rev-body)))
+      (define (accum-do [end? #f])
+        (if (null? rev-do)
+            rev-body
+            (list* #`[(rhombus-blocklet-forwarding-sequence
+                       #,end? ; whether `let` is allowed
+                       (rhombus-body-sequence
+                        #,@(reverse rev-do)))]
+                   '#:do
+                   rev-body)))
       (cond
-        [(null? body) (values (reverse (accum-do))
+        [(null? body) (values (reverse (accum-do #t))
                               (reverse rev-attrs)
                               desc
                               (reverse defaults))]

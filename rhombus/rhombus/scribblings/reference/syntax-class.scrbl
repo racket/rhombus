@@ -157,7 +157,8 @@
  declared by a preceding @rhombus(field, ~pattern_clause). Consecutive
  definitions and expressions within a @rhombus(pattern_case) form a
  definition context, but separated sets of definitions and expressions
- can refer only to definitions in earlier sets.
+ can refer only to definitions in earlier sets, and @rhombus(let, ~defn)
+ is allowed only in the last set of definitions and expressions.
 
  A variable bound with a syntax class (within a syntax pattern) can be
  used without dot notation. The variable is bound to a syntax object
