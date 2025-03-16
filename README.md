@@ -1,4 +1,4 @@
-[Rhombus](https:://rhombus-lang.org) is a general-purpose programming
+[Rhombus](https://rhombus-lang.org) is a general-purpose programming
 language that is easy to use and uniquely customizable.
 
 For an overview of Rhombus's goals and design, see
@@ -15,7 +15,7 @@ Rhombus implementation.
 # Trying Rhombus
 
 The quickest route to trying Rhombus is the
-[snapshot Racket with Rhombus included]("https://users.cs.utah.edu/plt/rhombus-snapshots/").
+[snapshot Racket with Rhombus included](https://users.cs.utah.edu/plt/rhombus-snapshots/).
 
 Alternatively, using [Racket](https://racket-lang.org), install the package `rhombus`
 through DrRacket's "Install Package..." menu item or on the command
