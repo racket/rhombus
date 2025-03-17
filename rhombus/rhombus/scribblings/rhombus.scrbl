@@ -22,6 +22,7 @@ This document is a general guide to Rhombus. For more information, see
 @include_section("guide/overview.scrbl")
 @include_section("guide/datatype.scrbl")
 @include_section("guide/class-overview.scrbl")
+@include_section("guide/io.scrbl")
 @include_section("guide/macro.scrbl")
 @include_section("guide/annotation-overview.scrbl")
 @include_section("guide/static-overview.scrbl")

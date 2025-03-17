@@ -17,6 +17,8 @@
 
 @title(~tag: "rx-charset"){Regexp Character Sets}
 
+@margin_note_block{See also @secref(~doc: guide_doc, "rx-quickref").}
+
 A @deftech{character set} is written with @brackets in a @{regexp}
 pattern (via the implicit
 @rhombus(#%brackets, ~at rhombus/rx) operator). A character set
@@ -296,7 +298,7 @@ bytes to match for a byte-mode @tech{regexp}.
  The @rhombus(graph, ~at rhombus/rx_charset) character set has all ASCII
  characters that print with ink. The
  @rhombus(print, ~at rhombus/rx_charset) character set adds space
- (@rhombus(Char.to_int) value 32) and tab (@rhombus(Char.to_int).
+ (@rhombus(Char.to_int) value 32) and tab (@rhombus(Char.to_int) value 7).
 }
 
 

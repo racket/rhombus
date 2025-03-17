@@ -207,7 +207,7 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
               error.val(~label: "spliced value", a))
   let str = String.append(extract(a), ...)
   let (num_captures, vars):
-    recur loop(vars :~ Map = Map.by(===){}, as = as, var_seq = var_seq, di = 0):
+    recur loop(vars :~ Map = {}, as = as, var_seq = var_seq, di = 0):
       match var_seq
       | []: values(di, vars)
       | [#false, & var_seq]: loop(vars, as, var_seq, di+1)

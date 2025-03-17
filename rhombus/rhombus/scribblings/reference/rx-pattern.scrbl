@@ -17,6 +17,8 @@
 
 @title(~tag: "rx-pattern"){Regexp Patterns}
 
+@margin_note_block{See also @secref(~doc: guide_doc, "rx-quickref").}
+
 The portion of a @rhombus(rx) or @rhombus(rx_in) form within @quotes is
 a pattern that is written with regexp pattern operators. Some pattern
 operators overlap with expression operators, but they have different

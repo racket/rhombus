@@ -18,6 +18,8 @@
 @docmodule(~use_sources: lib("rhombus/rx.rhm"),
            rhombus/rx)
 
+@margin_note_block{See also @secref(~doc: guide_doc, "rx-quickref").}
+
 A @deftech{regular expression}, or @deftech{regexp} can be matched
 against the content of a @tech{string}, @tech{byte string}, or
 @tech{input port}. The @rhombus(rx) and @rhombus(rx_in) forms create

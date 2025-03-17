@@ -11,7 +11,7 @@ To get started with Rhombus:
 
  To try out Rhombus quickly, it may be easiest to install a
  @hyperlink("https://users.cs.utah.edu/plt/rhombus-snapshots/"){snapshot Racket with Rhombus included}.
- For all but the most common machine types or for long-term support,
+ For less common machine types or for long-term support,
  however, a @hyperlink("https://racket-lang.org/download"){Regular Racket release} is the best option.
 
  Depending on your operating system, you may be able to install through
