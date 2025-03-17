@@ -55,7 +55,7 @@ at the same speed as it has in the past, but it means that we will
 maintain our standard commitment to reliability and quality. 
 
 
-Phase 1: Brainstorming (months) (COMPLETED)
+Phase 1: Brainstorming (months) [Completed December 2021]
 ---------------------- 
 
 GOAL AND OUTPUT: A design sketch and collection of prototype 
@@ -102,7 +102,7 @@ The project leader will also use this first process to identify
 contributors and working-group leaders for the second phase. 
 
 
-Phase 2: Iterative Design (years)  (COMPLETED JUNE 2024)
+Phase 2: Iterative Design (years) [Completed June 2024]
 ------------------------- 
 
 GOAL AND OUTPUT: Specification and a coherent prototype for the overall 
@@ -130,6 +130,8 @@ design decisions. Possible groups include a reader group, a macro
 group, a data structures and generics group, a library-organization 
 group, and so on. 
 
+CHANGE POLICY: Breaking changes are frequent.
+
 CONCLUSION: When this phase produces sufficiently clear, detailed, and 
 coherent specifications plus a significant implementation, the project 
 can move to the next phase. 
@@ -138,7 +140,7 @@ Failure is still an option. If the project leader is never able to
 identify such a result, the project will be declared a failure. 
 
 
-Phase 3: Integration (months or years) (IN PROGRESS)
+Phase 3: Integration (months or years) [Completed March 2025]
 ------------------- 
 
 GOAL AND OUTPUT: Essentially complete core language, libraries, and documentation, 
@@ -156,6 +158,10 @@ historical properties of Rhombus-in-development that end up not being
 true about the completed language.  [Note: In the end, we picked
 Rhombus for the language name, too.]
 
+CHANGE POLICY: Breaking changes are allowed and expected. Some effort
+should be made to smooth out incompatibilities in the short run (e.g.,
+leaving a deprecated name in place for a while).
+
 CONCLUSION: The decision of whether this conversion succeeds—
 including which things really should be converted or not and when 
 progress is sufficient to consider the next step—is up to Racket 
@@ -164,10 +170,10 @@ project leadership.
 Failure is not yet ruled out. If the Racket project leadership never 
 approves the language for direct support, then the project fails. 
 
-**See announcement for details:** https://github.com/racket/rhombus/discussions/521
+[Details on this transition at [https://github.com/racket/rhombus/discussions/521](https://github.com/racket/rhombus/discussions/521).]
 
-Phase 4: Production (years)
-------------------- 
+Phase 4: Stabilization (years)
+----------------------
 
 GOAL AND OUTPUT: Unified distribution and presentation for the new 
 language, possibly prominently branded in the Racket ecosystem.
@@ -196,25 +202,55 @@ Rhombus project, will make the calls at this phase.
 Failure is no longer an option at this point for the new language,
 but its prominence within Racket will depend on the community.
 
+CHANGE POLICY: Breaking changes are allowed, but rare. Every breaking
+change needs a clearly identified transition path for all Rhombus
+users.
+
 CONCLUSION: The new language is at least as well supported and 
 available as `#lang racket`. 
+
+Phase 5: Production (eons)
+-------------------
+
+GOAL AND OUTPUT: Long-term maintenance and development of Rhombus.
+
+PROCESS: No programming language design is ever final, but this phase
+reflects the point where Rhombus is best characterized as in compete
+and ready for production. The language is maintained and managed by
+the Rhombus and Racket community.
+
+CHANGE POLICY: Breaking changes are generally disallowed. Although
+*any* change is a breaking change to some potential program
+(otherwise, it wouldn't be a change), "breaking change" at this point
+means breaking a package that is publically registered in place such
+as [https://pkgs.racket-lang.org](https://pkgs.racket-lang.org).
+In cooperation with the broader Rhombus community, Rhombus management
+may decide to accept a breaking change, but only as a carefully
+reasoned exemption to the general prohibition against breaking changes.
 
 
 What Will Happen to Racket by the End 
 ------------------------------------- 
 
-Transitioning does not mean that Racket will disappear. 
+Reaching the Production phase of Rhombus does not mean that Racket will disappear.
 
-- Existing `#lang racket` programs will continue to run beyond Phase 4. 
+- Existing `#lang racket` programs will continue to run.
 
-- The documentation for `#lang racket` will co-exist with whatever we 
-call the new language. 
+- The documentation for `#lang racket` will co-exist with Rhombus documentation.
 
-Put differently, Racket will become a component of the overall new 
-distribution. 
+Put differently, Racket will continue to exist as it is. Rhombus will continue to work
+as a part of the Racket ecosystem, whether or not its most prominent packaging changes.
 
 
 # Edit history
 
 Originally [posted on the Racket mailing list](https://groups.google.com/d/msg/racket-users/-x_M5wIhtWk/V47eL30HCgAJ)
 from Racket project leadership on 2019/10/02.
+
+Revised in the transition to phase 3 to use the names "Integration"
+and "Production" for phases 3 and 4.
+
+Revised in the transition to phase 4 to use the name "Stabilization"
+for phase 4, add "Production" as phase 5, clarify the
+breaking-change policies of each phase, and refine the description
+of Rhombus's interacton of Racket afterward.
