@@ -79,3 +79,59 @@ check:
 check:
   repr(Parameter.make(#false, ~name: #'p))
   ~is "#<context-parameter:p>"
+
+check:
+  ~eval
+  use_static
+  Parameter.def p = #false
+  p(~key: 1)
+  ~throws "keyword argument not recognized by called function (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def p = Parameter.make(#false)
+  p(~key: 1)
+  ~throws "keyword argument not recognized by called function (based on static information)"
+
+check:
+  ~eval
+  use_static
+  Parameter.def p = #false
+  p(1, 2)
+  ~throws "wrong number of arguments in function call (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def p = Parameter.make(#false)
+  p(1, 2)
+  ~throws "wrong number of arguments in function call (based on static information)"
+
+check:
+  use_static
+  Parameter.def p = #false
+  p.for_each([1, 2, 3, 4, 5])
+  p()
+  ~is 5
+
+check:
+  use_static
+  def p = Parameter.make(#false)
+  p.for_each([1, 2, 3, 4, 5])
+  p()
+  ~is 5
+
+check:
+  use_static
+  Parameter.def p :: String = ""
+  p("Hello")
+  p().length()
+  ~is 5
+
+check:
+  ~eval
+  use_static
+  Parameter.def p :: String = ""
+  p("Hello").length()
+  ~throws "no such field or method (based on static information)"

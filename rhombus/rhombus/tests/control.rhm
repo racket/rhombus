@@ -322,3 +322,22 @@ check:
 check:
   repr(Continuation.Marks.current())
   ~is "#<continuation-marks>"
+
+check:
+  ~eval
+  use_static
+  def k :: Continuation:
+    Continuation.capture k:
+      k
+  k(~key: 1)
+  ~throws "keyword argument not recognized by called function (based on static information)"
+
+check:
+  use_static
+  def k :: Continuation:
+    Continuation.prompt:
+      1 + (Continuation.capture k:
+             Continuation.escape(k))
+      ~catch k: k
+  k.map([1, 2, 3, 4, 5])
+  ~is [2, 3, 4, 5, 6]

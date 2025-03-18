@@ -14,6 +14,9 @@
          (submod "annotation.rkt" for-class)
          (submod "function-parse.rkt" for-build)
          (submod "equal.rkt" for-parse)
+         "function-arity-key.rkt"
+         "static-info.rkt"
+         (submod "function.rkt" for-info)
          "if-blocked.rkt"
          "rhombus-primitive.rkt")
 
@@ -51,8 +54,12 @@
   #:fields
   ([current Continuation.Marks.current]))
 
+(define-static-info-getter get-continuation-static-infos
+  (#%function-arity -1)
+  . #,(get-function-static-infos))
+
 (void (set-primitive-contract! 'continuation? "Continuation"))
-(define-annotation-syntax Continuation (identifier-annotation continuation? ()))
+(define-annotation-syntax Continuation (identifier-annotation continuation? #,(get-continuation-static-infos)))
 
 (void (set-primitive-contract! 'continuation-prompt-tag? "Continuation.PromptTag"))
 (define-annotation-syntax PromptTag (identifier-annotation continuation-prompt-tag? ()))

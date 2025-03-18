@@ -11,6 +11,7 @@
          "definition.rkt"
          "parens.rkt"
          "static-info.rkt"
+         (submod "function.rkt" for-info)
          (submod "equal.rkt" for-parse)
          "dotted-sequence-parse.rkt"
          "parse.rkt"
@@ -23,7 +24,8 @@
                      Parameter))
 
 (define-static-info-getter get-parameter-static-infos
-  (#%function-arity 3))
+  (#%function-arity 3)
+  . #,(get-function-static-infos))
 
 (define/arity (Parameter.make v
                               #:guard [guard #f]
@@ -73,6 +75,11 @@
                                                          (raise-annotation-failure who v 'annotation-str))))
                                 #f)
                           'reflect-name))
-       (if (null? (syntax-e #'static-infos))
-           null
-           #`((define-static-info-syntax name (#%call-result static-infos))))))))
+       (list (if (null? (syntax-e #'static-infos))
+                 #'(define-static-info-syntax name
+                     #:getter get-parameter-static-infos)
+                 #'(define-static-info-syntax name
+                     (#%call-result (#:at_arities
+                                     ((1 static-infos)
+                                      (2 ()))))
+                     . #,(get-parameter-static-infos))))))))
