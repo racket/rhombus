@@ -6,18 +6,27 @@ import:
 check Custodian.current() ~is_a Custodian
 check Custodian() ~is_a Custodian
 
-check Custodian.current() == Custodian.current() ~is #true
+check Custodian.current() === Custodian.current() ~is #true
 
 block:
   let c = Custodian()
   check:
-    c === (parameterize { Custodian.current: c}:
+    c === (parameterize { Custodian.current: c }:
              Custodian.current())
     ~is #true
   let th :~ Thread:
-    parameterize { Custodian.current: c}:
+    parameterize { Custodian.current: c }:
       thread:
         Thread.sleep(100)
   check th.sync(~timeout: 0) ~is #false
   check c.shutdown_all() ~is #void
   check th.sync(~timeout: 0) ~is th
+
+check Custodian.Box(1) ~is_a Custodian.Box
+
+block:
+  let c = Custodian()
+  let bx = Custodian.Box(1, ~custodian: c)
+  check bx.value ~is 1
+  check c.shutdown_all() ~is #void
+  check bx.value ~is #false

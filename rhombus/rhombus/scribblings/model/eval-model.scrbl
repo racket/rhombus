@@ -1004,7 +1004,7 @@ garbage collected, at which point its subordinates become immediately
 subordinate to the collected custodian's superordinate (owner) custodian.
 
 In addition to the other entities managed by a custodian, a
-@deftech{custodian box} created with @rhombus(CustodianBox, ~annot)
+@deftech{custodian box} created with @rhombus(Custodian.Box)
 strongly holds onto a value placed in the box until the box's
 custodian is shut down. However, the custodian only weakly retains the box
 itself, so the box and its content can be collected if there
