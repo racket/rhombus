@@ -166,11 +166,15 @@
        [(_ id:identifier (tag::block g ...))
         (values #'(call-with-composable-continuation
                    (lambda (id)
+                     (define-static-info-syntax id
+                       #:getter get-continuation-static-infos)
                      (rhombus-body-at tag g ...)))
                 #'())]
        [(_ tag-expr ...+ id:identifier (tag::block g ...))
         (values #`(call-with-composable-continuation
                    (lambda (id)
+                     (define-static-info-syntax id
+                       #:getter get-continuation-static-infos)
                      (rhombus-body-at tag g ...))
                    (rhombus-expression (#,group-tag tag-expr ...)))
                 #'())]))))

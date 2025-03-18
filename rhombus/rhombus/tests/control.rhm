@@ -333,6 +333,23 @@ check:
   ~throws "keyword argument not recognized by called function (based on static information)"
 
 check:
+  ~eval
+  use_static
+  Continuation.prompt:
+    1 + (Continuation.capture k:
+           k(~key: 1))
+  ~throws "keyword argument not recognized by called function (based on static information)"
+
+check:
+  ~eval
+  use_static
+  def tag = Continuation.PromptTag.make()
+  Continuation.prompt tag:
+    1 + (Continuation.capture tag k:
+           k(~key: 1))
+  ~throws "keyword argument not recognized by called function (based on static information)"
+
+check:
   use_static
   def k :: Continuation:
     Continuation.prompt:
@@ -340,4 +357,21 @@ check:
              Continuation.escape(k))
       ~catch k: k
   k.map([1, 2, 3, 4, 5])
+  ~is [2, 3, 4, 5, 6]
+
+check:
+  use_static
+  Continuation.prompt:
+    1 + (Continuation.capture k:
+           Continuation.escape(k.map([1, 2, 3, 4, 5])))
+    ~catch v: v
+  ~is [2, 3, 4, 5, 6]
+
+check:
+  use_static
+  def tag = Continuation.PromptTag.make()
+  Continuation.prompt tag:
+    1 + (Continuation.capture tag k:
+           Continuation.escape(~tag: tag, k.map([1, 2, 3, 4, 5])))
+    ~catch v: v
   ~is [2, 3, 4, 5, 6]
