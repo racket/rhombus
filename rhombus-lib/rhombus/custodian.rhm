@@ -1,19 +1,16 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/base.rkt") as rkt
+  "private/parameter.rhm"
 
 export:
   Custodian
-
-def custs = WeakMutableMap.by(===)()
 
 class Custodian(private _handle):
   opaque
   internal _Custodian
   constructor (~parent: parent :: Custodian = current()):
-    let self = super(rkt.#{make-custodian}(parent._handle))
-    custs[self._handle] := self
-    self
+    from_handle(rkt.#{make-custodian}(parent._handle))
 
   property handle: _handle
 
@@ -33,16 +30,8 @@ class Custodian(private _handle):
     current
     Box
 
-def current:
-  rkt.#{make-derived-parameter}(rkt.#{current-custodian},
-                                fun (v :: Custodian):
-                                  ~name: Custodian.current
-                                  _Custodian._handle(v),
-                                fun (hand):
-                                  custs.get(hand,
-                                            fun ():
-                                              let c = _Custodian(hand)
-                                              custs[hand] := c
-                                              c),
-                                #'#{Custodian.current},
-                                #'rhombus)
+parameter.def_from_racket current from_handle:
+  ~orig: rkt.#{current-custodian}
+  ~class: Custodian
+  ~_class: _Custodian
+  ~_handle: _handle

@@ -1,24 +1,34 @@
-#lang rhombus
+#lang rhombus/static
 import:
   rhombus/random open
 
 block:
   import "static_arity.rhm"
   static_arity.check ~import rhombus/random:
-    Random([state])
-    Random.random(prng, [start], [end]) ~method
-    Random.state(prng, [state])
     Random.current([prng])
 
 check:
   Random() ~is_a Random
   Random(Random().state) ~is_a Random
+  Random.current() ~is_a Random
+
+check:
+  Random.current() === Random.current() ~is #true
 
 check:
   parameterize { Random.current: Random() }:
     check:
+      Random.current() === Random.current() ~is #true
+    check:
       Random.current() ~is_a Random
       Random.current(Random()) ~is #void
+    check:
+      Random.current() === Random.current() ~is #true
+    let old_rng = Random.current()
+    Random.current(Random(Random.current().state))
+    check:
+      old_rng === Random.current() ~is #false
+      old_rng.state is_now Random.current().state ~is #true
   ~completes
 
 check:
@@ -39,7 +49,6 @@ check:
   )
 
 block:
-  use_static
   let cur_rng = Random.current()
   check:
     cur_rng.state ~is_a RandomState
@@ -64,7 +73,6 @@ block:
     math.random(2 ** 1024) ~is similar_rng.random(2 ** 1024)
 
 block:
-  use_static
   let rng = Random()
   let old_state = rng.state
   check:
@@ -90,7 +98,6 @@ check:
   ~completes
 
 block:
-  use_static
   let l = [1, 2, 3, 4, 5]
   check shuffle(l) ~is_a List
   check shuffle(l).length() ~is 5

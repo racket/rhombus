@@ -3,10 +3,34 @@ import:
   rhombus/custodian open
   rhombus/thread open
 
+block:
+  import "static_arity.rhm"
+  static_arity.check ~import rhombus/custodian:
+    Custodian.current([cust])
+
 check Custodian.current() ~is_a Custodian
 check Custodian() ~is_a Custodian
 
 check Custodian.current() === Custodian.current() ~is #true
+
+check:
+  parameterize { Custodian.current: Custodian() }:
+    check:
+      Custodian.current() === Custodian.current() ~is #true
+    check:
+      Custodian.current() ~is_a Custodian
+      Custodian.current(Custodian()) ~is #void
+    check:
+      Custodian.current() === Custodian.current() ~is #true
+  ~completes
+
+check:
+  Custodian.current("oops")
+  ~throws values(
+    "Custodian.current: " ++ error.annot_msg("argument"),
+    error.annot("Custodian").msg,
+    error.val(~label: "argument", "oops").msg,
+  )
 
 block:
   let c = Custodian()
@@ -19,8 +43,17 @@ block:
       thread:
         Thread.sleep(100)
   check th.sync(~timeout: 0) ~is #false
+  check c.is_shutdown() ~is #false
   check c.shutdown_all() ~is #void
   check th.sync(~timeout: 0) ~is th
+  check c.is_shutdown() ~is #true
+
+check:
+  parameterize { Custodian.current: Custodian() }:
+    check Custodian.current().is_shutdown() ~is #false
+    check Custodian.current().shutdown_all() ~is #void
+    check Custodian.current().is_shutdown() ~is #true
+  ~completes
 
 check Custodian.Box(1) ~is_a Custodian.Box
 

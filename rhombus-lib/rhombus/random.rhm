@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/base.rkt") as rkt
-  "private/amalgam/realm.rkt".#{rhombus-realm}
+  "private/parameter.rhm"
 
 use_static
 
@@ -18,9 +18,10 @@ class Random(private _handle):
   opaque
   internal _Random
   constructor
-  | (): super(rkt.#{make-pseudo-random-generator}())
+  | ():
+      from_handle(rkt.#{make-pseudo-random-generator}())
   | (state :: RandomState):
-      super(rkt.#{vector->pseudo-random-generator}(state))
+      from_handle(rkt.#{vector->pseudo-random-generator}(state))
 
   export: current
 
@@ -47,23 +48,11 @@ class Random(private _handle):
   | state := (s :: RandomState):
       rkt.#{vector->pseudo-random-generator!}(_handle, s)
 
-def current = rkt.#{make-derived-parameter}(
-  rkt.#{current-pseudo-random-generator},
-  fun (prg :: _Random described_as Random):
-    ~name: Random.current
-    prg._handle,
-  fun (handle):
-    _Random(handle),
-)
-
-statinfo.macro 'current':
-  let '$(a :: annot_meta.Parsed)':
-    'Function.all_of(
-       () -> Random,
-       (Random) -> Void,
-     )'
-  let (_, _, statinfo) = annot_meta.unpack_converter(a)
-  statinfo
+parameter.def_from_racket current from_handle:
+  ~orig: rkt.#{current-pseudo-random-generator}
+  ~class: Random
+  ~_class: _Random
+  ~_handle: _handle
 
 fun shuffle(l :: List, rnd :: Random = current()) :~ List:
   // Fisher-Yates shuffle

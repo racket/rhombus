@@ -1,0 +1,50 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+  meta:
+    lib("version/utils.rkt")
+
+export:
+  def_from_racket
+
+expr.macro 'version_guard_at_least $vers | $then | $else':
+  if !utils.#{version<?}(system.racket_version(), vers.unwrap())
+  | then
+  | else
+
+fun make_derived_parameter(param, guard, wrap, name, realm):
+  version_guard_at_least "8.15.0.4"
+  | rkt.#{make-derived-parameter}(param, guard, wrap, name, realm)
+  | rkt.#{make-derived-parameter}(param, guard, wrap)
+
+defn.macro 'def_from_racket $name $from_handle:
+              ~orig: $orig
+              ~class: $class
+              ~_class: $_class
+              ~_handle: $_handle':
+  let full_name = Symbol.from_string(class +& "." +& name)
+  let param_annot:
+    let '$(a :: annot_meta.Parsed)':
+      'Function.all_of(
+         () -> $class,
+         ($class) -> Void,
+       )'
+    let (_, _, statinfo) = annot_meta.unpack_converter(a)
+    annot_meta.pack_predicate('fun (_): #true', statinfo)
+  '
+    def params = WeakMutableMap.by(===){}
+    fun $from_handle(hand):
+      let self = $_class(hand)
+      params[hand] := self
+      self
+    def $name :~ $param_annot = make_derived_parameter(
+      $orig,
+      fun (v :: $_class described_as $class):
+        ~name: $full_name
+        v . $_handle,
+      fun (hand):
+        params.get(hand, fun (): $from_handle(hand)),
+      #' $full_name,
+      #'rhombus
+    )
+  '
