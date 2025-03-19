@@ -207,3 +207,24 @@ check:
           thing
     "ok"
   ~throws "duplicate export name with different bindings"
+
+check:
+  namespace ~open:
+    export only_space defn:
+      foo
+    defn.macro 'foo $x':
+      'def $x = 42'
+  foo y
+  y
+  ~is 42
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace ~open:
+    export except_space defn:
+      foo
+    defn.macro 'foo $x':
+      'def $x = 42'
+  foo
+  ~throws "foo: undefined"

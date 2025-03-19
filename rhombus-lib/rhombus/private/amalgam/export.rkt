@@ -113,10 +113,10 @@
     #:name-root-ref name-root-export-ref)
 
   (define (make-export-modifier-ref parsed-ex)
-    ;; "accessor" closes over unpecked `parsed-x`
+    ;; "accessor" closes over unpacked `parsed-ex`
     (let ([ex (syntax-parse parsed-ex
                 #:datum-literals (parsed)
-                [(parsed #:rhombus/expo req) #'req]
+                [(parsed #:rhombus/expo req) (syntax-local-introduce #'req)]
                 [_ (raise-arguments-error
                     'export_meta.ParsedModifier
                     "given export to modify is not parsed"
@@ -257,30 +257,30 @@
 (define-export-syntax only_space
   (export-modifier
    (lambda (ex stx)
-     (define (build spaces-stx)
+     (define (build form spaces-stx)
        (define spaces (parse-space-names stx spaces-stx))
-       (datum->syntax ex (list* (syntax/loc #'form only-spaces-out) ex spaces) ex))
+       (datum->syntax ex (list* (syntax/loc form only-spaces-out) ex spaces) ex))
      (syntax-parse stx
        #:datum-literals (group)
        [(form space ...)
-        (build #'((space ...)))]
+        (build #'form #'((space ...)))]
        [(form (_::block (group space ...)
                         ...))
-        (build #'((space ...) ...))]))))
+        (build #'form #'((space ...) ...))]))))
 
 (define-export-syntax except_space
   (export-modifier
    (lambda (ex stx)
-     (define (build spaces-stx)
+     (define (build form spaces-stx)
        (define spaces (parse-space-names stx spaces-stx))
-       (datum->syntax ex (list* (syntax/loc #'form except-spaces-out) ex spaces) ex))
+       (datum->syntax ex (list* (syntax/loc form except-spaces-out) ex spaces) ex))
      (syntax-parse stx
        #:datum-literals (group)
        [(form space ...)
-        (build #'((space ...)))]
+        (build #'form #'((space ...)))]
        [(form (_::block (group space ...)
                         ...))
-        (build #'((space ...) ...))]))))
+        (build #'form #'((space ...) ...))]))))
 
 (define-export-syntax names
   (export-prefix-operator
