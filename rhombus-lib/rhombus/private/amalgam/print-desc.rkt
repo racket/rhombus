@@ -1,8 +1,8 @@
 #lang racket/base
-(require "annotation-failure.rkt"
-         (prefix-in pe: pretty-expressive)
-         (prefix-in sp: shrubbery/private/simple-pretty))
-
+(require (prefix-in pe: pretty-expressive)
+         (prefix-in sp: shrubbery/private/simple-pretty)
+         "annotation-failure.rkt"
+         "realm.rkt")
 
 (provide (struct-out PrintDesc)
          (struct-out pretty-ref)
@@ -34,17 +34,20 @@
 
 (define current-print-as-pretty (make-parameter #f
                                                 (lambda (v) (and v #t))
-                                                'Printable.current_pretty))
+                                                'Printable.current_pretty
+                                                rhombus-realm))
 (define current-pretty-as-optimal (make-parameter #f
                                                   (lambda (v) (and v #t))
-                                                  'Printable.current_optimal))
+                                                  'Printable.current_optimal
+                                                  rhombus-realm))
 (define current-page-width
   (make-parameter 80
                   (lambda (v)
                     (unless (exact-nonnegative-integer? v)
                       (raise-annotation-failure 'Printable.current_page_width v "NonnegInt"))
                     v)
-                  'Printable.current_page_width))
+                  'Printable.current_page_width
+                  rhombus-realm))
 
 (define (pretty-display v [op/ht #f])
   (cond

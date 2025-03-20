@@ -191,3 +191,21 @@ check:
   parameterize { Printable.current_page_width: 0 }:
     Printable.current_page_width() < dynamic(1)
   ~is #true
+
+check:
+  Printable.current_pretty.name() ~is #'#{Printable.current_pretty}
+  Printable.current_pretty.realm() ~is #'rhombus
+  Printable.current_optimal.name() ~is #'#{Printable.current_optimal}
+  Printable.current_optimal.realm() ~is #'rhombus
+  Printable.current_page_width.name() ~is #'#{Printable.current_page_width}
+  Printable.current_page_width.realm() ~is #'rhombus
+  Printable.current_graph.name() ~is #'#{Printable.current_graph}
+  Printable.current_graph.realm() ~is #'rhombus
+
+check:
+  Printable.current_page_width("oops")
+  ~throws values(
+    "Printable.current_page_width: " ++ error.annot_msg(),
+    error.annot("NonnegInt").msg,
+    error.val("oops").msg,
+  )

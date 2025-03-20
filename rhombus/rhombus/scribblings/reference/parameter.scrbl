@@ -32,6 +32,7 @@ parameter's value using @rhombus(parameterize).
   fun Parameter.make(
     initial_val :: Any,
     ~name: name :: Symbol = #'parameter,
+    ~realm: realm :: Symbol = #'rhombus,
     ~guard: guard :: maybe(Function.of_arity(1)) = #false
   ) :: Parameter
 
@@ -53,8 +54,8 @@ parameter's value using @rhombus(parameterize).
 ){
 
  The @rhombus(Parameter.make) function creates a @tech{context parameter} whose initial value is
- @rhombus(initial_val) and whose name for debugging purposes as
- @rhombus(name). If @rhombus(guard) is not @rhombus(#false), then it used
+ @rhombus(initial_val) and whose name and realm for debugging purposes are
+ @rhombus(name) and @rhombus(realm). If @rhombus(guard) is not @rhombus(#false), then it used
  as a filter on any candidate value for the function, whether that value
  is supplied via @rhombus(parameterize) or by calling the context
  parameter as a function with one argument. The @rhombus(guard) filter

@@ -3,7 +3,7 @@
 block:
   import "static_arity.rhm"
   static_arity.check:
-    Parameter.make(val)
+    Parameter.make(val, #//~name: [name], #//~realm: [realm], #//~guard: [guard])
 
 block:
   def p = Parameter.make(10)
@@ -79,6 +79,22 @@ check:
 check:
   repr(Parameter.make(#false, ~name: #'p))
   ~is "#<context-parameter:p>"
+
+block:
+  use_static
+  let p1 = Parameter.make(#false)
+  let p2 = Parameter.make(#false, ~name: #'p2)
+  let p3 = Parameter.make(#false, ~name: #'p3, ~realm: #'new)
+  Parameter.def p4 = #false
+  check:
+    p1.name() ~is #'parameter
+    p1.realm() ~is #'rhombus
+    p2.name() ~is #'p2
+    p2.realm() ~is #'rhombus
+    p3.name() ~is #'p3
+    p3.realm() ~is #'new
+    p4.name() ~is #'p4
+    p4.realm() ~is #'rhombus
 
 check:
   ~eval

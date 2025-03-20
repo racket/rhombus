@@ -12,6 +12,7 @@
          "call-result-key.rkt"
          (submod "parameter.rkt" for-info)
          "number.rkt"
+         "rename-parameter.rkt"
          "static-info.rkt"
          "print-desc.rkt"
          (submod "print.rkt" for-printable)
@@ -69,7 +70,7 @@
   ([describe Printable.describe]
    [render Printable.render]
    [current_page_width current-page-width]
-   [current_graph print-graph]
+   [current_graph current-graph]
    [current_pretty current-print-as-pretty]
    [current_optimal current-pretty-as-optimal]))
 
@@ -174,12 +175,14 @@
   (check-nonneg-int who len)
   (PrintDesc (pretty-special v len mode alt)))
 
+(define current-graph (rename-parameter print-graph 'Printable.current_graph))
+
 (define-static-info-syntax current-page-width
   (#%call-result (#:at_arities
                   ((1 #,(get-int-static-infos))
                    (2 ()))))
   . #,(get-parameter-static-infos))
-(define-static-info-syntaxes (print-graph
+(define-static-info-syntaxes (current-graph
                               current-print-as-pretty
                               current-pretty-as-optimal)
   #:getter get-parameter-static-infos)

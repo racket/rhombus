@@ -17,7 +17,8 @@
          "parse.rkt"
          "extract-name.rkt"
          "name-prefix.rkt"
-         "call-result-key.rkt")
+         "call-result-key.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -32,9 +33,10 @@
 
 (define/arity (Parameter.make v
                               #:guard [guard #f]
-                              #:name [name 'parameter])
+                              #:name [name 'parameter]
+                              #:realm [realm rhombus-realm])
   #:static-infos ((#%call-result #,(get-parameter-static-infos)))
-  (make-parameter v guard name))
+  (make-parameter v guard name realm))
 
 (define-name-root Parameter
   #:fields
@@ -77,7 +79,8 @@
                                     (converter v 'name (lambda (v who)
                                                          (raise-annotation-failure who v 'annotation-str))))
                                 #f)
-                          'reflect-name))
+                          'reflect-name
+                          rhombus-realm))
        (list (if (null? (syntax-e #'static-infos))
                  #'(define-static-info-syntax name
                      #:getter get-parameter-static-infos)
