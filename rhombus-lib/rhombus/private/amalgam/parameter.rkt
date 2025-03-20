@@ -23,6 +23,9 @@
                       rhombus/annot)
                      Parameter))
 
+(module+ for-info
+  (provide (for-syntax get-parameter-static-infos)))
+
 (define-static-info-getter get-parameter-static-infos
   (#%function-arity 3)
   . #,(get-function-static-infos))

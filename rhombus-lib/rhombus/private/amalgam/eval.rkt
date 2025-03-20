@@ -6,12 +6,11 @@
          "parse.rkt"
          "pack.rkt"
          "define-arity.rkt"
-         "function-arity-key.rkt"
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
          (submod "module-path-object.rkt" for-primitive)
-         (submod "function.rkt" for-info))
+         (submod "parameter.rkt" for-info))
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -55,8 +54,7 @@
       (eval #`(rhombus-top #,@(unpack-multi e 'eval #f)))))
 
 (define-static-info-syntaxes (current-namespace)
-  (#%function-arity 3)
-  . #,(get-function-static-infos))
+  #:getter get-parameter-static-infos)
 
 (define (check-module-path who mod-path)
   (unless (module-path? mod-path)

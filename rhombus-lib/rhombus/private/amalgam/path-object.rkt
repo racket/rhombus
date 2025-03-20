@@ -19,7 +19,7 @@
          "rename-parameter.rkt"
          (submod "annotation.rkt" for-class)
          (submod "bytes.rkt" static-infos)
-         (submod "function.rkt" for-info)
+         (submod "parameter.rkt" for-info)
          (submod "list.rkt" for-listable)
          (submod "string.rkt" static-infos)
          (submod "symbol.rkt" for-static-info))
@@ -276,9 +276,10 @@
 (define Path.current_directory (rename-parameter current-directory 'Path.current_directory))
 (define Path.current_directory_for_user (rename-parameter current-directory-for-user 'Path.current_directory_for_user))
 (define-static-info-syntaxes (Path.current_directory Path.current_directory_for_user)
-  (#%function-arity 3)
-  (#%call-result #,(get-path-static-infos))
-  . #,(get-function-static-infos))
+  (#%call-result (#:at_arities
+                  ((1 #,(get-path-static-infos))
+                   (2 ()))))
+  . #,(get-parameter-static-infos))
 
 (define/method (Path.name p)
   #:local-primitive (split-path)

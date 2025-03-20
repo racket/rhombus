@@ -9,8 +9,9 @@
          (submod "annotation.rkt" for-class)
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "define-arity.rkt"
-         (submod "function.rkt" for-info)
-         "function-arity-key.rkt"
+         "call-result-key.rkt"
+         (submod "parameter.rkt" for-info)
+         "number.rkt"
          "static-info.rkt"
          "print-desc.rkt"
          (submod "print.rkt" for-printable)
@@ -173,12 +174,15 @@
   (check-nonneg-int who len)
   (PrintDesc (pretty-special v len mode alt)))
 
-(define-static-info-syntaxes (current-page-width
-                              print-graph
+(define-static-info-syntax current-page-width
+  (#%call-result (#:at_arities
+                  ((1 #,(get-int-static-infos))
+                   (2 ()))))
+  . #,(get-parameter-static-infos))
+(define-static-info-syntaxes (print-graph
                               current-print-as-pretty
                               current-pretty-as-optimal)
-  (#%function-arity 3)
-  . #,(get-function-static-infos))
+  #:getter get-parameter-static-infos)
 
 (define/arity (Printable.describe v
                                   #:mode [mode 'text]

@@ -233,7 +233,7 @@
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx
-    [(_ id:identifier #:getter getter:id)
+    [(_ id:identifier #:getter getter:identifier)
      #`(define-syntax #,(in-static-info-space #'id)
          (static-info getter))]
     [(_ id:identifier . tail)
@@ -242,6 +242,10 @@
 
 (define-syntax (define-static-info-syntaxes stx)
   (syntax-parse stx
+    [(_ (id:identifier ...) #:getter getter:identifier)
+     #'(begin
+         (define-static-info-syntax id #:getter getter)
+         ...)]
     [(_ (id:identifier ...) . tail)
      #'(begin
          (define-static-info-getter getter . tail)

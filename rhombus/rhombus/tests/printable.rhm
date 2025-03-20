@@ -186,3 +186,8 @@ block:
       "PrintDesc",
       "Box(\"really not a print description\")",
     )
+
+check:
+  parameterize { Printable.current_page_width: 0 }:
+    Printable.current_page_width() < dynamic(1)
+  ~is #true

@@ -14,10 +14,9 @@
          (submod "string.rkt" static-infos)
          "static-info.rkt"
          "define-arity.rkt"
-         (submod "function.rkt" for-info)
+         (submod "parameter.rkt" for-info)
          (submod "map.rkt" for-info)
          "class-primitive.rkt"
-         "realm.rkt"
          "enum.rkt"
          "binding.rkt"
          "literal.rkt"
@@ -244,14 +243,16 @@
   (rename-parameter port-count-lines-enabled 'Port.current_enable_locations))
 
 (define-static-info-syntax Port.Input.current
-  (#%function-arity 3)
-  (#%call-result #,(get-input-port-static-infos))
-  . #,(get-function-static-infos))
+  (#%call-result (#:at_arities
+                  ((1 #,(get-input-port-static-infos))
+                   (2 ()))))
+  . #,(get-parameter-static-infos))
 
 (define-static-info-syntaxes (Port.Output.current Port.Output.current_error)
-  (#%function-arity 3)
-  (#%call-result #,(get-output-port-static-infos))
-  . #,(get-function-static-infos))
+  (#%call-result (#:at_arities
+                  ((1 #,(get-output-port-static-infos))
+                   (2 ()))))
+  . #,(get-parameter-static-infos))
 
 (define-annotation-syntax EOF (identifier-annotation eof-object? ()))
 
