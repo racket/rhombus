@@ -286,15 +286,19 @@
 
 (define-for-syntax (raise-wrong-depth expr used-depth-stx want-depth actual-depth
                                       #:at-least? [at-least? #f])
-  (raise-syntax-error #f
-                      "used with wrong repetition depth"
-                      expr
-                      #f
-                      null
-                      (format "\n  expected: ~a\n  actual: ~a~a"
-                              (+ want-depth (syntax-e used-depth-stx))
-                              (if at-least? "at least " "")
-                              (+ actual-depth (syntax-e used-depth-stx)))))
+  (define expected-depth (+ want-depth (syntax-e used-depth-stx)))
+  (define adjusted-actual-depth (+ actual-depth (syntax-e used-depth-stx)))
+  (cond
+    [(and (zero? expected-depth) (positive? adjusted-actual-depth))
+     (define details (format "\n  used repetition depth: ~a" adjusted-actual-depth))
+     (raise-syntax-error #f "not a repetition" expr #f null details)]
+    [else
+     (define details
+       (format "\n  expected: ~a\n  actual: ~a~a"
+               expected-depth
+               (if at-least? "at least " "")
+               adjusted-actual-depth))
+     (raise-syntax-error #f "used with wrong repetition depth" expr #f null details)]))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

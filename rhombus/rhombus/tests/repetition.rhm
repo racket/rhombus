@@ -351,3 +351,14 @@ check:
   def [x, ...] = [1, 2, 3]
   [[if 1 | 2 | 3, x,] ...]
   ~throws "cannot use expression binding as a repetition"
+
+check:
+  ~eval
+  [x, ...]
+  ~throws "not a repetition"
+
+check:
+  ~eval
+  def [x, ...] = [1, 2, 3]
+  [x, ..., ...]
+  ~throws "used with wrong repetition depth"
