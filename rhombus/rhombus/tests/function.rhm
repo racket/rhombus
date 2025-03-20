@@ -5,6 +5,11 @@ block:
   static_arity.check:
     Function.map(fn, lst0, lst, ...) ~method
     Function.for_each(fn, lst0, lst, ...) ~method
+    Function.name(fn) ~method
+    Function.realm(fn) ~method
+    Function.rename(fn, name, #//~realm: [realm]) ~method
+    Function.arity(fn) ~method
+    Function.reduce_arity(fn, mask, req_kws, allow_kws, #//~name: [name], #//~realm: [realm]) ~method
 
 check:
   1 is_a Function ~is #false
@@ -455,11 +460,26 @@ block:
   fun f3(x, y, z, & args): x
   fun f4(x, ~y, & args, ~& kws): x
   check f1.name() ~is #'f1
+  check f1.realm() ~is #'rhombus
   check f2.name() ~is #'f2
+  check f2.realm() ~is #'rhombus
   check print(f1.rename(#'helper)) ~prints "#<function:helper>"
+  check f1.rename(#'any, ~realm: #'new).realm() ~is #'new
   check f1.arity() ~is values(2, [], [])
   check f2.arity() ~is values(6, [#'~z], [#'~w, #'~z])
   check f3.arity() ~is values(-8, [], [])
   check f4.arity() ~is values(-2, [#'~y], #false)
   check f2.reduce_arity(4, [#'~z], [#'~w, #'~z]) ~is_a Function
   check f4.reduce_arity(32, [#'~y], [#'~a, #'~b, #'~c, #'~y]) ~is_a Function
+
+block:
+  check (fun (x): x).name() ~is #'fun
+  check (fun (x): x).realm() ~is #'rhombus
+  check (fun (x):
+           ~name: f
+           x)
+    .name() ~is #'f
+  check (fun (x):
+           ~name: f
+           x)
+    .realm() ~is #'rhombus

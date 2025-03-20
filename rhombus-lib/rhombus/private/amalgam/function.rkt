@@ -3,7 +3,6 @@
                      syntax/parse/pre
                      syntax/strip-context
                      shrubbery/property
-                     enforest/name-parse
                      "consistent.rkt"
                      "entry-point-adjustment.rkt"
                      "dotted-sequence.rkt"
@@ -78,6 +77,7 @@
   (map
    for_each
    name
+   realm
    rename
    arity
    reduce_arity))
@@ -763,6 +763,11 @@
   #:static-infos ((#%call-result ((#%maybe #,(get-symbol-static-infos)))))
   (check-proc who p)
   (object-name p))
+
+(define/method (Function.realm p)
+  #:primitive (procedure-realm)
+  #:static-infos ((#%call-result #,(get-symbol-static-infos)))
+  (procedure-realm p))
 
 (define/method (Function.rename p name #:realm [realm rhombus-realm])
   #:primitive (procedure-rename)

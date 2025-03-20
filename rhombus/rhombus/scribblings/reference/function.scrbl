@@ -587,7 +587,8 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 
 
 @doc(
-  method (f :: Function).name() :: Symbol
+  method (f :: Function).name() :: maybe(Symbol)
+  method (f :: Function).realm() :: Symbol
   method (f :: Function).rename(
     name :: Symbol,
     ~realm: realm :: Symbol = #'rhombus
@@ -595,10 +596,11 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 ){
 
  The @rhombus(Function.name) method reports a function's name, which is
- used for printing the function. The @rhombus(Function.rename) method
- returns a function that is like @rhombus(f), but with the given name. A
- function's realm may affect how the function name is printed in
- different contexts.
+ used for printing the function. The @rhombus(Function.realm) method
+ reports a function's realm, which is used for error message adjusting.
+ The @rhombus(Function.rename) method returns a function that is like
+ @rhombus(f), but with the given name. A function's realm may affect
+ how the function name is printed in different contexts.
 
 }
 
