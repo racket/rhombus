@@ -136,14 +136,14 @@ namespace filesystem:
             let tmp = make_temporary()
             let moved:
               try:
-                rkt.#{rename-file-or-directory}(p, tmp, #true)
+                rkt.#{rename-file-or-directory}(p, tmp.path, #true)
                 #true
                 ~catch (x :: Exn.Fail.Filesystem):
                   #false
             rkt_error.local_error_adjust { #'#{delete-file}: who }:
               unless moved
               | rkt.#{delete-file}(p)
-              rkt.#{delete-file}(tmp)
+              rkt.#{delete-file}(tmp.path)
         | ~else:
             rkt_error.local_error_adjust { #'#{delete-file}: who }:
               rkt.#{delete-file}(p)
