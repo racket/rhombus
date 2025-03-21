@@ -125,6 +125,24 @@ check:
   ~is "_1,2_"
 
 block:
+  class Posn(x, y):
+    private implements Printable
+    private override describe(mode, recur):
+      if mode == #'text
+      | "_" +& x +& "," +& y +& "_"
+      | recur(this, ~as: #'super)
+  check "" +& Posn(1, 2) ~is "_1,2_"
+  check repr(Posn(1, 2)) ~is "Posn(1, 2)"
+
+check:
+  class Posn(x, y):
+    private implements Printable
+    private override describe(mode, recur):
+      recur("something else", ~as: #'super)
+  "" +& Posn(1, 2)
+  ~throws "value for super mode is not the original object"
+
+block:
   class Box(tag, mutable val):
     implements Printable
     override describe(mode, recur):

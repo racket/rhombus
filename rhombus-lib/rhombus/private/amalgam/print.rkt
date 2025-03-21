@@ -16,7 +16,8 @@
          "print-desc.rkt"
          "key-comp-property.rkt"
          "enum.rkt"
-         "syntax-wrap.rkt")
+         "syntax-wrap.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -291,39 +292,26 @@
           (fresh-ref
            v
            (lambda ()
-             (printer v mode (lambda (v #:mode [mode 'expr])
-                               (check-mode 'describe_recur mode)
-                               (PrintDesc (pretty v mode ht)))))))]
+             (printer v mode
+                      (lambda (next-v #:mode [mode 'expr] #:as [as-mode 'print])
+                        (define who 'describe_recur)
+                        (check-mode who mode)
+                        (unless (or (eq? as-mode 'print) (eq? as-mode 'super))
+                          (raise-annotation-failure who mode "Any.of(#'print, #'super)"))
+                        (cond
+                          [(eq? as-mode 'super)
+                           (unless (eq? v next-v)
+                             (raise-arguments-error* who rhombus-realm
+                                                     "value for super mode is not the original object"
+                                                     "value" next-v))
+                           (PrintDesc (default-struct-print v (lambda (v [mode mode]) (pretty v mode ht))))]
+                          [else
+                           (PrintDesc (pretty next-v mode ht))]))))))]
     [(struct? v)
-     (define vec (struct->vector v))
      (fresh-ref
       v
       (lambda ()
-        (pretty-listlike
-         (pretty-concat
-          (pretty-write (cond
-                          [(srcloc? v) 'Srcloc]
-                          [(exn? v) (get-exn-name v)]
-                          [else (object-name v)]))
-          (pretty-text "("))
-         (cond
-           [(print-field-shapes-ref v #f)
-            => (lambda (shapes)
-                 (cond
-                   [(eq? shapes 'opaque)
-                    (list (pretty-text "..."))]
-                   [else
-                    (for/list ([i (in-range 1 (vector-length vec))]
-                               [s (in-list shapes)]
-                               #:when s)
-                      (if (keyword? s)
-                          (pretty-blocklike (pretty-text (string-append "~" (keyword->immutable-string s)))
-                                            (print (vector-ref vec i)))
-                          (print (vector-ref vec i))))]))]
-           [else
-            (for/list ([i (in-range 1 (vector-length vec))])
-              (print (vector-ref vec i)))])
-         (pretty-text ")"))))]
+        (default-struct-print v (lambda (v [mode mode]) (pretty v mode ht)))))]
     ;; (byte) strings at this point are mutable
     ;; refer to `maybe-print-immediate`
     [(or (and (string? v) "String.copy(")
@@ -495,6 +483,34 @@
         (racket-print (racket-print-redirect v) rop 1)
         (display "}" rop)
         (pretty-text (get-output-bytes rop))])]))
+
+(define (default-struct-print v recur)
+  (define vec (struct->vector v))
+  (pretty-listlike
+   (pretty-concat
+    (pretty-write (cond
+                    [(srcloc? v) 'Srcloc]
+                    [(exn? v) (get-exn-name v)]
+                    [else (object-name v)]))
+    (pretty-text "("))
+   (cond
+     [(print-field-shapes-ref v #f)
+      => (lambda (shapes)
+           (cond
+             [(eq? shapes 'opaque)
+              (list (pretty-text "..."))]
+             [else
+              (for/list ([i (in-range 1 (vector-length vec))]
+                         [s (in-list shapes)]
+                         #:when s)
+                (if (keyword? s)
+                    (pretty-blocklike (pretty-text (string-append "~" (keyword->immutable-string s)))
+                                      (recur (vector-ref vec i)))
+                    (recur (vector-ref vec i) 'expr)))]))]
+     [else
+      (for/list ([i (in-range 1 (vector-length vec))])
+        (recur (vector-ref vec i) 'expr))])
+   (pretty-text ")")))
 
 (define (racket-print v op mode)
   (print v op mode))

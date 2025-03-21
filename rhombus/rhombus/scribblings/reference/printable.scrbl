@@ -30,11 +30,21 @@ interface customizes the way that instances of a class print.
   --- returns a @rhombus(PrintDesc, ~annot) given a
   @rhombus(mode, ~var), which is either @rhombus(#'text) or
   @rhombus(#'expr), and a @rhombus(recur, ~var) function, which accepts a
-  value and an optional @rhombus(~mode) like @rhombus(Printable.describe)
+  value, an optional @rhombus(~mode) like @rhombus(Printable.describe)
   (unlike @rhombus(Printable.describe), the @rhombus(~mode) defaults to
-  @rhombus(#'expr), which is generally desirable when printing subcomponents);
+  @rhombus(#'expr), which is generally desirable when printing subcomponents),
+  and an optional @rhombus(~as) argument;
   the @rhombus(recur, ~var) function is specific to a particular overall print
-  action so that it can handle cycles and graph references.}
+  action so that it can handle cycles and graph references.
+
+  The optional @rhombus(~as) argument for @rhombus(recur, ~var) can be
+  @rhombus(#'print) or @rhombus(#'super), and the default is
+  @rhombus(#'print). When @rhombus(~as) is @rhombus(#'super), the supplied
+  object to print must be the same object whose @rhombus(describe, ~datum)
+  method is called; in that case, instead of immediately recurring back to
+  @rhombus(describe, ~datum), the default printing implementation is used.
+  An exception is thrown for @rhombus(#'super) mode for any other object
+  to print.}
 
 )
 
