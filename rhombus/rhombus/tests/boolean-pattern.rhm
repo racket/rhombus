@@ -110,3 +110,14 @@ check:
     ++ "\n" ++ "matcher: [_]"
     ++ "\n" ++ "matcher: [_, _]"
     ++ "\n"
+
+check: match #"x" | is_now #"x": "yes"
+       ~is "yes"
+check: match #"x".copy() | is_now #"x": "yes"
+       ~is "yes"
+check: match "x".copy() | is_now "x": "yes"
+       ~is "yes"
+check: match "x".copy()
+       | is_now #"x": "yes"
+       | ~else: "no"
+       ~is "no"

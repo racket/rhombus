@@ -1,18 +1,21 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/print
                      "annotation-string.rkt")
          "binding.rkt"
          "static-info.rkt"
          "literal.rkt"
          "if-blocked.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         (submod "implicit.rkt" check-literal))
 
 (provide (for-space rhombus/bind
                     &&
                     \|\|
-                    !))
+                    !
+                    is_now))
 
 (module+ for-class
   (provide (for-syntax make-and-binding)))
@@ -208,3 +211,16 @@
   (syntax-parse stx
     [(_ arg-id () info)
      #'(begin)]))
+
+;; ----------------------------------------
+;; is_now
+
+(define-binding-syntax is_now
+  (binding-transformer
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(form-id datum . tail)
+        (check-literal-term #'form-id #'datum)
+        (values (binding-form #'literal-now-infoer
+                              #`([datum #,(shrubbery-syntax->string #'datum)]))
+                #'tail)]))))

@@ -58,6 +58,9 @@
 (module+ normal-literal
   (provide (for-syntax normal-literal?)))
 
+(module+ check-literal
+  (provide (for-syntax check-literal-term)))
+
 (define-syntax #%block
   (expression-prefix+infix-operator
    (expression-transformer

@@ -634,4 +634,5 @@
       (raise-string-comp-failure '!= a b)))
 
 (begin-for-syntax
-  (install-get-literal-static-infos! 'string get-string-static-infos))
+  (install-get-literal-static-infos! 'string get-string-static-infos)
+  (install-get-literal-static-infos! 'readable-string get-readable-string-static-infos))

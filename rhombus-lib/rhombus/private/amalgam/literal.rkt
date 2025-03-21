@@ -8,6 +8,7 @@
          "number.rkt")
 
 (provide literal-infoer
+         literal-now-infoer
          ;; useful for other binding patterns:
          literal-commit-nothing
          literal-bind-nothing)
@@ -19,6 +20,12 @@
                        literal-static-infos)))
 
 (define-syntax (literal-infoer stx)
+  (parse-literal-infoer stx #'equal-always? #t))
+
+(define-syntax (literal-now-infoer stx)
+  (parse-literal-infoer stx #'equal? #f))
+
+(define-for-syntax (parse-literal-infoer stx eql?-stx always?)
   (syntax-parse stx
     [(_ up-static-infos (~and data ([datum0 str0] [datum str] ...)))
      (binding-info (annotation-string-from-pattern
@@ -32,7 +39,7 @@
                                   ([datum (in-list (syntax->list #'(datum ...)))])
                           #:break (not si)
                           (cond
-                            [(literal-static-infos datum)
+                            [(literal-static-infos datum always?)
                              => (lambda (more-si)
                                   (static-infos-or si more-si))]
                             [else #f]))
@@ -44,12 +51,12 @@
                    #'()
                    #'literal-commit-nothing
                    #'literal-bind-nothing
-                   #'data)]))
+                   #`(#,eql?-stx . data))]))
 
 (define-syntax (literal-matcher stx)
   (syntax-parse stx
-    [(_ arg-id ([datum _] ...) IF success fail)
-     #'(IF (or (equal-always? arg-id (quote datum))
+    [(_ arg-id (eql? [datum _] ...) IF success fail)
+     #'(IF (or (eql? arg-id (quote datum))
                ...)
            success
            fail)]))
@@ -65,18 +72,22 @@
      #'(begin)]))
 
 (define-for-syntax get-string-static-infos #f)
+(define-for-syntax get-readable-string-static-infos #f)
 (define-for-syntax get-bytes-static-infos #f)
 (define-for-syntax get-char-static-infos #f)
 (define-for-syntax (install-get-literal-static-infos! kind get-static-infos)
   (case kind
     [(string) (set! get-string-static-infos get-static-infos)]
+    [(readable-string) (set! get-readable-string-static-infos get-static-infos)]
     [(bytes) (set! get-bytes-static-infos get-static-infos)]
     [(char) (set! get-char-static-infos get-static-infos)]
     [else (error "unrecognized kind" kind)]))
 
-(define-for-syntax (literal-static-infos d-stx)
+(define-for-syntax (literal-static-infos d-stx [always? #t])
   (define d (syntax-e d-stx))
-  (or (and (string? d) (get-string-static-infos))
+  (or (and (string? d) (if always?
+                           (get-string-static-infos)
+                           (get-readable-string-static-infos)))
       (and (bytes? d) (get-bytes-static-infos))
       (and (exact-integer? d) (get-int-static-infos))
       (and (flonum? d) (get-flonum-static-infos))

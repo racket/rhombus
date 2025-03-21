@@ -107,10 +107,11 @@ See also @secref("Equatables").
     expr.macro '$expr !is_now $expr'
   non_target:
     repet.macro '$repet !#,(@rhombus(is_now, ~repet)) $repet'
+  bind.macro 'is_now $literal'
   key_comp.def 'is_now'
 ){
 
- Reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
+ Th @rhombus(is_now) operator reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
  in the sense that mutable fields of objects have the same values. The
  operator combination @rhombus(!is_now) inverts the test.
 
@@ -119,6 +120,12 @@ See also @secref("Equatables").
  other is immutable. However, a mutable map or set is never considered
  equivalent to an immutable map or set, even if they have the same
  content.
+
+ As a binding operator, @rhombus(is_now, ~bind) matches values that are
+ equal by the @rhombus(is_now) operator to a @rhombus(literal), where
+ @rhombus(literal) is typically a @tech{string} or @tech{byte string}.
+ See @rhombus(#%literal, ~bind) for information on the allow forms of
+ @rhombus(literal).
 
  The @rhombus(is_now, ~key_comp) @tech(~doc: meta_doc){map configuration} can be used with forms
  like the @rhombus(Map.by) constructor or @rhombus(Map.by, ~annot)
