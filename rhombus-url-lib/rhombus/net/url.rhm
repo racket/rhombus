@@ -1,0 +1,163 @@
+#lang rhombus/static/and_meta
+import:
+  lib("net/url-structs.rkt") open
+  lib("net/url-string.rkt") open
+  lib("net/uri-codec.rkt") open
+
+export:
+  URL
+  PathWithParams
+  KeyValue
+
+  relative_path_to_relative_url_string
+
+  EncodeMode
+  current_encode_mode
+
+  uri
+  form
+
+enum EncodeMode:
+  recommended
+  unreserved
+
+class PathWithParams(path :: String || Path.Dot,
+                     params :: List.of(String))
+
+class KeyValue(key :: String,
+               value :: maybe(String))
+
+class URL(~scheme: scheme :: maybe(String) = #false,
+          ~user: user :: maybe(String) = #false,
+          ~host: host :: maybe(String) = #false,
+          ~port: port :: maybe(NonnegInt) = #false,
+          ~is_path_absolute: is_path_absolute :: Boolean = #true,
+          ~path: path :: List.of(PathWithParams) = [],
+          ~query: query :: List.of(KeyValue) = [],
+          ~fragment: fragment :: maybe(String) = #false):
+  private implements Printable
+  export:
+    from_string
+    from_path
+    from_handle
+
+  method to_string() :~ String:
+    parameterize { #{current-url-encode-mode}: current_encode_mode(),
+                   #{current-alist-separator-mode}: current_separator_mode_as_rkt() }:
+      String.to_string(#{url->string}(to_url()))
+
+  private override method describe(mode, recur):
+    if mode == #'text
+    | to_string()
+    | recur(this, ~mode: mode, ~as: #'super)
+
+  method to_path(conv :: CrossPath.Convention = CrossPath.Convention.current()) :~ CrossPath:
+    #{url->path}(to_url(), conv)      
+
+  method add(rel :: String) :~ URL:
+    from_url(#{combine-url/relative}(to_url(), rel))
+
+  method to_handle():
+    to_url()
+    
+  private method to_url() :~ URL:
+    let [pp, ...] = path
+    let [KeyValue(k, v), ...] = query
+    url(scheme,
+        user,
+        host,
+        port,
+        is_path_absolute,
+        PairList[#{path/param}(pp.path, PairList(& pp.params)), ...],
+        PairList[Pair(Symbol.from_string(k), v), ...],
+        fragment)
+
+fun from_handle(handle) :~ URL:
+  unless #{url?}(handle)
+  | error("not a valid URL handle",
+          error.val(handle))
+  from_url(handle)
+
+fun from_string(s :: String) :~ URL:
+  ~name: URL.from_string
+  from_url(#{string->url}(s))
+
+fun from_path(p :: PathString || CrossPath) :~ URL:
+  ~name: URL.from_path
+  from_url(#{path->url}(p))
+
+fun from_url(u) :~ URL:
+  fun maybe_to_string(s): s && to_string(s)
+  URL(~scheme: maybe_to_string(#{url-scheme}(u)),
+      ~user: maybe_to_string(#{url-user}(u)),
+      ~host: maybe_to_string(#{url-host}(u)),
+      ~port: #{url-port}(u),
+      ~is_path_absolute: #{url-path-absolute?}(u),
+      ~path: let PairList[pp, ...] = #{url-path}(u)
+             [PathWithParams(to_string(#{path/param-path}(pp)),
+                             PairList.to_list(#{path/param-param}(pp)).map(to_string)),
+              ...],
+      ~query: let PairList[Pair(k, v), ...] = #{url-query}(u)
+              [KeyValue(to_string(k), maybe_to_string(v)), ...],
+      ~fragment: maybe_to_string(#{url-fragment}(u)))
+
+fun relative_path_to_relative_url_string(p :: (PathString.to_path || CrossPath) && CrossPath.Relative) :~ String:
+  to_string(#{relative-path->relative-url-string}(p))
+  
+Parameter.def current_encode_mode :: EncodeMode = #{current-url-encode-mode}()
+
+fun current_separator_mode_as_rkt():
+  match form.current_separator_mode()
+  | #'amp_or_semi: #'#{amp-or-semi}
+  | #'semi_or_amp: #'#{semi-or-amp}
+  | s: s
+
+decl.nestable_macro 'converter_def $id $rkt_id':
+  'export $id
+   fun $id(s :: String) :~ String:
+     to_string($rkt_id(s))'
+
+namespace uri:
+  converter_def encode #{uri-encode}
+  converter_def decode #{uri-decode}
+  converter_def path_segment_encode #{uri-path-segment-encode}
+  converter_def path_segment_decode #{uri-path-segment-decode}
+  converter_def userinfo_encode #{uri-userinfo-encode}
+  converter_def userinfo_decode #{uri-userinfo-decode}
+  converter_def unreserved_encode #{uri-unreserved-encode}
+  converter_def unreserved_decode #{uri-unreserved-decode}
+  converter_def path_segment_unreserved_encode #{uri-path-segment-unreserved-encode}
+  converter_def path_segment_unreserved_decode #{uri-path-segment-unreserved-decode}
+
+namespace form:
+  export:
+    list_to_urlencoded
+    urlencoded_to_list
+    AListSeparatorMode
+    current_separator_mode
+
+  converter_def urlencoded_encode #{form-urlencoded-encode}
+  converter_def urlencoded_decode #{form-urlencoded-decode}
+
+  fun list_to_urlencoded(kv :: List.of(KeyValue)) :~ String:
+    let [KeyValue(k, v), ...] = kv
+    parameterize { #{current-alist-separator-mode}: current_separator_mode_as_rkt() }:
+      to_string(#{alist->form-urlencoded}(PairList(Pair(Symbol.from_string(k), v), ...)))
+  fun urlencoded_to_list(s :: String) :~ List.of(KeyValue):
+    let PairList[Pair(k, v), ...]:
+      parameterize { #{current-alist-separator-mode}: current_separator_mode_as_rkt() }:
+        #{form-urlencoded->alist}(s)
+    [KeyValue(to_string(k), to_string(v)), ...]
+
+  enum AListSeparatorMode:
+    amp
+    semi
+    amp_or_semi
+    semi_or_amp
+
+  Parameter.def current_separator_mode :: AListSeparatorMode:
+    match #{current-alist-separator-mode}()
+    | #'#{amp-or-semi}: #'amp_or_semi
+    | #'#{semi-or-amp}: #'semi_or_amp
+    | s: s
+
