@@ -156,6 +156,8 @@
    [maybe_to_number String.maybe_to_number]
    [to_int String.to_int]
    [to_number String.to_number]
+   [from_int String.from_int]
+   [from_number String.from_number]
    [to_string String.to_string]
    [upcase String.upcase]
    [downcase String.downcase]
@@ -306,38 +308,59 @@
   (check-readable-string who s)
   (string->immutable-string s))
 
-;; FIXME these should use shrubbery lexeme syntax
-(define (rhombus-string->int s)
-  (define n (string->number s))
+;; FIXME: shrubbery lexeme syntax should be an option?
+(define (rhombus-string->int s [radix 10])
+  (define n (string->number s radix))
   (and (exact-integer? n)
        n))
 
-(define (rhombus-string->number s)
-  (string->number s))
+(define (rhombus-string->number s [radix 10])
+  (string->number s radix))
 
-(define/method (String.maybe_to_int s)
+(define (check-radix who radix)
+  (unless (and (exact-integer? radix)
+               (radix . >= . 2)
+               (radix . <= . 16))
+    (raise-annotation-failure who radix "Int.in(2, 16)")))
+
+(define/method (String.maybe_to_int s #:radix [radix 10])
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
   (check-readable-string who s)
-  (rhombus-string->int s))
+  (check-radix who radix)
+  (rhombus-string->int s radix))
 
-(define/method (String.maybe_to_number s)
+(define/method (String.maybe_to_number s #:radix [radix 10])
   #:static-infos ((#%call-result ((#%maybe #,(get-number-static-infos)))))
   (check-readable-string who s)
-  (rhombus-string->number s))
+  (check-radix who radix)
+  (rhombus-string->number s radix))
 
-(define/method (String.to_int s)
+(define/method (String.to_int s #:radix [radix 10])
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (check-readable-string who s)
-  (or (rhombus-string->int s)
+  (check-radix who radix)
+  (or (rhombus-string->int s radix)
       (raise-arguments-error* who rhombus-realm "string does not parse as an integer"
                               "string" s)))
 
-(define/method (String.to_number s)
+(define/method (String.to_number s #:radix [radix 10])
   #:static-infos ((#%call-result #,(get-number-static-infos)))
   (check-readable-string who s)
-  (or (rhombus-string->number s)
+  (check-radix who radix)
+  (or (rhombus-string->number s radix)
       (raise-arguments-error* who rhombus-realm "string does not parse as a number"
                               "string" s)))
+
+(define/arity (String.from_int n #:radix [radix 10])
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (unless (exact-integer? n) (raise-annotation-failure who n "Int"))
+  (check-radix who radix)
+  (string->immutable-string (number->string n radix)))
+
+(define/arity (String.from_number n)
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (unless (number? n) (raise-annotation-failure who n "Number"))
+  (string->immutable-string (number->string n)))
 
 (define-annotation-syntax String.to_int
   (make-identifier-binding-annotation

@@ -362,12 +362,18 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.to_int(str :: ReadableString) :: Int
+  method String.to_int(
+    str :: ReadableString,
+    ~radix: radix :: Int.in(2, 16) = 10
+  ) :: Int
   annot.macro 'String.to_int'
-  method String.maybe_to_int(str :: ReadableString) :: maybe(Int)
+  method String.maybe_to_int(
+    str :: ReadableString,
+    ~radix: radix :: Int.in(2, 16) = 10
+  ) :: maybe(Int)
 ){
 
- The @rhombus(String.to_int) function parses @rhombus(str) as an
+ The @rhombus(String.to_int) function parses @rhombus(str) as a base-@rhombus(radix)
  integer and returns the integer value. If @rhombus(str) does not
  parse as an integer, the @rhombus(Exn.Fail.Contract, ~class)
  exception is thrown. The @rhombus(String.maybe_to_int) function is
@@ -384,6 +390,7 @@ Strings are @tech{comparable}, which means that generic operations like
   String.maybe_to_int("forty-two")
   "100".to_int()
   "100".maybe_to_int()
+  "100".to_int(~radix: 16)
 )
 
  The @rhombus(String.to_int, ~annot) @tech(~doc: guide_doc){converter annotation} is
@@ -401,12 +408,18 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.to_number(str :: ReadableString) :: Number
+  method String.to_number(
+    str :: ReadableString,
+    ~radix: radix :: Int.in(2, 16) = 10
+  ) :: Number
   annot.macro 'String.to_number'
-  method String.maybe_to_number(str :: ReadableString) :: maybe(Number)
+  method String.maybe_to_number(
+    str :: ReadableString,
+    ~radix: radix :: Int.in(2, 16) = 10
+  ) :: maybe(Number)
 ){
 
- The @rhombus(String.to_number) function parses @rhombus(str) as a
+ The @rhombus(String.to_number) function parses @rhombus(str) as a base-@rhombus(radix)
  number and returns the number value. If @rhombus(str) does not
  parse as a number, the @rhombus(Exn.Fail.Contract, ~class)
  exception is thrown. The @rhombus(String.maybe_to_number) function is
@@ -421,6 +434,7 @@ Strings are @tech{comparable}, which means that generic operations like
   String.maybe_to_number("forty-two")
   "3/4".to_number()
   "3/4".maybe_to_number()
+  String.to_number("42.0", ~radix: 16)
 )
 
  The @rhombus(String.to_number, ~annot) @tech(~doc: guide_doc){converter annotation} is
@@ -430,6 +444,25 @@ Strings are @tech{comparable}, which means that generic operations like
 @examples(
   def n :: String.to_number = "42.0"
   n
+)
+
+}
+
+@doc(
+  method String.from_int(
+    n :: Integer,
+    ~radix: radix :: Int.in(2, 16) = 10
+  ) :: String
+  method String.from_number(n :: Number) :: String
+){
+
+ Like @rhombus(to_string) on @rhombus(n), but in the case of
+ @rhombus(String.from_int), a base @rhombus(radix) can be supplied.
+
+@examples(
+  String.from_int(17)
+  String.from_int(16, ~radix: 16)
+  String.from_number(3/4)
 )
 
 }

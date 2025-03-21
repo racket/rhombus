@@ -19,6 +19,8 @@ block:
     String.maybe_to_number(str) ~method ReadableString
     String.to_int(str) ~method ReadableString
     String.to_number(str) ~method ReadableString
+    String.from_int(n)
+    String.from_number(n)
     String.substring(str, start, [end]) ~method ReadableString
     String.append(str, ...) ~method ReadableString
     String.replace(str, from, to) ~method ReadableString
@@ -66,18 +68,26 @@ block:
     "hello".append(" world", " and bye") ~is "hello world and bye"
     "hello".maybe_to_int() ~is #false
     "17".maybe_to_int() ~is 17
+    "17".maybe_to_int(~radix: 16) ~is 23
     "hello".maybe_to_number() ~is #false
     "4.35".maybe_to_number() ~is 4.35
+    "4.35".maybe_to_number(~radix: 16) ~is 4.20703125
     "hello".to_int() ~throws values(
       "String.to_int: string does not parse as an integer",
       error.val("hello", ~label: "string").msg,
     )
+    "hello".to_int(~radix: 16) ~throws values(
+      "String.to_int: string does not parse as an integer",
+      error.val("hello", ~label: "string").msg,
+    )
     "17".to_int() ~is 17
+    "17".to_int(~radix: 16) ~is 23
     "hello".to_number() ~throws values(
       "String.to_number: string does not parse as a number",
       error.val("hello", ~label: "string").msg,
     )
     "4.35".to_number() ~is 4.35
+    "4.35".to_number(~radix: 16) ~is 4.20703125
     "hello".upcase() ~is "HELLO"
     "Hello".downcase() ~is "hello"
     "Hello".foldcase() ~is "hello"
@@ -141,17 +151,21 @@ check:
   dynamic("hello").append(" world", " and bye") ~is "hello world and bye"
   dynamic("hello").maybe_to_int() ~is #false
   dynamic("17").maybe_to_int() ~is 17
+  dynamic("17").maybe_to_int(~radix: 16) ~is 23
   dynamic("hello").maybe_to_number() ~is #false
   dynamic("4.35").maybe_to_number() ~is 4.35
+  dynamic("4.35").maybe_to_number(~radix: 16) ~is 4.20703125
   dynamic("hello").to_int() ~throws values(
     "String.to_int: string does not parse as an integer",
     error.val("hello", ~label: "string").msg,
   )
   dynamic("17").to_int() ~is 17
+  dynamic("17").to_int(~radix: 16) ~is 23
   dynamic("hello").to_number() ~throws values(
     "String.to_number: string does not parse as a number",
     error.val("hello", ~label: "string").msg,
   )
+  dynamic("4.35").to_number(~radix: 16) ~is 4.20703125
   dynamic("hello").upcase() ~is "HELLO"
   dynamic("Hello").downcase() ~is "hello"
   dynamic("hello").locale_upcase() ~is_a String
@@ -192,9 +206,40 @@ check:
 check:
   String.length("hello") ~is 5
   String.maybe_to_int("17") ~is 17
+  String.maybe_to_int("17", ~radix: 16) ~is 23
+  String.maybe_to_int("17", ~radix: 160) ~throws values(
+    error.val(160).msg,
+    error.annot("Int.in(2, 16)").msg
+  )
+  String.maybe_to_int("17", ~radix: "nan") ~throws values(
+    error.val("nan").msg,
+    error.annot("Int.in(2, 16)").msg
+  )
   String.maybe_to_number("4.35") ~is 4.35
+  String.maybe_to_number("4.35", ~radix: 16) ~is 4.20703125
+  String.maybe_to_number("17", ~radix: 160) ~throws values(
+    error.val(160).msg,
+    error.annot("Int.in(2, 16)").msg
+  )
   String.to_int("17") ~is 17
+  String.to_int("17", ~radix: 16) ~is 23
+  String.to_int("17", ~radix: 160) ~throws values(
+    error.val(160).msg,
+    error.annot("Int.in(2, 16)").msg
+  )
   String.to_number("4.35") ~is 4.35
+  String.to_number("4.35", ~radix: 16) ~is 4.20703125
+  String.to_number("17", ~radix: 160) ~throws values(
+    error.val(160).msg,
+    error.annot("Int.in(2, 16)").msg
+  )
+  String.from_int(16) ~is "16"
+  String.from_int(16, ~radix: 8) ~is "20"
+  String.from_int(17, ~radix: 160) ~throws values(
+    error.val(160).msg,
+    error.annot("Int.in(2, 16)").msg
+  )
+  String.from_number(16.5) ~is "16.5"
   String.upcase("hello") ~is "HELLO"
   String.downcase("Hello") ~is "hello"
   String.foldcase("Hello") ~is "hello"
