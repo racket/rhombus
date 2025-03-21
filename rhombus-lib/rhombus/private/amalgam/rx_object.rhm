@@ -44,7 +44,7 @@ class RX(private _rkt_partial_rx,
     | #'char
     | #'bytes
 
-  class_clause.macro 'match_method $name($input $(input_ann :: Sequence), $start, $end, $out, $prefix):
+  class_clause.macro 'match_method $name($input $(input_ann :: Sequence), $start, $end, $out, $prefix) :~ $res_ann ...:
                         $(body :: Block)':
     let input_ann:
       match input_ann
@@ -54,7 +54,7 @@ class RX(private _rkt_partial_rx,
                   ~start: $start :: Int = 0,
                   ~end: $end :: maybe(Int) = #false,
                   ~unmatched_out: $out :: maybe(Port.Output) = #false,
-                  ~input_prefix: $prefix :: Bytes = #"")
+                  ~input_prefix: $prefix :: Bytes = #"") :: $res_ann ...
        $body'
 
   private method
@@ -63,42 +63,42 @@ class RX(private _rkt_partial_rx,
       def mList = (for List (elem in m): freeze(elem))
       RXMatch(mList[0], mList.rest, _vars)
 
-  match_method match(input, start_pos, end_pos, output_port, input_prefix):
+  match_method match(input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     strings_result(
       base.#{regexp-match}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
     )
 
-  match_method match_in(input, start_pos, end_pos, output_port, input_prefix):
+  match_method match_in(input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     strings_result(
       base.#{regexp-match}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
     )
 
-  match_method try_match(input :: Port.Input, start_pos, end_pos, output_port, input_prefix):
+  match_method try_match(input :: Port.Input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     strings_result(
       base.#{regexp-try-match}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
     )
 
-  match_method try_match_in(input, start_pos, end_pos, output_port, input_prefix):
+  match_method try_match_in(input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     strings_result(
       base.#{regexp-try-match}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
     )
 
-  match_method match_range(input, start_pos, end_pos, output_port, input_prefix):
+  match_method match_range(input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     MATCH base.#{regexp-match-positions}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
     | PairList[Pair(s0, e0), maybe_pr, ...]:
         RXMatch(s0 .. e0, [maybe_range(maybe_pr), ...], _vars)
     | ~else: #false
 
-  match_method match_range_in(input, start_pos, end_pos, output_port, input_prefix):
+  match_method match_range_in(input, start_pos, end_pos, output_port, input_prefix) :~ maybe(RXMatch):
     MATCH base.#{regexp-match-positions}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
     | PairList[Pair(s0, e0), maybe_pr, ...]:
         RXMatch(s0 .. e0, [maybe_range(maybe_pr), ...], _vars)
     | ~else: #false
 
-  match_method is_match(input, start_pos, end_pos, output_port, input_prefix):
+  match_method is_match(input, start_pos, end_pos, output_port, input_prefix) :~ Boolean:
     base.#{regexp-match?}(_rkt_rx, input, start_pos, end_pos, output_port, input_prefix)
 
-  match_method is_match_in(input, start_pos, end_pos, output_port, input_prefix):
+  match_method is_match_in(input, start_pos, end_pos, output_port, input_prefix) :~ Boolean:
     base.#{regexp-match?}(_rkt_partial_rx, input, start_pos, end_pos, output_port, input_prefix)
 
   method max_lookbehind():
