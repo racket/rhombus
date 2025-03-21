@@ -949,6 +949,14 @@
   head-extract-metavariables
   head-extract-typeset)
 
+(define-doc veneer
+  "veneer"
+  (lambda (stx)
+    '(rhombus/class rhombus/annot))
+  head-extract-name
+  head-extract-metavariables
+  head-extract-typeset)
+
 (define-for-syntax (enum-extract-descs stx)
   (syntax-parse stx
     #:datum-literals (group block)

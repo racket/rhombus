@@ -142,7 +142,7 @@
               #,@(top-level-declare #'(name?))
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-veneer-annotation converter? super interfaces
-                                          #'(name name? name-convert
+                                          #'(name name-extends name? name-convert
                                                   name-instance indirect-static-infos))
               (veneer-finish
                [orig-stx base-stx scope-stx
@@ -349,27 +349,29 @@
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
-  (with-syntax ([(name name? name-convert
+  (with-syntax ([(name name-extends name? name-convert
                        name-instance indirect-static-infos)
                  names])
     (with-syntax ([dot-providers (add-super-dot-providers #'name-instance super interfaces)])
       (cond
         [(not converter?)
          (list
-          #`(define-annotation-syntax name
-              (identifier-annotation name?
-                                     ((#%dot-provider dot-providers)
-                                      . indirect-static-infos)
-                                     #:static-only)))]
+          (build-syntax-definition/maybe-extension
+           'rhombus/annot #'name #'name-extends
+           #`(identifier-annotation name?
+                                    ((#%dot-provider dot-providers)
+                                     . indirect-static-infos)
+                                    #:static-only)))]
         [else
          (list
-          #`(define-annotation-syntax name
-              (identifier-binding-annotation #,(binding-form #'converter-binding-infoer
-                                                             #'(name name-convert val))
-                                             val
-                                             ((#%dot-provider dot-providers)
-                                              . indirect-static-infos)
-                                             #:static-only)))]))))
+          (build-syntax-definition/maybe-extension
+           'rhombus/annot #'name #'name-extends
+           #`(identifier-binding-annotation #,(binding-form #'converter-binding-infoer
+                                                            #'(name name-convert val))
+                                            val
+                                            ((#%dot-provider dot-providers)
+                                             . indirect-static-infos)
+                                            #:static-only)))]))))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx

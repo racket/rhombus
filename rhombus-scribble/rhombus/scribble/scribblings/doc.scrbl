@@ -384,6 +384,7 @@
     in_id_name: namespace id_name ~defn
   doc 'class $id_name($arg, ...) $term ...'
   doc 'interface $id_name $term ...'
+  doc 'veneer $id_name $term ...'
   doc 'method ($id :: $in_id_name) . $method_id($arg, ...) $term ...'
   doc 'property ($id :: $in_id_name) . $property_id $term ...'
   doc 'dot ($id :: $in_id_name) . $dot_id $term ...'
