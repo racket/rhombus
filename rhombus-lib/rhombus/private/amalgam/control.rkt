@@ -329,6 +329,8 @@
                              (let ()
                                (arg.committer-id arg-id arg.evidence-ids arg.data)
                                (arg.binder-id arg-id arg.evidence-ids arg.data)
+                               (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
+                               ...
                                (rhombus-body-at tag g ...))
                              (#,next arg-id))))])))
 

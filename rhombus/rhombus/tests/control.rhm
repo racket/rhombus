@@ -27,6 +27,15 @@ check:
         "fail"
   ~is "fail"
 
+check:
+  use_static
+  try:
+    throw "oops"
+    ~catch
+    | s :: String:
+        s.length()
+  ~is 4
+
 block:
   def mutable n = 0;
   check:
