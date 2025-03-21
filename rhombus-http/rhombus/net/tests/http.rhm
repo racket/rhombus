@@ -1,0 +1,189 @@
+#lang rhombus/static
+import:
+  net/url
+  net/http open
+  rhombus/network
+
+def lnr = network.TCP.listen()
+def (_, portno) = lnr.addresses()
+
+def here = url.URL(~scheme: "http",
+                   ~host: "localhost",
+                   ~port: portno,
+                   ~path: [url.PathWithParams("index.html", [])])
+
+def mutable recent_method = #false
+def mutable recent_path = #false
+def mutable recent_user_agent = #false
+def mutable recent_data = #false
+
+// minimal server to test against:
+block:
+  import:
+    rhombus/thread open
+    rhombus/rx open
+  thread:
+    recur serve():
+      let (in, out) = lnr.accept()
+      thread:
+        // Discard the request header (up to blank line):
+        let headers_o = Port.Output.open_bytes()
+        let req_line = in.read_line()
+        rx'("\r\n" || bof) "\r\n"'.match_in(in, ~unmatched_out: headers_o)        
+        let headers = headers_o.get_string()
+        recent_method := rx'bof ["A"-"Z"]*'.match_in(req_line)!![0]
+        recent_path := rx'" " ~~([! " "]*) " "'.match_in(req_line)!![1]
+        recent_user_agent := rx'case_insensitive: "user-agent: " ($ua: [! "\r"]*)'.match_in(headers)!![#'ua]
+        let pause = rx'"pause: " ($v: [! "\r"]*)'.match_in(headers)
+        when pause
+        | Thread.sleep(String.to_int(pause!![#'v]))
+        let content = rx'case_insensitive: "Content-Length: " ($v: [! "\r"]*)'.match_in(headers)
+        when content
+        | recent_data := in.read_bytes(String.to_int(content!![#'v]))
+        when rx'case_insensitive: "Transfer-Encoding: chunked"'.is_match_in(headers)
+        | recent_data := #""
+          recur loop():
+            let spec = in.read_line()
+            let len = String.to_int(String.split(spec, " ")[0], ~radix: 16)            
+            recent_data := Bytes.append(recent_data, in.read_bytes(len))
+            in.read_line() // terminator
+            unless len == 0
+            | loop()
+        // Send reply:
+        out.write_string("HTTP/1.0 200 Okay\r\n")
+        out.write_string("Server: k\r\nContent-Type: text/html\r\n\r\n")
+        cond
+        | rx'"authorization: Basic"'.match_in(headers):
+            out.write_string("<html><body>make a wish</body></html>")
+        | ~else:
+            out.write_string("<html><body>Hello, world!</body></html>")
+        in.close()
+        out.close()
+      serve()
+  #void
+
+check get(here) ~matches Response(~status_code: 200)
+check get(here) ~matches Response(~status_message: is_now #"Okay")
+check get(here) ~matches Response(~http_version: is_now #"1.0")
+check get(here) ~matches Response(~body: is_now #"<html><body>Hello, world!</body></html>")
+check get(here) ~matches Response(~headers: { "Server": is_now #"k" })
+check get(here) ~matches Response(~headers: { "Server": is_now #"k", & [is_now #"Content-Type: text/html"] })
+check get(here) ~matches Response(~history: [])
+
+check get(here).status_code ~is 200
+check get(here).status_message ~is_now #"Okay"
+check get(here).status_message.length() ~is 4
+check get(here).http_version ~is_now #"1.0"
+check get(here).http_version.length() ~is 3
+check get(here).body() ~is_now #"<html><body>Hello, world!</body></html>"
+check get(here).body().length() ~is 39
+check get(here).headers() ~is_now { "server": #"k", "content-type": #"text/html" }
+check get(here).headers()["server"] ~is_now #"k"
+check get(here).headers()["server"].length() ~is 1
+check get(here).history() ~is []
+check get(here).history().length() ~is 0
+
+block:
+  let resp = get(here)
+  let o = resp.output()
+  check o.read_bytes(2) ~throws "closed"
+
+block:
+  let resp = get(here, ~stream: #true)
+  let o = resp.output()
+  check o.read_bytes(10) ~is_now #"<html><bod"
+  check o.read_bytes(2) ~is_now #"y>"
+  resp.close()
+  check o.read_bytes(2) ~throws "closed"
+
+block:
+  let resp = get(here, ~stream: #true)
+  resp.drain()
+  let o = resp.output()
+  check o.read_bytes(2) ~throws "closed"
+  check resp.body() ~is_now #"<html><body>Hello, world!</body></html>"
+
+block:
+  let resp = get(here, ~stream: #true)
+  check resp.body() ~is_now #"<html><body>Hello, world!</body></html>"
+  let o = resp.output()
+  check o.read_bytes(2) ~throws "closed"
+
+check String.substring(recent_user_agent, 0..13) ~is_now "net/http-easy"
+
+parameterize { current_user_agent: "Tester" }:
+  check get(here).status_code ~is 200
+  check recent_user_agent ~is "Tester"
+
+check get(here, ~user_agent: "test2").status_code ~is 200
+check recent_user_agent ~is "test2"
+check recent_method ~is "GET"
+
+check put(here).status_code ~is 200
+check recent_method ~is "PUT"
+
+check post(here).status_code ~is 200
+check recent_method ~is "POST"
+
+check delete(here).status_code ~is 200
+check recent_method ~is "DELETE"
+
+check head(here).status_code ~is 200
+check recent_method ~is "HEAD"
+
+check options(here).status_code ~is 200
+check recent_method ~is "OPTIONS"
+
+check patch(here).status_code ~is 200
+check recent_method ~is "PATCH"
+
+check Session().request(here, ~method: #'post).status_code ~is 200
+check recent_method ~is "POST"
+
+check get(here, ~session: Session()).status_code ~is 200
+check recent_method ~is "GET"
+
+check 100 ~is_a StatusCode
+check 1 is_a StatusCode ~is #false
+
+check Timeouts() ~is_a Timeouts
+check: try:
+         get(here,
+             ~timeouts: Timeouts(~request: 0.25),
+             ~headers: { "pause": "10"})
+         ~catch e :: Exn.Fail.HTTP.Timeout:
+           e.kind
+       ~is #'request
+
+check recent_path ~is "/index.html"
+
+check get(here, ~params: [url.KeyValue("piano", "C")]).status_code ~is 200
+check recent_path ~is "/index.html?piano=C"
+
+check get(here with (query = [url.KeyValue("skeleton", "attic")]), ~params: [url.KeyValue("piano", "C")]).status_code ~is 200
+check recent_path ~is "/index.html?skeleton=attic&piano=C"
+
+check get(here with (query = [url.KeyValue("skeleton", #false)]), ~params: [url.KeyValue("piano", "C")]).status_code ~is 200
+check recent_path ~is "/index.html?skeleton&piano=C"
+
+check get(here with (query = [url.KeyValue("skeleton", "attic")]), ~params: [url.KeyValue("piano", #false)]).status_code ~is 200
+check recent_path ~is "/index.html?skeleton=attic&piano"
+
+check:
+  get(here, ~auth: auth.basic(~username: "Alladin", ~password: "OpenSesame")).body()
+  ~is_now #"<html><body>make a wish</body></html>"
+check get(here, ~auth: auth.bearer(~token: "token")).status_code ~is 200
+
+check recent_data ~is_now #""
+
+check put(here, ~data: #"howdy").status_code ~is 200
+check recent_data ~is_now #"howdy"
+
+check put(here, ~data: payload.pure(#"hello")).status_code ~is 200
+check recent_data ~is_now #"hello"
+
+check put(here, ~data: payload.pure(Port.Input.open_bytes(#"helloooo"))).status_code ~is 200
+check recent_data ~is_now #"helloooo"
+
+check put(here, ~data: payload.buffered(payload.pure(Port.Input.open_bytes(#"oooo")))).status_code ~is 200
+check recent_data ~is_now #"oooo"
