@@ -1,0 +1,32 @@
+#lang rhombus/private/amalgam/core
+
+import:
+  "core-meta.rkt" open
+
+export:
+  guard
+
+
+defn.sequence_macro 'guard $condition ... | $failure_body
+                     $success_body':
+  values(
+    'if $condition ...
+     | $success_body
+     | $failure_body',
+    '')
+
+
+namespace guard:
+  export:
+    rename guard_let as let
+
+  defn.sequence_macro 'guard_let $test_pattern ...
+                         $(bound_as expr_meta.space: '=')
+                         $target_expr ...
+                       | $failure_body
+                       $success_body':
+    values(
+      'match $target_expr ...
+       | $test_pattern ...: $success_body
+       | ~else: $failure_body',
+      '')
