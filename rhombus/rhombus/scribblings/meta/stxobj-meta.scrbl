@@ -136,6 +136,49 @@
 
 @doc(
   ~meta
+  fun syntax_meta.make_definition_context(
+    parent :: maybe(syntax_meta.DefinitionContext) = #false
+  ) :: syntax_meta.DefinitionContext
+  method (def_ctx :: syntax_meta.DefinitionContext).add_definitions(
+    defns :: Syntax
+  ) :: Void
+  method (def_ctx :: syntax_meta.DefinitionContext).add_scopes(
+    defns :: Syntax
+  ) :: Syntax
+  method (def_ctx :: syntax_meta.DefinitionContext).call_using(
+    thunk :: Function.of_arity(0)
+  )
+  annot.macro 'syntax_meta.DefinitionContext'
+){
+
+ The @rhombus(syntax_meta.make_definition_context) function creates a
+ @deftech{definition context} to hold expansion-time definitions:
+
+@itemlist(
+
+ @item{The @rhombus(syntax_meta.DefinitionContext.add_definitions)
+  method accepts a syntax object with definition forms, and it adds those
+  definitions to the context.
+
+  Only definitions that bind expansion-time values are allowed, such as
+  @rhombus(macro), @rhombus(expr.macro), and @rhombus(meta.bridge).
+  Definitions for run-time values, such as @rhombus(def) or @rhombus(let),
+  are not allowed.}
+
+ @item{The @rhombus(syntax_meta.DefinitionContext.add_scopes) method
+  accepts a syntax object and adds the definition context's scopes to the
+  object, returning the new syntax object with those scopes added.}
+
+ @item{The @rhombus(syntax_meta.DefinitionContext.call_using) method
+  makes the definition context active for expansion while calling
+  @rhombus(thunk).}
+
+)
+
+}
+
+@doc(
+  ~meta
   fun syntax_meta.is_static(stx :: Name) :: Boolean
 ){
 

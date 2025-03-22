@@ -390,7 +390,7 @@
                         infix
                         #,kind
                         opt
-                        #,(extract-extra-binds g extra-kws extra-shapes #'opt main-kws)
+                        #,(extract-extra-binds g extra-kws extra-shapes #'opt main-kws #t)
                         #,(convert-order order-name)
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
                         #,(convert-assc (combine-main #'opt.assc main-assc "associativity") order-name)
@@ -416,7 +416,7 @@
                         prefix
                         #,kind
                         opt
-                        #,(extract-extra-binds g extra-kws extra-shapes #'opt #f)
+                        #,(extract-extra-binds g extra-kws extra-shapes #'opt #f #t)
                         #,(convert-order (combine-main #'opt.order-name main-order-name "operator order"))
                         #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
                         #,main-assc
@@ -775,7 +775,7 @@
                                                     #'gs)]))))
 
 (begin-for-syntax
-  (define (extract-extra-binds stx extra-kws extra-shapes opts main-kws)
+  (define (extract-extra-binds stx extra-kws extra-shapes opts main-kws [generate-ids? #f])
     (define-values (kws-stx binds-stx)
       (for/lists (kws-stx binds-stx) ([opt (in-list (syntax->list opts))]
                                       #:do [(define-values (kw bind)
@@ -811,4 +811,6 @@
                       (raise-syntax-error #f "expected an identifier" stx bind))])
                  (hash-set ht (syntax-e kw-stx) bind)))
     (for/list ([kw (in-list extra-kws)])
-      (hash-ref ht kw #f))))
+      (or (hash-ref ht kw #f)
+          (and generate-ids?
+               (car (generate-temporaries (list kw))))))))

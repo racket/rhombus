@@ -30,7 +30,8 @@
          rhombus-forward
 
          (for-syntax expand-forwarding-sequence
-                     expand-forwarding-sequence-continue))
+                     expand-forwarding-sequence-continue
+                     expand-bridge-definition-sequence))
 
 (define-syntax (rhombus-module-forwarding-sequence stx)
   (syntax-parse stx
@@ -67,7 +68,7 @@
      #`(sequence [(#:stop-at (final . data) stop-id ()) base-ctx add-ctx remove-ctx all-ctx #hasheq()] . tail)]))
 
 (define-syntax (sequence stx)
-  (forwarding-sequence-step stx syntax-local-context syntax-local-introduce))
+  (forwarding-sequence-step stx #f syntax-local-context syntax-local-introduce))
 
 ;; A step for `sequence` takes a syntax object of the form
 ;;
@@ -93,7 +94,7 @@
 ;;      ...
 ;;      (final ....))
 ;;
-(define-for-syntax (forwarding-sequence-step stx get-expand-context local-introduce)
+(define-for-syntax (forwarding-sequence-step stx def-ctx get-expand-context local-introduce)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
       #:literals (quote)
@@ -114,6 +115,8 @@
               (final ... [#:ctx base-ctx remove-ctx] #,@(reverse (syntax->list #'(bind ...)))))]
          [(#:block #f orig)
           (raise-syntax-error #f "block does not end with an expression" (maybe-respan #'orig))]
+         [(#:bridge)
+          #`(expanded #,forms stx-params)]
          [(#:module _ prov ...)
           (unless (bound-identifier=? (datum->syntax #'base-ctx 'x)
                                       (datum->syntax #'remove-ctx 'x))
@@ -150,7 +153,7 @@
                                                 #'#%require
                                                 #'#%declare
                                                 #'begin-for-syntax)
-                                          #f))]))
+                                          def-ctx))]))
        (define (need-end-expr state) (syntax-parse state
                                        [(#:block #t orig) #'(#:block #f orig)]
                                        [_ state]))
@@ -159,11 +162,12 @@
                                       [_ state]))
        (syntax-parse exp-form
          #:literals (begin define-values define-syntaxes rhombus-forward pop-forward #%require provide #%provide quote-syntax
-                           define-syntax-parameter)
+                           define-syntax-parameter #%plain-app void)
          [((~and tag rhombus-forward) sub-form ...)
+          (define (not-here) (raise-syntax-error #f "forward-only definition not allowed in this context" (maybe-respan #'form)))
           (syntax-parse #'state
-            [(#:blocklet #f)
-             (raise-syntax-error #f "forward-only definition not allowed in this context" (maybe-respan #'form))]
+            [(#:blocklet #f) (not-here)]
+            [(#:bridge) (not-here)]
             [_ (void)])
           (define intro (let ([intro (syntax-local-make-definition-context-introducer (syntax-e #'tag))])
                           (lambda (stx)
@@ -189,7 +193,12 @@
               seq
               #`(begin #,@(reverse accum) #,seq))]
          [((~and def (~or* define-values define-syntaxes)) (id ...) rhs)
-          #:do [(define sub (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)])
+          #:do [(when (eq? (syntax-e #'def) 'define-values)
+                  (syntax-parse #'state
+                    [(#:bridge)
+                     (raise-syntax-error #f "variable definitions not allowed in this context" (maybe-respan #'form))]
+                    [_ (void)]))
+                (define sub (let ([sub (make-syntax-delta-introducer #'remove-ctx #'base-ctx)])
                               (lambda (stx) (sub stx 'remove))))
                 (define add (let ([add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
                               (lambda (stx) (add stx 'add))))
@@ -297,13 +306,21 @@
                     [_ #f]))]
           #:when next
           next]
+         [(#%plain-app void)
+          #:when (syntax-parse #'state
+                   [(#:bridge) #t]
+                   [_ #f])
+          #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params] . forms)]
          [_ #`(begin
                 #,@(reverse accum)
                 #,(syntax-parse exp-form
                     #:literals (#%declare begin-for-syntax module module*)
                     [((~or* #%declare begin-for-syntax module module*) . _)
-                     exp-form]
+                     exp-form]                    
                     [_
+                     (syntax-parse #'state
+                       [(#:bridge) (raise-syntax-error #f "expressions not allowed in this context" (maybe-respan exp-form))]
+                       [_ (void)])
                      (let ([exp-form
                             (cond
                               [(zero? (hash-count (syntax-e #'stx-params)))
@@ -353,7 +370,7 @@
   (syntax-parse all-state
     [(state bodys expand-context)
      (define step-stx (forwarding-sequence-step #`(sequence state . bodys)
-                                                (lambda () (syntax->datum #'expand-context))
+                                                #f (lambda () (syntax->datum #'expand-context))
                                                 local-introduce))
      (syntax-parse step-stx
        #:literals (begin expanded)
@@ -367,6 +384,37 @@
                 #`[state bodys expand-context])]
        [(_ state . bodys)
         (expand-forwarding-sequence-continue #`[state bodys expand-context] local-introduce expr-k done-k)])]))
+
+(define-for-syntax (expand-bridge-definition-sequence defs def-ctx expand-context params-box)
+  (define seq #`(sequence [(#:bridge) base-ctx add-ctx remove-ctx all-ctx #,(unbox params-box)] #,defs))
+  (define (eval forms stx-params)
+    (syntax-parse forms
+      #:literals (define-syntaxes)
+      [((define-syntaxes ids rhs) ...)
+       (for ([ids (in-list (syntax->list #'(ids ...)))]
+             [rhs (in-list (syntax->list #'(rhs ...)))])
+         (with-continuation-mark
+             syntax-parameters-key stx-params
+             (syntax-local-bind-syntaxes (syntax->list ids)
+                                         rhs
+                                         def-ctx)))]))
+  (let loop ([seq seq])
+    (define s (forwarding-sequence-step seq def-ctx (lambda () expand-context) (lambda (stx) stx)))
+    (syntax-parse s
+      #:literals (expanded begin define-syntaxes sequence)
+      [(expanded (begin . forms) stx-params)
+       (eval #'forms #'stx-params)]
+      [(begin (define-syntaxes ids rhs)
+              ...
+              (~and seq (sequence [(#:bridge) _ _ _ _ stx-params] . _)))
+       (eval #'((define-syntaxes ids rhs) ...) #'stx-params)
+       (loop #'seq)]
+      [(sequence . _)
+       (loop s)]
+      [_
+       (raise-syntax-error #f
+                           "internal error: unexpected definition-sequence form"
+                           s)])))
 
 ;; sentinels for `expand-forwarding-sequence`
 (define-syntax expanded #f)

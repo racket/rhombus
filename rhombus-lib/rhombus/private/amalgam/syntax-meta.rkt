@@ -18,11 +18,16 @@
                      "srcloc.rkt"
                      "treelist.rkt"
                      "context-stx.rkt"
-                     "syntax-wrap.rkt")
+                     "syntax-wrap.rkt"
+                     "definition-context.rkt"
+                     "class-primitive.rkt")
          "space.rkt"
          "is-static.rkt"
          "static-info.rkt"
-         "operator-compare.rkt")
+         "operator-compare.rkt"
+         "forwarding-sequence.rkt"
+         "syntax-parameter.rkt"
+         "parse.rkt")
 
 (module+ for-unquote
   (provide (for-syntax syntax_meta.equal_binding)))
@@ -45,7 +50,22 @@
      [is_static syntax_meta.is_static]
      [dynamic_name syntax_meta.dynamic_name]
      [parse_dot_expr syntax_meta.parse_dot_expr]
-     [parse_dot_repet syntax_meta.parse_dot_repet]))
+     [parse_dot_repet syntax_meta.parse_dot_repet]
+     [make_definition_context syntax_meta.make_definition_context]
+     DefinitionContext))
+
+  (define-primitive-class DefinitionContext definition-context
+    #:lift-declaration
+    #:existing
+    #:just-annot
+    #:fields
+    ()
+    #:properties
+    ()
+    #:methods
+    ([add_definitions DefinitionContext.add_definitions]
+     [add_scopes DefinitionContext.add_scopes]
+     [call_using DefinitionContext.call_using]))
 
   (define expr-space-path (space-syntax #f))
 
@@ -200,6 +220,55 @@
        (relocate+reraw name-stx (add-dynamism-context #'n.name static? (space-name-symbol sp)))]
       [_
        (raise-annotation-failure who name-stx "Name")]))
+
+  (define/arity (syntax_meta.make_definition_context [parent #f])
+    #:static-infos ((#%call-result #,(get-definition-context-static-infos)))
+    (unless (or (not parent) (definition-context? parent))
+      (raise-annotation-failure who parent "DefinitionContext"))
+    (definition-context
+      (syntax-local-make-definition-context
+       (and parent (definition-context-def-ctx parent)))
+      (cons (gensym)
+            (if parent
+                (definition-context-expand-context parent)
+                null))
+      (box #hasheq())))
+
+  (define/method (DefinitionContext.add_definitions ctx stx)
+    (unless (definition-context? ctx)
+      (raise-annotation-failure who ctx "DefinitionContext"))
+    (unless (syntax? stx)
+      (raise-annotation-failure who stx "Syntax"))
+    (define gs (unpack-multi stx who #f))
+    (expand-bridge-definition-sequence #`(rhombus-body-sequence #,@gs)
+                                       (definition-context-def-ctx ctx)
+                                       (definition-context-expand-context ctx)
+                                       (definition-context-params-box ctx))
+    (void))
+
+  (define/method (DefinitionContext.add_scopes ctx stx)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (definition-context? ctx)
+      (raise-annotation-failure who ctx "DefinitionContext"))
+    (unless (syntax? stx)
+      (raise-annotation-failure who stx "Syntax"))
+    (internal-definition-context-add-scopes
+     (definition-context-def-ctx ctx)
+     stx))
+
+  (define/method (DefinitionContext.call_using ctx f)
+    (unless (definition-context? ctx)
+      (raise-annotation-failure who ctx "DefinitionContext"))
+    (unless (and (procedure? f)
+                 (procedure-arity-includes? f 0))
+      (raise-annotation-failure who f "Function.of_arity(0)"))
+    (with-continuation-mark
+     syntax-parameters-key (unbox (definition-context-params-box ctx))
+     (syntax-local-apply-transformer
+      f
+      #'cons
+      (definition-context-expand-context ctx)
+      (definition-context-def-ctx ctx))))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation phase? ())))
