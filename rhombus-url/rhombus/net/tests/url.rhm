@@ -1,0 +1,68 @@
+#lang rhombus
+import:
+  net/url open
+
+check URL() ~is_a URL
+check URL(~host: "localhost") ~is_a URL
+
+block:
+  let u = URL.from_string("http://tester@www.rhombus-lang.org:80/~mflatt/guess;x;y/page?ok=some&fair&bad=some#main")
+  check u.to_string() ~is "http://tester@www.rhombus-lang.org:80/~mflatt/guess;x;y/page?ok=some&fair&bad=some#main"
+  check to_string(u) ~is "http://tester@www.rhombus-lang.org:80/~mflatt/guess;x;y/page?ok=some&fair&bad=some#main"
+  check u.host ~is "www.rhombus-lang.org"
+  check u.user ~is "tester"
+  check u.path ~is [PathWithParams("~mflatt", []), PathWithParams("guess", ["x", "y"]), PathWithParams("page", [])]
+  check u.query ~is [KeyValue("ok", "some"), KeyValue("fair", #false), KeyValue("bad", "some")]
+  check u.fragment ~is "main"
+
+check:
+  URL.from_path(Path.current_directory())
+  ~is_a URL
+
+check:
+  URL.from_string("http://rhombus-lang.org/").add("y").to_string()
+  ~is "http://rhombus-lang.org/y"
+
+check:
+  relative_path_to_relative_url_string(Path("x"))
+  ~is "x"
+
+check:
+  relative_path_to_relative_url_string(CrossPath(#"x//y", #'unix))
+  ~is "x/y"
+
+check:
+  relative_path_to_relative_url_string(CrossPath(#"x\\y", #'windows))
+  ~is "x/y"
+
+check:
+  URL(~scheme: "http", ~host: "www").to_string()
+  ~is "http://www"
+
+check:
+  URL(~scheme: "http", ~host: "www", ~query: [KeyValue("x", #false), KeyValue("y", #false)]).to_string()
+  ~is "http://www?x&y"
+
+check:
+  parameterize { form.current_separator_mode: #'semi_or_amp }:
+    URL(~scheme: "http", ~host: "www", ~query: [KeyValue("x", #false), KeyValue("y", #false)]).to_string()
+  ~is "http://www?x;y"
+
+check:
+  parameterize { form.current_separator_mode: #'semi }:
+    URL(~scheme: "http", ~host: "www", ~query: [KeyValue("x", #false), KeyValue("y", #false)]).to_string()
+  ~is "http://www?x;y"
+
+
+def big_str = "abcdefghijklMNOPQRSTUZWXYZ!!()/\\|,.-_=+@#%done"
+
+check form.urlencoded_decode(form.urlencoded_encode(big_str)) ~is big_str
+block:
+  let l = [KeyValue(big_str, "0"), KeyValue("1", big_str)]
+  check form.urlencoded_to_list(form.list_to_urlencoded(l)) ~is l
+
+check uri.decode(uri.encode(big_str)) ~is big_str
+check uri.path_segment_decode(uri.path_segment_encode(big_str)) ~is big_str
+check uri.userinfo_decode(uri.userinfo_encode(big_str)) ~is big_str
+check uri.unreserved_decode(uri.unreserved_encode(big_str)) ~is big_str
+check uri.path_segment_unreserved_decode(uri.path_segment_unreserved_encode(big_str)) ~is big_str
