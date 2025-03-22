@@ -5,7 +5,7 @@
 (define deps
   '("base"
     "rhombus-lib"
-    "rhombus-draw-lib"))
+    "rhombus-logo-lib"))
 
 (define build-deps
   '("rhombus"
