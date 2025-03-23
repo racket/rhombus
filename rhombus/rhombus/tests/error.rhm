@@ -1,0 +1,157 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+expr.macro 'check_error ($arg, ...):
+              $err
+              ...':
+  ~op_stx: self
+  let check_id = 'check'.relocate(self)
+  '
+    block:
+      $check_id:
+        error($arg, ...)
+        ~throws values($err, ...)
+      $check_id:
+        let msg = error.message($arg, ...)
+        all(msg.contains($err), ...)
+        ~is #true
+  '
+
+check_error (~who: #'example, "~a oops"):
+  "example: ~a oops"
+
+block:
+  check_error (~who: "who-str", "message"):
+    "who-str: message"
+  check_error (~who: #'who_sym, "message"):
+    "who_sym: message"
+  check_error (~who: Syntax.make(#'who_id), "message"):
+    "who_id: message"
+  check_error (~who: Syntax.make_op(#'who_op), "message"):
+    "who_op: message"
+  check_error (~who: Syntax.make_op(#'who_op).source_properties("PREFIX", "the who", "!", "SUFFIX"), "message"):
+    "the who!: message"
+  check_error (~who: 'some.namespace.function', "message"):
+    "some.namespace.function: message"
+  check_error (~who: 'some .  namespace .function', "message"):
+    "some .  namespace .function: message"
+  check_error (~who: '+++', "message"):
+    "+++: message"
+  check_error (~who: 'some.namespace.(+++)', "message"):
+    "some.namespace.(+++): message"
+
+block:
+  check_error (~srcloc: Srcloc("file", 1, 2, 3, 4), "message"):
+    "file:1:2: message"
+  check_error (~srcloc: Srcloc("file", 1, #false, 3, 4), "message"):
+    "file::3: message"
+  check_error (~srcloc: Srcloc("file", 1, 2, 3, 4),
+               ~who: #'me,
+               "message"):
+    "file:1:2: me: message"
+  check_error (~srcloc: Srcloc("file", 1, #false, 3, 4),
+               ~who: #'me,
+               "message"):
+    "file::3: me: message"
+
+block:
+  check_error (~who: #'me, "oops",
+               ~details: ["something has gone wrong;",
+                          "see the manual for more information"]):
+    "me: oops;"
+    "something has gone wrong;"
+    "see the manual for more information"
+  check_error (~who: #'me, "mismatch between fruit and vegetable",
+               error.val(~label: "fruit", [#'Apple, 0]),
+               error.val(~label: "vegetable", [#'Lettuce, -1])):
+    "me: mismatch between fruit and vegetable"
+    "fruit: [#'Apple, 0]"
+    "vegetable: [#'Lettuce, -1]"
+
+fun prefix_adjuster(sym):
+  match sym
+  | #'name:
+      fun (name, realm):
+        values(
+          match realm
+          | #'prefix: Symbol.from_string("prefix_" +& name)
+          | ~else: name,
+          realm,
+        )
+  | #'message:
+      fun (name, name_realm, msg, msg_realm):
+        values(
+          match name_realm
+          | #'prefix: Symbol.from_string("prefix_" +& name)
+          | ~else: name,
+          name_realm,
+          match msg_realm
+          | #'prefix: "prefix: " +& msg
+          | ~else: msg,
+          msg_realm,
+        )
+  | #'contract:
+      fun (ctc, realm):
+        values(
+          match realm
+          | #'prefix: "prefix " +& ctc
+          | ~else: ctc,
+          realm,
+        )
+
+parameterize { rkt.#{current-error-message-adjuster}: prefix_adjuster }:
+  check:
+    try:
+      error(~who: #'me,
+            ~exn: Exn.Fail.Annot,
+            error.annot_msg("fruit"),
+            error.annot("Tropical"),
+            error.val(~label: "fruit", #'Apple))
+      ~catch exn:
+        check exn ~is_a Exn.Fail.Annot
+        throw exn
+    ~throws values(
+      "me: fruit does not satisfy annotation",
+      "annotation: Tropical",
+      "fruit: #'Apple",
+    )
+  check:
+    let msg = error.message(~who: #'me,
+                            error.annot_msg("fruit"),
+                            error.annot("Tropical"),
+                            error.val(~label: "fruit", #'Apple))
+    all(
+      msg.contains("me: fruit does not satisfy annotation"),
+      msg.contains("annotation: Tropical"),
+      msg.contains("fruit: #'Apple"),
+    )
+    ~is #true
+  check:
+    try:
+      error(~who: #'me,
+            ~realm: #'prefix,
+            ~exn: Exn.Fail.Annot,
+            error.annot_msg("fruit"),
+            error.annot("Tropical", ~realm: #'prefix),
+            error.val(~label: "fruit", #'Apple))
+      ~catch exn:
+        check exn ~is_a Exn.Fail.Annot
+        throw exn
+    ~throws values(
+      "prefix_me: prefix: fruit does not satisfy annotation",
+      "annotation: prefix Tropical",
+      "fruit: #'Apple",
+    )
+  check:
+    let msg = error.message(~who: #'me,
+                            ~realm: #'prefix,
+                            error.annot_msg("fruit"),
+                            error.annot("Tropical", ~realm: #'prefix),
+                            error.val(~label: "fruit", #'Apple))
+    all(
+      msg.contains("prefix_me: prefix: fruit does not satisfy annotation"),
+      msg.contains("annotation: prefix Tropical"),
+      msg.contains("fruit: #'Apple"),
+    )
+    ~is #true

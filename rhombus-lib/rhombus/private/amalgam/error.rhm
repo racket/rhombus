@@ -63,7 +63,7 @@ fun error(~srcloc: srcloc :: maybe(Srcloc) = #false,
                     ~who: who,
                     ~realm: realm,
                     msg,
-                    ~detail: [detail, ...],
+                    ~details: [detail, ...],
                     clause, ...)
   let marks = Continuation.Marks.current()
   let e:
@@ -78,7 +78,7 @@ fun message(~srcloc: srcloc :: maybe(Srcloc) = #false,
             ~who: who :: maybe(error.Who) = #false,
             ~realm: realm :: Symbol = #'rhombus,
             message :: ReadableString,
-            ~detail: [detail :: ReadableString, ...] = [],
+            ~details: [detail :: ReadableString, ...] = [],
             clause :: error.Clause,
             ...) :~ String:
   (if srcloc | Srcloc.to_report_string(srcloc) ++ ": " | "")

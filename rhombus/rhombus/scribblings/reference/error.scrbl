@@ -13,6 +13,7 @@
             = Exn.Fail,
     ~srcloc: srcloc :: maybe(Srcloc) = #false,
     ~who: who :: maybe(error.Who) = #false,
+    ~realm: realm :: Symbol = #'rhombus,
     msg :: ReadableString,
     ~details: details :: [List.of(ReadableString)] = [],
     clause :: error.Clause,
@@ -24,8 +25,13 @@
  error message from @rhombus(srcloc), @rhombus(who), @rhombus(msg),
  @rhombus(details), and the @rhombus(clause)s in order.
 
- If @rhombus(who) is not @rhombus(#false), it is added to the beginning
- of the message, and a @litchar{: } separator is added in between.
+ If @rhombus(who) or @rhombus(srcloc) is not @rhombus(#false), it is
+ added to the beginning of the message, and a @litchar{: } separator
+ is added in between. If both are not @rhombus(#false),
+ @rhombus(srcloc) appears preceding @rhombus(who). The string form of
+ @rhombus(who) is used, while a human-readable string form (in the
+ sense of @rhombus(Srcloc.to_report_string)) of @rhombus(srcloc) is
+ used.
 
  The @rhombus(msg) part of the error message is meant to fit on a single
  line. If @rhombus(details) is non-empty, then @litchar{;} is added to
@@ -70,6 +76,10 @@
 
  )
 
+ The error message is adjusted using the given @rhombus(realm).
+ Typically, Rhombus error messages are identified as being from the
+ @rhombus(#'rhombus) realm.
+
 @examples(
   ~repl:
     ~error:
@@ -101,6 +111,7 @@
   fun error.message(
     ~srcloc: srcloc :: maybe(Srcloc) = #false,
     ~who: who :: maybe(error.Who) = #false,
+    ~realm: realm = #'rhombus,
     msg :: ReadableString,
     ~details: details :: [List.of(ReadableString)] = [],
     clause :: Error.Clause,
@@ -142,6 +153,7 @@
                  v :: Any, ...)
     :: error.Clause
   fun error.annot(~label: label :: String = "annotation",
+                  ~realm: realm :: Symbol = #'rhombus,
                   annot_str :: String)
     :: error.Clause
 ){
@@ -160,7 +172,8 @@
  Use @rhombus(error.annot) to report an annotation in an error message,
  where @rhombus(Syntax.to_source_string) may be useful (especially in in
  a macro's implementation) to construct a suitable string form of an
- annotation.
+ annotation. The annotation string is adjusted using the given
+ @rhombus(realm).
 
  The @rhombus(msg) field of a @rhombus(error.Clause, ~annot) omits a
  2-space prefix that will be added to the clause by @rhombus(error) or
