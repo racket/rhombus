@@ -326,8 +326,10 @@
 @doc(
   ~nonterminal:
     id_pattern: #%quotes pattern
+    evidence_id_tree_pattern: #%quotes pattern
     data_pattern: #%quotes pattern
-  defn.macro '«bind.committer '$id($id_pattern, $data_pattern)':
+  defn.macro '«bind.committer '$id($id_pattern, $evidence_id_tree_pattern,
+                                   $data_pattern)':
                  $body
                  ...»'
 ){
@@ -338,8 +340,10 @@
  @rhombus(id_pattern) holds the value that was matched by a matcher. If
  the matcher included any additional bindings around the success branch,
  then those bindings are in the environment of the definitions generated
- by this binder. The term matched to @rhombus(data_pattern) is whatever
- data the infoer included at the end of its result.
+ by this binder. The term matched to @rhombus(evidence_id_tree_pattern)
+ is the evidence tree, and the term matched to
+ @rhombus(data_pattern) is whatever data the infoer included at the
+ end of its result.
 
  The definitions produced by a committer should not use identifiers
  supplied by a user of the binding form, because those names will not be
@@ -354,8 +358,10 @@
 @doc(
   ~nonterminal:
     id_pattern: #%quotes pattern
+    evidence_id_tree_pattern: #%quotes pattern
     data_pattern: #%quotes pattern
-  defn.macro '«bind.binder '$id($id_pattern, $data_pattern)':
+  defn.macro '«bind.binder '$id($id_pattern, $evidence_id_tree_pattern,
+                                $data_pattern)':
                  $body
                  ...»'
 ){
@@ -367,8 +373,10 @@
  the matcher included any additional bindings around the success branch,
  then those bindings are in the environment of the definitions generated
  by this binder, and any intermediate definitions from the committer are
- also in the environment. The term matched to @rhombus(data_pattern) is whatever
- data the infoer included at the end of its result.
+ also in the environment. The term matched to @rhombus(evidence_id_tree_pattern)
+ is the evidence tree, and the term matched to
+ @rhombus(data_pattern) is whatever data the infoer included at the
+ end of its result.
 
  The definitions produced by a binder should not refer to each other,
  because they may be adjusted by @rhombus(let) expansion. Bindings that
