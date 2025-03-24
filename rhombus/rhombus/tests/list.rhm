@@ -751,6 +751,17 @@ check:
     error.val("oops").msg,
   )
 
+// check element static info in `List.repet`
+block:
+  use_static
+  class Doggo(name):
+    method bork():
+      println("woof! " +& name)
+  check:
+    let lst :: List.of(Doggo) = [Doggo("Spot"), Doggo("Rover")]
+    Function.pass(List.repet(lst).bork(), ...)
+    ~prints "woof! Spot\nwoof! Rover\n"
+
 check:
   ("oops" :~ List)[0]
   ~throws values(

@@ -773,29 +773,31 @@
   (syntax-parse stx
     [(_ accum e) #'(cons e accum)]))
 
-(define-for-syntax (make-repet g-to-for-clause-stx)
+(define-for-syntax (make-repet expr-to-for-clause-stx)
   (repetition-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (~and args (_::parens g)) . tail)
-        (values (make-repetition-info #'(form-id args)
-                                      #`(([(repet) #,(g-to-for-clause-stx #'g)]))
+       [(form-id (~and args (_::parens e::expression)) . tail)
+        (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
+                                      #`(([(repet) #,(expr-to-for-clause-stx
+                                                      (discard-static-infos #'e.parsed))]))
                                       #'repet
-                                      #'()
+                                      (extract-result-statinfo
+                                       (extract-static-infos #'e.parsed))
                                       0)
                 #'tail)]))))
 
 (define-repetition-syntax List.repet
-  (make-repet (lambda (g)
-                #`(in-treelist (let ([l (rhombus-expression #,g)])
+  (make-repet (lambda (expr)
+                #`(in-treelist (let ([l #,expr])
                                  (unless (variable-reference-from-unsafe? (#%variable-reference))
                                    (check-treelist 'List.repet l))
                                  l)))))
 
 (define-repetition-syntax PairList.repet
-  (make-repet (lambda (g)
-                #`(in-list (let ([l (rhombus-expression #,g)])
+  (make-repet (lambda (expr)
+                #`(in-list (let ([l #,expr])
                              (unless (variable-reference-from-unsafe? (#%variable-reference))
                                (check-list 'PairList.repet l))
                              l)))))

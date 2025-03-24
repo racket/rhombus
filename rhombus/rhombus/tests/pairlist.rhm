@@ -570,6 +570,17 @@ check:
     error.val("oops").msg,
   )
 
+// check element static info in `PairList.repet`
+block:
+  use_static
+  class Doggo(name):
+    method bork():
+      println("woof! " +& name)
+  check:
+    let lst :: PairList.of(Doggo) = PairList[Doggo("Spot"), Doggo("Rover")]
+    Function.pass(PairList.repet(lst).bork(), ...)
+    ~prints "woof! Spot\nwoof! Rover\n"
+
 check:
   ("oops" :~ PairList)[0]
   ~throws values(
