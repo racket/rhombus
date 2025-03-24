@@ -1,0 +1,66 @@
+#lang rhombus/static/and_meta
+import:
+  "class.rhm" open
+  "swap.rhm" open
+
+export:
+  to_syntax
+
+fun to_syntax(xml :: Document || Element,
+              ~swap_underscore_dash: swap = default_swap,
+              ~source: source = #false):
+  ~name: xml.to_xstx
+  ~who: who
+  element(match xml
+          | d :: Document: d.element
+          | ~else: xml,
+          swap,
+          source)
+
+fun build_name(str :: String, swap):
+  if swap
+  | swap_underscore_dash(str)
+  | str
+
+fun at(v, srcloc, source):
+  match srcloc
+  | SrclocRange(Srcloc(_, line, col, offset, span), _):
+      Syntax.make(v).relocate(Srcloc(source, line, col, offset, span))
+  | ~else:
+      v
+
+fun element(Element(~srcloc: srcloc,
+                    ~name: name,
+                    ~attributes: [attr, ...],
+                    ~content: [c, ...]),
+            swap,
+            source):
+  '$(at(Symbol.from_string(build_name(name, swap)), srcloc, source)):
+     $(attribute(attr, swap, source))
+     ...
+     $(content(c, swap, source))
+     ...'
+
+def amp = Syntax.make_op(#'#{&}) // no srcloc
+
+fun attribute(Attribute(~srcloc: srcloc,
+                        ~name: name,
+                        ~value: value),
+              swap,
+              source):
+  '$(at(Keyword.from_string(build_name(name, swap)), srcloc, source)): $value'
+
+fun content(c, swap, source):
+  match c
+  | _ :: Element:
+      element(c, swap, source)
+  | t :: Text:
+      at(t.text, t.srcloc, source)
+  | e :: Entity:
+      '$amp $(at(if e.text is_a Int
+                 | e.text
+                 | Symbol.from_string(e.text),
+                 e.srcloc,
+                 source))'
+  | ~else:
+      Syntax.inject(c)
