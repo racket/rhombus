@@ -1,0 +1,3 @@
+#lang rhombus
+import: rhombus/json
+export: all_from(.json)

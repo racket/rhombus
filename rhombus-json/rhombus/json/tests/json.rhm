@@ -1,0 +1,119 @@
+#lang rhombus
+import:
+  json
+
+check 1 ~is_a json.JSON
+check 1/2 is_a json.JSON ~is #false
+check "a" ~is_a json.JSON
+check "a".copy() is_a json.JSON ~is #false
+check [1, 2] ~is_a json.JSON
+check { "a": 1 } ~is_a json.JSON
+check { #'a: 1 } is_a json.JSON ~is #false
+check { "a": [1, #nan] } is_a json.JSON ~is #false
+check #'null ~is_a json.JSON
+
+check json.to_string(1) ~is "1"
+check json.to_string("apple") ~is "\"apple\""
+check json.to_string("\"apple\"") ~is "\"\\\"apple\\\"\""
+check json.to_string([1, 2, 3.0]) ~is "[1,2,3.0]"
+check json.to_string([1, [2], 3]) ~is "[1,[2],3]"
+check json.to_string({ "a": 1, "b": 2 }) ~is "{\"a\":1,\"b\":2}"
+check json.to_string({}) ~is "{}"
+check json.to_string(#true) ~is "true"
+check json.to_string(#'null) ~is "null"
+check json.to_string([1, #'null]) ~is "[1,null]"
+
+check json.to_string(1/2) ~throws values("json.to_string",
+                                         error.annot_msg("argument"),
+                                         error.val(~label: "argument", 1).msg)
+check json.to_string(#inf) ~throws values("json.to_string",
+                                          error.annot_msg("argument"),
+                                          error.val(~label: "argument", #inf).msg)
+check json.to_string({ 1: 2 }) ~throws values("json.to_string",
+                                              error.annot_msg("argument"),
+                                              error.val(~label: "argument", { 1: 2 }).msg)
+check json.to_string({ #'null: 2 }) ~throws values("json.to_string",
+                                                   error.annot_msg("argument"),
+                                                   error.val(~label: "argument", { #'null: 2 }).msg)
+
+check json.to_string([1,3/2,4]) ~throws values(error.annot_msg("argument"),
+                                               error.val(~label: "argument", [1, 3/2, 4]).msg)
+
+check json.to_bytes(1) ~is_now #"1"
+check json.to_bytes({ "a": 1, "b": 2 }) ~is_now #"{\"a\":1,\"b\":2}"
+
+check json.to_bytes(1/2) ~throws values("json.to_bytes",
+                                        error.annot_msg("argument"),
+                                        error.val(~label: "argument", 1).msg)
+
+check:
+  json.write([1, 2, 3])
+  ~prints "[1,2,3]"
+
+check:
+  let o = Port.Output.open_string()
+  json.write([1, 2, 3], ~out: o)
+  o.get_string()
+  ~is "[1,2,3]"
+
+check json.write(1/2) ~throws values("json.write",
+                                     error.annot_msg("argument"),
+                                     error.val(~label: "argument", 1).msg)
+check json.write([1, 2, 3], ~out: 0) ~throws values("json.write",
+                                                    error.annot_msg("argument"),
+                                                    error.val(~label: "argument", 0).msg)
+
+check json.from_string("1") ~is 1
+check json.from_string("1".copy()) ~is 1
+check json.from_string("[1, 2, 3.0]") ~is [1, 2, 3.0]
+check json.from_string("{\"a\":1,\"b\":2}") ~is { "a": 1, "b": 2 }
+check json.from_string("{}") ~is {}
+check json.from_string("{ \"a\": null }") ~is { "a": #'null }
+check json.from_string("true") ~is #true
+check json.from_string("false") ~is #false
+
+check json.from_string("bad") ~throws values("json.from_string",
+                                             "bad input")
+check json.from_string("()") ~throws values("json.from_string",
+                                            "bad input")
+check json.from_string("{null:1}") ~throws values("json.from_string",
+                                                  "non-string value used for json object key")
+
+check json.from_string("") ~throws values("json.from_string",
+                                          "no value in string")
+check json.from_string("1 2") ~throws values("json.from_string",
+                                             "found additional value in string")
+
+check json.from_bytes(#"1") ~is 1
+check json.from_bytes(#"[1, 2, 3.0]") ~is [1, 2, 3.0]
+
+check json.from_bytes(#"bad") ~throws values("json.from_bytes",
+                                             "bad input")
+check json.from_bytes(#"{null:1}") ~throws values("json.from_bytes",
+                                                  "non-string value used for json object key")
+check json.from_bytes(#"") ~throws values("json.from_bytes",
+                                          "no value in byte string")
+check json.from_bytes(#"1 2") ~throws values("json.from_bytes",
+                                             "found additional value in byte string")
+
+check json.read(~in: Port.Input.open_string("")) ~is Port.eof
+check json.read(~in: Port.Input.open_string("bad")) ~throws values("json.read",
+                                                                   "bad input")
+
+block:
+  let inp = Port.Input.open_string("1 [2, 3] false")
+  check json.read(~in: inp) ~is 1
+  check json.read(~in: inp) ~is [2, 3]
+  check json.read(~in: inp) ~is #false
+  check json.read(~in: inp) ~is Port.eof
+
+check json.read(~in: Port.Input.open_string("1a")) ~is 1
+check json.read(~in: Port.Input.open_string("1,a")) ~is 1
+check json.read(~in: Port.Input.open_string("true,a")) ~is #true
+check json.read(~in: Port.Input.open_string("truea")) ~throws "bad input"
+check json.read(~in: Port.Input.open_string("true1")) ~throws "bad input"
+
+check json.from_string(@str{"x"}) ~is "x"
+check json.from_string(@str{"\u03BB"}) ~is "λ"
+check json.from_string(@str{"\uD870"}) ~throws "bad string"
+check json.from_string(@str{"\uD870"}, ~replace_malformed_surrogate: #true) ~is "\uFFFD"
