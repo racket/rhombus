@@ -1,0 +1,18 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/rx open
+
+export:
+  default_swap
+  swap_underscore_dash
+
+def default_swap = #false
+
+fun swap_underscore_dash(str :: String):
+  fun underscore_to_dash(str):
+    rx'"_"'.replace_all(str, "-")
+  let strs = str.split("-")
+  if strs.length() == 1
+  | underscore_to_dash(str)
+  | let [str, ...] = strs
+    String.join([underscore_to_dash(str), ...], "_")

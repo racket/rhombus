@@ -1,0 +1,111 @@
+#lang rhombus/static/and_meta
+import:
+  lib("xml/main.rkt") as rkt
+  "class.rhm" open
+
+export:
+  to_rkt
+  element_to_rkt
+
+fun to_rkt(Document(~prolog: prolog, ~element: e, ~misc: [misc, ...])):
+  rkt.document(prolog_to_rkt(prolog),
+               element_to_rkt(e),
+               PairList[misc_to_rkt(misc), ...])
+  
+fun prolog_to_rkt(Prolog(~pre_misc: [pre_misc, ...],
+                         ~dtd: dtd,
+                         ~post_misc: [post_misc, ...])):
+  rkt.prolog(PairList[misc_to_rkt(pre_misc), ...],
+             match dtd
+             | #false: #false
+             | dtd :: DTD:
+                 rkt.#{document-type}(dtd.name,
+                                      if dtd.public
+                                      | rkt.#{external-dtd/public}(dtd.system,
+                                                                   dtd.public)
+                                      | rkt.#{external-dtd/system}(dtd.system)),
+             PairList[misc_to_rkt(post_misc), ...])
+
+fun element_to_rkt(Element(~srcloc: srcloc,
+                           ~name: name,
+                           ~attributes: [attr, ...],
+                           ~content: [c, ...])):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  rkt.element(start, end,
+              Symbol.from_string(name),
+              PairList[attribute_to_rkt(attr), ...],
+              PairList[content_to_rkt(c), ...])
+
+fun content_to_rkt(c):
+  match c
+  | _ :: Element:      
+      element_to_rkt(c)
+  | _ :: Entity:
+      entity_to_rkt(c)
+  | _ :: Text:
+      text_to_rkt(c)
+  | _ :: Inject:
+      inject_to_rkt(c)
+  | _ :: Comment:
+      comment_to_rkt(c)
+  | _ :: ProcessingInstruction:
+      p_i_to_rkt(c)
+  | ~else:
+      // permissive mode
+      c
+
+fun misc_to_rkt(misc):
+  match misc
+  | _ :: Comment:
+      comment_to_rkt(misc)
+  | _ :: ProcessingInstruction:
+      p_i_to_rkt(misc)
+
+fun text_to_rkt(Text(~srcloc: srcloc, ~text: text, ~write_mode: write_mode)):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  match write_mode
+  | Text.WriteMode.default: 
+      rkt.pcdata(start, end,
+                 text)
+  | Text.WriteMode.cdata: 
+      rkt.cdata(start, end,
+                "<![CDATA[" ++ text ++ "]]>")
+  | Text.WriteMode.entity: 
+      rkt.entity(start, end,
+                 text[0].to_int())
+
+fun inject_to_rkt(Inject(~srcloc: srcloc, ~text: text)):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  rkt.cdata(start, end,
+            text)
+
+fun comment_to_rkt(Comment(~text: text)):
+  rkt.comment(text)
+
+fun p_i_to_rkt(ProcessingInstruction(~srcloc: srcloc, ~target_name: tn, ~instruction: i)):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  rkt.#{p-i}(start, end,
+             Symbol.from_string(tn), i)
+
+fun srcloc_to_rkt(s):
+  match s
+  | #false: values(#'rhombus, #'rhombus)
+  | SrclocRange(Srcloc(_, start_line, start_col, start_offset, _),
+                Srcloc(_, end_line, end_col, end_offset, _)):
+      values(rkt.location(start_line, start_col, start_offset),
+             rkt.location(end_line, end_col, end_offset))
+
+fun attribute_to_rkt(Attribute(~srcloc: srcloc,
+                               ~name: name,
+                               ~value: v)):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  rkt.attribute(start, end,
+                Symbol.from_string(name),
+                v)
+
+fun entity_to_rkt(Entity(~srcloc: srcloc,
+                         ~text: v)):
+  let (start, end) = srcloc_to_rkt(srcloc)
+  rkt.entity(start, end, if v is_a String
+                         | Symbol.from_string(v)
+                         | v)

@@ -1,0 +1,123 @@
+#lang rhombus/static/and_meta
+import:
+  "class.rhm" open
+  "swap.rhm" open
+
+export:
+  from_syntax
+  _from_syntax
+
+fun from_syntax(xstx :: Syntax,
+                ~swap_underscore_dash: swap = default_swap):
+  ~name: xml.from_xstx
+  ~who: who
+  Document(~element: element(who, xstx, swap))
+
+fun _from_syntax(~who: who,
+                 xstx :: Syntax,
+                 ~swap_underscore_dash: swap = default_swap):
+  Document(~element: element(who, xstx, swap))
+
+fun extract_name(str :: String, swap):
+  if swap
+  | swap_underscore_dash(str)
+  | str
+
+fun element(who, xstx :~ Syntax, swap):
+  match xstx
+  | '$(name :: Identifier):
+       $blk':
+      let (attrs, content) = content(who, blk, swap, [], [])
+      Element(~srcloc: make_srcloc(name),
+              ~name: extract_name(to_string(name), swap),
+              ~attributes: attrs,
+              ~content: content)
+  | ~else:
+      error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            ~srcloc: xstx.srcloc(),
+            "invalid XML syntax",
+            error.val(xstx))
+    
+fun content(who, es, swap, attrs :~ List, cs :~ List):
+  match es
+  | '':
+      values(attrs, cs)
+  | '$(name :: Keyword): $rhs
+     $e; ...':
+      unless cs == []
+      | error(~who: who,
+              ~exn: Exn.Fail.Annot,
+              ~srcloc: name.srcloc(),            
+              "misplaced attribute",
+              error.val(name))
+      unless rhs.unwrap() is_a (String || OtherPermitted)
+      | error(~who: who,
+              ~exn: Exn.Fail.Annot,
+              ~srcloc: rhs.srcloc(),            
+              "expected a string for an attribute value",
+              error.val(rhs))
+      let attr = Attribute(~name: extract_name(to_string(name.unwrap()), swap),
+                           ~value:
+                             let v = rhs.unwrap()
+                             if v is_a ReadableString
+                             | to_string(v)
+                             | v)
+      content(who, '$e; ...', swap, attrs.add(attr), cs)
+  | '$(name :: Identifier): $blk
+     $e; ...':
+      let (c_attrs, c_cs) = content(who, blk, swap, [], [])
+      let c = Element(~srcloc: make_srcloc(name),
+                      ~name: extract_name(to_string(name), swap),
+                      ~attributes: c_attrs,
+                      ~content: c_cs)
+      content(who, '$e; ...', swap, attrs, cs.add(c))
+  | '$g
+     $e; ...':
+      let es = '$e; ...'
+      recur group(g = g, attrs :~ List = attrs, cs :~ List = cs):
+        match g
+        | '':
+            content(who, es, swap, attrs, cs)
+        | '($g0, ...) $(g :: Sequence)':
+            content(who, '$g0; ...; $g; $es', swap, attrs, cs)
+        | '[$g0, ...] $(g :: Sequence)':
+            content(who, '$g0; ...; $g; $es', swap, attrs, cs)
+        | '& $(entity :: Term) $(g :: Sequence)':
+            match entity
+            | '$(s :: Identifier)':
+                let c = Entity(~srcloc: make_srcloc(s),
+                               ~text: to_string(s))
+                group(g, attrs, cs.add(c))
+            | '$(i :: Int)' when i.unwrap() is_a EntityInt:
+                let c = Entity(~srcloc: make_srcloc(i),
+                               ~text: i.unwrap())
+                group(g, attrs, cs.add(c))
+            | ~else:
+                error(~who: who,
+                      ~srcloc: entity.srcloc(),
+                      ~exn: Exn.Fail.Annot,
+                      "invalid entity",
+                      error.val(entity))
+        | '$(head :: Term) $(g :: Sequence)':            
+            match head
+            | '$(s :: String)':
+                let c = Text(~srcloc: make_srcloc(head),
+                             ~text: s.unwrap())
+                group(g, attrs, cs.add(c))
+            | ~else:
+                let c = head.unwrap()
+                if c is_a Content
+                | group(g, attrs, cs.add(c))
+                | error(~who: who,
+                        ~srcloc: head.srcloc(),
+                        ~exn: Exn.Fail.Annot,
+                        "invalid content",
+                        error.val(head))
+
+fun make_srcloc(s :~ Syntax):
+  match s.srcloc()
+  | srcloc && Srcloc(src, line, col, pos, span):
+      SrclocRange(srcloc,
+                  Srcloc(src, line, col, pos && span && pos + span, #false))
+  | else: #false

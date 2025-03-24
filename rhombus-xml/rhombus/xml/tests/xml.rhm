@@ -1,0 +1,308 @@
+#lang rhombus
+import:
+  xml
+
+fun no_srcloc(v):
+  match v
+  | g :: Syntax:
+      Syntax.make_group(g.unwrap_all().rest)
+  | xml.Document(~prolog: xml.Prolog(~pre_misc: [pre_misc, ...],
+                                     ~dtd: dtd,
+                                     ~post_misc: [post_misc, ...]),
+                 ~element: e,
+                 ~misc: [misc, ...]):
+      xml.Document(~prolog: xml.Prolog(~pre_misc: [no_srcloc(pre_misc), ...],
+                                       ~post_misc: [no_srcloc(post_misc), ...]),
+                   ~element: no_srcloc(e),
+                   ~misc: [no_srcloc(misc), ...])
+  | xml.Element(~srcloc: _,
+                ~name: name,
+                ~attributes: [attr, ...],
+                ~content: [c, ...]):
+      xml.Element(~name: name,
+                  ~attributes: [no_srcloc(attr), ...],
+                  ~content: [no_srcloc(c), ...])
+  | t :: xml.Text:
+      t with (srcloc = #false)
+  | e :: xml.Entity:
+      e with (srcloc = #false)
+  | v :: xml.Inject:
+      v with (srcloc = #false)
+  | a :: xml.Attribute:
+      a with (srcloc = #false)
+  | pi :: xml.ProcessingInstruction:
+      pi with (srcloc = #false)
+  | cmt :: xml.Comment:
+      cmt
+
+def hi = xml.Text(~text: "hi")
+check hi.text ~is "hi"
+check hi ~is_a xml.Content
+
+def e = xml.Element(~name: "demo",
+                    ~content: [hi])
+check e ~is_a xml.Content
+check xml.from_syntax(xml.to_syntax(e)).element ~is e
+
+check xml.to_syntax(e) ~matches 'demo: "hi"'
+check xml.from_syntax(no_srcloc('demo: "hi"')).element ~is e
+
+def d = xml.Document(~element: e)
+check d.element ~is e
+check xml.from_syntax(xml.to_syntax(d)) ~is d
+
+check:
+  xml.syntax:
+    greeting:
+      "hi"
+  ~matches 'greeting: "hi"'
+
+check:
+  no_srcloc(xml.doc:
+              demo:
+                "hi")
+  ~is d
+
+check:
+  xml.syntax:
+    greeting:
+      $("hi" ++ " " ++ "there")
+  ~matches 'greeting: "hi there"'
+
+check:
+  no_srcloc(xml.doc:
+              demo_tag:
+                ~#{attr-name}: "yes"
+                "hi")
+  ~is xml.Document(~element:
+                     xml.Element(~name: "demo_tag",
+                                 ~attributes: [xml.Attribute(~name: "attr-name",
+                                                             ~value: "yes")],
+                                 ~content: [xml.Text(~text: "hi")]))
+
+check:
+  no_srcloc(xml.doc:
+              ~swap_underscore_dash: #true
+              demo_tag:
+                ~#{attr-name}: "yes"
+                "hi")
+  ~is xml.Document(~element:
+                     xml.Element(~name: "demo-tag",
+                                 ~attributes: [xml.Attribute(~name: "attr_name",
+                                                             ~value: "yes")],
+                                 ~content: [xml.Text(~text: "hi")]))
+
+block:
+  def ent = xml.Entity(~text: "amp")
+  check ent.text ~is "amp"
+  check ent ~is_a xml.Content
+
+  check: xml.to_syntax(xml.Element(~name: "demo", ~content: [ent]))
+         ~matches 'demo: &amp'
+  check: xml.from_syntax(no_srcloc('demo: &amp')).element
+         ~is xml.Element(~name: "demo", ~content: [ent])
+
+block:
+  def ent = xml.Entity(~text: 1234)
+  check ent.text ~is 1234
+  check ent ~is_a xml.Content
+
+  check: xml.to_syntax(xml.Element(~name: "demo", ~content: [ent]))
+         ~matches 'demo: &1234'
+  check: xml.from_syntax(no_srcloc('demo: &1234')).element
+         ~is xml.Element(~name: "demo", ~content: [ent])
+
+def cdata = xml.Text(~text: "cowbell", ~write_mode: #'cdata)
+check cdata.text ~is "cowbell"
+
+check: xml.Text(~text: "broken]]>", ~write_mode: #'cdata)
+       ~throws "cannot write as CData"
+check: xml.Text(~text: "br", ~write_mode: #'entity)
+       ~throws "cannot write as an entity"
+
+def verb = xml.Inject(~text: "broken]]>")
+check verb.text ~is "broken]]>"
+
+def cmt = xml.Comment(~text: "more cowbell")
+check cmt.text ~is "more cowbell"
+
+def pi = xml.ProcessingInstruction(~target_name: "bell",
+                                   ~instruction: "ring")
+check pi.target_name ~is "bell"
+check pi.instruction ~is "ring"
+
+block:
+  let doc = xml.Document(~element:
+                           xml.Element(~name: "doc",
+                                       ~content:
+                                         [cdata, verb, cmt]))
+  check: xml.from_syntax(xml.to_syntax(doc))
+         ~is xml.Document(~element:
+                           xml.Element(~name: "doc",
+                                       ~content:
+                                         [cdata with (write_mode = xml.Text.WriteMode.default), verb, cmt]))
+
+check:
+  xml.to_string(xml.Document(~element:
+                               xml.Element(~name: "doc",
+                                           ~content:
+                                             [cdata,
+                                              xml.Text(~text: "moo"),
+                                              cmt,
+                                              pi,
+                                              verb])))
+  ~matches "<doc><![CDATA[cowbell]]>moo<!--more cowbell--><?bell ring?>broken]]></doc>"
+
+check: xml.write_syntax('demo:
+                           "hello" &lt
+                           "world" &gt')
+       ~prints "<demo>hello&lt;world&gt;</demo>"
+check: xml.syntax_to_string('demo:
+                               "hello" &lt
+                               "world" &gt')
+       ~is "<demo>hello&lt;world&gt;</demo>"
+check: parameterize { xml.current_read_normalize: #false }:
+         xml.string_to_syntax("<demo>hello&lt;world&gt;</demo>")
+       ~matches 'demo:
+                   "hello"
+                   "<"
+                   "world"
+                   ">"'
+check: xml.string_to_syntax("<demo>hello&lt;world&gt;</demo>")
+       ~matches 'demo:
+                   "hello<world>"'
+check: xml.syntax_to_string(xml.string_to_syntax("<demo>hello&lt;world&gt;</demo>"))
+       ~is "<demo>hello&lt;world&gt;</demo>"
+check: xml.syntax_to_bytes(xml.bytes_to_syntax(#"<demo>hello&lt;world&gt;</demo>"))
+       ~is_now #"<demo>hello&lt;world&gt;</demo>"
+check: xml.to_bytes(xml.from_bytes(#"<demo>hello&lt;world&gt;</demo>"))
+       ~is_now #"<demo>hello&lt;world&gt;</demo>"
+
+check:
+  xml.syntax_to_string(
+    xml.syntax:
+      demo:
+        $(Syntax.inject(xml.Comment(~text: "get ready")))
+        "hello<world>"
+        $(Syntax.inject(xml.Inject(~text: "<>")))
+  )
+  ~is "<demo><!--get ready-->hello&lt;world&gt;<></demo>"
+
+check:
+  parameterize { xml.current_read_normalize: #false }:
+    no_srcloc(xml.from_string("<doc><![CDATA[cowbell]]>moo<!--more cowbell--></doc>"))
+  ~is xml.Document(~element:
+                     xml.Element(~name: "doc",
+                                 ~content:
+                                   [cdata,
+                                    xml.Text(~text: "moo")]))
+check:
+  no_srcloc(xml.from_string("<doc><![CDATA[cowbell]]>moo<!--more cowbell--></doc>"))
+  ~is xml.Document(~element:
+                     xml.Element(~name: "doc",
+                                 ~content:
+                                   [xml.Text(~text: "cowbellmoo")]))
+
+check:
+  no_srcloc(xml.from_string("<doc><![CDATA[cowbell]]>moo<!--more cowbell--><?bell ring?></doc>"))
+  ~is xml.Document(~element:
+                     xml.Element(~name: "doc",
+                                 ~content:
+                                   [xml.Text(~text: "cowbellmoo"),
+                                    pi]))
+
+check:
+  parameterize { xml.current_read_comments: #true }:
+    no_srcloc(xml.from_string("<doc><![CDATA[cowbell]]>moo<!--more cowbell--><?bell ring?></doc>"))
+  ~is xml.Document(~element:
+                     xml.Element(~name: "doc",
+                                 ~content:
+                                   [xml.Text(~text: "cowbellmoo"),
+                                    cmt,
+                                    pi]))
+
+check:
+  parameterize { xml.current_read_normalize: #false,
+                 xml.current_read_processing_instructions: #true }:
+    no_srcloc(xml.from_string("<doc><![CDATA[cowbell]]>moo<!--more cowbell--><?bell ring?></doc>"))
+  ~is xml.Document(~element:
+                     xml.Element(~name: "doc",
+                                 ~content:
+                                   [cdata,
+                                    xml.Text(~text: "moo"),
+                                    pi]))
+
+check: xml.current_permissive() ~is #false
+check: #'oops is_a xml.OtherPermitted ~is #false
+check: xml.Element(~name: "doc", ~content: [#'oops])
+       ~throws values(error.annot_msg())
+check:
+  parameterize { xml.current_permissive: #true }:
+    #'oops is_a xml.OtherPermitted
+  ~is #true
+
+check:
+  parameterize { xml.current_permissive: #true }:
+    xml.Element(~name: "doc", ~content: [#'oops])
+  ~is_a xml.Element
+
+check:
+  xml.to_syntax(parameterize { xml.current_permissive: #true }:             
+                  xml.Element(~name: "doc", ~content: [#'oops]))
+  ~matches 'doc: oops'
+
+check:
+  no_srcloc(xml.from_string("<a>&#48;</a>"))
+  ~is xml.Document(~element: xml.Element(~name: "a",
+                                         ~content:
+                                           [xml.Text(~text: "0",
+                                                     ~write_mode: #'entity)]))
+check:
+  xml.to_string(xml.from_string("<a>&#48;</a>"))
+  ~is "<a>&#48;</a>"
+
+check:
+  no_srcloc(xml.from_string("<a>&other;</a>"))
+  ~is xml.Document(~element: xml.Element(~name: "a",
+                                         ~content:
+                                           [xml.Entity(~text: "other")]))
+check:
+  xml.to_string(xml.from_string("<a>&other;</a>"))
+  ~is "<a>&other;</a>"
+
+check:
+  no_srcloc(xml.from_string("<a>a<!-- c -->b</a>"))
+  ~is xml.Document(~element: xml.Element(~name: "a",
+                                         ~content:
+                                           [xml.Text(~text: "ab")]))
+
+check:
+  match xml.string_to_syntax("<a>\n <b/>\n</a>")
+  | '$a:
+       $_
+       $b
+       $_':
+      [a.srcloc(), b.srcloc()]
+  ~is [Srcloc(#false, 1, 0, 1, 14), Srcloc(#false, 2, 1, 6, 4)]
+
+check:
+  match xml.string_to_syntax("<a>1&amp;2</a>")
+  | '$_:
+       $b':
+      b.srcloc()
+  ~is Srcloc(#false, 1, 3, 4, 7)
+
+check:
+  xml.to_string(
+    xml.doc:
+      a:
+        "a"
+        (["x", "y", "z"],
+         t:
+           "hello")
+        () [] (([[]]))
+        "more"
+        @{(pssst... @($"hey"))}
+  )
+  ~is "<a>axyz<t>hello</t>more(pssst... hey)</a>"
+
