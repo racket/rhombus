@@ -7,7 +7,11 @@
     "rhombus-draw-lib"
     "rhombus-gui-lib"
     "rhombus-pict-lib"
-    "rhombus-scribble-lib"))
+    "rhombus-scribble-lib"
+    "rhombus-html-lib"
+    "rhombus-url-lib"
+    "rhombus-icons"
+    "rhombus-logo-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-main-distribution\"")
 
