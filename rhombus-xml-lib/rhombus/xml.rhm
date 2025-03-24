@@ -1,0 +1,181 @@
+#lang rhombus/static/and_meta
+import:
+  lib("xml/main.rkt") as rkt
+  "xml/private/class.rhm":
+    expose:
+      Document
+      Element
+  "xml/private/to_rhm.rhm" open
+  "xml/private/to_rkt.rhm" open
+  "xml/private/to_xstx.rhm" open
+  "xml/private/from_xstx.rhm" open
+  "xml/private/swap.rhm" open
+
+export:
+  all_from(.class)
+  to_syntax
+  from_syntax
+
+namespace xml:
+  export:
+    read
+    from_string
+    from_bytes
+    read_syntax
+    string_to_syntax
+    bytes_to_syntax
+
+    write
+    to_string
+    to_bytes
+    write_syntax
+    syntax_to_string
+    syntax_to_bytes
+
+    Indentation
+
+    current_read_normalize
+    current_read_comments
+    current_read_processing_instructions
+    current_read_count_bytes
+    current_read_collapse_whitespace
+    current_write_empty_shorthand
+
+    doc
+    syntax
+
+  fun read(~in: inp :: Port.Input = Port.Input.current(),
+           ~read_post_misc: read_post_misc = #true)
+    :~ Document:
+      let x:
+        parameterize { rkt.#{read-comments}: current_read_comments(),
+                       rkt.#{xml-count-bytes}: current_read_count_bytes(),
+                       rkt.#{collapse-whitespace}: current_read_collapse_whitespace() }:
+          if read_post_misc
+          | rkt.#{read-xml}(inp)
+          | rkt.#{read-xml/document}(inp)      
+      to_rhm(x,
+             ~keep_pi: current_read_processing_instructions(),
+             ~normalize: current_read_normalize())
+
+  fun read_syntax(~in: inp :: Port.Input = Port.Input.current())
+    :~ Syntax:
+      to_syntax(read(~in: inp))
+
+  fun from_string(str :: String)
+    :~ Document:
+      read(~in: Port.Input.open_string(str))
+
+  fun string_to_syntax(str :: String)
+    :~ Document:
+      to_syntax(read(~in: Port.Input.open_string(str)))
+
+  fun from_bytes(bstr :: Bytes)
+    :~ Document:
+      read(~in: Port.Input.open_bytes(bstr))
+
+  fun bytes_to_syntax(bstr :: Bytes)
+    :~ Document:
+      to_syntax(read(~in: Port.Input.open_bytes(bstr)))
+
+  enum Indentation:
+    none
+    peek
+    scan
+
+  fun write(doc :: Document || Element,
+            ~out: outp :: Port.Output = Port.Output.current(),
+            ~indentation: indentation :: Indentation = #'none):
+    parameterize { rkt.#{permissive-xexprs}: class.current_permissive(),
+                   rkt.#{empty-tag-shorthand}: (if current_write_empty_shorthand()
+                                                | #'always
+                                                | #'never) }:
+      if doc is_a Document
+      | rkt.#{display-xml}(to_rkt(doc), outp,
+                           ~indentation: indentation)
+      | rkt.#{display-xml/content}(element_to_rkt(doc), outp,
+                                   ~indentation: indentation)
+
+  fun write_syntax(xstx :: Syntax,
+                   ~swap_underscore_dash: swap = default_swap,
+                   ~out: outp :: Port.Output = Port.Output.current(),
+                   ~indentation: indentation :: Indentation = #'none):
+    ~who: who
+    let doc = _from_syntax(~who: who,
+                           xstx,
+                           ~swap_underscore_dash: swap)
+    write(doc,
+          ~out: outp,
+          ~indentation: indentation)
+
+  fun to_string(doc :: Document || Element,
+                ~indentation: indentation :: Indentation = #'none)
+    :~ String:
+      let outp = Port.Output.open_string()
+      write(doc,
+            ~out: outp,
+            ~indentation: indentation)
+      outp.get_string()
+
+  fun to_bytes(doc :: Document || Element,
+               ~indentation: indentation :: Indentation = #'none)
+    :~ Bytes:
+      let outp = Port.Output.open_string()
+      write(doc,
+            ~out: outp,
+            ~indentation: indentation)
+      outp.get_bytes()
+
+  fun syntax_to_string(xstx :: Syntax,
+                       ~indentation: indentation :: Indentation = #'none,
+                       ~swap_underscore_dash: swap = default_swap)
+    :~ String:
+      ~who: who
+      let doc = _from_syntax(~who: who,
+                             xstx,
+                             ~swap_underscore_dash: swap)
+      to_string(doc,
+                ~indentation: indentation)
+
+  fun syntax_to_bytes(xstx :: Syntax,
+                      ~indentation: indentation :: Indentation = #'none,
+                      ~swap_underscore_dash: swap = default_swap)
+    :~ Bytes:
+      ~who: who
+      let doc = _from_syntax(~who: who,
+                             xstx,
+                             ~swap_underscore_dash: swap)
+      to_bytes(doc,
+               ~indentation: indentation)
+
+  Parameter.def current_read_normalize :: Any.to_boolean = #true
+  Parameter.def current_read_comments :: Any.to_boolean = #false
+  Parameter.def current_read_processing_instructions :: Any.to_boolean = #true
+  Parameter.def current_read_count_bytes :: Any.to_boolean = #false
+  Parameter.def current_read_collapse_whitespace :: Any.to_boolean = #false
+  Parameter.def current_write_empty_shorthand :: Any.to_boolean = #false
+
+  expr.macro 'doc:
+                $(group_option_sequence
+                  | '~swap_underscore_dash: $do_swap')
+                $content
+                ...':
+    ~op_stx: who
+    '«to_doc('$who', '$content; ...', $(do_swap || 'default_swap'))»'
+
+  expr.macro 'syntax: $content':
+    ~op_stx: who
+    '«check_syntax('$who', '$content')»'
+
+  fun to_doc(who, xstx, swap):
+    _from_syntax(~who: who,
+                 xstx,
+                 ~swap_underscore_dash: swap)
+  
+  fun check_syntax(who, xstx):
+    // ignoring result:
+    to_doc(who, xstx, #false)
+    xstx
+
+export:
+  all_from(.xml)
