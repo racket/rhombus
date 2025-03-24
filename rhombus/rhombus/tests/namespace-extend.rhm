@@ -207,3 +207,20 @@ check:
     import: .N as n
     [n.y, n.z 0]
   ~is [10, 1]
+
+// make sure `def` uses right context for binding
+block:
+  namespace my_ns
+  defn.macro 'def_on_my_ns $(name :: Identifier) $rhs ...':
+    'def my_ns . $name $rhs ...'
+  def_on_my_ns foo = 42
+  check my_ns.foo ~is 42
+
+// make sure `class` uses right context for binding
+block:
+  namespace my_ns
+  defn.macro 'def_on_my_ns $(name :: Identifier) $rhs ...':
+    'class my_ns . $name (v $rhs ...)'
+  def_on_my_ns foo = 42
+  check my_ns.foo().v ~is 42
+  

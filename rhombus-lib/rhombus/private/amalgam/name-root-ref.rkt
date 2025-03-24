@@ -51,9 +51,9 @@
                       (cons get #f)
                       (cons #f (syntax-parse stxes
                                  [(form-id . _) #'form-id])))])
-           (define (build-name prefix field-id)
+           (define (build-name prefix field-id #:ctx [ctx prefix])
              (syntax-property
-              (datum->syntax prefix
+              (datum->syntax ctx
                              (string->symbol
                               (string-append (symbol->immutable-string (syntax-e prefix))
                                              "."
@@ -95,7 +95,10 @@
                         (binding-extension-combine
                          (in-name-root-space prefix)
                          field-id
-                         (relocate-field form-id field-id (build-name prefix field-id) field-op-parens)))]
+                         (relocate-field form-id
+                                         field-id
+                                         (build-name prefix field-id #:ctx field-id)
+                                         field-op-parens)))]
                      [else
                       ;; try again with the shallowest to report an error
                       (let ([get (caar gets)])
