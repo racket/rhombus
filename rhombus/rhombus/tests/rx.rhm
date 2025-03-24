@@ -587,3 +587,8 @@ block:
   check:
     r1.match("d") ~is r2.match("d")
     r2.match("d") ~is r3.match("d")
+
+check:
+  let rx'($offset: .)' = "a"
+  offset
+  ~is "a"

@@ -80,6 +80,7 @@
                                          [(head . _)
                                           (relocate+reraw stx
                                                           #`(#,(relocate-id #'head #'rhombus-forward)
+                                                             #:enter
                                                              #,defn))])))
             #:check-context (lambda (stx)
                               (when (eq? (syntax-local-context) 'top-level)
@@ -110,24 +111,25 @@
      (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
            [uses (in-list (syntax->list #'(lhs-i.bind-uses ...)))])
        (check-bind-uses form-id #'lhs id uses))
-     (append
-      (top-level-decls #'(lhs-i.bind-id ...))
-      (list
-       #`(lhs-i.oncer-id lhs-i.data)
-       #`(define tmp-id (let ([lhs-i.name-id #,(discard-static-infos #'rhs)])
+     (list
+      #`(rhombus-forward
+         #:suspend
+         #,@(top-level-decls #'(lhs-i.bind-id ...))
+         (lhs-i.oncer-id lhs-i.data)
+         (define tmp-id (let ([lhs-i.name-id #,(discard-static-infos #'rhs)])
                           lhs-i.name-id))
-       #`(lhs-i.matcher-id tmp-id
+         (lhs-i.matcher-id tmp-id
                            lhs-i.data
                            if/flattened
                            (begin)
                            (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
-       #`(lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
-       (wrap-definition
-        #`(begin
-            (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
-            ...
-            #,@(maybe-end-def)))))]))
+         (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data))
+      (wrap-definition
+       #`(begin
+           (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
+           (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
+           ...
+           #,@(maybe-end-def))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
                                              #:check-bind-uses [check-bind-uses void])

@@ -1,0 +1,124 @@
+#lang rhombus/static/and_meta
+
+import:
+  lib("racket/base.rkt").#{make-immutable-hashalw}
+  lib("json/main.rkt") ! #{for-extension} as rkt_json:
+    rename #{read-json*} as read
+    rename #{write-json*} as write
+
+def known_json = WeakMutableMap.by(===)()
+
+// Using a `json` namespace adds a prefix to names
+namespace json:
+  export:
+    JSON
+    write
+    to_string
+    to_bytes
+    read
+    from_string
+    from_bytes
+
+  fun is_json(v):
+    match v
+    | _ :: (Int && Exact) || (Real && Inexact && Rational): #true
+    | _ :: String: #true
+    | _ :: Boolean: #true
+    | #'null: #true
+    | vs :: List:
+        cond
+        | vs in known_json: #true
+        | (for all (v in vs): is_json(v)):
+            known_json[vs] := #true
+            #true
+        | ~else:
+            #false
+    | m :: Map:
+        cond
+        | m in known_json: #true
+        | (for all ((k, v) in m):
+             k is_a String && is_json(v)):
+            known_json[m] := #true
+            #true
+        | ~else:
+            #false
+    | _: #false
+
+  annot.macro 'JSON': 'satisfying(is_json)'
+
+  fun do_write(who, v, out):
+    rkt_json.write(who,
+                   v,
+                   out,
+                   ~encode: #'control,
+                   ~indent: #false,
+                   ~null: #'null,
+                   #{#:object-rep?}: (_ is_a Map),
+                   #{#:object-rep->hash}: values,
+                   #{#:list-rep?}: (_ is_a List),
+                   #{#:list-rep->list}: fun (vs): PairList(&vs),
+                   #{#:key-rep?}: (_ is_a String),
+                   #{#:key-rep->string}: values,
+                   #{#:string-rep?}: (_ is_a String),
+                   #{#:string-rep->string}: values)
+
+  fun write(v :: JSON,
+            ~out: out :: Port.Output = Port.Output.current()):
+    ~who: who
+    do_write(who, v, out)
+
+  fun to_string(v :: JSON) :~ String:
+    ~who: who
+    let s = Port.Output.open_string()
+    do_write(who, v, s)
+    s.get_string()
+
+  fun to_bytes(v :: JSON) :~ Bytes:
+    ~who: who
+    let s = Port.Output.open_bytes()
+    do_write(who, v, s)
+    s.get_bytes()
+
+  fun do_read(who, in, replace_malformed_surrogate):
+    rkt_json.read(who,
+                  in,
+                  ~null: #'null,
+                  #{#:make-object}: #{make-immutable-hashalw},
+                  #{#:make-list}: PairList.to_list,
+                  #{#:make-key}: values,
+                  #{#:make-string}: String.snapshot,
+                  #{#:replace-malformed-surrogate?}: replace_malformed_surrogate)
+
+  fun read(~in: in :: Port.Input = Port.Input.current(),
+           ~replace_malformed_surrogate: replace_malformed_surrogate :: Any.to_boolean = #true):
+    ~who: who
+    do_read(who, in, replace_malformed_surrogate)
+  
+  fun check_eof(who, v, what, s):
+    when v == Port.eof
+    | error(~who: who,
+            "no value in " ++ what)
+    let v = do_read(who, s, #true)
+    unless v == Port.eof
+    | error(~who: who,
+            "found additional value in " ++ what,
+            error.val(~label: "additional value", v))
+
+  fun from_string(s :: ReadableString,
+                  ~replace_malformed_surrogate: replace_malformed_surrogate :: Any.to_boolean = #true):
+    ~who: who
+    let s = Port.Input.open_string(s)
+    let v= do_read(who, s, replace_malformed_surrogate)
+    check_eof(who, v, "string", s)
+    v
+
+  fun from_bytes(s :: Bytes,
+                 ~replace_malformed_surrogate: replace_malformed_surrogate :: Any.to_boolean = #true):
+    ~who: who
+    let s = Port.Input.open_bytes(s)
+    let v = do_read(who, s, replace_malformed_surrogate)
+    check_eof(who, v, "byte string", s)
+    v
+    
+export:
+  all_from(.json)

@@ -104,3 +104,54 @@ def rx <> (ry :: Int) = "2" <> 1
 check:
   rx
   ~is "2"
+
+
+// binder that ultimately expands to a use of `def`
+bind.macro 'simple $(id :: Identifier)':
+  bind_meta.pack('(simple_infoer, $id)')
+
+bind.infoer 'simple_infoer($in_id, $id)':
+  '($(to_string(id)),
+    $id,
+    (),
+    (($id, [], ())),
+    simple_once,
+    simple_match,
+    (),
+    simple_commit,
+    simple_bind,
+    $id)'
+
+bind.oncer 'simple_once($id)':
+  ''
+
+bind.matcher 'simple_match($in_id, $id,
+                           $IF, $success, $fail)':
+  '$IF #true
+   | $success
+   | $fail'
+
+bind.committer 'simple_commit($in_id, (), $id)':
+  ''
+
+bind.committer 'simple_bind($in_id, (), $id)':
+  'def $id = $in_id'
+
+check:
+  def simple x = 10
+  x
+  ~is 10
+
+check:
+  let simple x = 11
+  x
+  ~is 11
+
+check:
+  block:
+    let x = 12
+    fun f(): x
+    let simple x = 13
+    fun g(): x
+    [x, f(), g()]
+  ~is [13, 12, 13]
