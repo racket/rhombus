@@ -10,7 +10,7 @@
     "rhombus-pict"
     "rhombus-scribble"
 
-    "rhombus-html"
+    "rhombus-http"
     "rhombus-url"
 
     "rhombus-icons"

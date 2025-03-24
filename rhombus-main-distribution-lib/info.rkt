@@ -8,7 +8,7 @@
     "rhombus-gui-lib"
     "rhombus-pict-lib"
     "rhombus-scribble-lib"
-    "rhombus-html-lib"
+    "rhombus-http-lib"
     "rhombus-url-lib"
     "rhombus-icons"
     "rhombus-logo-lib"))
