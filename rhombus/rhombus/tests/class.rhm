@@ -1137,3 +1137,11 @@ block:
   check print(Posn.m) ~prints "#<function:Loc.m>"
   check print(Posn.n) ~prints "#<function:Loc.n>"
   check Posn.x(0) ~throws "Loc.x"
+
+block:
+  class A(~kw: kw = #false):
+    nonfinal
+  class B(~kw2: kw2):
+    extends A
+  check: to_string(B(~kw: 0, ~kw2: 1))
+         ~is "B(~kw: 0, ~kw2: 1)"

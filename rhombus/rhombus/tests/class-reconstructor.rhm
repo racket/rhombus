@@ -149,3 +149,13 @@ block:
     use_dynamic
     check dynamic(Posn3D(1, 2, 3)) with (extent = 30) ~is Posn3D(1, 2, 30)
     check dynamic(Posn3D(1, 2, 3)) with (x = 10) ~is Posn3D(10, 2, 3)
+
+block:
+  class A(~kw: kw = #false):
+    nonfinal
+  class B(~kw2: kw2):
+    extends A
+  check: B(~kw2: 1) with (kw2 = 2)
+         ~is B(~kw: #false, ~kw2: 2)
+  check: B(~kw2: 1) with (kw = -1)
+         ~is B(~kw: -1, ~kw2: 1)

@@ -101,6 +101,9 @@
                                          [arg (in-list args)])
                                 (cond
                                   [(keyword? (syntax-e arg)) (list arg name)]
+                                  [(and (box? (syntax-e arg))
+                                        (keyword? (syntax-e (unbox (syntax-e arg)))))
+                                   (list (unbox (syntax-e arg)) name)]
                                   [else (list name)]))))))
 
 (define-for-syntax (make-update-syntax constructor-info)

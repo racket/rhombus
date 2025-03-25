@@ -505,9 +505,14 @@
                                 #:do [(define arg (field-desc-constructor-arg fld))])
                        (if (identifier? arg)
                            #f
-                           (if (keyword? (syntax-e arg))
-                               (syntax-e arg)
-                               (field-desc-name fld))))])
+                           (cond
+                             [(keyword? (syntax-e arg))
+                              (syntax-e arg)]
+                             [(and (box? (syntax-e arg))
+                                   (keyword? (syntax-e (unbox (syntax-e arg)))))
+                              (syntax-e (unbox (syntax-e arg)))]
+                             [else
+                              (field-desc-name fld)])))])
          (define all-fields (class-desc-all-fields super))
          (if all-fields
              ;; insert `#f`s for private and protected fields
