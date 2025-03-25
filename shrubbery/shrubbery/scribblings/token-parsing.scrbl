@@ -76,7 +76,9 @@ shrubbery-notation identifier. The same holds for numbers, booleans,
 strings, byte strings, and keywords. A @s_exp_braces
 escape must @emph{not} describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
-ill-formed representations.
+ill-formed representations. The @s_exp_kw_braces shorthand always
+produces a keyword, where the content of @s_exp_kw_braces must be
+an S-expression identifier that is converted to a keyword.
 
 Lines and indentation-influencing whitespace are not represented as
 tokens. Instead, each token conceptually has a line and column derived
@@ -235,6 +237,7 @@ but the table below describes the shape of @litchar("@") forms.
     [no_lex, @nonterm{bytestrelem}, bis, @italic{like Racket, but no literal newline}, ""],
     empty_line,
     [is_lex, @nonterm{sexpression}, bis, bseq(@litchar("#{"), @nonterm{racket}, @litchar("}")), ""],
+    ["", "", bis, bseq(@litchar("~#{"), @nonterm{racket-identifier}, @litchar("}")), ""],
     empty_line,
     [no_lex, @nonterm{racket}, bis, @italic{any non-pair Racket S-expression}, ""],
     empty_line,

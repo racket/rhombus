@@ -27,12 +27,22 @@ basic forms of data:
  @item{Symbols and keywords. A keyword is written in shrubbery notation
  for Rhombus with a @litchar{~} prefix, and it is written in S-expression
  notation with a @litchar{#:} prefix, but the representation does not
- include that prefix.}
+ include that prefix.
+
+ A Racket identifier with non-alphabetic characters can be written in
+ Rhombus using @litchar("#{")…@litchar("}") notation, as in
+ @rhombus(#{finish-work}). A Racket keyword with non-alphabetic
+ characters can be written in Rhombus using @litchar("~#{")…@litchar("}")
+ notation, as in @rhombus(~#{fast?}), or using
+ @litchar("#{")…@litchar("}") notation, as in @rhombus(#{#:fast?}), and
+ the former is usually preferred.}
 
  @item{Functions, including functions with keyword arguments are the
- same. Note that a Racket keyword with non-alphabetic characters can be
- written in rhombus using @litchar("#{")…@litchar("}") notation, as in
- @rhombus(work(#{#:fast?}: #true)).}
+ same.
+
+ The @litchar("#{")…@litchar("}") and @litchar("~#{")…@litchar("}")
+ notations can be useful for calling Racket functions with keyword
+ arguments, as in @rhombus(#{finish-work}(~#{fast?}: #true)).}
 
  @item{Pairs are the same. Racket @tech(~doc: racket_doc){lists} are
  Rhombus @tech(~doc: rhombus_doc){pair lists}, Rhombus

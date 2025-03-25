@@ -2,6 +2,7 @@
 (require parser-tools/lex
          racket/syntax-srcloc
          racket/port
+         racket/symbol
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
          "private/column.rkt"
@@ -345,7 +346,7 @@
        null])))
 
 (struct counter (start-line start-column status) #:prefab)
-(struct s-exp-mode (depth status in-quotes) #:prefab)
+(struct s-exp-mode (kind depth status in-quotes) #:prefab)
 (struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 (struct in-quotes (status openers) #:prefab)
@@ -428,6 +429,20 @@
      #f]
     [else #t]))
 
+(define (lex-s-exp-keyword? status)
+  (cond
+    [(s-exp-mode? status)
+     (eq? (s-exp-mode-kind status) 'keyword)]
+    [(counter? status)
+     (lex-s-exp-keyword? (counter-status status))]
+    [(pending-backup-mode? status)
+     (lex-s-exp-keyword? (pending-backup-mode-status status))]
+    [(in-at? status)
+     (lex-s-exp-keyword? (in-at-shrubbery-status status))]
+    [(in-escaped? status)
+     (lex-s-exp-keyword? (in-escaped-shrubbery-status status))]
+    [else #f]))
+
 (define (lex-dont-stop-status? status)
   ;; anything involving a peek has a pending backup
   (let ([status (if (counter? status)
@@ -469,15 +484,28 @@
                         (define len (- (file-position in*) start-pos))
                         (define raw (bytes->string/utf-8 (read-bytes len in) #\?))
                         (define-values (line-advance column-advance) (count-graphemes raw))
-                        (values (s-exp-token tok line-advance column-advance) type paren start end backup
-                                (let ([in-quotes (s-exp-mode-in-quotes status)])
+                        (define kind (s-exp-mode-kind status))
+                        (define type* (case kind
+                                        [(any) type]
+                                        [(keyword)
+                                         (case type
+                                           [(eof) 'eof]
+                                           [(symbol) 'hash-colon-keyword]
+                                           [else 'error])]
+                                        [(none)
+                                         (case type
+                                           [(eof) 'eof]
+                                           [else 'error])]))
+                        (values (s-exp-token tok line-advance column-advance) type* paren start end backup
+                                (let ([new-kind (if (eq? kind 'keyword) 'none kind)]
+                                      [in-quotes (s-exp-mode-in-quotes status)])
                                   (case action
                                     [(open)
-                                     (s-exp-mode (add1 depth) s-exp-status in-quotes)]
+                                     (s-exp-mode new-kind (add1 depth) s-exp-status in-quotes)]
                                     [(close)
-                                     (s-exp-mode (sub1 depth) s-exp-status in-quotes)]
+                                     (s-exp-mode new-kind (sub1 depth) s-exp-status in-quotes)]
                                     [else
-                                     (s-exp-mode depth s-exp-status in-quotes)]))
+                                     (s-exp-mode new-kind depth s-exp-status in-quotes)]))
                                 0)])]
                     [(in-at? status)
                      ;; within an `@` sequence
@@ -612,7 +640,9 @@
     ;; caller rewrites to 'opener or 'closer and picks a parentheses representation
     (ret 'squote lexeme 'parenthesis '? start-pos end-pos 'initial)]
    ["#{"
-    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0 #f #f))]
+    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 'any 0 #f #f))]
+   ["~#{"
+    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 'keyword 0 #f #f))]
    [":"
     (ret 'block-operator lexeme 'block-operator #f start-pos end-pos 'initial)]
    ["|"
@@ -675,7 +705,9 @@
          ;; pending backup in case "#%" turns into "#%id"
          #:pending-backup 2)]
    [(:or bad-str bad-keyword bad-comment bad-chars)
-    (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
+    (ret 'fail lexeme 'error #f start-pos end-pos 'bad
+         ;; pending backup in case "~#" turns into "~#{"
+         #:pending-backup 1)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
 (define (ret-eof start-pos end-pos)
@@ -819,17 +851,18 @@
      (let ([status (struct-copy in-at status
                                 [shrubbery-status sub-status])])
        (case (and (token? t) (token-name t))
-         [(opener s-exp) (ok (struct-copy in-at status
-                                          [mode (if (and (eq? in-mode 'initial)
-                                                         (equal? (in-at-openers status) '("("))
-                                                         (eq? 'opener (token-name t))
-                                                         (equal? (token-e t) "«"))
-                                                    'no-args
-                                                    in-mode)]
-                                          [openers (cons (if (eq? 's-exp (token-name t))
-                                                             "{"
-                                                             (token-e t))
-                                                         (in-at-openers status))]))]
+         [(opener s-exp)
+          (ok (struct-copy in-at status
+                           [mode (if (and (eq? in-mode 'initial)
+                                          (equal? (in-at-openers status) '("("))
+                                          (eq? 'opener (token-name t))
+                                          (equal? (token-e t) "«"))
+                                     'no-args
+                                     in-mode)]
+                           [openers (cons (if (eq? 's-exp (token-name t))
+                                              "{"
+                                              (token-e t))
+                                          (in-at-openers status))]))]
          [(closer)
           (cond
             [(and (pair? (in-at-openers status))
@@ -1273,7 +1306,7 @@
             (define-values (a next-status)
               (case name
                 [(s-exp)
-                 (define s-exp-tok (finish-s-exp tok in fail))
+                 (define s-exp-tok (finish-s-exp tok in fail (lex-s-exp-keyword? new-status)))
                  (values (wrap s-exp-tok)
                          (advance-location (out-of-s-exp-mode new-status #f)
                                            s-exp-tok))]
@@ -1294,18 +1327,24 @@
                               [else multi?])))
             (cons a d)])]))))
 
-(define (finish-s-exp open-tok in fail)
+(define (finish-s-exp open-tok in fail kw?)
   (define in* (peeking-input-port/count in))
   (define start-pos (file-position in*))
   (define v (read-syntax (current-lexer-source) in*))
   (when (eof-object? v)
-    (fail open-tok "expected S-expression after `#{`"))
+    (fail open-tok (if kw?
+                       "expected S-expression identifier after `~#{`"
+                       "expected S-expression after `#{`")))
+  (when (and kw? (not (identifier? v)))
+    (fail open-tok "expected S-expression identifier after `~#{`"))
   (let loop ()
     (define-values (line col pos) (port-next-location in*))
     (define c (read-char in*))
     (cond
       [(eof-object? c)
-       (fail v "expected `}` after S-expression")]
+       (fail v (if kw?
+                   "expected `}` after S-expression identifier for keyword"
+                   "expected `}` after S-expression"))]
       [(eqv? c #\})
        (void)]
       [(char-whitespace? c)
@@ -1316,7 +1355,9 @@
                                              col
                                              pos
                                              1)))
-       (fail bad "expected only whitespace or `}` after S-expression")]))
+       (fail bad (if kw?
+                     "expected only whitespace or `}` after S-expression identifier for keyword"
+                     "expected only whitespace or `}` after S-expression"))]))
   (define end-pos (file-position in*))
   (define len (- end-pos start-pos))
   (define raw (bytes->string/utf-8 (read-bytes len in) #\?))
@@ -1333,8 +1374,13 @@
                            (struct-copy srcloc (token-srcloc open-tok)
                                         [span (+ len (srcloc-span (token-srcloc open-tok)))]))])
       (syntax->token (if (identifier? v) 'identifier 'literal)
-                     (syntax-raw-property (datum->syntax v (syntax-e v) new-srcloc v)
-                                          (format "#{~s}" (syntax->datum v)))
+                     (syntax-raw-property (datum->syntax v
+                                                         (if kw?
+                                                             (string->keyword (symbol->immutable-string (syntax-e v)))
+                                                             (syntax-e v))
+                                                         new-srcloc
+                                                         v)
+                                          (format "~a#{~s}" (if kw? "~" "") (syntax->datum v)))
                      new-loc)))
   (when (pair? (syntax-e v))
     (fail result "S-expression in `#{` and `}` must not be a pair"))

@@ -53,14 +53,14 @@ namespace json:
                    ~encode: #'control,
                    ~indent: #false,
                    ~null: #'null,
-                   #{#:object-rep?}: (_ is_a Map),
-                   #{#:object-rep->hash}: values,
-                   #{#:list-rep?}: (_ is_a List),
-                   #{#:list-rep->list}: fun (vs): PairList(&vs),
-                   #{#:key-rep?}: (_ is_a String),
-                   #{#:key-rep->string}: values,
-                   #{#:string-rep?}: (_ is_a String),
-                   #{#:string-rep->string}: values)
+                   ~#{object-rep?}: (_ is_a Map),
+                   ~#{object-rep->hash}: values,
+                   ~#{list-rep?}: (_ is_a List),
+                   ~#{list-rep->list}: fun (vs): PairList(&vs),
+                   ~#{key-rep?}: (_ is_a String),
+                   ~#{key-rep->string}: values,
+                   ~#{string-rep?}: (_ is_a String),
+                   ~#{string-rep->string}: values)
 
   fun write(v :: JSON,
             ~out: out :: Port.Output = Port.Output.current()):
@@ -83,11 +83,11 @@ namespace json:
     rkt_json.read(who,
                   in,
                   ~null: #'null,
-                  #{#:make-object}: #{make-immutable-hashalw},
-                  #{#:make-list}: PairList.to_list,
-                  #{#:make-key}: String.snapshot,
-                  #{#:make-string}: String.snapshot,
-                  #{#:replace-malformed-surrogate?}: replace_malformed_surrogate)
+                  ~#{make-object}: #{make-immutable-hashalw},
+                  ~#{make-list}: PairList.to_list,
+                  ~#{make-key}: String.snapshot,
+                  ~#{make-string}: String.snapshot,
+                  ~#{replace-malformed-surrogate?}: replace_malformed_surrogate)
 
   fun read(~in: in :: Port.Input = Port.Input.current(),
            ~replace_malformed_surrogate: replace_malformed_surrogate :: Any.to_boolean = #false):
