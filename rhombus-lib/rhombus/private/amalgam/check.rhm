@@ -158,7 +158,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
         !exn_msg && (got == expected)
     | #'~is_now:
         !exn_msg && (got is_now expected)
-    | #'~throws || #'~raises:
+    | #'~throws:
         exn_msg && does_contain_each(expected, exn_msg)
     | #'~completes:
         !exn_msg
@@ -184,7 +184,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
         +& "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"
-                              | #'~throws || #'~raises: "exception " +& values_str(expected)
+                              | #'~throws: "exception " +& values_str(expected)
                               | #'~matches: "matching " +& expected_thunk(#false)
                               | #'~is_a: "satisfying " +& expected_thunk(#false)
                               | #'~prints: "output " +& values_str(expected)

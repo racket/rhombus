@@ -78,7 +78,7 @@
   and result are show. Forms are evaluated only for their side effects.}
 
   @item{@rhombus(~version_at_least): Splices the contained
-  @rhombus(chunks) as long as the rutime system version is at least
+  @rhombus(chunks) as long as the runtime system version is at least
   @rhombus(version_string), omits the @rhombus(chunk)s otherwise.}
 
 )
@@ -88,10 +88,10 @@
 @itemlist(
 
  @item{A plain @rhombus(form): The @rhombus(form) both typeset and
-  evaluated. Evaluation must not raise an (uncaught) exception.}
+  evaluated. Evaluation must not throw an (uncaught) exception.}
 
  @item{Using @rhombus(~error): The @rhombus(form) both typeset and
-  evaluated, and it must raise an (uncaught) exception. The exception
+  evaluated, and it must throw an (uncaught) exception. The exception
   message is printed as error output.}
 
  @item{Using @rhombus(~check): Like a plain @rhombus(form), but

@@ -106,7 +106,7 @@ unspecialized and fixnum-specific operations.
 
  The same as operators like @rhombus(bits.(<<)), but restricted to
  @tech{fixnum} arguments and results. Like @rhombus(fixnum.(+)), when the
- result would not be a fixnum, an exception is raised in safe mode.
+ result would not be a fixnum, an exception is thrown in safe mode.
 
  The @rhombus(fixnum.bits.logical.(>>)) operator is like
  @rhombus(fixnum.bits.(>>)), but it fills high bits with @rhombus(0)

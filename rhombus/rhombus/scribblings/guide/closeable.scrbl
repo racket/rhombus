@@ -40,4 +40,4 @@ is evaluated with asynchronous breaks disabled. Disabling breaks
 reliably handles the case that, say, a user hits Ctl-C in a terminal
 running a Rhombus program. In that case, either the
 @rhombus(Closeable, ~annot) is has not opened, or it is opened and will
-be reliably closed when the exception triggered by Ctl-C is raised.
+be reliably closed when the exception triggered by Ctl-C is thrown.

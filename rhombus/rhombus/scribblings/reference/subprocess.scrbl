@@ -111,7 +111,7 @@
  Accesses pipe ends created for subprocess.
 
  Accessing the @rhombus(Subprocess.in), @rhombus(Subprocess.out), or
- @rhombus(Subprocess.err), property raises an exception if the subprocess
+ @rhombus(Subprocess.err), property throws an exception if the subprocess
  does not have a pipe for the corresponding subprocess stream. Accessing
  the @rhombus(Subprocess.maybe_in), @rhombus(Subprocess.maybe_out), or
  @rhombus(Subprocess.maybe_err) property either produces the same result

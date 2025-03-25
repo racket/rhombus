@@ -791,7 +791,7 @@ The key is an arbitrary value, and each frame includes at most one
 mark for any given key. Various operations set and extract marks from
 continuations, so that marks can be used to attach information to a
 @tech{dynamic extent}. For example, marks can be used to record information
-for a ``stack trace'' to be presented when an exception is raised, or
+for a ``stack trace'' to be presented when an exception is thrown, or
 to implement dynamic scope.
 
 @// ------------------------------------------------------------------------
@@ -945,7 +945,7 @@ primitive forms and functions may throw exceptions.
 
 An @deftech{exception handler} to @deftech{catch} exceptions can be associated
 with a continuation frame though a @tech{continuation mark} (whose key
-is not directly accessible). When an exception is raised, the current
+is not directly accessible). When an exception is thrown, the current
 continuation's marks determine a chain of @tech{exception handler}
 functions that are consulted to handle the exception.
 A handler for uncaught exceptions is designated through a built-in @tech{context parameter}.

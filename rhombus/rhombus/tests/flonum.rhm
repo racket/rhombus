@@ -63,7 +63,7 @@ check:
        #false]
 
 // check that a flonum operation is inserted by checking that
-// an error is raised if a non-flonum number argument is supplied
+// an error is thrown if a non-flonum number argument is supplied
 
 fun not_a_flonum(who_str):
   values(rewrite_who(who_str) ++ ":",

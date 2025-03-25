@@ -39,7 +39,7 @@ check:
        #false]
 
 // check that a fixnum operation is inserted by checking that
-// an error is raised if a non-fixnum number argument is supplied
+// an error is thrown if a non-fixnum number argument is supplied
 
 fun not_a_fixnum(who_str):
   values(rewrite_who(who_str) ++ ":",

@@ -14,7 +14,7 @@
     :: Any.of(#'lease, #'connect, #'request)
 ){
 
- Veneers to recognize exceptions raised by @rhombus(Session.request) and
+ Veneers to recognize exceptions thrown by @rhombus(Session.request) and
  related functions.
 
 }

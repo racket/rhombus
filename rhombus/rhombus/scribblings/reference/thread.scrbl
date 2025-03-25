@@ -50,7 +50,7 @@ synchronization result is just the thread object itself.
     terminate
 ){
 
- Asynchronously raises an @rhombus(Exn.Break) exception in
+ Asynchronously throws an @rhombus(Exn.Break) exception in
  @rhombus(th), assuming that it has not yet terminated. If @rhombus(kind)
  is @rhombus(#'hang_up) or @rhombus(#'terminate), then the exception is
  more specifically @rhombus(Exn.Break.HangUp) or

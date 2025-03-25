@@ -1,15 +1,15 @@
 #lang rhombus/and_meta
 
-defn.macro 'static $check: $form; ...; $raises $msg':
+defn.macro 'static $check: $form; ...; $throws $msg':
   '$check:
      ~eval
      use_static
      $form; ...
-     $raises values($msg, "static")
+     $throws values($msg, "static")
    $check:
      ~eval
      $form; ...
-     $(Syntax.make(#'~completes, raises))'
+     $(Syntax.make(#'~completes, throws))'
 
 static check:
   fun f(x): x
@@ -131,7 +131,7 @@ static check:
     method m(): x
     method n(): m(1)
   ~throws "wrong number of arguments"
-  
+
 static check:
   class Posn(x, y):
     nonfinal
@@ -167,7 +167,7 @@ static check:
     property | p: 10
   fun (): Posn(1, 2).p := 11
   ~throws "property does not support assignment"
-  
+
 static check:
   class Posn(x, y):
     property | p: 10
@@ -180,14 +180,14 @@ check:
     property | p: 10
     method m(): p := 11
   ~throws "property does not support assignment"
-  
+
 static check:
   class Posn(x, y):
     nonfinal
     property | p: 10
   fun (): Posn(1, 2).p := 11
   ~throws "property does not support assignment"
-  
+
 static check:
   class Posn(x, y):
     nonfinal

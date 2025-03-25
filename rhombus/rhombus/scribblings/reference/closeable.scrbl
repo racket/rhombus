@@ -40,7 +40,7 @@ object after subsequent definitions and expressions. Implementing the
 
  The @rhombus(rhs_expr) is evaluated with breaks disabled like the
  @rhombus(~initially) part of @rhombus(try). If control escapes from the
- @rhombus(body) sequence (e.g., because an exception is raised), then the
+ @rhombus(body) sequence (e.g., because an exception is thrown), then the
  object produced by @rhombus(rhs_expr) is closed before escaping, and breaks
  are disabled during that close as in the @rhombus(~finally) part of
  @rhombus(try). Consequently, in the case of a break exception, the
