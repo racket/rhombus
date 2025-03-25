@@ -357,11 +357,21 @@
 (define (write-escaped v op)
   (cond
     [(symbol? op)
-     (twice (format "#{~s}" v))]
+     (cond
+       [(keyword? v)
+        (twice (format "~~#{~s}" (string->symbol (keyword->immutable-string v))))]
+       [else
+        (twice (format "#{~s}" v))])]
     [else
-     (display "#{" op)
-     (write v op)
-     (display "}" op)]))
+     (cond
+       [(keyword? v)
+        (display "~#{" op)
+        (write (string->symbol (keyword->immutable-string v)) op)
+        (display "}" op)]
+       [else
+        (display "#{" op)
+        (write v op)
+        (display "}" op)])]))
 
 (define (twice v)
   (values v v #f #t))

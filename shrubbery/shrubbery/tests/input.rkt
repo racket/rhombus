@@ -1931,6 +1931,7 @@ then @{8}
 
 @(in #{s-exp} mode)
 @{also in @(#{s-exp}) mode}
+@{this time in @(~#{s-exp-keyword}) mode}
 
 @elem{@a()@b()}
 @elem{@a{}@b()}
@@ -2057,6 +2058,13 @@ INPUT
        (brackets
         (group "also in ")
         (group (parens (group s-exp)))
+        (group " mode")))))
+    (group
+     (parens
+      (group
+       (brackets
+        (group "this time in ")
+        (group (parens (group #:s-exp-keyword)))
         (group " mode")))))
     (group
      elem
