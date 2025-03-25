@@ -204,7 +204,9 @@
 (define (handle-not/c form)
   (and (pair? (cdr form))
        (null? (cddr form))
-       (string-append "!" (get-primitive-contract (cadr form)))))
+       (let ([ctc (get-primitive-contract (cadr form))])
+         (and ctc
+              (string-append "!" ctc)))))
 
 (void (set-primitive-contract-combinator! 'not/c handle-not/c))
 (define-annotation-syntax !
