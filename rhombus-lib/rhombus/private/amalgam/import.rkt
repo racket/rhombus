@@ -912,6 +912,7 @@
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
+       #:datum-literals (group)
        [(_ ::rename-as)
         (datum->syntax req
                        (list* #'rename-in req #'([int-name ext-name]))
@@ -925,16 +926,7 @@
 (define-import-syntax only
   (import-modifier-block
    (lambda (req stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ name::name)
-        (datum->syntax req
-                       (list* #'only-in req #'(name.name))
-                       req)]
-       [(_ (_::block (group name::name ...) ...))
-        (datum->syntax req
-                       (list* #'only-in req #'(name.name ... ...))
-                       req)]))))
+     (parse-expose req stx #'only-in))))
 
 (define-import-syntax except
   (import-modifier-block
@@ -996,28 +988,31 @@
 (define-import-syntax expose
   (import-modifier-block
    (lambda (req stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ ::rename-as)
-        (datum->syntax req
-                       (list* #'rename-in
-                              (list* #'expose-in req #'(int-name))
-                              #'([int-name ext-name]))
-                       req)]
-       [(_ name::name)
-        (datum->syntax req
-                       (list* #'expose-in req #'(name.name))
-                       req)]
-       [(_ (_::block (~or* (group ::rename-as)
-                           (~and (group name::name)
-                                 (~parse int-name #'name.name)))
-                     ...))
-        (define expose (list* #'expose-in req #'(int-name ...)))
-        (define rename+expose
-          (syntax-parse #'((~? [int-name ext-name]) ...)
-            [() expose]
-            [renames (list* #'rename-in expose #'renames)]))
-        (datum->syntax req rename+expose req)]))))
+     (parse-expose req stx #'expose-in))))
+
+(define-for-syntax (parse-expose req stx expose-in-id)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(_ ::rename-as)
+     (datum->syntax req
+                    (list* #'rename-in
+                           (list* expose-in-id req #'(int-name))
+                           #'([int-name ext-name]))
+                    req)]
+    [(_ name::name)
+     (datum->syntax req
+                    (list* expose-in-id req #'(name.name))
+                    req)]
+    [(_ (_::block (~or* (group ::rename-as)
+                        (~and (group name::name)
+                              (~parse int-name #'name.name)))
+                  ...))
+     (define expose (list* expose-in-id req #'(int-name ...)))
+     (define rename+expose
+       (syntax-parse #'((~? [int-name ext-name]) ...)
+         [() expose]
+         [renames (list* #'rename-in expose #'renames)]))
+     (datum->syntax req rename+expose req)]))
 
 (define-import-syntax meta
   (import-modifier
