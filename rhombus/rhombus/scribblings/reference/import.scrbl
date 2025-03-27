@@ -341,14 +341,20 @@
 }
 
 @doc(
-  impo.modifier 'only $id'
+  ~nonterminal:
+    id: block
+    id_or_rename_as: expose ~impo
+  impo.modifier 'only $id_or_rename_as'
   impo.modifier 'only:
-                   $id ...
+                   $id_or_rename_as
                    ...'
 ){
 
  Modifies an @rhombus(import) clause so that only the listed
  @rhombus(id)s are imported.
+
+ Similar to @rhombus(expose, ~impo), if @rhombus(as, ~impo) is used,
+ the @rhombus(id) is renamed in addition.
 
 }
 

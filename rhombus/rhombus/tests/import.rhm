@@ -136,18 +136,6 @@ check:
   beta
   ~throws "beta: undefined"
 
-// This test assumes too much about the implementation of `Pair`
-#//
-check:
-  import:
-    lib("racket/base.rkt") as r:
-      rename:
-        cons as make_pair
-      only:
-        make_pair
-  r.make_pair
-  ~is Pair.cons
-
 check:
   import:
     rhombus/meta.expr
@@ -157,6 +145,16 @@ check:
         cons as make_pair
       only:
         make_pair
+  p.make_pair
+  ~is Pair.cons
+
+check:
+  import:
+    rhombus/meta.expr
+    rhombus.Pair as p:
+      only_space expr
+      only:
+        cons as make_pair
   p.make_pair
   ~is Pair.cons
 
