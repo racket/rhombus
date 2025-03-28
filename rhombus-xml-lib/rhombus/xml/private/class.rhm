@@ -1,0 +1,110 @@
+#lang rhombus/static/and_meta
+import:
+  lib("xml/main.rkt") as rkt
+
+export:
+  Document
+
+  Content
+  Element
+  Text
+  Entity
+  Inject
+  OtherPermitted
+
+  Prolog
+  DTD
+
+  SrclocRange
+
+  Comment
+  ProcessingInstruction
+  Misc
+
+  Attribute
+
+  EntityInt
+
+  current_permissive
+
+class SrclocRange(start :: Srcloc,
+                  end :: Srcloc)
+
+class Comment(~text: text :: String)
+
+class ProcessingInstruction(~target_name: target_name :: String,
+                            ~instruction: instruction :: String,
+                            ~srcloc: srcloc :: maybe(SrclocRange) = #false)
+
+class DTD(~name: name :: String,
+          ~system: system :: String,
+          ~public: public :: maybe(String) = #false)
+
+annot.macro 'Misc': 'Comment || ProcessingInstruction'
+
+class Prolog(~pre_misc: post_misc :: List.of(Misc) = [],
+             ~dtd: dtd :: maybe(DTD) = #false,
+             ~post_misc: pst_misc :: List.of(Misc) = [])
+
+Parameter.def current_permissive :: Any.to_boolean = #false
+
+annot.macro 'OtherPermitted': 'satisfying(fun (v): current_permissive())'
+
+annot.macro 'Content': 'satisfying(is_content)'
+
+fun is_content(v):
+  v is_a Element
+    || v is_a Entity
+    || v is_a Text
+    || v is_a Inject
+    || v is_a Misc
+    || v is_a OtherPermitted
+
+class Attribute(~name: name :: String,
+                ~value: value :: String || OtherPermitted,
+                ~srcloc: srcloc :: maybe(SrclocRange) = #false)
+
+enum WriteMode:
+  default
+  cdata
+  entity
+
+class Text(~text: text :: String,
+           ~srcloc: srcloc :: maybe(SrclocRange) = #false,
+           ~write_mode: write_mode :: WriteMode = #'default):
+  export:
+    WriteMode
+  constructor (~text: text :: String,
+               ~srcloc: srcloc :: maybe(SrclocRange) = #false,
+               ~write_mode: write_mode :: WriteMode described_as Text.WriteMode = #'default):
+    ~who: who
+    when write_mode == WriteMode.cdata && String.contains(text, "]]>")
+    | error(~who: who,
+            "cannot write as CData, because text includes `]]>`",
+            error.val(~label: "text", text))
+    when write_mode == WriteMode.entity && text.length() != 1
+    | error(~who: who,
+            "cannot write as an entity, because text is not of length 1",
+            error.val(~label: "text", text))
+    super(~text: text, ~srcloc: srcloc, ~write_mode: write_mode)
+  reconstructor (text, srcloc, write_mode):
+    Text(~text: text, ~srcloc: srcloc, ~write_mode: write_mode)
+
+class Inject(~text: text :: String,
+             ~srcloc: srcloc :: maybe(SrclocRange) = #false)
+
+annot.macro 'EntityInt': 'Int.in(1, 0xD7FF)
+                            || Int.in(0xE000, 0xFFFD)
+                            || Int.in(0x10000, 0x10FFFF)'
+
+class Entity(~text: text :: String || EntityInt,
+             ~srcloc: srcloc :: maybe(SrclocRange) = #false)             
+
+class Element(~name: name :: String,
+              ~attributes: attributes :: List.of(Attribute) = [],
+              ~content: content :: List.of(Content) = [],
+              ~srcloc: srcloc :: maybe(SrclocRange) = #false)
+
+class Document(~prolog: prolog :: Prolog = Prolog(),
+               ~element: element :: Element,
+               ~misc: misc :: List.of(Misc) = [])

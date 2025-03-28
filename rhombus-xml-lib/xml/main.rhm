@@ -1,0 +1,3 @@
+#lang rhombus
+import: rhombus/xml
+export: all_from(.xml)
