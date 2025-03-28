@@ -1,7 +1,166 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
   "empty.rhm"
 
 export:
   all_from(.empty)
   all_from("empty.rhm")
+
+namespace ns0:
+  export def x = "x"
+  export class Posn(x, y)
+  export annot.macro 'Five': 'matching(5)'
+check ns0.x ~is "x"
+check ns0.Posn(1, 2) ~is_a ns0.Posn
+check ns0.Posn.x(ns0.Posn(1, 2)) ~is 1
+check 5 ~is_a ns0.Five
+
+namespace ns1:
+  export import rhombus/measure
+check ns1.measure.cpu_milliseconds() ~is_a Int
+
+namespace ns2:
+  export import rhombus/measure open:
+    only cpu_milliseconds
+check ns2.cpu_milliseconds() ~is_a Int
+
+namespace ns3:
+  export import rhombus/measure.cpu_milliseconds
+check ns3.cpu_milliseconds() ~is_a Int
+
+namespace ns4:
+  export import rhombus/measure open:
+    only cpu_milliseconds as msecs
+check ns4.msecs() ~is_a Int
+
+check:
+  ~eval
+  namespace ns:
+    export import rhombus/measure open
+  ~throws "module re-export not supported"
+
+module ~early m1 ~lang rhombus:
+  export import rhombus/measure
+
+import self!m1
+check m1.measure.cpu_milliseconds() ~is_a Int
+
+module ~early m2 ~lang rhombus:
+  export import rhombus/measure open:
+    only cpu_milliseconds
+
+import self!m2
+check m2.cpu_milliseconds() ~is_a Int
+
+module ~early m3 ~lang rhombus:
+  export import rhombus/measure.cpu_milliseconds
+
+import self!m3
+check m3.cpu_milliseconds() ~is_a Int
+
+module ~early m4 ~lang rhombus:
+  export import rhombus/measure open:
+    only cpu_milliseconds as msecs
+
+import self!m4
+check m4.msecs() ~is_a Int
+
+module ~early m5 ~lang rhombus:
+  export import rhombus/measure open
+
+import self!m5
+check m5.cpu_milliseconds() ~is_a Int
+
+namespace ns10:
+  export import:
+    rhombus open:
+      only List as Lyst
+
+check ns10.Lyst(1, 2, 3) ~is [1, 2, 3]
+check [1, 2, 3] is_a ns10.Lyst ~is #true
+
+namespace ns11:
+  export import:
+    rhombus open:
+      only List as Lyst
+      only_space annot
+
+check [1, 2, 3] is_a ns11.Lyst ~is #true
+
+namespace ns12:
+  export import:
+    rhombus open:
+      only List as Lyst
+      only_space expr
+
+check ns12.Lyst(1, 2, 3) ~is [1, 2, 3]
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace ns:
+    export import:
+      rhombus open:
+        only List as Lyst
+        only_space annot
+  ns.Lyst(1)
+  ~throws "Lyst: identifier not provided by ns"
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace ns:
+    def Lyst = values
+    export import:
+      rhombus open:
+        only List as Lyst
+        only_space annot
+  ns.Lyst(1)
+  ~throws "Lyst: identifier not provided by ns"
+
+check:
+  ~eval
+  import rhombus/meta open
+  def Lyst = values
+  namespace ns:
+    export import:
+      rhombus open:
+        only List as Lyst
+        only_space annot
+  ns.Lyst(1)
+  ~throws "Lyst: identifier not provided by ns"
+
+module ~early m10 ~lang rhombus:
+  export import:
+    rhombus open:
+      rename List as Lyst
+
+import self!m10
+check m10.Lyst(1, 2, 3) ~is [1, 2, 3]
+check [1, 2, 3] is_a m10.Lyst ~is #true
+
+defn.macro 'namespace_export_nothing $id $(defn :: Sequence)':
+  'namespace $id:
+     export $defn'
+
+check:
+  namespace_export_nothing ns def x = 10
+  block:
+    let x = 11
+    block:
+      import .ns open
+      x
+  ~is 11
+
+defn.macro 'namespace_export_something $id $(defn :: Sequence)':
+  'namespace $id:
+     export ~scope_like $id $defn'
+
+check:
+  namespace_export_something ns def x = 10
+  block:
+    let x = 11
+    block:
+      import .ns open
+      x
+  ~is 10

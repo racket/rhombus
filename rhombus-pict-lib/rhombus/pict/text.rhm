@@ -56,7 +56,7 @@ export:
   verbatim
 
 module ly:
-  export ly
+  export: ly
 
 Parameter.def current_font :: draw.Font:
   draw.Font()

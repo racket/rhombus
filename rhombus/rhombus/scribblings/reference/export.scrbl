@@ -13,6 +13,10 @@
 
   decl.nestable_macro 'export $export_clause'
 
+  decl.nestable_macro 'export $defn'
+
+  decl.nestable_macro 'export ~scope_like $id $defn'
+
   grammar export_clause:
     $export_item
     $export_item:
@@ -48,7 +52,10 @@
  Exports from the enclosing module or namespace. An @rhombus(export) form with a
  single immediate @rhombus(export_clause) is shorthand for an
  @rhombus(export) form that has a block containing the single
- @rhombus(export_clause).
+ @rhombus(export_clause), except that @rhombus(export) as
+ a prefix before a @rhombus(defn) (optionally with
+ @rhombus(~scope_like id)) means the same as the @rhombus(defn) plus
+ exporting the defined names.
 
  An @rhombus(export_item) can be an identifier, operator, or other export
  form, such as @rhombus(all_from, ~expo).
@@ -67,6 +74,53 @@
  @rhombus(List.length). The last component of a dotted name is used as
  the export name. See @secref("namespaces") for information on
  @rhombus(id_name) and @rhombus(op_name).
+
+ When @rhombus(export) is used before a @rhombus(defn), the exported
+ names are all of the ones defined by the @rhombus(defn). Only defined
+ names with the same scopes as the @rhombus(export) identifier itself are
+ exported; macro-introduced names from the expansion of @rhombus(defn)
+ will not be exported, for example. If a @rhombus(~scope_like id) clause
+ is before @rhombus(defn), then defined names with the same scopes as
+ @rhombus(id) are exported. Defined names are exported only in
+ the @tech(~doc: meta_doc){spaces} where they are bound by @rhombus(defn), and not in other
+ spaces where the same name happens to be defined in the same definition
+ context.
+
+@(block:
+    let defn = "hack to avoid nonterminal"
+    @examples(
+      ~repl:
+        namespace ns1:
+          def x = 1
+          export x
+        ns1.x
+      ~repl:
+        namespace ns2:
+          def x = 2
+          export:
+            rename x as y
+        ns2.y
+      ~repl:
+        namespace ns3:
+          export def x = 3
+        ns3.x
+      ~repl:
+        namespace ns4:
+          export all_defined
+          def x = 4
+          def y = "four"
+        ns4.x
+        ns4.y
+      ~hidden:
+        import rhombus/meta open
+      ~repl:
+        defn.macro 'namespace_auto $ns_id $(a_defn :: Sequence)':
+          'namespace $ns_id:
+             export ~scope_like $ns_id $a_defn'
+        namespace_auto ns5 def x = 5
+        ns5.x
+    )
+  )
 
 }
 

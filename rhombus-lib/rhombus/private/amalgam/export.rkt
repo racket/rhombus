@@ -23,7 +23,9 @@
          "nestable-declaration.rkt"
          (submod "module-path.rkt" for-import-export)
          "space-parse.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "parse.rkt"
+         "forwarding-sequence.rkt")
 
 (provide (for-space rhombus/decl
                     export)
@@ -166,11 +168,31 @@
   (nestable-declaration-transformer
    (lambda (stx name-prefix)
      (syntax-parse stx
+       [(form #:scope_like id:identifier . tail)
+        #:with (~var e (:definition name-prefix)) #'(group . tail)
+        #`(#,(relocate+reraw
+              stx
+              #`(rhombus-forward
+                 #:export
+                 #,(relocate-id #'form #'id)
+                 e.parsed)))]
+       [(head . tail)
+        #:with (~var e (:definition name-prefix)) #'(group . tail)
+        #`(#,(relocate+reraw
+              stx
+              #`(rhombus-forward
+                 #:export
+                 head
+                 e.parsed)))]
        [(_ (_::block e::modified-export ...))
-        #`((provide e.parsed ...))]
+        #`(#,(relocate+reraw
+              stx
+              #'(provide e.parsed ...)))]
        [(_ term ...)
         #:with e::modified-export #`(#,group-tag term ...)
-        #`((provide e.parsed))]))))
+        #`(#,(relocate+reraw
+              stx
+              #'(provide e.parsed)))]))))
 
 (define-syntax (define-export-syntax stx)
   (syntax-parse stx
