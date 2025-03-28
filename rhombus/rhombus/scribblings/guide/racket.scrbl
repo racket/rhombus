@@ -1,6 +1,11 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      lib("racket/base.rkt") open:
+        only:
+          #{path-string?}
+          #{open-output-file})
 
 @title(~tag: "racket"){Using Racket Tools and Libraries}
 
@@ -36,11 +41,11 @@ Here are some key techniques for using Racket libraries in Rhombus:
  @rhombus(lib("racket/main.rkt"), ~impo) imports from
  @rhombuslangname(racket).}
 
- @item{Use @s_exp_braces to refer to Racket identifiers that do not fit
- the syntax of Rhombus identifiers. For example,
+ @item{Use @s_exp_braces or @s_exp_kw_braces to refer to Racket identifiers or keywords that do not fit
+ the syntax of Rhombus identifiers or keywords. For example,
  @rhombus(#{path-string?}) is the Racket predicate that corresponds to
  the Rhombus @rhombus(PathString, ~annot) annotation. Similarly,
- @rhombus(#{#:replace-permissions?}) is a keyword argument for the Racket
+ @rhombus(~#{replace-permissions?}) is a keyword argument for the Racket
  function @rhombus(#{open-output-file}).}
 
  @item{Racket lists are @rhombus(PairList, ~annot)s, not

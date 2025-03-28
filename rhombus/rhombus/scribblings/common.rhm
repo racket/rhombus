@@ -26,6 +26,7 @@ export:
   brackets
   braces
   s_exp_braces
+  s_exp_kw_braces
   quotes
   comma
   colon
@@ -81,6 +82,7 @@ def parens = @open_close("(", ")")
 def brackets = @open_close("[", "]")
 def braces = @open_close("{", "}")
 def s_exp_braces = @open_close("#{", "}")
+def s_exp_kw_braces = @open_close("~#{", "}")
 def quotes = @open_close("'", "'")
 def comma = @manual.litchar(",")
 def colon = @manual.litchar(":")
