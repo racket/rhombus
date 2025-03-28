@@ -34,10 +34,10 @@ class Button(private _handle):
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
     super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                       action,
-                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~#{enabled?}: obs.unwrap(is_enabled),
                       ~style: obs.unwrap_list(style, convert_style),
                       ~margin: obs.unwrap_list(margin, values),
-                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~#{min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values)))
 
   export:

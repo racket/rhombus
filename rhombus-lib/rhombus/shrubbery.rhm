@@ -17,4 +17,4 @@ fun read(in :: Port.Input,
          ~start_column: start :: NonnegInt = 0):
   parse.#{parse-all}(in,
                      ~mode: mode,
-                     #{#:start-column}: start)
+                     ~#{start-column}: start)

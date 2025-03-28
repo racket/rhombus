@@ -21,7 +21,7 @@ def html:
   )
   render(PairList[doc.doc],
          PairList["doc"],
-         #{#:dest-dir}: dir.path)
+         ~#{dest-dir}: dir.path)
   let in = Port.Input.open_file(dir.path.add("doc.html"))
   xml.#{xml->xexpr}(xml.#{document-element}(xml.#{read-xml}(in)))
 

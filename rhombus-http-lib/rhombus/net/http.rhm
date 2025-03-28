@@ -26,7 +26,7 @@ export:
   options
   patch
   put
- 
+
   Response
   Session
   Timeouts
@@ -160,7 +160,7 @@ namespace payload:
     if boundary
     | easy.#{multipart-payload}(f.handle, ..., ~boundary: boundary)
     | easy.#{multipart-payload}(f.handle, ...)
-    
+
 
 class PoolConfig(_handle):
   opaque
@@ -168,8 +168,8 @@ class PoolConfig(_handle):
   property handle: _handle
   constructor (~max_size: max_size :: PosInt || matching(#inf) = 128,
                ~idle_timeout_seconds: idle_timeout :: maybe(PosReal) = 600):
-    super(easy.#{make-pool-config}(#{#:max-size}: max_size,
-                                   #{#:idle-timeout}: idle_timeout))
+    super(easy.#{make-pool-config}(~#{max-size}: max_size,
+                                   ~#{idle-timeout}: idle_timeout))
 
 class Timeouts(_handle):
   opaque
@@ -304,7 +304,7 @@ expr.macro 'header_extract($who, $hand, $key, ...)':
   let [key_id, ...] = [Syntax.make_temp_id(key_sym), ...]
   expr_meta.pack_s_exp(['rkt_match',
                         expr_meta.pack_expr(hand),
-                        [['response', '#{#:headers}',
+                        [['response', '~headers',
                           [[key_sym, key_id],
                            ...],
                           'rest'],
@@ -353,9 +353,9 @@ class Session(_handle):
                ~cookie_jar: cookie_jar :: maybe(CookieJar) = #false,
                ~proxies: proxies :: List.of(Proxy) = []):
     let [p, ...] = proxies
-    super(easy.#{make-session}(#{#:pool-config}: pool_config.handle,
-                               #{#:ssl-context}: ssl_context,
-                               #{#:cookie-jar}: cookie_jar,
+    super(easy.#{make-session}(~#{pool-config}: pool_config.handle,
+                               ~#{ssl-context}: ssl_context,
+                               ~#{cookie-jar}: cookie_jar,
                                ~proxies: PairList(p.handle, ...)))
   override method close():
     easy.#{session-close!}(_handle)
@@ -369,7 +369,7 @@ class Session(_handle):
                  ~stream: stream :: Any.to_boolean = #false,
                  ~headers: headers :: Headers = {},
                  ~params: params :: List.of(url.KeyValue) = [],
-                 ~auth: auth :: maybe(auth.Function) = #false,         
+                 ~auth: auth :: maybe(auth.Function) = #false,
                  ~data: data :: maybe(Bytes || String || Port.Input || payload.Function) = #false,
                  ~timeouts: timeouts :: Timeouts = Timeouts(),
                  ~max_attempts: max_attempts :: PosInt = 3,
@@ -381,16 +381,16 @@ class Session(_handle):
                                       | u :: url.URL: u.to_handle()
                                       | ~else: uri,
                                       ~method: method,
-                                      #{#:close?}: close,
-                                      #{#:stream?}: stream,
+                                      ~#{close?}: close,
+                                      ~#{stream?}: stream,
                                       ~headers: hdr.to_symbols(headers),
                                       ~params: PairList[Pair(Symbol.from_string(k), v), ...],
                                       ~auth: auth && au.unwrap(auth),
                                       ~data: if data is_a Function | pl.unwrap(data) | data,
                                       ~timeouts: timeouts.handle,
-                                      #{#:max-attempts}: max_attempts,
-                                      #{#:max-redirects}: max_redirects,
-                                      #{#:user-agent}: user_agent))
+                                      ~#{max-attempts}: max_attempts,
+                                      ~#{max-redirects}: max_redirects,
+                                      ~#{user-agent}: user_agent))
 
 
 Parameter.def current_session :: Session:
@@ -405,7 +405,7 @@ defn.macro 'def_method $name':
              ~stream: stream :: Any.to_boolean = #false,
              ~headers: headers :: Headers = {},
              ~params: params :: List.of(url.KeyValue) = [],
-             ~auth: auth :: maybe(auth.Function) = #false,         
+             ~auth: auth :: maybe(auth.Function) = #false,
              ~data: data :: maybe(Bytes || String || Port.Input || payload.Function) = #false,
              ~timeouts: timeouts :: Timeouts = Timeouts(),
              ~max_attempts: max_attempts :: PosInt = 3,

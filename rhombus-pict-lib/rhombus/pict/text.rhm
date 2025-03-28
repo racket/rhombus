@@ -187,7 +187,7 @@ fun flatten_para_content(who, decode, c) :~ List:
         let PairList[str, ...] = string.#{string-split}(s)
         let ps = List.append([Pict.from_handle(rkt.para(~t: mstr_t,
                                                         ~width: #inf,
-                                                        #{#:decode?}: decode,
+                                                        ~#{decode?}: decode,
                                                         str)), #'sep],
                              ...)
         let ps = if s[s.length()-1] == Char" " | ps | ps.drop_last(1)
@@ -228,8 +228,8 @@ fun para(~width: width = current_para_width(),
     match ps
     | [p :: pict.StaticPict, ...]:
         Pict.from_handle(rkt.para(~t: mstr_t,
-                                  #{#:line-sep}: current_line_sep(),
-                                  #{#:fill?}: full,
+                                  ~#{line-sep}: current_line_sep(),
+                                  ~#{fill?}: full,
                                   ~width: width,
                                   ~align: align,
                                   p.handle, ...))

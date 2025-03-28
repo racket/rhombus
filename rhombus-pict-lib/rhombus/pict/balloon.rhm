@@ -25,7 +25,7 @@ export:
   spike_to_dx
   spike_to_dy
   CompassDirection
-    
+
 Parameter.def current_color :: Color || String:
   let c = bln.#{current-balloon-color}()
   if c is_a String
@@ -38,7 +38,7 @@ Parameter.def current_vert_margin :: Real:
 
 annot.macro 'CompassDirection':
   'matching(#'n || #'ne || #'e || #'se || #'s || #'sw || #'w || #'nw)'
- 
+
 fun pin(content :: Pict,
         ~on: p :: Pict,
         ~at: at :: Find,
@@ -89,17 +89,17 @@ fun pin(content :: Pict,
                                  handle, fun (p, q): values(at_x, at_y),
                                  content_handle,
                                  ~spike: spike,
-                                 #{#:x-margin}: hmargin,
-                                 #{#:y-margin}: vmargin,
-                                 #{#:corner-radius}: corner_radius,
-                                 #{#:spike-radius}: spike_radius,
+                                 ~#{x-margin}: hmargin,
+                                 ~#{y-margin}: vmargin,
+                                 ~#{corner-radius}: corner_radius,
+                                 ~#{spike-radius}: spike_radius,
                                  ~dx: dx,
                                  ~dy: dy,
                                  ~sprout: sprout,
-                                 #{#:thought?}: thought,
+                                 ~#{thought?}: thought,
                                  ~color: fill_color,
-                                 #{#:line-color}: outline_color,
-                                 #{#:line-width}: outline_width)
+                                 ~#{line-color}: outline_color,
+                                 ~#{line-width}: outline_width)
             Pict.from_handle(build([p.handle, content.handle]),
                              [p, content],
                              build)
@@ -161,13 +161,13 @@ fun note(content :: Pict,
         let color = (color && as_color(color)) || current_color()
         fun build([content_handle]):
           bln.#{balloon-note}(content.handle,
-                              #{#:x-margin}: hmargin,
-                              #{#:y-margin}: vmargin,
-                              #{#:corner-radius}: corner_radius,
-                              #{#:thought?}: thought,
+                              ~#{x-margin}: hmargin,
+                              ~#{y-margin}: vmargin,
+                              ~#{corner-radius}: corner_radius,
+                              ~#{thought?}: thought,
                               ~color: color,
-                              #{#:line-color}: line_color,
-                              #{#:line-width}: line_width)
+                              ~#{line-color}: line_color,
+                              ~#{line-width}: line_width)
         Pict.from_handle(build([content.handle]), [content], build)
     | ~else:
         animate_map(~deps: contents,
@@ -190,6 +190,6 @@ fun as_color(color):
 
 fun spike_to_dx(spike :: CompassDirection):
   bln.#{spike->dx}(spike)
-  
+
 fun spike_to_dy(spike :: CompassDirection):
   bln.#{spike->dy}(spike)

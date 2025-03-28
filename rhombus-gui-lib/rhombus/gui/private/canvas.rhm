@@ -43,10 +43,10 @@ class Canvas(private _handle):
     super(easy.canvas(obs.unwrap(data),
                       fun (dc, data): draw(SomeDC(dc), data),
                       ~label: obs.unwrap(label),
-                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~#{enabled?}: obs.unwrap(is_enabled),
                       ~style: obs.unwrap_list(style, convert_style),
                       ~margin: obs.unwrap_list(margin, values),
-                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~#{min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values),
                       ~mixin: fun (c):
                                 mix(add_canvas_callbacks(

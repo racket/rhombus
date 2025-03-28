@@ -49,7 +49,7 @@ class Obs(private _handle):
                    ~name: if name === anon_str
                           | #'anon
                           | Symbol.from_string(name),
-                   #{#:derived?}: is_derived))
+                   ~#{derived?}: is_derived))
 
   property
   | value: peek()

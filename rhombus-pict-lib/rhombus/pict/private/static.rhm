@@ -1163,27 +1163,27 @@ fun do_rectangle(~desc: desc,
                          | rkt.#{filled-rounded-rectangle}(width,
                                                            height,
                                                            if rounded == #'default | -0.25 | rounded,
-                                                           #{#:color}: as_color(fill),
-                                                           #{#:draw-border?}: line,
-                                                           #{#:border-color}: line && as_color(line),
-                                                           #{#:border-width}: as_width(line_width))
+                                                           ~color: as_color(fill),
+                                                           ~#{draw-border?}: line,
+                                                           ~#{border-color}: line && as_color(line),
+                                                           ~#{border-width}: as_width(line_width))
                          | rkt.#{filled-rectangle}(width,
                                                    height,
-                                                   #{#:color}: as_color(fill),
-                                                   #{#:draw-border?}: line,
-                                                   #{#:border-color}: line && as_color(line),
-                                                   #{#:border-width}: as_width(line_width))
+                                                   ~color: as_color(fill),
+                                                   ~#{draw-border?}: line,
+                                                   ~#{border-color}: line && as_color(line),
+                                                   ~#{border-width}: as_width(line_width))
                      | line:
                          if rounded
                          | rkt.#{rounded-rectangle}(width,
                                                     height,
                                                     if rounded == #'default | -0.25 | rounded,
-                                                    #{#:border-color}: as_color(line),
-                                                    #{#:border-width}: as_width(line_width))
+                                                    ~#{border-color}: as_color(line),
+                                                    ~#{border-width}: as_width(line_width))
                          | rkt.#{rectangle}(width,
                                             height,
-                                            #{#:border-color}: as_color(line),
-                                            #{#:border-width}: as_width(line_width))
+                                            ~#{border-color}: as_color(line),
+                                            ~#{border-width}: as_width(line_width))
                      | ~else:
                          rkt.blank(width,
                                    height))
@@ -1275,15 +1275,15 @@ fun do_ellipse(~desc: desc,
                      | fill:
                          rkt.#{filled-ellipse}(width,
                                                height,
-                                               #{#:color}: as_color(fill),
-                                               #{#:draw-border?}: line,
-                                               #{#:border-color}: line && as_color(line),
-                                               #{#:border-width}: line && as_width(line_width))
+                                               ~color: as_color(fill),
+                                               ~#{draw-border?}: line,
+                                               ~#{border-color}: line && as_color(line),
+                                               ~#{border-width}: line && as_width(line_width))
                      | line:
                          rkt.#{ellipse}(width,
                                         height,
-                                        #{#:border-color}: as_color(line),
-                                        #{#:border-width}: as_width(line_width))
+                                        ~#{border-color}: as_color(line),
+                                        ~#{border-width}: as_width(line_width))
                      | ~else:
                          rkt.blank(width,
                                    height))
@@ -1752,10 +1752,10 @@ fun connect(~on: p :: Pict,
               | #'line: values(rkt.#{pin-line}, [], {})
               | #'arrow: values(rkt.#{pin-arrow-line},
                                 [arrow_size],
-                                { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
+                                { #'~#{solid?}: solid, #'~#{hide-arrowhead?}: hidden })
               | #'arrows: values(rkt.#{pin-arrows-line},
                                  [arrow_size],
-                                 { #'#{#:solid?}: solid, #'#{#:hide-arrowhead?}: hidden })
+                                 { #'~#{solid?}: solid, #'~#{hide-arrowhead?}: hidden })
             let label_handle = label && StaticPict.handle(label)
             fun build(handles):
               let (handle, label_handle):
@@ -1766,16 +1766,16 @@ fun connect(~on: p :: Pict,
                    handle,
                    handle, fun (p, q): values(from_x, from_y),
                    handle, fun (p, q): values(to_x, to_y),
-                   #{#:start-angle}: start_angle,
-                   #{#:start-pull}: start_pull,
-                   #{#:end-angle}: end_angle,
-                   #{#:end-pull}: end_pull,
-                   #{#:line-width}: as_width(width),
-                   #{#:color}: as_color(color),
-                   #{#:under?}: order == #'back,
-                   #{#:label}: label_handle,
-                   #{#:x-adjust-label}: label_dx,
-                   #{#:y-adjust-label}: label_dy,
+                   ~#{start-angle}: start_angle,
+                   ~#{start-pull}: start_pull,
+                   ~#{end-angle}: end_angle,
+                   ~#{end-pull}: end_pull,
+                   ~#{line-width}: as_width(width),
+                   ~color: as_color(color),
+                   ~#{under?}: order == #'back,
+                   ~label: label_handle,
+                   ~#{x-adjust-label}: label_dx,
+                   ~#{y-adjust-label}: label_dy,
                    ~& kw_args)
             static_pict(build(if label_handle | [p.handle, label_handle] | p.handle),
                         children,
@@ -2038,7 +2038,7 @@ fun explain_bbox(p :: Pict,
                                   ~ascent: ascent && (as_color(ascent) || inherit()),
                                   ~baseline: baseline && (as_color(baseline) || inherit()),
                                   ~scale: scale,
-                                  #{#:line-width}: line_width),
+                                  ~#{line-width}: line_width),
                       [p], [p._instances],
                       fun ([p]): retry(p))
       | ~else:

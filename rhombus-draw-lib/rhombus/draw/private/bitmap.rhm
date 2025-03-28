@@ -90,7 +90,7 @@ class Bitmap():
                ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
                ~quality: quality :: Int.in(0, 100) = 75,
                ~as_unscaled: as_unscaled :: Any.to_boolean = #false):
-    unless rkt.send handle.#{save-file}(#{#:unscaled?}: as_unscaled,
+    unless rkt.send handle.#{save-file}(~#{unscaled?}: as_unscaled,
                                         dest, kind, quality)
     | error(~who: "Bitmap.write",
             "error writing bitmap",

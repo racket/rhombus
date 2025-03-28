@@ -36,12 +36,12 @@ class Choice(private _handle, private _at_selection :: Obs):
     super(easy.choice(obs.unwrap_list(choices, values),
                       action,
                       ~selection: obs.unwrap(at_selection),
-                      #{#:choice->label}: choice_to_label,
-                      #{#:choice=?}: choice_equal,
+                      ~#{choice->label}: choice_to_label,
+                      ~#{choice=?}: choice_equal,
                       ~label: obs.unwrap(label),
-                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~#{enabled?}: obs.unwrap(is_enabled),
                       ~style: obs.unwrap_list(style, convert_style),
-                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~#{min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values)),
           at_selection)
 

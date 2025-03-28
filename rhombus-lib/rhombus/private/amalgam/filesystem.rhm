@@ -95,7 +95,7 @@ namespace filesystem:
     fun files_here(accum :~ List, p, onto_path):
       let files :~ PairList:
         rkt_error.local_error_adjust { #'#{directory-list}: who }:
-          rkt.#{directory-list}(p, #{#:build?}: !onto_path && add_path)
+          rkt.#{directory-list}(p, ~#{build?}: !onto_path && add_path)
       for values(accum :~ List = accum) (file in files):
         let file = (if onto_path | Path.add(onto_path, file) | file)
         keep_when keep(file)
@@ -156,7 +156,7 @@ namespace filesystem:
               when recur
               | let files :~ PairList:
                   rkt_error.local_error_adjust { #'#{directory-list}: who }:
-                    rkt.#{directory-list}(p, #{#:build?}: #true)
+                    rkt.#{directory-list}(p, ~#{build?}: #true)
                 for (f in files):
                   delete(f)
               rkt_error.local_error_adjust { #'#{delete-directory}: who }:
@@ -232,13 +232,13 @@ namespace filesystem:
             rkt_error.local_error_adjust { #'#{open-output-file}: who }:
               Port.Output.close(rkt.#{open-output-file}(tmp,
                                                         ~permissions: permissions || 0o666,
-                                                        #{#:replace-permissions?}: replace_permissions))
+                                                        ~#{replace-permissions?}: replace_permissions))
         | ~else:
             rkt_error.local_error_adjust { #'#{copy-file}: who }:
               rkt.#{copy-file}(copy_from,
                                tmp,
                                ~permissions: permissions,
-                               #{#:replace-permissions?}: replace_permissions)
+                               ~#{replace-permissions?}: replace_permissions)
         tmp
         ~catch (exn :: (Exn.Fail.Filesystem.Exists
                           || satisfying(fun
@@ -270,9 +270,9 @@ namespace filesystem:
       rkt_error.local_error_adjust { #'#{copy-file}: who }:
         rkt.#{copy-file}(src_path,
                          dest_path,
-                         #{#:exists-ok?}: exists_ok,
+                         ~#{exists-ok?}: exists_ok,
                          ~permissions: permissions,
-                         #{#:replace-permissions?}: replace_permissions)
+                         ~#{replace-permissions?}: replace_permissions)
       when keep_modify_seconds
       | rkt_error.local_error_adjust { #'#{file-or-directory-modify-seconds}: who }:
           rkt.#{file-or-directory-modify-seconds}(

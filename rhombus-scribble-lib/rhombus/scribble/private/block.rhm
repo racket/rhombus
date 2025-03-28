@@ -43,14 +43,14 @@ fun margin_note(~at: at :: MarginSide = #'right,
                 pre_content :: PreContent)
   :: Element:
     ~doc
-    base.#{margin-note*}(#{#:left?}: at == #'left,
+    base.#{margin-note*}(~#{left?}: at == #'left,
                          pre_content)
 
 fun margin_note_block(~at: at :: MarginSide = #'right,
                       pre_flow :: PreFlow)
   :: FlowBlock:
     ~doc
-    base.#{margin-note}(#{#:left?}: at == #'left,
+    base.#{margin-note}(~#{left?}: at == #'left,
                         pre_flow)
 
 annot.macro 'Item': 'satisfying(base.#{item?})'
@@ -84,10 +84,10 @@ fun tabular(cells :: List.of(List.of(Cell)),
     base.tabular(convert_list_of_lists(cells),
                  ~style: style,
                  ~sep: sep,
-                 #{#:column-properties}: convert_list(col_props),
-                 #{#:row-properties}: convert_list(row_props),
-                 #{#:cell-properties}: convert_list_of_lists(cell_props),
-                 #{#:sep-properties}: convert_list(sep_props))
+                 ~#{column-properties}: convert_list(col_props),
+                 ~#{row-properties}: convert_list(row_props),
+                 ~#{cell-properties}: convert_list_of_lists(cell_props),
+                 ~#{sep-properties}: convert_list(sep_props))
 
 fun verbatim(~indent: indent :: NonnegInt = 0,
              [content :: Content, ...])

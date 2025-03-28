@@ -25,11 +25,11 @@ fun title(~tag: tag :: maybe(TagSuffix) = #false,
   ~doc
   maybe_drop_extras:
     base.title(~tag: convert_list(tag),
-               #{#:tag-prefix}: pack_tag_prefix(tag_prefix),
+               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
                ~style: convert_list(style),
                ~version: vers,
                ~date: date,
-               #{#:index-extras}: convert_extras(index_extras),
+               ~#{index-extras}: convert_extras(index_extras),
                pre_content)
 
 meta:
@@ -76,9 +76,9 @@ defn.macro 'def_section $section: $rkt_section':
          ~doc
          maybe_drop_extras:
            base . $rkt_section(~tag: convert_list(tag),
-                               #{#:tag-prefix}: pack_tag_prefix(tag_prefix),
+                               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
                                ~style: convert_list(style),
-                               #{#:index-extras}: convert_extras(index_extras),
+                               ~#{index-extras}: convert_extras(index_extras),
                                pre_content)'
   )
 
@@ -102,5 +102,5 @@ fun author(c :: Content,
            ~email: email :: maybe(String),
            ~obfuscate: obfuscate = #false):
   if email
-  | base.#{author+email}(c, email, #{#:obfuscate?}: obfuscate)
+  | base.#{author+email}(c, email, ~#{obfuscate?}: obfuscate)
   | base.author(c)

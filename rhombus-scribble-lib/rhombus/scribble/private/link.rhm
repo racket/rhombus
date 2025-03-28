@@ -25,7 +25,7 @@ fun hyperlink(url :: String,
     ~doc
     base.hyperlink(url,
                    pre_content,
-                   #{#:underline?}: underline,
+                   ~#{underline?}: underline,
                    ~style: style)
 
 fun url(dest :: String) :: Element:
@@ -43,9 +43,9 @@ fun secref(tag :: String,
     ~doc
     base.secref(tag,
                 ~doc: module_path && (module_path :~ ModulePath).s_exp(),
-                #{#:tag-prefixes}: convert_list(prefixes),
-                #{#:underline?}: underline,
-                #{#:link-render-style}: ref_style && core.#{link-render-style}(ref_style))
+                ~#{tag-prefixes}: convert_list(prefixes),
+                ~#{underline?}: underline,
+                ~#{link-render-style}: ref_style && core.#{link-render-style}(ref_style))
 
 fun Secref(tag :: String,
            ~doc: module_path :: maybe(ModulePath) = #false,
@@ -56,9 +56,9 @@ fun Secref(tag :: String,
     ~doc
     base.Secref(tag,
                 ~doc: module_path && (module_path :~ ModulePath).s_exp(),
-                #{#:tag-prefixes}: convert_list(prefixes),
-                #{#:underline?}: underline,
-                #{#:link-render-style}: ref_style && core.#{link-render-style}(ref_style))
+                ~#{tag-prefixes}: convert_list(prefixes),
+                ~#{underline?}: underline,
+                ~#{link-render-style}: ref_style && core.#{link-render-style}(ref_style))
 
 fun seclink(tag :: String,
             ~doc: module_path :: maybe(ModulePath) = #false,
@@ -70,9 +70,9 @@ fun seclink(tag :: String,
     ~doc
     base.seclink(tag,
                  ~doc: module_path && (module_path :~ ModulePath).s_exp(),
-                 #{#:tag-prefixes}: convert_list(prefixes),
-                 #{#:underline?}: underline,
-                 #{#:indirect?}: indirect,
+                 ~#{tag-prefixes}: convert_list(prefixes),
+                 ~#{underline?}: underline,
+                 ~#{indirect?}: indirect,
                  pre_content)
 
 fun docref(module_path :: ModulePath,
@@ -81,8 +81,8 @@ fun docref(module_path :: ModulePath,
   :: Element:
     ~doc
     base.#{other-doc}(module_path.s_exp(),
-                      #{#:underline?}: underline,
-                      #{#:indirect}: indirect)
+                      ~#{underline?}: underline,
+                      ~indirect: indirect)
 
 fun elemtag(t :: (Taglet || GeneratedTag),
             pre_content :: Content)
@@ -97,4 +97,4 @@ fun elemref(t :: (Taglet || GeneratedTag),
     ~doc
     base.elemref(t,
                  pre_content,
-                 #{#:underline?}: underline)
+                 ~#{underline?}: underline)

@@ -26,8 +26,8 @@ class Checkbox(private _handle, private _at_checked :: Obs):
                               at_checked.value := on)
     super(easy.checkbox(action,
                         ~label: obs.unwrap(label),
-                        #{#:enabled?}: obs.unwrap(is_enabled),
-                        #{#:checked?}: obs.unwrap(at_checked)),
+                        ~#{enabled?}: obs.unwrap(is_enabled),
+                        ~#{checked?}: obs.unwrap(at_checked)),
           at_checked)
 
   property at_is_checked :: Obs:

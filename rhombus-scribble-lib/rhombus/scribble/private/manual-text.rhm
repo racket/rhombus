@@ -34,9 +34,9 @@ fun deftech(pre_content :: PreContent,
     maybe_drop_extras:
       manual.deftech(pre_content,
                      ~key: key,
-                     #{#:normalize?}: normalize,
-                     #{#:style?}: use_style,
-                     #{#:index-extras}: convert_extras(index_extras))
+                     ~#{normalize?}: normalize,
+                     ~#{style?}: use_style,
+                     ~#{index-extras}: convert_extras(index_extras))
 
 fun tech(pre_content :: PreContent,
          ~key: key :: maybe(String) = #false,
@@ -50,10 +50,10 @@ fun tech(pre_content :: PreContent,
     let tech = if quiet | manual.tech | manual.techlink
     tech(pre_content,
          ~key: key,
-         #{#:normalize?}: normalize,
+         ~#{normalize?}: normalize,
          ~doc: doc && (doc :~ ModulePath).s_exp(),
-         #{#:tag-prefixes}: convert_list(prefixes),
-         #{#:indirect?}: indirect)
+         ~#{tag-prefixes}: convert_list(prefixes),
+         ~#{indirect?}: indirect)
 
 fun onscreen(pre_content :: PreContent) :~ Element:
   ~doc

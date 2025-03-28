@@ -10,6 +10,6 @@ export:
 expr.macro 'maybe_drop_extras: $body':
   if utils.#{version<?}(base.version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
   | match body
-    | '$f ...($pre, ..., $('~extras' || '#{#:index-extras}'): $arg, $post, ...)':
+    | '$f ...($pre, ..., $('~extras' || '~#{index-extras}'): $arg, $post, ...)':
         '$f ...($pre, ..., $post, ...)'
   | body

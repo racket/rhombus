@@ -10,14 +10,14 @@ export:
 
 annot.macro 'CollectionString':
   'String && satisfying(setup.#{collection-name?})'
-  
+
 fun path(collect :: CollectionString) :~ maybe(Path):
-  rkt.#{collection-path}(collect, #{#:fail}: fun (x): #false)
+  rkt.#{collection-path}(collect, ~fail: fun (x): #false)
 
 fun file_path(~collect: collect :: CollectionString,
               ~file: file :: PathString.to_path && Path.Relative,
               ~infer_from_compiled = #false) :~ maybe(Path):
   rkt.#{collection-file-path}(file,
                               collect,
-                              #{#:fail}: fun (x): #false,
-                              #{#:check-compiled?}: infer_from_compiled)
+                              ~fail: fun (x): #false,
+                              ~#{check-compiled?}: infer_from_compiled)

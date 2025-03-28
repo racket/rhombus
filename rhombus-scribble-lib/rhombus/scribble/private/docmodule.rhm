@@ -36,9 +36,9 @@ meta:
   | '~lang':
       field [form, ...]: ['~lang']
   | '~no_declare':
-      field [form, ...]: ['#{#:no-declare}']
+      field [form, ...]: ['~#{no-declare}']
   | '~use_sources: $mod ...; ...':
-      field [form, ...]: ['#{#:use-sources}',
+      field [form, ...]: ['~#{use-sources}',
                           pack_tree([ModulePath('$mod ...').s_exp(),
                                      ...])]
 
@@ -53,9 +53,9 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
        as_racket_mod_name('$mod ...'),
        option.form, ..., ...]
     | ['defmodule',
-       '#{#:require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
+       '~#{require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
        expr_meta.pack_expr('@rhombusmodname($mod ...)'),
-       '#{#:module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
+       '~#{module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
        option.form, ..., ...]
   )
 
