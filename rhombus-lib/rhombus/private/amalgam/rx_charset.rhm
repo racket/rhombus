@@ -22,7 +22,7 @@ space.enforest rx_charset:
       pack
       unpack
     fun pack(charset :: Charset, stx) :~ Syntax:
-      do_pack(Array(charset.raw_int_ranges())).relocate_span([stx])
+      do_pack(Syntax.inject(Array(charset.raw_int_ranges()), 'here')).relocate_span([stx])
     fun unpack(stx :: Syntax) :~ Charset:
       Charset.from_raw_int_ranges(Array.get(do_unpack(stx, #false).unwrap_all(), 0))
 

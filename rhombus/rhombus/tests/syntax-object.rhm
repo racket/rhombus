@@ -71,7 +71,7 @@ block:
 
 check:
   Syntax.make(1) ~matches '1'
-  Syntax.make([1, 2]) ~throws "invalid as a shrubbery term"
+  Syntax.make([1, 2]) ~throws "cannot coerce value to term syntax"
   Syntax.make([#'parens, [#'group, 1, "a", #'z]]) ~matches '(1 "a" z)'
   Syntax.make([#'parens,
                [#'group, 1],
@@ -85,9 +85,9 @@ check:
 check:
   Syntax.make_group([1, 2]) ~matches '1 2'
   Syntax.make_group(['block', ['block', '1 2', '3']]) ~matches 'block: 1 2; 3'
-  Syntax.make_group([': a', ': b']) ~throws "invalid as a shrubbery non-tail term representation"
-  Syntax.make_group(['any', ['block', '1 2', '3'], 'more']) ~throws "invalid as a shrubbery non-tail term"
-  Syntax.make_group(['any', ['alts', ['block', '1 2', '3']], 'more']) ~throws "invalid as a shrubbery non-tail term"
+  Syntax.make_group([': a', ': b']) ~throws "cannot coerce value to non-tail term syntax"
+  Syntax.make_group(['any', ['block', '1 2', '3'], 'more']) ~throws "cannot coerce value to non-tail term syntax"
+  Syntax.make_group(['any', ['alts', ['block', '1 2', '3']], 'more']) ~throws "cannot coerce value to non-tail term syntax"
   Syntax.make_group([': a', '| b']) ~matches ':« a » | b'
   Syntax.make_group([['block', 'a'], ['alts', ['block', '1 2', '3']]]) ~matches ':« a » | 1 2 ; 3'
 

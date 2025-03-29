@@ -90,7 +90,9 @@
 
          insert-multi-front-group
          insert-multi-front-head-group
-         check-valid-group)
+         check-valid-group
+
+         syntaxable?)
 
 (define multi-blank (syntax-raw-property (datum->syntax #f 'multi) null))
 (define group-blank (syntax-raw-property (datum->syntax #f 'group) null))
@@ -128,8 +130,24 @@
        (if (and (pair? (cdr l)) (null? (cddr l)))
            (cadr l)
            (fail))]
-      [(or (treelist? r) (list? r)) (cannot-coerce-list who r)]
-      [else (datum->syntax at-stx r)])))
+      [else (syntaxable->syntax who at-stx r)])))
+
+(define (syntaxable? r)
+  (or (number? r)
+      (boolean? r)
+      (string? r)
+      (bytes? r)
+      (symbol? r)
+      (keyword? r)
+      (path? r)
+      (srcloc? r)
+      (void? r)))
+
+(define (syntaxable->syntax who at-stx r)
+  (cond
+    [(syntax? r) r]
+    [(syntaxable? r) (datum->syntax at-stx r)]
+    [else (cannot-coerce who r)]))
 
 ;; For meta functions that take terms as arguments
 (define (unpack-term/maybe v)
@@ -168,7 +186,10 @@
           (check-valid-group who elems '())
           (and elems
                (datum->syntax #f (cons group-blank elems))))]
-    [else (datum->syntax #f (list group-blank (datum->syntax at-stx r)))]))
+    [else
+     (define elem (syntaxable->syntax who at-stx r))
+     (and elem
+          (datum->syntax #f (list group-blank elem)))]))
 
 ;; "Unpacks" to a `group` form that might be empty
 (define (unpack-group-or-empty r who at-stx)
@@ -250,7 +271,9 @@
                           (unpack-term e who at-stx)))
           (check-valid-group who terms '())
           terms)]
-    [else (list (datum->syntax at-stx r))]))
+    [else
+     (define elem (syntaxable->syntax who at-stx r))
+     (and elem (list elem))]))
 
 ;; Unpacks a multi-group sequence into a list of groups,
 ;; but otherwise produces a list with one group. A list is
@@ -290,7 +313,10 @@
              ;; this means that we don't really have a multi-group splicing form,
              ;; but that constraint avoids ambiguity
              (list (unpack-group es who at-stx))]))]
-    [else (list (datum->syntax #f (list group-blank (datum->syntax at-stx r))))]))
+    [else
+     (define elem (syntaxable->syntax who at-stx r))
+     (and elem
+          (list (datum->syntax #f (list group-blank elem))))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
 ;; an empty list turns into `multi` with no groups
@@ -324,8 +350,9 @@
           [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
        [(group-syntax? r) (cdr (syntax-e r))]
-       [(pair? r) (cannot-coerce-pair who r)]
-       [else (list (datum->syntax at-stx r))]))))
+       [else
+        (define elem (syntaxable->syntax who at-stx r))
+        (and elem (list elem))]))))
 
 ;; similar to `pack-tail` but for a list of groups, so no
 ;; special case for empty is needed
@@ -340,8 +367,9 @@
      (cond
        [(multi-syntax? r) (cdr (syntax-e r))]
        [(group-syntax? r) (list r)]
-       [(pair? r) (cannot-coerce-pair who r)]
-       [else (list (datum->syntax at-stx r))]))))
+       [else
+        (define elem (syntaxable->syntax who at-stx r))
+        (and elem (list elem))]))))
 
 ;; ----------------------------------------
 
@@ -562,25 +590,18 @@
     [(procedure? v) (proc-name v)]
     [else v]))
 
-(define (cannot-coerce-list who r)
+(define (cannot-coerce who r)
   (and who
        (raise-arguments-error* (->name who)
                                rhombus-realm
-                               "cannot coerce list to syntax"
-                               "list" r)))
+                               "cannot coerce value to syntax"
+                               "value" r)))
 
 (define (cannot-coerce-empty-list who r)
   (and who
        (raise-arguments-error* (->name who)
                                rhombus-realm
                                "cannot coerce empty list to group syntax")))
-
-(define (cannot-coerce-pair who r)
-  (and who
-       (raise-arguments-error* (->name who)
-                               rhombus-realm
-                               "cannot coerce pair to syntax"
-                               "pair" r)))
 
 (define (raise-error who msg r)
   (cond

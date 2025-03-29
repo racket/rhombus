@@ -254,6 +254,47 @@ check:
 check:
   '#void'.unwrap() ~is #void
 
+check:
+  '$error'
+  ~throws "cannot coerce value to syntax"
+
+block:
+  class Posn(x, y)
+  check: '$(Posn(1, 2))'
+         ~throws "cannot coerce value to syntax"
+  check: Syntax.make(Posn(1, 2))
+         ~throws "cannot coerce value to term syntax"
+  check: Syntax.inject(Posn(1, 2)).unwrap()
+         ~is Posn(1, 2)
+  check: Syntax.inject([1, 2]).unwrap()
+         ~is [1, 2]
+  check: Syntax.inject([]).unwrap()
+         ~is []
+  check: Syntax.make(Pair(1, 2))
+         ~throws "cannot coerce value to term syntax"
+  check: Syntax.make(PairList.empty)
+         ~throws "cannot coerce value to term syntax"
+  check: Syntax.inject(Pair(1, 1)).unwrap()
+         ~is Pair(1, 1)
+  check: Syntax.inject(PairList.empty).unwrap()
+         ~is PairList.empty
+  check: Syntax.inject({#'a: #'A, #'b: #'B}).unwrap()
+         ~is {#'a: #'A, #'b: #'B}
+  check: Syntax.inject(Array(1, 2, 3, #'z)).unwrap()
+         ~is_now Array(1, 2, 3, #'z)
+  check: Syntax.inject(Box(#'x)).unwrap()
+         ~is_now Box(#'x)
+  class PrePosn(x, y):
+    prefab
+  check: Syntax.inject(PrePosn(#'x, #'y)).unwrap()
+         ~is PrePosn(#'x, #'y)
+  check: 'a: b [$(Syntax.inject(Pair(1, 2)))]'.unwrap_all()
+         ~is [#'group, #'a, [#'block, [#'group, #'b, [#'brackets, [#'group, Pair(1, 2)]]]]]
+  check: 'a
+          $(Syntax.inject(Pair(1, 2)))
+          b'.unwrap_all()
+         ~is [#'multi, [#'group, #'a], [#'group, Pair(1, 2)], [#'group, #'b]]
+
 // prevent construction of ill-formed groups
 block:
   def a = '| 12 | 13'

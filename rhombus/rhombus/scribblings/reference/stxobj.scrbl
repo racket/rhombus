@@ -79,7 +79,7 @@ class's name.
  A @rhombus($) as a @rhombus(term, ~var) unquotes (i.e., escapes) the expression
  afterward; the value of that expression replaces the @rhombus($) term and expression. The value
  is normally a syntax object, but except for lists, other kinds of values are coerced
- to a syntax object. Nested @quotes forms are allowed around
+ to a syntax object via @rhombus(Syntax.make). Nested @quotes forms are allowed around
  @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
 
 @examples(
@@ -870,6 +870,21 @@ class's name.
  as @rhombus(ctx_stx) if it is a syntax object, an empty set of scopes
  otherwise.
 
+ Lists and other @tech{listable} values in @rhombus(term) are converted
+ to compound shrubbery forms, such as a parenthesized term or a sequence
+ of alternatives. Each listable value must start with a symbol that
+ selects the compound form, such as @rhombus(#'parens) or
+ @rhombus(#'alts).
+
+ Alone or within nested listables, only certain kinds of atomic values
+ can be converted to syntax: numbers, @tech{strings}, @tech{byte
+  strings}, @tech{symbols}, @tech{keywords}, @tech{paths},
+ @rhombus(Srcloc, ~annot) values, @rhombus(#true), @rhombus(#false), and
+ @rhombus(#void). Mutable strings and byte strings are implicitly coerced
+ to immutable variants. Other kinds of values can be converted to syntax
+ using @rhombus(Syntax.inject), but with limitations on the use of the
+ resulting syntax object.
+
 @examples(
   Syntax.make(1.0)
   Syntax.make([#'parens, '1.0', '2', '"c"'])
@@ -968,6 +983,31 @@ class's name.
   Syntax.make_temp_id("hello")
   Syntax.make_temp_id("hello", ~keep_name: #true)
 )
+
+}
+
+
+@doc(
+  fun Syntax.inject(v :: Any,
+                    ctx_stx :: maybe(Term) = #false)
+    :: Term
+){
+
+ Similar to @rhombus(Syntax.make), and the result is the same as from
+ @rhombus(Syntax.make) is @rhombus(v) is an allowed atomic value. Other
+ values for @rhombus(v) are also treated as ``atomic'' value, even if
+ @rhombus(v) a @tech{listable} value.
+
+ The value @rhombus(v) can be recovered via @rhombus(Syntax.unwrap), but
+ the syntax object produced by @rhombus(Syntax.inject) is not necessarily
+ suitable for use as an expression or as a literal quoted term to be
+ included in an expression, because it cannot necessarily be serialized
+ in a compiled form. Phase-crossing via syntax quoting can also fail,
+ because some values (including @rhombus(List, ~annot) values) have
+ distinct run-time and compile-time representations. The intent of
+ @rhombus(Syntax.inject) is to support arbitrary values in a syntax
+ object that is constructed and used only within a phase, and especially
+ at run time.
 
 }
 

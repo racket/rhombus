@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "injected.rkt")
          "expression.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -107,17 +108,18 @@
   (expression-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(form-id datum . tail)
-        (check-literal-term #'form-id #'datum)
+       [(form-id raw-datum . tail)
+        (define datum (uninject #'raw-datum))
+        (check-literal-term #'form-id datum)
         (define quoted-datum
           ;; but reraw here
-          (reraw (list #'form-id #'datum)
+          (reraw (list #'form-id datum)
                  ;; copies all props, including originalness
-                 (relocate #'datum
-                           #`(quote #,(no-srcloc #'datum))
-                           #'datum)))
+                 (relocate datum
+                           #`(quote #,(no-srcloc datum))
+                           datum)))
         (values (cond
-                  [(literal-static-infos #'datum)
+                  [(literal-static-infos datum)
                    => (lambda (si)
                         (wrap-static-info* quoted-datum si))]
                   [else quoted-datum])
@@ -127,22 +129,24 @@
   (binding-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(form-id datum . tail)
-        (check-literal-term #'form-id #'datum)
+       [(form-id raw-datum . tail)
+        (define datum (uninject #'raw-datum))
+        (check-literal-term #'form-id datum)
         (values (binding-form #'literal-infoer
-                              #`([datum #,(shrubbery-syntax->string #'datum)]))
+                              #`([#,datum #,(shrubbery-syntax->string datum)]))
                 #'tail)]))))
 
 (define-repetition-syntax #%literal
   (repetition-transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [(form-id datum . tail)
-        (check-literal-term #'form-id #'datum)
-        (values (make-repetition-info #'datum
+       [(form-id raw-datum . tail)
+        (define datum (uninject #'raw-datum))
+        (check-literal-term #'form-id datum)
+        (values (make-repetition-info datum
                                       '()
-                                      #'(quote datum)
-                                      (or (literal-static-infos #'datum)
+                                      #`(quote #,datum)
+                                      (or (literal-static-infos datum)
                                           #'())
                                       0)
                 #'tail)]))))
