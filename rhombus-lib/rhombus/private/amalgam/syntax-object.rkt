@@ -10,6 +10,7 @@
          shrubbery/print
          "treelist.rkt"
          "to-list.rkt"
+         "injected.rkt"
          "provide.rkt"
          "expression.rkt"
          "normalize-syntax.rkt"
@@ -73,6 +74,7 @@
    literal_local
    literal_local_term
    literal_local_group
+   [inject Syntax.inject]
    [make Syntax.make]
    [make_op Syntax.make_op]
    [make_group Syntax.make_group]
@@ -285,10 +287,10 @@
   (define (invalid)
     (raise-arguments-error* who rhombus-realm
                             (if group?
-                                "invalid as a shrubbery group representation"
+                                "cannot coerce value to group syntax"
                                 (if tail?
-                                    "invalid as a shrubbery term representation"
-                                    "invalid as a shrubbery non-tail term representation"))
+                                    "cannot coerce value to term syntax"
+                                    "cannot coerce value to non-tail term syntax"))
                             "value" v))
   (define (group-loop l)
     (for/list ([e (in-list l)])
@@ -379,8 +381,28 @@
                                (unless tail? (invalid))])])
                          t]
                         [else (invalid)]))]
-      [else v]))
+      [(syntaxable? v) v]
+      [else (invalid)]))
   (datum->syntax ctx-stx-t (if group? (group v) (loop v pre-alts? tail?))))
+
+(define/arity (Syntax.inject v [ctx-stx #f])
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+  (cond
+    [(syntax*? v) v]
+    [else
+     (define ctx-stx-t (extract-ctx who ctx-stx))
+     (define new-v (cond
+                     [(syntaxable? v)
+                      v]
+                     [(or (hash? v)
+                          (pair? v)
+                          (null? v)
+                          (vector? v)
+                          (box? v)
+                          (prefab-struct-key v))
+                      (injected v)]
+                     [else v]))
+     (datum->syntax ctx-stx new-v)]))
 
 (define/arity (Syntax.make v [ctx-stx #f])
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -466,6 +488,7 @@
     [(and (pair? u)
           (eq? (syntax-e (car u)) 'parsed))
      v]
+    [(injected? u) (injected-e u)]
     [else
      (if (and (pair? u)
               (not (list? u)))
@@ -496,15 +519,19 @@
       [(null? s) empty-treelist]
       [(pair? s) (for/treelist ([e (in-list s)])
                    (list->treelist* e))]
+      [(injected? s) (injected-e s)]
       [else s]))
   (define (normalize s)
     (cond
       [(null? s) empty-treelist]
-      [(not (pair? s)) s]
+      [(not (pair? s))
+       (if (injected? s)
+           (injected-e s)
+           s)]
       [(eq? (car s) 'group)
        (if (null? (cddr s))
            (list->treelist* (cadr s))
-           s)]
+           (list->treelist* s))]
       [(eq? (car s) 'multi)
        (if (and (pair? (cdr s)) (null? (cddr s)))
            (normalize (cadr s))

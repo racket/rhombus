@@ -127,7 +127,12 @@ meta:
         let stx_str = to_string(stx)
         let rkt_rx = #{#rx""}
         let rkt_full_rx = if is_full | #{#rx"^$"}  | rkt_rx
-        '_RX($rkt_rx, $rkt_full_rx, 0, {}, #false, $stx_str)'
+        '_RX(#%literal $(Syntax.inject(rkt_rx)),
+             #%literal $(Syntax.inject(rkt_full_rx)),
+             0,
+             #%literal $(Syntax.inject({})),
+             #false,
+             $stx_str)'
     | ~else:
         let '[$ast, [$var, ...]]' = rx_meta.unpack(pat)
         let stx_str = to_string(stx)
@@ -143,7 +148,12 @@ meta:
             | compile('sequence(bof, $ast, eof)', vars, num_captures, stx)
             | rkt_rx
           // generate static regexp
-          '_RX($rkt_rx, $rkt_full_rx, $num_captures, $vars, $has_backref, $stx_str)'
+          '_RX(#%literal $(Syntax.inject(rkt_rx)),
+               #%literal $(Syntax.inject(rkt_full_rx)),
+               $num_captures,
+               #%literal $(Syntax.inject(vars)),
+               $has_backref,
+               $stx_str)'
 
 expr.macro
 | '«rx ''»':
@@ -505,7 +515,7 @@ meta:
     | #false:
         let rkt_rx = if is_full | #{#rx"^$"} | #{#rx""}
         bind_meta.pack('(rx_infoer,
-                         [$rkt_rx,
+                         [$(Syntax.inject(rkt_rx, 'here')),
                           [],
                           $("matching(" ++ stx.to_source_string() ++ ")")])')
     | ~else:
@@ -522,7 +532,7 @@ meta:
             keep_when var is_a Identifier
             [var, i]
         bind_meta.pack('(rx_infoer,
-                         [$rkt_rx,
+                         [$(Syntax.inject(rkt_rx, 'here')),
                           [[$var, $index], ...],
                           $("matching(" ++ stx.to_source_string() ++ ")")])')
 

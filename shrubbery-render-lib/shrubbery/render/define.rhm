@@ -120,12 +120,12 @@ meta:
     | ~else: literal_term(stxs)
 
 fun sequence_cons_syntax(a, d, context):
-  let a_r: Syntax.relocate(Syntax.make(a), context)
+  let a_r: Syntax.relocate(Syntax.inject(a), context)
   match d
   | '$e ...': '$a_r $e ...'
 
 fun relocate_expansion(e, context):
-  Syntax.relocate(Syntax.make(e), context)
+  Syntax.relocate(Syntax.inject(e), context)
 
 // ----------------------------------------
 
