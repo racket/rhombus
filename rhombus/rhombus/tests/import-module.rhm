@@ -184,3 +184,12 @@ check:
     '$alpha'
   get_alpha
   ~is "alpha"
+
+// `import .<id> open` and shadowing
+module ~early n ~lang rhombus:
+  export str
+  def str = "a string"
+import self!n
+block:
+  import .n open
+  check str ~is "a string"

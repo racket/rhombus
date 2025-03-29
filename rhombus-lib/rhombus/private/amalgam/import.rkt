@@ -508,7 +508,7 @@
                  #:datum-literals (parsed nspace)
                  [(parsed mod-path parsed-r)
                   (define-values (mp r) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
-                  #`(reimport #,id #,mp #,r)]
+                  #`(reimport #,id #,(datum->syntax id (syntax-e mp)) #,r)]
                  [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
   (cond
     [(null? space+maps)
