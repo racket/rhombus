@@ -5,7 +5,8 @@
                      racket/symbol
                      syntax/parse/pre
                      "introducer.rkt"
-                     "id-binding.rkt")
+                     "id-binding.rkt"
+                     "skip-only-except-key.rkt")
          "name-root-ref.rkt"
          "name-root-space.rkt"
          "dotted-sequence-parse.rkt")
@@ -28,12 +29,15 @@
           (syntax-parse stx
             [[id out-id] (values #'id #'out-id)]
             [id (values #'id #'id)]))
-        (define (make-export phase space id [as-sym (syntax-e out-id)])
+        (define (make-export phase space id [as-sym (syntax-e out-id)]
+                             #:filter-space [filter-space #f])
           (export id
                   as-sym
                   (phase+space phase space)
                   #f ; not protected
-                  stx))
+                  (if filter-space
+                      (syntax-property stx skip-only/except-space-key filter-space)
+                      stx)))
         (define (adjust-prefix sym prefix)
           (if (eq? (syntax-e id) (syntax-e out-id))
               sym
@@ -86,7 +90,9 @@
                                   #:when (identifier-extension-binding? id name-root-id)
                                   #:when (or (not space)
                                              (identifier-distinct-binding* id id* abs-phase)))
-                         (make-export phase space (intro (datum->syntax out-int-id sym out-int-id)) (adjust-prefix sym prefix))))]
+                         (make-export phase space (intro (datum->syntax out-int-id sym out-int-id))
+                                      (adjust-prefix sym prefix)
+                                      #:filter-space 'rhombus/namespace)))]
                  [else null])))))))))))
 
 (define-syntax all-spaces-defined-out

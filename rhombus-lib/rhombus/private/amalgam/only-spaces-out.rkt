@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/provide-transform
-                     racket/phase+space))
+                     racket/phase+space
+                     "skip-only-except-key.rkt"))
 
 (provide only-spaces-out
          except-spaces-out)
@@ -16,9 +17,11 @@
                          (values (syntax-e sp) #t)))
         (define exports (expand-export #'prov phase+spaces))
         (for/list ([ex (in-list exports)]
-                   #:when (if (eq? prune 'only)
-                              (hash-ref spaces (phase+space-space (export-mode ex)) #f)
-                              (not (hash-ref spaces (phase+space-space (export-mode ex)) #f))))
+                   #:when (let ([space-sym (or (syntax-property (export-orig-stx ex) skip-only/except-space-key)
+                                               (phase+space-space (export-mode ex)))])
+                            (if (eq? prune 'only)
+                                (hash-ref spaces space-sym #f)
+                                (not (hash-ref spaces space-sym #f)))))
           ex)]))))
 
 (define-syntax only-spaces-out

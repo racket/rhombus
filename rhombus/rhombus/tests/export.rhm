@@ -164,3 +164,46 @@ check:
       import .ns open
       x
   ~is 10
+
+module ~early A ~lang rhombus/and_meta:
+  export:
+    only_space namespace:
+      Foo
+  namespace Foo
+  def Foo.bar = 42
+
+module ~early B ~lang rhombus:
+  import: parent!A open
+  def x = Foo.bar
+  export x
+
+check:
+  import self!B.x
+  x
+  ~is 42
+
+module ~early Ae ~lang rhombus/and_meta:
+  export:
+    only_space expr:
+      Foo
+  namespace Foo
+  def Foo.bar = 42
+  def Foo = 5
+
+check:
+  import self!Ae.Foo
+  Foo
+  ~is 5
+
+check:
+  ~eval
+  module ~early Ae ~lang rhombus/and_meta:
+    export:
+      only_space expr:
+        Foo
+    namespace Foo
+    def Foo.bar = 42
+    def Foo = 5
+  import self!Ae.Foo
+  Foo.bar
+  ~throws "bar: no such field or method"
