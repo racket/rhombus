@@ -265,3 +265,42 @@ check:
     expose: alpha
   alpha
   ~is "alpha"
+
+block:
+  namespace m:
+    namespace ns:
+      export:
+        Foo
+        x
+      namespace Foo:
+        export def z = 6
+      namespace Foo.Bar:
+        export def y = 10
+      class Foo.Bar.X():
+        export i
+        def i = 0
+      def x = 5
+    export:
+      ns.Foo
+      ns.x
+
+  check m.Foo.z ~is 6
+  check m.Foo.Bar.y ~is 10
+  check m.Foo.Bar.X.i ~is 0
+  check m.Foo.Bar.X() ~is_a m.Foo.Bar.X
+
+  block:
+    import .m as m2:
+      expose:
+        Foo
+        x
+
+    check m2.Foo.z ~is 6
+    check m2.Foo.Bar.y ~is 10
+    check m2.Foo.Bar.X.i ~is 0
+    check m2.Foo.Bar.X() ~is_a m2.Foo.Bar.X
+
+    check Foo.z ~is 6
+    check Foo.Bar.y ~is 10
+    check Foo.Bar.X.i ~is 0
+    check Foo.Bar.X() ~is_a Foo.Bar.X
