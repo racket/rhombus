@@ -193,3 +193,32 @@ import self!n
 block:
   import .n open
   check str ~is "a string"
+
+module ~early many_m ~lang rhombus/and_meta:  
+  namespace ns:
+    export:
+      Foo
+      x
+    namespace Foo:
+      export def z = 6
+    namespace Foo.Bar:
+      export def y = 10
+    class Foo.Bar.X()
+    def x = 5
+  export:
+    ns.Foo
+    ns.x
+
+block:
+  import self!many_m:
+    expose:
+      Foo
+      x
+  check Foo.z ~is 6
+  check Foo.Bar.y ~is 10
+  check Foo.Bar.X() ~is_a Foo.Bar.X
+  check x ~is 5
+  check many_m.Foo.z ~is 6
+  check many_m.Foo.Bar.y ~is 10
+  check many_m.Foo.Bar.X() ~is_a Foo.Bar.X
+  check many_m.x ~is 5

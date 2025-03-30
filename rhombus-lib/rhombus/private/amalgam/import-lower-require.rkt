@@ -53,7 +53,7 @@
                            (define-values (sym sym-ext) (extract-symbol-root+ext full-sym mentioned))
                            (define space (phase+space-space (car phase+space+syms)))
                            (define old-table (hash-ref syms sym #hasheq()))
-                           (define old-sym-exts (hash-ref old-table sym #hash()))
+                           (define old-sym-exts (hash-ref old-table space #hash()))
                            (hash-set syms sym (hash-set old-table space (hash-set old-sym-exts sym-ext #t)))))
             (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f '#:all))
           (define (get-not-here revnames only-mentioned?)
