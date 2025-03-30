@@ -9,4 +9,5 @@
 @include_section("stxobj.scrbl")
 @include_section("syntax-class.scrbl")
 @include_section("macro.scrbl")
+@include_section("alias.scrbl")
 @include_section("eval.scrbl")

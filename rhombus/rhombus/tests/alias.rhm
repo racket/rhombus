@@ -1,0 +1,108 @@
+#lang rhombus/and_meta
+
+check:
+  ~eval
+  alias Roster: List
+  ~throws "bad syntax"
+
+check:
+  ~eval
+  alias 'Roster x': 'List'
+  ~throws "unexpected term"
+
+alias 'Roster': 'List'
+
+check Roster[1, 2, 3] ~is [1, 2, 3]
+check [1, 2, 3] is_a Roster ~is #true
+check Roster.cons(1, [2, 3]) ~is [1, 2, 3]
+
+alias 'MakeRoster':
+  ~only_space expr
+  'List'
+check MakeRoster(1, 2, 3) ~is [1, 2, 3]
+
+check:
+  ~eval
+  import rhombus/meta.expr
+  alias 'MakeRoster':
+    ~only_space expr
+    'List'
+  [1, 2, 3] is_a MakeRoster
+  ~throws values("MakeRoster",
+                 "not bound as an annotation")
+
+check:
+  ~eval
+  import rhombus/meta.annot
+  alias 'MakeRoster':
+    ~only_space annot
+    'List.cons'
+  ~throws "no binding found for aliased name"
+
+block:
+  def Rosterette = 5
+  alias 'Rosterette':
+    ~except_space:
+      expr
+      statinfo
+    'List'
+
+  check [1, 2, 3] is_a Rosterette ~is #true
+  check Rosterette.cons(1, [2, 3]) ~is [1, 2, 3]
+  check Rosterette ~is 5
+
+alias 'build': 'List.cons'
+check build(1, [2, 3]) ~is [1, 2, 3]
+block:
+  use_static
+  check build(1, [2, 3]).length() ~is 3
+
+namespace ns:
+  export def x = "x"
+
+check ns.x ~is "x"
+alias 'ns.Inventory': 'List'
+check ns.Inventory[1, 2, 3] ~is [1, 2, 3]
+check [1, 2, 3] is_a ns.Inventory ~is #true
+
+alias '++++': '++'
+check [1, 2, 3] ++++ [4, 5] ~is [1, 2, 3, 4, 5]
+
+block:
+  namespace Foo
+  namespace Bar
+  def Bar.baz = 42
+  alias 'Foo.Bar': 'Bar'
+  check Foo.Bar.baz ~is 42
+
+block:
+  namespace Foo
+  namespace Foo.Bar
+  def Foo.Bar.baz = 42
+  alias 'Bear': 'Foo.Bar'
+  check Bear.baz ~is 42
+
+block:
+  namespace m:
+    namespace ns:
+      export:
+        Foo
+        x
+      namespace Foo:
+        export def z = 6
+      namespace Foo.Bar:
+        export def y = 10
+      class Foo.Bar.X():
+        export i
+        def i = 0
+      def x = 5
+    export:
+      ns.Foo
+      ns.x
+
+  alias 'f': 'm.Foo'
+
+  check f.z ~is 6
+  check f.Bar.y ~is 10
+  check f.Bar.X.i ~is 0
+  check f.Bar.X() ~is_a m.Foo.Bar.X
