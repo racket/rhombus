@@ -7,4 +7,5 @@
 ;; not exported by `rhombus/meta` for meta.
 
 (bounce "class-clause-primitive-macro.rkt"
-        "macro.rkt")
+        "macro.rkt"
+        "alias.rkt")
