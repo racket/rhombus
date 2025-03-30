@@ -26,6 +26,19 @@
                      portal-syntax->extends
                      name-root-all-out))
 
+(begin-for-syntax
+  (define (build-name prefix field-id #:ctx [ctx prefix])
+    (syntax-property
+     (datum->syntax ctx
+                    (string->symbol
+                     (string-append (symbol->immutable-string (syntax-e prefix))
+                                    "."
+                                    (symbol->immutable-string (syntax-e field-id))))
+                    field-id
+                    field-id)
+     'disappeared-use
+     (syntax-local-introduce (in-name-root-space prefix)))))
+
 ;; * `binding-ref` as non-#f means that we're parsing a binding, so we
 ;;    want to follow namespaces, but a tail non-bound name is one to
 ;;    be bound (so don't complain if it's not bound). This path is
@@ -51,17 +64,6 @@
                       (cons get #f)
                       (cons #f (syntax-parse stxes
                                  [(form-id . _) #'form-id])))])
-           (define (build-name prefix field-id #:ctx [ctx prefix])
-             (syntax-property
-              (datum->syntax ctx
-                             (string->symbol
-                              (string-append (symbol->immutable-string (syntax-e prefix))
-                                             "."
-                                             (symbol->immutable-string (syntax-e field-id))))
-                             field-id
-                             field-id)
-              'disappeared-use
-              (syntax-local-introduce (in-name-root-space prefix))))
            (define (next form-id field-id field-op-parens what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -341,5 +343,6 @@
               [(nspace . _) #t]
               [_ #f])]
            [else
-            (loop (cdr ids) (portal-syntax-content v) id)])
+            (or (loop (cdr ids) (portal-syntax-content v) id)
+                (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who))])
          (in-name-root-space id))))

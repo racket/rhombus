@@ -223,4 +223,11 @@ block:
     'class my_ns . $name (v $rhs ...)'
   def_on_my_ns foo = 42
   check my_ns.foo().v ~is 42
-  
+
+// make sure namespace as extension can be extended
+block:
+  namespace Foo
+  namespace Foo.Bar
+  class Foo.Bar.X(x)
+  check: Foo.Bar.X(1).x
+         ~is 1
