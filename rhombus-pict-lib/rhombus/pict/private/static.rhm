@@ -1552,7 +1552,7 @@ fun offset(proc, dx, dy, dx_w, dy_h):
   fun (p :~ Pict, q :~ Pict, epoch :~ Int, n :~ Real.in(0, 1), nth):
     cond
     | q == nothing:
-        #false
+        values(#false, #false)
     | ~else:
         let p :~ StaticPict = (if p is_a StaticPict
                                | p

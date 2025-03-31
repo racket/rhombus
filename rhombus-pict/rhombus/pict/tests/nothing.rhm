@@ -20,3 +20,7 @@ check:
   concurrent(nothing) ~is [nothing]
   concurrent(something, nothing) ~matches [_, _ :: NothingPict]
   concurrent(nothing, something, nothing) ~matches [_ :: NothingPict, _, _ :: NothingPict]
+
+check:
+  Find(nothing).in(something)
+  ~throws "cannot find pict"
