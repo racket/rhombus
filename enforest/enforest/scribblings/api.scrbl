@@ -207,14 +207,23 @@
  an enforest function, which is used to start enforestation of a
  group. It takes a syntax list of S-expressions for parsed shrubberies
  in a group and returns a parsed form. The enforest function drives a
- loop that calls the enforest-step function.
+ loop that calls the enforest-step function. The enforest function
+ also takes any number of additional arguments, which are passed on to
+ any infix or prefix operator's implementation.
 
  The @racket[enforest-step] name (defaulting to a fresh name) is bound
  to an enforest-step function that continues an enforestation. It
- takes two arguments: a syntax list of all remaining terms in a group
- and the current operator, and returns two values: a parsed form and a
- syntax list of remaining terms (starting with an infix operator that
- has lower precedence than the input operator).
+ takes 5 to enforest the argument of prefix operator: a list of extra
+ arguments to pass to operator implementations, a syntax list of all
+ remaining terms in a group the current operator, the current
+ operator's syntax as it appeared in the group, and a hash table of
+ flags. To continue enforestation after an infix operator, the
+ enforest-step function accepts an extra after between the first and
+ second, where the extra argument is the parsed form for the infix
+ operator's left-hand side. In either case, the enforest-step function
+ returns two values: a parsed form and a syntax list of remaining
+ terms (starting with an infix operator that has lower precedence than
+ the input operator).
 
  The @racket[syntax-class] is a name (defaulting to a fresh name) or a
  parenthesized name with arguments. The name is bound to a syntax

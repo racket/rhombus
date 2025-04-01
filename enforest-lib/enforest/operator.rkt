@@ -205,31 +205,34 @@
   (values op op-stx))
 
 (define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind
-                               stop-on-unbound? lookup-space-description)
+                               flags lookup-space-description)
   (define op-stx (in-space (datum->syntax (extract-context adj-context) adjacent-name)))
   (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (cond
-      [(identifier? prev-form)
-       (raise-syntax-error #f
-                           (format
-                            (string-append
-                             "~a ~a;\n"
-                             " the identifier is not bound as a macro,"
-                             " and no infix operator appears afterward"
-                             #;
-                             ",\n and `~a` is not bound as an implicit infix ~a")
-                            (if (identifier-binding (in-space prev-form)) "misplaced" "unbound or misplaced")
-                            form-kind
-                            #;
-                            adjacent-name
-                            #;
-                            operator-kind)
-                           prev-form
-                           #f
-                           null
-                           (information-about-bindings prev-form lookup-space-description))]
-      [(not stop-on-unbound?)
+      [(hash-ref flags 'prev-was-id #f)
+       => (lambda (prev-id)
+            (raise-syntax-error #f
+                                (format
+                                 (string-append
+                                  "~a ~a;\n"
+                                  " the identifier is not bound as a macro,"
+                                  " and no infix operator appears afterward"
+                                  #;
+                                  ",\n and `~a` is not bound as an implicit infix ~a")
+                                 (if (identifier-binding (in-space prev-id))
+                                     "misplaced"
+                                     "unbound or misplaced")
+                                 form-kind
+                                 #;
+                                 adjacent-name
+                                 #;
+                                 operator-kind)
+                                prev-id
+                                #f
+                                null
+                                (information-about-bindings prev-id lookup-space-description)))]
+      [(not (hash-ref flags 'stop-on-unbound #f))
        (raise-syntax-error #f
                            (format
                             (string-append

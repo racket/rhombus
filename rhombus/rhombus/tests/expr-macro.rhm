@@ -461,3 +461,9 @@ block:
     ends_parse ~infix strong {} ~is #true
     ends_parse ~infix strong '' ~is #false
     ends_parse ~infix strong weak ~is #true
+
+check:
+  ~eval
+  not_good{10}
+  ~throws values("not_good",
+                 "not bound as a macro")

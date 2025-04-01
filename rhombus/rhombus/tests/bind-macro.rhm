@@ -155,3 +155,9 @@ check:
     fun g(): x
     [x, f(), g()]
   ~is [13, 12, 13]
+
+check:
+  ~eval
+  def not_good(10) = 10
+  ~throws values("not_good",
+                 "not bound as a macro")
