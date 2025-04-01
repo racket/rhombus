@@ -8,7 +8,7 @@
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
-         racket/treelist
+         "treelist.rkt"
          "pack.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
