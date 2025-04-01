@@ -288,7 +288,7 @@ spacer.bridge fun(self, tail, context, esc):
         let mutable has_name = #false
         values(
           fun (self):
-            spacer.set(self, if has_name | #'~defn | #'~expr),
+            spacer.set(self, if has_name | #'~defn | (context || #'~expr)),
           fun (name):
             unless has_name
             | has_name := name !matches ''

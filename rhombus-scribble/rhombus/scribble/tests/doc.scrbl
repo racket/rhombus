@@ -88,6 +88,8 @@ Starting example:
  Description, where @rhombus(some_s.length()) and
  @rhombus(some_other_s.length()) are linked.
 
+ See @rhombus(fun) versus @rhombus(fun, ~defn).
+
 }
 
 @section{Draw}

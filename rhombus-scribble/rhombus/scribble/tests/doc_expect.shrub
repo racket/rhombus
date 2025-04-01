@@ -527,7 +527,7 @@ html:
                           span {class: "RktVar"}: "c"
                           span {class: "stt"}: ":"
                           span {class: "hspace"}: nbsp
-                          span {class: "stt"}: span {class: "RktSym"}: "fun"
+                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
                           span {class: "hspace"}: nbsp
                           span {class: "RktPn"}: "("
                           span {class: "stt"}: "x"
@@ -798,6 +798,12 @@ html:
             span {class: "RktPn"}: "("
             span {class: "RktPn"}: ")"
             " are linked."
+        p:
+          "See "
+          span {class: "stt"}: span {class: "RktSym"}: "fun"
+          " versus "
+          span {class: "stt"}: a {class: "RktValLink"}: "fun"
+          "."
         h3:«»
         p:
           table:
