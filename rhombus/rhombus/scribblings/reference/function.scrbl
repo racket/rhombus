@@ -189,9 +189,12 @@ form or @rhombus(fun) expression form, but see also
     valid(3, 2)
 )
 
- When alternatives are specified with multiple @vbar clauses, the
+ When alternatives are specified with @vbar clauses, the
  clauses can be provided immediately after @rhombus(fun) or after the
  name and a @rhombus(maybe_res_annot) as described further below.
+ An argument in a @vbar clause cannot include @rhombus(=) or a block,
+ which would provide a default-value expression for an argument in a
+ function without @vbar.
 
 @examples(
   ~defn:

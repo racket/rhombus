@@ -461,3 +461,13 @@ block:
   fun f(x, ~y: y): #void
   check f(1, ~y: 2, ~z: 3) ~throws "function call: function does not expect an argument with given keyword\n  function"
   check f(1) ~throws "function call: required keyword argument not supplied\n  function"
+
+check:
+  ~eval
+  fun | f (x = 10): x
+  ~throws "default-value expressions are not supported in multi-case functions"
+
+check:
+  ~eval
+  fun | f (x: 10): x
+  ~throws "default-value expression blocks are not supported in multi-case functions"

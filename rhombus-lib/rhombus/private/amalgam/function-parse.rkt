@@ -80,6 +80,19 @@
   (provide (for-syntax :non-special)))
 
 (begin-for-syntax
+  (define (disallow-default-value form)
+    (syntax-parse form
+      #:datum-literals (group)
+      [(group _ ... eq::equal _ ...)
+       (raise-syntax-error #f
+                           "default-value expressions are not supported in multi-case functions"
+                           #'eq)]
+      [(group _ ... (~and blk (_::block . _)))
+       (raise-syntax-error #f
+                           "default-value expression blocks are not supported in multi-case functions"
+                           #'blk)]
+      [_ (void)]))
+
   (define-syntax-class :non-...
     #:datum-literals (group)
     (pattern (~and (~not (group _::...-bind))
@@ -88,6 +101,7 @@
   (define-syntax-class :non-...-binding
     #:attributes (parsed)
     (pattern form::non-...
+             #:do [(disallow-default-value #'form)]
              #:with ::binding #'form))
 
   (define-syntax-class :non-special
@@ -109,6 +123,7 @@
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a ...+)))
              #:cut
+             #:do [(disallow-default-value #`(#,group-tag a ...))]
              #:with ::binding #`(#,group-tag a ...))
     (pattern (group kw:keyword)
              #:cut
