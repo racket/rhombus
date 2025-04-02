@@ -94,3 +94,17 @@ check:
         export:
           nonesuch
   ~throws "onesuch: exported identifier not defined"
+
+// make sure `private` works for every clause form
+space.enforest ident2:
+  space_path demo/ident
+  private macro_definer macro
+  private bridge_definer bridge
+  meta_namespace ident2_meta:
+    private parse_syntax_class Parsed
+    private parse_prefix_more_syntax_class PrefixParsed
+    private parse_infix_more_syntax_class InfixParsed
+    private name_start_syntax_class Starts
+    private parsed_packer pack
+    private parsed_unpacker unpack
+    private reflection space

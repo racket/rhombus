@@ -29,8 +29,8 @@ space.enforest rx:
     export:
       pack unpack
 
-    parsed_packer do_pack
-    parsed_unpacker do_unpack
+    private parsed_packer do_pack
+    private parsed_unpacker do_unpack
     fun pack(s :: Syntax) :: Syntax:
       do_pack(s)
     fun unpack(stx) :: Syntax:
@@ -299,7 +299,7 @@ rx.macro 'case_insensitive: $(pat :: rx_meta.Parsed)':
 // unnamed capture group
 rx.macro '~~ $right':
   ~stronger_than: ~other
-  let '[$p, [$p_var, ...]]' = rx_meta.do_unpack(right)
+  let '[$p, [$p_var, ...]]' = rx_meta.unpack(right)
   rx_meta.pack('[capture($p), [#false, $p_var, ...]]')
 
 rx.macro ||:

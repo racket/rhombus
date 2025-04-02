@@ -4,6 +4,7 @@
                      racket/symbol
                      "tag.rkt")
          "space-meta-clause.rkt"
+         (submod "space-meta-clause.rkt" for-class)
          "parens.rkt"
          "parse.rkt")
 
@@ -18,7 +19,8 @@
                     parse_checker
                     parsed_packer
                     parsed_unpacker
-                    identifier_parser))
+                    identifier_parser
+                    private))
 
 (module+ for-space-meta-macro
   (provide rhombus-space-meta-clause
@@ -28,13 +30,18 @@
 
 (define-for-syntax (wrap-clause parsed)
   #`[(group (parsed #:rhombus/space_meta_clause (quote-syntax (rhombus-space-meta-clause #,parsed) #:local)))])
+(define-for-syntax (unwrap-clause parsed)
+  (syntax-parse parsed
+    #:datum-literals (group parsed quote-syntax rhombus-space-meta-clause)
+    [[(group (parsed #:rhombus/space_meta_clause (quote-syntax (rhombus-space-meta-clause p) #:local)))]
+     #'p]))
 
 (define-for-syntax (make-identifier-transformer kw)
   (space-meta-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ id:identifier)
-        (wrap-clause #`(#,kw id))]))))
+        (wrap-clause #`(#,kw id #t))]))))
 
 (define-space-meta-clause-syntax parse_syntax_class
   (space-meta-clause-transformer
@@ -42,9 +49,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(_ id:identifier)
-        (wrap-clause #`(#:syntax_class id))]
+        (wrap-clause #`(#:syntax_class id #t))]
        [(_ id:identifier (_::parens (group arg:id) ...))
-        (wrap-clause #`(#:syntax_class id (arg ...)))]))))
+        (wrap-clause #`(#:syntax_class id #t (arg ...)))]))))
 (define-space-meta-clause-syntax parse_prefix_more_syntax_class
   (make-identifier-transformer '#:syntax_class_prefix_more))
 (define-space-meta-clause-syntax parse_infix_more_syntax_class
@@ -76,35 +83,74 @@
 (define-space-meta-clause-syntax identifier_parser
   (make-expression-transformer '#:identifier_transformer))
 
+(define-space-meta-clause-syntax private
+  (space-meta-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ id:identifier . rest)
+        #:when (let ([id (in-space-meta-clause-space #'id)])
+                 (or (free-identifier=? id (in-space-meta-clause-space (quote-syntax parse_syntax_class)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax parse_prefix_more_syntax_class)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax parse_infix_more_syntax_class)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax name_start_syntax_class)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax reflection)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_packer)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_unpacker)))))
+        (syntax-parse #'(group id . rest)
+          [cl::space-meta-clause
+           (syntax-parse (unwrap-clause #'cl.parsed)
+             [(kw id #t . rest)
+              (wrap-clause #'(kw id #f . rest))])])]
+       [else
+        (raise-syntax-error #f
+                            "expected enforest syntax class, reflection, packer, or unpacker clause to make private"
+                            stx)]))))
+
 (define-for-syntax (parse-space-meta-clause-options orig-stx enforest? options-stx)
   (for/fold ([options #hasheq()]) ([option (in-list (syntax->list options-stx))])
     (define (check what #:enforest-only? [enforest-only? #f])
       (syntax-parse option
-        [(kw stx . _)
+        [(_ (kw stx . _))
          (unless (or enforest? (not enforest-only?))
            (raise-syntax-error #f (format "~a not allowed in a transformer" what) orig-stx #'stx))
          (when (hash-ref options (syntax-e #'kw) #f)
            (raise-syntax-error #f (format "multiple ~a declared" what) orig-stx #'stx))]))
+    (define (maybe-private options public?-stx kw)
+      (if (syntax-e public?-stx)
+          options
+          (hash-set options '#:private (hash-set (hash-ref options #'#:private #hasheq()) kw #t))))
     (syntax-parse option
-      [(_ (#:syntax_class id))
+      [(_ (#:syntax_class id public?))
        (check "syntax classes")
-       (hash-set options '#:syntax_class #'id)]
-      [(_ (#:syntax_class id (arg ...)))
+       (maybe-private (hash-set options '#:syntax_class #'id)
+                      #'public?
+                      '#:syntax_class)]
+      [(_ (#:syntax_class id public? (arg ...)))
        (check "syntax classes")
-       (hash-set (hash-set options '#:syntax_class #'id)
-                 '#:syntax_class_arguments (syntax->list #'(arg ...)))]
-      [(_ (#:syntax_class_prefix_more id))
+       (maybe-private (hash-set (hash-set options '#:syntax_class #'id)
+                                '#:syntax_class_arguments (syntax->list #'(arg ...)))
+                      #'public?
+                      '#:syntax_class)]
+      [(_ (#:syntax_class_prefix_more id public?))
        (check "prefix-more syntax classes" #:enforest-only? #t)
-       (hash-set options '#:syntax_class_prefix_more #'id)]
-      [(_ (#:syntax_class_infix_more id))
+       (maybe-private (hash-set options '#:syntax_class_prefix_more #'id)
+                      #'public?
+                      '#:syntax_class_prefix_more)]
+      [(_ (#:syntax_class_infix_more id public?))
        (check "infix-more syntax classes" #:enforest-only? #t)
-       (hash-set options '#:syntax_class_infix_more #'id)]
-      [(_ (#:syntax_class_name_start id))
+       (maybe-private (hash-set options '#:syntax_class_infix_more #'id)
+                      #'public?
+                      '#:syntax_class_infix_more)]
+      [(_ (#:syntax_class_name_start id public?))
        (check "name-start syntax classes")
-       (hash-set options '#:syntax_class_name_start #'id)]
-      [(_ (#:reflection id))
+       (maybe-private (hash-set options '#:syntax_class_name_start #'id)
+                      #'public?
+                      '#:syntax_class_name_start)]
+      [(_ (#:reflection id public?))
        (check "syntax_value names")
-       (hash-set options '#:reflection #'id)]
+       (maybe-private (hash-set options '#:reflection #'id)
+                      #'public?
+                      '#:reflection)]
       [(_ (#:desc stx e))
        (check "description string expressions")
        (hash-set options '#:desc #'e)]
@@ -114,14 +160,18 @@
       [(_ (#:parsed_checker stx e))
        (check "parse-checking function expressions")
        (hash-set options '#:parsed_checker #'e)]
-      [(_ (#:parsed_packer pack))
+      [(_ (#:parsed_packer pack public?))
        (when (hash-ref options '#:parsed_packer #f)
          (raise-syntax-error #f "multiple parsed packer names declared" orig-stx #'pack))
-       (hash-set options '#:parsed_packer #'pack)]
-      [(_ (#:parsed_unpacker unpack))
+       (maybe-private (hash-set options '#:parsed_packer #'pack)
+                      #'public?
+                      '#:parsed_packer)]
+      [(_ (#:parsed_unpacker unpack public?))
        (when (hash-ref options '#:parsed_unpacker #f)
          (raise-syntax-error #f "multiple parsed unpacker names declared" orig-stx #'unpack))
-       (hash-set options '#:parsed_unpacker #'unpack)]
+       (maybe-private (hash-set options '#:parsed_unpacker #'unpack)
+                      #'public?
+                      '#:parsed_unpacker)]
       [(_ (#:identifier_transformer stx e))
        (check "identifier parser expressions" #:enforest-only? #t)
        (hash-set options '#:identifier_transformer #'e)]

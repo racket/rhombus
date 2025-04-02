@@ -56,6 +56,7 @@ driver and macro-definitions forms.
       $keyword
       ...
     #,(@rhombus(bridge_definer, ~space_clause)) $id
+    #,(@rhombus(private, ~space_clause)) $clause
     #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
       ...
@@ -78,6 +79,7 @@ driver and macro-definitions forms.
     #,(@rhombus(description, ~space_meta_clause)) $meta_expr
     #,(@rhombus(operator_description, ~space_meta_clause)) $meta_expr
     #,(@rhombus(reflection, ~space_meta_clause)) $id
+    #,(@rhombus(private, ~space_meta_clause)) $meta_clause
     $nestable_body
 ){
 
@@ -103,6 +105,9 @@ driver and macro-definitions forms.
  @rhombus(meta.bridge). If @rhombus(macro_definer, ~space_clause) and
  @rhombus(bridge_definer, ~space_clause) are not declared, then there is
  no way to bind in the new namespace except by using lower-level mechanisms.
+ A @rhombus(macro_definer, ~space_clause) or @rhombus(bridge_definer, ~space_clause)
+ can be prefixed with @rhombus(private, ~space_clause) to bind a name
+ without implicitly exporting it from the @rhombus(space_id) namespace.
 
  Also typically among the @rhombus(space_clause_or_body_or_export)s, a
  @rhombus(meta_namespace, ~space_clause) declares the name of a
@@ -224,18 +229,20 @@ driver and macro-definitions forms.
 
 @itemlist(
 
- @item{@rhombus(macro_definer, ~space_clause): declares an identifier to
+ @item{@rhombus(macro_definer, ~space_clause): Declares an identifier to
   be bound to a macro-definition form analogous to @rhombus(expr.macro),
   but for defining macros for the space. Keywords listed after the
   identifier serve as options along the same lines as @rhombus(~op_stx) in
   @rhombus(expr.macro), and they receive arguments passed to the syntax
-  class as declared by @rhombus(parse_syntax_class, ~space_meta_clause).}
+  class as declared by @rhombus(parse_syntax_class, ~space_meta_clause).
+  This clause form can prefixed with @rhombus(private, ~space_clause).}
 
- @item{@rhombus(bridge_definer, ~space_clause): declares an identifier to
+ @item{@rhombus(bridge_definer, ~space_clause): Declares an identifier to
   be bound to a meta-definition form analogous to @rhombus(meta.bridge),
-  but for defining bridges in the space.}
+  but for defining bridges in the space.
+  This clause form can prefixed with @rhombus(private, ~space_clause).}
 
- @item{@rhombus(parse_syntax_class, ~space_meta_clause): declares an
+ @item{@rhombus(parse_syntax_class, ~space_meta_clause): Declares an
   identifier to be bound as a @rhombus(~group) syntax class with a
   @rhombus(group, ~datum) field; the value of a match is a parsed term,
   while the @rhombus(group, ~datum) field holds the matched unparsed
@@ -245,10 +252,11 @@ driver and macro-definitions forms.
   @rhombus(macro_definer, ~space_clause). The number of arguments declared
   in @rhombus(parse_syntax_class, ~space_meta_clause) must match the
   number of keywords listed in @rhombus(macro_definer, ~space_clause), and
-  the arguments and keywords are correlated by position.}
+  the arguments and keywords are correlated by position.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
  @item{@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause):
-  declares an identifier to be bound as a @rhombus(~group) syntax class
+  Declares an identifier to be bound as a @rhombus(~group) syntax class
   that takes one argument and has @rhombus(group, ~datum) and
   @rhombus(tail, ~datum) fields. The argument is a syntax object containing
   a prefix operator or identifier that is bound for the space. Parsing
@@ -256,16 +264,18 @@ driver and macro-definitions forms.
   parsing can stop with a tail sequence remaining. The parsed ``argument''
   is is the matched result, the consumed terms are in a
   @rhombus(group, ~datum) field, and the remaining tail is a
-  @rhombus(tail, ~datum) repetition field.}
+  @rhombus(tail, ~datum) repetition field.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
  @item{@rhombus(parse_infix_more_syntax_class, ~space_meta_clause):
-  declares an identifier like
+  Declares an identifier like
   @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause), but the
   syntax class expects a syntax object with an infix operator or
   identifier. Parsing can stop when reaching an infix operator in the
-  group whose precedence is weaker than the starting one.}
+  group whose precedence is weaker than the starting one.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
- @item{@rhombus(name_start_syntax_class, ~space_meta_clause): declares
+ @item{@rhombus(name_start_syntax_class, ~space_meta_clause): Declares
   an identifier to be bound as a @rhombus(~group) syntax class, which has
   @rhombus(name, ~datum), @rhombus(head, ~datum), and
   @rhombus(tail, ~datum) fields. The syntax class matches a group that
@@ -275,9 +285,10 @@ driver and macro-definitions forms.
   @rhombus(head, ~datum) field is a repetition that contains the leading
   terms of the group that we used to compute the @rhombus(name, ~datum),
   and the @rhombus(tail, ~datum) field is a repetition that contains the
-  remaining terms of the group.}
+  remaining terms of the group.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
- @item{@rhombus(parse_checker, ~space_meta_clause): supplies a
+ @item{@rhombus(parse_checker, ~space_meta_clause): Supplies a
   compile-time function that is applied to two arguments: the result of
   any macro defined for the space, and a function implementing the macro
   transformer (which is useful for reporting errors or recursively
@@ -286,38 +297,41 @@ driver and macro-definitions forms.
   when either @rhombus(parsed_packer, ~space_meta_clause) or
   @rhombus(parsed_unpacker, ~space_meta_clause) is supplied.}
 
- @item{@rhombus(parsed_packer, ~space_meta_clause): declares an
+ @item{@rhombus(parsed_packer, ~space_meta_clause): Declares an
   identifier to be bound to a function that takes a syntax term and
   returns a syntax object representing a parsed term. A parsed term parses
   as itself, and it is opaque except as unpacked via a function declared
-  with @rhombus(parsed_unpacker, ~space_meta_clause).}
+  with @rhombus(parsed_unpacker, ~space_meta_clause).
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
- @item{@rhombus(parsed_unpacker, ~space_meta_clause): declares an
+ @item{@rhombus(parsed_unpacker, ~space_meta_clause): Declares an
   identifier to be bound to a function that takes a syntax term and
   optionally either @rhombus(#false) or a function of one argument. If
   the first argument is a parsed term, the declared unpacker acts as the
   inverse of the function declared with
   @rhombus(parsed_packer, ~space_meta_clause). For any other value, if a
   second argument is provided as a function, then the function is called
-  and the first argument is passed along; otherwise, an error is reported.}
+  and the first argument is passed along; otherwise, an error is reported.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
- @item{@rhombus(identifier_parser, ~space_meta_clause): supplies a
+ @item{@rhombus(identifier_parser, ~space_meta_clause): Supplies a
   compile-time function that is applied to an identifier that is not bound
   in the space and should return a parsed form for the identifier. By
   default, a syntax error is reported for unbound identifiers.}
 
- @item{@rhombus(description, ~space_meta_clause): supplies a string that
+ @item{@rhombus(description, ~space_meta_clause): Supplies a string that
   describes the space; the string is used for reporting syntax
   errors.}
 
- @item{@rhombus(operator_description, ~space_meta_clause): supplies a
+ @item{@rhombus(operator_description, ~space_meta_clause): Supplies a
   string that describes operators in the space; the string is used
   for reporting syntax errors.}
 
- @item{@rhombus(reflection, ~space_meta_clause): declares an identifier to be
+ @item{@rhombus(reflection, ~space_meta_clause): Declares an identifier to be
   bound to a @rhombus(SpaceMeta, ~annot) that refers to the defined space.
   This name is useful in combination with @rhombus(syntax_meta.value), for
-  example.}
+  example.
+  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
 )
 
@@ -388,6 +402,30 @@ driver and macro-definitions forms.
  form. See @rhombus(space.enforest) for more information.
 
 }
+
+@doc(
+  space_clause.macro 'private $clause'
+  space_meta_clause.macro 'private $meta_clause'
+){
+
+ Clauses prefixed with @rhombus(private, ~space_clause) or meta clauses
+ prefixed with @rhombus(private, ~space_meta_clause) define names without
+ automatically exporting them from the enclosing namespace.
+
+ Only specific @rhombus(clause) or
+ @rhombus(meta_clause) forms are recognized:
+ @rhombus(macro_definer, ~space_clause),
+ @rhombus(bridge_definer, ~space_clause),
+ @rhombus(parse_syntax_class, ~space_meta_clause),
+ @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause),
+ @rhombus(parse_infix_more_syntax_class, ~space_meta_clause),
+ @rhombus(name_start_syntax_class, ~space_meta_clause),
+ @rhombus(parsed_packer, ~space_meta_clause),
+ @rhombus(parsed_unpacker, ~space_meta_clause), and
+ @rhombus(reflection, ~space_meta_clause).
+
+}
+
 
 @doc(
   ~meta

@@ -118,6 +118,7 @@
                                                                   #`(lambda (e env)
                                                                       (apply parse-group e env))))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
+       (define private-kws (hash-ref options '#:private #hasheq()))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
@@ -164,14 +165,15 @@
             #`(begin
                 (define-name-root #,(expose #'meta-name)
                   #:fields
-                  (#,@(filter-missing
-                       #`([#,class-name _class-name]
-                          [#,prefix-more-class-name _prefix-more-class-name]
-                          [#,infix-more-class-name _infix-more-class-name]
-                          [#,name-start-class-name #,name-start-class-name]
-                          [#,space-reflect-name _space]
-                          [#,pack-id #,pack-id]
-                          [#,unpack-id #,unpack-id]))
+                  (#,@(filter-missing-or-private
+                       private-kws
+                       #`([#,class-name #,class-name #:syntax_class]
+                          [#,prefix-more-class-name #,prefix-more-class-name #:syntax_class_prefix_more]
+                          [#,infix-more-class-name #,infix-more-class-name #:syntax_class_infix_more]
+                          [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
+                          [#,space-reflect-name #,space-reflect-name #:reflection]
+                          [#,pack-id #,pack-id #:parsed_packer]
+                          [#,unpack-id #,unpack-id #:parsed_unpacker]))
                    . #,exs))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
                 (property new-prefix-operator prefix-operator)
@@ -192,23 +194,29 @@
                   #:infix-operator-ref new-infix-operator-ref
                   #:check-result #,macro-result
                   #:make-identifier-form #,identifier-transformer)
-                (define-syntax _class-name (make-syntax-class #':base
-                                                              #:kind 'group
-                                                              #:arity base-arity-mask
-                                                              #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag stx))
-                                                              #:root-swap '(parsed . group)))
-                (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
-                                                                          #:kind 'group
-                                                                          #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
-                                                                                      (tail #f tail tail unpack-tail-list* stx))
-                                                                          #:root-swap '(parsed . group)
-                                                                          #:arity more-arity-mask))
-                (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
-                                                                         #:kind 'group
-                                                                         #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
-                                                                                     (tail #f tail tail unpack-tail-list* stx))
-                                                                         #:root-swap '(parsed . group)
-                                                                         #:arity more-arity-mask))
+                (maybe-skip
+                 #,class-name
+                 (define-syntax #,class-name (make-syntax-class #':base
+                                                                #:kind 'group
+                                                                #:arity base-arity-mask
+                                                                #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag stx))
+                                                                #:root-swap '(parsed . group))))
+                (maybe-skip
+                 #,prefix-more-class-name
+                 (define-syntax #,prefix-more-class-name (make-syntax-class #':prefix-more
+                                                                            #:kind 'group
+                                                                            #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
+                                                                                        (tail #f tail tail unpack-tail-list* stx))
+                                                                            #:root-swap '(parsed . group)
+                                                                            #:arity more-arity-mask)))
+                (maybe-skip
+                 #,infix-more-class-name
+                 (define-syntax #,infix-more-class-name (make-syntax-class #':infix-more
+                                                                           #:kind 'group
+                                                                           #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
+                                                                                       (tail #f tail tail unpack-tail-list* stx))
+                                                                           #:root-swap '(parsed . group)
+                                                                           #:arity more-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
                                                                         (quote #,(and pack-and-unpack? parsed-tag))))
@@ -218,22 +226,23 @@
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
-                 (define _space (space-name 'space-path-name))))]
+                 (define #,space-reflect-name (space-name 'space-path-name))))]
            [else
             #`(begin
                 (define-name-root #,(expose #'meta-name)
                   #:fields
-                  #,(filter-missing
-                     #`([#,class-name _class-name]
-                        [#,space-reflect-name _space]
-                        [#,name-start-class-name #,name-start-class-name]
+                  #,(filter-missing-or-private
+                     private-kws
+                     #`([#,class-name #,class-name #:syntax_class]
+                        [#,space-reflect-name #,space-reflect-name #:reflection]
+                        [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
                         . #,exs)))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
                 (maybe-skip
-                 class-name
+                 #,class-name
                  (property new-transformer transformer))
                 (maybe-skip
-                 class-name
+                 #,class-name
                  (define-rhombus-transform
                    #:syntax-class :base-decl
                    #:transform parse-group
@@ -243,27 +252,31 @@
                    #:transformer-ref new-transformer-ref
                    #:check-result #,macro-result))
                 (maybe-skip
-                 class-name
-                 (define-syntax _class-name (make-syntax-class #':base
-                                                               #:kind 'group
-                                                               #:fields #'((parsed parsed parsed 0 unpack-term* stx))
-                                                               #:root-swap '(parsed . group)
-                                                               #:arity base-arity-mask)))
+                 #,class-name
+                 (define-syntax #,class-name (make-syntax-class #':base
+                                                                #:kind 'group
+                                                                #:fields #'((parsed parsed parsed 0 unpack-term* stx))
+                                                                #:root-swap '(parsed . group)
+                                                                #:arity base-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (maybe-skip
-                 class-name
+                 #,class-name
                  (define make-prefix-operator (make-make-transformer 'name new-transformer)))
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
-                 (define _space (space-name 'space-path-name))))]))])))
+                 (define #,space-reflect-name (space-name 'space-path-name))))]))])))
 
-(define-for-syntax (filter-missing flds)
+(define-for-syntax (filter-missing-or-private private-kws flds)
   (for/list ([fld (in-list (syntax->list flds))]
              #:when (syntax-parse fld
                       [[#f . _] #f]
+                      [[_ _ kw]
+                       #:when (hash-ref private-kws (syntax-e #'kw) #f)
+                       #f]
                       [_ #t]))
-    fld))
+    (syntax-parse fld
+      [[a b . _] #'[a b]])))
 
 (define (tag form parsed-tag)
   ;; input to macro might or might not be tagged; it's not tagged when

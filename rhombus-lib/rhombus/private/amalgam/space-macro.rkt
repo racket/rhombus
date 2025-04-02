@@ -105,6 +105,7 @@
        (define define-macro (hash-ref options '#:export_macro #'#f))
        (define macro-kws (hash-ref options '#:export_macro_keywords #'()))
        (define define-bridge (hash-ref options '#:export_bridge #'#f))
+       (define private-kws (hash-ref options '#:private #hasheq()))
        (define exs (parse-exports #'(combine-out . exports) (make-expose #'scope-stx #'base-stx)))
        (check-distinct-exports (exports->names exs) define-macro define-bridge #'orig-stx)
        (register-field-check #`(base-ctx scope-ctx . #,exs))
@@ -116,13 +117,14 @@
                (space-syntax #,space-path-name))
              (define-name-root name
                #:fields
-               (#,@(filter-missing
-                    #`([#,define-macro _define-macro]
-                       [#,define-bridge _define-bridge]))
+               (#,@(filter-missing-or-private
+                    private-kws
+                    #`([#,define-macro #,define-macro #:export_macro]
+                       [#,define-bridge #,define-bridge #:export_bridge]))
                 . #,exs))
              (maybe-skip
               #,define-macro
-              (define-operator-definition-transformer _define-macro
+              (define-operator-definition-transformer #,define-macro
                 'macro
                 #,space-path-name
                 #:extra ([extra-kw get-empty-static-infos value] ...)
@@ -131,7 +133,7 @@
                 #'make-prefix+infix-operator))
              (maybe-skip
               #,define-bridge
-              (define-syntax _define-bridge
+              (define-syntax #,define-bridge
                 (make-bridge-definer '#,space-path-name)))
              (begin-for-syntax
                (enforest-meta
@@ -159,12 +161,16 @@
     [(_ #f . _) #'(begin)]
     [(_ _ def) #'def]))
 
-(define-for-syntax (filter-missing flds)
+(define-for-syntax (filter-missing-or-private private-kws flds)
   (for/list ([fld (in-list (syntax->list flds))]
              #:when (syntax-parse fld
                       [[#f . _] #f]
+                      [[_ _ kw]
+                       #:when (hash-ref private-kws (syntax-e #'kw) #f)
+                       #f]
                       [_ #t]))
-    fld))
+    (syntax-parse fld
+      [[a b . _] #'[a b]])))
 
 (define-for-syntax (check-distinct-exports ex-ht define-macro define-bridge orig-stx)
   (define (check-one what id)
