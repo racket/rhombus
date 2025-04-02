@@ -1146,7 +1146,7 @@ check_spacer:
 
 check_spacer:
   "hello" is_a Any.of("hello", "goodbye")
-  $datum $(expr.full) $(annot.full) . $(annot.full)($datum, $datum)
+  $datum $(expr.full) $(annot) . $(annot)($datum, $datum)
 
   "hello" is_a Any
     . of (

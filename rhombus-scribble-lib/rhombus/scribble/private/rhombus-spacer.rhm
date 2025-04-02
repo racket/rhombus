@@ -53,14 +53,6 @@ export:
       #%braces
     PairList
     MutableList
-    names:
-      // export namespace extensions
-      Map
-      MutableMap
-      WeakMutableMap
-      Set
-      MutableSet
-      WeakMutableSet
     rename:
       // renamed to avoid shadowing a namespace
       s_Map as Map
@@ -89,8 +81,16 @@ export:
     match_unless
     $
     pattern
-    Parameter
     enum
+  only_space namespace:
+    // export namespace extensions
+    Map
+    MutableMap
+    WeakMutableMap
+    Set
+    MutableSet
+    WeakMutableSet
+    Parameter
 
 module for_doc:
   export:
