@@ -27,7 +27,7 @@ space.enforest rx:
     reflection space
 
     export:
-      pack unpack space
+      pack unpack
 
     parsed_packer do_pack
     parsed_unpacker do_unpack

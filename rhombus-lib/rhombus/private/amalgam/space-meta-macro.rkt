@@ -23,6 +23,7 @@
          "space.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
+         "export-check.rkt"
          "space-meta-clause.rkt"
          "define-arity.rkt"
          "call-result-key.rkt"
@@ -122,6 +123,7 @@
        (check-distinct-exports (exports->names exs)
                                class-name prefix-more-class-name infix-more-class-name name-start-class-name
                                #'orig-stx)
+       (register-field-check #`(base-ctx scope-ctx . #,exs))
        (define (build-pack-and-unpack)
          #`((maybe-skip
              #,pack-id

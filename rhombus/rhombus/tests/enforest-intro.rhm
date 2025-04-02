@@ -74,3 +74,23 @@ check:
   with_scale 2:
     as_scaled (7 - 8) and_as_scaled 3 + 4
   ~is [-2, 14]
+
+check:
+  ~eval
+  module m ~lang rhombus/and_meta:
+    space.enforest example:
+      space_path my/example
+      meta_namespace ns:«»
+      export:
+        nonesuch
+  ~throws "nonesuch: exported identifier not defined"
+
+check:
+  ~eval
+  module m ~lang rhombus/and_meta:
+    space.enforest example:
+      space_path my/example
+      meta_namespace ns:
+        export:
+          nonesuch
+  ~throws "onesuch: exported identifier not defined"
