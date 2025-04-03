@@ -16,17 +16,26 @@ defn.sequence_macro 'guard $condition ... | $failure_body
     '')
 
 
+meta syntax_class GuardRightHandSide:
+  fields: as_expression
+  root_swap: as_expression raw_sequence
+| ': $e ...':
+    field as_expression = '$e ...'
+| ': $(b :: Block)':
+    field as_expression = 'block $b'
+| '$(bound_as expr_meta.space: '=') $e ...':
+    field as_expression = '$e ...'
+
+
 namespace guard:
   export:
     rename guard_let as let
 
-  defn.sequence_macro 'guard_let $test_pattern ...
-                         $(bound_as expr_meta.space: '=')
-                         $target_expr ...
+  defn.sequence_macro 'guard_let $test_pattern ... $(rhs :: GuardRightHandSide)
                        | $failure_body
                        $success_body':
     values(
-      'match $target_expr ...
+      'match $rhs
        | $test_pattern ...: $success_body
        | ~else: $failure_body',
       '')

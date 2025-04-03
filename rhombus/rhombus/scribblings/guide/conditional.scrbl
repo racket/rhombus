@@ -116,3 +116,72 @@ multiple cases, use the function name after @rhombus(fun), then
     | fib(1): 1
     | fib(n :: NonnegInt): fib(n-1) + fib(n-2)
 )
+
+The @rhombus(if), @rhombus(cond), and @rhombus(match) forms are best for
+writing a single conditional expression where each branch has similar
+importance. However, it is often the case that some condition needs to be
+"gotten out of the way" before the "real logic" of an operation can
+happen. Consider this code:
+
+@examples(
+  ~hidden:
+    class User(name):
+      method get_documents(): [1, 2, 3]
+
+    fun get_user(_):
+      User("Alice")
+  ~defn:
+    fun show_user_stats(user_id):
+      cond
+      | user_id == "": #false
+      | ~else:
+          let user = get_user(user_id)
+          let document_count = user.get_documents().length
+          let message = @str{User @user.name has @document_count documents.}
+          println(message)
+  ~repl:
+    show_user_stats("bf4afcb")
+    show_user_stats("")
+)
+
+In these instances, the @rhombus(guard) form can be used. A @rhombus(guard)
+expression checks that a condition is true, and if it isn't, short-circuits
+the surrounding block with a given alternative. The above code can be
+rewritten using guard expressions like so:
+
+@examples(
+  ~hidden:
+    class User(name):
+      method get_documents(): [1, 2, 3]
+
+    fun get_user(_):
+      User("Alice")
+  ~defn:
+    fun show_user_stats(user_id):
+      guard user_id != "" | #false
+      let user = get_user(user_id)
+      let document_count = user.get_documents().length()
+      let message = @str{User @user.name has @document_count documents.}
+      println(message)
+  ~repl:
+    show_user_stats("bf4afcb")
+    show_user_stats("")
+)
+
+A pattern matching variant, @rhombus(guard.let), is also available. The
+@rhombus(guard.let) form checks that a value matches a pattern, otherwise
+it short-circuits with a given alternative just like @rhombus(guard). Here
+we can use it to check that two lists are equal:
+
+@examples(
+  ~defn:
+    fun lists_equal(xs, ys):
+      guard.let [x, & rest_xs] = xs | ys == []
+      guard.let [y, & rest_ys] = ys | #false
+      x == y && lists_equal(rest_xs, rest_ys)
+  ~repl:
+    lists_equal([1, 2, 3], [1, 2, 3])
+    lists_equal([1], [1, 2, 3])
+    lists_equal([1, 2, 3], [1])
+    lists_equal([1, 2, 3], [1, 2, 10000])
+)
