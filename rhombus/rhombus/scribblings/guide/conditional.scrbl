@@ -120,7 +120,7 @@ multiple cases, use the function name after @rhombus(fun), then
 The @rhombus(if), @rhombus(cond), and @rhombus(match) forms are best for
 writing a single conditional expression where each branch has similar
 importance. However, it is often the case that some condition needs to be
-"gotten out of the way" before the "real logic" of an operation can
+gotten out of the way before the ``real logic'' of an operation can
 happen. Consider this code:
 
 @examples(
@@ -136,7 +136,7 @@ happen. Consider this code:
       | user_id == "": #false
       | ~else:
           let user = get_user(user_id)
-          let document_count = user.get_documents().length
+          let document_count = user.get_documents().length()
           let message = @str{User @user.name has @document_count documents.}
           println(message)
   ~repl:

@@ -20,7 +20,7 @@
  Checks that @rhombus(test_expr) produces a true value, evaluating the
 @rhombus(body) sequence if so. If @rhombus(test_expr) produces
 @rhombus(#false), then @rhombus(body) is skipped and @rhombus(failure_body)
-is evaluated instead. This is equivalent to
+is evaluated, instead. This is equivalent to
 @rhombus(if $test_expr | $body ... | $failure_body ...), and is primarily
 useful when @rhombus(body) is much more complex than @rhombus(failure_body)
 or contains a mixture of definitions and additional @rhombus(guard) forms
@@ -68,7 +68,7 @@ Static information works the same way as it would in an equivalent
 available in the subsequent @rhombus(body) sequence. If
 @rhombus(target_expr) does not match @rhombus(test_bind), then the
 @rhombus(body) sequence is skipped and @rhombus(failure_body) is
-evaluated instead. This is the pattern matching variant of
+evaluated, instead. This is the pattern matching variant of
 @rhombus(guard), see its documentation for general advice on using
 guards.
 
