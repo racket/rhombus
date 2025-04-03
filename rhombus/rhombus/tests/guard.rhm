@@ -85,3 +85,89 @@ check:
     | 100
     x + y
   ~is 3
+
+check:
+  ~eval
+  guard
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard
+  0
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard 1
+  ~throws "missing `|` alternative for failure body"
+
+check:
+  ~eval
+  guard 1 | #false
+  ~throws "empty success sequence after guard"
+
+check:
+  ~eval
+  guard 1 | #false | #true
+  ~throws "expected a single `|` alternative for failure body"
+
+check:
+  ~eval
+  guard 1 |«»
+  ~throws "empty failure body for guard"
+
+check:
+  ~eval
+  guard.let
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard.let
+  0
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard.let 1
+  ~throws "missing `|` alternative for failure body"
+
+check:
+  ~eval
+  guard.let 1 | #false
+  ~throws "empty success sequence after guard"
+
+check:
+  ~eval
+  guard.let 1 | #false | #true
+  ~throws "expected a single `|` alternative for failure body"
+
+check:
+  ~eval
+  guard.let 1 |«»
+  ~throws "empty failure body for guard"
+
+check:
+  ~eval
+  guard.let 1 | #false
+  0
+  ~throws "expected binding followed by expression or block"
+
+check:
+  ~eval
+  guard.let 1 = 1 = 1 | #false
+  0
+  ~throws "multiple immediate equals not allowed"
+
+check:
+  ~eval
+  guard.let 1 = | #false
+  0
+  ~throws "empty expression for binding"
+
+check:
+  ~eval
+  guard.let 1:«» | #false
+  0
+  ~throws "empty expression for binding"
