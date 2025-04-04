@@ -1,5 +1,20 @@
 #lang rhombus
 
+check:
+  let mutable x = 1
+  let v:
+    try ~escape_as esc:
+      1 + esc("done") + 2
+      x := 2
+  values(v, x)
+  ~is values("done", 1)
+
+check:
+  try ~escape_as esc:
+    esc(1, 2, 3)
+    "done"
+  ~is values(1, 2, 3)
+
 block:
   use_static
   def v:

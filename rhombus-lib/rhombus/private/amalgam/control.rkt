@@ -70,85 +70,105 @@
 (define/arity (Continuation.Marks.current)
   (current-continuation-marks))
 
+(define-for-syntax (parse-try stx now-stx)
+  (syntax-parse now-stx
+    [(head #:escape_as escape:identifier (~and b (tag::block . _)))
+     (values #`(let/ec esc
+                 (define escape esc)
+                 (define-static-info-syntax escape . #,(get-continuation-static-infos))
+                 (finish-esc-try #,stx (head b)))
+             #'())]
+    [(_ (tag::block g ...))
+     (define-values (rev-gs state)
+       (for/fold ([rev-gs null]
+                  [state #hasheq()])
+                 ([g (in-list (syntax->list #'(g ...)))])
+         (syntax-parse g
+           #:datum-literals (group)
+           [(group #:initially . _)
+            #:when (hash-ref state 'initially #f)
+            (raise-syntax-error #f "duplicate `~initially` clause" stx g)]
+           [(group #:initially . _)
+            #:when (or (pair? rev-gs) (positive? (hash-count state)))
+            (raise-syntax-error #f "`~initially` clause must appear at the start of the body" stx g)]
+           [(group #:initially (tag::block body ...))
+            (values rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
+           [(group #:initially term ...+)
+            (values rev-gs (hash-set state 'initially #`(rhombus-expression (#,group-tag term ...))))]
+           [(group #:initially . _)
+            (raise-syntax-error #f "expected block or expression after `~initially`" stx g)]
+           [(group #:finally . _)
+            #:when (hash-ref state 'finally #f)
+            (raise-syntax-error #f "duplicate `~finally` clause" stx g)]
+           [(group #:finally (tag::block body ...))
+            (values rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
+           [(group #:finally term ...+)
+            (values rev-gs (hash-set state 'finally #`(rhombus-expression (#,group-tag term ...))))]
+           [(group #:finally . _)
+            (raise-syntax-error #f "expected block or expression after `~finally`" stx g)]
+           [(group #:catch . _)
+            #:when (hash-ref state 'handler #f)
+            (raise-syntax-error #f "duplicate `~catch` clause" stx g)]
+           [(group #:catch . _)
+            #:when (hash-ref state 'finally #f)
+            (raise-syntax-error #f "`~catch` not allowed after `~finally`" stx g)]
+           [(group #:catch (_::alts b ...))
+            (define-values (b-parseds rhss)
+              (for/lists (b-parseds rhss)
+                  ([b (in-list (syntax->list #'(b ...)))])
+                (syntax-parse b
+                  #:datum-literals (group)
+                  [(_::block (group bind ...+ (~and rhs (_::block . _))))
+                   #:with b::binding #`(#,group-tag bind ...)
+                   (values #'b.parsed #'rhs)]
+                  [_ (raise-syntax-error #f
+                                         "expected a binding and block for `~catch` alternative"
+                                         stx
+                                         b)])))
+            (define handler (build-try-handler b-parseds rhss))
+            (values rev-gs (hash-set state 'handler handler))]
+           [(group #:catch bind ...+ (~and rhs (_::block . _)))
+            #:with b::binding #`(#,group-tag bind ...)
+            (define handler (build-try-handler (list #'b.parsed) (list #'rhs)))
+            (values rev-gs (hash-set state 'handler handler))]
+           [(group #:catch . _)
+            (raise-syntax-error #f "expected alternatives or a binding and block after `~catch`" stx g)]
+           [_
+            (when (or (hash-ref state 'handler #f)
+                      (hash-ref state 'finally #f))
+              (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`" stx g))
+            (values (cons g rev-gs) state)])))
+     (let* ([body #`(rhombus-body-at tag #,@(reverse rev-gs))]
+            [body (let ([handler (hash-ref state 'handler #f)])
+                    (if handler
+                        #`(with-handlers ([always-true #,handler])
+                            #,body)
+                        body))]
+            [body (let ([initially (hash-ref state 'initially #f)]
+                        [finally (hash-ref state 'finally #f)])
+                    (if (or finally initially)
+                        #`(dynamic-wind
+                              #,(if initially #`(lambda () #,initially) #'void)
+                            (lambda () #,body)
+                            #,(if finally #`(lambda () #,finally) #'void))
+                        body))])
+       (values body #'()))]
+    [_
+     (raise-syntax-error #f
+                         "expected a block, optionally preceded by an `~escape_as` and an identifier"
+                         stx)]))
+
 (define-syntax try
   (expression-transformer
    (lambda (stx)
-     (syntax-parse stx
-       [(_ (tag::block g ...))
-        (define-values (rev-gs state)
-          (for/fold ([rev-gs null]
-                     [state #hasheq()])
-                    ([g (in-list (syntax->list #'(g ...)))])
-            (syntax-parse g
-              #:datum-literals (group)
-              [(group #:initially . _)
-               #:when (hash-ref state 'initially #f)
-               (raise-syntax-error #f "duplicate `~initially` clause" stx g)]
-              [(group #:initially . _)
-               #:when (or (pair? rev-gs) (positive? (hash-count state)))
-               (raise-syntax-error #f "`~initially` clause must appear at the start of the body" stx g)]
-              [(group #:initially (tag::block body ...))
-               (values rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
-              [(group #:initially term ...+)
-               (values rev-gs (hash-set state 'initially #`(rhombus-expression (#,group-tag term ...))))]
-              [(group #:initially . _)
-               (raise-syntax-error #f "expected block or expression after `~initially`" stx g)]
-              [(group #:finally . _)
-               #:when (hash-ref state 'finally #f)
-               (raise-syntax-error #f "duplicate `~finally` clause" stx g)]
-              [(group #:finally (tag::block body ...))
-               (values rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
-              [(group #:finally term ...+)
-               (values rev-gs (hash-set state 'finally #`(rhombus-expression (#,group-tag term ...))))]
-              [(group #:finally . _)
-               (raise-syntax-error #f "expected block or expression after `~finally`" stx g)]
-              [(group #:catch . _)
-               #:when (hash-ref state 'handler #f)
-               (raise-syntax-error #f "duplicate `~catch` clause" stx g)]
-              [(group #:catch . _)
-               #:when (hash-ref state 'finally #f)
-               (raise-syntax-error #f "`~catch` not allowed after `~finally`" stx g)]
-              [(group #:catch (_::alts b ...))
-               (define-values (b-parseds rhss)
-                 (for/lists (b-parseds rhss)
-                            ([b (in-list (syntax->list #'(b ...)))])
-                   (syntax-parse b
-                     #:datum-literals (group)
-                     [(_::block (group bind ...+ (~and rhs (_::block . _))))
-                      #:with b::binding #`(#,group-tag bind ...)
-                      (values #'b.parsed #'rhs)]
-                     [_ (raise-syntax-error #f
-                                            "expected a binding and block for `~catch` alternative"
-                                            stx
-                                            b)])))
-               (define handler (build-try-handler b-parseds rhss))
-               (values rev-gs (hash-set state 'handler handler))]
-              [(group #:catch bind ...+ (~and rhs (_::block . _)))
-               #:with b::binding #`(#,group-tag bind ...)
-               (define handler (build-try-handler (list #'b.parsed) (list #'rhs)))
-               (values rev-gs (hash-set state 'handler handler))]
-              [(group #:catch . _)
-               (raise-syntax-error #f "expected alternatives or a binding and block after `~catch`" stx g)]
-              [_
-               (when (or (hash-ref state 'handler #f)
-                         (hash-ref state 'finally #f))
-                 (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`" stx g))
-               (values (cons g rev-gs) state)])))
-        (let* ([body #`(rhombus-body-at tag #,@(reverse rev-gs))]
-               [body (let ([handler (hash-ref state 'handler #f)])
-                       (if handler
-                           #`(with-handlers ([always-true #,handler])
-                               #,body)
-                           body))]
-               [body (let ([initially (hash-ref state 'initially #f)]
-                           [finally (hash-ref state 'finally #f)])
-                       (if (or finally initially)
-                           #`(dynamic-wind
-                               #,(if initially #`(lambda () #,initially) #'void)
-                               (lambda () #,body)
-                               #,(if finally #`(lambda () #,finally) #'void))
-                           body))])
-          (values body #'()))]))))
+     (parse-try stx stx))))
+
+(define-syntax finish-esc-try
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ stx now-stx)
+       (define-values (e tail) (parse-try #'stx #'now-stx))
+       e])))
 
 (define-syntax throw
   (expression-prefix-operator
