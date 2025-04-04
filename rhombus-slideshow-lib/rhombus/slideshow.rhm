@@ -38,7 +38,9 @@ export:
   is_condensing
 
   start_at_recent
+
   retract_recent
+  Slide
 
 namespace slide:
   export:
@@ -176,5 +178,14 @@ fun is_condensing():
 fun start_at_recent():
   rkt.#{start-at-recent-slide}()
 
-fun retract_recent():
-  rkt.#{retract-most-recent-slide}()
+// ----------------------------------------
+
+class Slide(_handle):
+  internal _Slide
+  constructor ~none
+  property handle: _handle
+  method reissue():
+    rkt.#{re-slide}(_handle)
+
+fun retract_recent() :~ Slide:
+  _Slide(rkt.#{retract-most-recent-slide}())

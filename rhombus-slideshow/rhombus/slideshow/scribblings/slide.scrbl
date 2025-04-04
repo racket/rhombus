@@ -271,9 +271,18 @@
 }
 
 @doc(
-  fun retract_recent()
+  fun retract_recent() :: Slide
+  class Slide():
+    constructor ~none
+  method (s :: Slide).reissue() :: Void
+  property (s :: Slide).handle
 ){
 
- Unregisters the most recently registered slide.
+ The @rhombus(retract_recent) function unregisters the most recently
+ registered slide and returns a representation of that slide as a
+ @rhombus(Slide, ~class) object. The @rhombus(Slide.reissue) method
+ registers a copy of the slide. Together, the function and method provide
+ limited support for post-hoc reordering of slides, but beware that each
+ step of an animation counts as a different slide for these operations.
 
 }

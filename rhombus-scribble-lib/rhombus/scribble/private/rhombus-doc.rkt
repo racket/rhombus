@@ -860,7 +860,7 @@
               null
               space-names)]
          [_ space-names]))
-     (cons (append (unless-none 'expression '(#f))
+     (cons (append (unless-none 'expression (unless-none 'constructor '(#f)))
                    (unless-none 'annotation '(rhombus/annot))
                    (unless-none 'binding '(rhombus/bind))
                    '(rhombus/class))
@@ -899,6 +899,8 @@
          [(_ constructor . more)
           (syntax-parse #'more
             #:datum-literals (alts block group parens)
+            [(#:none) vars]
+            [((block (group #:none))) vars]
             [((~and p (parens . _)) . _)
              (parens-extract-metavariables #'p space-name vars #:just-parens? #t)]
             [((alts (block (group (~and p (parens . _))) . _) ...))
