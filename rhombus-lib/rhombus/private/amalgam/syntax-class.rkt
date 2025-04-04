@@ -265,7 +265,7 @@
                                          #`(gensym '#,class-name)))))
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,internal-class-name . #,class-formals)
-                                 class-name)
+                                 internal-class-name)
             #:description #,(or description-expr #f)
             #:disable-colon-notation
             #:attributes #,(for/list ([var (in-list attributes)])
