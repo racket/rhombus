@@ -6,12 +6,19 @@
 @title{Exceptions}
 
 @doc(
-  expr.macro 'try:
+  ~nonterminal:
+    escape_id: block id
+
+  expr.macro 'try $maybe_escape_id:
                 $maybe_initially
                 $body
                 ...
                 $maybe_catch
                 $maybe_finally'
+
+  grammar maybe_escape_id:
+    $escape_id
+    #,(epsilon)
 
   grammar maybe_initially:
     ~initially: $body; ...
@@ -48,12 +55,24 @@
  disabled while attempting to match a @rhombus(~catch) clause or
  evaluating its body.
 
- The last @rhombus(body) form of @rhombus(try) are not in tail position
- is any of @rhombus(~initially), @rhombus(~catch), or @rhombus(~finally)
+ If @rhombus(escape_id) is provided before the block after
+ @rhombus(try), then it is bound for use in the body of the @rhombus(try)
+ form as an @deftech{escape continuation} function that jumps out of the
+ @rhombus(try) form. The arguments provided to the function are returned
+ as the results of the @rhombus(try) form. Calling @rhombus(escape_id) is
+ an error when outside the dynamic extent of evaluating the @rhombus(try)
+ form.
+
+ The last @rhombus(body) form of @rhombus(try) is not in tail position
+ if any of @rhombus(escape_id), @rhombus(~initially), @rhombus(~catch), or @rhombus(~finally)
  is present. If none are present, the @rhombus(try) form is the same as
- @rhombus(begin).
+ @rhombus(block).
 
 @examples(
+  ~repl:
+    try escape:
+      1 + escape(0) + 2
+      println("doesn't get here")
   ~repl:
     try:
       ~initially: println("in")
