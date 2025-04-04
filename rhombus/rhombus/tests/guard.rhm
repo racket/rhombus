@@ -1,0 +1,173 @@
+#lang rhombus
+
+check:
+  block:
+    guard #false | 1
+    2
+  ~is 1
+
+check:
+  block:
+    guard #true | 1
+    2
+  ~is 2
+
+check:
+  block:
+    let x = 1
+    guard x > 0
+    | let y = x - 1
+      -100
+    let y = x + 1
+    100
+  ~is 100
+
+check:
+  block:
+    let x = 1
+    guard x < 0
+    | let y = x - 1
+      -100
+    let y = x + 1
+    100
+  ~is -100
+
+class Point(x, y)
+
+check:
+  block:
+    guard.let Point(x, y) = #false | 100
+    x + y
+  ~is 100
+
+check:
+  block:
+    guard.let Point(x, y) = Point(1, 2) | 100
+    x + y
+  ~is 3
+
+
+check:
+  block:
+    guard.let Point(x, y) = #false
+    | let x = 42
+      let y = 43
+      100
+    let z = x + y
+    z
+  ~is 100
+
+check:
+  block:
+    guard.let Point(x, y) = Point(1, 2)
+    | let x = 42
+      let y = 43
+      100
+    let z = x + y
+    z
+  ~is 3
+
+
+check:
+  block:
+    guard.let Point(x, y):
+      let foo = 42
+      #false
+    | 100
+    x + y
+  ~is 100
+
+check:
+  block:
+    guard.let Point(x, y):
+      let foo = 42
+      Point(1, 2)
+    | 100
+    x + y
+  ~is 3
+
+check:
+  ~eval
+  guard
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard
+  0
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard 1
+  ~throws "missing `|` alternative for failure body"
+
+check:
+  ~eval
+  guard 1 | #false
+  ~throws "empty success sequence after guard"
+
+check:
+  ~eval
+  guard 1 | #false | #true
+  ~throws "expected a single `|` alternative for failure body"
+
+check:
+  ~eval
+  guard 1 |«»
+  ~throws "empty failure body for guard"
+
+check:
+  ~eval
+  guard.let
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard.let
+  0
+  ~throws "expected more terms"
+
+check:
+  ~eval
+  guard.let 1
+  ~throws "missing `|` alternative for failure body"
+
+check:
+  ~eval
+  guard.let 1 | #false
+  ~throws "empty success sequence after guard"
+
+check:
+  ~eval
+  guard.let 1 | #false | #true
+  ~throws "expected a single `|` alternative for failure body"
+
+check:
+  ~eval
+  guard.let 1 |«»
+  ~throws "empty failure body for guard"
+
+check:
+  ~eval
+  guard.let 1 | #false
+  0
+  ~throws "expected binding followed by expression or block"
+
+check:
+  ~eval
+  guard.let 1 = 1 = 1 | #false
+  0
+  ~throws "multiple immediate equals not allowed"
+
+check:
+  ~eval
+  guard.let 1 = | #false
+  0
+  ~throws "empty expression for binding"
+
+check:
+  ~eval
+  guard.let 1:«» | #false
+  0
+  ~throws "empty expression for binding"

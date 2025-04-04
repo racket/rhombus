@@ -8,6 +8,7 @@
 
 @include_section("cond.scrbl")
 @include_section("match.scrbl")
+@include_section("guard.scrbl")
 @include_section("annotation.scrbl")
 @include_section("equal.scrbl")
 @include_section("check.scrbl")

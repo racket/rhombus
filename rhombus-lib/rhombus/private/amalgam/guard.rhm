@@ -1,0 +1,97 @@
+#lang rhombus/private/amalgam/core
+
+import:
+  "core-meta.rkt" open
+
+export:
+  guard
+
+meta syntax_class GuardAndSuccess(stx):
+  kind: ~multi
+  fields: [condition, ...]
+          failure_body
+          success_body
+| '$condition ... | $failure_body
+   $(success_body :: Multi)':
+    when '$condition ...' matches ''
+    | syntax_meta.error("empty condition for guard",
+                        stx)
+    when failure_body matches ''
+    | syntax_meta.error("empty failure body for guard",
+                        stx)
+    when success_body matches ''
+    | syntax_meta.error("empty success sequence after guard",
+                        stx)
+| '$(seq :: Sequence)
+   $(_ :: Multi)':
+    match seq
+    | '$_ ... | $__body | ...':
+        syntax_meta.error("expected a single `|` alternative for failure body",
+                          stx,
+                          seq)
+    | ~else:
+        syntax_meta.error("missing `|` alternative for failure body",
+                          stx,
+                          seq)
+    field [condition, ...] = []
+    field failure_body = #false
+    field success_body = #false
+
+defn.sequence_macro 'guard $seq ... ~nonempty
+                     $rest':
+  ~all_stx: stx
+  match '$seq ...; $rest':
+  | '$(g :: GuardAndSuccess(stx))':
+      values(
+        'if $g.condition ...
+         | $g.success_body
+         | $g.failure_body',
+        ''
+      )
+
+meta syntax_class GuardBindAndRightHandSide(who):
+  fields: [bind, ...]
+          rhs_expression
+| '$bind ... ~nonempty: $e ...':
+    field rhs_expression = '$e ...'
+    when rhs_expression matches ''
+    | syntax_meta.error(~who: who,
+                        "empty expression for binding",
+                        '$bind ...')
+| '$bind ... ~nonempty: $(b :: Block)':
+    field rhs_expression = 'block $b'
+| '$bind ... ~nonempty $(eql && bound_as expr_meta.space: '=') $e ...':
+    field rhs_expression = '$e ...'
+    when '$bind ... $e ...' matches '$_ ... $(bound_as expr_meta.space: '=') $_ ...':
+    | syntax_meta.error(~who: who,
+                        "multiple immediate equals not allowed in this group;\n"
+                          ++ " use parentheses to disambiguate",
+                        eql)
+    when '$e ...' matches ''
+    | syntax_meta.error(~who: who,
+                        "empty expression for binding",
+                        '$bind ...')
+| '$bind ...':
+    syntax_meta.error(~who: who,
+                      "expected binding followed by expression or block",
+                      '$bind ...')
+    field rhs_expression = #false
+
+namespace guard:
+  export:
+    rename guard_let as let
+
+  defn.sequence_macro 'guard_let $seq ... ~nonempty
+                       $rest':
+    ~op_stx: who
+    ~all_stx: stx
+    match '$seq ...; $rest':
+    | '$(g :: GuardAndSuccess(stx))':
+        match '$g.condition ...'
+        | '$(gb :: GuardBindAndRightHandSide(who))':
+            values(
+              'match $gb.rhs_expression
+               | $gb.bind ...: $g.success_body
+               | ~else: $g.failure_body',
+              ''
+            )
