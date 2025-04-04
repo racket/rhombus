@@ -185,3 +185,8 @@ we can use it to check that two lists are equal:
     lists_equal([1, 2, 3], [1])
     lists_equal([1, 2, 3], [1, 2, 10000])
 )
+
+A @rhombus(guard) form only escapes from its immediately enclosing
+block. Non-local escapes can be implemented with @rhombus(try), either
+by throwing and catching an exception or calling an escape function
+bound by @rhombus(try).
