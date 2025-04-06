@@ -957,9 +957,12 @@
      (define set1 (unwrap-static-infos #'set1/statinfo))
      (define set2 (unwrap-static-infos #'set2/statinfo))
      (syntax-parse set2
-       [(id:identifier v)
+       [(id:identifier v-expr)
         #:when (free-identifier=? (expr-quote Set-build) #'id)
-        #`(set (hash-set (set-ht #,set1) v #t))]
+        #`(let ([st #,set1]
+                [v v-expr])
+            (check-set 'Set.append st)
+            (set-add st v))]
        [_
         #`(Set.append #,set1 #,set2)])]))
 
@@ -1000,9 +1003,13 @@
   (unless (immutable-set? s)
     (raise-annotation-failure who s "Set")))
 
-(define/method (Set.add s v)
-  (check-set who s)
+(define (set-add s v)
   (set (hash-set (set-ht s) v #t)))
+
+(define/method (Set.add s v)
+  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  (check-set who s)
+  (set-add s v))
 
 (define (set-append/hash a b)
   (let-values ([(a b)

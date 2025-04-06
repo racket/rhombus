@@ -48,7 +48,8 @@ instances of classes that implement @rhombus(Appendable, ~class).
  @rhombus(set_expr ++ {elem_expr}) is recognized by the compiler and
  turned into an efficient functional update of the map or set produced
  by @rhombus(map_expr) or @rhombus(set_expr), as opposed to creating
- an intermediate map or set.
+ an intermediate map or set. In other words, they are like direct
+ invocations of @rhombus(Map.set) or @rhombus(Set.add).
 
  When @rhombus(v1) is an instance of a class that implements
  @rhombus(Appendable, ~class), then @rhombus(v2) must be an instance of

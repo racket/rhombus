@@ -196,8 +196,9 @@
   ([maybe Map.maybe extract-maybe-statinfo])
   #:methods
   (append
-   remove
-   add))
+   set
+   [add Map.set] ; TEMP to be removed
+   remove))
 
 (void (set-primitive-contract! '(and/c hash? (not/c immutable?)) "MutableMap"))
 (define-primitive-class MutableMap mutable-map mutable-hash
@@ -557,7 +558,7 @@
         (values
          (reducer/no-break #'build-map-reduce
                            #'([ht #hashalw()])
-                           #'build-map-add
+                           #'build-map-set
                            (get-map-static-infos)
                            #'ht)
          #'tail)]))))
@@ -572,7 +573,7 @@
                           (values
                            (reducer/no-break #'build-map-reduce
                                              #`([ht #,(key-comp-empty-stx mapper)])
-                                             #'build-map-add
+                                             #'build-map-set
                                              (get-map-static-infos)
                                              #'ht)
                            #'tail)]))))))
@@ -581,7 +582,7 @@
   (syntax-parse stx
     [(_ ht-id e) #'e]))
 
-(define-syntax (build-map-add stx)
+(define-syntax (build-map-set stx)
   (syntax-parse stx
     [(_ ht-id e)
      #'(let-values ([(k v) e])
@@ -1034,9 +1035,13 @@
      (define map1 (unwrap-static-infos #'map1/statinfo))
      (define map2 (unwrap-static-infos #'map2/statinfo))
      (syntax-parse map2
-       [(id:identifier k v)
+       [(id:identifier k-expr v-expr)
         #:when (free-identifier=? (expr-quote Map-build) #'id)
-        #`(hash-set #,map1 k v)]
+        #`(let ([ht #,map1]
+                [k k-expr]
+                [v v-expr])
+            (check-map 'Map.append ht)
+            (hash-set ht k v))]
        [_
         #`(Map.append #,map1 #,map2)])]))
 
@@ -1101,8 +1106,9 @@
     [(ht key) (hash-ref ht key)]
     [(ht key default) (hash-ref ht key default)]))
 
-(define/method (Map.add ht key val)
+(define/method (Map.set ht key val)
   #:primitive (hash-set)
+  #:static-infos ((#%call-result #,(get-map-static-infos)))
   (hash-set ht key val))
 
 (define (check-map who ht)
