@@ -347,8 +347,8 @@ it supplies its elements in an unspecified order.
   method (st :: Set).add(val :: Any) :: Set
 ){
 
- Returns a set like @rhombus(st) but with @rhombus(val) added if it is
- not already present.
+ Returns a set like @rhombus(st), but with @rhombus(val) added if it is
+ not already present, like @rhombus(st ++ {val}).
 
 @examples(
   {1, 2, 3}.add(4)
@@ -361,7 +361,7 @@ it supplies its elements in an unspecified order.
   method (st :: Set).remove(val :: Any) :: Set
 ){
 
- Returns a set like @rhombus(st) but without @rhombus(val), if it is
+ Returns a set like @rhombus(st), but without @rhombus(val) if it is
  present.
 
 @examples(

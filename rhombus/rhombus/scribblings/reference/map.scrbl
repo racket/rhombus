@@ -519,11 +519,26 @@ in an unspecified order.
 
 
 @doc(
+  method (mp :: Map).set(key :: Any, val :: Any) :: Map
+){
+
+ Returns a map like @rhombus(mp), but with a mapping for @rhombus(key)
+ to @rhombus(val), like @rhombus(mp ++ {key: val}).
+
+@examples(
+  Map.set({"a": 1, "b": 2}, "a", 3)
+  Map.set({"a": 1, "b": 2}, "c", 3)
+)
+
+}
+
+
+@doc(
   method (mp :: Map).remove(key :: Any) :: Map
 ){
 
  Returns a map like @rhombus(mp), but without a mapping for
- @rhombus(key) is @rhombus(mp) has one.
+ @rhombus(key) if @rhombus(mp) has one.
 
 @examples(
   Map.remove({"a": 1, "b": 2}, "a")
