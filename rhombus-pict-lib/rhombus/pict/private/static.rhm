@@ -1905,117 +1905,135 @@ fun table(rows :: List.of(List.of(Pict)),
           ~hline: hline :: maybe(ColorMode) = line_c,
           ~hline_width: hline_width :: LineWidth = line_width,
           ~vline: vline :: maybe(ColorMode) = line_c,
-          ~vline_width: vline_width :: LineWidth = line_width) :~ Pict:
-  match rows
-  | [[elem :~ _StaticPict, ...], ...]:
-      fun
-      | improper([]): rkt.#{cc-superimpose}
-      | improper([e]): e
-      | improper([a, &l]): Pair.cons(a, improper(l))
-      fun to_align(align):
-        match align
-        | [align, ...]:
-            improper([to_align(align), ...])
-        | #'left:
-            rkt.#{lc-superimpose}
-        | #'right:
-            rkt.#{rc-superimpose}
-        | #'center:
-            rkt.#{cc-superimpose}
-        | #'top:
-            rkt.#{ct-superimpose}
-        | #'topline:
-            rkt.#{ctl-superimpose}
-        | #'baseline:
-            rkt.#{cbl-superimpose}
-        | #'bottom:
-            rkt.#{cb-superimpose}
-      let picts = [elem._handle, ..., ...]
-      let row_length = rows[0].length()
-      let h_align = to_align(horiz)
-      let v_align = to_align(vert)
-      fun build([handle, ...]):
-        let picts = PairList[handle, ...]
-        rkt.table(row_length,
-                  picts,
-                  h_align,
-                  v_align,
-                  if hsep is_a List | PairList[& hsep] | hsep,
-                  if vsep is_a List | PairList[& vsep] | vsep)
-      let r = build(picts)
-      if !hline && !vline && !line_c
-      | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...], build)
-        match ins
-        | [h, v]: p._pad(h, v, h, v, #false)
-        | [l, t, r, b]: p._pad(l, t, r, b, #false)
-        | ~else: p._pad(ins, ins, ins, ins, #false)
-      | let picts = [& picts]
-        let col_length = rows.length()
-        let ws:
-          for List (i in 0 .. row_length):
-            let [p, ...]: for List (r in 0 .. col_length):
-                            picts[i + r * row_length]
-            math.max(rkt.#{pict-width}(p), ...)
-        let hs:
-          for List (i in 0 .. col_length):
-            let [p, ...]: for List (r in 0 .. row_length):
-                            picts[r + i * row_length]
-            math.max(rkt.#{pict-height}(p), ...)
-        let r: rkt.inset(r, & if ins is_a List | ins | [ins])
-        let (left_ins, top_ins): match ins
-                                 | [l, t, _, _]: values(l, t)
-                                 | [h, v]: values(h, v)
-                                 | a: values(a, a)
-        let pin: if order == #'front
-                 | rkt.#{pin-under}
-                 | rkt.#{pin-over}
-        let r:
-          if !vline
-          | r
-          | recur loop(r = r, i = 1, dx = left_ins):
-              if i == row_length
-              | r
-              |  let dx = dx + ws[i-1]
-                 let sep:
-                   match hsep:
-                   | hsep :: List: if hsep.length() > i-1
-                                   | hsep[i-1]
-                                   | hsep[hsep.length() - 1]
-                   | else: hsep
-                 loop(pin(r,
-                          dx + sep / 2, 0,
-                          line(~dy: rkt.#{pict-height}(r),
-                               ~line: vline,
-                               ~line_width: vline_width).snapshot().handle),
-                      i + 1,
-                      dx + sep)
-        fun add_lines(r):
-          if !hline
-          | r
-          | recur loop(r = r, i = 1, dy = top_ins):
-              if i == col_length
-              | r
-              |  let dy = dy + hs[i-1]
-                 let sep:
-                   match vsep:
-                   | vsep :: List: if vsep.length() > i-1
-                                   | vsep[i-1]
-                                   | vsep[vsep.length() - 1]
-                   | else: vsep
-                 loop(pin(r,
-                          0, dy + sep / 2,
-                          line(~dx: rkt.#{pict-width}(r),
-                               ~line: hline,
-                               ~line_width: hline_width).snapshot().handle),
-                      i + 1,
-                      dy + sep)
-        let r = add_lines(r)
-        let p = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
-                            fun (handles): add_lines(build(handles)))
-        if line_c
-        | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
-        | p
+          ~vline_width: vline_width :: LineWidth = line_width,
+          ~epoch: epoch :: EpochAlignment = #'center,
+          ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
+  recur retry (rows :~ List.of(List.of(Pict)) = rows):
+    match rows
+    | [[elem :: _StaticPict, ...], ...]:
+        fun
+        | improper([]): rkt.#{cc-superimpose}
+        | improper([e]): e
+        | improper([a, &l]): Pair.cons(a, improper(l))
+        fun to_align(align):
+          match align
+          | [align, ...]:
+              improper([to_align(align), ...])
+          | #'left:
+              rkt.#{lc-superimpose}
+          | #'right:
+              rkt.#{rc-superimpose}
+          | #'center:
+              rkt.#{cc-superimpose}
+          | #'top:
+              rkt.#{ct-superimpose}
+          | #'topline:
+              rkt.#{ctl-superimpose}
+          | #'baseline:
+              rkt.#{cbl-superimpose}
+          | #'bottom:
+              rkt.#{cb-superimpose}
+        let picts = [elem._handle, ..., ...]
+        let row_length = rows[0].length()
+        let h_align = to_align(horiz)
+        let v_align = to_align(vert)
+        fun build([handle, ...]):
+          let picts = PairList[handle, ...]
+          rkt.table(row_length,
+                    picts,
+                    h_align,
+                    v_align,
+                    if hsep is_a List | PairList[& hsep] | hsep,
+                    if vsep is_a List | PairList[& vsep] | vsep)
+        let r = build(picts)
+        if !hline && !vline && !line_c
+        | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...], build)
+          match ins
+          | [h, v]: p._pad(h, v, h, v, #false)
+          | [l, t, r, b]: p._pad(l, t, r, b, #false)
+          | ~else: p._pad(ins, ins, ins, ins, #false)
+        | let picts = [& picts]
+          let col_length = rows.length()
+          let ws:
+            for List (i in 0 .. row_length):
+              let [p, ...]: for List (r in 0 .. col_length):
+                              picts[i + r * row_length]
+              math.max(rkt.#{pict-width}(p), ...)
+          let hs:
+            for List (i in 0 .. col_length):
+              let [p, ...]: for List (r in 0 .. row_length):
+                              picts[r + i * row_length]
+              math.max(rkt.#{pict-height}(p), ...)
+          let r: rkt.inset(r, & if ins is_a List | ins | [ins])
+          let (left_ins, top_ins): match ins
+                                   | [l, t, _, _]: values(l, t)
+                                   | [h, v]: values(h, v)
+                                   | a: values(a, a)
+          let pin: if order == #'front
+                   | rkt.#{pin-under}
+                   | rkt.#{pin-over}
+          let r:
+            if !vline
+            | r
+            | recur loop(r = r, i = 1, dx = left_ins):
+                if i == row_length
+                | r
+                |  let dx = dx + ws[i-1]
+                   let sep:
+                     match hsep:
+                     | hsep :: List: if hsep.length() > i-1
+                                     | hsep[i-1]
+                                     | hsep[hsep.length() - 1]
+                     | else: hsep
+                   loop(pin(r,
+                            dx + sep / 2, 0,
+                            line(~dy: rkt.#{pict-height}(r),
+                                 ~line: vline,
+                                 ~line_width: vline_width).snapshot().handle),
+                        i + 1,
+                        dx + sep)
+          fun add_lines(r):
+            if !hline
+            | r
+            | recur loop(r = r, i = 1, dy = top_ins):
+                if i == col_length
+                | r
+                |  let dy = dy + hs[i-1]
+                   let sep:
+                     match vsep:
+                     | vsep :: List: if vsep.length() > i-1
+                                     | vsep[i-1]
+                                     | vsep[vsep.length() - 1]
+                     | else: vsep
+                   loop(pin(r,
+                            0, dy + sep / 2,
+                            line(~dx: rkt.#{pict-width}(r),
+                                 ~line: hline,
+                                 ~line_width: hline_width).snapshot().handle),
+                        i + 1,
+                        dy + sep)
+          let r = add_lines(r)
+          let p = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
+                              fun (handles): add_lines(build(handles)))
+          if line_c
+          | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
+          | p
+    | [[elem, ...], ...]:
+        let len = rows[0].length()
+        convert([elem, ..., ...], epoch, duration,
+                fun (elems, dt, n): retry(group_by(elems, len)))
 
+fun group_by(elems, n):
+  recur loop(elems :~ List = elems, i = 0):
+    cond
+    | elems == []:
+        [[]]
+    | i == n:
+        [[], & loop(elems, 0)]
+    | ~else:
+        let [l0, & ls] = loop(elems.rest, i + 1)
+        [[elems.first] ++ l0, & ls]
+  
 // ----------------------------------------
 
 fun explain_bbox(p :: Pict,
