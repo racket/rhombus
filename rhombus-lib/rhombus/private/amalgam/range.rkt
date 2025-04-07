@@ -32,7 +32,8 @@
          "contains-key.rkt"
          "sequence-constructor-key.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         "deprecated.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -45,9 +46,10 @@
                      ..
                      ..=
                      <..
-                     ;; TEMP replaced by `<..`
-                     (rename-out [<.. <..<])
+                     <..<
                      <..=))
+
+(define-deprecated <..< <..< (#f rhombus/repet rhombus/bind) "15-Aprl-2025" <..)
 
 (module+ for-container
   (provide range?
@@ -82,8 +84,7 @@
    [to Range.to]
    [to_inclusive Range.to_inclusive]
    [full Range.full]
-   ;; TEMP to be removed
-   [to_sequence SequenceRange.to_sequence]
+   [to_sequence SequenceRange.to_sequence #:deperecated (#f rhombus/statinfo) "15-Apr-2025"]
    [step_by SequenceRange.step_by]
    [to_list ListRange.to_list])
   #:properties

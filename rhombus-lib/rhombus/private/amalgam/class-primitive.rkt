@@ -3,6 +3,7 @@
                      racket/symbol
                      syntax/parse/pre
                      enforest/syntax-local
+                     enforest/deprecated
                      "srcloc.rkt"
                      "class-parse.rkt")
          "name-root.rkt"
@@ -72,11 +73,16 @@
                               #:defaults ([property-extract #'extract-empty-statinfo]))]
          ...)
         #:methods
-        ((~or* (~and [method mask name-method-proc method-proc]
+        ((~or* (~and [method mask name-method-proc:identifier method-proc:identifier]
                      (~parse method-dispatch
-                             #'(nary 'mask (quote-syntax name-method-proc) (quote-syntax method-proc))))
-               (~and (~or* (~and [method name-method-proc])
+                             #'(nary 'mask (quote-syntax name-method-proc) (quote-syntax method-proc)))
+                     (~parse method-depr #'()))
+               (~and (~or* (~and [method name-method-proc #:deprecate method-depr-date]
+                                 (~parse method-depr #'(#:deprecate (#f rhombus/statinfo) method-depr-date)))
+                           (~and [method name-method-proc]
+                                 (~parse method-depr #'()))
                            (~and method
+                                 (~parse method-depr #'())
                                  (~parse name-method-proc
                                          (datum->syntax
                                           #'method
@@ -165,6 +171,15 @@
              ...) (if super
                       (class-desc-fields super)
                       null)
+     #:with (method-dispatch/maybe-depr ...) (for/list ([method (syntax->list #'(method ...))]
+                                                        [method-dispatch (syntax->list #'(method-dispatch ...))]
+                                                        [method-depr (syntax->list #'(method-depr ...))])
+                                               (syntax-parse method-depr
+                                                 [(#:deprecate spaces date)
+                                                  (define name-method
+                                                    (string->symbol (format "~a.~a" (syntax-e #'Name) (syntax-e method))))
+                                                  #`(deprecated-nary '#,name-method date . #,method-dispatch)]
+                                                 [_ method-dispatch]))
 
      (define declaration
        (let ([mutator-pairs #'((~? (~@ 'prop prop-mutator)) ...)])
@@ -270,7 +285,7 @@
            #:fields
            #,(if (attribute no-methods)
                  #'(ns-field ...)
-                 #'(ns-field ... [prop prop-accessor] ... [method name-method-proc] ...)))
+                 #'(ns-field ... [prop prop-accessor] ... [method name-method-proc . method-depr] ...)))
 
          (define-syntax (get-name-field-list) #`field-list)
 
@@ -342,7 +357,7 @@
                                (~? (lambda (lhs rhs reloc)
                                      (reloc #`(prop-mutator #,lhs #,rhs)))))])]
                ...
-               [(method) method-dispatch]
+               [(method) method-dispatch/maybe-depr]
                ...
                [(dot-method) dot-method-dispatch]
                ...
@@ -368,3 +383,7 @@
         ht
         (loop (hash-set ht (car kvs) (cadr kvs))
               (cddr kvs)))))
+
+(define-for-syntax (deprecated-nary name date-str dispatch nary)
+  (warn-deprecated! name date-str)
+  (dispatch nary))

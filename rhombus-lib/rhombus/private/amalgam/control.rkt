@@ -30,18 +30,15 @@
   #:fields
   (Marks
    PromptTag
-   ;; TEMP see `Marks`
-   [current_marks Continuation.Marks.current]
+   [current_marks Continuation.Marks.current #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    capture
    in
    prompt
    barrier
    [escape Continuation.escape]
-   ;; TEMP see `PromptTag`
-   [default_prompt_tag Continuation.PromptTag.default]
+   [default_prompt_tag Continuation.PromptTag.default #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    [make_prompt_tag Continuation.PromptTag.make]
-   ;; TEMP replaced by `Continuation.in`
-   [call_in call-in-continuation]
+   [call_in call-in-continuation  #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    with_mark
    [call_with_immediate_mark Continuation.call_with_immediate_mark]))
 
