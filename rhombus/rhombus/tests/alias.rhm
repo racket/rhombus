@@ -106,3 +106,16 @@ block:
   check f.Bar.y ~is 10
   check f.Bar.X.i ~is 0
   check f.Bar.X() ~is_a m.Foo.Bar.X
+
+module ~early A ~lang rhombus:
+  export namespace X
+  def X.foo = 42
+
+module ~early B ~lang rhombus:
+  import parent!A open
+  export get
+  alias 'Y': 'X'
+  fun get(): Y.foo
+
+import self!B
+check B.get() ~is 42

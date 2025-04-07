@@ -73,7 +73,7 @@
                    (datum->syntax #f (syntax-e name) name))))
      (list
       #`(define #,tmp #,rhs)
-      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(syntax-property tmp 'not-free-identifier=? #t))
                                                             (quote-syntax #,extends))))]
     [else
      (list
