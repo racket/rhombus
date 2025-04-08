@@ -34,8 +34,6 @@ block:
     Port.Output.open_string([name])
     Port.Output.open_file(path)
     Port.Output.open_nowhere([name])
-    Port.Output.get_bytes(out) ~method Port.Output.String
-    Port.Output.get_string(out) ~method Port.Output.String
     Port.Output.flush([out]) ~method
     Port.Output.current([out])
     Port.Output.current_error([out])
@@ -47,6 +45,8 @@ block:
     Port.Output.println(v, ...) ~method
     Port.Output.show(v, ...) ~method
     Port.Output.showln(v, ...) ~method
+    Port.Output.String.get_bytes(out) ~method
+    Port.Output.String.get_string(out) ~method
     Port.Output.Special.write(out, s)
     Port.Output.Special.write(out, s)
     Port.FileStream.try_lock(p, mode) ~method

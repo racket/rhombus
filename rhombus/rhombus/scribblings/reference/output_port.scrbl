@@ -129,7 +129,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
  @rhombus(Port.Output.open_string) does the same as
  @rhombus(Port.Output.open_bytes), but can be used to clarify the
- intention together with @rhombus(Port.Output.get_string).
+ intention together with @rhombus(Port.Output.String.get_string).
 
 }
 

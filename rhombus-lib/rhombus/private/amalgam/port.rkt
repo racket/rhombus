@@ -226,11 +226,11 @@
   #:parent #f output-port
   #:fields ()
   #:namespace-fields
-  (#:no-methods)
+  ()
   #:properties ()
   #:methods
-  ([get_bytes Port.Output.String.get_bytes]
-   [get_string Port.Output.String.get_string]))
+  (get_bytes
+   get_string))
 
 (define Port.Input.current (rename-parameter current-input-port 'Port.Input.current))
 (set-primitive-who! 'current-input-port 'Port.Input.current)
