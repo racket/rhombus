@@ -208,10 +208,18 @@
                                                (ret0 ...))))
     (pattern (~seq id:identifier ret::maybe-ret (~and rhs (_::block . _)))
              #:with form (wrap-class-clause #`(#,mode id rhs ret.seq))))
-  (define-splicing-syntax-class (:method-decl mode)
+  (define-splicing-syntax-class (:method-decl stx mode)
     #:description "method declaration"
     #:attributes (id rhs maybe-ret)
     #:datum-literals (group)
+    (pattern (~seq _ ... (~and b (_::block . _)))
+             #:do [(raise-syntax-error #f
+                                       "implementation block not allowed"
+                                       stx
+                                       #'b)]
+             #:with id #f
+             #:with rhs #f
+             #:with maybe-ret #f)
     (pattern (~seq id:identifier (tag::parens arg ...) ret::maybe-ret)
              #:with rhs #'(block (group fun (tag arg ...)
                                         (block (group (parsed #:rhombus/expr (void))))))
@@ -439,7 +447,7 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method-impl #'#:method))) #'m.form]
-       [(_ (~var decl (:method-decl #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))))
+       [(_ (~var decl (:method-decl stx #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))))
 
 (define-veneer-clause-syntax method
   (veneer-clause-transformer parse-class-method))
@@ -477,11 +485,11 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
-       [(_ _::method (~var decl (:method-decl #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+       [(_ _::method (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
        [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
        [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs decl.maybe-ret))]
        [(_ (~var m (:method-impl #'#:override))) #'m.form]
-       [(_ (~var decl (:method-decl #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]))))
+       [(_ (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]))))
 
 (define-veneer-clause-syntax override
   (veneer-clause-transformer parse-class-override))
@@ -544,15 +552,15 @@
 
 (define-for-syntax (parse-abstract-clause stx data)
   (syntax-parse stx
-    [(_ _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]
-    [(_ _::protected (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
-    [(_ _::protected _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::protected (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::protected _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.maybe-ret))]
     [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs decl.maybe-ret))]
-    [(_ _::override (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
-    [(_ _::override _::method (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::override (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::override _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
     [(_ _::override _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs decl.maybe-ret))]
     [(_ _::protected _::property decl::property-decl) (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs decl.maybe-ret))]
-    [(_ (~var decl (:method-decl #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))
+    [(_ (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))
 
 (define-class-clause-syntax abstract
   (class-clause-transformer parse-abstract-clause))

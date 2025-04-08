@@ -518,3 +518,11 @@ block:
     def something = Something(#false)
     values(something.stx, something.self)
     ~matches values('check_options stx self', 'check_options')
+
+check:
+  ~eval
+  class Hello():
+    nonfinal
+    abstract method foo() :: Int:
+      42
+  ~throws "abstract: implementation block not allowed"

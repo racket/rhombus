@@ -6,6 +6,8 @@
 
 (begin-for-syntax
   (define-syntax-class :not-block
+    #:description "a non-block term"
+    #:opaque
     #:datum-literals (op parens braces brackets quotes parsed)
     (pattern _:identifier)
     (pattern _:keyword)
