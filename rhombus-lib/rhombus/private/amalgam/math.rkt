@@ -20,7 +20,8 @@
          "repetition.rkt"
          "parens.rkt"
          (only-in "implicit.rkt" #%call)
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "reducer.rkt")
 
 (provide (for-space rhombus/namespace
                     math))
@@ -250,6 +251,49 @@
   #:static-infos ((#%call-result #,(get-number-static-infos)))
   [sum +]
   [product *])
+
+(define-for-syntax (make-number-reducer init op)
+  (reducer-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(self . tail)
+        (values (reducer
+                 #'build-result
+                 #`([result #,init])
+                 #f
+                 #'build-accum
+                 #f
+                 #f
+                 #'build-accum-result
+                 (get-number-static-infos)
+                 #`(result #,op self next-result))
+                #'tail)]))))
+
+(define-reducer-syntax sum
+  (make-number-reducer #'0 #'+))
+
+(define-reducer-syntax product
+  (make-number-reducer #'1 #'*))
+
+(define-syntax (build-result stx)
+  (syntax-parse stx
+    [(_ _ e) #'e]))
+
+(define-syntax (build-accum stx)
+  (syntax-parse stx
+    [(_ (result op self next-result) e)
+     #'(define next-result
+         (let ([v e])
+           (if (number? v)
+               (op result v)
+               (raise-number-error 'self v))))]))
+
+(define-syntax (build-accum-result stx)
+  (syntax-parse stx
+    [(_ (_ _ _ next-result)) #'next-result]))
+
+(define (raise-number-error who v)
+  (raise-annotation-failure who v "Number"))
 
 (void (set-primitive-who! 'flabs 'abs))
 (void (set-primitive-who! 'flmin 'min))

@@ -512,16 +512,20 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 @doc(
   fun math.sum(n :: Number, ...) :: Number
+  reducer.macro 'math.sum'
   fun math.product(n :: Number, ...) :: Number
+  reducer.macro 'math.product'
 ){
 
  Generalizations of @rhombus(+) and @rhombus(*) to any number of
- arguments.
+ arguments and to work as a reducer with @rhombus(for).
 
 @examples(
   math.sum()
   math.sum(1, 2, 3, 4)
   math.product(1, 2, 3, 4)
+  for math.sum (i in 0..10):
+    i
 )
 
 }
