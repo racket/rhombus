@@ -1,13 +1,18 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre
-                     enforest/name-root
-                     "srcloc.rkt"
-                     "introducer.rkt")
+                     syntax/parse/pre)
          "name-root-space.rkt"
          "deprecated.rkt")
 
 (provide define-name-root)
+
+(begin-for-syntax
+  (define-syntax-class :export-rule
+    #:attributes ()
+    (pattern ())
+    (pattern (#:only space ...))
+    (pattern (#:except space ...))
+    (pattern (#:space ([space val-id:identifier] ...) . rule::export-rule))))
 
 (define-syntax (define-name-root stx)
   (syntax-parse stx
@@ -31,9 +36,9 @@
                                    ;; alternate identifiers (so that the second one here
                                    ;; is ignored) for some specific spaces; see below for
                                    ;; more information
-                                   [(as-id:identifier id:identifier #:deprecate spaces date . rule)
+                                   [(as-id:identifier id:identifier #:deprecate spaces date . rule::export-rule)
                                     #`(as-id #,depr . rule)]
-                                   [(_:identifier _:identifier . rule) c]))
+                                   [(_:identifier _:identifier . rule::export-rule) c]))
      #:with (def-deprecate ...) (for/list ([c (in-list (syntax->list #'(content ...)))]
                                            [depr (in-list (syntax->list #'(deprecate-id ...)))]
                                            #:when (syntax-e depr))

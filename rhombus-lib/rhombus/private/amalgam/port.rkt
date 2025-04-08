@@ -133,8 +133,8 @@
    [open_bytes Port.Output.open_bytes]
    [open_file Port.Output.open_file]
    [open_string Port.Output.open_string]
-   [get_bytes Port.Output.String.get_bytes]    ;; temporary: to be removed
-   [get_string Port.Output.String.get_string]  ;; temporary: to be removed
+   [get_bytes Port.Output.String.get_bytes #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
+   [get_string Port.Output.String.get_string #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    [open_nowhere Port.Output.open_nowhere]
    ExistsMode
    [using Port.Output.using])
