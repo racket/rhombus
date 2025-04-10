@@ -76,23 +76,31 @@
                   => (lambda (name-root-id)
                        ;; also export any extensions
                        (define out-int-id (out-of-name-root-space int-id))
-                       (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
-                       (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
-                                  #:do [(define intro (if space
-                                                          (make-interned-syntax-introducer/add space)
-                                                          (lambda (x) x)))]
-                                  [sym (in-list (syntax-bound-symbols (intro out-int-id)))]
-                                  #:do [(define str (symbol->immutable-string sym))]
-                                  #:when (and (> (string-length str) (string-length prefix))
-                                              (string=? prefix (substring str 0 (string-length prefix))))
-                                  #:do [(define id* (datum->syntax out-int-id sym))
-                                        (define id (intro id*))]
-                                  #:when (identifier-extension-binding? id name-root-id)
-                                  #:when (or (not space)
-                                             (identifier-distinct-binding* id id* abs-phase)))
-                         (make-export phase space (intro (datum->syntax out-int-id sym out-int-id))
-                                      (adjust-prefix sym prefix)
-                                      #:filter-space 'rhombus/namespace)))]
+                       (let ns-loop ([int-id int-id] [name-root-id name-root-id])
+                         (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
+                         (apply
+                          append
+                          (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                     #:do [(define intro (if space
+                                                             (make-interned-syntax-introducer/add space)
+                                                             (lambda (x) x)))
+                                           (define bound-syms (syntax-bound-symbols (intro out-int-id)))]
+                                     [sym (in-list bound-syms)]
+                                     #:do [(define str (symbol->immutable-string sym))]
+                                     #:when (and (> (string-length str) (string-length prefix))
+                                                 (string=? prefix (substring str 0 (string-length prefix))))
+                                     #:do [(define id* (datum->syntax out-int-id sym))
+                                           (define id (intro id*))]
+                                     #:when (identifier-extension-binding? id name-root-id)
+                                     #:when (or (not space)
+                                                (identifier-distinct-binding* id id* abs-phase)))
+                            (cons
+                             (make-export phase space (intro (datum->syntax out-int-id sym out-int-id))
+                                          (adjust-prefix sym prefix)
+                                          #:filter-space 'rhombus/namespace)
+                             (if (eq? space 'rhombus/namespace)
+                                 (ns-loop int-id id)
+                                 null))))))]
                  [else null])))))))))))
 
 (define-syntax all-spaces-defined-out

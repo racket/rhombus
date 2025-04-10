@@ -62,7 +62,9 @@
 
 (begin-for-syntax
   (struct extension-rename-transformer (id extends-id)
-    #:property prop:rename-transformer 0))
+    #:property prop:rename-transformer 0)
+  (define (id-as-ext-target tmp)
+    (syntax-property tmp 'not-free-identifier=? #t)))
 
 (define-for-syntax (build-definitions/maybe-extension space-sym name-in extends rhs)
   (define name ((space->introducer space-sym) name-in))
@@ -73,7 +75,7 @@
                    (datum->syntax #f (syntax-e name) name))))
      (list
       #`(define #,tmp #,rhs)
-      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(syntax-property tmp 'not-free-identifier=? #t))
+      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
                                                             (quote-syntax #,extends))))]
     [else
      (list
@@ -88,7 +90,7 @@
      #`(begin
          (define-syntax #,tmp (let ([#,name #,rhs])
                                 #,name))
-         (define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+         (define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
                                                              (quote-syntax #,extends))))]
     [else
      #`(define-syntax #,name #,rhs)]))
@@ -107,22 +109,22 @@
             (values #,@names #,@extra-names)))
       (for/list ([name (in-list names)]
                  [tmp (in-list tmps)])
-        #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+        #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
                                                               (quote-syntax #,extends)))))]
     [else
      (list
       #`(define-syntaxes (#,@names #,@extra-names) #,rhs))]))
 
 (define-for-syntax (identifier-extension-binding? id prefix)
-  (define v (syntax-local-value* id (lambda (v)
-                                      (and (or (extension-rename-transformer? v)
-                                               (portal-syntax? v))
-                                           v))))
-  (cond
-    [(extension-rename-transformer? v)
-     (free-identifier=? prefix (extension-rename-transformer-extends-id v))]
-    [(portal-syntax? v)
-     (define extends (portal-syntax->extends (portal-syntax-content v)))
-     (and (identifier? extends)
-          (free-identifier=? prefix extends))]
-    [else #f]))
+  (syntax-local-value* id (lambda (v)
+                            (cond
+                              [(extension-rename-transformer? v)
+                               ;; note that a chain of extension rename transformers is possible,
+                               ;; so that's why we have this check inside `syntax-local-value*`
+                               ;; instead of outside
+                               (free-identifier=? prefix (extension-rename-transformer-extends-id v))]
+                              [(portal-syntax? v)
+                               (define extends (portal-syntax->extends (portal-syntax-content v)))
+                               (and (identifier? extends)
+                                    (free-identifier=? prefix extends))]
+                              [else #f]))))

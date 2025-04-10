@@ -136,28 +136,38 @@
            (define name-root-id (extensible-name-root (list int-id)))
            (cond
              [name-root-id
-              ;; look for extensions (in all spaces)
-              (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
-              (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
-                                         #:do [(define intro (if space-sym
-                                                                 (make-interned-syntax-introducer/add space-sym)
-                                                                 (lambda (x) x)))]
-                                         [sym (in-list (syntax-bound-symbols (intro int-id)))])
-                (define str (symbol->immutable-string sym))
-                (cond
-                  [(and (> (string-length str) (string-length prefix))
-                        (string=? prefix (substring str 0 (string-length prefix))))
-                   (define id (intro (datum->syntax int-id sym int-id)))
-                   (cond
-                     [(identifier-extension-binding? id name-root-id)
-                      (define ext-ext-id (datum->syntax ext-id sym))
-                      (hash-set ht sym (merge-ext+int+rule
-                                        ext-ext-id
-                                        (hash-ref ht sym #f)
-                                        (make-ext+int+rule ext-ext-id id '#:only (hasheq space-sym
-                                                                                         (datum->syntax #f space-sym)))))]
-                     [else ht])]
-                  [else ht]))]
+              (let ns-loop ([base-ht base-ht] [int-id int-id] [name-root-id name-root-id])
+                ;; look for extensions (in all spaces)
+                (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
+                (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                           #:do [(define intro (if space-sym
+                                                                   (make-interned-syntax-introducer/add space-sym)
+                                                                   (lambda (x) x)))]
+                                           [sym (in-list (syntax-bound-symbols (intro int-id)))])
+                  (define str (symbol->immutable-string sym))
+                  (cond
+                    [(and (> (string-length str) (string-length prefix))
+                          (string=? prefix (substring str 0 (string-length prefix))))
+                     (define id* (datum->syntax int-id sym int-id))
+                     (define id (intro id*))
+                     (cond
+                       [(or (not (identifier-binding* id))
+                            (and space-sym
+                                 (not (identifier-distinct-binding* id id*))))
+                        ht]
+                       [(identifier-extension-binding? id name-root-id)
+                        (define ext-ext-id (datum->syntax ext-id sym))
+                        (define new-ht
+                          (hash-set ht sym (merge-ext+int+rule
+                                            ext-ext-id
+                                            (hash-ref ht sym #f)
+                                            (make-ext+int+rule ext-ext-id id* '#:only (hasheq space-sym
+                                                                                              (datum->syntax #f space-sym))))))
+                        (if (eq? space-sym 'rhombus/namespace)
+                            (ns-loop new-ht id* id)
+                            new-ht)]
+                       [else ht])]
+                    [else ht])))]
              [else base-ht])]))
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label

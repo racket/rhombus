@@ -119,3 +119,134 @@ module ~early B ~lang rhombus:
 
 import self!B
 check B.get() ~is 42
+
+module ~early more_alias ~lang rhombus:
+  module ~early A ~lang rhombus:
+    export namespace X
+    def X.foo = 42
+
+  module ~early B ~lang rhombus:
+    import parent!A open
+    export namespace Y
+    alias 'Y.Z': 'X'
+
+  module ~early C ~lang rhombus:
+    import parent!B open
+    export def out = Y.Z.foo
+
+  check:
+    import self!C.out
+    out
+    ~is 42
+
+  module ~early D ~lang rhombus:
+    import parent!B open
+    export W
+    alias 'W': 'Y.Z'
+    def W.bar = 50
+    module check:
+      export def out1 = W.foo
+      export def out2 = W.bar
+
+  check:
+    import self!D!check
+    [check.out1, check.out2]
+    ~is [42, 50]
+
+  module ~early E ~lang rhombus:
+    import parent!D open
+    export def out1 = W.foo
+    export def out2 = W.bar
+
+  check:
+    import self!E
+    [E.out1, E.out2]
+    ~is [42, 50]
+
+  module ~early F ~lang rhombus:
+    import parent!B open
+    export Q
+    alias 'Q': 'Y'
+    export def out1 = Y.Z.foo
+    export def out2 = Q.Z.foo
+
+  check:
+    import self!F
+    [F.out1, F.out2]
+    ~is [42, 42]
+
+  module ~early G ~lang rhombus:
+    import parent!F open
+    export def out = Q.Z.foo
+
+  check:
+    import self!G
+    G.out
+    ~is 42
+
+import self!more_alias
+
+module ~early more_namespace_alias ~lang rhombus:
+  namespace A:
+    export namespace X
+    def X.foo = 42
+
+  namespace B:
+    import .A open
+    export namespace Y
+    alias 'Y.Z': 'X'
+
+  namespace C:
+    import .B open
+    export def out = Y.Z.foo
+
+  check:
+    import .C.out
+    out
+    ~is 42
+
+  namespace D:
+    import .B open
+    export W
+    alias 'W': 'Y.Z'
+    def W.bar = 50
+    export def cout1 = W.foo
+    export def cout2 = W.bar
+
+  check:
+    import .D open
+    [cout1, cout2]
+    ~is [42, 50]
+
+  namespace E:
+    import .D open
+    export def out1 = W.foo
+    export def out2 = W.bar
+
+  check:
+    import .E
+    [E.out1, E.out2]
+    ~is [42, 50]
+
+  namespace F:
+    import .B open
+    export Q
+    alias 'Q': 'Y'
+    export def out1 = Y.Z.foo
+    export def out2 = Q.Z.foo
+
+  check:
+    import .F
+    [F.out1, F.out2]
+    ~is [42, 42]
+
+  namespace G:
+    import .F open
+    export def out = Q.Z.foo
+
+  check:
+    import .G
+    G.out
+    ~is 42
+
+import self!more_namespace_alias

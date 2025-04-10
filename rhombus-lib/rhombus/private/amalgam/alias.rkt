@@ -74,29 +74,38 @@
                    [(and (eq? space-sym 'rhombus/namespace)
                          (extensible-name-root (list old-id-in-space)))
                     => (lambda (name-root-id)
-                         ;; also export any extensions
+                         ;; also alias any extensions
                          (define out-int-id (out-of-name-root-space old-id))
-                         (define prefix (string-append (symbol->immutable-string (syntax-e old-id))
-                                                       "."))
-                         (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
-                                    #:do [(define intro (if space
-                                                            (make-interned-syntax-introducer/add space)
-                                                            (lambda (x) x)))]
-                                    [sym (in-list (syntax-bound-symbols (intro out-int-id)))]
-                                    #:do [(define str (symbol->immutable-string sym))]
-                                    #:when (and (> (string-length str) (string-length prefix))
-                                                (string=? prefix (substring str 0 (string-length prefix))))
-                                    #:do [(define id* (datum->syntax out-int-id sym))
-                                          (define id (intro id*))]
-                                    #:when (identifier-extension-binding? id name-root-id)
-                                    #:when (or (not space)
-                                               (identifier-distinct-binding* id id*)))
-                           (define ext-sym (string->symbol (string-append
-                                                            (symbol->immutable-string (syntax-e #'new-name.name))
-                                                            "."
-                                                            (substring (symbol->immutable-string sym) (string-length prefix)))))
-                           #`(define-syntax #,(intro (datum->syntax #'new-name.name ext-sym #'new-name.name))
-                               (make-rename-transformer (quote-syntax #,id)))))]
+                          (let ns-loop ([out-int-id out-int-id] [name-root-id name-root-id])
+                            (define prefix (string-append (symbol->immutable-string (syntax-e old-id))
+                                                          "."))
+                            (apply
+                             append
+                             (for/list ([space (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                        #:do [(define intro (if space
+                                                                (make-interned-syntax-introducer/add space)
+                                                                (lambda (x) x)))]
+                                        [sym (in-list (syntax-bound-symbols (intro out-int-id)))]
+                                        #:do [(define str (symbol->immutable-string sym))]
+                                        #:when (and (> (string-length str) (string-length prefix))
+                                                    (string=? prefix (substring str 0 (string-length prefix))))
+                                        #:do [(define id* (datum->syntax out-int-id sym))
+                                              (define id (intro id*))]
+                                        #:when (identifier-extension-binding? id name-root-id)
+                                        #:when (or (not space)
+                                                   (identifier-distinct-binding* id id*)))
+                               (define ext-sym (string->symbol (string-append
+                                                                (symbol->immutable-string (syntax-e #'new-name.name))
+                                                                "."
+                                                                (substring (symbol->immutable-string sym) (string-length prefix)))))
+                               (cons
+                                (build-syntax-definition/maybe-extension
+                                 space (datum->syntax #'new-name.name ext-sym #'new-name.name)
+                                 ((make-interned-syntax-introducer 'rhombus/namespace) #'new-name.name)
+                                 #`(make-rename-transformer (quote-syntax #,id)))
+                                (if (eq? space 'rhombus/namespace)
+                                    (ns-loop id* id)
+                                    null))))))]
                    [else
                     null]))]
                [else
