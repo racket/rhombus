@@ -41,7 +41,7 @@ the @rhombus(test, ~datum) submodule directly with
  @litchar{!} is a special character in most command-line shells. Your
  shell and its quoting form may vary.}
 
-@nested(~style: #'inset){@exec{racket prog.rhm'!'test}}
+@nested(~style: #'inset){@exec{rhombus prog.rhm'!'test}}
 
 or use Racket's
 @seclink("test", ~doc: raco_doc, ~indirect: #true, @exec{raco test}) tool
