@@ -172,7 +172,7 @@
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
                                       only-spaces-out except-spaces-out all-spaces-defined-out
-                                      except-out)
+                                      all-spaces-dots-out except-out)
         [(combine-out ex ...)
          (for/fold ([ht ht]) ([ex (in-list (syntax->list #'(ex ...)))])
            (loop ex ht except-ht spaces spaces-mode))]
@@ -183,6 +183,17 @@
                [(int-id ext-id) (values #'ext-id #'int-id)]
                [_:identifier (values o o)]))
            (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode))]
+        [(all-spaces-dots-out combine-id id ...)
+         (define ids (syntax->list #'(id ...)))
+         (define out-id (car (reverse ids)))
+         (for/fold ([ht ht]) ([space-sym (in-list (if spaces
+                                                      spaces
+                                                      (cons #f (syntax-local-module-interned-scope-symbols))))]
+                              #:when (use-space? space-sym spaces-mode spaces))
+           (define id (dotted-binding-id ids space-sym))
+           (if id
+               (add-name-at-all-spaces ht out-id id (hasheq space-sym #t) '#:only)
+               ht))]
         [(only-spaces-out ex space ...)
          (define new-spaces
            (for/hasheq ([sp (in-list (syntax->list #'(space ...)))])

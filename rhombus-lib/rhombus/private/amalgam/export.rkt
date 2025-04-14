@@ -82,22 +82,18 @@
   (define (make-identifier-export id)
     (cond
       [(syntax-property id namespace-syntax-property-key)
-       => (lambda (ns-id)
-            (define outs
-              (name-root-all-out ns-id id (cons #f (syntax-local-module-interned-scope-symbols))))
-            #`(combine-out #,@(for/list ([id+space-sym (in-list outs)])
-                                (define id (car id+space-sym))
-                                (define space-sym (cdr id+space-sym))
-                                #`(only-spaces-out (all-spaces-out #,id) #,space-sym))))]
+       => (lambda (dot-names)
+            #`(all-spaces-dots-out #,id #,@dot-names))]
       [else #`(all-spaces-out #,id)]))
-  (define (export-extension-combine prefix field-id id)
-    (syntax-property field-id namespace-syntax-property-key prefix))
+
+  (define (export-extension-combine dot-names id)
+    (syntax-property id namespace-syntax-property-key dot-names))
 
   (define name-root-export-ref
     (make-name-root-ref #:binding-ref (lambda (v)
                                         (or (export-prefix-operator-ref v)
                                             (export-infix-operator-ref v)))
-                        #:binding-extension-combine export-extension-combine))
+                        #:dot-name-construction export-extension-combine))
 
   (define-rhombus-enforest
     #:syntax-class :export

@@ -24,7 +24,8 @@
                      portal-syntax->lookup
                      portal-syntax->import
                      portal-syntax->extends
-                     name-root-all-out))
+                     name-root-all-out
+                     dotted-binding-id))
 
 (begin-for-syntax
   (define (build-name prefix field-id #:ctx [ctx prefix])
@@ -48,6 +49,7 @@
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f] ;; see above
                                        #:non-portal-ref [non-portal-ref #f] ;; see above
                                        #:binding-extension-combine [binding-extension-combine (lambda (prefix field-id id) id)]
+                                       #:dot-name-construction [dot-name-construction (lambda (names id) id)]
                                        #:quiet-fail? [quiet-fail? #f])
   (lambda (v)
     (define (make self-id get)
@@ -57,13 +59,16 @@
          ;; keep going as long as there are namespace bindings,
          ;; but back up if we don't find a binding in the space
          ;; indicated by `in-space`
+         (define head
+           (syntax-parse stxes
+             [(form-id . _) #'form-id]))
          (let loop ([stxes stxes]
                     [gets
                      ;; reverse order search path: (cons get prefix)
                      (list
                       (cons get #f)
-                      (cons #f (syntax-parse stxes
-                                 [(form-id . _) #'form-id])))])
+                      (cons #f head))]
+                    [rev-dot-names (list head)])
            (define (next form-id field-id field-op-parens what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -78,7 +83,9 @@
                        [(not get)
                         (define name (build-name prefix field-id))
                         (and (identifier-binding* (in-id-space name))
-                             (relocate-field form-id field-id name field-op-parens))]
+                             (dot-name-construction
+                              (reverse (cons field-id rev-dot-names))
+                              (relocate-field form-id field-id name field-op-parens)))]
                        [else
                         (define sub-id (if prefix
                                            (build-name prefix field-id)
@@ -88,19 +95,23 @@
                                (or ns?
                                    (not binding-end?)
                                    (syntax-local-value* (in-id-space id) binding-ref))
-                               (relocate-field form-id field-id id field-op-parens)))]))
+                               (dot-name-construction
+                                (reverse (cons field-id rev-dot-names))
+                                (relocate-field form-id field-id id field-op-parens))))]))
                    (cond
                      [fail-ok? #f]
                      [(or binding-end?
                           quiet-fail?)
                       (let ([prefix (cdar (reverse gets))])
-                        (binding-extension-combine
-                         (in-name-root-space prefix)
-                         field-id
-                         (relocate-field form-id
-                                         field-id
-                                         (build-name prefix field-id #:ctx field-id)
-                                         field-op-parens)))]
+                        (dot-name-construction
+                         (reverse (cons field-id rev-dot-names))
+                         (binding-extension-combine
+                          (in-name-root-space prefix)
+                          field-id
+                          (relocate-field form-id
+                                          field-id
+                                          (build-name prefix field-id #:ctx field-id)
+                                          field-op-parens))))]
                      [else
                       ;; try again with the shallowest to report an error
                       (let ([get (caar gets)])
@@ -130,7 +141,8 @@
                                                       (define prefix (cdr get+prefix))
                                                       (cons get (if prefix
                                                                     (build-name prefix field-id)
-                                                                    field-id)))))
+                                                                    field-id))))
+                                                   (cons field-id rev-dot-names))
                                              (values self-id tail))))]
                [non-portal-ref
                 (non-portal-ref form-id field-id tail)]
@@ -346,3 +358,40 @@
             (or (loop (cdr ids) (portal-syntax-content v) id)
                 (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who))])
          (in-name-root-space id))))
+
+;; Similar to a `make-name-root-ref` search, but more direct where
+;; all identifiers in a sequence must be used, and also similar to
+;; `extensible-name-root`, but looking for the binding in a namespace
+(define-for-syntax (dotted-binding-id ids space-sym)
+  (define in-space
+    (if space-sym
+        (make-interned-syntax-introducer space-sym)
+        (lambda (x [mode #f]) x)))
+  (let loop ([ids ids] [portal-stx #f] [prev-who #f])
+    (define id
+      (cond
+        [(not portal-stx) (car ids)]
+        [else
+         (portal-syntax->lookup portal-stx
+                                (lambda (self-id get)
+                                  (define id (get #f #f (car ids) (if (null? (cdr ids))
+                                                                      (lambda (id) (in-space id 'add))
+                                                                      in-name-root-space)))
+                                  (and id
+                                       (relocate-field prev-who (car ids) id #f))))]))
+    (cond
+      [(not id) #f]
+      [(null? (cdr ids))
+       (and (if space-sym
+                (identifier-distinct-binding* (in-space id 'add) (in-space id 'remove))
+                (identifier-binding* id))
+            (in-space id 'remove))]
+      [else
+       (define v
+         (and id
+              (syntax-local-value* (in-name-root-space id) (lambda (v)
+                                                             (and (portal-syntax? v)
+                                                                  v)))))
+       (and v
+            (or (loop (cdr ids) (portal-syntax-content v) id)
+                (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who)))])))

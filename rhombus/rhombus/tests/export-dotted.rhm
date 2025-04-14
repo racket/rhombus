@@ -1,0 +1,143 @@
+#lang rhombus
+
+module ~early m0 ~lang rhombus:
+  export def z = "zee"
+
+module ~early m1 ~lang rhombus/and_meta:
+  import:
+    parent!m0
+  namespace ns:
+    export def x = "ex"
+    export annot.macro 'XInt': 'Int'
+    export class XObj(a)
+  def ns.y = "wy"
+  annot.macro '(ns.YFlonum)': 'Flonum'
+  class ns.YObj(b)
+  class ns.ZObj(c)
+  export:
+    m0.z
+    ns.x
+    ns.XInt
+    ns.XObj
+    ns.y
+    ns.YFlonum
+    ns.YObj
+    only_space expr:
+      ns.ZObj
+
+import self!m1
+
+check m1.y ~is "wy"
+check m1.x ~is "ex"
+check m1.z ~is "zee"
+
+check 10 is_a m1.XInt ~is #true
+check 10.0 is_a m1.XInt ~is #false
+check 10 is_a m1.YFlonum ~is #false
+check 10.0 is_a m1.YFlonum ~is #true
+
+check m1.XObj(1).a ~is 1
+check m1.XObj(1) ~is_a m1.XObj
+check:
+  let m1.XObj(a) = m1.XObj(10)
+  a
+  ~is 10
+
+check m1.YObj(1).b ~is 1
+check m1.YObj(1) ~is_a m1.YObj
+check:
+  let m1.YObj(z) = m1.YObj(10)
+  z
+  ~is 10
+
+check m1.ZObj(3).c ~is 3
+
+check:
+  ~eval
+  import lib("rhombus/tests/export-dotted.rhm")!m1
+  10 is_a m1.ZObj
+  ~throws "m1.ZObj: not bound as an annotation"
+
+namespace ns1:
+  import rhombus/meta open
+  namespace ns:
+    export def x = "x"
+    export annot.macro 'XInt': 'Int'
+    export class XObj(a)
+  def ns.y = "y"
+  annot.macro '(ns.YFlonum)': 'Flonum'
+  class ns.YObj(b)
+  export:
+    ns.x
+    ns.XInt
+    ns.XObj
+    ns.y
+    ns.YFlonum
+    ns.YObj
+
+check ns1.y ~is "y"
+check ns1.x ~is "x"
+
+check 10 is_a ns1.XInt ~is #true
+check 10.0 is_a ns1.XInt ~is #false
+check 10 is_a ns1.YFlonum ~is #false
+check 10.0 is_a ns1.YFlonum ~is #true
+
+check ns1.XObj(1).a ~is 1
+check ns1.XObj(1) ~is_a ns1.XObj
+check:
+  let ns1.XObj(a) = ns1.XObj(10)
+  a
+  ~is 10
+
+check ns1.YObj(1).b ~is 1
+check ns1.YObj(1) ~is_a ns1.YObj
+check:
+  let ns1.YObj(z) = ns1.YObj(10)
+  z
+  ~is 10
+
+module ~early m2 ~lang rhombus/and_meta:
+  namespace ns:
+    export namespace sub:
+      export def x = "ns.sub.x"
+    def sub.y = "ns.sub.y"
+  export:
+    ns.sub.x
+    ns.sub.y
+
+import self!m2
+
+check m2.y ~is "ns.sub.y"
+check m2.x ~is "ns.sub.x"
+
+namespace ns2:
+  namespace ns:
+    export namespace sub:
+      export def x = "ns.sub.x"
+    def sub.y = "ns.sub.y"
+  namespace ns.also_sub:
+    export def z = "ns.also_sub.z"
+  export:
+    ns.sub.x
+    ns.sub.y
+    ns.also_sub.z
+
+check ns2.y ~is "ns.sub.y"
+check ns2.x ~is "ns.sub.x"
+check ns2.z ~is "ns.also_sub.z"
+
+namespace ns3:
+  namespace ns:
+    export def y = "y"
+  export:
+    ns.x
+    ns.y
+  def ns.x = "x"
+
+check ns3.x ~is "x"
+check ns3.y ~is "y"
+
+block:
+  import .ns3.x
+  check x ~is "x"
