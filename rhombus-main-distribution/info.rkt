@@ -12,6 +12,8 @@
 
     "rhombus-http"
     "rhombus-url"
+    "rhombus-xml"
+    "rhombus-json"
 
     "rhombus-icons"
     "rhombus-logo"

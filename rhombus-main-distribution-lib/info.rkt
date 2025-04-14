@@ -10,6 +10,8 @@
     "rhombus-scribble-lib"
     "rhombus-http-lib"
     "rhombus-url-lib"
+    "rhombus-xml-lib"
+    "rhombus-json-lib"
     "rhombus-icons"
     "rhombus-logo-lib"))
 
