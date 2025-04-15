@@ -122,12 +122,12 @@
       [(syntax-wrap? r) (loop (syntax-unwrap r))]
       [(multi-syntax? r)
        (define l (syntax->list r))
-       (if (and (pair? (cdr l)) (null? (cddr l)))
+       (if (and l (pair? (cdr l)) (null? (cddr l)))
            (loop (cadr l))
            (fail))]
       [(group-syntax? r)
        (define l (syntax->list r))
-       (if (and (pair? (cdr l)) (null? (cddr l)))
+       (if (and l (pair? (cdr l)) (null? (cddr l)))
            (cadr l)
            (fail))]
       [else (syntaxable->syntax who at-stx r)])))
@@ -169,15 +169,26 @@
 ;; properties on the `group` tag. So, unpacking here is really about
 ;; coercing from different representations, as opposed to changing a
 ;; `group` representation. The result is always a syntax object.
-(define (unpack-group r who at-stx)
+(define (unpack-group r who at-stx [strict? #f])
   (cond
     [(syntax-wrap? r) (unpack-group (syntax-unwrap r) who at-stx)]
     [(multi-syntax? r)
      (define l (syntax->list r))
      (cond
-       [(and (pair? (cdr l)) (null? (cddr l))) (cadr l)]
+       [(not l) (raise-error who "invalid syntax for group" r)]
+       [(and (pair? (cdr l)) (null? (cddr l)))
+        (if strict?
+            (unpack-group (cadr l) who at-stx #t)
+            (cadr l))]
        [else (raise-error who "multi-group syntax not allowed in group context" r)])]
-    [(group-syntax? r) r]
+    [(group-syntax? r)
+     (cond
+       [strict?
+        (define l (syntax->list r))
+        (if (and l (pair? (cdr l)))
+            r
+            (raise-error who "invalid syntax for group" r))]
+       [else r])]
     [(to-list #f r)
      => (lambda (es)
           (when (null? es) (cannot-coerce-empty-list who r))
@@ -252,6 +263,7 @@
 ;; that check may be redundant with an enclosing check when
 ;; used in the middle of a template
 (define (unpack-term-list r who at-stx)
+  (define (bad) (raise-error who "invalid syntax for term list" r))
   (cond
     [(syntax-wrap? r) (unpack-term-list (syntax-unwrap r) who at-stx)]
     [(syntax? r)
@@ -259,10 +271,19 @@
        [(multi-syntax? r)
         (define l (syntax->list r))
         (cond
+          [(not l) (bad)]
           [(null? (cdr l)) null]
-          [(null? (cddr l)) (cdr (syntax->list (cadr l)))]
+          [(null? (cddr l))
+           (define g-l (syntax->list (cadr l)))
+           (if (and g-l (pair? g-l))
+               (cdr g-l)
+               (bad))]
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
-       [(group-syntax? r) (cdr (syntax->list r))]
+       [(group-syntax? r)
+        (define g-l (syntax->list r))
+        (if g-l
+            (cdr g-l)
+            (bad))]
        [else (list r)])]
     [(or (and (treelist? r) (treelist->list r))
          (and (list? r) r))
@@ -283,7 +304,10 @@
     [(syntax-wrap? r) (unpack-group-list (syntax-unwrap r) who at-stx)]
     [(and (syntax? r)
           (multi-syntax? r))
-     (cdr (syntax->list r))]
+     (define l (syntax->list r))
+     (if l
+         (cdr l)
+         (raise-error who "invalid syntax for group list" r))]
     [else (list (unpack-group r who at-stx))]))
 
 ;; `r` is a sequence of groups
@@ -302,7 +326,11 @@
 (define (unpack-multi r who at-stx)
   (cond
     [(syntax-wrap? r) (unpack-multi (syntax-unwrap r) who at-stx)]
-    [(multi-syntax? r) (cdr (syntax->list r))]
+    [(multi-syntax? r)
+     (define l (syntax->list r))
+     (if l
+         (cdr l)
+         (raise-error who "invalid syntax for group sequence" r))]
     [(group-syntax? r) (list r)]
     [(to-list #f r)
      => (lambda (es)
@@ -346,6 +374,7 @@
        [(multi-syntax? r)
         (define l (syntax->list r))
         (cond
+          [(not l) (raise-error who "invalid syntax for group sequence" r)]
           [(null? (cdr l)) '()]
           [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]

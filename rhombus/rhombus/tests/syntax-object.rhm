@@ -117,6 +117,24 @@ check:
   Syntax.unwrap_sequence('1') ~matches ['1']
   Syntax.unwrap_all('(1 2, 3 4)') ~is [#'parens, [#'group, 1, 2], [#'group, 3, 4]]
 
+block:
+  import lib("racket/base.rkt")
+  def bad1 = base.#{datum->syntax}(#false, PairList[#'oops])
+  def bad2 = base.#{datum->syntax}(#false, { "a": "b" })
+  def bad3 = base.#{datum->syntax}(#false, PairList[#'group])
+  check:
+    bad1 is_a Term ~is #true
+    Syntax.unwrap(bad1) ~is bad1
+    Syntax.unwrap_group('1 $bad1 2') ~matches ['1', _ :: Any.of(bad1), '2']
+    Syntax.unwrap_sequence('1; $bad1; 2') ~matches ['1', _ :: satisfying(fun (stx :: Syntax): stx.unwrap() == bad1), '2']
+    bad2 is_a Term ~is #true
+    Syntax.unwrap(bad2) ~is bad2
+    bad3 is_a Term ~is #false
+    bad3 is_a Group ~is #false
+    Syntax.unwrap_group(bad3) ~throws "invalid syntax for group"
+    Syntax.unwrap_sequence(bad3) ~matches [bad3]
+    Syntax.unwrap_sequence(bad3) matches [''] ~is #false
+
 // unwrapping parsed term results in the parsed term
 block:
   import meta -1:

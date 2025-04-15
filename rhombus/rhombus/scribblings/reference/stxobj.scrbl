@@ -1019,8 +1019,7 @@ class's name.
  Unwraps a single-term syntax object by one layer. The result is a
  list of syntax objects in the case of an operator, parentheses,
  brackets, braces, block, or alternatives, where the first element of
- the list reflects the specific shape. In the case of a @tech{parsed}
- term, the result is just the parsed term, still as a syntax object.
+ the list reflects the specific shape.
 
 @examples(
   Syntax.unwrap('1.0')
@@ -1030,6 +1029,11 @@ class's name.
   ~error:
     Syntax.unwrap('1 2 3')
 )
+
+ In the case of a @tech{parsed} term, the result is just the parsed
+ term, still as a syntax object. Similarly, in the case of a syntax
+ object constructed at the Racket level that does not have the shape of a
+ shrubbery form, the result is still the syntax object.
 
 }
 
@@ -1095,11 +1099,17 @@ class's name.
 ){
 
  Unwraps a syntax object recursively, returning a value that does not
- contain a syntax object but could be passed to @rhombus(Syntax.make).
+ contain a syntax object (except in limited circumstances) but could be
+ passed to @rhombus(Syntax.make).
 
 @examples(
   Syntax.unwrap_all('(1 + 2)')
 )
+
+ The result can contain a syntax object only for a @tech{parsed} term, a
+ syntax object injected with @rhombus(Syntax.inject), or a syntax object
+ that is created at the Racket level and does not represent a shrubbery
+ form.
 
 }
 

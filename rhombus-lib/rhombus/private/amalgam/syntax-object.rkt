@@ -138,7 +138,7 @@
                    #:datum-literals (op)
                    [(op _) #t]
                    [_ #f])
-                 (let ([t (unpack-group s #f #f)])
+                 (let ([t (unpack-group s #f #f #t)])
                    (and t
                         (syntax-parse t
                           #:datum-literals (group)
@@ -152,7 +152,7 @@
        (let ([t (unpack-term s #f #f)])
          (or (identifier? t)
              (and (not t)
-                  (let ([t (unpack-group s #f #f)])
+                  (let ([t (unpack-group s #f #f #t)])
                     (and t
                          (syntax-parse t
                            #:datum-literals (group)
@@ -170,7 +170,7 @@
   (identifier-annotation syntax-group? #,(get-syntax-static-infos)))
 (define (syntax-group? s)
   (and (syntax*? s)
-       (unpack-group s #f #f)
+       (unpack-group s #f #f #t)
        #t))
 
 (define-annotation-syntax TermSequence
@@ -315,7 +315,7 @@
            (invalid))]
       [(to-list #f e) => group]
       [(syntax*? e)
-       (or (unpack-group e #f #f)
+       (or (unpack-group e #f #f #t)
            (invalid))]
       [else (invalid)]))
   (define (loop v pre-alt? tail?)
@@ -394,12 +394,7 @@
      (define new-v (cond
                      [(syntaxable? v)
                       v]
-                     [(or (hash? v)
-                          (pair? v)
-                          (null? v)
-                          (vector? v)
-                          (box? v)
-                          (prefab-struct-key v))
+                     [(needs-injected? v)
                       (injected v)]
                      [else v]))
      (datum->syntax ctx-stx new-v)]))
@@ -480,64 +475,169 @@
   (unless (syntax*? v)
     (raise-annotation-failure who v "Syntax")))
 
+(define (needs-injected? v)
+  (or (hash? v)
+      (pair? v)
+      (null? v)
+      (vector? v)
+      (box? v)
+      (prefab-struct-key v)))
+
 (define/method (Syntax.unwrap v)
   (check-syntax who v)
   (define unpacked (unpack-term v who #f))
   (define u (syntax-e unpacked))
   (cond
-    [(and (pair? u)
-          (eq? (syntax-e (car u)) 'parsed))
-     v]
-    [(injected? u) (injected-e u)]
+    [(not (pair? u))
+     (cond
+       [(injected? u)
+        (injected-e u)]
+       [(needs-injected? u)
+        ;; treat as opaque
+        v]
+       [else
+        ;; assume that this is some injected value
+        u])]
     [else
-     (if (and (pair? u)
-              (not (list? u)))
-         (list->treelist (syntax->list unpacked))
-         (maybe-list->treelist u))]))
+     (define head (syntax-e (car u)))
+     (define (unwrap-list mode)
+       (define l (syntax->list unpacked))
+       (cond
+         [(not l) unpacked]
+         [else
+          (cond
+            [(for/and ([e (in-list (cdr l))])
+               (define e-u (syntax-e e))
+               (and (pair? e-u)
+                    (eq? mode (syntax-e (car e-u)))))
+             (list->treelist l)]
+            [else unpacked])]))
+     (case head
+       [(parsed) v]
+       [(parens brackets braces quotes)
+        (unwrap-list 'group)]
+       [(block)
+        (unwrap-list 'group)]
+       [(alts)
+        (unwrap-list 'block)]
+       [(op)
+        (define l (syntax->list unpacked))
+        (if (and l (pair? (cdr l)) (null? (cddr l)) (identifier? (cadr l)))
+            (treelist (car l) (cadr l))
+            unpacked)]
+       [else unpacked])]))
 
 (define/method (Syntax.unwrap_op v)
   (syntax-parse (and (syntax*? v)
                      (unpack-term v who #f))
     #:datum-literals (op)
-    [(op o) (syntax-e #'o)]
+    [(op o:identifier) (syntax-e #'o)]
     [_ (raise-annotation-failure who v "Operator")]))
 
 (define/method (Syntax.unwrap_group v)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (check-syntax who v)
-  (list->treelist (syntax->list (unpack-tail v who #f))))
+  (define l (syntax->list (unpack-tail v who #f)))
+  (if (pair? l)
+      (list->treelist l)
+      (raise-arguments-error* who rhombus-realm "invalid syntax for group" "syntax" v)))
 
 (define/method (Syntax.unwrap_sequence v)
   #:static-infos ((#%call-result #,(get-treelist-of-syntax-static-infos)))
   (check-syntax who v)
-  (list->treelist (syntax->list (unpack-multi-tail v who #f))))
+  (define l (syntax->list (unpack-multi-tail v who #f)))
+  (if l
+      (list->treelist l)
+      (raise-arguments-error* who rhombus-realm "invalid syntax for group sequence" "syntax" v)))
 
 (define/method (Syntax.unwrap_all v)
   (check-syntax who v)
-  (define (list->treelist* s)
+  (let loop ([v v] [mode 'any])
+    (define u (syntax-e v))
     (cond
-      [(null? s) empty-treelist]
-      [(pair? s) (for/treelist ([e (in-list s)])
-                   (list->treelist* e))]
-      [(injected? s) (injected-e s)]
-      [else s]))
-  (define (normalize s)
-    (cond
-      [(null? s) empty-treelist]
-      [(not (pair? s))
-       (if (injected? s)
-           (injected-e s)
-           s)]
-      [(eq? (car s) 'group)
-       (if (null? (cddr s))
-           (list->treelist* (cadr s))
-           (list->treelist* s))]
-      [(eq? (car s) 'multi)
-       (if (and (pair? (cdr s)) (null? (cddr s)))
-           (normalize (cadr s))
-           (list->treelist* s))]
-      [else (list->treelist* s)]))
-  (normalize (syntax->datum v)))
+      [(not (pair? u))
+       (cond
+         [(not (or (eq? mode 'any)
+                   (eq? mode 'term)))
+          v]
+         [(injected? u)
+          (injected-e u)]
+         [(needs-injected? u)
+          ;; treat as opaque
+          v]
+         [else
+          ;; assume that this is some injected value
+          u])]
+      [else
+       (define head (syntax-e (car u)))
+       (define (unwrap-list mode)
+         (define l (syntax->list v))
+         (cond
+           [(not l) v]
+           [else
+            (define new-l
+              (treelist-cons
+               (for/treelist ([e (in-list (cdr l))])
+                 (loop e mode))
+               head))
+            (cond
+              [(and (not (eq? mode 'term))
+                    (for/or ([e (in-treelist new-l)])
+                      (syntax? e)))
+               v]
+              [else new-l])]))
+       (case head
+         [(parsed) v]
+         [(multi)
+          (define l
+            (if (eq? mode 'any)
+                (unwrap-list 'group)
+                v))
+          (if (and (treelist? l)
+                   (= 2 (treelist-length l)))
+              (let ([g (treelist-ref l 1)])
+                (if (and (treelist? g)
+                         (= 2 (treelist-length g)))
+                    (treelist-ref g 1)
+                    g))
+              l)]
+         [(group)
+          (define l
+            (if (or (eq? mode 'group)
+                    (eq? mode 'any))
+                (unwrap-list 'term)
+                v))
+          (if (and (eq? mode 'any)
+                   (treelist? l)
+                   (= 2 (treelist-length l)))
+              (treelist-ref l 1)
+              l)]
+         [(op)
+          (if (or (eq? mode 'term)
+                  (eq? mode 'any))
+              (let ([l (unwrap-list 'term)])
+                (if (and (= 2 (treelist-length l))
+                         (symbol? (treelist-ref l 1)))
+                    l
+                    v))
+              v)]
+         [(parens brackets braces quotes)
+          (if (or (eq? mode 'term)
+                  (eq? mode 'any))
+              (unwrap-list 'group)
+              v)]
+         [(block)
+          (if (or (eq? mode 'term)
+                  (eq? mode 'block)
+                  (eq? mode 'any))
+              (unwrap-list 'group)
+              v)]
+         [(alts)
+          (if (or (eq? mode 'term)
+                  (eq? mode 'any))
+              (unwrap-list 'block)
+              v)]
+         [else v])])))
 
 (define/method (Syntax.strip_scopes v)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -551,7 +651,7 @@
 
 (define/method (Syntax.name_to_symbol v)
   (syntax-parse (and (syntax*? v)
-                     (unpack-group v who #f))
+                     (unpack-group v who #f #t))
     #:datum-literals (group op)
     [(group (op o)) (syntax-e #'o)]
     [(group x:identifier) (syntax-e #'x)]
@@ -678,11 +778,11 @@
                      (32 #,(get-syntax-static-infos))))))
   (case-lambda
     [(stx-in)
-     (define stx (unpack-group stx-in #f #f))
+     (define stx (unpack-group stx-in #f #f #t))
      (unless stx (raise-annotation-failure who stx-in "Group"))
      (get-source-properties stx extract-group-ctx)]
     [(stx-in prefix raw tail suffix)
-     (define stx (unpack-group stx-in #f #f))
+     (define stx (unpack-group stx-in #f #f #t))
      (unless stx (raise-annotation-failure who stx-in "Group"))
      (set-source-properties stx extract-group-ctx prefix raw tail suffix)]))
 
@@ -747,7 +847,7 @@
 
 (define/method (Syntax.relocate_group_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-  (define stx (unpack-group stx-in #f #f))
+  (define stx (unpack-group stx-in #f #f #t))
   (unless stx (raise-annotation-failure who stx-in "Group"))
   (relocate-span who stx ctx-stxes-in extract-group-ctx))
 

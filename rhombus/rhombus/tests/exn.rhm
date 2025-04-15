@@ -17,6 +17,8 @@ check:
 
 block:
   use_static
+  import lib("racket/base.rkt")
+  fun rkt_unwrap(stx): base.#{syntax->list}(stx)
   def v:
     try:
       parameterize { Evaluator.current: Evaluator.make_rhombus() }:
@@ -24,19 +26,19 @@ block:
       ~catch x:
         x
   check:
-    (v :: Exn.Fail.Syntax).exprs[0].unwrap()
-    ~matches ['fun']
+    rkt_unwrap((v :: Exn.Fail.Syntax).exprs[0])
+    ~matches PairList['fun']
   check:
     def e :: Exn.Fail.Syntax = v
-    e.exprs[0].unwrap()
-    ~matches ['fun']
+    rkt_unwrap(e.exprs[0])
+    ~matches PairList['fun']
   check:
-    Exn.Fail.Syntax.exprs(v)[0].unwrap()
-    ~matches ['fun']
+    rkt_unwrap(Exn.Fail.Syntax.exprs(v)[0])
+    ~matches PairList['fun']
   check:
     use_dynamic
-    v.exprs[0].unwrap()
-    ~matches ['fun']
+    rkt_unwrap(v.exprs[0])
+    ~matches PairList['fun']
 
   check:
     def v = Exn.Fail.Read("hi", Continuation.Marks.current(), PairList[Srcloc(1, 2, 3, 4, 5)])
