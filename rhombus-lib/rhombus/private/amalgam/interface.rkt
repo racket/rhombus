@@ -373,6 +373,7 @@
                  (wrap-class-transformer #'name #'tail-name
                                          ((make-syntax-introducer) annotation-rhs)
                                          #'make-annotation-prefix-operator
+                                         #:extra-args (list #'ctx)
                                          "interface"))]
             [else
              (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])

@@ -1248,3 +1248,46 @@ block:
   check f(Set.by(===){1}) ~prints "now\n"
   check f(Set.by(===){1}) ~prints "now\n"
   check f(Set.by(===){1}, Set.by(===){1}) ~prints "now\n"
+
+// dependent result annotations
+block:
+  use_static
+  def m = { "a" }
+  check: for List (k in m):
+           k.length()
+         ~is [1]
+  check: for List (k in m.to_sequence()):
+           k.length()
+         ~is [1]
+  check m.to_list()[0].length() ~is 1
+  check m.add("c").to_list()[0].length() ~is 1
+  check m.remove("c").to_list()[0].length() ~is 1
+  def mm :: MutableSet.later_of(String) = { "a" }.copy()
+  check mm.snapshot().to_list()[0].length() ~is 1
+  check m.snapshot().to_list()[0].length() ~is 1
+  def m2 = { "a", & { "c" } }
+  check m2.to_list()[0].length() ~is 1
+  let [str, ...] = ["x", "y"]
+  check { str, ...}.to_list()[0].length() ~is 1
+  check ({"a"} ++ {"b"}).to_list()[0].length() ~is 1
+  check ({"a", "d"} ++ {"b", "c"}).to_list()[0].length() ~is 1
+  check m.union({"b"}).to_list()[0].length() ~is 1
+  check m.intersect({#"b", "a"}).to_list()[0].length() ~is 1
+
+check:
+  ~eval
+  use_static
+  def m :: Set.of(String) = { "a" }
+  m.add(#"x").to_list()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def m = Set{ "a", #"b" }
+  m.to_list()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")

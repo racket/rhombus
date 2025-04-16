@@ -10,6 +10,8 @@
                   unsafe-fx+
                   unsafe-fx<
                   unsafe-fx<=)
+         "treelist.rkt"
+         "range-struct.rkt"
          "expression.rkt"
          "repetition.rkt"
          "compound-repetition.rkt"
@@ -17,7 +19,7 @@
          "parse.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
-         "treelist.rkt"
+         "treelist-statinfo.rkt"
          "realm.rkt"
          "annotation-failure.rkt"
          "number.rkt"
@@ -33,6 +35,7 @@
          "sequence-constructor-key.rkt"
          "order.rkt"
          "order-primitive.rkt"
+         "to-list.rkt"
          "deprecated.rkt")
 
 (provide (for-spaces (rhombus/namespace
@@ -62,10 +65,6 @@
 
 (module+ for-substring
   (provide range-canonical-start+end))
-
-(module+ for-info
-  (provide (for-syntax (rename-out [get-treelist-static-infos indirect-get-treelist-static-infos])
-                       install-get-treelist-static-infos!)))
 
 (define-primitive-class Range range
   #:lift-declaration
@@ -482,10 +481,6 @@
              (let ([Name (lambda ()
                            (unsafe-name))])
                Name)))]))
-
-(struct range () #:authentic)
-(struct sequence-range range () #:authentic)
-(struct list-range sequence-range () #:authentic)
 
 (define-range list-range range-from-to Range.from_to ".." #:both
   #:->sequence range-from-to->sequence)
@@ -1119,11 +1114,8 @@
     [else (range-from-to-inclusive->treelist r)]))
 
 (define/method (ListRange.to_list r)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result #,(indirect-get-treelist-static-infos)))
   (check-list-range who r)
   (list-range->treelist r))
 
-(define-for-syntax get-treelist-static-infos #f)
-
-(define-for-syntax (install-get-treelist-static-infos! get-static-infos)
-  (set! get-treelist-static-infos get-static-infos))
+(void (set-range->list! list-range->list list-range->treelist))

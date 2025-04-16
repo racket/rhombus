@@ -287,6 +287,28 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 
 @doc(
+  method (in :: Port.Input).bytes_lines(
+    ~mode: mode :: Port.Input.ReadLineMode = #'any
+  ) :: Sequence.expect_of(Bytes) && Listable.expect_of(Bytes)
+  method (in :: Port.Input).lines(
+    ~mode: mode :: Port.Input.ReadLineMode = #'any
+  ) :: Sequence.expect_of(String) && Listable.expect_of(String)
+){
+
+ Returns a @tech{listable} @tech{sequence} that reads lines from
+ @rhombus(in) on demand. The @rhombus(mode) argument determines line
+ parsing the same as for @rhombus(Port.Input.read_line).
+
+@examples(
+  def p = Port.Input.open_string("a\nb\nc")
+  for (ln in p.lines()):
+    showln(ln)
+)
+
+}
+
+
+@doc(
   method (in :: Port.Input).peek_byte(
     ~skip_bytes: skip :: NonnegInt = 0,
     ~special_wrap: special_wrap :: maybe(Any -> Any) = #false,

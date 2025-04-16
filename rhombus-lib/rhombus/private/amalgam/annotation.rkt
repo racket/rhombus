@@ -5,12 +5,18 @@
                      enforest/property
                      enforest/proc-name
                      enforest/name-parse
+                     enforest/hier-name-parse
+                     enforest/syntax-local
+                     "treelist.rkt"
                      "srcloc.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "keyword-sort.rkt"
                      "macro-result.rkt"
                      "tag.rkt"
+                     "name-path-op.rkt"
+                     "annot-context.rkt"
+                     "class-parse.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
@@ -20,6 +26,7 @@
          "binding.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
+         "name-root-space.rkt"
          "dotted-sequence-parse.rkt"
          "static-info.rkt"
          "parse.rkt"
@@ -30,7 +37,15 @@
          "rhombus-primitive.rkt"
          "annotation-failure.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         "call-result-key.rkt"
+         "index-result-key.rkt"
+         "sequence-element-key.rkt"
+         "values-key.rkt"
+         "class-this-id.rkt"
+         "treelist-statinfo.rkt"
+         "map-statinfo.rkt"
+         "keyword-statinfo.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet
@@ -82,8 +97,6 @@
              in-annotation-space
              annot-quote
 
-             check-annotation-result
-
              :annotation
              :annotation-predicate-form
              :annotation-binding-form
@@ -120,12 +133,12 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/annot) #'id))]))
 
-  (define (raise-not-a-annotation id)
+  (define (raise-not-a-annotation id ctx)
     (raise-syntax-error #f
                         "not bound as an annotation"
                         id))
 
-  (define (check-annotation-result form proc)
+  (define (check-annotation-result form proc ctx)
     (syntax-parse (if (syntax? form) form #'#f)
       [(~or* _::annotation-predicate-form _::annotation-binding-form) form]
       [_ (raise-bad-macro-result (proc-name proc) "annotation" form)]))
@@ -134,7 +147,7 @@
 
   (define-rhombus-enforest
     #:enforest enforest-annotation
-    #:syntax-class :annotation
+    #:syntax-class (:annotation [ctx empty-annot-context])
     #:infix-more-syntax-class :annotation-infix-op+form+tail
     #:desc "annotation"
     #:operator-desc "annotation operator"
@@ -241,7 +254,7 @@
      #f
      '((default . stronger))
      'macro
-     (lambda (stx)
+     (lambda (stx ctx)
        (when static-only? (check-static stx))
        (define-values (predicate-stx static-infos) (get))
        (define packed (annotation-predicate-form predicate-stx static-infos))
@@ -261,7 +274,7 @@
      #f
      '((default . stronger))
      'macro
-     (lambda (stx)
+     (lambda (stx ctx)
        (when static-only? (check-static stx))
        (define-values (binding-stx body-stx static-infos) (get stx))
        (define packed (annotation-binding-form binding-stx body-stx static-infos))
@@ -276,7 +289,7 @@
                           "not allowed in a dynamic context"
                           stx)))
 
-  (define (parse-annotation-of/one stx sub-n kws)
+  (define (parse-annotation-of/one stx ctx sub-n kws)
     (syntax-parse stx
       [(form-id (~and subs (_::parens g ...)) . tail)
        (define new-stx #'(form-id subs))
@@ -284,24 +297,24 @@
        (unless (eqv? (length unsorted-gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
-                             new-stx))
+                             (respan new-stx)))
        (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx))
        (values new-stx
                gs
                (for/list ([g (in-list gs)])
                  (syntax-parse g
-                   [c::annotation #'c.parsed]))
+                   [(~var c (:annotation ctx)) #'c.parsed]))
                (datum->syntax #f (list #'form-id #'subs))
                #'tail)]))
 
-  (define (parse-annotation-of stx predicate-stx static-infos
+  (define (parse-annotation-of stx ctx predicate-stx static-infos
                                sub-n kws
                                ;; predicate-maker can be #f if only a converter is supported
-                               predicate-maker info-maker
+                               predicate-maker info-maker-id info-maker-data
                                ;; binding-maker-id can be #f or an error string if a converter is not supported
                                binding-maker-id binding-maker-data)
     (define-values (new-stx gs c-parseds loc tail)
-      (parse-annotation-of/one stx sub-n kws))
+      (parse-annotation-of/one stx ctx sub-n kws))
     (values
      (cond
        [(and predicate-maker
@@ -316,7 +329,8 @@
                                                 (lambda (v)
                                                   (and (immed-pred v)
                                                        (pred v))))
-                                            #`(#,@(info-maker c-static-infoss)
+                                            #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                                                         c-static-infoss)
                                                . #,static-infos)))]
                [_ #f]))]
        [else
@@ -337,7 +351,8 @@
                               ([c.binding c.body] ...) #,static-infos result
                               #,kws])
              #'result
-             #`(#,@(info-maker c-static-infoss)
+             #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                          c-static-infoss)
                 . #,static-infos)))])])
      tail))
 
@@ -346,12 +361,12 @@
   ;; chaperone the original value.  Also, the makers receive the raw
   ;; text of subannotations so that they can compose a better error
   ;; message.
-  (define (parse-annotation-of/chaperone stx predicate-stx static-infos
+  (define (parse-annotation-of/chaperone stx ctx predicate-stx static-infos
                                          sub-n kws
-                                         predicate-maker info-maker
+                                         predicate-maker info-maker-id info-maker-data
                                          binding-maker-id binding-maker-data)
     (define-values (new-stx gs c-parseds loc tail)
-      (parse-annotation-of/one stx sub-n kws))
+      (parse-annotation-of/one stx ctx sub-n kws))
     (define annot-strs (map shrubbery-tail->string gs))
     (values
      (syntax-parse c-parseds
@@ -371,7 +386,7 @@
                            #,static-infos
                            result])
           #'result
-          #`(#,@(info-maker c-static-infoss)
+          #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
              . #,static-infos)))]
        [(c::annotation-binding-form ...)
         (unless (identifier? binding-maker-id)
@@ -389,12 +404,12 @@
                            ([c.binding c.body] ...) #,static-infos result
                            #,kws])
           #'result
-          #`(#,@(info-maker c-static-infoss)
+          #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
              . #,static-infos)))])
      tail))
 
   (define (annotation-constructor predicate-stx get-static-infos
-                                  sub-n kws predicate-maker info-maker
+                                  sub-n kws predicate-maker info-maker-id info-maker-data
                                   binding-maker-id binding-maker-data
                                   parse-annotation-of)
     (define root
@@ -402,7 +417,7 @@
        #f
        '((default . stronger))
        'macro
-       (lambda (stx)
+       (lambda (stx ctx)
          (syntax-parse stx
            [(form-id . tail)
             (values (relocate+reraw
@@ -418,19 +433,48 @@
       #f
       '((default . stronger))
       'macro
-      (lambda (stx)
-        (parse-annotation-of stx
+      (lambda (stx ctx)
+        (parse-annotation-of stx ctx
                              predicate-stx (get-static-infos)
                              sub-n kws
-                             predicate-maker info-maker
-                             binding-maker-id binding-maker-data))))))
+                             predicate-maker info-maker-id info-maker-data
+                             binding-maker-id binding-maker-data)))))
+
+  (define (compound-static-infos info-maker-id info-maker-data
+                                 c-static-infoss)
+    (cond
+      [(for/or ([c-static-infos (in-list c-static-infoss)])
+         (static-info-lookup c-static-infos #'#%dependent-result #:no-indirect? #t))
+       #`((#%dependent-result (dependent-compound-static-infos (#,info-maker-id
+                                                                #,info-maker-data
+                                                                #,c-static-infoss))))]
+      [else
+       (define info-maker (syntax-local-value info-maker-id))
+       (info-maker info-maker-data c-static-infoss)])))
+
+(define-syntax (dependent-compound-static-infos data deps)
+  (syntax-parse data
+    [(info-maker-id info-maker-data c-static-infoss-stx)
+     (define c-static-infoss
+       (for/list ([c-static-infos (in-list (syntax->list #'c-static-infoss-stx))])
+         (cond
+           [(static-info-lookup c-static-infos #'#%dependent-result)
+            => (lambda (dep)
+                 (syntax-parse dep
+                   [(id data)
+                    (define proc (syntax-local-value #'id))
+                    (static-infos-and (proc #'data deps)
+                                      (static-infos-remove c-static-infos #'#%dependent-result))]))]
+           [else c-static-infos])))
+     (define info-maker (syntax-local-value #'info-maker-id))
+     (info-maker #'info-maker-data c-static-infoss)]))
 
 (define-syntax (define-annotation-constructor stx)
   (syntax-parse stx
     [(_ (name of-name)
         binds
         predicate-stx static-infos
-        sub-n kws predicate-maker info-maker
+        sub-n kws predicate-maker info-maker-id info-maker-data
         binding-maker-id binding-maker-data
         (~optional (~seq #:parse-of parse-annotation-of-id)
                    #:defaults ([parse-annotation-of-id #'parse-annotation-of]))
@@ -443,11 +487,11 @@
        (build-syntax-definitions/maybe-extension
         (list 'rhombus/annot) #'name #:extra-names extra-names #'name-extends
         #'(let binds
-            (annotation-constructor predicate-stx (lambda () #`static-infos)
-                                    sub-n 'kws
-                                    predicate-maker info-maker
-                                    binding-maker-id binding-maker-data
-                                    parse-annotation-of-id))))
+              (annotation-constructor predicate-stx (lambda () #`static-infos)
+                                      sub-n 'kws
+                                      predicate-maker info-maker-id info-maker-data
+                                      binding-maker-id binding-maker-data
+                                      parse-annotation-of-id))))
      (if (and (pair? defs) (null? (cdr defs)))
          (car defs)
          #`(begin #,@defs))]))
@@ -978,7 +1022,14 @@
 (define-name-root Any
   #:fields
   ([of Any.of]
-   [to_boolean Any.to_boolean]))
+   [to_boolean Any.to_boolean]
+   [like Any.like]
+   [like_element Any.like_element]
+   [like_key Any.like_key]
+   [like_value Any.like_value]
+   [like_first Any.like_first]
+   [like_rest Any.like_rest]
+   [like_field Any.like_field]))
 
 (define-name-root Int
   #:fields
@@ -1021,7 +1072,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens arg::binding)) . tail)
         #:with arg-parsed::binding-form #'arg.parsed
@@ -1047,7 +1098,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens pred-g)) . tail)
         (values
@@ -1075,7 +1126,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stxes)
+   (lambda (stxes ctx)
      (syntax-parse stxes
        [(_ kw:keyword . tail)
         (raise-syntax-error #f
@@ -1091,7 +1142,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stxes)
+   (lambda (stxes ctx)
      (syntax-parse stxes
        [(_ (_::parens n-g) . tail)
         (values (annotation-predicate-form
@@ -1127,7 +1178,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stxes)
+   (lambda (stxes ctx)
      (syntax-parse stxes
        #:datum-literals (group)
        [(form-id (~and args (_::parens lo::incl-group hi::incl-group))
@@ -1174,7 +1225,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stxes)
+   (lambda (stxes ctx)
      (syntax-parse stxes
        #:datum-literals (group)
        [(_ (_::parens g ...)
@@ -1194,6 +1245,192 @@
                                                  #'val)
                                  val
                                  ()))
+
+(define-for-syntax (select-like accessor-id id form ctx
+                                #:make-data [make-data (lambda (x) x)])
+  (define v (or (hash-ref (annotation-context-argument-names ctx)
+                          (syntax-local-introduce id)
+                          #f)
+                (and (free-identifier=? id #'this)
+                     (annotation-context-this-pos ctx))))
+  (unless v
+    (raise-syntax-error #f
+                        "cannot find argument by name"
+                        (respan form)
+                        id))
+  (define data (if (treelist? v) (treelist->list v) v))
+  (annotation-predicate-form
+   #'(lambda (x) #t)
+   #`((#%dependent-result (#,accessor-id #,(make-data data))))))
+
+(define-for-syntax (make-like accessor-id)
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stxes ctx)
+     (syntax-parse stxes
+       #:datum-literals (group)
+       [(form-id (~and args (_::parens (group id:identifier)))
+                 . tail)
+        (values (select-like accessor-id #'id #'(form-id args) ctx)
+                #'tail)]))))
+
+(define-for-syntax (get-argument-static-infos data deps)
+  (define v (syntax->datum data))
+  (or (cond
+        [(integer? v)
+         (define args (annotation-dependencies-args deps))
+         (and (v . < . (length args))
+              (list-ref args v))]
+        [(keyword? v)
+         (hash-ref (annotation-dependencies-kw-args deps) v #f)]
+        [(and (pair? v)
+              (or (eq? (car v) 'repet)
+                  (eq? (car v) 'splice))
+              (not (annotation-dependencies-rest? deps)))
+         (define i (cadr v))
+         (define args (annotation-dependencies-args deps))
+         (cond
+           [(i . < . (length args))
+            (define si (for/fold ([si (car (list-tail args i))])
+                                 ([new-si (list-tail args (add1 i))])
+                         (static-infos-or si new-si)))
+            (if (eq? (car v) 'splice)
+                #`((#%index-result #,si)
+                   #,@(indirect-get-treelist-static-infos))
+                si)]
+           [else
+            (if (eq? (car v) 'splice)
+                (indirect-get-treelist-static-infos)
+                #f)])]
+        [(and (pair? v)
+              (eq? (car v) 'keyword_splice)
+              (not (annotation-dependencies-kw-rest? deps)))
+         (define kw-args
+           (for/fold ([kw-args (annotation-dependencies-kw-args deps)]) ([kw (in-list (cdr v))])
+             (hash-remove kw-args kw)))
+         (define sis (hash-values kw-args))
+         (define si
+           (cond
+             [(null? sis) #'()]
+             [else (for/fold ([si (car sis)])
+                             ([new-si (cdr sis)])
+                     (static-infos-or si new-si))]))
+         #`((#%sequence-element ((#%values (#,(indirect-get-keyword-static-infos)
+                                            #,si))))
+            #,@(indirect-get-map-static-infos))]
+        [else #f])
+      #'()))
+
+(define-syntax (like-accessor data deps)
+  (define si (get-argument-static-infos data deps))
+  si)
+
+(define-annotation-syntax Any.like
+  (make-like #'like-accessor))
+
+(define-syntax (like-element-accessor data deps)
+  (define si (get-argument-static-infos data deps))
+  (or (static-info-lookup si #'#%sequence-element)
+      (static-info-lookup si #'#%index-result)
+      #'()))
+
+(define-annotation-syntax Any.like_element
+  (make-like #'like-element-accessor))
+
+(define-syntax (like-first-accessor data deps)
+  (static-info-lookup (get-argument-static-infos data deps) #'car))
+
+(define-syntax (like-rest-accessor data deps)
+  (static-info-lookup (get-argument-static-infos data deps) #'cdr))
+
+(define-annotation-syntax Any.like_first
+  (make-like #'like-first-accessor))
+
+(define-annotation-syntax Any.like_rest
+  (make-like #'like-rest-accessor))
+
+(define-for-syntax (like-sequence-values-accessor data deps key?)
+  (define si (get-argument-static-infos data deps))
+  (define se (static-info-lookup si #'#%sequence-element))
+  (or (and se
+           (syntax-parse (static-info-lookup se #'#%values)
+             [(k v) (if key? #'k #'v)]
+             [_ #f]))
+      #'()))
+
+(define-syntax (like-key-accessor data deps)
+  (like-sequence-values-accessor data deps #t))
+
+(define-annotation-syntax Any.like_key
+  (make-like #'like-key-accessor))
+
+(define-syntax (like-value-accessor data deps)
+  (like-sequence-values-accessor data deps #f))
+
+(define-annotation-syntax Any.like_value
+  (make-like #'like-value-accessor))
+
+(define-syntax (like-field data deps)
+  (syntax-parse data
+    [(accessor-id data)
+     (define si (get-argument-static-infos #'data deps))
+     (or (static-info-lookup si #'accessor-id)
+         #'())]
+    [_ #'()]))
+
+(begin-for-syntax
+  (define-syntax-class :dot
+    #:description "dot operator"
+    #:opaque
+    #:datum-literals (op |.|)
+    (pattern (op |.|))))
+
+(define-annotation-syntax Any.like_field
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stxes ctx)
+     (syntax-parse stxes
+       #:datum-literals (group)
+       [(form-id (~and args (_::parens
+                             (group class-name-seq ...+
+                                    _::dot
+                                    field-id:identifier
+                                    (~and parens (_::parens . _)))))
+                 . tail)
+        (syntax-parse #'(class-name-seq ...)
+          [(~var class-name (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref))
+           (syntax-parse #'parens
+             #:context (respan #'(form-id args))
+             [(_parens (group id:identifier))
+              (syntax-parse #'class-name.tail
+                [(t . _) (raise-syntax-error #f
+                                             "unexpected term after accessor name"
+                                             (respan #'(form-id args))
+                                             #'t)]
+                [_ (void)])
+              (define cls (or (syntax-local-value* (in-class-desc-space #'class-name.name) class-desc-ref)
+                              (raise-syntax-error #f
+                                                  "cannot find class"
+                                                  (respan #'(form-id args))
+                                                  #'class-name.name)))
+              (define accessor-id (or (for/or ([f (in-list (class-desc-fields cls))])
+                                        (and (eq? (field-desc-name f) (syntax-e #'field-id))
+                                             (field-desc-accessor-id f)))
+                                      (raise-syntax-error #f
+                                                          "no such field in class"
+                                                          (respan #'(form-id args))
+                                                          #'field-id)))
+              (values (select-like #'like-field #'id #'(form-id args) ctx
+                                   #:make-data (lambda (data) #`(#,accessor-id #,data)))
+                      #'tail)])]
+          [_ (raise-syntax-error #f
+                                 "expected a class name"
+                                 (respan #'(form-id args))
+                                 (respan #'(class-name-seq ...)))])]))))
 
 (define-syntax (to_boolean-infoer stx)
   (syntax-parse stx

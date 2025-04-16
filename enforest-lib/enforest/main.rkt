@@ -129,6 +129,10 @@
      #:with (sc-arg ...) (syntax-parse #'form-class
                            [(_ sc-arg ...) #'(sc-arg ...)]
                            [_ #'()])
+     #:with (sc-arg-name ...) (for/list ([sc-arg (syntax->list #'(sc-arg ...))])
+                                (syntax-parse sc-arg
+                                  [(id:identifier default) #'id]
+                                  [id:identifier #'id]))
      #'(begin
          tl-decl ...
          (define-syntax-class form-class
@@ -138,7 +142,7 @@
                     ;; The calls to `transform-out` and `transform-in` here are in case
                     ;; of an enclosing macro transformer, analogous to the use of
                     ;; `syntax-local-introduce` within `local-expand`
-                    #:with parsed (transform-in (enforest (transform-out #'tail) sc-arg ...))))
+                    #:with parsed (transform-in (enforest (transform-out #'tail) sc-arg-name ...))))
 
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`
@@ -149,7 +153,7 @@
                     #:with (~var op-name :name/group) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
-                          (define env (list sc-arg ...))
+                          (define env (list sc-arg-name ...))
                           (define-values (form new-tail) (enforest-step env (transform-out #'in-tail) op op-stx stop-on-unbound))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))
@@ -159,7 +163,7 @@
                     #:with (~var op-name :name/group) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
-                          (define env (list sc-arg ...))
+                          (define env (list sc-arg-name ...))
                           (define-values (form new-tail) (enforest-step env (transform-in #'in-tail) op op-stx stop-on-unbound))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))

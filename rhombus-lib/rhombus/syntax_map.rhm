@@ -2,6 +2,7 @@
 import:
   meta:
     rhombus/meta.key_comp
+    lib("rhombus/private/syntax-map.rkt").define_equal_name_and_scopes
 
 export:
   equal_name
@@ -31,10 +32,4 @@ meta:
                     recur(syntax_meta.binding_symbol(a))
                   equal_binding
 
-  key_comp.def 'equal_name_and_scopes':
-    ~equals: fun (a, b, recur):
-               syntax_meta.equal_name_and_scopes(a, b)
-    ~hash_code: block:
-                  fun equal_name_and_scopes(a :: Name, recur):
-                    recur(a.name_to_symbol())
-                  equal_name_and_scopes
+  define_equal_name_and_scopes equal_name_and_scopes

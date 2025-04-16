@@ -155,6 +155,89 @@ block:
     (Posn(1, 2) :~ _Posn).zero().x
     ~is 0
 
+// multi-case functions
+block:
+  class Posn(x, y):
+    method m :: String
+    | m():
+        to_string(x+y)
+    | m(z):
+        if z is_a Int | to_string(x+y+z) | #'no
+    method
+    | n() :: String:
+        to_string(x+y)
+    | n(z) :: String:
+        if z is_a Int | to_string(x+y+z) | #'no
+    method
+    | p() :: String:
+        to_string(x+y)
+    | p(z) :: Int:
+        if z is_a Int | x+y+z | #'no
+  check Posn(1, 2).m() ~is "3"
+  check Posn(1, 2).m(3) ~is "6"
+  check Posn(1, 2).m("bad") ~throws values(error.annot_msg("result"),
+                                           error.annot("String").msg)
+  check Posn(1, 2).n() ~is "3"
+  check Posn(1, 2).n(3) ~is "6"
+  check Posn(1, 2).n("bad") ~throws values(error.annot_msg("result"),
+                                           error.annot("String").msg)
+  check Posn(1, 2).p() ~is "3"
+  check Posn(1, 2).p(3) ~is 6
+  check Posn(1, 2).p("bad") ~throws values(error.annot_msg("result"),
+                                           error.annot("Int").msg)
+  check Posn(1, 2).m().length() ~is 1
+  check Posn(1, 2).n().length() ~is 1
+
+  check:
+    ~eval
+    use_static
+    class Posn(x, y):
+      method
+      | p() :: String:
+          to_string(x+y)
+      | p(z) :: Int:
+          if z is_a Int | x+y+z | #'no
+    Posn(1, 2).p().length()
+    ~throws values("length",
+                   "no such field or method",
+                   "based on static information")
+
+  check:
+    ~eval
+    use_static
+    class Posn(x, y):
+      nonfinal
+      method
+      | p() :: String:
+          to_string(x+y)
+      | p(z) :: String:
+          if z is_a Int | x+y+z | #'no
+    Posn(1, 2).p().length()
+    ~throws values("length",
+                   "no such field or method",
+                   "based on static information")
+
+block:
+  class Posn(x, y):
+    nonfinal
+    method m :: String
+    | m():
+        to_string(x+y)
+    | m(z):
+        if z is_a Int | to_string(x+y+z) | #'no
+    method
+    | n() :: String:
+        to_string(x+y)
+    | n(z) :: String:
+        if z is_a Int | to_string(x+y+z) | #'no
+  class CPosn(c):
+    extends Posn
+    override m(): 0
+    override n(): 0
+  check CPosn(1, 2, "c").m() ~throws values(error.annot_msg("result"),
+                                            error.annot("String").msg)
+  check CPosn(1, 2, "c").n() ~is 0
+
 // interface
 block:
   interface Pointy:

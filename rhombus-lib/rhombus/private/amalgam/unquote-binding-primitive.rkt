@@ -82,9 +82,11 @@
     (pattern (~seq (~and args (_::parens . _))))
     (pattern (~seq)
              #:with args #'#f))
-  (define (parse-syntax-class-args stx-class rator-in arity class-args auto-args)
+  (define (parse-syntax-class-args stx-class rator-in arity-mask class-args auto-args)
     (cond
-      [(not arity)
+      [(or (not arity-mask)
+           (and (bitwise-bit-set? arity-mask 0)
+                (not (syntax-e class-args))))
        (when (syntax-e class-args)
          (raise-syntax-error #f
                              "syntax class does not expect arguments"
@@ -102,7 +104,7 @@
                               #:static? #t
                               #:rator-stx stx-class
                               #:rator-kind '|syntax class|
-                              #:rator-arity arity))
+                              #:rator-arity arity-mask))
        (unwrap-static-infos call)])))
 
 (begin-for-syntax
@@ -255,7 +257,7 @@
       (define sc (rhombus-syntax-class-class rsc))
       (define sc-call (parse-syntax-class-args stx-class
                                                sc
-                                               (rhombus-syntax-class-arity rsc)
+                                               (rhombus-syntax-class-arity-mask rsc)
                                                class-args
                                                (rhombus-syntax-class-auto-args rsc)))
       (define temp-id (car (generate-temporaries (list #'id))))

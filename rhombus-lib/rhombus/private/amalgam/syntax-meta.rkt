@@ -20,7 +20,8 @@
                      "context-stx.rkt"
                      "syntax-wrap.rkt"
                      "definition-context.rkt"
-                     "class-primitive.rkt")
+                     "class-primitive.rkt"
+                     "name-equal.rkt")
          "space.rkt"
          "is-static.rkt"
          "static-info.rkt"
@@ -103,14 +104,7 @@
   (define/arity (syntax_meta.equal_name_and_scopes id1
                                                    id2
                                                    [phase (syntax-local-phase-level)])
-    (define l1 (extract-name-components who id1))
-    (define l2 (extract-name-components who id2))
-    (unless (phase? phase)
-      (raise-annotation-failure who phase "SyntaxPhase"))
-    (and (= (length l1) (length l2))
-         (for/and ([n1 (in-list l1)]
-                   [n2 (in-list l2)])
-           (bound-identifier=? n1 n2 phase))))
+    (equal-name-and-scopes? who id1 id2 phase))
 
   (define/arity syntax_meta.binding_symbol
     (case-lambda
@@ -126,28 +120,6 @@
     (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
     (extract-name who stx (space-name-symbol sp)
                   #:build-dotted? build-dotted?))
-
-  (define (extract-name-components who stx)
-    (define s (unpack-term stx #f #f))
-    (or (cond
-          [(identifier? s) (list s)]
-          [s
-           (syntax-parse s
-             #:datum-literals (op)
-             [(op id) (list #'id)]
-             [_ #f])]
-          [else
-           (define g (unpack-group stx #f #f))
-           (and g
-                (syntax-parse g
-                  #:datum-literals (group)
-                  [(group n::dotted-operator-or-identifier-sequence)
-                   (let loop ([l (syntax->list #'n)])
-                     (cond
-                       [(null? (cdr l)) l]
-                       [else (cons (car l) (loop (cddr l)))]))]
-                  [_ #f]))])
-        (raise-annotation-failure who stx "Name")))
 
   (define/arity (syntax_meta.expanding_phase)
     (syntax-local-phase-level))

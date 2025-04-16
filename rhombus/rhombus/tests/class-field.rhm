@@ -46,3 +46,62 @@ check:
     method get_dist(): dist
   Posn(1, 2).get_dist()
   ~is 3
+
+// dependent result annotations
+block:
+  class Posn(x, y)
+  class MPosn(mutable x, y)
+  def m = Posn("a", #"bb")
+  def mm :: MPosn.now_of(String, Bytes) = MPosn("a", #"bb")
+  check Posn.x(m).length() ~is 1
+  check Posn.y(m).length() ~is 2
+  check MPosn.y(mm).length() ~is 2
+  fun ex(p) :: Any.like_field(Posn.x(p)):
+    Posn.x(p)
+  fun wy(p) :: Any.like_field(Posn.y(p)):
+    Posn.y(p)
+  check ex(m).length() ~is 1
+  check wy(m).length() ~is 2
+
+block:
+  class Posn(~x: x, y)
+  let p = Posn(~x: "a", #"bb")
+  check p.x.length() ~is 1
+  check p.y.length() ~is 2
+
+block:
+  class Posn(x, ~y: y)
+  let p = Posn("a", ~y: #"bb")
+  check p.x.length() ~is 1
+  check p.y.length() ~is 2
+
+block:
+  class Posn(~x: x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+  let p = Posn3D(~x: "a", #"bb", "ccc")
+  check p.x.length() ~is 1
+  check p.y.length() ~is 2
+  check p.z.length() ~is 3
+
+block:
+  class Posn(x, y):
+    nonfinal
+  class Posn4D(~z: z, w):
+    extends Posn
+  let p = Posn4D("a", #"bb", #"dddd", ~z: "ccc")
+  check p.x.length() ~is 1
+  check p.y.length() ~is 2
+  check p.z.length() ~is 3
+  check p.w.length() ~is 4
+
+check:
+  ~eval
+  use_static
+  class MPosn(mutable x, y)
+  def mm :: MPosn.now_of(String, Bytes) = MPosn("a", #"bb")
+  MPosn.x(mm).length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")

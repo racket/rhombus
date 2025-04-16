@@ -64,6 +64,8 @@
      [unpack_group statinfo_meta.unpack_group]
      [pack_call_result statinfo_meta.pack_call_result]
      [unpack_call_result statinfo_meta.unpack_call_result]
+     [pack_dependent_result statinfo_meta.pack_dependent_result]
+     [unpack_dependent_result statinfo_meta.unpack_dependent_result]
      [check_function_arity statinfo_meta.check_function_arity]
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
@@ -75,6 +77,7 @@
 
      function_arity_key
      call_result_key
+     dependent_result_key
      index_result_key
      index_get_key
      index_set_key
@@ -245,10 +248,26 @@
                       (unpack-static-infos who #'results))]
            [_
             (raise-arguments-error* who rhombus-realm
-                                    "ill-formed unpacked call result"
+                                    "ill-formed packed call result"
                                     "syntax object" stx)]))]
       [_
        (treelist (treelist -1 (unpack-static-infos who stx)))]))
+
+  (define/arity (statinfo_meta.pack_dependent_result id-stx data)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (define id (unpack-term id-stx #f #f))
+    (unless (identifier? id) (raise-annotation-failure who id-stx "Identifier"))
+    (unless (syntax*? id) (raise-annotation-failure who data "Syntax"))
+    #`(#,id #,data))
+
+  (define/arity (statinfo_meta.unpack_dependent_result stx)
+    #:static-infos ((#%call-result ((#%values #,(get-treelist-static-infos)
+                                              #,(get-treelist-static-infos)))))
+    (syntax-parse (unpack-term stx who #f)
+      [(id:identifier data) (values #'id #'data)]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "ill-formed packed dependent result"
+                                 "syntax object" stx)]))
 
   (define/arity (statinfo_meta.check_function_arity stx n kws)
     (check-syntax who stx)
@@ -321,6 +340,7 @@
 
 (define-key function_arity_key #%function-arity)
 (define-key call_result_key #%call-result)
+(define-key dependent_result_key #%dependent-result)
 (define-key index_result_key #%index-result)
 (define-key index_get_key #%index-get)
 (define-key index_set_key #%index-set)

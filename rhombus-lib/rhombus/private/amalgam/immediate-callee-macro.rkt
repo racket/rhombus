@@ -62,7 +62,7 @@
   (define-syntax-class-syntax Parsed
     (make-syntax-class #':immediate-callee/split
                        #:kind 'group
-                       #:arity 8 ; actually an arity mask
+                       #:arity-mask 8
                        #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr) stx)
                                    (tail #f tail tail unpack-tail-list* stx))
                        #:root-swap '(parsed . group))))

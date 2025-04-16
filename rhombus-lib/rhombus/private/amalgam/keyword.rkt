@@ -7,7 +7,8 @@
          "call-result-key.rkt"
          "compare-key.rkt"
          (submod "annotation.rkt" for-class)
-         "static-info.rkt")
+         "static-info.rkt"
+         "keyword-statinfo.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -63,3 +64,6 @@
 (define (keyword>? a b)
   (check-keywords '> a b)
   (keyword<? b a))
+
+(begin-for-syntax
+  (install-get-keyword-static-infos! get-keyword-static-infos))

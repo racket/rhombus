@@ -114,14 +114,18 @@
                (add-implements options 'protected-implements #'(id ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(#:constructor id rhs)
+              [(#:constructor id forward-rets rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
                (define rhs-options (hash-set (hash-set options 'constructor-rhs #'rhs)
                                              'constructor-stx-params (car stx-paramss)))
-               (if (syntax-e #'id)
-                   (hash-set rhs-options 'constructor-name #'id)
-                   rhs-options)]
+               (define rhs+name-options
+                 (if (syntax-e #'id)
+                     (hash-set rhs-options 'constructor-name #'id)
+                     rhs-options))
+               (if (syntax-e #'forward-rets)
+                   (hash-set rhs+name-options 'constructor-forward-rets #'forward-rets)
+                   rhs+name-options)]
               [(#:expression rhs)
                (when (hash-has-key? options 'expression-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
@@ -218,7 +222,7 @@
                       #:property #:override-property #:protected-property
                       #:final-property #:final-override-property #:final-protected-property
                       #:private-property #:private-override-property))
-      id rhs maybe-ret)
+      id rhs has-cases? maybe-ret)
      (define-values (body replace disposition exposure kind)
        (case (syntax-e #'tag)
          [(#:method) (values 'method 'method 'abstract 'public 'method)]
@@ -243,8 +247,11 @@
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
                                                     stx-params
+                                                    (syntax-e #'has-cases?)
                                                     #'maybe-ret
-                                                    (and (or (pair? (syntax-e #'maybe-ret))
+                                                    (and (or (syntax-parse #'maybe-ret
+                                                               [(args (t . _)) #t]
+                                                               [_ #f])
                                                              arity
                                                              ;; may need to propagate super:
                                                              (eq? replace 'override))
@@ -260,7 +267,7 @@
     [((~and tag (~or* #:abstract #:abstract-protected
                       #:abstract-property #:abstract-protected-property
                       #:abstract-override #:abstract-override-property))
-      id rhs maybe-ret)
+      id rhs has-cases? maybe-ret)
      (define-values (replace exposure kind)
        (case (syntax-e #'tag)
          [(#:abstract) (values 'method 'public 'method)]
@@ -275,6 +282,7 @@
                                                     '#:abstract
                                                     #'rhs
                                                     stx-params
+                                                    #f
                                                     #'maybe-ret
                                                     (and (or (pair? (syntax-e #'maybe-ret))
                                                              arity

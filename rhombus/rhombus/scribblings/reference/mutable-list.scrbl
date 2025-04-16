@@ -61,6 +61,12 @@ and it is not managed by a lock.
  to accesses of the mutable list. Note that a converter @rhombus(annot) is
  applied for each access or update.
 
+ Note that @rhombus(Any.like_element, ~annot) will not find any static
+ information for elements from an expression with an
+ @rhombus(MutableList, ~annot) or @rhombus(MutableList.now_of, ~annot)
+ annotation, but an @rhombus(MutableList.later_of, ~annot) annotation can
+ imply static information for elements.
+
  Static information associated by @rhombus(MutableList, ~annot) or
  @rhombus(MutableList.now_of, ~annot) makes an expression acceptable as a
  sequence to @rhombus(for) in static mode.
@@ -178,7 +184,8 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).get(n :: NonnegInt) :: Any
+  method (mlst :: MutableList).get(n :: NonnegInt)
+    :: Any.like_element(mlst)
 ){
 
  Equivalent to @rhombus(mlst[n]) (with the default implicit
@@ -431,7 +438,7 @@ and it is not managed by a lock.
 
 @doc(
   method (lst :: MutableList).find(pred :: Function.of_arity(1))
-    :: Any
+    :: Any.like_element(mlst)
   method (lst :: MutableList).find_index(pred :: Function.of_arity(1))
     :: maybe(NonnegInt)
 ){
@@ -551,8 +558,10 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).to_list() :: List
-  method (mlst :: MutableList).snapshot() :: List
+  method (mlst :: MutableList).to_list()
+    :: List.of(Any.like_element(mlst))
+  method (mlst :: MutableList).snapshot()
+    :: List.of(Any.like_element(mlst))
 ){
 
  Implements @rhombus(Listable, ~class) by returning a list containing
@@ -562,7 +571,8 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).to_sequence() :: Sequence
+  method (mlst :: MutableList).to_sequence()
+    :: Sequence.expect_of(Any.like_element(mlst))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

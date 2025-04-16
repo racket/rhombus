@@ -305,7 +305,21 @@ check:
   #"apple" is_a Sequence ~is #true
   #'apple is_a Sequence ~is #false
 
-  // FIXME non-negative integers are Racket sequences
+  // non-negative integers are Racket sequences
   -5 is_a Sequence ~is #false
-  0 is_a Sequence ~is #true
-  5 is_a Sequence ~is #true
+  0 is_a Sequence ~is #false
+  5 is_a Sequence ~is #false
+
+check:
+  use_static
+  let seq :: Sequence.expect_of(String) = dynamic(["a", "b"].to_sequence())
+  for math.sum (s in seq):
+    s.length()
+  ~is 2
+
+check:
+  use_static
+  def seq :: Sequence.expect_of(Int, Int) = dynamic({ 1: 2, 3: 4 })
+  for math.sum((k, v) in seq):
+    k+v
+  ~is 10

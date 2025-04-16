@@ -6,7 +6,8 @@
                      shrubbery/print
                      "srcloc.rkt"
                      "tag.rkt"
-                     "list-last.rkt")
+                     "list-last.rkt"
+                     "annot-context.rkt")
          "treelist.rkt"
          "to-list.rkt"
          "provide.rkt"
@@ -51,7 +52,8 @@
          "key-comp-property.rkt"
          "number.rkt"
          "same-hash.rkt"
-         (submod "map-maybe.rkt" for-map))
+         (submod "map-maybe.rkt" for-map)
+         "map-statinfo.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -356,11 +358,12 @@
 (define-for-syntax (parse-map stx arg-stxes repetition? map-build-id map-pair-build-id rep-for-form)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
-     (define-values (shape argss) (parse-setmap-content #'content
-                                                        #:map-for-form rep-for-form
-                                                        #:shape 'map
-                                                        #:who (syntax-e #'form-id)
-                                                        #:repetition? repetition?))
+     (define-values (shape argss k-static-infos v-static-infos)
+       (parse-setmap-content #'content
+                             #:map-for-form rep-for-form
+                             #:shape 'map
+                             #:who (syntax-e #'form-id)
+                             #:repetition? repetition?))
      (values (relocate-wrapped
               (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
@@ -368,7 +371,12 @@
                             #'hash-extend*
                             #'hash-append
                             #'hash-assert
-                            (get-map-static-infos)
+                            (if (and (static-infos-empty? k-static-infos)
+                                     (static-infos-empty? v-static-infos))
+                                (get-map-static-infos)
+                                #`((#%index-result #,v-static-infos)
+                                   (#%sequence-element ((#%values (#,k-static-infos #,v-static-infos))))
+                                   #,@(get-map-static-infos)))
                             #:repetition? repetition?
                             #:rep-for-form rep-for-form))
              #'tail)]
@@ -449,11 +457,10 @@
             (and (key-pred k)
                  (val-pred v)))))))
 
-(define-for-syntax map-annotation-make-static-info
-  (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))
-       (#%sequence-element ((#%values (#,(car static-infoss)
-                                       #,(cadr static-infoss))))))))
+(define-syntax (map-of-static-infos data static-infoss)
+  #`((#%index-result #,(cadr static-infoss))
+     (#%sequence-element ((#%values (#,(car static-infoss)
+                                     #,(cadr static-infoss)))))))
 
 (define-annotation-constructor (Map of)
   ()
@@ -461,7 +468,7 @@
   2
   #f
   (make-map-annotation-make-predicate #'in-immutable-hash)
-  map-annotation-make-static-info
+  #'map-of-static-infos #f
   #'map-build-convert #'(#hashalw()))
 
 (define-for-syntax (make-map-later-chaperoner who)
@@ -490,14 +497,18 @@
                           ;; equal-key-proc
                           #f)))))
 
+(define-syntax (map-later-of-static-infos data static-infoss)
+  #`((#%index-result #,(cadr static-infoss))
+     (#%sequence-element ((#%values (#,(car static-infoss)
+                                     #,(cadr static-infoss)))))))
+
 (define-annotation-constructor (Map/again Map.later_of)
   ()
   #'immutable-hash? #,(get-map-static-infos)
   2
   #f
   (make-map-later-chaperoner 'Map)
-  (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))))
+  #'map-later-of-static-infos #f
   "converter annotation not supported for elements;\n checking needs a predicate annotation for the map content"
   #'()
   #:parse-of parse-annotation-of/chaperone)
@@ -507,17 +518,17 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
                          #:datum-literals (op |.| of)
                          [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
-                          (parse-annotation-of #'(of-id . tail)
+                          (parse-annotation-of #'(of-id . tail) ctx
                                                (key-comp-map?-id mapper) (get-map-static-infos)
                                                2 #f
                                                (make-map-annotation-make-predicate #'in-immutable-hash)
-                                               map-annotation-make-static-info
+                                               #'map-of-static-infos #f
                                                #'map-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(form-id . tail)
                           (values (relocate+reraw
@@ -594,15 +605,17 @@
 (define-annotation-syntax WeakMutableMap (identifier-annotation ephemeron-mutable-hash? #,(get-weak-mutable-map-static-infos)))
 (define-annotation-syntax ReadableMap (identifier-annotation hash? #,(get-readable-map-static-infos)))
 
+(define-syntax (no-of-static-infos data static-infoss)
+  #`())
+
 (define-annotation-constructor (MutableMap MutableMap.now_of)
   ()
   #'mutable-hash? #,(get-mutable-map-static-infos)
   2
   #f
   (make-map-annotation-make-predicate #'in-hash)
-  (lambda (static-infoss)
-    ;; no static info, since mutable and content is checked only initially
-    #'())
+  ;; no static info, since mutable and content is checked only initially
+  #'no-of-static-infos #f
   "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable map content"
   #'())
 
@@ -612,8 +625,7 @@
   2
   #f
   (make-map-later-chaperoner 'MutableMap)
-  (lambda (static-infoss)
-    #`((#%index-result #,(cadr static-infoss))))
+  #'map-later-of-static-infos #f
   #'mutable-map-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
@@ -671,7 +683,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
@@ -704,7 +716,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
@@ -735,7 +747,7 @@
 (define-for-syntax (parse-mutable-map stx repetition? map-build-id mutable-map-build-id map-copy-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
-     (define-values (shape argss)
+     (define-values (shape argss k-static-infos v-static-infos)
        (parse-setmap-content #'content
                              #:shape 'map
                              #:who (syntax-e #'form-id)
@@ -1047,7 +1059,8 @@
 
 ;; for `++`
 (define-static-info-syntax Map.append/optimize
-  (#%call-result #,(get-map-static-infos)))
+  (#%call-result ((#%dependent-result (merge-keys-and-values #f))
+                  #,@(get-map-static-infos))))
 
 (define hash-extend*
   (case-lambda
@@ -1077,8 +1090,80 @@
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (hash-count ht))
 
+(define-syntax (select-key-or-value data deps)
+  (define args (annotation-dependencies-args deps))
+  (define map-i 0)
+  (define si
+    (or (static-info-lookup (or (and (< map-i (length args))
+                                     (list-ref args map-i))
+                                #'())
+                            #'#%sequence-element)
+        #'()))
+  (syntax-parse (static-info-lookup si #'#%values)
+    [(k v)
+     (syntax-parse data
+       [(which mode)
+        (case (syntax-e #'which)
+          [(both)
+           (define-values (new-k new-v)
+             (case (syntax-e #'mode)
+               [(merge)
+                (if (< 2 (length args))
+                    (values (static-infos-or #'k (list-ref args 1))
+                            (static-infos-or #'v (list-ref args 2)))
+                    (values null null))]
+               [else
+                (values #'k #'v)]))
+           (if (and (static-infos-empty? new-k)
+                    (static-infos-empty? new-v))
+               #`()
+               #`((#%index-result #,new-v)
+                  (#%sequence-element ((#%values (#,new-k #,new-v))))))]
+          [else
+           (define si (if (eq? (syntax-e #'which) 'key)
+                          #'k
+                          #'v))
+           (case (syntax-e #'mode)
+             [(index)
+              #`((#%index-result #,si))]
+             [else
+              si])])])]
+    [_ #`()]))
+
+(define-syntax (merge-keys-and-values data deps)
+  (define args (annotation-dependencies-args deps))
+  (cond
+    [(or (null? args)
+         (annotation-dependencies-rest? deps))
+     #'()]
+    [else
+     (define si-pair
+       (for/fold ([si-pair (static-info-lookup (or (static-info-lookup (car args) #'#%sequence-element)
+                                                   #'())
+                                               #'#%values)])
+                 ([arg (in-list (cdr args))])
+         (syntax-parse si-pair
+           [(k v)
+            (syntax-parse (static-info-lookup (or (static-info-lookup arg #'#%sequence-element)
+                                                  #'())
+                                              #'#%values)
+              [(k2 v2)
+               #`(#,(static-infos-or #'k #'k2)
+                  #,(static-infos-or #'v #'v2))]
+              [_ #f])]
+           [_ #f])))
+     (syntax-parse si-pair
+       [(k v)
+        (if (or (not (static-infos-empty? #'k))
+                (not (static-infos-empty? #'v)))
+            #`((#%index-result v)
+               (#%sequence-element ((#%values (k v)))))
+            #'())]
+       [_ #'()])]))
+
 (define/method (Map.keys ht [try-sort? #f])
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (key index)))
+                                  #,@(get-treelist-static-infos))))
   (check-readable-map who ht)
   (list->treelist (hash-keys ht (and try-sort? #t))))
 
@@ -1092,23 +1177,28 @@
 
 (define/method (Map.to_sequence ht)
   #:primitive (in-hash)
-  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (both #f)))
+                                  (#%sequence-constructor #t))))
   (in-hash ht))
 
 (define/method (Map.values ht)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (value index)))
+                                  #,@(get-treelist-static-infos))))
   (check-readable-map who ht)
   (list->treelist (hash-values ht)))
 
 (define/method Map.get
   #:primitive (hash-ref)
+  #:static-infos ((#%call-result (#:at_arities
+                                  ([4 ((#%dependent-result (select-key-or-value (value result))))]))))
   (case-lambda
     [(ht key) (hash-ref ht key)]
     [(ht key default) (hash-ref ht key default)]))
 
 (define/method (Map.set ht key val)
   #:primitive (hash-set)
-  #:static-infos ((#%call-result #,(get-map-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (both merge)))
+                                  #,@(get-map-static-infos))))
   (hash-set ht key val))
 
 (define (check-map who ht)
@@ -1125,7 +1215,8 @@
       (hash-set a k v))))
 
 (define/method Map.append
-  #:static-infos ((#%call-result #,(get-map-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (merge-keys-and-values #f))
+                                  #,@(get-map-static-infos))))
   (case-lambda
     [(ht)
      (check-map who ht)
@@ -1178,13 +1269,15 @@
   mht)
 
 (define/method (Map.snapshot ht)
-  #:static-infos ((#%call-result #,(get-map-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (both #f)))
+                                  #,@(get-map-static-infos))))
   (check-readable-map who ht)
   (hash-snapshot ht))
 
 (define/method (Map.remove ht key)
   #:primitive (hash-remove)
-  #:static-infos ((#%call-result #,(get-map-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-key-or-value (both #f)))
+                                  #,@(get-map-static-infos))))
   (hash-remove ht key))
 
 (define/method (MutableMap.set ht key val)
@@ -1194,3 +1287,6 @@
 (define/method (MutableMap.remove ht key)
   #:primitive (hash-remove!)
   (hash-remove! ht key))
+
+(begin-for-syntax
+  (install-get-map-static-infos! get-map-static-infos))

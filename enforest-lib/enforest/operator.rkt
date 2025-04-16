@@ -271,23 +271,25 @@
 
 (define (apply-prefix-direct-operator env op form stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
-  (checker (call-as-transformer
-            stx
-            (list form)
-            track-origin use-site-scopes?
-            (lambda (form)
-              (apply proc form stx env)))
-           proc))
+  (apply checker (call-as-transformer
+                  stx
+                  (list form)
+                  track-origin use-site-scopes?
+                  (lambda (form)
+                    (apply proc form stx env)))
+         proc
+         env))
 
 (define (apply-infix-direct-operator env op form1 form2 stx track-origin use-site-scopes? checker)
   (define proc (operator-proc op))
-  (checker (call-as-transformer
-            stx
-            (list form1 form2)
-            track-origin use-site-scopes?
-            (lambda (form1 form2)
-              (apply proc form1 form2 stx env)))
-           proc))
+  (apply checker (call-as-transformer
+                  stx
+                  (list form1 form2)
+                  track-origin use-site-scopes?
+                  (lambda (form1 form2)
+                    (apply proc form1 form2 stx env)))
+         proc
+         env))
 
 (define (apply-prefix-transformer-operator env op op-stx tail track-origin use-site-scopes? checker)
   (define proc (operator-proc op))

@@ -579,3 +579,14 @@ block:
     let lst = f(Array(1, 1, 1))
     [lst[1], lst[2]]
     ~prints "now\n"
+
+// dependent result annotations
+block:
+  use_static
+  def arr :: Array.later_of(String) = Array("a", "b", "c")
+  check arr[0].length() ~is 1
+  check arr.snapshot()[0].length() ~is 1
+  check arr.to_list()[0].length() ~is 1
+  check: for List (i in arr.to_sequence()):
+           i.length()
+         ~is [1, 1, 1]

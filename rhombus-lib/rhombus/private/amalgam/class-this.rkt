@@ -3,6 +3,8 @@
                      racket/stxparam-exptime)
          racket/stxparam)
 
+;; see "class-this-id.rkt" for the binding of `this`
+
 (provide this-id
          private-tables
 

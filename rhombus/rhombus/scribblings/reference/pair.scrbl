@@ -35,10 +35,11 @@ which case it supplies its elements in order.
 }
 
 @doc(
-  fun Pair(fst_v :: Any, rst_v :: Any) :: Pair
+  fun Pair(fst :: Any, rst :: Any)
+    :: Pair.of(Any.like(fst), Any.like(rst))
 ){
 
- Constructs a pair containing @rhombus(fst_v) and @rhombus(rst_v).
+ Constructs a pair containing @rhombus(fst) and @rhombus(rst).
 
 @examples(
   def pr = Pair(1, 2)
@@ -74,7 +75,8 @@ which case it supplies its elements in order.
   ~nonterminal:
     fst_bind: def bind ~defn
     rst_bind: def bind ~defn
-  fun Pair.cons(fst :: Any, rst :: Any) :: Pair
+  fun Pair.cons(fst :: Any, rst :: Any)
+    :: Pair.of(Any.like(fst), Any.like(rst))
   bind.macro 'Pair.cons($fst_bind, $rst_bind)'
 ){
 
@@ -95,7 +97,9 @@ which case it supplies its elements in order.
 
 @doc(
   property (pr :: Pair).first
+    :: Any.like_first(pr)
   property (pr :: Pair).rest
+    :: Any.like_rest(pr)
 ){
 
  Returns the first or second component of @rhombus(pr).
@@ -125,7 +129,8 @@ which case it supplies its elements in order.
 @doc(
   ~nonterminal:
     listable_expr: block expr
-  fun PairList(v :: Any, ...) :: PairList
+  fun PairList(v :: Any, ...)
+    :: PairList.of(Any.like(v))
   expr.macro 'PairList[$expr_or_splice, ...]'
   repet.macro 'PairList[$repet_or_splice, ...]'
 
@@ -235,7 +240,8 @@ which case it supplies its elements in order.
 }
 
 @doc(
-  fun PairList.cons(elem :: Any, lst :: PairList) :: PairList
+  fun PairList.cons(elem :: Any, lst :: PairList)
+    :: PairList.of(Any.like(elem) || Any.like_element(lst))
 ){
 
  Creates a list like @rhombus(lst), but with @rhombus(elem) added to the
@@ -280,7 +286,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).get(n :: NonnegInt) :: Any
+  method (lst :: PairList).get(n :: NonnegInt)
+    :: Any.like_element(lst)
 ){
 
  Equivalent to @rhombus(lst[n]) (with the default implicit
@@ -297,7 +304,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  property PairList.first(lst :: NonemptyPairList) :: Any
+  property PairList.first(lst :: NonemptyPairList)
+    :: Any.like_element(lst)
 ){
 
  Returns the first element of @rhombus(lst).
@@ -311,7 +319,8 @@ which case it supplies its elements in order.
 }
 
 @doc(
-  property PairList.last(lst :: NonemptyPairList) :: Any
+  property PairList.last(lst :: NonemptyPairList)
+    :: Any.like_element(lst)
 ){
 
  Returns the last element of @rhombus(lst).
@@ -325,7 +334,8 @@ which case it supplies its elements in order.
 }
 
 @doc(
-  property PairList.rest(lst :: NonemptyPairList) :: PairList
+  property PairList.rest(lst :: NonemptyPairList)
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but without its first element.
@@ -358,7 +368,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).reverse() :: PairList
+  method (lst :: PairList).reverse()
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Returns a @tech{pair list} with the same items as @rhombus(lst), but in reversed
@@ -373,8 +384,10 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).append(lst :: PairList, ...) :: PairList
-  fun PairList.append(lst :: PairList, ...) :: PairList
+  method (lst :: PairList).append(lst2 :: PairList, ...)
+    :: PairList.of(Any.like_element(lst) || Any.like_element(lst2))
+  fun PairList.append(lst :: PairList, ...)
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Appends the @rhombus(lst)s in order. See also @rhombus(++).
@@ -390,8 +403,10 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).take(n :: NonnegInt) :: PairList
-  method (lst :: PairList).take_last(n :: NonnegInt) :: PairList
+  method (lst :: PairList).take(n :: NonnegInt)
+    :: PairList.of(Any.like_element(lst))
+  method (lst :: PairList).take_last(n :: NonnegInt)
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Like @rhombus(List.take) and @rhombus(List.take_last), but for
@@ -410,8 +425,10 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).drop(n :: NonnegInt) :: PairList
-  method (lst :: PairList).drop_last(n :: NonnegInt) :: PairList
+  method (lst :: PairList).drop(n :: NonnegInt)
+    :: PairList.of(Any.like_element(lst))
+  method (lst :: PairList).drop_last(n :: NonnegInt)
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Like @rhombus(List.drop) and @rhombus(List.drop_last), but for
@@ -471,7 +488,7 @@ which case it supplies its elements in order.
 
 @doc(
   method (lst :: PairList).find(pred :: Function.of_arity(1))
-    :: Any
+    :: Any.like_element(lst)
   method (lst :: PairList).find_index(pred :: Function.of_arity(1))
     :: maybe(NonnegInt)
 ){
@@ -491,7 +508,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).remove(v :: Any) :: PairList
+  method (lst :: PairList).remove(v :: Any)
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Returns a @tech{pair list} like @rhombus(lst), but with the first element equal to
@@ -526,9 +544,10 @@ which case it supplies its elements in order.
   method (lst :: PairList).filter(
     ~keep: keep_pred :: Function.of_arity(1),
     ~skip: skip_pred :: Function.of_arity(1)
-  ) :: PairList,
+  ) :: PairList.of(Any.like_element(lst))
   method (lst :: PairList).partition(pred :: Function.of_arity(1))
-    :: values(PairList, PairList)
+    :: values(PairList.of(Any.like_element(lst)),
+              PairList.of(Any.like_element(lst)))
 ){
 
  List @rhombus(List.filter) and @rhombus(List.partition), but for
@@ -546,7 +565,7 @@ which case it supplies its elements in order.
 
 @doc(
   method (lst :: PairList).sort(is_less :: Function.of_arity(2) = (_ < _))
-    :: PairList
+    :: PairList.of(Any.like_element(lst))
 ){
 
  Sorts @rhombus(lst) using @rhombus(is_less) to compare elements.
@@ -576,7 +595,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).to_list() :: List
+  method (lst :: PairList).to_list()
+    :: List.of(Any.like_element(lst))
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
@@ -587,7 +607,8 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).to_sequence() :: Sequence
+  method (lst :: PairList).to_sequence()
+    :: Sequence.expect_of(Any.like_element(lst))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

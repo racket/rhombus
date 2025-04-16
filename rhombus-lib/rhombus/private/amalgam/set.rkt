@@ -2,9 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/syntax
+                     shrubbery/print
                      "srcloc.rkt"
                      "tag.rkt"
-                     shrubbery/print)
+                     "annot-context.rkt")
          racket/private/serialize-structs
          "treelist.rkt"
          "provide.rkt"
@@ -22,6 +23,7 @@
          "function-arity-key.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
+         "index-result-key.rkt"
          "parse.rkt"
          "literal.rkt"
          "realm.rkt"
@@ -435,11 +437,12 @@
 (define-for-syntax (parse-set stx arg-stxes repetition? set-build-id set-build*-id set-for-form)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
-     (define-values (shape argss) (parse-setmap-content #'content
-                                                        #:set-for-form set-for-form
-                                                        #:shape 'set
-                                                        #:who (syntax-e #'form-id)
-                                                        #:repetition? repetition?))
+     (define-values (shape argss k-static-infos v-static-infos)
+       (parse-setmap-content #'content
+                             #:set-for-form set-for-form
+                             #:shape 'set
+                             #:who (syntax-e #'form-id)
+                             #:repetition? repetition?))
      (values (relocate-wrapped
               (respan (datum->syntax #f (append (list #'form-id) arg-stxes (list #'content))))
               (build-setmap stx argss
@@ -447,7 +450,10 @@
                             #'set-extend*
                             #'set-append
                             #'set-assert
-                            (get-set-static-infos)
+                            (if (static-infos-empty? k-static-infos)
+                                (get-set-static-infos)
+                                #`((#%sequence-element #,k-static-infos)
+                                   #,@(get-set-static-infos)))
                             #:repetition? repetition?
                             #:rep-for-form #'for/setalw))
              #'tail)]
@@ -646,9 +652,8 @@
           (for/and ([v (#,in-form-stx (set-ht arg))])
             (pred v))))))
 
-(define-for-syntax set-annotation-make-static-info
-  (lambda (static-infoss)
-    #`((#%sequence-element #,(car static-infoss)))))
+(define-syntax (set-of-static-infos data static-infoss)
+  #`((#%sequence-element #,(car static-infoss))))
 
 (define-annotation-constructor (Set of)
   ()
@@ -656,7 +661,7 @@
   1
   #f
   (make-set-annotation-make-predicate #'in-immutable-hash-keys)
-  set-annotation-make-static-info
+  #'set-of-static-infos #f
   #'set-build-convert #'(#hashalw()))
 
 (define-for-syntax (make-set-later-chaperoner who)
@@ -691,7 +696,7 @@
   1
   #f
   (make-set-later-chaperoner 'Set)
-  (lambda (static-infoss) #'())
+  #'set-of-static-infos #f
   #'mutable-set-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
@@ -700,17 +705,17 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
                          #:datum-literals (op |.| of)
                          [(form-id (~and dot (op |.|)) (~and of-id of) . tail)
-                          (parse-annotation-of #'(of-id . tail)
+                          (parse-annotation-of #'(of-id . tail) ctx
                                                (key-comp-set?-id mapper) (get-set-static-infos)
                                                1 #f
                                                (make-set-annotation-make-predicate #'in-immutable-hash-keys)
-                                               set-annotation-make-static-info
+                                               #'set-of-static-infos #f
                                                #'set-build-convert #`(#,(key-comp-empty-stx mapper)))]
                          [(form-id . tail)
                           (values (relocate+reraw
@@ -764,7 +769,7 @@
 (define-for-syntax (parse-mutable-set stx repetition? mutable-set-build-id)
   (syntax-parse stx
     [(form-id (~and content (_::braces . _)) . tail)
-     (define-values (shape argss)
+     (define-values (shape argss k-static-infos v-static-infos)
        (parse-setmap-content #'content
                              #:shape 'set
                              #:who (syntax-e #'form-id)
@@ -792,13 +797,16 @@
 (define-annotation-syntax WeakMutableSet (identifier-annotation weak-mutable-set? #,(get-mutable-set-static-infos)))
 (define-annotation-syntax ReadableSet (identifier-annotation set? #,(get-readable-set-static-infos)))
 
+(define-syntax (no-of-static-infos data static-infoss)
+  #`())
+
 (define-annotation-constructor (MutableSet MutableSet.now_of)
   ()
   #'mutable-set? #,(get-mutable-set-static-infos)
   1
   #f
   (make-set-annotation-make-predicate #'in-hash-keys)
-  (lambda (static-infoss) #'())
+  #'no-of-static-infos #f
   "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the mutable set content"
   #'())
 
@@ -808,7 +816,7 @@
   1
   #f
   (make-set-later-chaperoner 'MutableSet)
-  (lambda (static-infoss) #'())
+  #'set-of-static-infos #f
   #'mutable-set-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
@@ -859,7 +867,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
@@ -875,7 +883,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-key-comp stx
                      (lambda (stx arg-stxes str mapper)
                        (syntax-parse stx
@@ -968,7 +976,8 @@
 
 ;; for `++`
 (define-static-info-syntax Set.append/optimize
-  (#%call-result #,(get-set-static-infos)))
+  (#%call-result ((#%dependent-result (merge-elems #f))
+                  #,@(get-set-static-infos))))
 
 (define set-extend*
   (case-lambda
@@ -986,13 +995,55 @@
                             "value" v))
   v)
 
+(define-syntax (select-elem data deps)
+  (define args (annotation-dependencies-args deps))
+  (define set-i 0)
+  (define si
+    (or (static-info-lookup (or (and (< set-i (length args))
+                                     (list-ref args set-i))
+                                #'())
+                            #'#%sequence-element)
+        #'()))
+  (define new-si
+    (if (eq? (syntax-e data) 'merge)
+        (static-infos-or si
+                         (or (and (< 1 (length args))
+                                  (list-ref args 1))
+                             #'()))
+        si))
+  (cond
+    [(static-infos-empty? new-si)
+     #'()]
+    [else
+     (case (syntax-e data)
+       [(sequence merge) #`((#%sequence-element #,new-si))]
+       [(index) #`((#%index-result #,new-si))]
+       [else new-si])]))
+
+(define-syntax (merge-elems data deps)
+  (define args (annotation-dependencies-args deps))
+  (cond
+    [(or (null? args)
+         (annotation-dependencies-rest? deps))
+     #'()]
+    [else
+     (define si
+       (for/fold ([si (or (static-info-lookup (car args) #'#%sequence-element) #'())])
+                 ([arg (in-list (cdr args))])
+         (static-infos-or si (or (static-info-lookup arg #'#%sequence-element) #'()))))
+     (if (not (static-infos-empty? si))
+         #`((#%sequence-element #,si))
+         #'())]))
+
 (define/method (Set.copy s)
-  #:static-infos ((#%call-result #,(get-mutable-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  #,@(get-mutable-set-static-infos))))
   (check-readable-set who s)
   (set (hash-copy (set-ht s))))
 
 (define/method (Set.snapshot s)
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  #,@(get-set-static-infos))))
   (check-readable-set who s)
   (define ht (set-ht s))
   (if (immutable-hash? ht)
@@ -1007,7 +1058,8 @@
   (set (hash-set (set-ht s) v #t)))
 
 (define/method (Set.add s v)
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem merge))
+                                  #,@(get-set-static-infos))))
   (check-set who s)
   (set-add s v))
 
@@ -1029,7 +1081,8 @@
          (set-append/hash ht (set-ht s)))))
 
 (define/method Set.append
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (merge-elems #f))
+                                  #,@(get-set-static-infos))))
   (case-lambda
     [(s)
      (check-set who s)
@@ -1045,7 +1098,8 @@
      (set-append-all s1 ss)]))
 
 (define/method Set.union
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (merge-elems #f))
+                                  #,@(get-set-static-infos))))
   (case-lambda
     [(s)
      (check-set who s)
@@ -1072,7 +1126,8 @@
       (hash-set new-ht k #t))))
 
 (define/method Set.intersect
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  #,@(get-set-static-infos))))
   (case-lambda
     [(s)
      (check-set who s)
@@ -1090,7 +1145,8 @@
             (set-intersect/hash ht (set-ht s))))]))
 
 (define/method (Set.remove s v)
-  #:static-infos ((#%call-result #,(get-set-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  #,@(get-set-static-infos))))
   (check-set who s)
   (set (hash-remove (set-ht s) v)))
 
@@ -1107,7 +1163,8 @@
   (hash-remove! (set-ht s) v))
 
 (define/method (Set.to_list s [try-sort? #f])
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem index))
+                                  #,@(get-treelist-static-infos))))
   (check-set who s)
   (list->treelist (set->list s (and try-sort? #t))))
 
@@ -1123,7 +1180,8 @@
       [_ #f])))
 
 (define/method (Set.to_sequence st)
-  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  (#%sequence-constructor #t))))
   (check-readable-set who st)
   (in-hash-keys (set-ht st)))
 

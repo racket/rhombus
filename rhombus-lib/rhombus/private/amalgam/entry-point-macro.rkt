@@ -48,7 +48,7 @@
 (begin-for-syntax
   (define-transformer-syntax-class
     Parsed :entry-point #:rhombus/entry_point
-    #:arity 2)
+    #:arity-mask 2)
   (define-transformer-syntax-class
     Shape :entry-point-shape #:rhombus/entry_point_shape))
 

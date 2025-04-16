@@ -12,10 +12,15 @@
                      "maybe-as-original.rkt")
          racket/stxparam
          "expression.rkt"
+         (only-in "annotation.rkt"
+                  :~)
+         (only-in (submod "annotation.rkt" for-class)
+                  annotation-predicate-form)
          "parse.rkt"
          "expression.rkt"
          "entry-point.rkt"
          "class-this.rkt"
+         "class-this-id.rkt"
          "class-define-method-result.rkt"
          "index-key.rkt"
          "append-key.rkt"
@@ -422,6 +427,7 @@
     (for/list ([added (in-list added-methods)])
       #`(define-method-result #,(added-method-result-id added)
           #,(added-method-maybe-ret added)
+          #,(added-method-ret-forwards added)
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
           ;; Also add static info as #%call-result to binding; use the method-result id
           ;; to hold this information if there's implementation name to attach it to
@@ -555,31 +561,6 @@
   (define j-ht (gather j #hasheq() #f))
   (for/or ([k (in-hash-keys i-ht)])
     (and (hash-ref j-ht k #f) k)))
-
-(define-syntax this
-  (expression-transformer
-   (lambda (stxs)
-     (syntax-parse stxs
-       [(head . tail)
-        (cond
-          [(let ([v (syntax-parameter-value #'this-id)])
-             (and (not (identifier? v)) v))
-           => (lambda (id+dp+isi+supers)
-                (syntax-parse id+dp+isi+supers
-                  [(id dp indirect-static-infos . _)
-                   (values (wrap-static-info*
-                            (let ([id (datum->syntax #'id (syntax-e #'id) #'head #'head)])
-                              (if (syntax-e #'dp)
-                                  (wrap-static-info id
-                                                    #'#%dot-provider
-                                                    #'dp)
-                                  id))
-                            #'indirect-static-infos)
-                           #'tail)]))]
-          [else
-           (raise-syntax-error #f
-                               "allowed only within methods"
-                               #'head)])]))))
 
 (define-syntax super
   (expression-transformer

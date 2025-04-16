@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "interface-parse.rkt"
-                     "class-method-result.rkt")
+                     "class-method-result.rkt"
+                     "annot-context.rkt")
          "provide.rkt"
          (submod "list.rkt" for-listable)
          (submod "list.rkt" for-compound-repetition)
@@ -14,12 +15,17 @@
          "call-result-key.rkt"
          "dot-provider-key.rkt"
          "dot-parse.rkt"
-         "binding.rkt")
+         "binding.rkt"
+         "index-result-key.rkt"
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/namespace
                       rhombus/annot)
                      Listable))
+
+(module+ for-static-info
+  (provide (for-syntax get-listable-static-infos)))
 
 (define-class-desc-syntax Listable
   (interface-desc-maker
@@ -49,8 +55,26 @@
    (lambda ()
      (method-result #'treelist? #t 1 "List" (get-treelist-static-infos) 2))))
 
-(define-annotation-syntax Listable
-  (identifier-annotation listable? ((#%dot-provider listable-instance))))
+(define-for-syntax (get-listable-static-infos)
+  #`((#%dot-provider listable-instance)))
+
+(define-for-syntax (listable-expect-of-predicate predicate-stxs)
+  #`(lambda (arg) #t))
+
+(define-syntax (listable-of-static-infoss data static-infoss)
+  #`((#%index-result #,(car static-infoss))))
+
+(define-syntax (listable-build-convert arg-id build-convert-stxs kws data)
+  arg-id)
+
+(define-annotation-constructor (Listable Listable.expect_of)
+  ()
+  #'listable? #,(get-listable-static-infos)
+  1
+  #f
+  listable-expect-of-predicate
+  #'listable-of-static-infoss #f
+  #'listable-build-convert #f)
 
 (define-dot-provider-syntax listable-instance
   (dot-provider
@@ -62,11 +86,25 @@
 
 (define-name-root Listable
   #:fields
-  ([to_list Listable.to_list]))
+  ([to_list Listable.to_list]
+   [expect_of Listable.expect_of]))
+
+(define-syntax to-list-static-infos
+  (lambda (data deps)
+    (define si (get-treelist-static-infos))
+    (define args (annotation-dependencies-args deps))
+    (cond
+      [(pair? args)
+       (define elem-si (static-info-lookup (car args) #'#%index-result))
+       (if elem-si
+           #`((#%index-result #,elem-si)
+              #,@si)
+           si)]
+      [else si])))
 
 ;; also see `to-treelist-who` in "list.rkt"
 (define/method (Listable.to_list v)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (to-list-static-infos #f)))))
   (to-treelist who v))
 
 (define-annotation-syntax Listable.to_list

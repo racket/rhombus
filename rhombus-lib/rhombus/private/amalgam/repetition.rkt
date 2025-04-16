@@ -51,7 +51,8 @@
 
             repetition-relative-precedence
 
-            repetition-static-info-lookup))
+            repetition-static-info-lookup
+            repetition-extract-static-infos))
 
 (begin-for-syntax
   (define-syntax-class :repetition-info
@@ -157,7 +158,12 @@
   (define (repetition-static-info-lookup element-static-infos key)
     (if (identifier? element-static-infos)
         (syntax-local-static-info element-static-infos key)
-        (static-info-lookup element-static-infos key))))
+        (static-info-lookup element-static-infos key)))
+
+  (define (repetition-extract-static-infos element-static-infos)
+    (if (identifier? element-static-infos)
+        (extract-static-infos element-static-infos)
+        element-static-infos)))
 
 (define-for-syntax repetition-as-list
   (case-lambda

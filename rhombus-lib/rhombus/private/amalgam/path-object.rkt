@@ -231,7 +231,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens g)) . tail)
         (values (annotation-predicate-form

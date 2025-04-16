@@ -200,3 +200,11 @@ block:
     [x, ...]
   check f(Box(1), Box(1)) ~prints "now\n"
   check f(Box(1)) ~prints "now\n"
+
+// dependent result annotations
+block:
+  use_static
+  def b :: Box.later_of(String) = Box("a")
+  check b.value.length() ~is 1
+  check Box.value(b).length() ~is 1
+  check Box.snapshot(b).value.length() ~is 1

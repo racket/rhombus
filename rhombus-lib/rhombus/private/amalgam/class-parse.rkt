@@ -50,6 +50,8 @@
          super-has-mutable-field?
          super-has-mutable-constructor-field?
 
+         extract-has-mutable-constructor-arguments
+
          print-field-shapes
 
          make-accessor-names)
@@ -165,7 +167,12 @@
                      annotation-str
                      exposure ; 'public, 'private, or 'protected
                      mutability))
-(struct added-method (id rhs-id rhs stx-params maybe-ret result-id
+(struct added-method (id rhs-id
+                         rhs
+                         stx-params
+                         ret-forwards ; #f or #`([maybe-id ret] ...) to represent lifted result annotations
+                         maybe-ret   ; #`[args ret-seq] for overall method
+                         result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
                          disposition ; 'abstract, 'final, 'private
@@ -428,6 +435,8 @@
 
 (define (field-to-field+keyword+default f arg)
   (values (field-desc-name f)
+          (field-desc-accessor-id f)
+          (field-desc-mutator-id f)
           (if (box? (syntax-e arg))
               (unbox (syntax-e arg))
               arg)
@@ -436,11 +445,11 @@
               #'#f)))
 
 (define (extract-super-constructor-fields super)
-  (for/lists (fs ls ds) ([f (in-list (if super
-                                         (class-desc-fields super)
-                                         '()))]
-                         #:do [(define arg (field-desc-constructor-arg f))]
-                         #:unless (identifier? arg))
+  (for/lists (fs as ms ls ds) ([f (in-list (if super
+                                               (class-desc-fields super)
+                                               '()))]
+                               #:do [(define arg (field-desc-constructor-arg f))]
+                               #:unless (identifier? arg))
     (field-to-field+keyword+default f arg)))
 
 (define (extract-super-internal-constructor-fields super super-constructor-fields super-keywords super-defaults)
@@ -475,7 +484,7 @@
          [(and (pair? fields) (identifier? (field-desc-constructor-arg (car fields)))) ; not in constructor
           (loop (cdr all-fields) (cdr fields) rev-fields rev-keywords rev-defaults)]
          [else ; public field in constructor
-          (define-values (f k d) (field-to-field+keyword+default (car fields) (field-desc-constructor-arg (car fields))))
+          (define-values (f a m k d) (field-to-field+keyword+default (car fields) (field-desc-constructor-arg (car fields))))
           (loop (cdr all-fields) (cdr fields) (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
     [else
      (values super-constructor-fields super-keywords super-defaults)]))
@@ -497,6 +506,22 @@
     (and (field-desc-mutator-id fld)
          (syntax-e (field-desc-mutator-id fld))
          (not (identifier? (field-desc-constructor-arg fld))))))
+
+
+(define (extract-has-mutable-constructor-arguments constructor-field-mutables
+                                                   constructor-field-exposures
+                                                   super)
+  (values
+   ;; has-mutable-constructor-arg?
+   (or (for/or ([mut (in-list (syntax->list constructor-field-mutables))]
+                [ex (in-list (syntax->list constructor-field-exposures))])
+         (and (syntax-e mut)
+              (eq? 'public (syntax-e ex))))
+       (and super
+            (super-has-mutable-constructor-field? super)))
+   ;; has-mutable-internal-constructor-arg?
+   (for/or ([mut (in-list (syntax->list constructor-field-mutables))])
+     (syntax-e mut))))
 
 (define (print-field-shapes super fields keywords exposures)
   (append

@@ -27,7 +27,7 @@
    (lambda () (order-quote logical_conjuction))
    null
    'automatic
-   (lambda (lhs rhs stx)
+   (lambda (lhs rhs stx ctx)
      (relocate+reraw
       (datum->syntax #f (list lhs stx rhs))
       (syntax-parse (list lhs rhs)
@@ -113,7 +113,7 @@
    (lambda () (order-quote logical_disjuction))
    null
    'automatic
-   (lambda (lhs rhs stx)
+   (lambda (lhs rhs stx ctx)
      (relocate+reraw
       (datum->syntax #f (list lhs stx rhs))
       (syntax-parse (list lhs rhs)
@@ -214,7 +214,7 @@
    (lambda () (order-quote logical_negation))
    '()
    'automatic
-   (lambda (form stx)
+   (lambda (form stx ctx)
      (relocate+reraw
       (datum->syntax #f (list stx form))
       (syntax-parse form

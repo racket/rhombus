@@ -71,6 +71,12 @@ in an unspecified order.
  every access, its static information is associated with access using
  @brackets.
 
+ Note that @rhombus(Any.like_element, ~annot) will not find any static
+ information for elements from an expression with an
+ @rhombus(MutableMap, ~annot) or @rhombus(MutableMap.now_of, ~annot)
+ annotation, but an @rhombus(MutableMap.later_of, ~annot) annotation can
+ imply static information for elements.
+
  The @rhombus(Map.by, ~annot), @rhombus(MutableMap.by, ~annot), and
  @rhombus(WeakMutableMap.by, ~annot) annotation variants match only maps
  that use the hash and equality functions specified by
@@ -432,7 +438,9 @@ in an unspecified order.
 
 
 @doc(
-  method (mp :: Map).append(another_mp :: Map, ...) :: Map
+  method (mp :: Map).append(another_mp :: Map, ...)
+    :: Map.of(Any.like_key(mp) || Any.like_key(another_mp),
+              Any.like_value(mp) || Any.like_value(another_mp))
 ){
 
  Functionally appends @rhombus(mp) and @rhombus(another_mp)s, like the @rhombus(++) operator
@@ -462,7 +470,7 @@ in an unspecified order.
 @doc(
   method Map.keys(mp :: ReadableMap,
                   try_sort :: Any = #false)
-    :: List
+    :: List.of(Any.like_key(mp))
 ){
 
  Returns the keys of @rhombus(mp) in a list. If @rhombus(try_sort)
@@ -477,7 +485,8 @@ in an unspecified order.
 
 
 @doc(
-  method Map.values(mp :: ReadableMap) :: List
+  method Map.values(mp :: ReadableMap)
+    :: List.of(Any.like_value(mp))
 ){
 
  Returns the values of @rhombus(mp) in a list.
@@ -490,6 +499,9 @@ in an unspecified order.
 
 
 @doc(
+  method Map.get(mp :: ReadableMap,
+                 key :: Any)
+    :: Any.like_value(mp)
   method Map.get(mp :: ReadableMap,
                  key :: Any,
                  default :: Any:
@@ -519,7 +531,9 @@ in an unspecified order.
 
 
 @doc(
-  method (mp :: Map).set(key :: Any, val :: Any) :: Map
+  method (mp :: Map).set(key :: Any, val :: Any)
+    :: Map.of(Any.like_key(mp) || Any.like(key),
+              Any.like_value(mp) || Any.like(val))
 ){
 
  Returns a map like @rhombus(mp), but with a mapping for @rhombus(key)
@@ -534,7 +548,8 @@ in an unspecified order.
 
 
 @doc(
-  method (mp :: Map).remove(key :: Any) :: Map
+  method (mp :: Map).remove(key :: Any)
+    :: Map.of(Any.like_key(mp), Any.like_value(mp))
 ){
 
  Returns a map like @rhombus(mp), but without a mapping for
@@ -624,7 +639,9 @@ in an unspecified order.
 
 
 @doc(
-  method Map.snapshot(mp :: ReadableMap) :: Map
+  method Map.snapshot(mp :: ReadableMap)
+    :: Map.of(Any.like_key(mp) || Any.like(key),
+              Any.like_value(mp) || Any.like(val))
 ){
 
  Returns an immutable map whose content matches @rhombus(mp). If
@@ -644,7 +661,8 @@ in an unspecified order.
 
 
 @doc(
-  method Map.to_sequence(mp :: ReadableMap) :: Sequence
+  method Map.to_sequence(mp :: ReadableMap)
+    :: Sequence.expect_of(Any.like_key(mp), Any.like_value(mp))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -654,9 +672,12 @@ in an unspecified order.
 }
 
 @doc(
-  property Map.maybe(mp :: ReadableMap) :: MapMaybe
+  property Map.maybe(mp :: ReadableMap)
+    :: MapMaybe.of(Any.like_element(mp))
   annot.macro 'MapMaybe'
-  method (mm :: MapMaybe).get(key :: Any) :: Any
+  annot.macro 'MapMaybe.expect_of($ann)'
+  method (mm :: MapMaybe).get(key :: Any)
+    :: Any.like_element(mm)
 ){
 
  The @rhombus(Map.maybe) property produces a @rhombus(MapMaybe, ~annot)
@@ -684,5 +705,11 @@ in an unspecified order.
     m.maybe[1]
     m.maybe is_a MapMaybe
 )
+
+ A @rhombus(MapMaybe.expect_of(ann), ~annot) annotation is like
+ @rhombus(MapMaybe, ~annot), but with static information indicating that
+ elements have the static information of @rhombus(maybe(ann), ~annot).
+ The extracted elements are not checked or converted, however, and
+ @rhombus(ann) is used only for its static information.
 
 }

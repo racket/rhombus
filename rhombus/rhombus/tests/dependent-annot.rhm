@@ -1,0 +1,186 @@
+#lang rhombus/static/and_meta
+
+block:
+  fun same(v) :: Any.like(v):
+    v
+  fun delist(v) :: Any.like_element(v):
+    List.first(v)
+  fun enlist(v) :: List.of(Any.like(v)):
+    [v]
+
+  check same("apple").length() ~is 5
+  check delist(["apple"] :: List.of(String)).length() ~is 5
+  check enlist("apple")[0].length() ~is 5
+
+block:
+  fun dearray(v) :: Any.like_element(v):
+    Array.get(v, 0)
+
+  check dearray(Array("apple") :: Array.later_of(String)).length() ~is 5
+  check: dearray(Array(#'oops) :: Array.later_of(String)).length()
+         ~throws "element does not satisfy annotation"
+
+block:
+  fun add(m :: Map, k, v) :: Map.of(Any.like_key(m) || Any.like(k),
+                                    Any.like_value(m) || Any.like(v)):
+    m ++ { k : v }
+
+  let m :: Map.of(String, Bytes) = { "a": #"b" }
+
+  let m2 = add(m, "hello", #"there")
+  check m2["hello"].length() ~is 5
+  check: for Set ((k, v) in m2):
+           k.length() + v.length()
+         ~is { 2, 10 }
+
+  let m3 = add(m, "hello", dynamic(#"there") :: maybe(Bytes))
+  check m3["hello"]!!.length() ~is 5
+  check: for Set ((k, v) in m3):
+           k.length() + v!!.length()
+         ~is { 2, 10 }
+
+check:
+  ~eval
+  use_static
+  fun add(m :: Map, k, v) :: Map.of(Any.like_key(m) || Any.like(k),
+                                    Any.like_value(m) || Any.like(v)):
+    m ++ { k : v }
+  def m :: Map.of(String, Bytes) = { "a": #"b" }
+  def m2 = add(m, "hello", #'bad)
+  m2["hello"].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+block:
+  fun twice(p) :: values(Pair.of(Any, Any.like_rest(p)),
+                         Pair.of(Any.like_first(p), Any)):
+    values(p, p)
+  let (p1, p2) = twice(Pair("x", #"yy"))
+  check p2.first.length() ~is 1
+  check p1.rest.length() ~is 2
+
+block:
+  class Posn(x, y):
+    constructor (y) :: Posn.of(Any, Any.like(y)):
+      super(0, y)
+    method twice(p) :: values(Posn.of(Any, Any.like_field(Posn.y(p))),
+                              Posn.of(Any.like_field(Posn.x(p)), Any)):
+      values(p, p)
+    method twice_this() :: values(Posn.of(Any, Any.like_field(Posn.y(this))),
+                                  Posn.of(Any.like_field(Posn.x(this)), Any)):
+      values(this, this)
+  check Posn("apple").y.length() ~is 5
+  check Posn("apple").twice(Posn("apple")) ~is values(Posn("apple"), Posn("apple"))
+  check Posn("apple").twice_this() ~is values(Posn("apple"), Posn("apple"))
+  check:
+    let (a, b) = Posn("apple").twice(Posn("apple"))
+    a.y.length()
+    ~is 5
+  check:
+    let (a, b) = Posn("apple").twice_this()
+    a.y.length()
+    ~is 5
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    constructor (y) :: Posn.of(Any, Any.like(y)):
+      super(0, y)
+  Posn("apple").x.length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+block:
+  fun f(& x) :: Any.like(x):
+    x
+  check f("a", "b")[0].length() ~is 1
+
+block:
+  fun f(x, ...) :: List.of(Any.like(x)):
+    [x, ...]
+  check f("a", "b")[0].length() ~is 1
+
+block:
+  fun f(~& x) :: Any.like(x):
+    x
+  check f(~x: "a", ~y: "b")[#'~x].length() ~is 1
+  check:
+    let keys = f(~x: "a", ~y: "b").keys()
+    keys[0] compares_equal keys[1]
+    ~is #false
+
+block:
+  class Identity():
+    implements Indexable
+    override get(x) :: Any.like(x):
+      x
+  let i = Identity()
+  check i.get("hello").length() ~is 5
+  check i["hello"].length() ~is 5
+
+block:
+  class Identity():
+    nonfinal
+    implements Indexable
+    override get(x) :: Any.like(x):
+      x
+  let i = Identity()
+  check i.get("hello").length() ~is 5
+  check i["hello"].length() ~is 5
+
+annot.macro 'ToAnyLike($id, ...)':
+  ~context ctx
+  let map:
+    for Map ((k, v) in ctx.argument_names):
+      values(Syntax.unwrap(k), v)
+  let map:
+    if ctx.this_position
+    | map.set(#'this, ctx.this_position)
+    | map
+  fun quote(v):
+    cond
+    | v is_a (Keyword || Symbol):
+        '#' $v'
+    | v is_a List:
+        let [v, ...] = v
+        '[$(quote(v)), ...]'
+    | ~else:
+        v
+  let [pr, ...]:
+    for List ((k, v) in map):
+      '[#' $k, $(quote(v))]'
+  'converting(fun (x): [$(quote(ctx.argument_names[syntax_meta.flip_introduce(id)])), ..., Map($pr, ...)])'
+
+fun f1(x, y) :: ToAnyLike(x):
+  10
+fun f2(x :: Int, ~y: y :: Int, ~z = #false) :: ToAnyLike(x, y):
+  10
+fun f3(x, ...) :: ToAnyLike(x):
+  10
+fun f4(& x) :: ToAnyLike(x):
+  10
+fun f5(~& x) :: ToAnyLike(x):
+  10
+def f6 = fun (x, y) :: ToAnyLike(x): 10
+
+check f1(-1, -2) ~is [0, { #'x: 0, #'y: 1 }]
+check f2(-1, ~y: -2) ~is [0, #'~y, { #'x: 0, #'y: #'~y }]
+check f3(-1) ~is [[#'repet, 0], { #'x: [#'repet, 0] }]
+check f4(-1) ~is [[#'splice, 0], { #'x: [#'splice, 0] }]
+check f5(~x: -1) ~is [[#'keyword_splice], { #'x: [#'keyword_splice] }]
+check f6(1, 2) ~is [0, { #'x: 0, #'y: 1 }]
+
+class Posn():
+  method m1(x, y) :: ToAnyLike(x):
+    10
+  method m2(x, ..., ~& y) :: ToAnyLike(x, y):
+    10
+  method m3(~z: z = 0, x, ~& y) :: ToAnyLike(z):
+    10
+
+check Posn().m1(-1, -2) ~is [1, { #'this: 0, #'x: 1, #'y: 2 }]
+check Posn().m2(-1, -2) ~is [[#'repet, 1], [#'keyword_splice], { #'this: 0, #'x: [#'repet, 1], #'y: [#'keyword_splice] }]
+check Posn().m3(-1) ~is [#'~z, { #'this: 0, #'z: #'~z, #'x: 1, #'y: [#'keyword_splice, #'~z] }]

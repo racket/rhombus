@@ -8,8 +8,11 @@ use_static
 export:
   Sequence
 
+fun is_sequence(v):
+  base.#{sequence?}(v) && (v !is_a Int)
+
 annot.macro 'Sequence':
-  annot_meta.pack_predicate('base.#{sequence?}',
+  annot_meta.pack_predicate('is_sequence',
                             '(($statinfo_meta.sequence_constructor_key, #true))')
 
 namespace Sequence:
@@ -17,6 +20,26 @@ namespace Sequence:
     make
     instantiable
     instantiate
+    expect_of
+  annot.macro 'expect_of($(ann :: Group), ...)':
+    ~all_stx: stx
+    ~context: ctx
+    let ['$(a :: annot_meta.Parsed(ctx))', ...] = [ann, ...]
+    let [statinfos, ...]:
+      for List (a in [a, ...]):
+        if annot_meta.is_converter(a)
+        | let (_, _, statinfos) = annot_meta.unpack_converter(a)
+          statinfos
+        | let (_, statinfos) = annot_meta.unpack_predicate(a)
+          statinfos
+    let all_statinfos:
+      let l = [statinfos, ...]
+      if l.length() == 1
+      | l[0]
+      | '(($statinfo_meta.values_key, $(statinfo_meta.pack_group('$statinfos ...'))))'
+    annot_meta.pack_predicate('is_sequence',
+                              '(($statinfo_meta.sequence_constructor_key, #true),
+                                ($statinfo_meta.sequence_element_key, $(statinfo_meta.pack(all_statinfos))))')
 
 fun make(~initial_position: init_pos,
          ~continue_at_position: continue_at_pos = #false,

@@ -662,3 +662,25 @@ check:
     error.annot("Function.of_arity(2)").msg,
     error.val("oops").msg,
   )
+
+// dependent result annotations
+block:
+  use_static
+  def los :: PairList.of(String) = PairList["a", "b", "c"]
+  check los.get(0).length() ~is 1
+  check PairList.first(los).length() ~is 1
+  check PairList.last(los).length() ~is 1
+  check PairList.rest(los)[0].length() ~is 1
+  check PairList.cons("zz", los)[0].length() ~is 2
+  check los.drop(1)[0].length() ~is 1
+  check los.take(1)[0].length() ~is 1
+  check los.drop_last(1)[0].length() ~is 1
+  check los.take_last(1)[0].length() ~is 1
+  check los.reverse()[0].length() ~is 1
+  check los.find((_ == "a")).length() ~is 1
+  check los.remove("a")[0].length() ~is 1
+  check los.filter(~keep: (_ == "a"))[0].length() ~is 1
+  check los.sort((_ :: String < _))[0].length() ~is 1
+  check los.to_list()[0].length() ~is 1
+  check (for List (e in los.to_sequence()): e.length()) ~is [1, 1, 1]
+  check (PairList["a"] ++ PairList["b"])[0].length() ~is 1

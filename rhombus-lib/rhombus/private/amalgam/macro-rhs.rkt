@@ -67,7 +67,7 @@
 
 ;; finish parsing one case (possibly the only case) in a macro definition,
 ;; now that we're in the right phase for the right-hand side of the definition
-(define-for-syntax (parse-one-macro-definition pre-parsed adjustments case-shape)
+(define-for-syntax (parse-one-macro-definition pre-parsed adjustments case-shape extra-get-static-infoss-stx)
   (define-values (who kind parsed-right?)
     (syntax-parse pre-parsed
       [(_ name _ _ kind _ _ _ _ _ parsed-right-id . _)
@@ -193,21 +193,23 @@
                [(syntax-e #'parsed-right-id)
                 (define right-id #'parsed-right-id)
                 (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
-                #`(lambda (#,@extra-args left #,right-id self-id extra-kw-id ...)
-                    (define-static-info-syntax left #:getter get-syntax-static-infos)
-                    (define-static-info-syntax #,right-id #:getter get-syntax-static-infos)
-                    (define-static-info-syntax self-id #:getter get-syntax-static-infos)
-                    #,@(if (syntax-e #'all-id)
-                           #`((define all-id (make-all (list left self-id #,right-id)))
-                              (define-static-info-syntax all-id #:getter get-syntax-static-infos))
-                           '())
-                    #,(adjust-result
-                       adjustments
-                       2
-                       (if (eq? kind 'rule)
-                           (convert-rule-template #'(tag rhs ...)
-                                                  (maybe-cons #'all-id (list #'left right-id #'self-id)))
-                           #'(rhombus-body-expression (tag rhs ...)))))]
+                (with-syntax ([(get-extra-kw-static-infos ...) extra-get-static-infoss-stx])
+                  #`(lambda (#,@extra-args left #,right-id self-id extra-kw-id ...)
+                      (define-static-info-syntax left #:getter get-syntax-static-infos)
+                      (define-static-info-syntax #,right-id #:getter get-syntax-static-infos)
+                      (define-static-info-syntax self-id #:getter get-syntax-static-infos)
+                      (define-static-info-syntax extra-kw-id #:getter get-extra-kw-static-infos) ...
+                      #,@(if (syntax-e #'all-id)
+                             #`((define all-id (make-all (list left self-id #,right-id)))
+                                (define-static-info-syntax all-id #:getter get-syntax-static-infos))
+                             '())
+                      #,(adjust-result
+                         adjustments
+                         2
+                         (if (eq? kind 'rule)
+                             (convert-rule-template #'(tag rhs ...)
+                                                    (maybe-cons #'all-id (list #'left right-id #'self-id)))
+                             #'(rhombus-body-expression (tag rhs ...))))))]
                [else
                 (macro-clause #'self-id #'all-id (list #'left)
                               #'tail-pattern
@@ -239,20 +241,22 @@
                [(syntax-e #'parsed-right-id)
                 (define arg-id #'parsed-right-id)
                 (define extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments)))
-                #`(lambda (#,@extra-args #,arg-id self-id extra-kw-id ...)
-                    (define-static-info-syntax #,arg-id #:getter get-syntax-static-infos)
-                    (define-static-info-syntax self-id #:getter get-syntax-static-infos)
-                    #,@(if (syntax-e #'all-id)
-                           #`((define all-id (make-all (list self-id #,arg-id)))
-                              (define-static-info-syntax all-id #:getter get-syntax-static-infos))
-                           '())
-                    #,(adjust-result
-                       adjustments
-                       2
-                       (if (eq? kind 'rule)
-                           (convert-rule-template #'(tag rhs ...)
-                                                  (maybe-cons #'all-id (list arg-id #'self-id)))
-                           #`(rhombus-body-expression (tag rhs ...)))))]
+                (with-syntax ([(get-extra-kw-static-infos ...) extra-get-static-infoss-stx])
+                  #`(lambda (#,@extra-args #,arg-id self-id extra-kw-id ...)
+                      (define-static-info-syntax #,arg-id #:getter get-syntax-static-infos)
+                      (define-static-info-syntax self-id #:getter get-syntax-static-infos)
+                      (define-static-info-syntax extra-kw-id #:getter get-extra-kw-static-infos) ...
+                      #,@(if (syntax-e #'all-id)
+                             #`((define all-id (make-all (list self-id #,arg-id)))
+                                (define-static-info-syntax all-id #:getter get-syntax-static-infos))
+                             '())
+                      #,(adjust-result
+                         adjustments
+                         2
+                         (if (eq? kind 'rule)
+                             (convert-rule-template #'(tag rhs ...)
+                                                    (maybe-cons #'all-id (list arg-id #'self-id)))
+                             #`(rhombus-body-expression (tag rhs ...))))))]
                [else
                 (cond
                   [(eq? case-shape 'cond)
@@ -332,7 +336,7 @@
 
 ;; combine previously parsed cases (possibly the only case) in a macro
 ;; definition that are all either prefix or infix
-(define-for-syntax (build-cases ps prefix? make-id space-sym adjustments orig-stx case-shape)
+(define-for-syntax (build-cases ps prefix? make-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx)
   (unless (syntax-e make-id)
     (raise-syntax-error #f
                         (format "~a patterns are not allowed" (if prefix? "prefix" "infix"))
@@ -348,18 +352,22 @@
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
                   (let ([extra-args (treelist->list (entry-point-adjustment-prefix-arguments adjustments))])
-                    #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self #,@(parsed-extra-kw-args p))
-                        #,(adjust-result
-                           adjustments
-                           2
-                           (cond
-                             [(eq? case-shape 'cond)
-                              #`(cond
-                                  #,@(map parsed-impl ps))]
-                             [else
-                              #`(syntax-parse (insert-multi-front-group self tail)
-                                  #:disable-colon-notation
-                                  #,@(map parsed-impl ps))])))))])
+                    (with-syntax ([(get-extra-kw-static-infos ...) extra-get-static-infoss-stx]
+                                  [(extra-kw-id ...) (parsed-extra-kw-args p)])
+                      #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self extra-kw-id ...)
+                          (define-static-info-syntax extra-kw-id #:getter get-extra-kw-static-infos)
+                          ...
+                          #,(adjust-result
+                             adjustments
+                             2
+                             (cond
+                               [(eq? case-shape 'cond)
+                                #`(cond
+                                    #,@(map parsed-impl ps))]
+                               [else
+                                #`(syntax-parse (insert-multi-front-group self tail)
+                                    #:disable-colon-notation
+                                    #,@(map parsed-impl ps))]))))))])
        #,(parsed-name p))
      #,@(if prefix?
             '()
@@ -373,11 +381,11 @@
                                                   #:extra-get-static-infoss [extra-get-static-infoss-stx #'()]
                                                   #:extra-shapes [extra-shapes '()])
   (define case-shape (select-case-shape pre-parsed))
-  (define p (parse-one-macro-definition pre-parsed adjustments case-shape))
+  (define p (parse-one-macro-definition pre-parsed adjustments case-shape extra-get-static-infoss-stx))
   (define op (parsed-name p))
   (define prefix? (eq? 'prefix (parsed-fixity p)))
   (define make-id (if prefix? make-prefix-id make-infix-id))
-  (build-cases (list p) prefix? make-id space-sym adjustments orig-stx case-shape))
+  (build-cases (list p) prefix? make-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx))
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions-rhs orig-stx pre-parseds
@@ -387,7 +395,7 @@
                                                    #:extra-get-static-infoss [extra-get-static-infoss-stx #'()]
                                                    #:extra-shapes [extra-shapes '()])
   (define case-shape 'syntax-parse)
-  (define ps (map (lambda (p) (parse-one-macro-definition p adjustments case-shape)) pre-parseds))
+  (define ps (map (lambda (p) (parse-one-macro-definition p adjustments case-shape extra-get-static-infoss-stx)) pre-parseds))
   (define prefixes (for/list ([p (in-list ps)] #:when (eq? 'prefix (parsed-fixity p))) p))
   (define infixes (for/list ([p (in-list ps)] #:when (eq? 'infix (parsed-fixity p))) p))
   (define (check-fixity-consistent what options ps)
@@ -419,11 +427,11 @@
                             orig-stx
                             (parsed-assc-stx p)))))
   (cond
-    [(null? prefixes) (build-cases infixes #f make-infix-id space-sym adjustments orig-stx case-shape)]
-    [(null? infixes) (build-cases prefixes #t make-prefix-id space-sym adjustments orig-stx case-shape)]
+    [(null? prefixes) (build-cases infixes #f make-infix-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx)]
+    [(null? infixes) (build-cases prefixes #t make-prefix-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx)]
     [else #`(#,prefix+infix-id
-             #,(build-cases prefixes #t make-prefix-id space-sym adjustments orig-stx case-shape)
-             #,(build-cases infixes #f make-infix-id space-sym adjustments orig-stx case-shape))]))
+             #,(build-cases prefixes #t make-prefix-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx)
+             #,(build-cases infixes #f make-infix-id space-sym adjustments orig-stx case-shape extra-get-static-infoss-stx))]))
 
 (define-for-syntax (adjust-result adjustments arity b)
   (wrap-expression ((entry-point-adjustment-wrap-body adjustments) arity #`(parsed #:rhombus/expr #,b))))

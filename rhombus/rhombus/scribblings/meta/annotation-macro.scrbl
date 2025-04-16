@@ -34,14 +34,29 @@
 @doc(
   ~nonterminal:
     macro_patterns: expr.macro ~defn
+    option: macro ~defn
 
   defn.macro 'annot.macro $macro_patterns'
+
+  grammar more_options:
+    ~context $id
+    ~context: $id
 ){
 
  Like @rhombus(expr.macro), but defines an identifier or operator as an
  annotation form in the @rhombus(annot, ~space) @tech{space}.
  The result of the macro expansion can be a result
  created with @rhombus(annot_meta.pack_predicate).
+
+ In addition to the @rhombus(option) forms supported by
+ @rhombus(expr.macro), @rhombus(annot.macro) supports a
+ @rhombus(~context) option, which declares an identifier be bound to
+ context information. Context is represented by a
+ @rhombus(annot_meta.Context) object, which records argument names that
+ can be referenced by @rhombus(Any.like, ~annot), for example. Normally,
+ when nested annotations are parsed directly via
+ @rhombus(annot_meta.Parsed) and similar, the same context object should
+ be passed along.
 
 @examples(
   ~eval: macro_eval
@@ -193,16 +208,18 @@
 
 @doc(
   ~meta
-  syntax_class annot_meta.Parsed:
+  syntax_class annot_meta.Parsed(ctx = annot_meta.Context.empty):
     kind: ~group
     fields:
       group
-  syntax_class annot_meta.AfterPrefixParsed(op_name):
+  syntax_class annot_meta.AfterPrefixParsed(op_name,
+                                            ctx = annot_meta.Context.empty):
     kind: ~group
     fields:
       group
       [tail, ...]
-  syntax_class annot_meta.AfterInfixParsed(op_name):
+  syntax_class annot_meta.AfterInfixParsed(op_name,
+                                           ctx = annot_meta.Context.empty):
     kind: ~group
     fields:
       group
@@ -217,10 +234,16 @@
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for annotations.
 
+ Unlike @rhombus(expr_meta.Parsed, ~stxclass), an optional
+ @rhombus(annot_meta.Context, ~annot) argument can supply context
+ information---including argument names that can be referenced by
+ @rhombus(Any.like, ~annot), for example.
+
 }
 
 
 @doc(
+  ~meta
   fun annot_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
                                      left_op :: Name,
                                      right_infix_op :: Name)
@@ -235,6 +258,81 @@
 
 }
 
+@doc(
+  ~meta
+  class annot_meta.Context(
+    argument_names :: Map.by(equal_name_and_scopes).of(Identifier, Any),
+    this_position :: Any
+  )
+  def annot_meta.Context.empty :: annot_meta.Context
+){
 
+ An @rhombus(annot_meta.Context, ~class) object represents the syntactic
+ context of an annotation form. The @rhombus(argument_names) map is empty
+ and @rhombus(this_position) is @rhombus(#false) in the default context
+ @rhombus(annot_meta.Context.empty).
+
+ The keys of the @rhombus(argument_names) map are identifiers. An
+ identifier received by an annotation macro typically must be
+ ``unintroduced'' by @rhombus(syntax_meta.flip_introduce) to find it in
+ the map.
+
+ Each value in the map or in the @rhombus(this_position) field is a
+ positions, one of the following:
+
+@itemlist(
+
+  @item{An integer: An index of a by-position argument.}
+
+  @item{A keyword: The keyword of by-keyword argument.}
+
+  @item{A 2-element list with @rhombus(#'repet) and an integer: A
+   repetition that starts after the indicated number of arguments.}
+
+  @item{A 2-element list with @rhombus(#'splice) and an integer: A
+   by-position splice that starts after the indicated number of arguments.}
+
+  @item{A list that starts @rhombus(#'keyword_splice) followed by any
+   number of keywords: A keyword-splice argument that will not include any
+   of the listed keywords, because those keywords have separate arguments.}
+
+)
+
+ Note that a function form's argument may not all have names that can be
+ referenced, so @rhombus(annot_meta.Context, ~class) object does not
+ necessarily represent all arguments to a function.
+
+}
+
+@doc(
+  ~meta
+  class annot_meta.Dependencies(
+    arguments :: List.of(Syntax),
+    keyword_arguments :: Map.of(Keyword, Syntax),
+    has_more_arguments :: Any.to_boolean,
+    has_more_keyword_arguments :: Any.to_boolean
+  )
+){
+
+ An @rhombus(annot_meta.Context, ~class) object represents static
+ information for actual arguments of a function call as passed to a
+ bridge function encoded in a
+ @rhombus(statinfo_meta.dependent_result_key) value by
+ @rhombus(statinfo_meta.pack_dependent_result).
+
+ The @rhombus(arguments) list holds static information for the
+ by-position arguments---at least, up to the point that an argument
+ repetition or splice (of an unknown length) is encountered.
+
+ The @rhombus(keyword_arguments) list holds static information for the
+ by-keyword arguments, not including any keywords supplied through a
+ keyword-argument splice.
+
+ The @rhombus(has_more_arguments) and
+ @rhombus(has_more_keyword_arguments) fields effectively report whether
+ @rhombus(arguments) and @rhombus(keyword_arguments) are an incomplete
+ enumeration of actual argument due to repetitions and splices.
+
+}
 
 @(macro.close_eval(macro_eval))

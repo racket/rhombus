@@ -4,7 +4,8 @@
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "interface-parse.rkt"
-                     "class-method-result.rkt")
+                     "class-method-result.rkt"
+                     "annot-context.rkt")
          (only-in racket/vector
                   vector-append)
          "treelist.rkt"
@@ -23,6 +24,7 @@
          "compound-repetition.rkt"
          "realm.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
+         (only-in (submod "function-parse.rkt" for-build) find-call-result-at)
          "is-static.rkt"
          "order.rkt"
          "order-primitive.rkt")
@@ -80,6 +82,7 @@
 (define-for-syntax (parse-append form1 form2 self-stx form1-in
                                  static?
                                  appendable-static-info
+                                 arg-static-infos
                                  k)
   (define direct-append-id/maybe-boxed (appendable-static-info #'#%append))
   (define checked? (and direct-append-id/maybe-boxed
@@ -94,8 +97,18 @@
                                                 self-stx
                                                 form1-in)
                             #'general-append)))
-  (define si (or (syntax-local-static-info append-id #'#%call-result)
-                 #'()))
+  (define si (cond
+               [(syntax-local-static-info append-id #'#%call-result)
+                => (lambda (results)
+                     (find-call-result-at results 2 null #f
+                                          (lambda ()
+                                            (annotation-dependencies
+                                             (list (arg-static-infos form1 0)
+                                                   (arg-static-infos form2 1))
+                                             (hashalw)
+                                             #f
+                                             #f))))]
+               [else #'()]))
   (k append-id
      (not checked?)
      form1 form2
@@ -124,6 +137,7 @@
       form1 form2 self-stx form1-in
       static?
       (lambda (key) (syntax-local-static-info form1 key))
+      (lambda (form idx) (extract-static-infos form))
       (lambda (append-id direct? form1 form2 si)
         (wrap-static-info*
          (build-append append-id direct? form1 form2
@@ -149,6 +163,12 @@
             static?
             (lambda (key)
               (repetition-static-info-lookup #'form1-info.element-static-infos key))
+            (lambda (form idx)
+              (if (= idx 0)
+                  #'form1-info.element-static-infos
+                  (syntax-parse form2
+                    [form2-info::repetition-info
+                     #'form2-info.element-static-infos])))
             (lambda (append-id direct? form1 form2 si)
               (values
                (build-append append-id direct? form1 form2

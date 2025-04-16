@@ -115,7 +115,7 @@
        (define super (and parent-name
                           (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
                               (raise-syntax-error #f "not a class name" #'orig-stx parent-name))))
-       (define-values (super-constructor-fields super-keywords super-defaults)
+       (define-values (super-constructor-fields super-accessors super-mutators super-keywords super-defaults)
          (extract-super-constructor-fields super))
 
        (define interface-names (reverse (hash-ref options 'implements '())))
@@ -172,12 +172,15 @@
                                          intro))
 
        (with-syntax ([constructor-name-fields constructor-name-fields]
-                     [((constructor-public-name-field constructor-public-field-keyword) ...)
+                     [((constructor-public-name-field constructor-public-name-field-mutable? constructor-public-field-keyword) ...)
                       (for/list ([exposure-stx (in-list (syntax->list #'constructor-field-exposures))]
                                  [name-field (in-list constructor-name-fields)]
+                                 [mutable? (in-list (syntax->list #'constructor-field-mutables))]
                                  [field-keyword (in-list (syntax->list #'constructor-field-keywords))]
                                  #:when (eq? 'public (syntax-e exposure-stx)))
-                        (list name-field field-keyword))]
+                        (list name-field
+                              mutable?
+                              field-keyword))]
                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [internal-name-instance (and internal-id
                                                   (intro (datum->syntax #f (string->symbol
@@ -200,22 +203,25 @@
                      [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
-                     [((super-field-name super-name-field . _) ...) (if super
-                                                                        (class-desc-fields super)
-                                                                        '())]
-                     [((super-public-name-field super-public-field-keyword) ...) (if super
-                                                                                     (for/list ([fld (in-list (class-desc-fields super))]
-                                                                                                #:unless (identifier? (field-desc-constructor-arg fld)))
-                                                                                       (list
-                                                                                        (field-desc-accessor-id fld)
-                                                                                        (let ([arg (field-desc-constructor-arg fld)])
-                                                                                          (cond
-                                                                                            [(keyword? (syntax-e arg)) arg]
-                                                                                            [(box? (syntax-e arg))
-                                                                                             (define c (unbox (syntax-e arg)))
-                                                                                             (and (keyword? (syntax-e c)) c)]
-                                                                                            [else #f]))))
-                                                                                     '())]
+                     [((super-field-name super-name-field super-name-field-mutable? . _) ...) (if super
+                                                                                                  (class-desc-fields super)
+                                                                                                  '())]
+                     [((super-public-name-field
+                        super-public-name-field-mutable?
+                        super-public-field-keyword) ...) (if super
+                                                             (for/list ([fld (in-list (class-desc-fields super))]
+                                                                        #:unless (identifier? (field-desc-constructor-arg fld)))
+                                                               (list
+                                                                (field-desc-accessor-id fld)
+                                                                (field-desc-mutator-id fld)
+                                                                (let ([arg (field-desc-constructor-arg fld)])
+                                                                  (cond
+                                                                    [(keyword? (syntax-e arg)) arg]
+                                                                    [(box? (syntax-e arg))
+                                                                     (define c (unbox (syntax-e arg)))
+                                                                     (and (keyword? (syntax-e c)) c)]
+                                                                    [else #f]))))
+                                                             '())]
                      [indirect-static-infos indirect-static-infos]
                      [internal-indirect-static-infos internal-indirect-static-infos]
                      [instance-static-infos instance-static-infos])
@@ -235,7 +241,9 @@
                                                         dot-providers internal-dot-providers
                                                         make-converted-name make-converted-internal
                                                         constructor-name-fields [constructor-public-name-field ...]
+                                                        constructor-field-mutables [constructor-public-name-field-mutable? ...]
                                                         [super-name-field ...] [super-public-name-field ...]
+                                                        [super-name-field-mutable? ...] [super-public-name-field-mutable? ...]
                                                         constructor-field-keywords [constructor-public-field-keyword ...]
                                                         [super-field-keyword ...] [super-public-field-keyword ...])))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
@@ -301,6 +309,7 @@
        (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
        (define given-expression-macro-rhs (hash-ref options 'expression-rhs #f))
+       (define constructor-forward-rets (hash-ref options 'constructor-forward-rets #f))
        (define binding-rhs (hash-ref options 'binding-rhs #f))
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define-values (internal-id exposed-internal-id extra-exposed-internal-ids)
@@ -337,12 +346,18 @@
        (define constructor-keywords (syntax->list #'(constructor-field-keyword ...)))
        (define constructor-defaults (syntax->list #'(constructor-field-default ...)))
        (define constructor-static-infoss (syntax->list #'(constructor-field-static-infos ...)))
+       (define constructor-field-names (syntax->list #'(constructor-field-name ...)))
+       (define constructor-mutables (syntax->list #'(constructor-field-mutable ...)))
        (define-values (constructor-public-fields constructor-private-fields)
          (partition-fields constructor-fields constructor-exposures #:result values))
        (define-values (constructor-public-keywords constructor-private-keywords)
          (partition-fields constructor-keywords constructor-exposures #:result values))
        (define-values (constructor-public-defaults constructor-private-defaults)
          (partition-fields constructor-defaults constructor-exposures #:result values))
+       (define-values (constructor-public-field-names constructor-private-field-names)
+         (partition-fields constructor-field-names constructor-exposures #:result values))
+       (define-values (constructor-public-mutables constructor-private-mutables)
+         (partition-fields constructor-mutables constructor-exposures #:result values))
        (define constructor-converters (syntax->list #'(constructor-field-converter ...)))
        (define constructor-annotation-strs (map syntax-e (syntax->list #'(constructor-field-annotation-str ...))))
 
@@ -357,7 +372,7 @@
                                  (any-stx? constructor-defaults)
                                  (for/or ([converter (in-list constructor-converters)])
                                    (and (syntax-e converter) #t))))
-       (define-values (super-constructor-fields super-keywords super-defaults)
+       (define-values (super-constructor-fields super-accessors super-mutators super-keywords super-defaults)
          (extract-super-constructor-fields super))
        (define-values (super-constructor+-fields super-constructor+-keywords super-constructor+-defaults)
          ;; The "constructor+" list corresponds to private+protected fields in the internal constructor as well
@@ -458,16 +473,10 @@
          (or has-private-fields?
              ((hash-count method-private) . > . 0)))
 
-       (define has-mutable-constructor-arg?
-         (or (for/or ([mut (in-list (syntax->list #'(constructor-field-mutable ...)))]
-                      [ex (in-list (syntax->list #'(constructor-field-exposure ...)))])
-               (and (syntax-e mut)
-                    (eq? 'public (syntax-e ex))))
-             (and super
-                  (super-has-mutable-constructor-field? super))))
-       (define has-mutable-internal-constructor-arg?
-         (for/or ([mut (in-list (syntax->list #'(constructor-field-mutable ...)))])
-           (syntax-e mut)))
+       (define-values (has-mutable-constructor-arg? has-mutable-internal-constructor-arg?)
+         (extract-has-mutable-constructor-arguments #'(constructor-field-mutable ...)
+                                                    #'(constructor-field-exposure ...)
+                                                    super))
 
        (define-values (callable? here-callable? public-callable?)
          (able-method-status 'call super interfaces method-mindex method-vtable method-private))
@@ -755,14 +764,20 @@
                                               given-constructor-rhs)
                                          (append super-keywords constructor-public-keywords)
                                          (append super-defaults constructor-public-defaults)
+                                         (append super-accessors (syntax->list #'(constructor-public-name-field ...)))
+                                         (append super-mutators constructor-public-mutables)
                                          (append super-keywords constructor-private-keywords)
                                          (append super-defaults constructor-private-defaults)
+                                         (append super-accessors (syntax->list #'(constructor-name-field ...)))
+                                         (append super-mutators constructor-private-mutables)
+                                         (eq? constructor-rhs 'synthesize) constructor-forward-rets
                                          #'(name constructor-name name-instance
                                                  internal-name-instance make-internal-name
                                                  indirect-static-infos
                                                  dot-providers internal-dot-providers
                                                  [name-field ...]
                                                  [field-static-infos ...]
+                                                 [public-name-field ...]
                                                  [public-name-field/mutate ...]
                                                  [public-maybe-set-name-field! ...]
                                                  [public-field-static-infos ...]))

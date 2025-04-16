@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "annot-context.rkt")
          (except-in racket/vector
                     vector-member)
          "vector-member.rkt"
@@ -17,6 +18,7 @@
          "call-result-key.rkt"
          "index-result-key.rkt"
          "sequence-constructor-key.rkt"
+         "sequence-element-key.rkt"
          "contains-key.rkt"
          "composite.rkt"
          "op-literal.rkt"
@@ -83,6 +85,9 @@
      (syntax-parse stx
        [(form-id . tail) (values (relocate-id #'form-id #'vector) #'tail)]))))
 
+(define-syntax (no-of-static-infos data static-infoss)
+  #`())
+
 (define-annotation-constructor (Array now_of)
   () #'vector? #,(get-array-static-infos)
   1
@@ -92,10 +97,12 @@
         (lambda (arg)
           (for/and ([e (in-vector arg)])
             (pred e)))))
-  (lambda (static-infoss)
-    ;; no static info, since mutable and content is checked only initially
-    #'())
+  ;; no static info, since mutable and content is checked only initially
+  #'no-of-static-infos #f
   "converter annotation not supported for elements;\n immediate checking needs a predicate annotation for the array content" #'())
+
+(define-syntax (array-of-static-infos data static-infoss)
+  #`((#%index-result #,(car static-infoss))))
 
 (define-annotation-constructor (Array/again later_of)
   () #'vector? #,(get-array-static-infos)
@@ -112,8 +119,7 @@
           (chaperone-vector vec
                             #,(make-reelementer "current")
                             #,(make-reelementer "new")))))
-  (lambda (static-infoss)
-    #`((#%index-result #,(car static-infoss))))
+  #'array-of-static-infos #f
   #'array-build-convert #'()
   #:parse-of parse-annotation-of/chaperone)
 
@@ -122,7 +128,7 @@
    #f
    `((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens len-g)) . tail)
         (values
@@ -234,8 +240,27 @@
                                              (number->string n)
                                              ")"))))
 
+(define-syntax (select-elem data deps)
+  (define args (annotation-dependencies-args deps))
+  (define arr-i 0)
+  (define si
+    (or (static-info-lookup (or (and (< arr-i (length args))
+                                     (list-ref args arr-i))
+                                #'())
+                            #'#%index-result)
+        #'()))
+  (cond
+    [(static-infos-empty? si)
+     #'()]
+    [else
+     (case (syntax-e data)
+       [(sequence) #`((#%sequence-element #,si))]
+       [(index) #`((#%index-result #,si))]
+       [else si])]))
+
 (define/method (Array.get v i)
   #:primitive (vector-ref)
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem value)))))
   (vector-ref v i))
 
 (define/method (Array.set v i x)
@@ -285,7 +310,8 @@
 
 (define/method (Array.snapshot v)
   #:primitive (vector->immutable-vector)
-  #:static-infos ((#%call-result #,(get-array-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem index))
+                                  #,@(get-array-static-infos))))
   (vector->immutable-vector v))
 
 (define/method (Array.take v n)
@@ -320,7 +346,8 @@
      v2)))
 
 (define/method (Array.to_list v)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem index))
+                                  #,@(get-treelist-static-infos))))
   (check-array who v)
   (vector->treelist v))
 
@@ -334,7 +361,8 @@
 
 (define/method (Array.to_sequence v)
   #:primitive (in-vector)
-  #:static-infos ((#%call-result ((#%sequence-constructor #t))))
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  (#%sequence-constructor #t))))
   (in-vector v))
 
 (define-binding-syntax Array

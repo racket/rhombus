@@ -56,7 +56,7 @@
                                                       [(si) (set! static-infos si)]))))
               (define-syntax #,(in-annotation-space #'name)
                 (letrec ([self (make-delayed-annotation
-                                (lambda (stx)
+                                (lambda (stx ctx)
                                   (values (annotation-predicate-form
                                            #'delayed-predicate
                                            #'((#%indirect-static-info delayed-static-info)))

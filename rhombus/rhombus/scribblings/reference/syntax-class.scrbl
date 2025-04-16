@@ -26,9 +26,12 @@
               | ...'
 
   grammar maybe_args:
-    ($id_bind, ...)
-    ($id_bind, ..., & $rest_id)
+    ($bind_id_maybe_kw_opt, ...)
+    ($bind_id_maybe_kw_opt, ..., & $rest_id)
     #,(epsilon)
+
+  grammar bind_id_maybe_kw_opt:
+    #,(@elem{a @rhombus(bind_maybe_kw_opt), but with a plain @nontermref(id) as @nontermref(bind)})
 
   grammar class_clause:
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
@@ -50,9 +53,9 @@
 ){
 
  Defines a @deftech{syntax class} @rhombus(stxclass_id_name) that can be used in syntax patterns with
- @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
- case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
- arguments; an @rhombus(id_bind) is like a @rhombus(bind_maybe_kw_opt) for
+ @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments; unless all arguments are
+ have devault values, every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
+ arguments. An @rhombus(bind_id_maybe_kw_opt) is like a @rhombus(bind_maybe_kw_opt) for
  @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments
  are visible in @rhombus(class_clause) bodies. Use @rhombus(syntax_class.together, ~defn) to

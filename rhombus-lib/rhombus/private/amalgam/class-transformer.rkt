@@ -12,7 +12,8 @@
 
 (provide (for-syntax wrap-class-transformer))
 
-(define-for-syntax (wrap-class-transformer name tail-name g make-prefix-operator what)
+(define-for-syntax (wrap-class-transformer name tail-name g make-prefix-operator what
+                                           #:extra-args [extra-args null])
   (check-class-transformer tail-name g what)
   (define lam
     (syntax-parse g
@@ -72,7 +73,7 @@
                             '((default . stronger))
                             'macro
                             (let ([name #,lam])
-                              (let ([name (lambda (tail head)
+                              (let ([name (lambda (tail head #,@extra-args)
                                             (name (pack-tail
                                                    (cons head (unpack-tail tail #f #f)))))])
                                 name)))))

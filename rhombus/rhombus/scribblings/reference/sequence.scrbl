@@ -19,6 +19,7 @@ internal state, and the state can even be specific to a particular
 
 @doc(
   annot.macro 'Sequence'
+  annot.macro 'Sequence.expect_of($ann, ...)'
 ){
 
  Matches any @tech{sequence}.
@@ -27,6 +28,14 @@ internal state, and the state can even be specific to a particular
  expression acceptable as a sequence to @rhombus(for) in static mode, and
  it is suitable when a more specialized annotation (such as
  @rhombus(List) or @rhombus(Array)) is not available.
+
+ A @rhombus(Sequence.expect_of(ann, ...), ~annot) annotation is the same
+ as @rhombus(Sequence, ~annot), but elements drawn from the sequence via
+ @rhombus(for) have the static information of @rhombus(ann)s (where
+ multiple @rhombus(ann)s correspond to multiple values for each element,
+ such as the key and value from a @tech{map}). The extracted elements are
+ not checked or converted, however, and each @rhombus(ann)s is used only
+ for its static information.
 
 }
 

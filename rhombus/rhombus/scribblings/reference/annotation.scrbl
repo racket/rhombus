@@ -39,6 +39,38 @@
 }
 
 @doc(
+  expr.macro '$expr :~ $annot'
+  repet.macro '$repet :~ $annot'
+){
+
+ Associates static information to the overall expression the same as
+ @rhombus(::), but performs no run-time check on the value of
+ @rhombus(expr). The @rhombus(annot) must specify a @tech(~doc: guide_doc){predicate
+  annotation}.
+
+@examples(
+  [1, 2, 3] :~ List
+  "oops" :~ List
+)
+
+}
+
+@doc(
+  bind.macro '$bind :~ $annot'
+){
+
+ Associates static information to @rhombus(bind) the same as
+ @rhombus(::, ~bind), but performs no run-time check. The @rhombus(annot)
+ must specify a @tech(~doc: guide_doc){predicate annotation}.
+
+@examples(
+  def x :~ List = [1, 2, 3]
+  def x :~ List = "oops"
+)
+
+}
+
+@doc(
   annot.macro 'Any'
   annot.macro 'Any.of($expr, ...)'
   annot.macro 'Any.to_boolean'
@@ -71,34 +103,121 @@
 
 }
 
+
 @doc(
-  expr.macro '$expr :~ $annot'
-  repet.macro '$repet :~ $annot'
+  ~nonterminal:
+    arg_id: block id
+    class_name: namespace id_name ~defn
+    field_id: block id
+  annot.macro 'Any.like($arg_id)'
+  annot.macro 'Any.like_element($arg_id)'
+  annot.macro 'Any.like_key($arg_id)'
+  annot.macro 'Any.like_value($arg_id)'
+  annot.macro 'Any.like_first($arg_id)'
+  annot.macro 'Any.like_rest($arg_id)'
+  annot.macro 'Any.like_field($class_name . $field_id($arg_id))'
 ){
 
- Associates static information to the overall expression the same as
- @rhombus(::), but performs no run-time check on the value of
- @rhombus(expr). The @rhombus(annot) must specify a @tech(~doc: guide_doc){predicate
-  annotation}.
+ Annotation constructors for use in a context where named arguments are
+ available---especially in the result annotation position of
+ @rhombus(fun, ~defn). Annotations created by @rhombus(Any.like, ~annot)
+ and related forms do not imply any run-time checks, but they propagate
+ static information from actual argument expressions in a specific
+ function call to that specific call's result.
+
+ In the case of a method, @rhombus(this) can be used as an
+ @rhombus(arg_id) to refer to the actual target object. When an
+ @rhombus(arg_id) refers to a repetition, then static information for
+ actual arguments mapped to the repetition are combined with
+ @rhombus(statinfo_meta.or). When an @rhombus(arg_id) refers to a splice
+ or keyword splice, then corresponding arguments are similarly combined
+ with @rhombus(statinfo_meta.or) to get the element or value static
+ information within the splice variable as a list or map.
+
+ An @rhombus(Any.like, ~annot) annotation propagates static information
+ directly from an argument.
 
 @examples(
-  [1, 2, 3] :~ List
-  "oops" :~ List
+  ~defn:
+    fun twice(v) :: List.of(Any.like(v)):
+      [v, v]
+    fun rev(v, ...) :: List.of(Any.like(v)):
+      [v, ...].reverse()
+  ~repl:
+    use_static
+    def lst = twice("apple")
+    :
+      lst[0].length() // method found statically
+    :
+      rev("a", "bb", "ccc")[0].length() // ditto
 )
 
-}
-
-@doc(
-  bind.macro '$bind :~ $annot'
-){
-
- Associates static information to @rhombus(bind) the same as
- @rhombus(::, ~bind), but performs no run-time check. The @rhombus(annot)
- must specify a @tech(~doc: guide_doc){predicate annotation}.
+ An @rhombus(Any.like_element, ~annot) annotation propagates static
+ information corresponding to @tech{sequence} or @tech{indexable} values
+ within an argument.
 
 @examples(
-  def x :~ List = [1, 2, 3]
-  def x :~ List = "oops"
+  ~defn:
+    fun pick(choices :: List) :: Any.like_element(choices):
+      choices[math.random(choices.length())]
+  ~repl:
+    use_static
+    pick(["a", "b"]).length()
+)
+
+ The @rhombus(Any.like_key, ~annot) or @rhombus(Any.like_value, ~annot)
+ annotation constructors are normally used for @tech{maps}. They are
+ similar to @rhombus(Any.like_element, ~annot), but for a @tech{sequence}
+ that produces two values, where @rhombus(Any.like_key, ~annot)
+ corresponds to the first value and @rhombus(Any.like_value, ~annot) the
+ second.
+
+@examples(
+  ~defn:
+    fun listize(m :: Map) :: List.of(Pair.of(Any.like_key(m),
+                                             Any.like_value(m))):
+      for List ((k, v) in m):
+        Pair(k, v)
+  ~repl:
+    use_static
+    def lst = listize({ "a": [1, 2, 3], "b": [0, 0] })
+    lst[0].first.length()
+    lst[1].rest.reverse()
+)
+
+ The @rhombus(Any.like_first, ~annot) or @rhombus(Any.like_rest, ~annot)
+ are similar to @rhombus(Any.like_element, ~annot), but for the components of
+ @tech{pairs}. 
+
+@examples(
+  ~defn:
+    fun pick_part(pr :: Pair) :: Any.like_first(pr) || Any.like_rest(pr):
+      if math.random(2) == 0
+      | pr.first
+      | pr.rest
+  ~repl:
+    use_static
+    pick_part(Pair("apples", "banana")).length()
+)
+
+ An @rhombus(Any.like_field(class_name.field_id(arg_id)), ~annot)
+ annotation propagates static information corresponding to the field
+ named by @rhombus(field_id) in the class named by @rhombus(class_name),
+ where @rhombus(arg_id) is an object that is an instance of
+ @rhombus(class_name).
+
+@examples(
+  ~defn:
+    class Posn(x :: Int || Flonum, y :: Int || Flonum):
+      // if both are Int or both are Flonum, result is the same
+      method dist() :: (Any.like_field(Posn.x(this))
+                          || Any.like_field(Posn.y(this))):
+        x + y
+  ~repl:
+    :
+      3.0 + Posn(1.0, 2.0).dist() // uses Flonum arithmetic
+    :
+      3.0 + Posn(1, 2.0).dist() // uses generic arithmetic
 )
 
 }

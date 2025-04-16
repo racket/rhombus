@@ -55,7 +55,7 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
-  (struct rhombus-syntax-class (kind class attributes splicing? arity root-swap auto-args key))
+  (struct rhombus-syntax-class (kind class attributes splicing? arity-mask root-swap auto-args key))
   (define (syntax-class-ref v) (and (rhombus-syntax-class? v) v))
 
   ;; used to communicate `syntax.parse` as a anonymous-class form
@@ -92,7 +92,7 @@
 
   (define (make-syntax-class pat
                              #:kind [kind 'term]
-                             #:arity [arity #f]
+                             #:arity-mask [arity-mask #f]
                              #:fields [fields #'()]
                              #:splicing? [splicing? #f]
                              #:root-swap [root-swap #f]
@@ -100,7 +100,7 @@
                              #:key [key (if (null? (syntax-e fields))
                                             #f
                                             (gensym 'sc))])
-    (rhombus-syntax-class kind pat fields splicing? arity root-swap auto-args key)))
+    (rhombus-syntax-class kind pat fields splicing? arity-mask root-swap auto-args key)))
 
 (define-splicing-syntax-class :sequence
   (pattern (~seq _ ...)))
@@ -149,23 +149,23 @@
         NameStart:id in-space
         (~optional (~seq AfterPrefixParsed:id (~var :prefix-op+form+tail)
                          AfterInfixParsed:id (~var :infix-op+form+tail)))
-        (~optional (~seq #:extra-arity a)
+        (~optional (~seq #:extra-arity-mask a)
                    #:defaults ([a #'#f])))
      #'(begin
          (define-syntax-class-syntax Parsed (make-syntax-class #':form
                                                                #:kind 'group
-                                                               #:arity a
+                                                               #:arity-mask a
                                                                #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag) stx))
                                                                #:root-swap '(parsed . group)))
          (~? (define-syntax-class-syntax AfterPrefixParsed (make-syntax-class #':prefix-op+form+tail
                                                                               #:kind 'group
-                                                                              #:arity (if a (+ a 2) 2)
+                                                                              #:arity-mask (if a (arithmetic-shift a 1) 2)
                                                                               #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag) stx)
                                                                                           (tail #f tail tail unpack-tail-list* stx))
                                                                               #:root-swap '(parsed . group))))
          (~? (define-syntax-class-syntax AfterInfixParsed (make-syntax-class #':infix-op+form+tail
                                                                              #:kind 'group
-                                                                             #:arity (if a (+ a 2) 2)
+                                                                             #:arity-mask (if a (arithmetic-shift a 1) 2)
                                                                              #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag) stx)
                                                                                          (tail #f tail tail unpack-tail-list* stx))
                                                                              #:root-swap '(parsed . group))))
@@ -177,10 +177,10 @@
 (define-syntax (define-transformer-syntax-class stx)
   (syntax-parse stx
     [(_ Parsed (~var :form) parsed-tag
-        (~optional (~seq #:arity a)
+        (~optional (~seq #:arity-mask a)
                    #:defaults ([a #'#f])))
      #'(define-syntax-class-syntax Parsed (make-syntax-class #':form
                                                              #:kind 'group
-                                                             #:arity a
+                                                             #:arity-mask a
                                                              #:fields #'((parsed #f parsed 0 (unpack-parsed* 'parsed-tag) stx))
                                                              #:root-swap '(parsed . group)))]))

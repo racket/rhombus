@@ -19,6 +19,7 @@
          "realm.rkt"
          "tag.rkt"
          "dotted-sequence.rkt"
+         "name-equal.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "srcloc.rkt"
@@ -195,7 +196,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (parse-syntax-of-annotation stx))))
 
 (begin-for-syntax
@@ -650,25 +651,7 @@
   (replace-context (extract-ctx who ctx #:false-ok? #f) v))
 
 (define/method (Syntax.name_to_symbol v)
-  (syntax-parse (and (syntax*? v)
-                     (unpack-group v who #f #t))
-    #:datum-literals (group op)
-    [(group (op o)) (syntax-e #'o)]
-    [(group x:identifier) (syntax-e #'x)]
-    [(group s::dotted-operator-or-identifier-sequence)
-     (string->symbol
-      (apply
-       string-append
-       (let loop ([s #'s])
-         (syntax-parse s
-           #:datum-literals (parens group op |.|)
-           [(head (op |.|) . tail)
-            (list* (symbol->immutable-string (syntax-e #'head))
-                   "."
-                   (loop #'tail))]
-           [((parens (group (op o)))) (list "(" (symbol->immutable-string (syntax-e #'o)) ")")]
-           [(x) (list (symbol->immutable-string (syntax-e #'x)))]))))]
-    [_ (raise-annotation-failure who v "Name")]))
+  (name-to-symbol who v))
 
 (define (do-relocate who stx-in ctx-stx-in
                      extract-ctx annot)

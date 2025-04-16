@@ -1,7 +1,7 @@
 #lang racket/base
 (require "treelist.rkt"
          "mutable-treelist.rkt"
-         (submod "range.rkt" for-listable)
+         "range-struct.rkt"
          "annotation-failure.rkt")
 
 (provide prop:Listable Listable? Listable-ref
@@ -9,7 +9,16 @@
          listable?
          to-list
          to-treelist
-         maybe-list->treelist)
+         maybe-list->treelist
+
+         set-range->list!)
+
+(define list-range->list (lambda (v) null))
+(define list-range->treelist (lambda (v) empty-treelist))
+
+(define (set-range->list! ->list ->treelist)
+  (set! list-range->list ->list)
+  (set! list-range->treelist ->treelist))
 
 (define-values (prop:Listable Listable? Listable-ref)
   (make-struct-type-property 'Listable))

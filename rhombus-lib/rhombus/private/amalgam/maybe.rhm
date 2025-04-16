@@ -14,8 +14,10 @@ export:
   ?.
   ?>
 
-annot.macro 'maybe($(ann :: annot_meta.Parsed))':
+annot.macro 'maybe($(ann :: Group))':
   ~all_stx: stx
+  ~context: ctx
+  let '$(ann :: annot_meta.Parsed(ctx))' = ann
   if annot_meta.is_predicate(ann)
   | let (pred, statinfos) = annot_meta.unpack_predicate(ann)
     annot_meta.pack_predicate('block:

@@ -60,7 +60,8 @@ sequence.
 
 
 @doc(
-  fun Listable.to_list(v :: Listable) :: List
+  fun Listable.to_list(v :: Listable)
+    :: List.of(Any.like_element(v))
 ){
 
  Converts any @tech{listable} value to a list.
@@ -70,6 +71,18 @@ sequence.
   Listable.to_list(PairList[1, 2, 3])
   Listable.to_list(Array(1, 2, 3))
 )
+
+}
+
+
+@doc(
+  annot.macro 'Listable.expect_of(ann)'
+){
+
+ An annotation like @rhombus(Listable, ~annot), with static information
+ indicating that elements have the static information of @rhombus(ann).
+ The extracted elements are not checked or converted, however, and
+ @rhombus(ann) is used only for its static information.
 
 }
 

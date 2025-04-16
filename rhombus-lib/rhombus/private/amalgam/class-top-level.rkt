@@ -15,7 +15,9 @@
          (only-in "class-desc.rkt"
                   define-class-desc-syntax)
          (only-in "class-define-method-result.rkt"
-                  define-method-result))
+                  define-method-result)
+         (only-in "class-static-info.rkt"
+                  define-constructor-static-info))
 
 (provide (for-syntax top-level-declare
                      reorder-for-top-level))
@@ -56,7 +58,8 @@
                         define-annotation-syntax define-annotation-constructor
                         define-dot-provider-syntax
                         define-update-syntax
-                        define-method-result)
+                        define-method-result
+                        define-constructor-static-info)
             [(begin d ...)
              (loop (append (syntax->list #'(d ...)) (cdr defs)) stxs vars var-names)]
             [(~or* (define (id . _) . _)
@@ -73,7 +76,8 @@
                    (define-annotation-constructor . _)
                    (define-dot-provider-syntax . _)
                    (define-update-syntax . _)
-                   (define-method-result . _))
+                   (define-method-result . _)
+                   (define-constructor-static-info . _))
              (loop (cdr defs) (cons def stxs) vars var-names)]
             [_
              (loop (cdr defs) stxs (cons def vars) var-names)])]))]

@@ -58,6 +58,12 @@ contents, even if one is mutable and the other is immutable.
  @rhombus(annot) is propagated to accesses of the array. Note that a
  converter @rhombus(annot) is applied for each access or update.
 
+ Note that @rhombus(Any.like_element, ~annot) will not find any static
+ information for elements from an expression with an
+ @rhombus(Array, ~annot) or @rhombus(Array.now_of, ~annot) annotation,
+ but an @rhombus(Array.later_of, ~annot) annotation can imply static
+ information for elements.
+
  @rhombus(MutableArray, ~annot) matches only mutable arrays, and
  @rhombus(ImmutableArray, ~annot) matches only immutable arrays (that may
  originate from Racket).
@@ -191,7 +197,8 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).get(n :: NonnegInt) :: Any
+  method (arr :: Array).get(n :: NonnegInt)
+    :: Any.like_element(arr)
 ){
 
  Equivalent to @rhombus(arr[n]) (with the default implicit
@@ -301,7 +308,8 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  method (arr :: Array).snapshot() :: ImmutableArray
+  method (arr :: Array).snapshot()
+    :: ImmutableArray && Array.always_of(Any.like_element(arr))
 ){
 
  Returns an immutable array as-is or copies a mutable array's content to
@@ -360,7 +368,8 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).to_list() :: List
+  method (arr :: Array).to_list()
+    :: List.of(Any.like_element(arr))
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
@@ -370,7 +379,8 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).to_sequence() :: Sequence
+  method (arr :: Array).to_sequence()
+    :: Sequence.expect_of(Any.like_element(arr))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

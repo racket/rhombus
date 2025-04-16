@@ -206,7 +206,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens g ...+)) . tail)
         (with-syntax ([(kw ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
@@ -260,8 +260,8 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
-     (parse-arrow-all-of stx))))
+   (lambda (stx ctx)
+     (parse-arrow-all-of stx ctx))))
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
@@ -347,7 +347,7 @@
         [(form-id (alts-tag::alts
                    (_::block
                     (group name-seq::dotted-identifier-sequence (~and args (_::parens arg::kw-binding ... rest::maybe-arg-rest))
-                           ret::ret-annotation
+                           (~var ret (:ret-annotation (parse-arg-context #'args)))
                            (~and rhs (_::block
                                       (~alt
                                        (~optional (~and who-clause (group #:who . _)))
@@ -405,7 +405,7 @@
                    (_::block
                     (group name-seq::dotted-identifier-sequence
                            (~and args-form (_::parens arg::kw-binding ... rest::maybe-arg-rest))
-                           ret::ret-annotation
+                           (~var ret (:ret-annotation (parse-arg-context #'args-form)))
                            (~and rhs (_::block
                                       (~alt
                                        (~optional (~and inner-who-clause (group #:who . _)))
@@ -464,7 +464,7 @@
         ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
-                  ret::ret-annotation
+                  (~var ret (:ret-annotation (parse-arg-context #'args-form)))
                   (~and rhs (rhs-tag::block (~alt
                                              (~optional (~and reflect-name-clause (group #:name . _)))
                                              (~optional (~and who-clause (group #:who . _)))
@@ -563,7 +563,8 @@
                           ...))
               (alts-tag::alts
                (_::block
-                (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
+                (group (~and args-form (_::parens arg::kw-binding ... rest::maybe-arg-rest))
+                       (~var ret (:ret-annotation (parse-arg-context #'args-form)))
                        (~and rhs (_::block
                                   (~optional (~and who-clause (group #:who . _)))
                                   body ...))))
@@ -593,7 +594,8 @@
                   proc))
              #'())]
     ;; single-alternative case
-    [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
+    [(form-id (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
+              (~var ret (:ret-annotation (parse-arg-context #'args-form)))
               (~and rhs (rhs-tag::block
                          (~alt (~optional (~and reflect-name-clause (group #:name . _)))
                                (~optional (~and who-clause (group #:who . _))))

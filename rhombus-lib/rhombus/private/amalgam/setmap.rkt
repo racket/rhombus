@@ -9,7 +9,10 @@
          (submod "set.rkt" for-build)
          (submod "set.rkt" for-info)
          (submod "set.rkt" for-binding)
-         "static-info.rkt")
+         "static-info.rkt"
+         "sequence-element-key.rkt"
+         "index-result-key.rkt"
+         "values-key.rkt")
 
 (provide (for-syntax parse-setmap-expression
                      parse-setmap-binding))
@@ -18,7 +21,7 @@
                                              #:shape [init-shape #f]
                                              #:who [who #f]
                                              #:repetition? [repetition? #f])
-  (define-values (shape argss)
+  (define-values (shape argss k-static-infos v-static-infos)
     (parse-setmap-content stx
                           #:set-for-form #'for/setalw
                           #:shape init-shape
@@ -32,7 +35,17 @@
                  (if (eq? shape 'set) #'set-extend* #'hash-extend*)
                  (if (eq? shape 'set) #'set-append #'hash-append)
                  (if (eq? shape 'set) #'set-assert #'hash-assert)
-                 (if (eq? shape 'set) (get-set-static-infos) (get-map-static-infos))
+                 (if (eq? shape 'set)
+                     (if (static-infos-empty? k-static-infos)
+                         (get-set-static-infos)
+                         #`((#%sequence-element #,k-static-infos)
+                            #,@(get-set-static-infos)))
+                     (if (and (static-infos-empty? k-static-infos)
+                              (static-infos-empty? v-static-infos))
+                         (get-map-static-infos)
+                         #`((#%index-result #,v-static-infos)
+                            (#%sequence-element ((#%values (#,k-static-infos #,v-static-infos))))
+                            #,@(get-map-static-infos))))
                  #:repetition? repetition?
                  #:rep-for-form (if (eq? shape 'set) #'for/setalw #'for/hashalw))))
 
@@ -40,7 +53,7 @@
   ;; we use `parse-setmap-content` just to pick between maps and sets;
   ;; we'll then parse from scarcth, since bindings support a more
   ;; limited set of splices
-  (define-values (shape argss)
+  (define-values (shape argss k-static-infos v-static-infos)
     (syntax-parse stx
       [(_ braces . tail)
        (parse-setmap-content #'braces

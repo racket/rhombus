@@ -48,7 +48,7 @@
 (begin-for-syntax
   (define-transformer-syntax-class
     ParsedModifier :export-modifier #:rhombus/expo
-    #:arity 2))
+    #:arity-mask 2))
 
 (define-for-syntax (extract-modifier form proc req)
   (syntax-parse (if (syntax*? form)

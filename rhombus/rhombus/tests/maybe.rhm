@@ -58,3 +58,10 @@ block:
   def [x :: maybe(String), ...] = [#false, "abc", #false]
   check: [x?.length(), ...]
          ~is [#false, 3, #false]
+  check: (dynamic("hello") :: String || maybe(String))!!.length()
+         ~is 5
+  check: (dynamic("hello") :: String && maybe(String))!!.length()
+         ~is 5
+  check: dynamic(#false) :: String && maybe(String)
+         ~throws error.annot_msg()
+

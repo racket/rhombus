@@ -17,7 +17,8 @@
                      "values-key.rkt"
                      (for-syntax racket/base)
                      "srcloc.rkt"
-                     "syntax-wrap.rkt")
+                     "syntax-wrap.rkt"
+                     "annot-context-meta.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -56,7 +57,9 @@
      Parsed
      AfterPrefixParsed
      AfterInfixParsed
-     NameStart)))
+     NameStart
+     [Context annot_meta.Context]
+     [Dependencies annot_meta.Dependencies])))
 
 (define-for-syntax space
   (space-syntax rhombus/annot))
@@ -64,6 +67,7 @@
 (define-operator-definition-transformer macro
   'macro
   rhombus/annot
+  #:extra ([#:context get-annotation-context-static-infos value])
   #'make-annotation-prefix-operator
   #'make-annotation-infix-operator
   #'annotation-prefix+infix-operator)
@@ -73,7 +77,8 @@
     Parsed :annotation #:rhombus/annot
     NameStart in-annotation-space
     AfterPrefixParsed :prefix-op+annotation+tail
-    AfterInfixParsed :infix-op+annotation+tail))
+    AfterInfixParsed :infix-op+annotation+tail
+    #:extra-arity-mask 3))
 
 (begin-for-syntax
   (struct annotation-prefix+infix-operator (prefix infix)
@@ -95,17 +100,17 @@
    prec
    protocol
    (if (eq? protocol 'macro)
-       (lambda (form1 tail)
+       (lambda (form1 tail ctx)
          (define-values (form new-tail)
            (tail-returner
             proc
             (syntax-parse tail
-              [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)])))
+              [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head ctx)])))
          (check-transformer-result (parse-annotation-macro-result form proc)
                                    (unpack-tail new-tail proc #f)
                                    proc))
-       (lambda (form1 form2 stx)
-         (parse-annotation-macro-result (proc (wrap-parsed form1) (wrap-parsed form2) stx)
+       (lambda (form1 form2 stx ctx)
+         (parse-annotation-macro-result (proc (wrap-parsed form1) (wrap-parsed form2) stx ctx)
                                         proc
                                         #:srcloc (datum->syntax #f (list form1 stx form2)))))
    assc))
@@ -116,17 +121,17 @@
    prec
    protocol
    (if (eq? protocol 'macro)
-       (lambda (tail)
+       (lambda (tail ctx)
          (define-values (form new-tail)
            (tail-returner
             proc
             (syntax-parse tail
-              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
+              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head ctx)])))
          (check-transformer-result (parse-annotation-macro-result form proc)
                                    (unpack-tail new-tail proc #f)
                                    proc))
-       (lambda (form stx)
-         (parse-annotation-macro-result (proc (wrap-parsed form) stx)
+       (lambda (form stx ctx)
+         (parse-annotation-macro-result (proc (wrap-parsed form) stx ctx)
                                         proc
                                         #:srcloc (datum->syntax #f (list stx form)))))))
 

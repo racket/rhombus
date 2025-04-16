@@ -3,7 +3,6 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "consistent.rkt"
-                     "same-expression.rkt"
                      "entry-point-adjustment.rkt")
          "expression.rkt"
          (only-in "repetition.rkt"
@@ -576,11 +575,11 @@
                                         main-order main-prec main-assc
                                         main-reflect-name main-who)
   (define (maybe-static-infos/main ops)
-    (or main-ret-static-infos
+    (or main-ret-static-infos        
         (let ([static-infoss (map opcase-ret-static-infos ops)])
-          (and (for/and ([static-infos (in-list (cdr static-infoss))])
-                 (same-expression? (car static-infoss) static-infos))
-               (car static-infoss)))
+          (and (pair? static-infoss)
+               (for/fold ([static-infos (car static-infoss)]) ([si (in-list (cdr static-infoss))])
+                 (static-infos-or static-infos si))))
         #'()))
   (define-values (all pres ins posts)
     (for/fold ([all '()] [pres '()] [ins '()] [posts '()] [use-main-reflect-name main-reflect-name]

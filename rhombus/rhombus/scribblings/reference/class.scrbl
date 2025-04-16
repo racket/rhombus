@@ -493,6 +493,12 @@
          $body
          ...
      | ...
+    $id $maybe_res_annot
+    | $id $case_maybe_kw:
+        $name_option; ...
+        $body
+        ...
+    | ...
 
   grammar property_impl:
     $id $maybe_res_annot:
@@ -529,13 +535,18 @@
  an optional result annotation and a block containing an @tech{entry
   point}, or it has the same form as a @rhombus(fun) definition with a
  form name like @rhombus(method, ~class_clause) in place of
- @rhombus(fun). A @rhombus(maybe_res_annot) applies to the immediate method
+ @rhombus(fun). A non-empty @rhombus(maybe_res_annot) that precedes separate cases
+ (if any) applies to the immediate method
  implementation as well as overriding implementations in subclasses; a
- result annotation within an @tech{entry point}, in contrast, does not
- apply to subclasses. A @rhombus(maybe_res_annot) can specify a
- @tech(~doc: guide_doc){converter annotation} only if the method is @rhombus(final)
+ result annotation within a case or within an @tech{entry point}, in contrast, does not
+ apply to subclasses. A non-empty @rhombus(maybe_res_annot) can specify a
+ @tech(~doc: guide_doc){converter annotation} only if the method is @rhombus(final, ~class_clause)
  or the enclosing class is @tech{final}; the conversion applies
  before inherited result annotations for the method are checked.
+ If a final method or method in a final class does not have a non-empty @rhombus(maybe_res_annot)
+ before cases, but cases have non-empty @rhombus(maybe_res_annot)s, then the
+ static information from the different case results are combined as by
+ @rhombus(statinfo_meta.or).
 
  A @rhombus(property, ~class_clause) clause declares or overrides a
  @tech(~doc: guide_doc){property}, which is like a method in that using the property evaluates a
@@ -654,6 +665,9 @@
     $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
     Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
      | ...
+    $id $maybe_res_annot
+    | $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+    | ...
 
   grammar property_decl:
     $id $maybe_res_annot

@@ -140,7 +140,7 @@
    (lambda () (order-quote member_access))
    '()
    'macro
-   (lambda (form1 tail)
+   (lambda (form1 tail ctx)
      (syntax-parse tail
        [(name . _)
         (raise-syntax-error #f

@@ -128,7 +128,7 @@
                                        statinfo_stx :: Syntax],
                                       ...])
     :: Syntax
-  fun statinfo_meta.unpack_call_result(statinfo_stx :: Syntax)
+  fun statinfo_meta.unpack_call_result(call_stx :: Syntax)
     :: matching([[_ :: Int, _ :: Syntax], ...])
 ){
 
@@ -145,6 +145,37 @@
  receives. A mask of @rhombus(-1) indicates a result that applies for any
  number of arguments. Each @rhombus(statinfo_stx) represents static
  information for the result in unpacked form.
+
+ Result static information can also depend on the static information
+ associated to actual argument expressions at a call site. A
+ @rhombus(statinfo_meta.dependent_result_key) mapping can be included
+ in a @rhombus(statinfo_stx) to implement that dependency, where the
+ value is packed by @rhombus(statinfo_meta.pack_dependent_result).
+}
+
+@doc(
+  ~meta
+  fun statinfo_meta.pack_dependent_result(bridge_name :: Identifier,
+                                          data :: Syntax)
+    :: Syntax
+  fun statinfo_meta.unpack_dependent_result(dep_stx :: Syntax)
+    :: values(Identifier, Syntax)
+){
+
+ Analogous to @rhombus(statinfo_meta.pack) and
+ @rhombus(statinfo_meta.unpack), but for information that represents a
+ dependent function-call result within static information packed by
+ @rhombus(statinfo_meta.call_result_key).
+
+ The @rhombus(bridge_name) identifier should be defined as a function
+ that accepts two arguments: the @rhombus(data) syntax object and a
+ @rhombus(annot_meta.Dependencies) object. The result should be static
+ information in packed form to use for the function-call result.
+
+ Typically, @rhombus(data) includes position information derived from
+ @rhombus(annot_meta.Context) in an annotation macro, and then static
+ information is found within @rhombus(annot_meta.Dependencies) using the
+ recorded position.
 
 }
 
@@ -260,6 +291,7 @@
   ~meta
   def statinfo_meta.function_arity_key :: Identifier
   def statinfo_meta.call_result_key :: Identifier
+  def statinfo_meta.dependent_result_key :: Identifier
   def statinfo_meta.index_result_key :: Identifier
   def statinfo_meta.index_get_key :: Identifier
   def statinfo_meta.index_set_key :: Identifier
@@ -290,6 +322,11 @@
   @item{@rhombus(statinfo_meta.call_result_key): Packed, per-arity static
         information for the result value if the expression is used as
         a function to call; see @rhombus(statinfo_meta.unpack_call_result).}
+
+  @item{@rhombus(statinfo_meta.dependent_result_key): Packed ``closure''
+        to represent result static information within a @rhombus(statinfo_meta.call_result_key)
+        that depends on static information from actual-argument expressions;
+        see @rhombus(statinfo_meta.unpack_call_result).}
 
   @item{@rhombus(statinfo_meta.index_result_key): Packed static information
         for the result value if the expression is used with

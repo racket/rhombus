@@ -67,3 +67,10 @@ check:
   let m :: Map.of(Int, String) = { 1: "2", 3: "4" }
   fake_map_maybe(m)[1]!!.length()
   ~throws "should have thrown"
+
+block:
+  use_static
+  let m = { "a": #"bb" }
+  check m.maybe["a"]!!.length() ~is 2
+  check Map.maybe(m)["a"]!!.length() ~is 2
+  check MapMaybe.get(m.maybe, "a")!!.length() ~is 2

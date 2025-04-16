@@ -4,7 +4,9 @@
                      shrubbery/print
                      enforest/name-parse
                      shrubbery/property
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "syntax-map.rkt"
+                     "annot-context.rkt")
          racket/unsafe/undefined
          shrubbery/print
          "treelist.rkt"
@@ -39,7 +41,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stxes)
+   (lambda (stxes ctx)
      (syntax-parse stxes
        [(_ (~and head (_::parens . args)) . tail)
         (let ([args (syntax->list #'args)])
@@ -55,7 +57,7 @@
                 (raise-syntax-error #f "too many annotations" #'head)]
                [else
                 (syntax-parse (car args)
-                  [c::annotation
+                  [(~var c (:annotation ctx))
                    (values (relocate+reraw #'head #'c.parsed) #'tail)])])]))]))))
 
 (define-annotation-syntax ->
@@ -63,7 +65,7 @@
    #f
    (lambda () `((default . stronger)))
    'macro
-   (lambda (lhs stx)
+   (lambda (lhs stx ctx)
      (arrow-annotation (list (list #f #f #f lhs)) #f #f #f #f lhs stx))
    'right))
 
@@ -89,7 +91,7 @@
                     kw-rest-name+ann kw-rest-first?
                     head tail))
 
-(define-for-syntax (parse-annotation-sequence arrow-name args as-result?)
+(define-for-syntax (parse-annotation-sequence arrow-name args as-result? #:ctx [ctx empty-annot-context])
   (define-values (non-rest-args rest-name+ann rest-ann-whole? kw-rest-name+ann kw-rest-first?)
     (extract-rest-args arrow-name args as-result?))
   (define (check-keyword kw)
@@ -155,9 +157,9 @@
              [(group name:identifier _:::-bind c ...)
               (non-opt)
               (values (list #f #'name #f (syntax-parse #'(group c ...)
-                                           [c::annotation #'c.parsed]))
+                                           [(~var c (:annotation ctx)) #'c.parsed]))
                       #f)]
-             [c::annotation
+             [(~var c (:annotation ctx))
               (non-opt)
               (values (list #f #f #f #'c.parsed)
                       #f)]))
@@ -216,11 +218,12 @@
                                      kw-rest-name+ann kw-rest-first?
                                      head stx)
   (define arrow (syntax-parse stx [(a . _) #'a]))
+  (define ctx (make-arg-context multi-kw+name+opt+lhs))
   (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole? loc tail)
     (let ()
       (define (multi args p-res tail)
         (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole?)
-          (parse-annotation-sequence head args #t))
+          (parse-annotation-sequence head args #t #:ctx ctx))
         (values multi-name+rhs
                 res-rest-name+ann res-rest-ann-whole?
                 (datum->syntax #f (list head arrow p-res))
@@ -242,7 +245,7 @@
         [(_ (~and p-res (_::parens res ...)) . tail)
          (multi (syntax->list #'(res ...)) #'p-res #'tail)]
         [(_ . tail)
-         #:with (~var res (:annotation-infix-op+form+tail arrow)) #`(group . tail)
+         #:with (~var res (:annotation-infix-op+form+tail arrow ctx)) #`(group . tail)
          (values (list (list #f #'res.parsed))
                  #f #f
                  (datum->syntax #f (list head arrow #'res.parsed))
@@ -321,11 +324,11 @@
         static-infos))
       tail)]))
 
-(define-for-syntax (parse-arrow-all-of stx)
+(define-for-syntax (parse-arrow-all-of stx ctx)
   (syntax-parse stx
     [(form-id (~and args (p-tag::parens in-g ...)) . tail)
      #:with (who-expr (g ...)) (extract-name stx #'(in-g ...))
-     #:with (a::annotation ...) #'(g ...)
+     #:with ((~var a (:annotation ctx)) ...) #'(g ...)
      (define loc (datum->syntax #f (list #'form-id
                                          ;; drop `~name` from reported annotation form
                                          (cons #'p-tag (syntax->list #'(g ...))))))
@@ -1063,3 +1066,18 @@
     [(syntax? s) (string->symbol (format "~a" (shrubbery-syntax->string s)))]
     [else
      (raise-annotation-failure '|-> ~name result| s "error.Who")]))
+
+(define-for-syntax (make-arg-context multi-kw+name+opt+lhs)
+  (define args
+    (for/fold ([args empty-equal_name_and_scopes-map]
+               [i 0]
+               #:result args)
+              ([kw+name+opt+lhs (in-list multi-kw+name+opt+lhs)])
+      (define kw (car kw+name+opt+lhs))
+      (define name (cadr kw+name+opt+lhs))
+      (values
+       (if name
+           (hash-set args (syntax-local-introduce name) (or kw i))
+           args)
+       (if kw i (add1 i)))))
+  (annotation-context args #f))

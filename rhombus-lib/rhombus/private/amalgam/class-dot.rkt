@@ -157,19 +157,9 @@
                                    default)))))
         (if exposed-internal-id
             (with-syntax ([([private-method-name private-method-id private-method-id/intf/prop] ...)
-                           (for/list ([(sym id/prop) (in-hash method-private)])
-                             (define id (if (pair? id/prop) (car id/prop) id/prop))
-                             (define id/intf/prop
-                               (cond
-                                 [(and (not final?)
-                                       (hash-ref method-private-inherit sym #f))
-                                  => (lambda (vec)
-                                       ;; Override of private implemented
-                                       (if (identifier? id/prop)
-                                           vec
-                                           (list vec)))]
-                                 [else id/prop]))
-                             (list sym id id/intf/prop))])
+                           (extract-private-method-names method-private
+                                                         method-private-inherit
+                                                         final?)])
               (list
                #`(define-syntaxes (#,exposed-internal-id #,(in-repetition-space exposed-internal-id))
                    (class-expression-transformers (quote-syntax name) (quote-syntax make-internal-name)))
@@ -195,6 +185,21 @@
                                                                       (quote-syntax private-method-id/intf/prop))
                                                                   ...))))))
             null))))))
+
+(define-for-syntax (extract-private-method-names method-private method-private-inherit final?)
+  (for/list ([(sym id/prop) (in-hash method-private)])
+    (define id (if (pair? id/prop) (car id/prop) id/prop))
+    (define id/intf/prop
+      (cond
+        [(and (not final?)
+              (hash-ref method-private-inherit sym #f))
+         => (lambda (vec)
+              ;; Override of private implemented
+              (if (identifier? id/prop)
+                  vec
+                  (list vec)))]
+        [else id/prop]))
+    (list sym id id/intf/prop)))
 
 (define-for-syntax (build-interface-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht
                                                  internal-name

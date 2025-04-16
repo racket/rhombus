@@ -198,7 +198,7 @@
                  #,class-name
                  (define-syntax #,class-name (make-syntax-class #':base
                                                                 #:kind 'group
-                                                                #:arity base-arity-mask
+                                                                #:arity-mask base-arity-mask
                                                                 #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag stx))
                                                                 #:root-swap '(parsed . group))))
                 (maybe-skip
@@ -208,7 +208,7 @@
                                                                             #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
                                                                                         (tail #f tail tail unpack-tail-list* stx))
                                                                             #:root-swap '(parsed . group)
-                                                                            #:arity more-arity-mask)))
+                                                                            #:arity-mask more-arity-mask)))
                 (maybe-skip
                  #,infix-more-class-name
                  (define-syntax #,infix-more-class-name (make-syntax-class #':infix-more
@@ -216,7 +216,7 @@
                                                                            #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
                                                                                        (tail #f tail tail unpack-tail-list* stx))
                                                                            #:root-swap '(parsed . group)
-                                                                           #:arity more-arity-mask)))
+                                                                           #:arity-mask more-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
                                                                         (quote #,(and pack-and-unpack? parsed-tag))))
@@ -257,7 +257,7 @@
                                                                 #:kind 'group
                                                                 #:fields #'((parsed parsed parsed 0 unpack-term* stx))
                                                                 #:root-swap '(parsed . group)
-                                                                #:arity base-arity-mask)))
+                                                                #:arity-mask base-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (maybe-skip
                  #,class-name

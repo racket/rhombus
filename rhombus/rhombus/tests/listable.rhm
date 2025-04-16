@@ -101,3 +101,43 @@ block:
 check:
   [& "oops"] ~throws "not a listable for splicing into a list"
   PairList[& "oops"] ~throws "not a listable for splicing into a pair list"
+
+block:
+  use_static
+  let x :: Listable.expect_of(String) = dynamic(["a"])
+  check Listable.to_list(x)[0].length() ~is 1
+  check x.to_list()[0].length() ~is 1
+
+block:
+  use_static
+  let x :: Listable = (["a"] :: List.of(String))
+  check Listable.to_list(x)[0].length() ~is 1
+  check x.to_list()[0].length() ~is 1
+
+block:
+  use_static
+  let x :: (Listable.expect_of(List.of(String)) || Listable.expect_of(List.of(Int))) = dynamic([["a"]])
+  check Listable.to_list(x)[0].length() ~is 1
+  check x.to_list()[0].length() ~is 1
+
+block:
+  use_static
+  class A():
+    nonfinal
+    method a(): 1
+  class B1():
+    extends A
+  class B2():
+    extends A
+  let x :: (Listable.expect_of(B1) || Listable.expect_of(B2)) = dynamic([B1()])
+  check Listable.to_list(x)[0].a() ~is 1
+  check x.to_list()[0].a() ~is 1
+
+check:
+  ~eval
+  use_static
+  def x :: (Listable.expect_of(String) || Listable.expect_of(Int)) = dynamic(["a"])
+  Listable.to_list(x)[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")

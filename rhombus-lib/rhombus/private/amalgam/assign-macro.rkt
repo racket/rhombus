@@ -146,7 +146,7 @@
   (define-syntax-class-syntax AssignParsed
     (make-syntax-class
      #':assign-parsed
-     #:arity 8
+     #:arity-mask 8
      #:kind 'group
      #:fields #'((parsed #f parsed 0 (unpack-parsed* '#:rhombus/expr) stx)
                  (tail #f tail tail unpack-tail-list* stx))

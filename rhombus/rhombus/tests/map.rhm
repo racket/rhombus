@@ -1555,3 +1555,71 @@ block:
   check f(Map.by(===){1: 2}) ~prints "now\nthen\n"
   check f(Map.by(===){1: 2}) ~prints "now\nthen\n"
   check f(Map.by(===){1: 2}, Map.by(===){1: 2}) ~prints "now\nthen\n"
+
+// dependent result annotations
+block:
+  use_static
+  def m = { "a" : #"bb" }
+  check m["a"].length() ~is 2
+  check m.get("a").length() ~is 2
+  check m.keys()[0].length() ~is 1
+  check m.values()[0].length() ~is 2
+  check: for List ((k, v) in m.to_sequence()):
+           k.length() + v.length()
+         ~is [3]
+  check m.set("c", #"ddd")["c"].length() ~is 3
+  check m.set("c", #"ddd").keys()[0].length() ~is 1
+  check m.remove("c")["a"].length() ~is 2
+  check m.remove("c").keys()[0].length() ~is 1
+  def mm :: MutableMap.later_of(String, Bytes) = { "a" : #"bb" }.copy()
+  check mm.snapshot().keys()[0].length() ~is 1
+  check mm.snapshot().values()[0].length() ~is 2
+  check m.snapshot().keys()[0].length() ~is 1
+  check m.snapshot().values()[0].length() ~is 2
+  def m2 = { "a": #"bb", & { "c": #"ddd" } }
+  check m2.get("a").length() ~is 2
+  check m2.keys()[0].length() ~is 1
+  let [str, ...] = ["x", "y"]
+  let [bstr, ...] = [#"00", #"11"]
+  check { str: bstr, ...}.keys()[0].length() ~is 1
+  check { str: bstr, ...}.values()[0].length() ~is 2
+  check ({"a": #"00"} ++ {"b": #"111"})["a"].length() ~is 2
+  check ({"a": #"00"} ++ {"b": #"111", "c": #"" })["b"].length() ~is 3
+  check ({"a": #"00"} ++ {"b": #"111"}).keys()[0].length() ~is 1
+  check ({"a": #"00"} ++ {"b": #"111", "c": #"" }).keys()[0].length() ~is 1
+
+check:
+  ~eval
+  use_static
+  def m :: Map.of(String, Bytes) = { "a" : #"bb" }
+  m.set(#"x", #"y").keys()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def m :: Map.of(String, Bytes) = { "a" : #"bb" }
+  m.set("x", "y").values()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def m = { "a" : #"bb", "c": 0 }
+  m.values()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def m = { "a" : #"bb", #'c: #"x" }
+  m.keys()[0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")

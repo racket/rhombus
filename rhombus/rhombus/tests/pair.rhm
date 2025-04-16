@@ -176,3 +176,10 @@ block:
   check f(PairList[1, 1, 1]) ~prints "now\n"
   check f(PairList[1, 1, 1]) ~prints "now\n"
   check f(PairList[]) ~prints "now\n"
+
+// dependent result annotations
+block:
+  use_static
+  def p = Pair("a", #"bb")
+  check Pair.first(p).length() ~is 1
+  check Pair.rest(p).length() ~is 2

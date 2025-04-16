@@ -26,6 +26,8 @@ block:
     Port.Input.read_line(in) ~method
     Port.Input.read_string(in, amount) ~method
     Port.Input.read_string_to(in, str) ~method
+    Port.Input.bytes_lines(in) ~method
+    Port.Input.lines(in) ~method
     Port.Input.copy_to(p, out, ...)
     Port.Input.Progress.evt(path)
     Port.Input.Progress.is_evt(path, v)
@@ -204,6 +206,26 @@ block:
   check read_many(#'any_one) ~is ["a", "b", "c", "", "d", "", "e"]
   check read_many(#false) ~is ["a", "b", "c", "d", "", "e"]
   check read_many(#'backward) ~throws "Port.Input.ReadLineMode"
+
+block:
+  def str = "a\nb\rc\r\nd\n\re"
+  check:
+    let p = Port.Input.open_string(str)
+    for List (i in p.lines()):
+      [i]
+    ~is ["a", "b", "c", "d", "", "e"].map(List)
+  // check static info propagation:
+  check Port.Input.open_string(str).lines().to_list()[0].length() ~is 1
+
+block:
+  def str = "a\nb\rc\r\nd\n\re"
+  check:
+    let p = Port.Input.open_string(str)
+    for List (i in p.bytes_lines()):
+      [i]
+    ~is_now [#"a", #"b", #"c", #"d", #"", #"e"].map(List)
+  // check static info propagation:
+  check Port.Input.open_string(str).bytes_lines().to_list()[0].length() ~is 1
 
 block:
   let p = Port.Output.open_bytes()

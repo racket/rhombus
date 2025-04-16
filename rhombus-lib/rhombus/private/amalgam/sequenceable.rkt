@@ -9,6 +9,12 @@
 (provide (for-spaces (rhombus/class)
                      Sequenceable))
 
+(module+ for-static-info
+  (provide (for-syntax get-sequence-static-infos)))
+
+(define-for-syntax (get-sequence-static-infos)
+  #'((#%sequence-constructor #t)))
+
 (define-values (prop:Sequenceable Sequenceable? Sequenceable-ref)
   (make-struct-type-property
    'Sequenceable
@@ -43,4 +49,4 @@
 (define-syntax to-sequence-result
   (method-result-maker
    (lambda ()
-     (method-result #'sequence? #t 1 "Sequence" #'((#%sequence-constructor #t)) 2))))
+     (method-result #'sequence? #t 1 "Sequence" (get-sequence-static-infos) 2))))

@@ -57,6 +57,12 @@ it supplies its elements in an unspecified order.
  every access, its static information is associated with access using
  @brackets.
 
+ Note that @rhombus(Any.like_element, ~annot) will not find any static
+ information for elements from an expression with an
+ @rhombus(MutableSet, ~annot) or @rhombus(MutableSet.now_of, ~annot)
+ annotation, but an @rhombus(MutableSet.later_of, ~annot) annotation can
+ imply static information for elements.
+
  The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
  annotation variants match only sets that use the hash and equality
  functions specified by @rhombus(key_comp).
@@ -84,7 +90,7 @@ it supplies its elements in an unspecified order.
   grammar ellipsis:
     #,(dots_expr)
 
-  fun Set(val :: Any, ...) :: Set
+  fun Set(val :: Any, ...) :: Set.of(Any.like(val))
   expr.macro 'Set.by($key_comp){$expr_or_splice, ...}'
   expr.macro 'Set.by($key_comp)'
   repet.macro 'Set.by($key_comp){$repet_or_splice, ...}'
@@ -292,8 +298,10 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method (st :: Set).append(another_st :: Set, ...) :: Set
-  method (st :: Set).union(another_st :: Set, ...) :: Set
+  method (st :: Set).append(another_st :: Set, ...)
+    :: Set.of(Any.like_element(st) || Any.like_element(another_st))
+  method (st :: Set).union(another_st :: Set, ...)
+    :: Set.of(Any.like_element(st) || Any.like_element(another_st))
 ){
 
  Functionally appends @rhombus(st) and @rhombus(another_st)s, like the @rhombus(++) operator
@@ -324,7 +332,8 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  method (st :: Set).intersect(another_st :: Set, ...) :: Set
+  method (st :: Set).intersect(another_st :: Set, ...)
+    :: Set.of(Any.like_element(st))
 ){
 
  Returns the intersection of @rhombus(st) and @rhombus(another_st)s.
@@ -344,7 +353,8 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  method (st :: Set).add(val :: Any) :: Set
+  method (st :: Set).add(val :: Any)
+    :: Set.of(Any.like_element(st) || Any.like(val))
 ){
 
  Returns a set like @rhombus(st), but with @rhombus(val) added if it is
@@ -358,7 +368,8 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
-  method (st :: Set).remove(val :: Any) :: Set
+  method (st :: Set).remove(val :: Any)
+    :: Set.of(Any.like_element(st))
 ){
 
  Returns a set like @rhombus(st), but without @rhombus(val) if it is
@@ -407,7 +418,7 @@ it supplies its elements in an unspecified order.
 @doc(
   method Set.to_list(st :: ReadableSet,
                      try_sort :: Any = #false)
-    :: List
+    :: List.of(Any.like_element(st))
 ){
 
  Returns the elements of @rhombus(st) in a list. If @rhombus(try_sort)
@@ -442,7 +453,8 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method Set.snapshot(st :: ReadableSet) :: Set
+  method Set.snapshot(st :: ReadableSet)
+    :: List.of(Any.like_element(st))
 ){
 
  Returns an immutable set whose content matches @rhombus(st). If
@@ -462,7 +474,8 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  method Set.to_sequence(st :: ReadableSet) :: Sequence
+  method Set.to_sequence(st :: ReadableSet)
+    :: Sequence.expect_of(Any.like_element(st))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

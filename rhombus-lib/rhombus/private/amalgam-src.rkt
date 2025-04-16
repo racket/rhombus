@@ -123,3 +123,6 @@
 
 (module+ dot
   (bounce (submod "amalgam/dot.rkt" for-external)))
+
+(module+ syntax-map
+  (bounce "amalgam/syntax-map-macro.rkt"))

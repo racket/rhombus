@@ -29,7 +29,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~and args

@@ -16,7 +16,9 @@
          "dotted-sequence-parse.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "key-comp.rkt")
+         "key-comp.rkt"
+         "sequence-element-key.rkt"
+         "values-key.rkt")
 
 (provide (for-syntax parse-setmap-content
                      build-setmap
@@ -48,22 +50,30 @@
                                          #:no-splice [no-splice #f])
   (define (one-argument e)
     (cond
-      [raw? e]
-      [repetition? (syntax-parse e [rep::repetition #'rep.parsed])]
-      [else #`(rhombus-expression #,e)]))
+      [raw? (values e #f)]
+      [repetition? (syntax-parse e [rep::repetition
+                                    (syntax-parse #'rep.parsed
+                                      [info::repetition-info
+                                       (values #'rep.parsed #'info.element-static-infos)])])]
+      [else
+       (define e-parsed (rhombus-local-expand #`(rhombus-expression #,e)))
+       (values e-parsed
+               (extract-static-infos e-parsed))]))
   (define (repetition-set-argument e extra-ellipses)
     (cond
-      [raw? e]
+      [raw? (values e #f)]
       [else
        (syntax-parse e
          [rep::repetition
           (define the-rep (flatten-repetition #'rep.parsed extra-ellipses))
-          (rest-rep (if repetition?
-                        the-rep
-                        (render-repetition set-for-form the-rep)))])]))
+          (values
+           (rest-rep (if repetition?
+                         the-rep
+                         (render-repetition set-for-form the-rep)))
+           (syntax-parse #'rep.parsed [elem::repetition-info #'elem.element-static-infos]))])]))
   (define (repetition-map-arguments key-e val-e extra-ellipses)
     (cond
-      [raw? (list key-e val-e)]
+      [raw? (values (list key-e val-e) #f #f)]
       [else
        (define key-parsed (syntax-parse key-e [key::repetition #'key.parsed]))
        (define val-parsed (syntax-parse val-e [val::repetition #'val.parsed]))
@@ -82,17 +92,42 @@
                          #:unpack-element (lambda (e)
                                             #`(let ([p #,e])
                                                 (values (car p) (cdr p))))))
-       (list (rest-rep (if repetition?
-                           pair-rep
-                           (render-repetition map-for-form pair-rep))))]))
+       (values
+        (list (rest-rep (if repetition?
+                            pair-rep
+                            (render-repetition map-for-form pair-rep))))
+        (syntax-parse key-parsed [key::repetition-info #'key.element-static-infos])
+        (syntax-parse val-parsed [val::repetition-info #'val.element-static-infos]))]))
+  (define (extract-splice-static-infos e-static-infos shape elems)
+    (cond
+      [(not shape)
+       (define inferred-shape
+         (for/or ([elem (in-list elems)])
+           (syntax-parse elem
+             #:datum-literals (group op)
+             [(group and-op::&-expr new-rst ...) #f]
+             [(group key-e ... (_::block . _)) 'map]
+             [_ 'set])))
+       (extract-splice-static-infos e-static-infos (or inferred-shape 'map) elems)]
+      [else
+       (define si (static-info-lookup e-static-infos #'#%sequence-element))
+       (cond
+         [(not si) (values #'() #'())]
+         [(eq? shape 'set) (values si #f)]
+         [else
+          (syntax-parse (static-info-lookup si #'#%values)
+            [(k v) (values #'k #'v)]
+            [_ (values #'() #'())])])]))
   (syntax-parse stx
     #:datum-literals (group)
     [(_::braces elem ...)
-     (define-values (shape rev-args rev-argss)
+     (define-values (shape rev-args rev-argss key-static-infos val-static-infos)
        (let loop ([elems (syntax->list #'(elem ...))]
                   [shape init-shape]
                   [rev-args '()]
-                  [rev-argss '()])
+                  [rev-argss '()]
+                  [key-static-infos #f]
+                  [val-static-infos #f])
          (define (assert-map)
            (when (eq? shape 'set)
              (raise-syntax-error #f "map element after set element" stx (car elems))))
@@ -101,8 +136,12 @@
              (raise-syntax-error who "element must be `<key> : <value>`" stx (car elems)))
            (when (eq? shape 'map)
              (raise-syntax-error who "set element after map element" stx (car elems))))
+         (define (static-info-combine static-infos new-static-infos)
+           (if (not static-infos)
+               new-static-infos
+               (static-infos-or static-infos new-static-infos)))
          (cond
-           [(null? elems) (values shape rev-args rev-argss)]
+           [(null? elems) (values shape rev-args rev-argss key-static-infos val-static-infos)]
            [(and (pair? (cdr elems))
                  (syntax-parse (cadr elems)
                    #:datum-literals (group op)
@@ -121,25 +160,33 @@
               [(group key-e ... (_::block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
+               (define-values (es e-key-static-infos e-val-static-infos)
+                 (repetition-map-arguments #`(#,group-tag key-e ...) #'val extra-ellipses))
                (loop (list-tail (cddr elems) extra-ellipses)
                      'map
                      '()
-                     (append (repetition-map-arguments #`(#,group-tag key-e ...) #'val extra-ellipses)
+                     (append es
                              (if (null? rev-args)
                                  rev-argss
-                                 (cons (reverse rev-args) rev-argss))))]
+                                 (cons (reverse rev-args) rev-argss)))
+                     (static-info-combine key-static-infos e-key-static-infos)
+                     (static-info-combine val-static-infos e-val-static-infos))]
               [(group key-e ... (~and blk (_::block val ...)))
                #:when (not (eq? init-shape 'set))
                (raise-syntax-error who "repetition requires a single-group block" #'blk)]
               [_
                (assert-set)
+               (define-values (e e-static-infos)
+                 (repetition-set-argument elem extra-ellipses))
                (loop (list-tail (cddr elems) extra-ellipses)
                      'set
                      '()
-                     (cons (repetition-set-argument elem extra-ellipses)
+                     (cons e
                            (if (null? rev-args)
                                rev-argss
-                               (cons (reverse rev-args) rev-argss))))])]
+                               (cons (reverse rev-args) rev-argss)))
+                     (static-info-combine key-static-infos e-static-infos)
+                     #f)])]
            [else
             ;; single element or splice
             (define elem (car elems))
@@ -150,43 +197,62 @@
                  (raise-syntax-error #f
                                      (format "`& rest` is not supported on ~a" no-splice)
                                      #'and-op.name))
+               (define-values (e e-static-infos) (one-argument #'(group new-rst ...)))
+               (define-values (e-key-static-infos e-val-static-infos)
+                 (if e-static-infos
+                     (extract-splice-static-infos e-static-infos shape (cdr elems))
+                     (values #f #f)))
                (loop (cdr elems)
                      shape
                      '()
-                     (cons (one-argument #'(group new-rst ...))
+                     (cons e
                            (if (null? rev-args)
                                rev-argss
-                               (cons (reverse rev-args) rev-argss))))]
+                               (cons (reverse rev-args) rev-argss)))
+                     (static-info-combine key-static-infos e-key-static-infos)
+                     (static-info-combine val-static-infos e-val-static-infos))]
               [(group key-e ... (_::block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
+               (define-values (e-k e-key-static-infos) (one-argument #'(group key-e ...)))
+               (define-values (e-v e-val-static-infos) (one-argument #'val))
                (loop (cdr elems)
                      'map
-                     (list* (one-argument #'val)
-                            (one-argument #'(group key-e ...))
+                     (list* e-v
+                            e-k
                             rev-args)
-                     rev-argss)]
+                     rev-argss
+                     (static-info-combine key-static-infos e-key-static-infos)
+                     (static-info-combine val-static-infos e-val-static-infos))]
               [(group key-e ... (~and blk (b-tag::block val ...)))
                #:when (not (eq? init-shape 'set))
                (when repetition?
                  (raise-syntax-error who "repetition requires a single-group block" #'blk))
                (assert-map)
+               (define-values (e-k e-key-static-infos) (one-argument #'(group key-e ...)))
                (loop (cdr elems)
                      'map
                      (list* #`(rhombus-body-at b-tag val ...)
-                            (one-argument #'(group key-e ...))
+                            e-k
                             rev-args)
-                     rev-argss)]
+                     rev-argss
+                     (static-info-combine key-static-infos e-key-static-infos)
+                     #'())]
               [_
                (assert-set)
+               (define-values (e e-static-infos) (one-argument elem))
                (loop (cdr elems)
                      'set
-                     (cons (one-argument elem) rev-args)
-                     rev-argss)])])))
+                     (cons e rev-args)
+                     rev-argss
+                     (static-info-combine key-static-infos e-static-infos)
+                     #f)])])))
      (values shape
              (if (null? rev-args)
                  (reverse rev-argss)
-                 (reverse (cons (reverse rev-args) rev-argss))))]))
+                 (reverse (cons (reverse rev-args) rev-argss)))
+             (or key-static-infos #'())
+             (or val-static-infos #'()))]))
 
 (define-for-syntax (build-setmap stx
                                  argss
