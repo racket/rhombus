@@ -1,0 +1,30 @@
+#lang rhombus/static/and_meta
+import:
+  pict open
+  "image_of.rhm" open
+
+check:
+  image_of(overlay(square(~size: 32, ~fill: "lightblue"),
+                   ~dx: 1,
+                   ~dy: 0,
+                   circle(~size: 34, ~fill: "black")))
+  ~is image_of(overlay.top_left(square(~size: 32, ~fill: "lightblue"),
+                                circle(~size: 34, ~fill: "black").pad(~left: 1)))
+
+check:
+  image_of(overlay(square(~size: 32, ~fill: "lightblue"),
+                   ~dx: 1,
+                   ~dy: 0,
+                   circle(~size: 34, ~fill: "black"),
+                   ~order: #'front))
+  ~is image_of(overlay.top_left(square(~size: 32, ~fill: "lightblue"),
+                                circle(~size: 34, ~fill: "black").pad(~left: 1)))
+
+check:
+  image_of(overlay(square(~size: 32, ~fill: "lightblue"),
+                   ~dx: 1,
+                   ~dy: 0,
+                   circle(~size: 34, ~fill: "black"),
+                   ~order: #'back))
+  ~is image_of(overlay.top_left(circle(~size: 34, ~fill: "black").pad(~left: 1),
+                                square(~size: 32, ~fill: "lightblue")))

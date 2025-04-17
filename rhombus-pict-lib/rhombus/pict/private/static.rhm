@@ -903,10 +903,14 @@ fun overlay(~dx: dx :: maybe(Real) = #false,
                        math.min(min_y, y),
                        math.max(max_x, x),
                        math.max(max_y, y))
-            rkt.#{lt-superimpose}(& for List (p in ps,
-                                              i in 0..):
-                                    let (x, y) = get_pt(p, i)
-                                    rkt.inset(p, max_x - x, max_y - y, 0, 0))
+            let new_ps:
+              for List (p in ps,
+                        i in 0..):
+                let (x, y) = get_pt(p, i)
+                rkt.inset(p, max_x - x, max_y - y, 0, 0)
+            let new_ps:
+              if order == #'back | new_ps.reverse() | new_ps
+            rkt.#{lt-superimpose}(& new_ps)
         static_pict(build(ps), children, all_instances, retry,
                     ~desc: desc)
     | ps && [p :~ Pict, ...]:
