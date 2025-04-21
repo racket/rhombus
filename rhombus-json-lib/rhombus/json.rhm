@@ -8,6 +8,12 @@ import:
 
 def known_json = WeakMutableMap.by(===)()
 
+expr.macro 'adjust_call_with_malformed_surrogate_keyword($(p :: Name)($a, ..., $last_a))':
+  import lib("version/utils.rkt")
+  if utils.#{version<?}(system.racket_version(), "8.16.0.1")
+  | '$p($a, ...)'
+  | '$p($a, ..., $last_a)'
+
 // Using a `json` namespace adds a prefix to names
 namespace json:
   export:
@@ -80,14 +86,16 @@ namespace json:
     s.get_bytes()
 
   fun do_read(who, in, replace_malformed_surrogate):
-    rkt_json.read(who,
-                  in,
-                  ~null: #'null,
-                  ~#{make-object}: #{make-immutable-hashalw},
-                  ~#{make-list}: PairList.to_list,
-                  ~#{make-key}: String.snapshot,
-                  ~#{make-string}: String.snapshot,
-                  ~#{replace-malformed-surrogate?}: replace_malformed_surrogate)
+    adjust_call_with_malformed_surrogate_keyword(
+      rkt_json.read(who,
+                    in,
+                    ~null: #'null,
+                    ~#{make-object}: #{make-immutable-hashalw},
+                    ~#{make-list}: PairList.to_list,
+                    ~#{make-key}: String.snapshot,
+                    ~#{make-string}: String.snapshot,
+                    ~#{replace-malformed-surrogate?}: replace_malformed_surrogate)
+    )
 
   fun read(~in: in :: Port.Input = Port.Input.current(),
            ~replace_malformed_surrogate: replace_malformed_surrogate :: Any.to_boolean = #false):

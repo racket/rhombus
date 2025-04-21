@@ -3,7 +3,7 @@
 (define collection 'multi)
 
 (define deps
-  '("base"
+  '(["base" #:version "8.16"]
     "rhombus-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-json\"")

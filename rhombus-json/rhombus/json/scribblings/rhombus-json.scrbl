@@ -119,12 +119,13 @@ and the @hyperlink("http://www.ietf.org/rfc/rfc8259.txt"){JSON RFC} for more inf
 
 @examples(
   ~eval: json_eval
-  ~repl:
-    json.from_string(@str{"\u03BB"})
-    ~error:
-      json.from_string(@str{"\uD870"})
-    json.from_string(@str{"\uD870"},
-                     ~replace_malformed_surrogate: #true)
+  ~version_and_later "8.16.0.1":
+    ~repl:
+      json.from_string(@str{"\u03BB"})
+      ~error:
+        json.from_string(@str{"\uD870"})
+      json.from_string(@str{"\uD870"},
+                       ~replace_malformed_surrogate: #true)
 )
 
 }
