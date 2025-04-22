@@ -115,17 +115,17 @@
                         (~and
                          (~seq (group kw clause-block) ...)
                          (~seq
-                          (~alt (~optional (group #:union
-                                                  (union-tag::block
-                                                   union-body ...)))
-                                (~optional (group #:intersect
-                                                  (intersect-tag::block
-                                                   intersect-body ...))))
+                          (~alt (~optional (group #:or
+                                                  (or-tag::block
+                                                   or-body ...)))
+                                (~optional (group #:and
+                                                  (and-tag::block
+                                                   and-body ...))))
                           ...))))
-         (unless (attribute union-tag)
-           (raise-syntax-error #f "missing a `~union` clause" stx))
-         (unless (attribute intersect-tag)
-           (raise-syntax-error #f "missing an `~intersect` clause" stx))
+         (unless (attribute or-tag)
+           (raise-syntax-error #f "missing a `~and` clause" stx))
+         (unless (attribute and-tag)
+           (raise-syntax-error #f "missing an `~and` clause" stx))
          #`((define-syntax name.name
               (make-key (~@ kw (rhombus-body-expression clause-block)) ...)))]))))
 
@@ -153,14 +153,14 @@
     (raise-annotation-failure who id-in "Identifier"))
   id)
 
-(define-for-syntax (make-key #:union union #:intersect intersect)
-  (define (check-proc union)
-    (unless (and (procedure? union)
-                 (procedure-arity-includes? union 2))
-      (raise-annotation-failure 'statinfo.key union "Function.of_arity(2)")))
-  (check-proc union)
-  (check-proc intersect)
-  (static-info-key union intersect))
+(define-for-syntax (make-key #:or or-proc #:and and-proc)
+  (define (check-proc or-proc)
+    (unless (and (procedure? or-proc)
+                 (procedure-arity-includes? or-proc 2))
+      (raise-annotation-failure 'statinfo.key or-proc "Function.of_arity(2)")))
+  (check-proc or-proc)
+  (check-proc and-proc)
+  (static-info-key or-proc and-proc))
 
 (define-for-syntax (extract-expr-static-infos who form)
   (extract-static-infos

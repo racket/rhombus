@@ -105,3 +105,16 @@ check:
     statinfo_meta.wrap(c, statinfo_meta.or(statinfo_meta.gather(a), statinfo_meta.gather(b)))
   (either ([]) (""): 0) ++ []
   ~throws "specialization not known"
+
+namespace key:
+  statinfo.key demo_key:
+    ~and: statinfo_meta.and
+    ~or: statinfo_meta.or
+
+  expr.macro 'm':
+    let s1 = '((demo_key, (($(statinfo_meta.function_arity_key), 3))))'
+    let s2 = '((demo_key, (($(statinfo_meta.function_arity_key), 6))))'
+    '['$(statinfo_meta.or(s1, s2))',
+      '$(statinfo_meta.and(s1, s2))']'
+
+  check m ~matches ['((demo_key, (($_, 2))))', '((demo_key, (($_, 7))))']

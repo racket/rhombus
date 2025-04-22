@@ -1257,7 +1257,7 @@
         (define get-arg-static-infos
           (lambda ()
             (annotation-dependencies (for/list ([arg (in-list rands)])
-                                       (extract-static-infos arg))
+                                       (datum->syntax #f (extract-static-infos arg)))
                                      (hashalw)
                                      #f
                                      #f)))
@@ -1395,13 +1395,13 @@
          (define get-arg-static-infos
            (lambda ()
              (define init-t (cons (reverse (for/list ([rand (in-list w0-extra-rands)])
-                                             (extract-static-infos rand)))
+                                             (datum->syntax #f (extract-static-infos rand))))
                                   (hashalw)))
              (define t
                (for/fold ([t init-t]) ([kw (in-list kws)]
                                        [arg (in-list args)]
                                        [i (in-naturals)])
-                 (define si (rand-extract-static-infos arg i))
+                 (define si (datum->syntax #f (rand-extract-static-infos arg i)))
                  (if (syntax-e kw)
                      (cons (car t)
                            (hash-set (cdr t) (syntax-e kw) si))

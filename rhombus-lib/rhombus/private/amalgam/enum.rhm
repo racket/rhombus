@@ -147,6 +147,6 @@ meta:
         ...
       fun is_enum(v):
         $(make_is_enum('v'))
-      annot.macro '$name':
+      annot.macro '($name)':
         annot_meta.pack_predicate('is_enum', Syntax.literal '$statinfo')
       $doc»'

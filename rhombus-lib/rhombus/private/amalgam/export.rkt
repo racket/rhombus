@@ -322,7 +322,7 @@
      (parameterize ([current-module-path-context 'export])
        (syntax-parse stx
          #:datum-literals (group op |.|)
-         [(_ (_::parens (group (op |.|) . (~var name (:hier-name-seq in-name-root-space values name-path-op name-root-ref))))
+         [(_ (_::parens (group (op |.|) . (~var name (:hier-name-seq in-name-root-space in-name-root-space name-path-op name-root-ref))))
              . tail)
           (values
            (cond

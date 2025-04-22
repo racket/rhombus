@@ -895,7 +895,7 @@
      (binding-info #'annotation-str
                    #'composite
                    #'static-infos
-                   #'((result-id (0)))
+                   #'((result-id ([#:repet ()])))
                    #'annotation-of-oncer
                    #'annotation-of-matcher
                    #'(temp)
@@ -909,7 +909,7 @@
      (binding-info #'annotation-str
                    #'composite
                    #'static-infos
-                   #'((result-id (0)))
+                   #'((result-id ([#:repet ()])))
                    #'annotation-of-oncer
                    #'annotation-of-matcher
                    #'(temp)
@@ -947,7 +947,7 @@
      (binding-info #'"<converted predicate>"
                    #'arg
                    all-static-infos
-                   #`((arg (0) . #,all-static-infos))
+                   #`((arg ([#:repet ()]) . #,all-static-infos))
                    #'empty-oncer
                    (syntax-parse #'predicate
                      [(lam (_) #t) ;; matches `Any` and maybe more
@@ -1438,7 +1438,7 @@
      (binding-info "to_boolean"
                    #'val
                    #'()
-                   #'((val (0)))
+                   #'((val ([#:repet ()])))
                    #'empty-oncer
                    #'to_boolean-matcher
                    #'()

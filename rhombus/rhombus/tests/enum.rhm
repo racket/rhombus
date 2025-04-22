@@ -207,3 +207,11 @@ block:
   check #'second is_a Order ~prints ""
   check #'second_and_a_half is_a Order ~prints ""
   check #'third is_a Order ~prints ""
+
+
+namespace ns
+enum ns.Example:
+  one
+  two
+check #'one ~is_a ns.Example
+
