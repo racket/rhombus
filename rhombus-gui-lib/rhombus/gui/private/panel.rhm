@@ -2,20 +2,12 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "type.rhm":
-    expose:
-      Alignment
-      SpacingInteger
-      Margin
-      Size
-      Stretch
-      LabelString
   "view.rhm".View
   "view.rhm"!private.to_view
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
+      ObsOrValue
 
 export:
   HPanel
@@ -42,14 +34,14 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
      override property handle: _handle
 
      constructor ($arg :: $arg_annot ..., ...,
-                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'center],
-                  ~styles: style :: MaybeObs.of(List.of($(name).Style)) = [],
-                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                  ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                  child :: MaybeObs.of(View),
+                  ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
+                  ~styles: style :: ObsOrValue.of(List.of($(name).Style)) = [],
+                  ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+                  ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+                  ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+                  ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+                  ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+                  child :: ObsOrValue.of(View),
                   $'...'):
        super(easy . $easy_name($convert($arg), ...,
                                ~alignment: obs.unwrap_list(alignment, values),
@@ -87,7 +79,7 @@ def_panel VPanel():
 
   annot.macro 'Style': 'PanelStyle'
 
-def_panel GroupPanel(label :: MaybeObs.of(LabelString) => (obs.unwrap)):
+def_panel GroupPanel(label :: ObsOrValue.of(View.LabelString) => (obs.unwrap)):
   ~easy: group
 
   export:
@@ -100,19 +92,19 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (choices :: MaybeObs.of(List),
-               ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+  constructor (choices :: ObsOrValue.of(List),
+               ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
-               ~selection: selection :: MaybeObs.of(Any) = #false,
-               ~action: action :: maybe(Function.of_arity(3)) = #false,
-               ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-               ~styles: style :: MaybeObs.of(List.of(TabsPanel.Style)) = [],
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               child :: MaybeObs.of(View),
+               ~selection: selection :: ObsOrValue.of(Any) = #false,
+               ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> Any = #false,
+               ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+               ~styles: style :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               child :: ObsOrValue.of(View),
                ...):
     let at_selection = obs.to_obs(selection)
     let action = action || (fun (_, _, selected):
@@ -138,6 +130,7 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
 
   export:
     Style
+    Action
 
   symbol_map_annot Style convert_style:
     { no_border: #{no-border},
@@ -146,3 +139,9 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
       new_button: #{new-button},
       flat_portable: #{flat-portable},
       deleted: deleted }
+
+  enum Action:
+    select
+    new
+    close
+    reorder

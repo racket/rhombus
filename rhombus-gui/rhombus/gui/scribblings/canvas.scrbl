@@ -2,22 +2,26 @@
 @(import:
     "common.rhm" open)
 
+@(def draw_DC = @rhombus(draw.DC, ~annot))
+
 @title{Canvases}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class Canvas():
+  class gui.Canvas():
     implements View
     constructor (
-      data :: MaybeObs.of(Any),
-      draw :: Function.of_arity(2),
-      ~mouse: mouse :: Function.of_arity(2) = Function.pass,
-      ~key: key :: Function.of_arity(2) = Function.pass,
-      ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~styles: styles :: MaybeObs.of(List.of(Canvas.Style)) = [],
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      data :: ObsOrValue.of(Any),
+      draw :: #,(draw_DC) Any -> ~any,
+      ~mouse: mouse :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
+      ~key: key :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
+      ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = "canvas",
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~styles: styles :: ObsOrValue.of(List.of(Canvas.Style)) = [],
+      ~margin: margin :: ObsOrValue.of(Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
       ~mixin: mix :: Function = values,
     )
 ){
@@ -26,7 +30,7 @@
  function is called as
 
 @rhombusblock(
-  draw(#,(@rhombus(dc, ~var)) :: DC, #,(@rhombus(data_val, ~var)))
+  draw(#,(@rhombus(dc, ~var)) :: #,(draw_DC), #,(@rhombus(data_val, ~var)))
 )
 
  to draw the canvas's content to a backing store @rhombus(dc ~var),
@@ -43,7 +47,7 @@
 }
 
 @doc(
-  enum Canvas.Style:
+  enum gui.Canvas.Style:
     control_border
     combo
     vscroll
@@ -61,8 +65,8 @@
 }
 
 @doc(
-  interface CanvasContext
-  property (ctx :: CanvasContext).client_size :: Size
+  interface gui.CanvasContext
+  property (ctx :: gui.CanvasContext).client_size :: Size
 ){
 
  A @rhombus(CanvasContext, ~class) represents a canvas instance that

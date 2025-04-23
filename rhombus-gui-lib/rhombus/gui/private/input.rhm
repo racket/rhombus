@@ -11,13 +11,7 @@ import:
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
-  "type.rhm":
-    expose:
-      LabelString
-      Margin
-      Size
-      Stretch
+      ObsOrValue
   "view.rhm".View
 
 export:
@@ -27,17 +21,17 @@ class Input(private _handle, private _at_content :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (content :: MaybeObs.of(Any) = "",
-               ~action: action :: maybe(Function.of_arity(2)) = #false,
-               ~label: label :: MaybeObs.of(LabelString) = "",
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
-               ~style: style :: MaybeObs.of(List.of(Input.StyleSymbol)) = [#'single],
+  constructor (content :: ObsOrValue.of(Any) = "",
+               ~action: action :: maybe((Input.Action, String) -> ~any) = #false,
+               ~label: label :: ObsOrValue.of(View.LabelString) = "",
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
+               ~style: style :: ObsOrValue.of(List.of(Input.StyleSymbol)) = [#'single],
                ~font : font :: Font = normal_control_font,
                // ~keymap: ... TODO
-               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~mixin: mixin :: Function = values,
                ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values):
@@ -61,6 +55,7 @@ class Input(private _handle, private _at_content :: Obs):
 
   export:
     StyleSymbol
+    Action
 
   symbol_map_annot StyleSymbol convert_style:
     { deleted: deleted,
@@ -70,3 +65,7 @@ class Input(private _handle, private _at_content :: Obs):
       password: password,
       single: single,
       vertical_label: #{vertical-label} }
+
+  enum Action:
+    input
+    return

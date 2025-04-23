@@ -6,13 +6,7 @@ import:
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
-  "type.rhm":
-    expose:
-      LabelString
-      PositionInteger
-      Size
-      Stretch
+      ObsOrValue
 
 export:
   Slider
@@ -21,14 +15,14 @@ class Slider(private _handle, private _at_value :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (label :: MaybeObs.of(maybe(LabelString)) = #false,
-               ~value: value :: MaybeObs.of(PositionInteger) = 0,
-               ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
-               ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
-               ~action: action :: maybe(Function.of_arity(1)) = #false,
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+  constructor (label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
+               ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
+               ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
+               ~action: action :: maybe(View.PositionInt -> ~any) = #false,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~styles: style :: List.of(Slider.Style) = [#'horizontal]):
     let at_value = obs.to_obs(value)
     let action = action || (fun (val):

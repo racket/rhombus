@@ -5,10 +5,7 @@ import:
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
-  "type.rhm":
-    expose:
-      LabelString
+      ObsOrValue
 
 export:
   Checkbox
@@ -17,10 +14,10 @@ class Checkbox(private _handle, private _at_checked :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (label :: MaybeObs.of(LabelString),
-               ~action: action :: maybe(Function.of_arity(1)) = #false,
-               ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true):
+  constructor (label :: ObsOrValue.of(View.LabelString),
+               ~action: action :: maybe(Boolean -> ~any) = #false,
+               ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true):
     let at_checked = obs.to_obs(is_checked)
     let action = action || (fun (on):
                               at_checked.value := on)

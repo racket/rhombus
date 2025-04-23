@@ -4,8 +4,10 @@
 
 @title{Views}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  interface View
+  interface gui.View
 ){
 
  A @deftech{view} corresponds to @rhombus(#{view<%>}) from
@@ -17,7 +19,7 @@
 }
 
 @doc(
-  property (v :: View).handle :: Any
+  property (v :: gui.View).handle :: Any
 ){
 
  Returns a Racket object that corresponds to the view for use directly
@@ -27,7 +29,7 @@
 
 
 @doc(
-  interface WindowView:
+  interface gui.WindowView:
     extends View
 ){
 

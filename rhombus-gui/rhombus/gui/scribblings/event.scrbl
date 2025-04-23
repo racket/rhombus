@@ -4,8 +4,10 @@
 
 @title{Events}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class MouseEvent():
+  class gui.MouseEvent():
     constructor (
       ~kind: kind :: MouseEvent.Kind = #'motion,
       ~downs: downs :: Set.of(MouseEvent.Down) = Set{},
@@ -14,13 +16,13 @@
       ~timestamp: timestamp :: Int = 0,
     )
 
-  property (ev :: MouseEvent).kind
+  property (ev :: gui.MouseEvent).kind
     :: MouseEvent.Kind
-  property (ev :: MouseEvent).downs
+  property (ev :: gui.MouseEvent).downs
     :: Set.of(MouseEvent.Down)
-  property (ev :: MouseEvent).x :: Int
-  property (ev :: MouseEvent).y :: Int
-  property (ev :: MouseEvent).timestamp :: Int
+  property (ev :: gui.MouseEvent).x :: Int
+  property (ev :: gui.MouseEvent).y :: Int
+  property (ev :: gui.MouseEvent).timestamp :: Int
 ){
 
  Represents a mouse event.
@@ -28,7 +30,7 @@
 }
 
 @doc(
-  method (ev :: MouseEvent).is_down(
+  method (ev :: gui.MouseEvent).is_down(
     sym :: MouseEvent.Down
   ) :: Boolean
 ){
@@ -39,16 +41,16 @@
 }
 
 @doc(
-  method (ev :: MouseEvent).is_button_changed(
+  method (ev :: gui.MouseEvent).is_button_changed(
     which :: MouseEvent.Button = #'any
   ) :: Boolean
-  method (ev :: MouseEvent).is_button_press(
+  method (ev :: gui.MouseEvent).is_button_press(
     which :: MouseEvent.Button = #'any
   ) :: Boolean
-  method (ev :: MouseEvent).is_button_release(
+  method (ev :: gui.MouseEvent).is_button_release(
     which :: MouseEvent.Button = #'any
   ) :: Boolean
-  method (ev :: MouseEvent).is_dragging()
+  method (ev :: gui.MouseEvent).is_dragging()
     :: Boolean
 ){
 
@@ -58,7 +60,7 @@
 
 
 @doc(
-  class KeyEvent():
+  class gui.KeyEvent():
     constructor (
       code :: (Char || KeyEvent.Key),
       ~release_code: r_code :: (Char || KeyEvent.Key) = #'press,
@@ -73,23 +75,23 @@
       ~use_altgr: use_altgr :: Any = #true,
     )
 
-  property (ev :: KeyEvent).code
+  property (ev :: gui.KeyEvent).code
     :: (Char || KeyEvent.Key)
-  property (ev :: KeyEvent).release_code
+  property (ev :: gui.KeyEvent).release_code
     :: (Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_caps_code
+  property (ev :: gui.KeyEvent).other_caps_code
     :: maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_shift_code
+  property (ev :: gui.KeyEvent).other_shift_code
     :: maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_altgr_code
+  property (ev :: gui.KeyEvent).other_altgr_code
     :: maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_shift_altgr_code
+  property (ev :: gui.KeyEvent).other_shift_altgr_code
     :: maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).downs
+  property (ev :: gui.KeyEvent).downs
     :: Set.of(KeyEvent.Down)
-  property (ev :: KeyEvent).x :: Int
-  property (ev :: KeyEvent).y :: Int
-  property (ev :: KeyEvent).timestamp :: Int
+  property (ev :: gui.KeyEvent).x :: Int
+  property (ev :: gui.KeyEvent).y :: Int
+  property (ev :: gui.KeyEvent).timestamp :: Int
 ){
 
  Represents a keyboard event.
@@ -97,7 +99,7 @@
 }
 
 @doc(
-  method (ev :: KeyEvent).is_down(
+  method (ev :: gui.KeyEvent).is_down(
     sym :: KeyEvent.Down
   ) :: Boolean
 ){
@@ -109,7 +111,7 @@
 
 
 @doc(
-  enum MouseEvent.Kind:
+  enum gui.MouseEvent.Kind:
     enter
     leave
     left_down
@@ -127,7 +129,7 @@
 
 
 @doc(
-  enum MouseEvent.Down:
+  enum gui.MouseEvent.Down:
     shift
     control
     meta
@@ -144,7 +146,7 @@
 
 
 @doc(
-  enum MouseEvent.Button:
+  enum gui.MouseEvent.Button:
     left
     middle
     right
@@ -156,7 +158,7 @@
 }
 
 @doc(
-  enum KeyEvent.Down:
+  enum gui.KeyEvent.Down:
     shift
     control
     meta
@@ -173,7 +175,7 @@
 
 
 @doc(
-  enum KeyEvent.Key:
+  enum gui.KeyEvent.Key:
     start
     cancel
     clear

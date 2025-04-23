@@ -6,13 +6,7 @@ import:
   "view.rhm".View
   "obs.rhm":
     expose:
-      MaybeObs
-  "type.rhm":
-    expose:
-      LabelString
-      Margin
-      Size
-      Stretch
+      ObsOrValue
 
 export:
   Button
@@ -21,17 +15,17 @@ class Button(private _handle):
   implements View
   override property handle: _handle
 
-  constructor (label :: MaybeObs.of(LabelString
-                                      || Bitmap
-                                      || matching([_ :: Bitmap,
-                                                   _ :: LabelString,
-                                                   _ :: Button.LabelPosition])),
-               ~action: action :: Function.of_arity(0) = values,
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~styles: style :: MaybeObs.of(List.of(Button.Style)) = [],
-               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
+  constructor (label :: ObsOrValue.of(View.LabelString
+                                        || Bitmap
+                                        || matching([_ :: Bitmap,
+                                                     _ :: View.LabelString,
+                                                     _ :: Button.LabelPosition])),
+               ~action: action :: () -> ~any = values,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~styles: style :: ObsOrValue.of(List.of(Button.Style)) = [],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
     super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                       action,
                       ~#{enabled?}: obs.unwrap(is_enabled),

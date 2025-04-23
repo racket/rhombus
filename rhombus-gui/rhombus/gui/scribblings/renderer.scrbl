@@ -4,8 +4,10 @@
 
 @title{Renderers}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  annot.macro 'Renderer'
+  annot.macro 'gui.Renderer'
 ){
 
  An @deftech{renderer} corresponds to @rhombus(#{renderer?}) from
@@ -14,8 +16,8 @@
 }
 
 @doc(
-  fun render(view :: WindowView,
-             parent :: maybe(Renderer) = #false)
+  fun gui.render(view :: WindowView,
+                 parent :: maybe(Renderer) = #false)
     :: Renderer
 ){
 

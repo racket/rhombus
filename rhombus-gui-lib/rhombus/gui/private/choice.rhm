@@ -5,13 +5,8 @@ import:
   "view.rhm".View
   "obs.rhm":
     expose:
-      MaybeObs
+      ObsOrValue
       Obs
-  "type.rhm":
-    expose:
-      LabelString
-      Size
-      Stretch
 
 export:
   Choice
@@ -20,16 +15,16 @@ class Choice(private _handle, private _at_selection :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (choices :: MaybeObs.of(List),
-               ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+  constructor (choices :: ObsOrValue.of(List),
+               ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
-               ~selection: selection :: MaybeObs.of(Any) = #false,
-               ~action: action :: maybe(Function.of_arity(1)) = #false,
-               ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-               ~styles: style :: MaybeObs.of(List.of(Choice.Style)) = [],
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
+               ~selection: selection :: ObsOrValue.of(Any) = #false,
+               ~action: action :: maybe(Any -> ~any) = #false,
+               ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~styles: style :: ObsOrValue.of(List.of(Choice.Style)) = [],
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
     let at_selection = obs.to_obs(selection)
     let action = action || (fun (selected):
                               at_selection.value := selected)

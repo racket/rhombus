@@ -4,21 +4,19 @@ import:
   rhombus/draw
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "type.rhm":
-    expose:
-      LabelString
-      Margin
-      Size
-      Stretch
   "view.rhm".View
   rhombus/draw/private/dc!internal.SomeDC
   "event.rhm"!private:
     expose:
       _MouseEvent
       _KeyEvent
+  "event.rhm":
+    expose:
+      MouseEvent
+      KeyEvent
   "obs.rhm":
     expose:
-      MaybeObs
+      ObsOrValue
   "canvas-help.rkt".add_canvas_callbacks
 
 export:
@@ -30,15 +28,15 @@ class Canvas(private _handle):
   override property handle: _handle
 
   constructor (data,
-               draw :: Function.of_arity(2),
-               ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-               ~key: on_key :: Function.of_arity(2) = Function.pass,
-               ~mouse: on_mouse :: Function.of_arity(2) = Function.pass,
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~styles: style :: MaybeObs.of(List.of(Canvas.Style)) = [],
-               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+               draw :: (draw.DC, Any) -> ~any,
+               ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~key: on_key :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
+               ~mouse: on_mouse :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~styles: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~mixin: mix :: Function = values):
     super(easy.canvas(obs.unwrap(data),
                       fun (dc, data): draw(SomeDC(dc), data),

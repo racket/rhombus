@@ -12,10 +12,7 @@ import:
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
-  "type.rhm":
-    expose:
-      LabelString
+      ObsOrValue
 
 export:
   Label
@@ -24,8 +21,8 @@ class Label(private _handle, private _at_label :: Obs):
   implements View
   override property handle: _handle
 
-  constructor (label :: MaybeObs.of(LabelString),
-               ~color: color :: MaybeObs.of(maybe(Color)) = #false,
+  constructor (label :: ObsOrValue.of(View.LabelString),
+               ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
                ~font: font :: Font = normal_control_font):
     let at_label = obs.to_obs(label)
     super(easy.text(obs.unwrap(at_label),

@@ -4,53 +4,47 @@ import:
   lib("racket/gui/base.rkt").#{label-string?}
 
 export:
-  SizeInteger
-  Size
-  PositionInteger
-  Position
-  SpacingInteger
-  Margin
-  Alignment
-  Stretch
-  LabelString
+  View
 
-annot.macro 'SizeInteger':
+namespace View
+
+annot.macro '(View.SizeInt)':
   'Int.in(0, 1000000)'
 
-annot.macro 'Size':
-  'matching([_ :: maybe(SizeInteger), _ :: maybe(SizeInteger)])'
+annot.macro '(View.Size)':
+  'matching([_ :: maybe(View.SizeInt), _ :: maybe(View.SizeInt)])'
 
-
-annot.macro 'PositionInteger':
+annot.macro '(View.PositionInt)':
   'Int.in(-1000000, 1000000)'
 
-annot.macro 'Position':
-  'Any.of(#'center) || matching([_ :: maybe(PositionInteger), _ :: maybe(PositionInteger)])'
+enum View.Position:
+  center
+  ~is_a matching([_ :: View.PositionInt, _ :: View.PositionInt])
 
-
-annot.macro 'SpacingInteger':
+annot.macro '(View.SpacingInt)':
   'Int.in(0, 1000)'
 
+annot.macro '(View.Margin)':
+  'matching([_ :: View.SpacingInt, _ :: View.SpacingInt])'
 
-annot.macro 'Margin':
-  'matching([_ :: maybe(SpacingInteger), _ :: maybe(SpacingInteger)])'
+enum View.HorizAlignment:
+  left
+  center
+  right
 
+enum View.VertAlignment:
+  top
+  center
+  bottom
 
-annot.macro 'Alignment':
-  'matching([_ :: HorizAlignSym, _ :: VertAlignSym])'
+annot.macro '(View.Alignment)':
+  'matching([_ :: View.HorizAlignment, _ :: View.VertAlignment])'
 
-symbol_set_annot HorizAlignSym:
-  { left, center, right }
-
-symbol_set_annot VertAlignSym:
-  { top, center, bottom }
-
-
-annot.macro 'Stretch':
+annot.macro '(View.Stretch)':
   'matching([_ :: Boolean, _ :: Boolean])'
 
 
-annot.macro 'LabelString':
+annot.macro '(View.LabelString)':
   'String && LabelStringSized'
 
 annot.macro 'LabelStringSized':

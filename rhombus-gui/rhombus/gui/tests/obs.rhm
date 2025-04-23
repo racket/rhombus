@@ -1,0 +1,17 @@
+#lang rhombus/static/and_meta
+import:
+  gui open
+
+block:
+  let orig_o = Obs(["1"])
+  let o :: Obs.later_of(List.later_of(Int)) = orig_o
+  check o.update(fun (x :~ List): x[0]) ~throws error.annot_msg("argument")
+  check orig_o.peek() ~is ["1"]
+  o.update(fun (x): ["no"])
+  let v :~ List = orig_o.peek()
+  check v[0] ~throws error.annot_msg("current element")
+  let v :~ List = o.peek()
+  check v[0] ~throws error.annot_msg("current element")
+  o.update(fun (x :~ List): [5])
+  check orig_o.peek() ~is [5]
+  check o.peek() ~is [5]

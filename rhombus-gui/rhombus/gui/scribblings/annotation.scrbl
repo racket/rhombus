@@ -4,8 +4,10 @@
 
 @title{Annotations}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  annot.macro 'SizeInteger'
+  annot.macro 'gui.View.SizeInt'
 ){
 
  Equivalent to @rhombus(Int.in(0, 1000000), ~annot).
@@ -13,15 +15,15 @@
 }
 
 @doc(
-  annot.macro 'Size'
+  annot.macro 'gui.View.Size'
 ){
 
- Satisfied by a list containing two @rhombus(maybe(SizeInteger), ~annot)s.
+ Satisfied by a list containing two @rhombus(maybe(View.SizeInt), ~annot)s.
 
 }
 
 @doc(
-  annot.macro 'PositionInteger'
+  annot.macro 'gui.View.PositionInt'
 ){
 
  Equivalent to @rhombus(Int.in(-1000000, 1000000), ~annot).
@@ -29,17 +31,17 @@
 }
 
 @doc(
-  annot.macro 'Position'
+  annot.macro 'gui.View.Position'
 
 ){
 
  Satisfied by @rhombus(#'center) or a list containing two
- @rhombus(PositionInteger, ~annot)s.
+ @rhombus(View.PositionInt, ~annot)s.
 
 }
 
 @doc(
-  annot.macro 'SpacingInteger'
+  annot.macro 'gui.View.SpacingInt'
 ){
 
  Equivalent to @rhombus(Int.in(0, 1000), ~annot).
@@ -47,25 +49,32 @@
 }
 
 @doc(
-  annot.macro 'Margin'
+  annot.macro 'gui.View.Margin'
 ){
 
- Satisfied by a list containing two @rhombus(SpacingInteger, ~annot)s.
+ Satisfied by a list containing two @rhombus(View.SpacingInt, ~annot)s.
 
 }
 
 @doc(
-  annot.macro 'Alignment'
+  annot.macro 'gui.View.Alignment'
+  enum gui.View.HorizAlignment:
+    left
+    center
+    right
+  enum gui.View.HorizAlignment:
+    top
+    center
+    bottom
 ){
 
- Satisfied by a list containing two symbols: @rhombus(#'left),
- @rhombus(#'center), or @rhombus(#'right), and @rhombus(#'top),
- @rhombus(#'center), or @rhombus(#'bottom).
+ A @rhombus(View.Alighment, ~annot) is a 2-element list containing a
+ @rhombus(View.HorizAlignment) and a @rhombus(View.VertAlignment).
 
 }
 
 @doc(
-  annot.macro 'Stretch'
+  annot.macro 'gui.View.Stretch'
 ){
 
  Satisfied by a list containing two @rhombus(Boolean, ~annot)s.
@@ -73,7 +82,7 @@
 }
 
 @doc(
-  annot.macro 'LabelString'
+  annot.macro 'gui.View.LabelString'
 ){
 
   Satisfied by a string whose length is less than 200 characters.

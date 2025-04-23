@@ -3,12 +3,9 @@
 import:
   meta_label:
     rhombus open
+    rhombus/gui
+    rhombus/draw
     rhombus/gui open
-    rhombus/draw open:
-      except: Path
-              Size
-              Point
-              Rect
     lib("racket/gui/easy.rkt") open:
       except:
         render
@@ -16,6 +13,7 @@ import:
 export:
   meta_label:
     all_from(rhombus)
+    gui
+    draw
     all_from(rhombus/gui)
-    all_from(rhombus/draw)
     all_from(lib("racket/gui/easy.rkt"))

@@ -100,7 +100,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
 def tabs:
   let at_tab = gui.Obs("Happy")
-  let shape = gui.Choice(["Circle", "Square", "Rounded"],
+  let shape = gui.Choice(gui.Obs(["Circle", "Square", "Rounded"]),
                          ~selection: "Circle")
   let eyes = gui.Checkbox("Eyes", ~is_checked: #true)
   let stache = gui.Checkbox("Moustache", ~is_checked: #false)

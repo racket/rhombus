@@ -2,12 +2,6 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "type.rhm":
-    expose:
-      Size
-      Alignment
-      Position
-      Stretch
   "view.rhm":
     expose:
       View
@@ -16,7 +10,7 @@ import:
   "obs.rhm":
     expose:
       Obs
-      MaybeObs
+      ObsOrValue
 
 export:
   Window
@@ -25,15 +19,15 @@ class Window(private _handle):
   implements WindowView
   override property handle: _handle
 
-  constructor (~title: title :: MaybeObs.of(String) = "Untitled",
-               ~size: size :: MaybeObs.of(Size) = [#false, #false],
-               ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-               ~position: position :: MaybeObs.of(Position) = #'center,
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               ~styles: style :: MaybeObs.of(List.of(Window.Style)) = [],
+  constructor (~title: title :: ObsOrValue.of(String) = "Untitled",
+               ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+               ~position: position :: ObsOrValue.of(View.Position) = #'center,
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
                ~mixin: mix :: Function = values,
-               child :: MaybeObs.of(View),
+               child :: ObsOrValue.of(View),
                ...):
     super(easy.window(~title: obs.unwrap(title),
                       ~size: obs.unwrap_list(size, values),

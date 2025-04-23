@@ -4,19 +4,21 @@
 
 @title{Windows}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class Window():
+  class gui.Window():
     implements WindowView
     constructor (
-      ~title: title :: MaybeObs.of(String) = "Untitled",
-      ~size: size :: MaybeObs.of(Size) = [#false, #false],
-      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~position: position :: MaybeObs.of(Position) = #'center,
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      ~styles: styles :: MaybeObs.of(List.of(Window.Style)) = [],
+      ~title: title :: ObsOrValue.of(String) = "Untitled",
+      ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~position: position :: ObsOrValue.of(View.Position) = #'center,
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~styles: styles :: ObsOrValue.of(List.of(Window.Style)) = [],
       ~mixin: mix :: Function = values,
-      child :: MaybeObs.of(View), ...
+      child :: ObsOrValue.of(View), ...
     )
 ){
 
@@ -26,7 +28,7 @@
 }
 
 @doc(
-  enum Window.Style:
+  enum gui.Window.Style:
     no_resize_border
     no_caption
     no_system_menu

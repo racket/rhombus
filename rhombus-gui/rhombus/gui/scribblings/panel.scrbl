@@ -4,30 +4,32 @@
 
 @title(~tag: "panels"){Panels and Tabs}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class HPanel():
+  class gui.HPanel():
     implements View
     constructor (
-      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~styles: styles :: MaybeObs.of(List.of(HPanel.Style)) = [],
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      child :: MaybeObs.of(View), ...
+      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~styles: styles :: ObsOrValue.of(List.of(HPanel.Style)) = [],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      child :: ObsOrValue.of(View), ...
     )
-  class VPanel():
+  class gui.VPanel():
     implements View
     constructor (
-      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~styles: styles :: MaybeObs.of(List.of(VPanel.Style)) = [],
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      child :: MaybeObs.of(View), ...
+      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~styles: styles :: ObsOrValue.of(List.of(VPanel.Style)) = [],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      child :: ObsOrValue.of(View), ...
     )
 ){
 
@@ -37,18 +39,18 @@
 }
 
 @doc(
-  class GroupPanel():
+  class gui.GroupPanel():
     implements View
     constructor (
-      label :: MaybeObs.of(LabelString),
-      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~styles: styles :: MaybeObs.of(List.of(GroupPanel.Style)) = [],
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      child :: MaybeObs.of(View), ...
+      label :: ObsOrValue.of(View.LabelString),
+      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~styles: styles :: ObsOrValue.of(List.of(GroupPanel.Style)) = [],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      child :: ObsOrValue.of(View), ...
     )
 ){
 
@@ -57,25 +59,26 @@
 }
 
 @doc(
-  class TabsPanel():
+  class gui.TabsPanel():
     implements View
     constructor (
-      choices :: MaybeObs.of(List),
-      ~selection: selection :: MaybeObs.of(Any),
-      ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
-      ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+      choices :: ObsOrValue.of(List),
+      ~selection: selection :: ObsOrValue.of(Any),
+      ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> Any
+                 = #,(@rhombus(set_selection, ~var)),
+      ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
-      ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-      ~styles: styles :: MaybeObs.of(List.of(TabsPanel.Style)) = [],
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-      child :: MaybeObs.of(View), ...
+      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~styles: styles :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      child :: ObsOrValue.of(View), ...
     )
 
-  property (tabs :: TabsPanel).at_selection :: Obs
+  property (tabs :: gui.TabsPanel).at_selection :: Obs
 ){
 
  Creates a tab panel where @rhombus(choices) provides the number and
@@ -93,7 +96,7 @@
  @rhombus(choices) to a label to be shown for the tab, and
  @rhombus(choice_equal) defines equality for choice identities. By
  default, @rhombus(choices) is expected to be a list of
- @rhombus(LabelString), since @rhombus(choice_to_label) is the identity
+ @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is the identity
  function.
 
  When the tab selection changes, @rhombus(action) is called as
@@ -122,7 +125,7 @@
 
 
 @doc(
-  enum HPanel.Style:
+  enum gui.HPanel.Style:
     deleted
     border
     vscroll
@@ -132,7 +135,7 @@
     hide_vscroll
     hide_hscroll
 
-  enum VPanel.Style:
+  enum gui.VPanel.Style:
     deleted
     border
     vscroll
@@ -148,7 +151,7 @@
 }
 
 @doc(
-  enum GroupPanel.Style:
+  enum gui.GroupPanel.Style:
     deleted
 ){
 
@@ -158,7 +161,7 @@
 
 
 @doc(
-  enum TabsPanel.Style:
+  enum gui.TabsPanel.Style:
     deleted
     no_border
     can_reorder
@@ -169,5 +172,18 @@
 ){
 
  A tab panel style option.
+
+}
+
+@doc(
+  enum gui.TabsPanel.Action:
+    select
+    new
+    close
+    reorder
+){
+
+ A tab panel action provided to the @rhombus(~action) callback function
+ of a @rhombus(Panel, ~class).
 
 }

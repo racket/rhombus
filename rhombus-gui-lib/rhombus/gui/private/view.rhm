@@ -7,6 +7,7 @@ import:
       #{observable-view}
   lib("racket/base.rkt").else
   "obs.rhm"
+  "type.rhm"
 
 export:
   View
@@ -22,6 +23,22 @@ interface View:
   export:
     if
     cond
+    type.View.SizeInt
+    type.View.Size
+    type.View.SizeLike
+    type.View.PositionInt
+    type.View.Position
+    type.View.PositionLike
+    type.View.SpacingInt
+    type.View.Margin
+    type.View.MarginLike
+    type.View.HorizAlignment
+    type.View.VertAlignment
+    type.View.Alignment
+    type.View.AlignmentLike
+    type.View.Stretch
+    type.View.StretchLike
+    type.View.LabelString
 
   expr.macro 'if $test | $then | $else':
     'AView($(expr_meta.pack_s_exp(['#{if-view}',

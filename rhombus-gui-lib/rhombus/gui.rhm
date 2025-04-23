@@ -3,7 +3,7 @@ import:
   "gui/private/obs.rhm":
     expose:
       Obs
-      MaybeObs
+      ObsOrValue
   "gui/private/renderer.rhm"
   "gui/private/view.rhm"
   "gui/private/window.rhm"
@@ -15,7 +15,6 @@ import:
   "gui/private/slider.rhm"
   "gui/private/label.rhm"
   "gui/private/event.rhm"
-  "gui/private/type.rhm"
   "gui/private/input.rhm"
   "gui/private/spacer.rhm"
 
@@ -32,6 +31,5 @@ export:
   all_from(.slider)
   all_from(.label)
   all_from(.event)
-  all_from(.type)
   all_from(.input)
   all_from(.spacer)

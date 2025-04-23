@@ -4,21 +4,23 @@
 
 @title{Controls}
 
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class Button():
+  class gui.Button():
     implements View
     constructor (
-      label :: MaybeObs.of(LabelString
-                             || Bitmap
-                             || matching([_ :: Bitmap,
-                                          _ :: LabelString,
-                                          _ :: Button.LabelPosition])),
-      ~action: action :: Function.of_arity(0) = fun (): #void,
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~styles: styles :: MaybeObs.of(List.of(Button.Style)) = [],
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      label :: ObsOrValue.of(View.LabelString
+                               || Bitmap
+                               || matching([_ :: Bitmap,
+                                            _ :: LabelString,
+                                            _ :: Button.LabelPosition])),
+      ~action: action :: () -> ~any = fun (): #void,
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~styles: styles :: ObsOrValue.of(List.of(Button.Style)) = [],
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
     )
 ){
 
@@ -28,16 +30,16 @@
 }
 
 @doc(
-  class Checkbox():
+  class gui.Checkbox():
     implements View
     constructor (
-      label :: MaybeObs.of(LabelString),
-      ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
-      ~action: action :: Function.of_arity(1) = #,(@rhombus(set_is_checked, ~var)),
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+      label :: ObsOrValue.of(View.LabelString),
+      ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+      ~action: action :: maybe(Boolean -> ~any) = #false,
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
     )
 
-  property (cb :: Checkbox).at_is_checked :: Obs.of(Boolean)
+  property (cb :: gui.Checkbox).at_is_checked :: Obs.of(Boolean)
 ){
 
  Creates a checkbox. When rendered, the function call
@@ -63,22 +65,22 @@
 }
 
 @doc(
-  class Choice():
+  class gui.Choice():
     implements View
     constructor (
-      choices :: MaybeObs.of(List),
-      ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+      choices :: ObsOrValue.of(List),
+      ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
-      ~selection: selection :: MaybeObs.of(Any) = #false,
-      ~action: action :: maybe(Function.of_arity(1)) = #false,
-      ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
-      ~styles: styles :: MaybeObs.of(List.of(Choice.Style)) = [],
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      ~selection: selection :: ObsOrValue.of(Any) = #false,
+      ~action: action :: maybe(Any -> ~any) = #false,
+      ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+      ~styles: styles :: ObsOrValue.of(List.of(Choice.Style)) = [],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
     )
 
-  property (chc :: Choice).at_selection :: Obs
+  property (chc :: gui.Choice).at_selection :: Obs
 ){
 
  Creates a popup choice selecotr where @rhombus(choices) provides the
@@ -99,7 +101,7 @@
  @rhombus(choices) to a label to be shown for the control, and
  @rhombus(choice_equal) defines equality for choice identities. By
  default, @rhombus(choices) is expected to be a list of
- @rhombus(LabelString), since @rhombus(choice_to_label) is the identity
+ @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is the identity
  function.
 
  The default @rhombus(action, ~var) function corresponds to
@@ -112,21 +114,21 @@
 }
 
 @doc(
-  class Slider():
+  class gui.Slider():
     implements View
     constructor (
-      label :: MaybeObs.of(maybe(LabelString)) = #false,
-      ~value: value :: MaybeObs.of(PositionInteger) = 0,
-      ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
-      ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
-      ~action: action :: maybe(Function.of_arity(1)) = #false,
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+      ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
+      ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
+      ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
+      ~action: action :: maybe(View.PositionInt -> ~any) = #false,
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~styles: styles :: List.of(Slider.Style) = [#'horizontal],
     )
 
-  property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
+  property (sldr :: gui.Slider).at_value :: Obs.of(PositionInt)
 ){
 
  Creates a slider. When rendered, the function call
@@ -153,15 +155,15 @@
 
 
 @doc(
-  class Label():
+  class gui.Label():
     implements View
     constructor (
-      label :: MaybeObs.of(LabelString),
-      ~color: color :: MaybeObs.of(maybe(Color)) = #false,
-      ~font: font :: MaybeObs.of(Font) = Label.normal_control_font,
+      label :: ObsOrValue.of(View.LabelString),
+      ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
+      ~font: font :: ObsOrValue.of(Font) = Label.normal_control_font,
     )
 
-  property (lbl :: Label).at_label :: Obs.of(LabelString)
+  property (lbl :: gui.Label).at_label :: Obs.of(View.LabelString)
 ){
 
  Creates a text label.
@@ -177,19 +179,19 @@
 
 
 @doc(
-  class Input():
+  class gui.Input():
     implements View
     constructor (
-      content :: MaybeObs.of(Any),
-      ~action: action :: maybe(Function.of_arity(2)) = #false,
-      ~label: label :: MaybeObs.of(LabelString) = "",
-      ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-      ~background_color: bg_color :: MaybeObs.of(maybe(Color)) = #false,
-      ~styles: styles :: MaybeObs.of(List.of(Input.Style)) = [#'single],
+      content :: ObsOrValue.of(Any),
+      ~action: action :: maybe((Input.Action, String) -> ~any) = #false,
+      ~label: label :: ObsOrValue.of(View.LabelString) = "",
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
+      ~styles: styles :: ObsOrValue.of(List.of(Input.Style)) = [#'single],
       ~font : font :: Font = normal_control_font,
-      ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-      ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-      ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~mixin: mixin :: Function = values,
       ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = (fun (a, b): a == b),
       ~value_to_text: val_to_txt :: Function = values
@@ -215,7 +217,7 @@
 
 
 @doc(
-  class Spacer():
+  class gui.Spacer():
     implements View
 ){
 
@@ -226,7 +228,7 @@
 
 
 @doc(
-  enum Button.Style:
+  enum gui.Button.Style:
     border
     multi_line
     deleted
@@ -237,7 +239,7 @@
 }
 
 @doc(
-  enum Button.LabelPosition:
+  enum gui.Button.LabelPosition:
     left
     top
     right
@@ -250,7 +252,7 @@
 
 
 @doc(
-  enum Choice.Style:
+  enum gui.Choice.Style:
     horizontal_label
     vertical_label
     deleted
@@ -262,7 +264,7 @@
 
 
 @doc(
-  enum Slider.Style:
+  enum gui.Slider.Style:
     horizontal
     vertical
     plain
@@ -277,7 +279,7 @@
 
 
 @doc(
-  enum Input.StyleSymbol:
+  enum gui.Input.StyleSymbol:
     deleted
     horizontal_label
     hscroll
@@ -288,5 +290,18 @@
 ){
 
  An input style option.
+
+}
+
+@doc(
+  enum gui.Input.Action:
+    input
+    return
+){
+
+ An action provided to the @rhombus(~action) callback function of an
+ @rhombus(Input, ~class). The action @rhombus(#'input) corresponds to any
+ change to the input text, while @rhombus(#'return) indicates that the
+ Return or Enter key was pressed.
 
 }

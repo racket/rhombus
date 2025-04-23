@@ -4,30 +4,65 @@
 
 @title{Observables}
 
+An @deftech{observable} holds a value, where the value in an observable
+can be updated, and graphical elements can react automatically to
+update. For example, the label or enable state for a button can be
+supplied as an observable, and if the obervable's value changes, then
+the graphical representation of the button changes automatically to
+match.
+
+An observable corresponds to @rhombus(#{obs?}) from
+@racketmodname(racket/gui/easy).
+
+@(~version_at_least "8.14.0.4")
+
 @doc(
-  class Obs():
+  class gui.Obs():
     constructor (v :: Any,
                  ~name: name :: String = "anon",
                  ~is_derived: is_derived :: Any = #false)
 
-  annot.macro 'Obs.of($annot)'
-  annot.macro 'MaybeObs.of($annot)'
+  annot.macro 'gui.Obs.of($annot)'
+  annot.macro 'gui.ObsOrValue.of($annot)'
+  annot.macro 'gui.Obs.later_of($annot)'
+  annot.macro 'gui.Obs.now_of($annot)'
+  annot.macro 'gui.ObsOrValue.later_of($annot)'
+  annot.macro 'gui.ObsOrValue.now_of($annot)'
 ){
 
- An @deftech{observable} corresponds to @rhombus(#{obs?}) from
- @racketmodname(racket/gui/easy).
+ The @rhombus(Obs) constructor creates an @tech{observable} whose initial
+ value is @rhombus(v).
 
  The annotation @rhombus(#,(@rhombus(Obs.of, ~annot))(annot)) is
- satisfied by an annotation whose current value satisfies
- @rhombus(annot). The annotation
- @rhombus(#,(@rhombus(MaybeObs.of, ~annot))(annot)) is satisfied by a
+ satisfied by an annotation whose value satisfies @rhombus(annot). The
+ predicate and conversion (if any) associated with @rhombus(annot) is not
+ applied immediately, but it is applied every time a value is extracted
+ or put into the observable. The annotation
+ @rhombus(#,(@rhombus(ObsOrValue.of, ~annot))(annot)) is satisfied by a
  value that satisfies either @rhombus(annot) or
  @rhombus(#,(@rhombus(Obs.of, ~annot))(annot)).
+
+ The @rhombus(#,(@rhombus(Obs.now_of, ~annot))(annot)) annotation is
+ @rhombus(#,(@rhombus(Obs.of, ~annot))(annot)), but the current value in
+ the observable is checked immediately, and it is not checked later or
+ when a new value is supplied to the observable. In other words,
+ @rhombus(#,(@rhombus(Obs.now_of, ~annot))(annot)) is a predicate
+ annotation, while @rhombus(#,(@rhombus(Obs.of, ~annot))(annot)) is a
+ converter annotation. The @rhombus(annot) argument in
+ @rhombus(#,(@rhombus(Obs.now_of, ~annot))(annot)) must be a predicate
+ annotation. The @rhombus(#,(@rhombus(ObsOrValue.now_of, ~annot))(annot))
+ annotation is analogously like
+ @rhombus(#,(@rhombus(ObsOrValue.of, ~annot))(annot)).
+
+ The @rhombus(Obs.later_of(annot), ~annot) and
+ @rhombus(ObsOrValue.later_of(annot), ~annot) annotations are aliases for
+ @rhombus(Obs.of(annot), ~annot) and
+ @rhombus(ObsOrValue.of(annot), ~annot), respectively.
 
 }
 
 @doc(
-  property (obs :: Obs).handle :: Any
+  property (obs :: gui.Obs).handle :: Any
 ){
 
  Returns a Racket object that corresponds to the observable for use
@@ -37,8 +72,8 @@
 
 @doc(
   property
-  | (obs :: Obs).value :: Any
-  | (obs :: Obs).value := (v :: Any)
+  | (obs :: gui.Obs).value :: Any
+  | (obs :: gui.Obs).value := (v :: Any)
 ){
 
  Returns the value via @rhombus(Obs.peek) (which you shouldn't normally
@@ -64,7 +99,7 @@
 
 
 @doc(
-  method (obs :: Obs).observe(f :: Function.of_arity(1))
+  method (obs :: gui.Obs).observe(f :: Function.of_arity(1))
     :: Void
 ){
 
@@ -74,7 +109,7 @@
 }
 
 @doc(
-  method (obs :: Obs).unobserve(f :: Function.of_arity(1))
+  method (obs :: gui.Obs).unobserve(f :: Function.of_arity(1))
     :: Void
 ){
 
@@ -84,9 +119,9 @@
 }
 
 @doc(
-  method (obs :: Obs).update(f :: Function.of_arity(1))
+  method (obs :: gui.Obs).update(f :: Function.of_arity(1))
     :: Any
-  operator ((obs :: Obs) <~ (f :: Function.of_arity(1)))
+  operator ((obs :: gui.Obs) <~ (f :: Function.of_arity(1)))
     :: Any
 ){
 
@@ -96,7 +131,7 @@
 }
 
 @doc(
-  method (obs :: Obs).peek() :: Any
+  method (obs :: gui.Obs).peek() :: Any
 ){
 
  Returns the current value of @rhombus(obs).
@@ -111,7 +146,7 @@
 }
 
 @doc(
-  method (obs :: Obs).rename(name :: String) :: Obs
+  method (obs :: gui.Obs).rename(name :: String) :: Obs
 ){
 
  Returns an observer like @rhombus(obs), but named as @rhombus(name).
@@ -119,9 +154,9 @@
 }
 
 @doc(
-  method (obs :: Obs).map(f :: Function.of_arity(1))
+  method (obs :: gui.Obs).map(f :: Function.of_arity(1))
     :: Obs
-  operator ((obs :: Obs) ~> (f :: Function.of_arity(1)))
+  operator ((obs :: gui.Obs) ~> (f :: Function.of_arity(1)))
     :: Obs
 ){
 
@@ -133,7 +168,7 @@
 }
 
 @doc(
-  method (obs :: Obs).debounce(
+  method (obs :: gui.Obs).debounce(
     ~duration: msec :: NonnegInt = 200
   ) :: Obs
 ){
@@ -145,7 +180,7 @@
 }
 
 @doc(
-  method (obs :: Obs).throttle(
+  method (obs :: gui.Obs).throttle(
     ~duration: msec :: NonnegInt = 200
   ) :: Obs
 ){
@@ -156,9 +191,9 @@
 }
 
 @doc(
-  fun Obs.combine(f :: Function, obs :: Obs, ...)
+  fun gui.Obs.combine(f :: Function, obs :: Obs, ...)
     :: Obs
-  fun Obs.combine({key: obs :: Obs, ...})
+  fun gui.Obs.combine({key: obs :: Obs, ...})
     :: Obs
 ){
 

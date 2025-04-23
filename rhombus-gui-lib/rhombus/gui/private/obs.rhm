@@ -4,7 +4,7 @@ import:
 
 export:
   Obs
-  MaybeObs
+  ObsOrValue
   _Obs
   unwrap
   unwrap_list
@@ -12,31 +12,112 @@ export:
   to_obs
   <~
   ~>
+  like_obs_value
 
 def anon_str = "anon"
 
-namespace MaybeObs:
-  export: of
-  annot.macro 'of($(ann :: annot_meta.Parsed))':
+statinfo.key obs_val:
+  ~and: statinfo_meta.and
+  ~or: statinfo_meta.or
+
+meta def obs_val_key = 'obs_val'
+
+annot.macro 'like_obs_value($(id :: Identifier))':
+  ~context ctx
+  ~all_stx stx
+  let pos = ctx.argument_names.maybe[id] || (syntax_meta.equal_binding(id, 'this')
+                                               && ctx.this_position)
+  unless pos
+  | syntax_meta.error("argument name not found",
+                      stx,
+                      id)
+  annot_meta.pack_predicate('fun (x): #true',
+                            '(($statinfo_meta.dependent_result_key,
+                               $(statinfo_meta.pack_dependent_result('select_obs_val', '$pos'))))')
+
+meta.bridge select_obs_val:
+  fun (data :~ Syntax, deps :~ annot_meta.Dependencies):
+    let pos = data.unwrap()
+    fun extract(si):
+      if si
+      | statinfo_meta.find(statinfo_meta.unpack(si), obs_val_key) || statinfo_meta.pack('()')
+      | statinfo_meta.pack('()')
+    cond
+    | pos is_a Int:
+        extract((pos < deps.arguments.length())
+                  && deps.arguments[pos])
+    | pos is_a Keyword:
+        extract(deps.keyword_arguments.maybe[pos])
+    | ~else:
+        extract(#false)
+
+namespace ObsOrValue:
+  export:    
+    now_of
+    later_of
+    rename: later_of as of
+  annot.macro 'now_of($(ann :: annot_meta.Parsed))':
+    ~all_stx: stx
+    parse_obs_now_of(#true, stx, ann)
+  annot.macro 'later_of($(ann_g :: Group))':
+    ~context ctx
+    ~all_stx: stx
+    ~op_stx: self
+    let '$(ann :: annot_meta.Parsed(ctx))' = ann_g    
+    parse_obs_later_of(#true, stx, self, ann)
+
+meta:
+  fun parse_obs_now_of(can_value, stx, ann :: Syntax.matched_of(annot_meta.Parsed)):
+    unless annot_meta.is_predicate(ann)
+    | syntax_meta.error("value annotation must be a predicate annotation",
+                        stx,
+                        ann.group)
     let (pred, infos) = annot_meta.unpack_predicate(ann)
     annot_meta.pack_predicate('block:
-                                 def pred = $pred
-                                 fun
-                                 | (v :: Obs): pred(v.peek())
-                                 | (v): pred(v)',
-                              '()')
+                                 let pred = $pred
+                                 fun (v):
+                                   (v is_a Obs && pred(Obs.value(v))) $(if can_value | '|| pred(v)' | '')',
+                              if can_value
+                              | '()'
+                              | get_obs_statinfo('()'))
 
-annot.macro 'of($(ann :: annot_meta.Parsed))':
-  let (pred, _) = annot_meta.unpack_predicate(ann)
-  let (_, obs_info):
-    let '$(a :: annot_meta.Parsed)' = 'Obs'
-    annot_meta.unpack_predicate(a)
-  annot_meta.pack_predicate('block:
-                               def pred = $pred
-                               fun
-                               | (v :: Obs): pred(v.peek())
-                               | (_): #false',
-                            obs_info)
+  fun parse_obs_later_of(can_value, stx, self, ann :: Syntax.matched_of(annot_meta.Parsed)):
+    let (bind, cvt, infos) = annot_meta.unpack_converter(ann)
+    let '$(b :: bind_meta.Parsed)' = '(o :: $(if can_value
+                                              | '(Obs || converting(fun ($bind): $cvt))'
+                                              | 'Obs') described_as ($stx))'
+    annot_meta.pack_converter(b,
+                              'block:
+                                 fun cvt(_, $bind described_as ($ann.group)):
+                                   ~name: $(Symbol.from_string(Syntax.to_source_string(self)))
+                                   $cvt
+                                 if o is_a Obs
+                                 | _Obs(easy.#{impersonate-obs}(Obs.handle(o),
+                                                                ~ref: cvt,
+                                                                ~set: cvt))
+                                 | o',
+                              if can_value
+                              | '()'
+                              | get_obs_statinfo(infos))
+
+  fun get_obs_statinfo(val_statinfos):
+    let '$(obs_ann :: annot_meta.Parsed)' = 'Obs'
+    let (_, obs_infos) = annot_meta.unpack_predicate(obs_ann)
+    if val_statinfos matches '()'
+    | obs_infos
+    | let '($si, ...)' = obs_infos
+      '(($obs_val_key, $(statinfo_meta.pack(val_statinfos))),
+        $si, ...)'
+
+annot.macro 'now_of($(ann :: annot_meta.Parsed))':
+  ~all_stx: stx
+  parse_obs_now_of(#false, stx, ann)
+annot.macro 'later_of($(ann_g :: Group))':
+  ~context ctx    
+  ~all_stx: stx
+  ~op_stx: self
+  let '$(ann :: annot_meta.Parsed(ctx))' = ann_g
+  parse_obs_later_of(#false, stx, self, ann)
 
 class Obs(private _handle):
   internal _Obs
@@ -67,7 +148,7 @@ class Obs(private _handle):
   method update(f :: Function.of_arity(1)):
     easy.#{obs-update!}(handle, f)
 
-  method peek():
+  method peek() :: like_obs_value(this):
     easy.#{obs-peek}(handle)
 
   method map(f :: Function.of_arity(1)) :: Obs:
@@ -81,7 +162,9 @@ class Obs(private _handle):
 
   export:
     combine
-    of
+    now_of
+    later_of
+    rename: later_of as of
 
 fun
 | combine(f :: Function, obs :: Obs, ...) :: Obs:
