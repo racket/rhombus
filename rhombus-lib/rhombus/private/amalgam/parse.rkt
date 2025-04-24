@@ -13,7 +13,8 @@
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "static-info.rkt")
 
 (provide rhombus-top
          rhombus-nested
@@ -269,9 +270,13 @@
   ;; The `enforest-rhombus-expression` function expects to be called
   ;; during the dynamic extent of a Rhombus transformer, so we
   ;; add calls to `syntax-local-introduce` to cancel the ones in
-  ;; `enforest-rhombus-expression`
-  (define new-stx (syntax-local-introduce
-                   (enforest-rhombus-expression (syntax-local-introduce stx))))
+  ;; `enforest-rhombus-expression`. Also, if we get here, then
+  ;; we're expanding a Rhombus expression in a Racket context, and
+  ;; the Racket context isn't going to look at static info, so we
+  ;; can prune it.
+  (define new-stx (discard-static-infos
+                   (syntax-local-introduce
+                    (enforest-rhombus-expression (syntax-local-introduce stx)))))
   ;; We don't want an 'opaque-raw property to be duplicated. So,
   ;; if it exists on the input, discard any such property on the
   ;; output.

@@ -1626,7 +1626,7 @@
   (define (gather group groups)
     (if (null? group)
         groups
-        (cons #`(#,*list-stx #,@group) groups)))
+        (cons #`(#,*list-stx #,@(map discard-static-infos group)) groups)))
   (define groups
     (for/foldr ([group '()]
                 [groups '()]
@@ -1644,8 +1644,8 @@
         [else (values (cons one group) groups)])))
   (cond
     [(null? groups) empty-*list-stx]
-    [(null? (cdr groups)) (car groups)]
-    [else #`(#,*list-append-stx #,@groups)]))
+    [(null? (cdr groups)) (discard-static-infos (car groups))]
+    [else #`(#,*list-append-stx #,@(map discard-static-infos groups))]))
 
 (define-for-syntax (build-treelist-form content)
   (build-*list-form content #'treelist #'empty-treelist #'treelist-append

@@ -160,7 +160,7 @@
                                         #`(lambda (v) (#,indexable-set!-id indexable-v index-v v))
                                         #'indexable
                                         #'assign.tail))
-     (values #`(let ([indexable-v #,indexable]
+     (values #`(let ([indexable-v #,(discard-static-infos indexable)]
                      [index-v (rhombus-expression index)])
                  #,assign-expr)
              tail)]
@@ -171,7 +171,7 @@
                                         (raise-syntax-error who (not-static) indexable-in)
                                         #'indexable-get)))
        (define e (datum->syntax (quote-syntax here)
-                                (list indexable-ref-id indexable index)
+                                (list indexable-ref-id (discard-static-infos indexable) (discard-static-infos index))
                                 (span-srcloc indexable #'head)
                                 #'head))
        (define result-static-infos (cond

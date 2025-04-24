@@ -1086,4 +1086,4 @@
                                                                     (lambda () #,raise))))))]
                                                     [else body])))))))
                                 #t)))
-         #'e.parsed]))]))
+         (discard-static-infos #'e.parsed)]))]))

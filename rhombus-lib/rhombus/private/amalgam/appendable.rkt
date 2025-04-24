@@ -118,12 +118,14 @@
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    (datum->syntax (quote-syntax here)
-                  (if direct?
-                      (list append-id form1 form2)
-                      `(,#'let ([a1 ,form1]
-                                [a2 ,form2])
-                               (,#'check-appendable a1 a2)
-                               (,append-id a1 a2))))))
+                  (let ([form1 (discard-static-infos form1)]
+                        [form2 (discard-static-infos form2)])
+                    (if direct?
+                        (list append-id form1 form2)
+                        `(,#'let ([a1 ,form1]
+                                  [a2 ,form2])
+                                 (,#'check-appendable a1 a2)
+                                 (,append-id a1 a2)))))))
 
 (define-syntax ++
   (expression-infix-operator

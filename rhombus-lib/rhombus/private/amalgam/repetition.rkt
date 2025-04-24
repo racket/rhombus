@@ -243,7 +243,7 @@
                                 (cond
                                   [(zero? keep-count)
                                    #`(([(elem) (in-list (for/list #,(insert-clause-separators for-clausess)
-                                                          #,(pack-element #'rep-info.body)))]))]
+                                                          #,(pack-element (discard-static-infos #'rep-info.body))))]))]
                                   [else
                                    (cons (car for-clausess)
                                          (loop (sub1 keep-count) (cdr for-clausess)))]))
@@ -288,7 +288,7 @@
                  (identifier? body)
                  (free-identifier=? body #'id))
      #'e]
-    [else #`(#,for-form #,clauses #,body)]))
+    [else #`(#,for-form #,clauses #,(discard-static-infos body))]))
 
 (define-for-syntax (raise-wrong-depth expr used-depth-stx want-depth actual-depth
                                       #:at-least? [at-least? #f])

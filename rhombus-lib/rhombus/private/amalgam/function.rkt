@@ -517,7 +517,8 @@
                   (~seq _ ... (_::alts . _))))
          (syntax-parse #`(group . #,stx)
            [e::expression
-            (list #'(#%expression e.parsed))])]))))
+            (let ([e (discard-static-infos #'e.parsed)])
+              (list #`(#%expression #,e)))])]))))
 
 (define-entry-point-syntax fun
   (entry-point-transformer

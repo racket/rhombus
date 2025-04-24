@@ -471,7 +471,7 @@
                                                  (#,(field-desc-mutator-id fld) obj v))
                                              #'obj
                                              #'assign.tail))
-          (success #`(let ([obj #,form1])
+          (success #`(let ([obj #,(discard-static-infos form1)])
                        #,assign-expr)
                    tail)]
          [_
@@ -528,7 +528,7 @@
        (define (checked-wrap-call e extra-rands)
          (define form1 (car extra-rands))
          (relocate+reraw form1
-                         #`(let ([#,obj-id #,form1])
+                         #`(let ([#,obj-id #,(discard-static-infos form1)])
                              #,@(if add-check
                                     (list (add-check obj-id))
                                     null)

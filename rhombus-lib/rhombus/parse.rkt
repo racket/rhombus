@@ -3,7 +3,8 @@
                     [rhombus-expression parse:rhombus-expression]))
 
 (provide rhombus-expression
-         rhombus-top)
+         rhombus-top
+         (for-syntax rhombus-local-expand))
 
 (define-syntax-rule (rhombus-expression e)
   ;; an expression may expand to `(begin (quote-syntax statinfo) expr)`,
