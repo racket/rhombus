@@ -64,7 +64,7 @@
     constructor (
       choices :: ObsOrValue.of(List),
       ~selection: selection :: ObsOrValue.of(Any),
-      ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> Any
+      ~action: action :: maybe((TabsPanel.Action, List, maybe(Any)) -> Any)
                  = #,(@rhombus(set_selection, ~var)),
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),

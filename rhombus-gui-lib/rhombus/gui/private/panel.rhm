@@ -96,7 +96,7 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
                ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: ObsOrValue.of(Any) = #false,
-               ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> Any = #false,
+               ~action: action :: maybe((TabsPanel.Action, List, maybe(Any)) -> Any) = #false,
                ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
                ~styles: style :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
@@ -107,8 +107,12 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
                child :: ObsOrValue.of(View),
                ...):
     let at_selection = obs.to_obs(selection)
-    let action = action || (fun (_, _, selected):
-                              at_selection.value := selected)
+    let action:
+      if action
+      | fun(what, choices, selected):
+          action(what, [& choices], selected)
+      | fun(_, _, selected):
+          at_selection.value := selected
     super(easy.tabs(obs.unwrap_list(choices, values),
                     action,
                     ~selection: obs.unwrap(at_selection),
