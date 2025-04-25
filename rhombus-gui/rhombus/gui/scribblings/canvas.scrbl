@@ -19,9 +19,9 @@
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = "canvas",
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Canvas.Style)) = [],
-      ~margin: margin :: ObsOrValue.of(Margin) = [0, 0],
-      ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~mixin: mix :: Function = values,
     )
 ){
