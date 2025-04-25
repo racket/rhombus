@@ -191,7 +191,7 @@ lists with @rhombus(++), adding to the front or end of a list with
 @rhombus(List.cons) or @rhombus(List.add), inserting into the middle of
 a list with @rhombus(List.insert), deleting a list element with
 @rhombus(List.delete), or dropping or taking a list prefix or suffix
-with functions like @rhombus(List.drop_left). Internally, lists are
+with functions like @rhombus(List.drop). Internally, lists are
 implemented as relaxed radix balanced (RRB) trees.
 
 As an alternative to @rhombus(List), @rhombus(PairList) constructs a
@@ -230,5 +230,6 @@ elements.
   PairList["cadillac", & [& autos, "corvette"]]
   PairList["cadillac", & [& autos, "corvette"]]
 )
+
 
 @(close_eval(list_eval))

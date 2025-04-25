@@ -14,5 +14,6 @@ collections through repetition and iteration forms.
 @include_section("set.scrbl")
 @include_section("repetition.scrbl")
 @include_section("for.scrbl")
+@include_section("range.scrbl")
 @include_section("more-arguments.scrbl")
 @include_section("function-shorthand.scrbl")

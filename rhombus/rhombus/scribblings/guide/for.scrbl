@@ -13,11 +13,12 @@ for repetitions but also do not need the full expressiveness of
 functions.
 
 The @rhombus(for) form supports iteration over @tech(~doc: ref_doc){sequences},
-which includes lists, arrays, maps, and sets. In the body of a @rhombus(for)
+which includes lists, arrays, maps, sets, and ranges. In the body of a @rhombus(for)
 form, each @rhombus(each, ~for_clause) clause binds to an element of a sequence for
 each iteration. The length of the sequence determines the number of
-iterations. The @rhombus(..) operator creates a sequence of integers
-from a starting integer (inclusive) to an ending integer (exclusive):
+iterations. The @rhombus(..) operator creates a range from a starting
+integer (inclusive) to an ending integer (exclusive), which works as a
+sequence of integer:
 
 @examples(
   for:
@@ -30,6 +31,14 @@ using parentheses before the @rhombus(for) body block:
 
 @examples(
   for (i in 1..4):
+    println(i)
+)
+
+Alternatively, the @rhombus(..=) operator is like @rhombus(..), except
+the ending integer is included.
+
+@examples(
+  for (i: 1..=4):
     println(i)
 )
 
@@ -81,8 +90,10 @@ since the short is for a single @rhombus(each, ~for_clause) clause:
 In this latest example, the sequence for @rhombus(index) could be
 @rhombus(1..) to avoid needing the length of the list for
 @rhombus(friend). When @rhombus(..) has no second argument, it creates
-an infinite sequence of integers, and when @rhombus(for) iterates over
-sequences in parallel, it stops when the shortest sequence stops.
+a range from a starting integer (inclusive) to positive infinity,
+which works as an infinite sequence of integers, and when
+@rhombus(for) iterates over sequences in parallel, it stops when the
+shortest sequence stops.
 
 The @rhombus(for) form acts as a comprehension form when a
 @deftech{reducer} is specified before the @rhombus(for) body block.

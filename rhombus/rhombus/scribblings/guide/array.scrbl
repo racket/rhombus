@@ -2,6 +2,8 @@
 @(import:
     "common.rhm" open)
 
+@(def array_eval = make_rhombus_eval())
+
 @title(~tag: "array"){Arrays}
 
 The @rhombus(Array) constructor is similar to @rhombus(List), but it
@@ -12,6 +14,7 @@ list, an array is @tech(~doc: ref_doc){indexable}. Unlike a list, an array is mu
 for assignment.
 
 @examples(
+  ~eval: array_eval
   ~defn:
     def buckets = Array(1, 2, 3, 4)
   ~repl:
@@ -34,6 +37,7 @@ indexing and update via @brackets and @rhombus(:=). Unlike an array, a
 mutable list supports operations that add or remove elements.
 
 @examples(
+  ~eval: array_eval
   ~defn:
     def items = MutableList(1, 2, 3, 4)
   ~repl:
@@ -45,3 +49,15 @@ mutable list supports operations that add or remove elements.
     items.append([10, 20, 30])
     items
 )
+
+Both arrays and mutable lists are listable (see @secref("list")).
+
+@examples(
+  ~eval: array_eval
+  ~repl:
+    [& buckets]
+    [& items]
+)
+
+
+@(close_eval(array_eval))
