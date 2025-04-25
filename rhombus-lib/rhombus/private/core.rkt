@@ -11,6 +11,8 @@
   (provide get-info-proc)
   (define (get-info-proc key default make-default)
     (case key
+      [(color-lexer)
+       (dynamic-require 'rhombus/private/syntax-color 'rhombus-lexer)]
       [(drracket:default-extension)
        "rhm"]
       [(drracket:define-popup)
