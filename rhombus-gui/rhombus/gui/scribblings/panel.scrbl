@@ -102,9 +102,7 @@
  When the tab selection changes, @rhombus(action) is called as
 
 @rhombusblock(
-  action(#,(@rhombus(what, ~var)) :: Any.of(#'select, #'new, #'close, #'reorder),
-         choices :: List,
-         #,(@rhombus(selected, ~var)) :: maybe(Any))
+  action(#,(@rhombus(what, ~var)), choices, #,(@rhombus(selected, ~var)))
 )
 
  where @rhombus(what, ~var) describes the action, @rhombus(choices) is

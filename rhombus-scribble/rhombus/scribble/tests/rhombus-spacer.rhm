@@ -1146,13 +1146,19 @@ check_spacer:
 
 check_spacer:
   "hello" is_a Any.of("hello", "goodbye")
-  $datum $(expr.full) $(annot) . $(annot)($datum, $datum)
+  $datum $(expr.full) $(annot.full) . $(annot.full)($datum, $datum)
 
   "hello" is_a Any
     . of (
       "hello",
       "goodbye"
     )
+
+check_spacer:
+  #'hello
+    :: Any.of(#'~goodbye)
+  $(expr.full) $value
+    $(expr.full) $(annot.full) . $(annot.full)($(expr.full) $value)
 
 check_spacer:
   def (x :: Int) described_as An Integer:
