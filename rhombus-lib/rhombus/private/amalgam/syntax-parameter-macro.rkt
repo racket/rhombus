@@ -55,7 +55,7 @@
                #`(syntax-parameter (gensym 'name.name)
                                    (rhombus-body-at tag body ...))))]))))
 
-(define-syntax relet
+(define-defn-syntax relet
   (definition-transformer
    (lambda (stx name-prefix)
      (syntax-parse stx

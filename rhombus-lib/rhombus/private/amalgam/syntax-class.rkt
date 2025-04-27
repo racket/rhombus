@@ -103,7 +103,7 @@
              #:when (free-identifier=? (in-defn-space #'name)
                                        (defn-quote syntax_class)))))
 
-(define-syntax together
+(define-defn-syntax together
   (definition-transformer
     (lambda (stx name-prefix)
       (syntax-parse stx
