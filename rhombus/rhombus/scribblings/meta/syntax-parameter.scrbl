@@ -63,8 +63,9 @@ parameter's binding in the remainder of a definition context using
 
 }
 
+
 @doc(
-  defn.macro '«syntax_parameter.relet '$id_name':
+  defn.macro '«syntax_parameter.relet $id_name:
                  $body
                  ...»'
 ){
@@ -73,6 +74,19 @@ parameter's binding in the remainder of a definition context using
  defined already) to the compile-time result of the @rhombus(body)
  sequence. The binding applies to all subsequent forms in the enclosing
  definition context, hence it's a ``re-let'' of the binding.
+
+ See @rhombus(syntax_parameter.bridge) for an example.
+
+}
+
+
+@doc(
+  ~meta
+  fun syntax_parameter_meta.lookup(name :: Identifier) :: Any
+){
+
+ Looks up the current binding of the @tech{syntax parameter}
+ @rhombus(name).
 
  See @rhombus(syntax_parameter.bridge) for an example.
 
