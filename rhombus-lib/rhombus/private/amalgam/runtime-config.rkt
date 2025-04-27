@@ -12,8 +12,7 @@
          "../version-case.rkt")
 
 ;; For `current-read-interaction` callback:
-(lazy-require [shrubbery/parse (parse-all)]
-              [racket/port (dup-input-port)])
+(lazy-require [shrubbery/parse (parse-all)])
 
 (provide install-runtime-config!
          parameters)
