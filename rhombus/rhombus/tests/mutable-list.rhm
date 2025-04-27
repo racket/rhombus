@@ -584,3 +584,30 @@ check:
     error.annot("Function.of_arity(2)").msg,
     error.val("oops").msg,
   )
+
+version_guard.at_least "8.16.0.2":
+  check:
+    MutableList[1, 2, 3][5] ~throws values(
+      "MutableList.get: " ++ "index is out of range",
+      error.text(~label: "index", "5").msg,
+      error.text(~label: "valid range", "[0, 2]").msg,
+      error.val(~label: "mutable list", MutableList[1, 2, 3]).msg,
+    )
+    MutableList[1, 2, 3].drop(5) ~throws values(
+      "MutableList.drop: " ++ "index is out of range",
+      error.text(~label: "index", "5").msg,
+      error.text(~label: "valid range", "[0, 3]").msg,
+      error.val(~label: "mutable list", MutableList[1, 2, 3]).msg,
+    )
+    MutableList[1, 2, 3].sublist(5, 5) ~throws values(
+      "MutableList.sublist: " ++ "starting index is out of range",
+      error.text(~label: "starting index", "5").msg,
+      error.text(~label: "valid range", "[0, 3]").msg,
+      error.val(~label: "mutable list", MutableList[1, 2, 3]).msg,
+    )
+    MutableList[1, 2, 3].sublist(1, 5) ~throws values(
+      "MutableList.sublist: " ++ "ending index is out of range",
+      error.text(~label: "ending index", "5").msg,
+      error.text(~label: "valid range", "[1, 3]").msg,
+      error.val(~label: "mutable list", MutableList[1, 2, 3]).msg,
+    )

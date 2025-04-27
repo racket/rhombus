@@ -135,7 +135,7 @@
                   => (lambda (m)
                        (rhombus (string-append (regexp-replace* #rx"vector" (substring msg (caar m) (cdar m)) "array")
                                                (substring msg (cdar m)))))]
-                 [(regexp-match-positions #rx"^index is out of range.*?treelist:" msg)
+                 [(regexp-match-positions #rx"^(?:starting |ending |)index is out of range.*?treelist:" msg)
                   => (lambda (m)
                        (rhombus (string-append (regexp-replace* #rx"treelist" (substring msg (caar m) (cdar m)) "list")
                                                (substring msg (cdar m)))))]
