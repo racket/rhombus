@@ -207,3 +207,17 @@ check:
   import self!Ae.Foo
   Foo.bar
   ~throws "bar: no such field or method"
+
+block:
+  class Posn(x, y):
+    export def bar = 42
+  check Posn.bar ~is 42
+
+space.enforest myspace:
+  space_path myspace
+  meta_namespace myspace_meta:
+    export def foo = 42
+  export def bar = 43
+meta:
+  check myspace_meta.foo ~is 42
+check myspace.bar ~is 43

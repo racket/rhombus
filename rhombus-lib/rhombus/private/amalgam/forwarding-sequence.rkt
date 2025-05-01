@@ -212,6 +212,7 @@
              (syntax-parse #'state
                [(#:module . _) (void)]
                [(#:nested . _) (void)]
+               [(#:stop-at . _) (void)]
                [_ (raise-syntax-error #f
                                       "allowed only in modules and namespaces"
                                       #'new-ex-id)])
