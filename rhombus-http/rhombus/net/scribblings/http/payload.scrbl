@@ -3,7 +3,8 @@
     meta_label:
       rhombus open
       net/http open
-      net/url)
+      net/url
+      json)
 
 @title(~tag: "payload"){Payload Data}
 
@@ -41,7 +42,7 @@
 }
 
 @doc(
-  fun payload.json(v :: JSON) :: payload.Function
+  fun payload.json(v :: json.JSON) :: payload.Function
 ){
 
  Produces a payload function that encodes @rhombus(v) as JSON data.

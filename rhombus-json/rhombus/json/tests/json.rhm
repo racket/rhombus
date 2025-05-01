@@ -117,3 +117,9 @@ check json.from_string(@str{"x"}) ~is "x"
 check json.from_string(@str{"\u03BB"}) ~is "λ"
 check json.from_string(@str{"\uD870"}) ~throws "bad string"
 check json.from_string(@str{"\uD870"}, ~replace_malformed_surrogate: #true) ~is "\uFFFD"
+
+check json.to_jsexpr("apple") ~is "apple"
+check json.to_jsexpr([#true, "apple", #'null]) ~is PairList[#true, "apple", #'null]
+check json.from_jsexpr(json.to_jsexpr([#true, "apple", #'null])) ~is [#true, "apple", #'null]
+check json.to_jsexpr({ "x": [1, 2.5, #false] }) ~is { #'x: PairList[1, 2.5, #false] }
+check json.from_jsexpr(json.to_jsexpr({ "x": [1, 2.5, #false] })) ~is { "x": [1, 2.5, #false] }

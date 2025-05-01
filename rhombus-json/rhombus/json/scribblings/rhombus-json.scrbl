@@ -161,3 +161,14 @@ and the @hyperlink("http://www.ietf.org/rfc/rfc8259.txt"){JSON RFC} for more inf
 )
 
 }
+
+
+@doc(
+  fun json.to_jsexpr(j :: json.JSON) :: satisfying(#{jsexpr?})
+  fun json.from_jsexpr(jsexpr :: satisfying(#{jsexpr?})) :: json.JSON
+){
+
+ Convert to/from the JSON representation used by the Racket
+ @rhombus(lib("json/main.rkt"), ~modpath) library.
+
+}

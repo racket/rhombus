@@ -5,6 +5,10 @@ import:
   lib("json/main.rkt") ! #{for-extension} as rkt_json:
     rename #{read-json*} as read
     rename #{write-json*} as write
+  lib("json/main.rkt") as rkt_json_main:
+    expose:
+      #{jsexpr?}
+      #{json-null}
 
 def known_json = WeakMutableMap.by(===)()
 
@@ -13,6 +17,8 @@ expr.macro 'adjust_call_with_malformed_surrogate_keyword($(p :: Name)($a, ..., $
   if utils.#{version<?}(system.racket_version(), "8.16.0.1")
   | '$p($a, ...)'
   | '$p($a, ..., $last_a)'
+
+alias 'symbol_to_string': 'to_string'
 
 // Using a `json` namespace adds a prefix to names
 namespace json:
@@ -24,6 +30,8 @@ namespace json:
     read
     from_string
     from_bytes
+    to_jsexpr
+    from_jsexpr
 
   fun is_json(v):
     match v
@@ -127,6 +135,31 @@ namespace json:
     let v = do_read(who, s, replace_malformed_surrogate)
     check_eof(who, v, "byte string", s)
     v
+
+  fun to_jsexpr(j :: JSON):
+    recur to_racket(j = j):
+      match j
+      | { key: val, ...}:
+          { Symbol.from_string(key): to_racket(val), ... }
+      | [elem, ...]:
+          PairList[to_racket(elem), ...]
+      | #'null:
+          #{json-null}()
+      | ~else:
+          j
+
+  fun from_jsexpr(j :: satisfying(#{jsexpr?})):
+    let null = #{json-null}()
+    recur from_racket(j = j):
+      match j
+      | { key: val, ...}:
+          { symbol_to_string(key): from_racket(val), ... }
+      | PairList[elem, ...]:
+          [from_racket(elem), ...]
+      | ~else:
+          if j === null
+          | #'null
+          | j
 
 export:
   all_from(.json)

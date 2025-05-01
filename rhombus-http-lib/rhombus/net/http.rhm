@@ -11,9 +11,9 @@ import:
     expose:
       quote
   net/url
+  json as json_lib
 
 // todo:
-annot.macro 'JSON': 'Any'
 annot.macro 'HTTPConn': 'Any'
 annot.macro 'SSLContext': 'Any'
 annot.macro 'CookieJar': 'Any'
@@ -127,8 +127,8 @@ namespace payload:
   fun form(f :: List.of(url.KeyValue)) :: Function:
     let [url.KeyValue(k, v), ...] = f
     pl.wrap(easy.#{form-payload}(PairList[Pair(Symbol.from_string(k), v), ...]))
-  fun json(j :: JSON) :: Function:
-    pl.wrap(easy.#{json-payload}(j))
+  fun json(j :: json_lib.JSON described_as json.JSON) :: Function:
+    pl.wrap(easy.#{json-payload}(json_lib.to_jsexpr(j)))
   fun gzip(f :: Function described_as payload.Function) :: Function:
     pl.wrap(easy.#{gzip-payload}(pl.unwrap(f)))
   fun pure(inp :: Bytes || String || Port.Input) :: Function:

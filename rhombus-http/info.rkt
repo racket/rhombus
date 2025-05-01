@@ -10,6 +10,7 @@
   '("http-easy"
     "rhombus"
     "rhombus-scribble-lib"
+    "rhombus-json"
     "rhombus-url"))
 
 (define pkg-desc "Rhombus HTTP library")

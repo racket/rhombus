@@ -5,6 +5,7 @@
 (define deps
   '("base"
     "rhombus-lib"
+    ["rhombus-json-lib" #:version "0.2"]
     "http-easy-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-http\"")

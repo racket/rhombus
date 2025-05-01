@@ -187,3 +187,6 @@ check recent_data ~is_now #"helloooo"
 
 check put(here, ~data: payload.buffered(payload.pure(Port.Input.open_bytes(#"oooo")))).status_code ~is 200
 check recent_data ~is_now #"oooo"
+
+check put(here, ~data: payload.json({"key": ["value", 7]})).status_code ~is 200
+check recent_data ~is_now Bytes.copy(#"{\"key\":[\"value\",7]}")
