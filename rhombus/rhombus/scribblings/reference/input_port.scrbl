@@ -20,7 +20,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
  recognizes @tech{input ports}.
  The @rhombus(Port.Input.String, ~annot) annotation recognizes
  @tech{input string ports}.
- The @rhombus(Port.Input.Progresse, ~annot) annotation recognizes
+ The @rhombus(Port.Input.Progress, ~annot) annotation recognizes
  input ports that can provide a progress event via @rhombus(Port.Input.Progress.evt).
 
 }
