@@ -132,6 +132,7 @@ namespace Evt:
   export:
     rename:
       evt.Evt.sync as sync
+      evt.Evt.wrap as wrap
     always
     never
 
