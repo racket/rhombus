@@ -69,3 +69,23 @@ block:
 block:
   check Evt.always.sync() ~is Evt.always
   check Evt.never.sync(~timeout: 0) ~is #false
+
+block:
+  let ch: Channel()
+  let th:
+    thread:
+      ch.put(42)
+      let v = ch.get()
+      ch.put(v)
+      ch.put(101)
+      ch.get()
+  check ch.get() ~is 42
+  ch.put(1)
+  check ch.get() ~is 1
+  check ch.sync() ~is 101
+  let e1:
+    ch.put_evt(53)
+  let e2:
+    e1.sync()
+  check e1 ~is e2
+  check e1 is_a ChannelPutEvt ~is #true
