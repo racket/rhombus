@@ -10,6 +10,7 @@ export:
   Evt
   _Evt
   __Evt
+  WrapEvt
   ProgressEvt
   CommitEvt
 
@@ -32,6 +33,22 @@ interface Evt:
     if enable_break
     | base.#{sync/timeout/enable-break}(timeout, h(this), h(evt), ...)
     | base.#{sync/timeout}(timeout, h(this), h(evt), ...)
+
+  method wrap(wr_fun, ~tail_call: tail_call = #false) :~ Evt:
+    fun h(e :~ Evt):
+      match e
+      | e :: __Evt: e.sync_handle
+      | ~else: e.handle
+    def hand:
+      if tail_call
+      | base.#{handle-evt}(h(this), wr_fun)
+      | base.#{wrap-evt}(h(this), wr_fun)
+    WrapEvt(hand)
+
+class WrapEvt(hand):
+  implements Evt
+  opaque
+  override property handle: hand
 
 class ProgressEvt(hand):
   implements Evt
