@@ -127,7 +127,9 @@
           (or (next named-dest)
               (add-rest named-dest))]
          [else
-          (define id ((make-intro space-name) (datum->syntax root (string->symbol raw))))
+          (define id-space-name (and (pair? space-names)
+                                     (car space-names)))
+          (define id ((make-intro id-space-name) (datum->syntax root (string->symbol raw))))
           (and (identifier-binding id #f)
                (let ([named-id (transfer-parens-suffix
                                 (syntax-raw-property

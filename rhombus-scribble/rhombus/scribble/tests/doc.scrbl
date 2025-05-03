@@ -11,12 +11,14 @@
           println
           String
           ReadableString
+      rhombus/scribble/tests/string_ext open
       rhombus/draw
       rhombus/cmdline)
 
 @title{Example}
 
-@docmodule(rhombus)
+@docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!core,
+           rhombus)
 
 Starting example:
 
@@ -35,6 +37,7 @@ Starting example:
   rhombus.String.copy("Hello").length()
   String.copy("Hello").snapshot().length()
   "Hello".upcase().length()
+  String.more
 )
 
 @rhombusblock(
@@ -117,5 +120,17 @@ Starting example:
 ){
 
   Annotation via namespace extension.
+
+}
+
+@section{Extension}
+
+@docmodule(rhombus/scribble/tests/string_ext)
+
+@doc(
+  def String.more :: String
+){
+
+ Defined by extension.
 
 }

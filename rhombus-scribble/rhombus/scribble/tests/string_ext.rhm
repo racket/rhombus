@@ -1,0 +1,6 @@
+#lang rhombus
+export:
+  String
+
+def String.more = "more"
+

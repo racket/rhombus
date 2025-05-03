@@ -1,0 +1,6 @@
+#lang rhombus
+import:
+  shrubbery/render/private/#{rhombus-spacer}
+
+export:
+  all_from(.#{rhombus-spacer})

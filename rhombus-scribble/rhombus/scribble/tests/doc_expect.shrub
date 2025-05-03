@@ -184,6 +184,9 @@ html:
                   span {class: "stt"}: a {class: "RktValLink"}: "length"
                   span {class: "RktPn"}: "("
                   span {class: "RktPn"}: ")"
+            tr:
+              td:
+                p: span {class: "stt"}: a {class: "RktValLink"}: "String.more"
         blockquote:
           table:
             tr: td: p: span {class: "RktCmt"}: "// also linked"
@@ -969,4 +972,53 @@ html:
                               a {class: "RktValDef RktValLink"}:
                                 "String.to_lib_module_path"
           div {class: "SIntrapara"}: "Annotation via namespace extension."
+        h3:«»
+        p:
+          table:
+            tr:
+              td:
+                span {class: "hspace"}: nbsp
+                span {class: "stt"}: span {class: "RktSym"}: "import"
+                span {class: "stt"}: ": "
+                a {class: "RktModLink"}:
+                  span {class: "stt"}: "rhombus"
+                  span {class: "stt"}: "/"
+                  span {class: "stt"}: "scribble"
+                  span {class: "stt"}: "/"
+                  span {class: "stt"}: "tests"
+                  span {class: "stt"}: "/"
+                  span {class: "stt"}: "string_ext"
+            tr:
+              td: nbsp
+              td:
+                span {class: "RpackageSpec"}:
+                  span {class: "Smaller"}:
+                    nbsp
+                    "package:"
+                  " "
+                  a: span {class: "stt"}: "rhombus-scribble"
+        p:
+          div {class: "SIntrapara"}:
+            table:
+              tr:
+                td:
+                  div {class: "RBackgroundLabel SIEHidden"}:
+                    div {class: "RBackgroundLabelInner"}: p: "value"
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "def"
+                          span {class: "hspace"}: nbsp
+                          a:«»
+                          span:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "String.more"
+                          span {class: "stt"}: "::"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValLink"}: "String"
+          div {class: "SIntrapara"}: "Defined by extension."
     div: nbsp

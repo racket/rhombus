@@ -46,13 +46,16 @@ def (render_line,
                    match current_rhombus_colorize() && kind
                    | #'value: p.colorize(current_literal_color())
                    | #'result: p.colorize(current_result_color())
-                   | #'identifier: p.colorize(current_identifier_color())
+                   | #'identifier || #'plain: p.colorize(current_identifier_color())
                    | #'paren: p.colorize(current_paren_color())
                    | #'comment: p.colorize(current_comment_color())
                    | ~else: p
                ~render_in_space:
-                 fun (space, str, od):
-                   rtt(str)
+                 fun (space, str, od,
+                      ~prefix = #false,
+                      ~suffix = #false,
+                      ~#{suffix-space} = #false):
+                   rtt(to_string(str))
                ~render_whitespace:
                  fun (n):
                    rtt(String.make(n, Char" "))
