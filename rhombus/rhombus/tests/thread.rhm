@@ -88,4 +88,4 @@ block:
   let e2:
     e1.sync()
   check e1 ~is e2
-  check e1 is_a ChannelPutEvt ~is #true
+  check e1 is_a Channel.PutEvt ~is #true
