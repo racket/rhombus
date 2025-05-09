@@ -18,7 +18,7 @@ related to OS-level pipes for communicating between different processes.
 
 @doc(
   fun Port.Pipe.make(
-    ~limit: maybe(PosInt),
+    ~limit: limit :: maybe(PosInt) = #false,
     ~input_name: input_name :: Any = #'pipe,
     ~input_name: output_name :: Any = #'pipe
   ) :: values(Port.Input && Port.Pipe,
@@ -31,7 +31,7 @@ related to OS-level pipes for communicating between different processes.
  ports, pipe ports do not need to be explicitly closed to be reclaimed by
  garbage collection.
 
- If limit is @rhombus(#false), the new pipe holds an unlimited number of
+ If @rhombus(limit) is @rhombus(#false), the new pipe holds an unlimited number of
  unread bytes (i.e., limited only by the available memory). If
  @rhombus(limit) is a positive number, then the pipe will hold at most
  @rhombus(limit) unread/unpeeked bytes; writing to the pipe's output port
@@ -39,7 +39,7 @@ related to OS-level pipes for communicating between different processes.
  more space available. (Peeks effectively extend the port's capacity
  until the peeked bytes are read.)
 
- The optional @rhombus(input_name) and @rhombus(output)name) are used as
+ The optional @rhombus(input_name) and @rhombus(output_name) are used as
  the names for the returned input and output ports, respectively.
 
 }

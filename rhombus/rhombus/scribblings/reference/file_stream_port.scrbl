@@ -20,7 +20,7 @@
 
 @doc(
    method (port :: Port.FileStream).truncate(
-     size :: NonegInt
+     size :: NonnegInt
    ) :: Void
 ){
 

@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Output Ports}
 
@@ -44,8 +45,8 @@ an @deftech{output string port} writes to a @tech{byte string}.
                 ...'
 
   grammar option:
-    ~exists $exist_mode_expr
-    ~exists: $exist_mode_body; ...
+    ~exists $exists_mode_expr
+    ~exists: $exists_mode_body; ...
 ){
 
  The @rhombus(Port.Output.current) @tech{context parameter} determines a
@@ -135,10 +136,8 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 
 @doc(
-  method (out :: Port.Output.String).get_bytes()
-    :: Bytes
-  method (out :: Port.Output.String).get_string()
-    :: String
+  method (out :: Port.Output.String).get_bytes() :: Bytes
+  method (out :: Port.Output.String).get_string() :: String
 ){
 
  @rhombus(Port.Output.String.get_bytes) returns the bytes accumulated in the
@@ -164,6 +163,16 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 }
 
+
+@doc(
+  method (out :: Port.Output).close() :: Void
+){
+
+ Closes an @tech{output port}.
+
+}
+
+
 @doc(
   method (out :: Port.Output).write_byte(b :: Byte) :: Void
   method (out :: Port.Output).write_char(ch :: Char) :: Void
@@ -176,7 +185,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 @doc(
   method (out :: Port.Output).write_bytes(
-    bytes :: ReadableBytes,
+    bytes :: Bytes,
     ~start: start :: NonnegInt = 0,
     ~end: end :: NonnegInt = bytes.length(),
     ~wait: wait :: Port.WaitMode = #'all

@@ -54,7 +54,7 @@ block:
     Port.FileStream.try_lock(p, mode) ~method
     Port.FileStream.identity(p) ~method
     Port.FileStream.stat(p) ~method
-    Port.Pipe.make([name])
+    Port.Pipe.make()
     Port.Pipe.content_length(p) ~method
 
 block:

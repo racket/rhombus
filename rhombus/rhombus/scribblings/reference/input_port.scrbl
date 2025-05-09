@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     meta_label:
       rhombus/thread open)
 
@@ -53,7 +54,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
  @rhombus(Port.Input, ~annot), otherwise @rhombus(path_expr) must produce
  a @rhombus(PathString). Breaks are disabled during the evaluation of
  @rhombus(port_expr) or opening the file indicated by
- @rhombus(path_expr), the same as for @rhombus(Closeable.def), and the
+ @rhombus(path_expr), the same as for @rhombus(Closeable.let), and the
  port is similarly closed on return or escape from the @rhombus(body)
  sequence.
 
@@ -104,6 +105,15 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
  Creates an @tech{input port} that is empty. The optional @rhombus(name)
  is used as the name for the returned port.
+
+}
+
+
+@doc(
+  method (in :: Port.Input).close() :: Void
+){
+
+ Closes an @tech{input port}.
 
 }
 
@@ -192,7 +202,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
  The result can be a non-@rhombus(Char), non-@rhombus(Port.eof) value if
  @rhombus(special_wrap) is not @rhombus(#false). The
  @rhombus(special_wrap) and @rhombus(source_name) argument as used as by
- @rhombus(Port.peek_byte).
+ @rhombus(Port.Input.peek_byte).
 
 }
 

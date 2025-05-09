@@ -25,7 +25,7 @@ output; it is possible for an object to be both an input and output port.
 ){
 
  The @rhombus(Port.eof) value represents an end-of-file (distinct from
- all other values), and the @rhombus(Port.eof) binding match matches that
+ all other values), and the @rhombus(Port.eof) binding matches that
  value.
 
  The @rhombus(Port.EOF, ~annot) annotation is satisfied by the
@@ -56,7 +56,7 @@ output; it is possible for an object to be both an input and output port.
  buffer mode cannot be determined.
 
  A port's default buffer mode depends on the communication channel that
- it represents. A file port is nomrally @rhombus(#'block) buffered. The
+ it represents. A file port is normally @rhombus(#'block) buffered. The
  initial @rhombus(stdin) port is @rhombus(#'block) buffered. The initial
  @rhombus(stdout) port is @rhombus(#'line) buffered if it writers to a
  terminal, @rhombus(#'block) buffered otherwise. The initial
@@ -99,13 +99,13 @@ output; it is possible for an object to be both an input and output port.
  and Mac OS will reset the file pointer to the end of a file before each
  write, which defeats file enlargement via @rhombus(Port.position). If
  @rhombus(pos) is beyond the end of an input file or (byte) string, then
- reading thereafter returns eof without changing the port's position.
+ reading thereafter returns @rhombus(Port.eof) without changing the port's position.
 
  When changing the file position for an output port, the port is first
  flushed if its buffer is not empty. Similarly, setting the position for
  an input port clears the port's buffer (even if the new position is the
  same as the old position). However, although input and output ports
- produced by open-input-output-file share the file position, setting the
+ produced by @rhombus(Port.open_input_output_file) share the file position, setting the
  position via one port does not flush the other port's buffer.
 
 }
@@ -117,9 +117,9 @@ output; it is possible for an object to be both an input and output port.
   Parameter.def Port.current_enable_locations
     :: Any.to_boolean
   method (port :: Port).next_location()
-    :: values(maybe(PostInt), maybe(NonnegInt), maybe(PosInt))
+    :: values(maybe(PosInt), maybe(NonnegInt), maybe(PosInt))
   method (port :: Port).next_location(
-    line :: maybe(PostInt),
+    line :: maybe(PosInt),
     column :: maybe(NonnegInt),
     offset :: maybe(PosInt)
   ) :: Void
@@ -159,7 +159,7 @@ output; it is possible for an object to be both an input and output port.
 ){
 
  Like @rhombus(Port.Output.open_file), but returns both input and output
- ports.The two ports are connected in that they share the underlying file
+ ports. The two ports are connected in that they share the underlying file
  descriptor.
 
  This function is intended for use with special devices that can be
