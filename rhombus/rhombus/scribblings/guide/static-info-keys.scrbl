@@ -7,7 +7,7 @@
 @title(~tag: "static-info-key"){Representing Static Information}
 
 Static information for an expression or binding is represented in
-key–value form and encoded within @tech{syntax objects} at expansion time.
+key--value form and encoded within @tech{syntax objects} at expansion time.
 When static information is associated with a binding, it
 is propagated to each use of the bound variable, so we can refer to an
 expression @meta{E} that has static information without loss of

@@ -130,7 +130,7 @@ terms. In particular, the proposal addresses the problem of parsing a
 mixture of operators and other terms within a shrubbery group, allowing
 the definition of infix, prefix, and postfix operators for expressions,
 bindings, and other contexts. The handling of operators is directly
-based on Honu, but with several refinements—including a framework for
+based on Honu, but with several refinements---including a framework for
 relative and non-transitive operator precedence that is more like
 Fortress than Honu.
 

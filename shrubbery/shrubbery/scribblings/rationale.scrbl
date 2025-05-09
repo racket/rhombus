@@ -13,7 +13,7 @@ be useful and straightforward in an editor.
 Parentheses in shrubbery notation do not disable indentation, unlike
 some indentation-sensitive notations. That choice supports a language in
 shrubbery notation where parentheses can be added around any expression
-— even if the expression is written with indentation (although the
+--- even if the expression is written with indentation (although the
 expression may need to be shifted right to preserve relative
 indentation, depending on how parentheses are added).
 

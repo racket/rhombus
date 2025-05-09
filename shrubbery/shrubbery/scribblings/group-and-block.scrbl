@@ -382,7 +382,7 @@ The following two groups are the same:
 @section(~tag: "semicolon"){Separating Groups with @litchar{;} and @litchar{,}}
 
 A @litchar{;} separates two groups on the same line. A @litchar{;} is
-allowed in any context—except between groups immediately within,
+allowed in any context---except between groups immediately within,
 @parens, @brackets, or @braces, where a @litchar{,}
 separates groups. The following three blocks are the same:
 
@@ -647,7 +647,7 @@ used:
 
  @item{When @litchar{#//} appears completely on its own line (possibly with
    whitespace and non-group comments), then its indentation does not
-   matter. It comments out the next group or alternative—which might
+   matter. It comments out the next group or alternative---which might
    be a single-line group, multi-line group, or @litchar{|} alternative.},
 
  @item{When @litchar{#//} appears at the start of a group with more tokens

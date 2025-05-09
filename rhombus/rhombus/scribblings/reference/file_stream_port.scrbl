@@ -41,7 +41,7 @@
 
  The @rhombus(Port.FileStream.try_lock) function attempts to acquire a
  filesystem lock on the file that @rhombus(port) represents using the
- operating systems’s facilities for file locking. The result is
+ operating systems's facilities for file locking. The result is
  @rhombus(#true) if the lock acquisition succeeds, @rhombus(#false)
  otherwise.
 

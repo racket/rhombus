@@ -763,7 +763,7 @@ its @tech{lexical information} and the global binding table, the expander also m
 ensure they are not used outside of the lexical region in which they are bound.
 
 Due to the way local binding forms like @racket[let] add a fresh @tech{scope} to both bound
-@tech{identifiers} and body forms, it isn’t ordinarily possible for an @tech{identifier} to reference
+@tech{identifiers} and body forms, it isn't ordinarily possible for an @tech{identifier} to reference
 a @tech{local binding} without appearing in the body of the @racket[let]. However, if macros use
 compile-time state to stash bound @tech{identifiers}, or use @racket[local-expand] to extract
 @tech{identifiers} from an expanded binding form, they can violate this constraint. For example, the
@@ -788,7 +788,7 @@ locally-bound @racket[x] @tech{identifier} outside of the lexical region in whic
     (unstash-id))
   (eval:error (unstash-id)))
 
-In general, an @tech{identifier}’s @tech{lexical information} is not sufficient to know whether or not
+In general, an @tech{identifier}'s @tech{lexical information} is not sufficient to know whether or not
 its @tech{binding} is available in the enclosing context, since the @tech{scope set} for the
 @tech{identifier} stored in @racket[stashed-id] unambiguously refers to a binding in the global
 binding table. This can be observed by the fact that @racket[identifier-binding] produces
@@ -803,8 +803,8 @@ binding table. This can be observed by the fact that @racket[identifier-binding]
   (eval:check (stashed-id-binding) 'lexical))
 
 However, the reference produced by @racket[(unstash-id)] in the above program is still illegal, even
-if it isn’t technically unbound. To record the fact that @racket[x]’s @tech{binding} is in scope only
-within the body of its corresponding @racket[let] form, the expander adds @racket[x]’s @tech{binding}
+if it isn't technically unbound. To record the fact that @racket[x]'s @tech{binding} is in scope only
+within the body of its corresponding @racket[let] form, the expander adds @racket[x]'s @tech{binding}
 to the @tech{local binding context} while expanding the @racket[let] body. More generally, the
 expander adds all @tech{local variable} @tech{bindings} to the @tech{local binding context} while
 expanding expressions in which a reference to the @tech{variable} would be legal. When the expander

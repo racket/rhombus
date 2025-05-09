@@ -166,7 +166,7 @@ encoding and decoding.
  Encodes and decodes according to @tt{application/x-www-form-urlencoded}
  rules from the HTML 4.0 specificiation. Encoding maps @litchar{!},
  @litchar{~}, @litchar{'}, @litchar{(}, and @litchar{)} using hex
- representations, which is the same choice as made by Java’s
+ representations, which is the same choice as made by Java's
  @tt{URLEncoder}.
 
  The @rhombus(form.urlencoded_encode) and
@@ -202,7 +202,7 @@ encoding and decoding.
 ){
 
  Encoding and decoding functions specified by @url_rfc.
- The encoding, in line with @(rfc_name)’s recommendation, represents a
+ The encoding, in line with @(rfc_name)'s recommendation, represents a
  character as-is, if possible. The decoding allows any characters to be
  represented by it hex value, and it allows a character to be incorrectly
  represented as-is. The ``unreserved'' encoders convert @litchar{!},

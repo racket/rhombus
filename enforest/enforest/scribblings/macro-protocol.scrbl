@@ -37,7 +37,7 @@ list. The macro therefore has no way to pull the expression apart,
 inspect it, or rearrange it. Of course, such facilities could be made
 available to the macro transformer in lower-level form. Meanwhile,
 @rhombus(y) and @rhombus(tail) are likely unparsed terms, which can be
-inspected—although it's possible that some other macro constructs a
+inspected---although it's possible that some other macro constructs a
 @rhombus(->) expression using already-parsed terms, in which case they
 are similarly opaque to the @rhombus(->) transformer.
 

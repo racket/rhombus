@@ -313,7 +313,7 @@
   ) :: Pict
 ){
 
- Returns a pict like @rhombus(pict), but the pict’s @tech{bounding box} is
+ Returns a pict like @rhombus(pict), but the pict's @tech{bounding box} is
  framed in the color @rhombus(line), a baseline showing the bounding
  box's descent is draw as a line using the color @rhombus(baseline), and
  a topline showing the bounding box's ascent is draw as a line using the

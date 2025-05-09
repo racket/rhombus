@@ -23,5 +23,5 @@ followed with the use of a designated name-path operator. A name root is
 implemented by a transformer that is similar to a prefix macro
 transformer (as explained in the next section), but it ``expands'' to a
 new identifier whose binding is checked in a space that's suitable to
-the context—or it expands to a reference to another name root, in which
+the context---or it expands to a reference to another name root, in which
 case the new root is expanded recursively.

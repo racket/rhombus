@@ -99,14 +99,14 @@ output; it is possible for an object to be both an input and output port.
  and Mac OS will reset the file pointer to the end of a file before each
  write, which defeats file enlargement via @rhombus(Port.position). If
  @rhombus(pos) is beyond the end of an input file or (byte) string, then
- reading thereafter returns eof without changing the port’s position.
+ reading thereafter returns eof without changing the port's position.
 
  When changing the file position for an output port, the port is first
  flushed if its buffer is not empty. Similarly, setting the position for
- an input port clears the port’s buffer (even if the new position is the
+ an input port clears the port's buffer (even if the new position is the
  same as the old position). However, although input and output ports
  produced by open-input-output-file share the file position, setting the
- position via one port does not flush the other port’s buffer.
+ position via one port does not flush the other port's buffer.
 
 }
 
@@ -165,7 +165,7 @@ output; it is possible for an object to be both an input and output port.
  This procedure is intended for use with special devices that can be
  opened by only one process, such as @filepath{COM1} in Windows. For
  regular files, sharing the file descriptor can be confusing. For
- example, using one port does not automatically flush the other port’s
+ example, using one port does not automatically flush the other port's
  buffer, and reading or writing in one port moves the file position (if
  any) for the other port. For regular files, use separate
  @rhombus(Port.Input.open_file) and @rhombus(Port.Output.open_file) calls

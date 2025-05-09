@@ -52,7 +52,7 @@ the remaining terms.
 An identifier/operator is connected to a transformer using Racket's
 mapping machinery (@racket_define_syntax, etc.). The enforestation
 algorithm is parameterized over the space (in the sense of
-@racket_provide_for_space) it should consult and accessor–predicate functions
+@racket_provide_for_space) it should consult and accessor--predicate functions
 that extract infix and prefix transformers from compile-time bindings.
 
 When a context includes only prefix @tech(~key: "macro protocol"){macro} operators that are

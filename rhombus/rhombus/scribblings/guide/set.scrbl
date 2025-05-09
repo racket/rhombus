@@ -9,7 +9,7 @@
 When @braces is used with elements that do not
 have @colon to separate a key and value, then @braces creates a set. (If
 a set-element expression uses @colon, then it will need to be in
-parentheses to avoid being parsed as a key–value pair.) A set
+parentheses to avoid being parsed as a key--value pair.) A set
 supports @tech(~doc: ref_doc){membership tests} with the @rhombus(in) operator.
 There's a @rhombus(Set) constructor that's analogous to
 @rhombus(Map), but @rhombus(Set) accepts just values to include in the

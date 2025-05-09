@@ -83,7 +83,7 @@ macro implementation after @colon is compile-time code. Importing
 forms like @rhombus(expr.macro) available. Normally,
 @rhombusmodname(rhombus/meta) should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time
-code—even for things like @rhombus(values) and @(quotes).
+code---even for things like @rhombus(values) and @(quotes).
 
 Whether defined by @rhombus(macro) or @rhombus(expr.macro), an
 infix/postfix macro's left-hand input is always parsed before the
