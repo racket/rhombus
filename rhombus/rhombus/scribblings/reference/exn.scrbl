@@ -170,8 +170,6 @@
     extends Exn.Fail.Filesystem
   class Exn.Fail.Network():
     extends Exn.Fail
-  class Exn.Fail.Network.Version():
-    extends Exn.Fail.Network
   class Exn.Fail.Network.Errno(errno :: Pair.of(Symbol, Int)):
     extends Exn.Fail.Network
   class Exn.Fail.OutOfMemory():
