@@ -162,7 +162,7 @@ output; it is possible for an object to be both an input and output port.
  ports.The two ports are connected in that they share the underlying file
  descriptor.
 
- This procedure is intended for use with special devices that can be
+ This function is intended for use with special devices that can be
  opened by only one process, such as @filepath{COM1} in Windows. For
  regular files, sharing the file descriptor can be confusing. For
  example, using one port does not automatically flush the other port's

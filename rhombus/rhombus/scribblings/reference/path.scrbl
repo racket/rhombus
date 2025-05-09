@@ -229,7 +229,7 @@ Paths are @tech{comparable}, which means that generic operations like
  directory separator. If the last @rhombus(part) ends in a separator, it
  is included in the resulting path.
 
- The @rhombus(Path.add) procedure builds a path @italic{without}
+ The @rhombus(Path.add) function builds a path @italic{without}
  checking the validity of the path or accessing the filesystem.
 
 @examples(
