@@ -7,6 +7,7 @@ export:
   thread
   Thread
   Semaphore
+  Channel
   except_space class:
     evt.ProgressEvt
     evt.CommitEvt
@@ -84,6 +85,34 @@ namespace ~open:
     unless rkt.#{semaphore?}(hand)
     | error(~who: who, "not a semaphore handle")
     _Semaphore(hand)
+
+namespace ~open:
+  export:
+    Channel
+
+  class Channel(private hand):
+    export:
+      only_space annot:
+        PutEvt
+    opaque
+    internal _Channel
+    implements evt.Evt
+    constructor ():
+      super(rkt.#{make-channel}())
+    override property handle: hand
+    method get():
+      rkt.#{channel-get}(hand)
+    method put(value):
+      rkt.#{channel-put}(hand, value)
+    method put_evt(value) :~ evt.Evt:
+      PutEvt(rkt.#{channel-put-evt}(hand, value))
+
+    class PutEvt(hand):
+      implements evt.Evt
+      private implements evt._Evt
+      opaque
+      override property handle: hand
+      private override property sync_handle: rkt.#{wrap-evt}(hand, fun (e): this)
 
 class AlwaysEvt():
   implements evt.Evt
