@@ -92,7 +92,7 @@ namespace ~open:
 
   class Channel(private hand):
     export:
-      except_space expr:
+      only_space annot:
         PutEvt
     opaque
     internal _Channel
@@ -107,12 +107,12 @@ namespace ~open:
     method put_evt(value) :~ evt.Evt:
       PutEvt(rkt.#{channel-put-evt}(hand, value))
 
-  class PutEvt(hand):
-    implements evt.Evt
-    private implements evt._Evt
-    opaque
-    override property handle: hand
-    private override property sync_handle: rkt.#{wrap-evt}(hand, fun (e): this)
+    class PutEvt(hand):
+      implements evt.Evt
+      private implements evt._Evt
+      opaque
+      override property handle: hand
+      private override property sync_handle: rkt.#{wrap-evt}(hand, fun (e): this)
 
 class AlwaysEvt():
   implements evt.Evt

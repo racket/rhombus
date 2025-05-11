@@ -2,7 +2,9 @@
 @(import:
     "common.rhm" open
     meta_label:
-      rhombus/thread open)
+      rhombus/thread:
+        only Channel
+        open)
 
 @title(~tag: "channel"){Channels}
 
@@ -48,11 +50,20 @@ Blocks until a receiver is ready to accept the value @rhombus(val) through
 }
 
 @doc(
-  method (ch :: Channel).put_evt(val :: Any) :: Evt
+  method (ch :: Channel).put_evt(val :: Any) :: Channel.PutEvt
 ){
 
 Constructs a @tech{synchronizable event} that is ready for synchronization when
-@rhombus(Channel.put(ch, val)) would not block, and the event's synchronization
-result is the event itself.
+@rhombus(Channel.put(ch, val)) would not block, and the event's
+synchronization result is the event itself.
+
+}
+
+@doc(
+  annot.macro 'Channel.PutEvt'
+){
+
+An annotation that recognizes a @tech{synchronizable event} created by
+@rhombus(Channel.put_evt).
 
 }
