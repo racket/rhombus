@@ -122,7 +122,7 @@
                            lhs-i.data
                            if/flattened
                            (begin)
-                           (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str))
+                           (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str #f))
          (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data))
       (wrap-definition
        #`(begin
@@ -170,8 +170,7 @@
                              lhs-i.data
                              if/flattened
                              (begin)
-                             (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str
-                                                  #:position 'pos))
+                             (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str 'pos))
            ...
            (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
            ...)
@@ -195,8 +194,7 @@
     [(top-level module) '()]
     [else (list #'(define-values () (values)))]))
 
-(define (rhs-binding-failure who val binding-str
-                             #:position [pos #f])
+(define (rhs-binding-failure who val binding-str pos)
   (define (n->th n)
     (string-append (number->string n)
                    (case (modulo n 100)
