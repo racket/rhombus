@@ -23,6 +23,7 @@
   fun slide(~title: title :: maybe(String || Pict) = #false,
             ~name: name = title,
             ~layout: layout :: SlideLayout = #'auto,
+            ~aspect: aspect :: Aspect = #'widescreen,
             ~sep: sep :: Real = slide.gap,
             ~horiz: horiz_align :: HorizAlignment = #'center,
             ~lead_in: lead_in = #false,
@@ -38,7 +39,7 @@
  @rhombus(lead_in) is true, then slides are also registered for the
  transition from epoch @rhombus(-1).
 
- The @rhombus(title) and @rhombus(layout) arguments are used to combine
+ The @rhombus(title), @rhombus(layout), and @rhombus(aspect) arguments are used to combine
  content picts via the @rhombus(current_assembler) parameter's value.
 
  Besides immediate picts, the @rhombus(content) values can produce
@@ -106,6 +107,7 @@
 @doc(
   fun slide_pict(~title: title :: maybe(String || Pict) = #false,
                  ~layout: layout :: SlideLayout = #'auto,
+                 ~aspect: aspect :: Aspect = #'widescreen,
                  ~sep: sep :: Real = slide.gap,
                  ~horiz: horiz_align :: HorizAlignment = #'center,
                  ~full: full = title && #true,
@@ -119,6 +121,25 @@
  including its title as combined via @rhombus(current_assembler).
  Otherwise, @rhombus(current_assembler) is not used, and the resulting
  pict is just the result of combining the @rhombus(content) values.
+
+}
+
+@doc(
+  fun blank_client(
+    ~aspect: aspect :: Aspect = #'widescreen,
+    ~title: title :: maybe(String || Pict) = #false,
+    ~layout: layout :: SlideLayout = #'auto
+  ) :: Pict
+){
+
+ Creates a blank pict that corersponds to the ``client'' area of a
+ slide, which is below the title (if any) and inset by a small margin.
+
+ If @rhombus(title) is not @rhombus(#false), then @rhombus(title) and
+ @rhombus(layout) determine a height for a client area that is consistent
+ with the default value of @rhombus(current_assembler). The
+ @rhombus(layout) argument matters only in whether it is @rhombus(#'tall)
+ or not.
 
 }
 
@@ -161,12 +182,15 @@
 
 
 @doc(
-  Parameter.def current_assembler :: Function.of_arity(3)
+  Parameter.def current_assembler
+    :: (title :: False || Pict,
+        layout:: SlideLayout,
+        aspect :: Aspect,
+        p :: Pict) -> Pict
 ){
 
  A context parameter for a function used to combine a slide title, layout mode,
- and content pict. The title can be a pict or @rhombus(#false), and the
- layout mode is a value that satisfies @rhombus(SlideLayout, ~annot).
+ aspect, and content pict to produce an overall pict.
 
  The default slide assembler vertically combines a title with the pict
  content using @rhombus(slide.gap) space for the @rhombus(#'tall) layout
@@ -229,6 +253,19 @@
 
  Slide layout options used with @rhombus(slide) and
  @rhombus(current_assembler).
+
+}
+
+@doc(
+  enum Aspect:
+    widescreen
+    fullscreen
+){
+
+ Slide aspect options used with @rhombus(slide) and
+ @rhombus(current_assembler). The @rhombus(#'widescreen) apsect is 16:9
+ as 1360 by 766 in drawing units. The @rhombus(#'fullscreen) aspect if
+ 4:3 as 1024 by 768 in drawing units.
 
 }
 

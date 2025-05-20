@@ -24,7 +24,9 @@ export:
 
   SlideContent
   SlideLayout
+  Aspect
   current_assembler
+  blank_client
 
   // flattens nested lists in arguments:
   slide
@@ -74,17 +76,22 @@ enum SlideLayout:
   top
   tall
 
+enum Aspect:
+  widescreen
+  fullscreen
+
 fun slide(~title: title :: maybe(String || Pict) = #false,
           ~name: name = title,
           ~layout: layout :: SlideLayout = #'auto,
           ~sep: sep :: Real = gap,
           ~horiz: horiz :: pict.HorizAlignment = #'center,
           ~lead_in: lead_in = #false,
+          ~aspect: aspect :: Aspect= #'widescreen,
           content :: SlideContent, ...):
   let p = slide_content_pict(~sep: sep, ~horiz: horiz,
                              flatten_slide_content(#'slide, [content, ...]))
   let name = if name is_a String | name | to_string(name)
-  let p: assemble_slide(title, layout, p, ~lead_in: lead_in)
+  let p: assemble_slide(title, layout, aspect, p, ~lead_in: lead_in)
   when lead_in && !rkt.#{condense?}
   | rkt_play.#{play-n}(~name: name,
                        ~#{skip-first?}: #true,
@@ -96,10 +103,12 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
     | let extent = p.epoch_extent(i)
       if extent .= 0
       | rkt.slide(~name: name,
+                  ~aspect: aspect,
                   & (if p == pict.nothing
                      | []
                      | [p.snapshot(i, 0).draw_handle]))
       | rkt_play.#{play-n}(~name: name,
+                           ~aspect: aspect,
                            ~steps: math.exact(math.round(10 * extent / 0.5)),
                            ~#{skip-last?}: #true,
                            fun (n): p.snapshot(i, n).draw_handle)
@@ -109,26 +118,27 @@ fun slide_pict(~title: title :: maybe(String || Pict) = #false,
                ~sep: sep :: Real = gap,
                ~horiz: horiz :: pict.HorizAlignment = #'center,
                ~layout: layout :: SlideLayout = #'auto,
+               ~aspect: aspect = #'widescreen,
                content :: SlideContent, ...) :~ Pict:
   let p = slide_content_pict(~sep: sep, ~horiz: horiz,
                              flatten_slide_content(#'slide_pict, [content, ...]))
   if full
-  | assemble_slide(title, layout, p)
+  | assemble_slide(title, layout, aspect, p)
   | p
 
-fun assemble_slide(title, layout, p, ~lead_in = #false) :~ Pict:
+fun assemble_slide(title, layout, aspect, p, ~lead_in = #false) :~ Pict:
   match title
   | _ :: pict.NothingPict:
-      current_assembler()(#false, layout, p)
+      current_assembler()(#false, layout, aspect, p)
   | _ :: String:
       let title = titlet(title)
       let title = if lead_in | title.sustain(1).time_pad(~before: -1) | title
-      current_assembler()(title, layout, p)
+      current_assembler()(title, layout, aspect, p)
   | ~else:
-      current_assembler()(title, layout, p)
+      current_assembler()(title, layout, aspect, p)
 
-Parameter.def current_assembler :: Function.of_arity(3):
-  fun (title :: False || Pict, layout:: SlideLayout, p :: Pict):
+Parameter.def current_assembler :: Function.of_arity(4):
+  fun (title :: False || Pict, layout:: SlideLayout, aspect :: Aspect, p :: Pict):
     recur retry(title = title, p :~ Pict = p):
       cond
       | layout == #'auto && !(p is_a pict.StaticPict):
@@ -138,7 +148,7 @@ Parameter.def current_assembler :: Function.of_arity(3):
           | pict.animate_map(~deps: [title, p], fun (~deps: [title, p], epoch, n): retry(title, p))
           | pict.animate_map(~deps: [p], fun (~deps: [p], epoch, n): retry(title, p))
       | ~else:
-          let back: Pict.from_handle(rkt.#{get-full-page}())
+          let back: Pict.from_handle(rkt.#{get-full-page}(~aspect: aspect))
           let head :~ Pict:
             if title
             | Pict.pad(title, ~bottom: if layout == #'tall | gap | 2*gap)
@@ -163,6 +173,15 @@ Parameter.def current_assembler :: Function.of_arity(3):
                                     p)
                          .refocus(body))
             .refocus(back)
+
+fun blank_client(~aspect: aspect :: Aspect = #'widescreen,
+                 ~title: title :: maybe(String || Pict) = #false,
+                 ~layout: layout :: SlideLayout = #'auto) :~ Pict:
+  let b = Pict.from_handle(rkt.#{get-full-page}(~aspect: aspect))
+  if title
+  | let title = titlet(title)
+    b.pad(~top: -title.height - (if layout == #'tall | gap | 2 * gap))
+  | b
 
 // ----------------------------------------
 
