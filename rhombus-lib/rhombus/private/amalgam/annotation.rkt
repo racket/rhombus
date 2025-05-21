@@ -1173,7 +1173,7 @@
     (pattern g
              #:with comp #'<=)))
 
-(define-for-syntax (make-in-annotation pred-stx annot-str)
+(define-for-syntax (make-in-annotation pred-stx annot-str get-static-infos)
   (annotation-prefix-operator
    #f
    '((default . stronger))
@@ -1196,13 +1196,14 @@
                         (and (#,pred-stx v)
                              (lo.comp lo-v v)
                              (hi.comp v hi-v))))
-                  #'()))
+                  (get-static-infos)))
                 #'tail)]))))
 
 (define-annotation-syntax Real.in
   (make-in-annotation
    #'real?
-   "Real"))
+   "Real"
+   get-real-static-infos))
 
 (define (handle-integer-in form)
   (and (pair? (cdr form))
@@ -1218,7 +1219,8 @@
 (define-annotation-syntax Int.in
   (make-in-annotation
    #'exact-integer?
-   "Int"))
+   "Int"
+   get-real-static-infos))
 
 (define-annotation-syntax Any.of
   (annotation-prefix-operator

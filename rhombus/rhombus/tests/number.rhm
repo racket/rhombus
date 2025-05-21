@@ -255,3 +255,9 @@ check:
     error.annot("Number").msg,
     error.val("oops").msg,
   )
+
+check:
+  use_static
+  fun test(a :: Int.in(-128, 127), b :: Int.in(-128, 127)):
+    a > b
+  ~completes
