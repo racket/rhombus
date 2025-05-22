@@ -28,5 +28,4 @@ specified by the initial @hash_lang() line.
 The
 @hyperlink("https://marketplace.visualstudio.com/items?itemName=evzen-wybitul.magic-racket"){Magic
  Racket} extension for Visual Studio Code provide support for running
-Rhombus programs, but its editor support is currently tied to Racket's
-parenthesis-oriented syntax.
+Rhombus programs, and adds rudimentary support for syntax highlighting as well.
