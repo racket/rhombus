@@ -25,8 +25,7 @@ Rhombus is supported in Emacs through
 using @tt{racket-hash-lang-mode} adapts the editor to the language
 specified by the initial @hash_lang() line.
 
-The
+For Visual Studio Code, the
 @hyperlink("https://marketplace.visualstudio.com/items?itemName=evzen-wybitul.magic-racket"){Magic
- Racket} extension for Visual Studio Code provide support for running
-Rhombus programs, but its editor support is currently tied to Racket's
-parenthesis-oriented syntax.
+ Racket} extension supports Rhombus with features including running
+programs, syntax highlighting, etc.
