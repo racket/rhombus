@@ -542,8 +542,10 @@ which case it supplies its elements in order.
 
 @doc(
   method (lst :: PairList).filter(
-    ~keep: keep_pred :: Function.of_arity(1),
+    ~keep: keep_pred :: Function.of_arity(1)
+             = fun (_): #true,
     ~skip: skip_pred :: Function.of_arity(1)
+             = fun (_): #false,
   ) :: PairList.of(Any.like_element(lst))
   method (lst :: PairList).partition(pred :: Function.of_arity(1))
     :: values(PairList.of(Any.like_element(lst)),

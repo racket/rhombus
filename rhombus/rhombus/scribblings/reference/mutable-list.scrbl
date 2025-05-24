@@ -496,8 +496,10 @@ and it is not managed by a lock.
 
 @doc(
   method (mlst :: MutableList).filter(
-    ~keep: keep_pred :: Function.of_arity(1),
+    ~keep: keep_pred :: Function.of_arity(1)
+             = fun (_): #true,
     ~skip: skip_pred :: Function.of_arity(1)
+             = fun (_): #false,
   ) :: Void
 ){
 

@@ -643,8 +643,10 @@ it supplies its elements in order.
 
 @doc(
   method (lst :: List).filter(
-    ~keep: keep_pred :: Function.of_arity(1),
+    ~keep: keep_pred :: Function.of_arity(1)
+             = fun (_): #true,
     ~skip: skip_pred :: Function.of_arity(1)
+             = fun (_): #false,
   ) :: List.of(Any.like_element(lst))
   method (lst :: List).partition(pred :: Function.of_arity(1))
     :: values(List.of(Any.like_element(lst)),
