@@ -2,6 +2,7 @@
 import:
   lib("racket/base.rkt")
   "core-meta.rkt" open
+  "alias.rkt" open
   "maybe.rhm" open
   "recur.rhm" open
   "error.rhm" open
@@ -14,8 +15,8 @@ export:
   splice_regexp
   freeze
 
-expr.macro 'MATCH $body ...':
-  'match $body ...'
+// shadowed in `RX`
+alias 'MATCH': 'match'
 
 class RX(private _rkt_partial_rx,
          private _rkt_rx,
@@ -173,7 +174,7 @@ fun from_handles(rx,
   _RX(partial_rx, rx, num_captures, vars, has_backref, source)
 
 fun maybe_range(maybe_pr):
-  MATCH maybe_pr
+  match maybe_pr
   | Pair(s, e): s .. e
   | ~else: #false
 

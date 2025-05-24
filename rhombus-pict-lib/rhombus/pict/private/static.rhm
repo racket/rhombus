@@ -1421,6 +1421,9 @@ fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
 
 // ------------------------------------------------------------
 
+// shadowed in `Find`
+alias 'IN': 'in'
+
 class Find(private q :~ Pict, private find, private t_find_or_dt, private is_animated):
   internal _Find
 
@@ -1484,8 +1487,8 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
     fun loop (p :~ Pict, delta):
       if p.identity == q.identity
       | delta
-      | for any (c: p.children,
-                 start: (p :~ _Pict)._children_starts):
+      | for any (c IN p.children,
+                 start IN (p :~ _Pict)._children_starts):
           loop(c, start + delta)
     match t_find_or_dt
     | dt :: Int:
