@@ -25,6 +25,7 @@ export:
   HorizAttachment
   TimeOrder
   ConnectStyle
+  ConnectLineStyle
   ArcDirection
   FindMode
   Refocus
@@ -105,6 +106,7 @@ enum OverlayOrder: front back
 enum HorizAttachment: line paragraph
 enum TimeOrder: before after
 enum ConnectStyle: line arrow arrows
+enum ConnectLineStyle: solid long_dash dot short_dash dot_dash
 enum ArcDirection: cw ccw
 enum FindMode: always maybe
 enum AutoReal: ~is_a Real; auto
@@ -1718,6 +1720,7 @@ fun connect(~on: p :: Pict,
             ~style: style :: ConnectStyle = #'line,
             ~line: color :: ColorMode = #'inherit,
             ~line_width: width :: LineWidth = #'inherit,
+            ~line_style: line_style :: ConnectLineStyle = #'solid,
             ~order: order :: OverlayOrder = #'front,
             ~arrow_size: arrow_size :: Real = 16,
             ~arrow_solid: solid = #true,
@@ -1778,6 +1781,12 @@ fun connect(~on: p :: Pict,
                    ~#{end-angle}: end_angle,
                    ~#{end-pull}: end_pull,
                    ~#{line-width}: as_width(width),
+                   ~style: match line_style
+                           | #'solid: #'solid
+                           | #'long_dash: #'#{long-dash}
+                           | #'short_dash: #'#{short-dash}
+                           | #'dot: #'dot
+                           | #'dot_dash: #'#{dot-dash},
                    ~color: as_color(color),
                    ~#{under?}: order == #'back,
                    ~label: label_handle,

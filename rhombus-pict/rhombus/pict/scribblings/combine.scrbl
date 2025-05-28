@@ -19,7 +19,7 @@
     ~epoch: epoch_align :: EpochAlignment = #'center,
     pict :: Pict, ...
   ) :: Pict
-){
+){77
 
  Creates a pict that combines the given @rhombus(pict)s horizontally
  with the first @rhombus(pict) as leftmost. The @rhombus(vert_align)
@@ -207,8 +207,9 @@
     to :: Find,
     ~find: find_mode :: FindMode = #'always,
     ~style: style :: ConnectStyle = #'line,
-    ~line: color :: ConnectMode = #'inherit,
+    ~line: color :: ColorMode = #'inherit,
     ~line_width: width :: LineWidth = #'inherit,
+    ~line_width: width :: ConnectLineStyle = #'solid,
     ~order: order :: OverlayOrder = #'front,
     ~arrow_size: arrow_size :: Real = 16,
     ~arrow_solid: solid = #true,
@@ -611,5 +612,18 @@
 ){
 
  Options for a @rhombus(connect) style.
+
+}
+
+@doc(
+  enum ConnectLineStyle:
+    solid
+    long_dash
+    short_dash
+    dot
+    dot_dash
+){
+
+ Options for a @rhombus(connect) line style.
 
 }
