@@ -157,30 +157,29 @@
              [id (in-list (syntax->list ids))]
              [uses (in-list (syntax->list usess))])
          (check-bind-uses form-id lhs id uses)))
-     (append
-      (top-level-decls #'(lhs-i.bind-id ... ...))
-      (list
-       #`(begin
-           (lhs-i.oncer-id lhs-i.data)
-           ...)
-       #`(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
+     (list
+      #`(rhombus-forward
+         #:suspend
+         #,@(top-level-decls #'(lhs-i.bind-id ... ...))
+         (lhs-i.oncer-id lhs-i.data)
+         ...
+         (define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
                                        (values lhs-i.name-id ...)))
+         (lhs-i.matcher-id tmp-id
+                           lhs-i.data
+                           if/flattened
+                           (begin)
+                           (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str 'pos))
+         ...
+         (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
+         ...)
+      (wrap-definition
        #`(begin
-           (lhs-i.matcher-id tmp-id
-                             lhs-i.data
-                             if/flattened
-                             (begin)
-                             (rhs-binding-failure '#,form-id tmp-id 'lhs-i.annotation-str 'pos))
+           (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
            ...
-           (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
-           ...)
-       (wrap-definition
-        #`(begin
-            (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-            ...
-            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
-            ... ...
-            #,@(maybe-end-def)))))]))
+           (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
+           ... ...
+           #,@(maybe-end-def))))]))
 
 (define-for-syntax (top-level-decls ids-stx)
   (cond

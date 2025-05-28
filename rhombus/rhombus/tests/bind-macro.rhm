@@ -156,6 +156,81 @@ check:
     [x, f(), g()]
   ~is [13, 12, 13]
 
+// variants that use `values` binding
+bind.macro 'simple2 $(id :: Identifier)':
+  bind_meta.pack('(simple2_infoer, $id)')
+
+bind.infoer 'simple2_infoer($in_id, $id)':
+  '($(to_string(id)),
+    $id,
+    (),
+    (($id, [], ())),
+    simple_once,
+    simple_match,
+    (),
+    simple_commit,
+    simple2_bind,
+    $id)'
+
+bind.committer 'simple2_bind($in_id, (), $id)':
+  'def ($id) = $in_id'
+
+check:
+  def simple2 x = 10
+  x
+  ~is 10
+
+check:
+  let simple2 x = 11
+  x
+  ~is 11
+
+check:
+  block:
+    let x = 12
+    fun f(): x
+    let simple2 x = 13
+    fun g(): x
+    [x, f(), g()]
+  ~is [13, 12, 13]
+
+bind.macro 'simple3 $(id :: Identifier)':
+  bind_meta.pack('(simple3_infoer, $id)')
+
+bind.infoer 'simple3_infoer($in_id, $id)':
+  '($(to_string(id)),
+    $id,
+    (),
+    (($id, [], ())),
+    simple_once,
+    simple_match,
+    (),
+    simple_commit,
+    simple3_bind,
+    $id)'
+
+bind.committer 'simple3_bind($in_id, (), $id)':
+  'def values($id) = $in_id'
+
+check:
+  def simple3 x = 10
+  x
+  ~is 10
+
+check:
+  let simple3 x = 11
+  x
+  ~is 11
+
+check:
+  block:
+    let x = 12
+    fun f(): x
+    let simple3 x = 13
+    fun g(): x
+    [x, f(), g()]
+  ~is [13, 12, 13]
+
 check:
   ~eval
   def not_good(10) = 10
