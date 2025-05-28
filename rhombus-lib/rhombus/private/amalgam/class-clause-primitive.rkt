@@ -102,7 +102,14 @@
   (lambda (stx data)
     (syntax-parse stx
       [(_ name:identifier)
-       (wrap-class-clause #'(#:internal name))])))
+       (wrap-class-clause #'(#:internal name))]
+      [(_ (tag::block (group name)))
+       (wrap-class-clause #'(#:internal name))]
+      [(_ (~and b (tag::block (group name) ...)))
+       (raise-syntax-error #f
+                           "multiple ids not allowed"
+                           stx
+                           #'b)])))
 
 (define-class-clause-syntax internal
   (class-clause-transformer parse-class-internal))

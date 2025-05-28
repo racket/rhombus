@@ -526,3 +526,22 @@ check:
     abstract method foo() :: Int:
       42
   ~throws "abstract: implementation block not allowed"
+
+
+check:
+  ~eval
+  class Hello(a):
+    internal:
+      _World
+    constructor():
+      _World(42)
+  Hello().a
+  ~matches 42
+
+check:
+  ~eval
+  class Hello(a):
+    internal:
+      _World
+      _Some
+  ~throws "internal: multiple ids not allowed"
