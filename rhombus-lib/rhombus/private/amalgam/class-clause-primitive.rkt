@@ -61,6 +61,7 @@
 (define-for-syntax (parse-multiple-names stx)
   (define lines
     (syntax-parse stx
+      #:datum-literals (group)
       [(_ (tag::block (group form ...) ...))
        (syntax->list #'((form ...) ...))]
       [(_ form ...)
@@ -101,8 +102,16 @@
 (define-for-syntax parse-class-internal
   (lambda (stx data)
     (syntax-parse stx
+      #:datum-literals (group)
       [(_ name:identifier)
-       (wrap-class-clause #'(#:internal name))])))
+       (wrap-class-clause #'(#:internal name))]
+      [(_ (tag::block (group name:identifier)))
+       (wrap-class-clause #'(#:internal name))]
+      [(_ (~and b (tag::block (group name:identifier) ...)))
+       (raise-syntax-error #f
+                           "multiple ids not allowed"
+                           stx
+                           #'b)])))
 
 (define-class-clause-syntax internal
   (class-clause-transformer parse-class-internal))
