@@ -25,6 +25,7 @@ import:
   "bitmap-interface.rhm".Bitmap
   "transformation.rhm" open
   "transformation.rhm"!private open
+  "text-combine.rhm".DC.TextCombine
 
 export:
   DC
@@ -226,9 +227,6 @@ interface DC:
 
   symbol_set_annot BitmapOverlay:
     { solid, opaque, xor }
-
-  symbol_set_annot TextCombine:
-    { kern, grapheme, char }
 
   symbol_map_annot Fill fill_convert:
     { odd_even: #{odd-even},

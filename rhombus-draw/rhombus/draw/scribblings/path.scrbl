@@ -60,6 +60,14 @@
                                  start :: Real, end :: Real,
                                  ~clockwise: clockwise :: Any = #false)
     :: Void
+  method (path :: draw.Path).text_outline(
+    str :: String,
+    ~dpt: dpt :: Point = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0,
+    ~font: font :: Font = Font(),
+    ~combine: combine :: DC.TextCombine = #'kern
+  ) :: Void
 ){
 
  Adds to the path. If the path is currently open, it is first closed,

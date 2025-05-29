@@ -7,6 +7,8 @@ import:
       PointLike
       RectLike
       Rect
+  "font.rhm".Font
+  "text-combine.rhm".DC
 
 export:
   Path
@@ -73,3 +75,11 @@ class Path(private _handle):
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0):
     rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+
+  method text_outline(str :: String,
+                      ~dpt: dpt :: Point = Point.zero,
+                      ~dx: dx :: Real = 0,
+                      ~dy: dy :: Real = 0,
+                      ~font: font :: Font = Font(),
+                      ~combine: combine :: DC.TextCombine = #'kern):
+    rkt.send handle.#{text-outline}(font.handle, str, dpt.x + dx, dpt.y + dy, combine)
