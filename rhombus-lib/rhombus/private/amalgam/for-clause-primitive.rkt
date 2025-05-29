@@ -1,36 +1,63 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "srcloc.rkt"
                      "tag.rkt")
          "for-clause.rkt"
          "parens.rkt"
          "parse.rkt"
-         (submod "membership-testable.rkt" in-operator))
+         "binding.rkt"
+         (rename-in "values.rkt"
+                    [values rhombus-values])
+         (submod "membership-testable.rkt" in-operator)
+         (submod "equal.rkt" for-parse))
 
 (provide (for-space rhombus/for_clause
                     each
                     keep_when
                     skip_when
                     break_when
-                    final_when))
+                    final_when
+                    keep_let))
 
 (begin-for-syntax
+  (define-syntax-class :values-id
+    #:attributes (name)
+    #:description "the literal `values`"
+    #:opaque
+    (pattern ::name
+             #:when (free-identifier=? (in-binding-space #'name)
+                                       (bind-quote rhombus-values))))
+
+  (define (check-multiple-ins stx)
+    (syntax-parse stx
+      [(_ _ ... in::in (~seq _ ... more::in) ...+ _ ...)
+       (raise-syntax-error #f
+                           (string-append "multiple immediate membership operators not allowed in this group;"
+                                          "\n use parentheses to disambiguate")
+                           stx
+                           #'in
+                           (syntax->list #'(more ...)))]
+      [(_ _ ... _::in _ ...)
+       (void)]))
+
   ;; Like `:var-decl`, but we don't allow `=` here
   (define-splicing-syntax-class (:each-decl stx)
     #:datum-literals (group)
-    #:attributes ([bind 1] blk)
-    (pattern (~seq bind ...+ _::in expr ...+)
-             #:do [(syntax-parse #'(bind ... expr ...)
-                     [(_ ... i::in _ ...)
-                      (raise-syntax-error #f
-                                          (string-append "multiple immediate membership operators not allowed in this group;"
-                                                         "\n use parentheses to disambiguate")
-                                          stx
-                                          #'i)]
-                     [_ (void)])]
-             #:attr blk #'(block (group expr ...)))
-    (pattern (~seq bind ...+ (~and blk (_::block . _))))))
+    #:attributes ([bind-g 1] blk)
+    (pattern (~seq (~optional _::values-id) (_::parens bind-g ...) (~and blk (_::block . _))))
+    (pattern (~and (~seq t ...)
+                   (~seq (~optional _::values-id) (_::parens bind-g ...) _::in expr ...+))
+             #:do [(check-multiple-ins #'(t ...))]
+             #:with blk #`(block (#,group-tag expr ...)))
+    (pattern (~and (~seq t ...)
+                   (~seq bind ...+ _::in expr ...+))
+             #:do [(check-multiple-ins #'(t ...))]
+             #:with (bind-g ...) #`((#,group-tag bind ...))
+             #:with blk #`(block (#,group-tag expr ...)))
+    (pattern (~seq bind ...+ (~and blk (_::block . _)))
+             #:with (bind-g ...) #`((#,group-tag bind ...)))))
 
 (define-for-clause-syntax each
   (for-clause-transformer
@@ -38,10 +65,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~var d (:each-decl stx)))
-        #`(#:each d.bind ... d.blk)]
+        #`(#:each ((d.bind-g ...)) (d.blk))]
        [(form-id (tag::block (group (~var d (:each-decl stx))) ...))
-        #`(#:each (tag (group d.bind ... d.blk)
-                       ...))]
+        #`(#:each ((d.bind-g ...) ...) (d.blk ...))]
        [_
         (raise-syntax-error #f
                             "needs a binding or a block of bindings, each followed by a block"
@@ -77,3 +103,19 @@
   (for-clause-transformer
    (lambda (stx)
      (parse-when stx '#:final))))
+
+(define-for-clause-syntax keep_let
+  (for-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block . _)))
+        #`(#:let (g ...) rhs)]
+       [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
+        (check-multiple-equals stx)
+        #`(#:let (g ...) (#,group-tag rhs ...))]
+       [(form-id bind ...+ _::equal rhs ...+)
+        (check-multiple-equals stx)
+        #`(#:let ((#,group-tag bind ...)) (#,group-tag rhs ...))]
+       [(form-id bind ...+ (~and rhs (_::block . _)))
+        #`(#:let ((#,group-tag bind ...)) rhs)]))))

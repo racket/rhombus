@@ -229,6 +229,34 @@ check:
   ~is 15
 
 check:
+  for values(sum = 0):
+    each lst in [[], [1], [1, 2], [1, 2, 3]]
+    keep_let [fst, _, ...] = lst
+    sum + fst
+  ~is 3
+
+check:
+  for values(sum = 0):
+    each lst in [[], [1], [1, 2], [1, 2, 3]]
+    keep_let [fst, _, ...]: lst
+    sum + fst
+  ~is 3
+
+check:
+  for values(sum = 0):
+    each lst in [[], [1], [1, 2], [1, 2, 3]]
+    keep_let ([fst, _, ...], [_, snd, _, ...]) = values(lst, lst)
+    sum + fst + snd
+  ~is 6
+
+check:
+  for values(sum = 0):
+    each lst in [[], [1], [1, 2], [1, 2, 3]]
+    keep_let ([fst, _, ...], [_, snd, _, ...]): values(lst, lst)
+    sum + fst + snd
+  ~is 6
+
+check:
   use_static
   def set:
     for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
@@ -754,6 +782,15 @@ version_guard.at_least "8.11.1.4":
       final_when true_or_false
       i
     ~is [0]
+
+  check:
+    for List:
+      each i in 0..2
+      syntax_parameter.relet true_or_false_val:
+        #true
+      keep_let #true = true_or_false
+      i
+    ~is [0, 1]
 
   syntax_parameter.bridge a_range_stx:
     #false
