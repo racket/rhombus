@@ -10,14 +10,16 @@
          "binding.rkt"
          (rename-in "values.rkt"
                     [values rhombus-values])
-         (submod "membership-testable.rkt" in-operator))
+         (submod "membership-testable.rkt" in-operator)
+         (submod "equal.rkt" for-parse))
 
 (provide (for-space rhombus/for_clause
                     each
                     keep_when
                     skip_when
                     break_when
-                    final_when))
+                    final_when
+                    keep_let))
 
 (begin-for-syntax
   (define-syntax-class :values-id
@@ -101,3 +103,19 @@
   (for-clause-transformer
    (lambda (stx)
      (parse-when stx '#:final))))
+
+(define-for-clause-syntax keep_let
+  (for-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block . _)))
+        #`(#:let (g ...) rhs)]
+       [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
+        (check-multiple-equals stx)
+        #`(#:let (g ...) (#,group-tag rhs ...))]
+       [(form-id bind ...+ _::equal rhs ...+)
+        (check-multiple-equals stx)
+        #`(#:let ((#,group-tag bind ...)) (#,group-tag rhs ...))]
+       [(form-id bind ...+ (~and rhs (_::block . _)))
+        #`(#:let ((#,group-tag bind ...)) rhs)]))))
