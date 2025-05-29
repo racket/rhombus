@@ -34,6 +34,21 @@ check:
 
 check:
   ~eval
+  def x = 1 = 2
+  ~throws "multiple immediate equals not allowed in this group"
+
+check:
+  ~eval
+  def (x) = 1 = 2
+  ~throws "multiple immediate equals not allowed in this group"
+
+check:
+  ~eval
+  def values(x) = 1 = 2
+  ~throws "multiple immediate equals not allowed in this group"
+
+check:
+  ~eval
   def | x = 2
   ~throws "alternatives are not supported here"
 

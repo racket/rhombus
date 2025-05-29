@@ -47,6 +47,7 @@
                                    wrap-definition
                                    #:check-bind-uses check-bind-uses)]
         [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
+         (check-multiple-equals stx)
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition

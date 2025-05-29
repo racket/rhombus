@@ -35,7 +35,7 @@
  most binding operators also create bindings in the
  @rhombus(expr, ~space) space.
 
- When @rhombus(def) is used with @rhombus(=), then @rhombus(rhs_expr) must
+ When @rhombus(def) is used with @rhombus(=), then @rhombus(lhs_bind) or @rhombus(rhs_expr) must
  not contain any immediate @rhombus(=) terms (although @rhombus(=) can
  appear nested in blocks, parentheses, etc.). When a @rhombus(def) group
  both contains a @rhombus(=) and ends in a block, the block is treated as
