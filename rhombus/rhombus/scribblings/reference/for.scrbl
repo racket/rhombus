@@ -6,6 +6,9 @@
 @title{Iteration}
 
 @doc(
+  ~nonterminal:
+    lhs_bind: def ~defn
+
   expr.macro 'for $maybe_each:
                 $clause_or_body
                 ...
@@ -22,11 +25,7 @@
   grammar maybe_each:
     ($bind_each, ...)
     #,(epsilon)
-  grammar bind_each:
-    $bind in $expr
-    $bind:
-      $body
-      ...
+
   grammar clause_or_body:
     #,(@rhombus(each, ~for_clause)) $bind_each
     #,(@rhombus(each, ~for_clause)):
@@ -36,12 +35,24 @@
     #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
     #,(@rhombus(break_when, ~for_clause)) $expr_or_block
     #,(@rhombus(final_when, ~for_clause)) $expr_or_block
+    #,(@rhombus(keep_let, ~for_clause)) $bind_let
     $other_for_clause
     $body
-
+  grammar bind_each:
+    $lhs_bind in $expr
+    $lhs_bind:
+      $body
+      ...
   grammar expr_or_block:
     $expr
-    : $body; ...
+    :
+      $body
+      ...
+  grammar bind_let:
+    $lhs_bind = $expr
+    $lhs_bind:
+      $body
+      ...
 ){
 
  Iterates as determined by @rhombus(maybe_each) and @rhombus(each, ~for_clause) clauses among the
@@ -60,10 +71,10 @@
  sequence; see also @rhombus(Sequence, ~annot) and @rhombus(statinfo_meta.sequence_constructor_key).
  A fresh @tech{instantiation} of the sequence is used each
  time the @rhombus(for) form is evaluated. Each element of that sequence is bound in turn to
- the @rhombus(bind) variables of the @rhombus(each, ~for_clause). If a sequence
- can has multiple values as its elements (for example, a map as a
+ the @rhombus(lhs_bind) variables of the @rhombus(each, ~for_clause). If a sequence
+ can have multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
- @rhombus(bind) can be a @rhombus(values, ~bind) pattern or just a
+ @rhombus(lhs_bind) can be a @rhombus(values, ~bind) pattern or just a
  parenthesized sequence of bindings to receive a matching number of
  element values.
 
@@ -75,14 +86,19 @@
  the layer is exhausted.
 
  A @rhombus(keep_when, ~for_clause) or @rhombus(skip_when, ~for_clause) clause short-circuits one
- iteration of the @rhombus(for) body, skipping remaining expressions
+ iteration of the @rhombus(for) body, skipping remaining clauses
  (including nested iterations) when the subsequent @rhombus(expr)
  produces @rhombus(#false) for @rhombus(keep_when, ~for_clause) or a true value for
  @rhombus(skip_when, ~for_clause). A @rhombus(break_when, ~for_clause) clause short-circuits the current
  iteration and all would-be remaining iterations of the @rhombus(for)
  form when its @rhombus(expr) produces a true value. A @rhombus(final_when, ~for_clause)
- clause is similar to @rhombus(keep_when, ~for_clause), but it allows one iteration to
+ clause is similar to @rhombus(break_when, ~for_clause), but it allows one iteration to
  complete before skipping the remaining iterations.
+
+ A @rhombus(keep_let, ~for_clause) clause is like
+ @rhombus(keep_when, ~for_clause), but proceeds to remaining clauses
+ only if all values match the bindings, and the bindings become
+ visible to remaining clauses.
 
  New @rhombus(for) clause forms can be defined as macros that
  (eventually) expand to the core forms that are recognized by
@@ -121,6 +137,10 @@
       each v in ["a", "b", "c"]
       final_when v == "b"
       println(v)
+    for:
+      each v in ["a", "b", "c"]
+      keep_let "b" && b = v
+      println(b)
     for (v in ["a", "b", "c"],
          i in 0..):
       println(i +& ". " +& v)
@@ -173,19 +193,18 @@
 
 @doc(
   ~nonterminal:
-    bind_each: for bind_each
+    bind_each: for
+    expr_or_block: for
+    bind_let: for
   for_clause.macro 'each:
                       $bind_each
                       ...'
   for_clause.macro 'each $bind_each'
-  for_clause.macro 'keep_when $expr'
-  for_clause.macro 'keep_when: $body; ...'
-  for_clause.macro 'skip_when $expr'
-  for_clause.macro 'skip_when: $body; ...'
-  for_clause.macro 'break_when $expr'
-  for_clause.macro 'break_when: $body; ...'
-  for_clause.macro 'final_when $expr'
-  for_clause.macro 'final_when: $body; ...'
+  for_clause.macro 'keep_when $expr_or_block'
+  for_clause.macro 'skip_when $expr_or_block'
+  for_clause.macro 'break_when $expr_or_block'
+  for_clause.macro 'final_when $expr_or_block'
+  for_clause.macro 'keep_let $bind_let'
 ){
 
  The primitive clause forms that are recognized by @rhombus(for).

@@ -63,6 +63,7 @@ export:
       s_WeakMutableSet as WeakMutableSet
     for
     each
+    keep_let
     import
     export
     described_as
@@ -1033,6 +1034,10 @@ spacer.bridge each(self, tail, context, esc):
   | '': self
   | ~else:
       '$self $(adjust_bind_each(tail, context, esc))'
+
+spacer.bridge keep_let(self, tail, context, esc):
+  ~in: ~for_clause
+  '$self $(adjust_def(tail, esc))'
 
 spacer.bridge import(self, tail, context, esc):
   ~in: ~defn
