@@ -89,3 +89,29 @@ block:
     e1.sync()
   check e1 ~is e2
   check e1 is_a Channel.PutEvt ~is #true
+
+block:
+  let ev: Evt.always.wrap(fun (v): v == Evt.always)
+  check ev.sync() ~is #true
+
+  let ch: Channel()
+  let ev: ch.wrap(fun (v): v + 1)
+  thread:
+    ch.put(10)
+  check ev.sync() ~is 11
+
+block:
+  class Ch():
+    implements Synchronizable
+    field ch :~ Channel = Channel()
+    override method as_evt(): ch
+    method trigger():
+      thread:
+        ch.put(10)
+
+  let ch: Ch()
+  ch.trigger()
+  check ch.sync() ~is 10
+
+  ch.trigger()
+  check ch.wrap((_ + 1)).sync() ~is 11
