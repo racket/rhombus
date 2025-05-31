@@ -18,8 +18,9 @@ count.
 ){
 
  An annotation that recognizes @tech{synchronizable events}, which
- include @tech{threads}, @tech{semaphores}, an objects returned by
- methods like @rhombus(TCPListener.accept_evt).
+ include @tech{threads}, @tech{semaphores}, objects returned by
+ methods like @rhombus(TCPListener.accept_evt), and objects that implement
+ the @rhombus(Synchronizable) interface.
 
  The @rhombus(Evt, ~annot) annotation interface-like in the sense that
  every @rhombus(Evt, ~annot) supports the @rhombus(Evt.sync) method.
@@ -42,6 +43,22 @@ count.
 
 }
 
+@doc(
+  method (evt :: Evt).wrap(
+    ~tail_call: tail_call :: Any.to_boolean = #false,
+    wrapf :: (Any, ...) -> Any
+  ) :: Evt
+){
+ Creates an @rhombus(Evt) that is ready for synchronization, when @rhombus(evt)
+ is ready for synchronization, but whose synchronization result is determined
+ by applying @rhombus(wrapf) to the synchronization result of @rhombus(evt).
+ The number of arguments accepted by @rhombus(wrapf) must match the number of
+ values for the synchronization result of @rhombus(evt).
+
+ If @rhombus(tail_call) is @rhombus(#true) then @rhombus(wrapf) is call in tail
+ position with respect to the synchronization request when it is no wrapped by
+ another @rhombus(Evt.wrap).
+}
 
 @doc(
   def Evt.always :: Evt
@@ -71,5 +88,23 @@ count.
  A @rhombus(CommitEvt, ~annot) is either a @rhombus(Semaphore, ~annot),
  channel-put event, channel, semaphore-peek event, @rhombus(Evt.always),
  or @rhombus(Evt.never).
+
+}
+
+@doc(
+  interface Synchronizable
+){
+ An interface that a class can implement to make instances of the class usable
+ as an @rhombus(Evt, ~annot).  When a class that implements
+ @rhombus(Synchronizable) is used with @rhombus(Evt.sync) the
+ @rhombus(Synchronizable.to_evt) method is called, and the result is used in
+ the synchronization.
+
+ The interface has a single abstract method:
+
+@itemlist(
+  @item{@rhombus(#,(@rhombus(to_evt, ~datum))()) --- produces an
+  @tech{synchronizable event} that can be used in @rhombus(Evt.sync).}
+)
 
 }
