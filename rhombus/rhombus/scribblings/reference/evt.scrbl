@@ -97,13 +97,13 @@ count.
  An interface that a class can implement to make instances of the class usable
  as an @rhombus(Evt, ~annot).  When a class that implements
  @rhombus(Synchronizable) is used with @rhombus(Evt.sync) the
- @rhombus(Synchronizable.to_evt) method is called, and the result is used in
+ @rhombus(Synchronizable.as_evt) method is called, and the result is used in
  the synchronization.
 
  The interface has a single abstract method:
 
 @itemlist(
-  @item{@rhombus(#,(@rhombus(to_evt, ~datum))()) --- produces an
+  @item{@rhombus(#,(@rhombus(as_evt, ~datum))()) --- produces an
   @tech{synchronizable event} that can be used in @rhombus(Evt.sync).}
 )
 
