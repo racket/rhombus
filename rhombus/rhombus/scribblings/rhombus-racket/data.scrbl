@@ -2,7 +2,8 @@
 @(import:
     "racket_names.rkt" open
     meta_label:
-      rhombus open)
+      rhombus open
+      rhombus/thread open)
 
 @(def rhombus_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")')
 @(def racket_doc = ModulePath'lib("scribblings/reference/reference.scrbl")')

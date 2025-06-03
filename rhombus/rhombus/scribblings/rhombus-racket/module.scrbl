@@ -2,12 +2,7 @@
 @(import:
     "racket_names.rkt" open
     meta_label:
-      rhombus open
-      rhombus/meta:
-        expose:
-          expr_meta
-          defn_meta
-          decl_meta)
+      rhombus open)
 
 @title(~tag: "module"){Modules and Exports}
 
@@ -30,7 +25,7 @@ filesystem- and collection-based paths, so a Rhombus module can
  refers to a @filepath{main.rkt} file.
 
  To refer to a collection-based @filepath{.rkt} file from Rhombus, use
- the @rhombus(lib, ~impo) form, as in @rhombus(lib("racket/math.rkt")).
+ the @rhombus(lib, ~impo) form, as in @rhombus(lib("racket/math.rkt"), ~impo).
  To refer to a collection-based @filepath{.rhm} file from Racket, use the
  @racket_lib form as in @racketmod_rhombus_random.}
 

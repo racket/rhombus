@@ -1,7 +1,8 @@
 #lang scribble/manual
 @(require (for-label rhombus/dynamic-require
                      rhombus/parse
-                     racket/base)
+                     racket/base
+                     racket/contract/base)
           "rhombus-names.rhm")
 
 @title[#:tag "dynamic-require"]{Dynamic Require of Rhombus Exports}
