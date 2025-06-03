@@ -12,6 +12,7 @@
 @(def braces = @open_close("{", "}"))
 @(def s_exp_braces = @open_close("#{", "}"))
 @(def quotes = @open_close("'", "'"))
+@(def explicit_quotes = @open_close("'«", "»'"))
 @(def comma = @litchar(","))
 @(def colon = @litchar(":"))
 @(def vbar = @litchar{|})
@@ -318,8 +319,8 @@ separate lines).
     'fun () $body'
 )
 
-Nested quoting sometimes requires the use of @litchar{'} @litchar{«} ...
-@litchar{»} @litchar{'} so that the nested opening quote is not parsed
+Nested quoting sometimes requires the use of @explicit_quotes
+so that the nested opening quote is not parsed
 as a close quote. This counts as a different use of @litchar{«} and
 @litchar{»} than with @litchar{:} or @litchar{|}, and it doesn't
 disable indentation for the quoted code.
@@ -332,3 +333,5 @@ S-expression notation through @(s_exp_braces). For example,
 @litchar{#{list-first}} is a single identifier that includes @litchar{-}
 as one of its characters. A @(s_exp_braces) cannot wrap a
 list-structured S-expression that uses immediate parentheses, however.
+Keywords can also be written this way, prefixed with @litchar{~}, like
+@litchar{~#{immutable?}}.
