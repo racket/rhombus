@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          "op-literal.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_]))
 
 (provide (for-syntax simple-call?
                      normal-call?
@@ -26,10 +28,12 @@
               (normal-call? #'tag))
           (for/and ([arg-g (in-list (syntax->list #'(arg-g ...)))])
             (syntax-parse arg-g
+              #:literals (rhombus-_)
               #:datum-literals (group)
               [(group _::&-expr . _) #f]
               [(group _::~&-expr . _) #f]
               [(group _:keyword (~optional (_::block . _))) #f]
               [(group _::...-expr) ellipsis-ok?]
+              [(group rhombus-_) #f]
               [(group . _) #t])))]
     [_ #f]))

@@ -21,3 +21,9 @@ block:
   let [x :: String, ...] = ["a", "bc"]  
   check values(x.length(), ...) ~is values(1, 2)  
   check [values(x).length(), ...] ~is [1, 2]
+
+block:
+  let f = values(_)
+  let g = values("one", _, "three")
+  check f(10) ~is 10
+  check g(10) ~is values("one", 10, "three")
