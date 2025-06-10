@@ -450,6 +450,13 @@ block:
       super.call() ++ "B"
     override method next(s :: String):
       s ++ ".b"  
+  class revB():
+    extends A
+    implements: D C
+    override method call():
+      super.call() ++ "B"
+    override method next(s :: String):
+      s ++ ".b"  
   check:
     A(1).indirect() ~is "intf.a"
     A.indirect(A(1)) ~is "intf.a"
@@ -459,6 +466,7 @@ block:
     B(1).direct() ~is "direct"
     D.direct(B(1)) ~is "direct"
     B(1).call() ~is "INTFB"
+    revB(1).call() ~is "INTFB"
     B(1).next("x") ~is "x.b"
 
 // check on inherited method when called via subclass that
@@ -621,6 +629,20 @@ check:
     override method m():
       super.m()
   ~throws "inherited method is ambiguous"
+
+check:
+  // regression test to make sure `super` finds superclass method
+  interface Dummy
+  class Base():
+    method hello():
+      42
+    nonfinal
+  class Ext():
+    extends Base
+    implements Dummy
+    override hello():
+      super.hello()    
+  ~completes
 
 check:
   // make sure static info works calling a final-ish method

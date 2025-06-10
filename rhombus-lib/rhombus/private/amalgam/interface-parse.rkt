@@ -16,7 +16,8 @@
          interface-set-diff
          extract-private-protected-interfaces
          close-interfaces-over-superinterfaces
-         interface-names->quoted-list)
+         interface-names->quoted-list
+         subinterface?)
 
 (struct interface-desc objects-desc
   ;; `flags` from `objects-desc` can include 'veneer
@@ -169,3 +170,10 @@
        (loop seen (cdr names) (cdr intfs))]
       [else
        (cons (car names) (loop (hash-set seen (car intfs) #t) (cdr names) (cdr intfs)))])))
+
+(define (subinterface? i i2)
+  (for/or ([super-id (in-list (syntax->list (objects-desc-interface-ids i)))])
+    (define super (syntax-local-value* (in-class-desc-space super-id) interface-desc-ref))
+    (or (eq? super i2)
+        (subinterface? super i2))))
+

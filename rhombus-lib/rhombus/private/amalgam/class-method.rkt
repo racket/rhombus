@@ -592,10 +592,17 @@
                   (unless super
                     (raise-syntax-error #f "class or interface not found" super-id))
                   (define pos (hash-ref (objects-desc-method-map super) (syntax-e #'method-id) #f))
-                  (when found
-                    (unless (in-common-superinterface (car found) super (syntax-e #'method-id))
-                      (raise-syntax-error #f "inherited method is ambiguous" #'method-id)))
-                  (and pos (cons super pos))))
+                  (cond
+                    [(and pos found)
+                     (unless (in-common-superinterface (car found) super (syntax-e #'method-id))
+                       (raise-syntax-error #f "inherited method is ambiguous" #'method-id))
+                     (cond
+                       [(class-desc? (car found)) found]
+                       [(class-desc? super) (cons super pos)]
+                       [(subinterface? super (car found)) (cons super pos)]
+                       [else found])]
+                    [pos (cons super pos)]
+                    [else found])))
               (unless super+pos
                 (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
               (define super (car super+pos))
