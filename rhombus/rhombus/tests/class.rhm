@@ -1145,3 +1145,86 @@ block:
     extends A
   check: to_string(B(~kw: 0, ~kw2: 1))
          ~is "B(~kw: 0, ~kw2: 1)"
+
+block:
+  interface Dummy:
+    method world
+
+  class NNN():
+    implements:
+      Dummy
+      Printable
+      Listable
+    override method world():
+      "NNN"
+
+    override method to_list():
+      ["NNN"]
+
+    override method describe(mode, recur):
+      "NNN++++"
+
+    nonfinal
+
+
+  class LLL():
+    extends NNN
+    override method to_list():
+      ["LLL"]
+
+    override method world():
+      "LLL"
+
+    override method describe(mode, recur):
+      "LLL++++"
+
+    nonfinal
+
+  class MMM():
+    extends:
+      LLL
+    override method to_list():
+      ["MMM"]
+
+    override method describe(mode, recur):
+      "MMM+++++"
+
+    override method world():
+      "MMM"
+
+  check:
+    (fun (x):
+       use_dynamic
+       x.world())(MMM()) ~is "MMM"
+    (fun (x):
+       use_dynamic
+       x.to_list())(MMM()) ~is  ["MMM"]
+
+  check:
+    print(MMM()) ~prints "MMM+++++"
+    dynamic(print(MMM())) ~prints "MMM+++++"
+
+block:
+  interface IB:
+    method HAHAH()
+
+  class Apple():
+    implements:
+      IB
+    nonfinal
+
+  class Pear():
+    extends Apple
+
+    nonfinal
+
+  class Orange():
+    extends:
+      Pear
+
+    override method HAHAH():
+      "fs"
+
+  check Orange() ~is_a Pear
+  check Orange() ~is_a Apple
+  check Orange() ~is_a IB
