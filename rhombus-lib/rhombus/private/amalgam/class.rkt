@@ -922,21 +922,37 @@
                   [(reflect-public-name-field ...) (map replace-name-with-reflect-name (syntax->list #'(public-name-field ...)))])
       (define all-interfaces
         (close-interfaces-over-superinterfaces
-         (if abstract-name
-             ;; for interface-implementing properties, an abstract class defers to
-             ;; subclasses for public interfaces
-             null
-             ;; otherwise, always implement interface properties from superclasses,
-             ;; because it's a vtable that needs to refer to this class's implementations
-             (append (if super
-                         (interface-names->interfaces
-                          #f
-                          (let ([l (objects-desc-interface-ids super)])
-                            (if (null? l)
-                                null
-                                (syntax->list l))))
-                         null)
-                     interfaces))
+         (cond
+           [abstract-name
+            ;; for interface-implementing properties, an abstract class defers to
+            ;; subclasses for public interfaces
+            null]
+           [else
+            ;; otherwise, always implement interface properties from superclasses,
+            ;; because it's a vtable that needs to refer to this class's implementations
+            (define supers (cond
+                             [super
+                              ;; collect all interfaces in the inheritance chain starting from super
+                              (let loop ([acc (list super)])
+                                (define ssuper-syn-id (class-desc-super-id (car acc)))
+                                (if ssuper-syn-id
+                                    (loop (cons (syntax-local-value* (in-class-desc-space ssuper-syn-id)
+                                                                     class-desc-ref)
+                                                acc))
+                                    acc))]
+                             [else null]))
+            (append (if (pair? supers)
+                        (interface-names->interfaces
+                         #f
+                         (apply append
+                                (map (lambda (s)
+                                       (define l (objects-desc-interface-ids s))
+                                       (if (null? l)
+                                           null
+                                           (syntax->list l)))
+                                     supers)))
+                        null)
+                    interfaces)])
          private-interfaces
          protected-interfaces))
       (define all-prim-prop-interfaces
