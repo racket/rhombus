@@ -76,14 +76,14 @@ namespace au:
     fun (u, headers, [url.KeyValue(k, v), ...]):
       let (headers, PairList(Pair(k, v), ...)) = f(url.URL.to_handle(u),
                                                    hdr.to_symbols(headers),
-                                                   PairList(Pair(k, v), ...))
-      values(hdr.to_strings(headers), [url.KeyValue(k, v), ...])
+                                                   PairList(Pair(Symbol.from_string(k), v), ...))
+      values(hdr.to_strings(headers), [url.KeyValue(to_string(k), v), ...])
   fun unwrap(f):
     fun (u, headers, PairList[Pair(k, v), ...]):
       let (headers, [url.KeyValue(k, v), ...]) = f(url.URL.from_handle(u),
                                                    hdr.to_strings(headers),
-                                                   [url.KeyValue(k, v), ...])
-      values(hdr.to_symbols(headers), PairList[Pair(k, v), ...])
+                                                   [url.KeyValue(to_string(k), v), ...])
+      values(hdr.to_symbols(headers), PairList[Pair(Symbol.from_string(k), v), ...])
 
 namespace auth:
   export:
@@ -105,7 +105,11 @@ namespace pl:
   fun wrap(f):
     fun (headers):
       let (headers, r) = f(hdr.to_symbols(headers))
-      values(hdr.to_strings(headers), r)
+      match r
+      | r :: ReadableString:
+          values(hdr.to_strings(headers), r.to_string())
+      | ~else:
+          values(hdr.to_strings(headers), r)
   fun unwrap(f):
     fun (headers):
       let (headers, r) = f(hdr.to_strings(headers))
