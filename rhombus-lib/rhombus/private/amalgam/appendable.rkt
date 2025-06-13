@@ -159,6 +159,7 @@
         (build-compound-repetition
          self-stx
          (list form1 form2)
+         #:element-statinfo? #t
          (lambda (form1 form2)
            (parse-append
             form1 form2 self-stx form1
@@ -168,9 +169,7 @@
             (lambda (form idx)
               (if (= idx 0)
                   #'form1-info.element-static-infos
-                  (syntax-parse form2
-                    [form2-info::repetition-info
-                     #'form2-info.element-static-infos])))
+                  (extract-static-infos form2)))
             (lambda (append-id direct? form1 form2 si)
               (values
                (build-append append-id direct? form1 form2

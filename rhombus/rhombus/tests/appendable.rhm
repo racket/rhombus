@@ -142,3 +142,20 @@ block:
     "Any",
     "\"oops\"", "\"wow\"",
   )
+
+check:
+  // regression check for `++` as a repetition operator
+  let spc = " "
+  fun two_column(l :~ List):
+    if l.length() mod 2 == 0
+    | let [left :~ List, ...] = #void
+      let [right :~ List, ...] = #void
+      [left ++ [spc] ++ right, ...]
+    | #void
+  ~completes
+
+check:
+  // check propagation of static information with `++` as a repetition operator
+  let [[s :: List.of(String)], ...] = [[["1"]]]
+  [s ++ ["2"], ...][0][0].length()
+  ~is 1
