@@ -130,7 +130,7 @@ check:
   enum NoIntersection:
     ~is_a A
     ~is_a B
-  (A() :: NoIntersection).whoami()
+  (dynamic(A()) :: NoIntersection).whoami()
   ~throws "no such field or method (based on static information)"
 
 // duplicate identifier
@@ -214,4 +214,3 @@ enum ns.Example:
   one
   two
 check #'one ~is_a ns.Example
-

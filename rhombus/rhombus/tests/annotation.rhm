@@ -207,3 +207,143 @@ check:
   fun access_x(p :: Posn && converting(fun(x :: Posn) :: Posn: x) && satisfying(fun(y :: Posn): #true)):
     p.x
   ~completes
+
+// `::`/`:~` should `&&` static infos for predicate annotations
+block:
+  use_static
+  check:
+    ("a" :~ Int).length() ~is 1
+    ("a" :: Int).length() ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("a").msg,
+    )
+  check:
+    ("a" :~ Int) < dynamic(2) ~throws values(
+      ".<: " ++ error.annot_msg(),
+      error.annot("Real").msg,
+      error.val("a").msg,
+    )
+    ("a" :: Int) < dynamic(2) ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("a").msg,
+    )
+
+block:
+  use_static
+  class NoLength()
+  check:
+    ("a" :~ NoLength).length() ~is 1
+    ("a" :: NoLength).length() ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("NoLength").msg,
+      error.val("a").msg,
+    )
+  class HasLength():
+    method length():
+      "oops"
+  check:
+    ("a" :~ HasLength).length() ~throws values(
+      "HasLength.length: not an instance for method call",
+      error.val("a").msg,
+    )
+    ("a" :: HasLength).length() ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("HasLength").msg,
+      error.val("a").msg,
+    )
+
+block:
+  use_static
+  let [str, ...] = ["a", "ab", "abc"]
+  check:
+    [(str :~ Int).length(), ...] ~is [1, 2, 3]
+    [(str :: Int).length(), ...] ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("a").msg,
+    )
+  check:
+    [(str :~ Int) < dynamic(2), ...] ~throws values(
+      ".<: " ++ error.annot_msg(),
+      error.annot("Real").msg,
+      error.val("a").msg,
+    )
+    [(str :: Int) < dynamic(2), ...] ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("Int").msg,
+      error.val("a").msg,
+    )
+
+block:
+  use_static
+  let [str, ...] = ["a", "ab", "abc"]
+  class NoLength()
+  check:
+    [(str :~ NoLength).length(), ...] ~is [1, 2, 3]
+    [(str :: NoLength).length(), ...] ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("NoLength").msg,
+      error.val("a").msg,
+    )
+  class HasLength():
+    method length():
+      "oops"
+  check:
+    [(str :~ HasLength).length(), ...] ~throws values(
+      "HasLength.length: not an instance for method call",
+      error.val("a").msg,
+    )
+    [(str :: HasLength).length(), ...] ~throws values(
+      "::: " ++ error.annot_msg(),
+      error.annot("HasLength").msg,
+      error.val("a").msg,
+    )
+
+check:
+  ~eval
+  use_static
+  class HasWeirdLength():
+    property length:
+      "oops"
+  (HasWeirdLength() :~ String).length
+  ~throws "method must be called (based on static information)"
+
+check:
+  ~eval
+  use_static
+  class HasWeirdLength():
+    property length:
+      "oops"
+  block:
+    let [x, ...] = [HasWeirdLength(), HasWeirdLength(), HasWeirdLength()]
+    [(x :~ String).length, ...]
+  ~throws "method must be called (based on static information)"
+
+// `::`/`:~` should *not* `&&` static infos for converter annotations
+check:
+  ~eval
+  use_static
+  ("a" :: converting(fun (x) :~ Int: x)).length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  block:
+    let [str, ...] = ["a", "ab", "abc"]
+    [(str :: converting(fun (x) :~ Int: x)).length(), ...]
+  ~throws "no such field or method (based on static information)"
+
+// but static infos should be propagated to inner binding
+block:
+  use_static
+  check:
+    "a" :: converting(fun (x): x.length()) ~is 1
+
+block:
+  use_static
+  let [str, ...] = ["a", "ab", "abc"]
+  check:
+    [str :: converting(fun (x): x.length()), ...] ~is [1, 2, 3]

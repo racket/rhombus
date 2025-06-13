@@ -142,7 +142,7 @@
         | 0: x
         | 1: y
       expression 'Posn($x, $y)':
-        'Pair($x, $y) :~ Posn'
+        'dynamic(Pair($x, $y)) :~ Posn'
   ~repl:
     def p = Posn(10, 20)
     p.x

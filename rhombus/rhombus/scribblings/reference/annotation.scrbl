@@ -10,11 +10,15 @@
   repet.macro '$repet :: $annot'
 ){
 
- Checks that the value of @rhombus(expr) satisfies
- @rhombus(annot), and returns the value if so.
+ Checks that the value of @rhombus(expr) satisfies @rhombus(annot),
+ and returns the value if so.
+
+ If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation},
+ the converted value is returned.
 
 @examples(
   [1, 2, 3] :: List
+  PairList[1, 2, 3] :: Listable.to_list
 )
 
 }
@@ -34,6 +38,7 @@
 
 @examples(
   def x :: List = [1, 2, 3]
+  def [x, y, z] :: Listable.to_list = PairList[1, 2, 3]
 )
 
 }

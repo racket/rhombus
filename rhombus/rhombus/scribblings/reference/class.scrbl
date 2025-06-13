@@ -1024,7 +1024,7 @@
     class PosnX(x, y):
       internal _PosnX
       expression 'PosnX< $x ... || $y ... >':
-        '_PosnX($x ..., $y ...) :~ PosnX'
+        'dynamic(_PosnX($x ..., $y ...)) :~ PosnX'
       reconstructor (x, y):
         PosnX< x || y >
   ~repl:

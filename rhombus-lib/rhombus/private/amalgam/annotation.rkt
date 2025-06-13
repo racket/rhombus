@@ -507,7 +507,7 @@
         (define op-name (string->symbol (shrubbery-syntax->string #'op.name)))
         (values
          (build-annotated-expression #'op.name #'t
-                                     checked? form #'t.parsed
+                                     checked? (discard-static-infos form) (extract-static-infos form) #'t.parsed
                                      (lambda (tmp-id)
                                        #`(raise-::-annotation-failure '#,op-name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
                                      wrap-static-info*)
@@ -527,7 +527,7 @@
           [rep::repetition-info
            (build-annotated-expression
             #'op.name #'t
-            checked? #'rep.body #'t.parsed
+            checked? #'rep.body #'rep.element-static-infos #'t.parsed
             (lambda (tmp-id)
               #`(raise-::-annotation-failure '#,op-name #,tmp-id '#,(shrubbery-syntax->string #'t.parsed)))
             (lambda (body static-infos)
@@ -540,7 +540,10 @@
                #'t.tail)))])]))
    'none))
 
-(define-for-syntax (build-annotated-expression form-name orig-stx checked? form t-parsed build-fail k)
+(define-for-syntax (build-annotated-expression form-name orig-stx
+                                               checked? form static-infos t-parsed
+                                               build-fail
+                                               k)
   (syntax-parse t-parsed
     [c-parsed::annotation-predicate-form
      (k
@@ -550,12 +553,12 @@
                   val
                   #,(build-fail #'val)))
           form)
-      #'c-parsed.static-infos)]
+      (static-infos-and #'c-parsed.static-infos static-infos))]
     [c-parsed::annotation-binding-form
      #:do [(unless checked?
              (raise-unchecked-disallowed form-name orig-stx))]
      #:with arg-parsed::binding-form #'c-parsed.binding
-     #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+     #:with arg-impl::binding-impl #`(arg-parsed.infoer-id #,static-infos arg-parsed.data)
      #:with arg-info::binding-info #'arg-impl.info
      #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
      (k
