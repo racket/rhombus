@@ -36,7 +36,7 @@ check:
   ~eval
   use_static
   fun g(x, ...): [x, ...]
-  def f :: Function.of_arity(1) = (g :: Function.of_arity(2))
+  def f :: Function.of_arity(1) = (dynamic(g) :: Function.of_arity(2))
   f()
   ~throws "wrong number of arguments in function call"
 
@@ -44,7 +44,7 @@ check:
   ~eval
   use_static
   fun g(x, ...): [x, ...]
-  def f :: Function.of_arity(1) = (g :: Function.of_arity(2))
+  def f :: Function.of_arity(1) = (dynamic(g) :: Function.of_arity(2))
   f(1, 2, 3)
   ~throws "wrong number of arguments in function call"
 

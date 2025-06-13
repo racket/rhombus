@@ -155,7 +155,7 @@ block:
                                                             error.annot("Port.WaitMode").msg)
   check p.read_bytes_to(bstr, ~start: 5, ~end: 6) ~is 1
   check bstr[5] ~is Byte#"d"
-  
+
 block:
   let p = Port.Input.open_string("abλcdefμ")
   check p is_a Port.Input ~is #true
@@ -298,13 +298,13 @@ block:
 check:
   ~eval
   use_static
-  (Port.Output.open_string() :: Port.Output).get_string()
+  (dynamic(Port.Output.open_string()) :: Port.Output).get_string()
   ~throws "no such field or method (based on static information)"
 
 check:
   ~eval
   use_static
-  (Port.Output.open_string() :: Port.Output).get_bytes()
+  (dynamic(Port.Output.open_string()) :: Port.Output).get_bytes()
   ~throws "no such field or method (based on static information)"
 
 check:

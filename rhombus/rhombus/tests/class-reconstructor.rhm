@@ -31,7 +31,7 @@ block:
   class Posn(x, y):
     internal _Posn
     expression 'Posn < $x $y >':
-      '_Posn($x, $y) :~ Posn'
+      'dynamic(_Posn($x, $y)) :~ Posn'
     reconstructor (x, y):
       Posn < x  y >
   def p = Posn< 1 2 >
@@ -46,14 +46,14 @@ block:
   class Posn3D(z):
     extends Posn
     reconstructor(x, y, z = this.z):
-      Posn3D(x, y, z+1)  
+      Posn3D(x, y, z+1)
   check Posn3D(1, 2, 3) with (x = 10) ~is Posn3D(10, 2, 4)
   check Posn3D(1, 2, 3) with (x = 11, z = 8) ~is Posn3D(11, 2, 9)
-  check (Posn3D(1, 2, 3) :: Posn) with (x = 10) ~is Posn3D(10, 2, 4)
+  check (dynamic(Posn3D(1, 2, 3)) :: Posn) with (x = 10) ~is Posn3D(10, 2, 4)
   block:
     use_dynamic
     check dynamic(Posn3D(1, 2, 3)) with (w = -1) ~throws "no such reconstructor argument in class"
-    check (Posn3D(1, 2, 3) :: Posn) with (z = 30) ~is Posn3D(1, 2, 31)
+    check (dynamic(Posn3D(1, 2, 3)) :: Posn) with (z = 30) ~is Posn3D(1, 2, 31)
 
 block:
   class Posn(x, y):
@@ -62,7 +62,7 @@ block:
     extends Posn
     nonfinal
     reconstructor(x, y, z = this.z):
-      Posn3D(x, y, z+1)  
+      Posn3D(x, y, z+1)
   class Posn4D(w):
     extends Posn3D
   check Posn3D(1, 2, 3) with (x = 10) ~is Posn3D(10, 2, 4)
@@ -90,7 +90,7 @@ block:
     constructor ():
       super(0, 0)
   class Posn3D(z):
-    extends Posn  
+    extends Posn
     internal _Posn3D
     constructor (z):
       super()(z)
@@ -140,7 +140,7 @@ block:
   class Posn3D(z):
     extends Posn
     reconstructor_fields:
-      extent: this.z          
+      extent: this.z
     reconstructor(x, y, z):
       Posn3D(x, y, z)
   check Posn3D(1, 2, 3) with (extent = 30) ~is Posn3D(1, 2, 30)

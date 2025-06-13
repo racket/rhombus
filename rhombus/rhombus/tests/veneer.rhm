@@ -94,7 +94,7 @@ veneer RevList2(this :: List):
   override get(i):
     this[this.length() - i - 1]
   expression 'RevList2[$elem, ...]':
-    '[$elem, ...] :~ RevList2'
+    'dynamic([$elem, ...]) :~ RevList2'
 
 check:
   RevList2[1, 2, 3][0] ~is 3

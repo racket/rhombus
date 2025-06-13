@@ -60,7 +60,7 @@ block:
   check p with (x = 10) ~is Posn3D(~x: 10, 2, 3)
   check p with (y = 20) ~is Posn3D(~x: 1, 20, 3)
   check p with (z = 30) ~is Posn3D(~x: 1, 2, 30)
-  check (p :: Posn) with (x = 10) ~is Posn3D(~x: 10, 2, 3)
+  check (dynamic(p) :: Posn) with (x = 10) ~is Posn3D(~x: 10, 2, 3)
 
 block:
   class Posn(x, y):
