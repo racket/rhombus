@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "statically-str.rkt")
          "parens.rkt"
          (submod "assign.rkt" for-assign)
          (only-in "repetition.rkt"
@@ -16,8 +17,12 @@
 (define-for-syntax (dot-parse-dispatch k)
   (lambda (lhs dot field-stx tail more-static? repetition? success-k fail-k)
     (define (ary mask n-k no-k)
-      (define (bad msg)
-        (raise-syntax-error #f msg field-stx))
+      (define (success-call/dynamic)
+        (success-k (no-k (lambda (e)
+                           (relocate+reraw
+                            (respan (datum->syntax #f (list lhs dot field-stx)))
+                            e)))
+                   tail))
       (syntax-parse tail
         [((~and args (p-tag::parens g ...)) . new-tail)
          (define (success-call/static)
@@ -27,12 +32,6 @@
                               (respan (datum->syntax #f (list lhs dot field-stx #'args)))
                               e)))
                       #'new-tail))
-         (define (success-call/dynamic)
-           (success-k (no-k (lambda (e)
-                              (relocate+reraw
-                               (respan (datum->syntax #f (list lhs dot field-stx)))
-                               e)))
-                      tail))
          (define-values (n kws rsts? kwrsts?)
            (for/fold ([n 0] [kws null] [rsts? #f] [kwrsts? #f])
                      ([g (in-list (syntax->list #'(g ...)))])
@@ -48,22 +47,20 @@
                 (values (add1 n) kws rsts? kwrsts?)])))
          (cond
            [more-static?
-            (if (check-arity field-stx #f mask n kws rsts? kwrsts? 'method #:always? #t)
-                (success-call/static)
-                (success-call/dynamic))]
-           ;; dynamic
+            ;; check correct call
+            (check-arity field-stx #f mask n kws rsts? kwrsts? 'method #:always? #t)
+            (success-call/static)]
+           ;; dynamic mode, method is correctly called
            [(check-arity #f #f mask n kws rsts? kwrsts? #f #:always? #t)
             (success-call/static)]
            [else
             (success-call/dynamic)])]
         [_
-         (if more-static?
-             (bad "expected parentheses afterward")
-             (success-k (no-k (lambda (e)
-                                (relocate+reraw
-                                 (respan (datum->syntax #f (list lhs dot field-stx)))
-                                 e)))
-                        tail))]))
+         (when more-static?
+           (raise-syntax-error #f
+                               (string-append "method must be called" statically-str)
+                               field-stx))
+         (success-call/dynamic)]))
 
     (define (nary mask direct-id id)
       (define rator
