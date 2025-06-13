@@ -448,14 +448,14 @@
 (define-for-syntax ((make-handle-class-instance-dot name do-allow-protected? internal-fields internal-methods)
                     form1 dot field-id
                     tail more-static? repetition?
-                    success failure-in)
+                    success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) objects-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define (do-field fld)
     (cond
       [repetition?
        ;; let dot-provider dispatcher handle repetition construction:
-       (failure-in)]
+       (failure)]
       [else
        (define accessor-id (field-desc-accessor-id fld))
        (syntax-parse tail
@@ -608,14 +608,6 @@
         (get-private-table desc
                            #:fail-v #f
                            #:allow-super-for (syntax-e field-id))))
-  (define (failure)
-    (cond
-      [(and more-static?
-            (not repetition?))
-       (raise-syntax-error #f
-                           (string-append "no such field or method" statically-str)
-                           field-id)]
-      [else (failure-in)]))
   (cond
     [(and (class-desc? desc)
           (or (for/or ([field+acc (in-list (class-desc-fields desc))])
@@ -691,7 +683,7 @@
             [else
              (do-field id/intf/fld)]))]
     [else (failure)]))
-  
+
 (define-for-syntax no-constructor-transformer
   (expression-transformer
    (lambda (stx)
