@@ -274,15 +274,15 @@
          ;; nonsplice arguments
          (if base
              (quasisyntax/loc stx
-               (#,extend*-id #,base #,@args))
+               (#,extend*-id #,base #,@(map discard-static-infos args)))
              (quasisyntax/loc stx
-               (#,build-id #,@args)))]
+               (#,build-id #,@(map discard-static-infos args))))]
         [else
          ;; a `&` or `...` splice
          (define e
            (cond
              [(rest-rep? args) (rest-rep-stx args)]
-             [else #`(#,assert-id #,args)]))
+             [else #`(#,assert-id #,(discard-static-infos args))]))
          (if base
              (quasisyntax/loc stx
                (#,append-id #,base #,e))

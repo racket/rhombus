@@ -195,7 +195,7 @@
          #:with b-info::binding-info #'b-impl.info
          #`(let ()
              (b-info.oncer-id b-info.data)
-             (let ([val-in (let ([b-info.name-id #,form])
+             (let ([val-in (let ([b-info.name-id #,(discard-static-infos form)])
                              b-info.name-id)])
                (b-info.matcher-id val-in
                                   b-info.data

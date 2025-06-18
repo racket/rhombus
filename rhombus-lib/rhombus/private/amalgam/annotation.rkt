@@ -562,7 +562,7 @@
      #:with arg-info::binding-info #'arg-impl.info
      #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
      (k
-      #`(let* ([tmp-id (let ([arg-info.name-id #,form])
+      #`(let* ([tmp-id (let ([arg-info.name-id #,(discard-static-infos form)])
                          arg-info.name-id)]
                [fail-k (lambda () #,(build-fail #'tmp-id))])
           (arg-info.oncer-id arg-info.data)
@@ -637,7 +637,7 @@
      (values
       (syntax-parse #'t.parsed
         [c-parsed::annotation-predicate-form
-         (let ([r #`(c-parsed.predicate #,form)])
+         (let ([r #`(c-parsed.predicate #,(discard-static-infos form))])
            (if (eq? mode 'invert)
                #`(not #,r)
                r))]
@@ -645,7 +645,7 @@
          #:with arg-parsed::binding-form #'c-parsed.binding
          #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
          #:with arg-info::binding-info #'arg-impl.info
-         #`(let ([val-in (let ([arg-info.name-id #,form])
+         #`(let ([val-in (let ([arg-info.name-id #,(discard-static-infos form)])
                            arg-info.name-id)])
              (arg-info.oncer-id arg-info.data)
              (arg-info.matcher-id val-in

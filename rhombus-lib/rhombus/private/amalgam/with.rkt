@@ -58,7 +58,7 @@
             (raise-syntax-error #f
                                 (string-append "no update implementation available" statically-str)
                                 #'with-id
-                                (unwrap-static-infos orig-form1)))
+                                orig-form1))
           (for/fold ([seen #hasheq()]) ([name (in-list (syntax->list #'(name ...)))])
             (when (hash-ref seen (syntax-e name) #f)
               (raise-syntax-error #f "duplicate field for update" #'with-id name))
@@ -72,7 +72,10 @@
                (let ([name-map (for/hasheq ([name (in-list (syntax->list #'(name ...)))]
                                             [pos (in-naturals)])
                                  (values (syntax-e name) pos))])
-                 #`(dynamic-update 'with-id #,form1 '#,name-map (vector (rhombus-expression (group rhs ...)) ...))))
+                 #`(dynamic-update 'with-id
+                                   #,(discard-static-infos form1)
+                                   '#,name-map
+                                   (vector (rhombus-expression (group rhs ...)) ...))))
            #'tail))]
        [(with-id (_::parens g ...) . tail)
         (for ([g (in-list (syntax->list #'(g ...)))])

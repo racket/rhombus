@@ -159,7 +159,7 @@
         (define expr
           (with-syntax ([(arg-id ...) arg-ids]
                         [(rhs-expr ...) rhss])
-            #`(let ([obj #,form1]
+            #`(let ([obj #,(discard-static-infos form1)]
                     [arg-id rhs-expr]
                     ...)
                 (#,(if direct? constructor-id #`(extract-reconstructor '#,with-id obj))

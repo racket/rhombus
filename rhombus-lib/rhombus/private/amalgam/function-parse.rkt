@@ -1497,9 +1497,11 @@
      (define rest-args
        (cond
          [dots (repetition-as-list dots rsts 1)]
-         [rsts (syntax-parse rsts [rst::expression (if amp
-                                                       #`(to-list '#,amp rst.parsed)
-                                                       #'rst.parsed)])]
+         [rsts (syntax-parse rsts
+                 [rst::expression
+                  (if amp
+                      #`(to-list '#,amp #,(discard-static-infos #'rst.parsed))
+                      #'rst.parsed)])]
          [else #''()]))
      (define kwrest-args
        (and kwrsts

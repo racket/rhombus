@@ -6,7 +6,8 @@
          "parse.rkt"
          (submod "ellipsis.rkt" for-parse)
          "op-literal.rkt"
-         "repetition.rkt")
+         "repetition.rkt"
+         "static-info.rkt")
 
 (provide all
          any)
@@ -33,7 +34,7 @@
                  (combine (render-repetition for/comb #'repet.parsed #:depth (add1 count))
                           tail)])]
              [(e::expression . tail)
-              (combine #'e.parsed #'tail)]))
+              (combine (discard-static-infos #'e.parsed) #'tail)]))
          #'tail)]))))
 
 (define-syntax all (combiner #'and #'for/and #''#t))

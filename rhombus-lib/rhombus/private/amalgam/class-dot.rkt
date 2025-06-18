@@ -597,9 +597,9 @@
                              field-id))
        (cond
          [(identifier? pos/id)
-          (success #`(curry-method #,pos/id #,form1) new-tail)]
+          (success #`(curry-method #,pos/id #,(discard-static-infos form1)) new-tail)]
          [else
-          (success #`(method-curried-ref #,ref-id #,form1 #,pos/id) new-tail)])]))
+          (success #`(method-curried-ref #,ref-id #,(discard-static-infos form1) #,pos/id) new-tail)])]))
   (define (make-interface-check desc name)
     (lambda (obj-id)
       #`(void (#,(interface-desc-ref-id desc) #,obj-id))))

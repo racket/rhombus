@@ -723,7 +723,7 @@
                (cons e (loop new-gs))]
               [(g . gs)
                (define e (syntax-parse #'g
-                           [e::expression #'e.parsed]))
+                           [e::expression (discard-static-infos #'e.parsed)]))
                (cons e (loop #'gs))])))
         (values
          (relocate+reraw

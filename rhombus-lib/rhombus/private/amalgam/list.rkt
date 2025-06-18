@@ -1635,7 +1635,7 @@
       (cond
         [(list-rest-splice? one)
          (values '()
-                 (cons #`(#,ensure-*list-stx #,(list-rest-syntax one))
+                 (cons #`(#,ensure-*list-stx #,(discard-static-infos (list-rest-syntax one)))
                        (gather group groups)))]
         [(list-rest-rep? one)
          (values '()

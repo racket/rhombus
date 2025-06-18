@@ -239,7 +239,7 @@
                                      (normalize-pvar-statinfos (pattern-variable-statinfos attr))
                                      0)])]
            [else
-            (wrap-static-info* #`(car (hash-ref (syntax-wrap-attribs #,form1)
+            (wrap-static-info* #`(car (hash-ref (syntax-wrap-attribs #,(discard-static-infos form1))
                                                 (quote #,(pattern-variable-sym attr))))
                                (normalize-pvar-statinfos (pattern-variable-statinfos attr)))])
          tail)]

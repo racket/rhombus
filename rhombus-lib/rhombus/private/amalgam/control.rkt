@@ -173,7 +173,7 @@
    '((default . weaker))
    'automatic
    (lambda (form1 op-stx)
-     #`(raise #,form1))))
+     #`(raise #,(discard-static-infos form1)))))
 
 (void (set-primitive-who! 'call-with-composable-continuation 'Continuation.capture))
 (define-syntax capture

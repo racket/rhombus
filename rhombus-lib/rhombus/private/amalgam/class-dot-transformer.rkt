@@ -61,7 +61,7 @@
         (define new-g (pack-tail
                        #`((parsed #:rhombus/expr
                                   #,(wrap-static-info
-                                     #`(let ([o e.parsed])
+                                     #`(let ([o #,(discard-static-infos #'e.parsed)])
                                          (check-instance '#,name #,pred o)
                                          o)
                                      #'#%dot-provider
