@@ -822,3 +822,10 @@ check:
   for List (i in 0..2):
     i < 1
   ~is [#true, #false]
+
+// regression test: `keep_let` should use definition context for matcher
+check:
+  for List (str in ["1", "2"]):
+    keep_let num :: String.to_int = str
+    num
+  ~is [1, 2]

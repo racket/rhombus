@@ -352,15 +352,16 @@
          (define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
                                        (values lhs-i.name-id ...)))
          (define evidence
-           #,(for/foldr ([success (if need-evidence?
-                                      #'(vector lhs-i-evidence-id ...)
-                                      #'#t)])
-                        ([lhs-i-matcher-id (in-list (syntax->list #'(lhs-i.matcher-id ...)))]
-                         [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
-                         [lhs-i-data (in-list (syntax->list #'(lhs-i.data ...)))])
-               #`(#,lhs-i-matcher-id #,tmp-id #,lhs-i-data if/blocked
-                                     #,success
-                                     #f))))
+           (let ()
+             #,(for/foldr ([success (if need-evidence?
+                                        #'(vector lhs-i-evidence-id ...)
+                                        #'#t)])
+                          ([lhs-i-matcher-id (in-list (syntax->list #'(lhs-i.matcher-id ...)))]
+                           [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
+                           [lhs-i-data (in-list (syntax->list #'(lhs-i.data ...)))])
+                 #`(#,lhs-i-matcher-id #,tmp-id #,lhs-i-data if/blocked
+                                       #,success
+                                       #f)))))
       #'evidence
       #`(#,@(if need-evidence?
                 (list #`(define-values (lhs-i-evidence-id ...) (vector->values evidence)))
