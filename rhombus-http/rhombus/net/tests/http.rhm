@@ -29,7 +29,7 @@ block:
         // Discard the request header (up to blank line):
         let headers_o = Port.Output.open_bytes()
         let req_line = in.read_line()
-        rx'("\r\n" || bof) "\r\n"'.match_in(in, ~unmatched_out: headers_o)        
+        rx'("\r\n" || bof) "\r\n"'.match_in(in, ~unmatched_out: headers_o)
         let headers = headers_o.get_string()
         recent_method := rx'bof ["A"-"Z"]*'.match_in(req_line)!![0]
         recent_path := rx'" " ~~([! " "]*) " "'.match_in(req_line)!![1]
@@ -44,7 +44,7 @@ block:
         | recent_data := #""
           recur loop():
             let spec = in.read_line()
-            let len = String.to_int(String.split(spec, " ")[0], ~radix: 16)            
+            let len = String.to_int(String.split(spec, " ")[0], ~radix: 16)
             recent_data := Bytes.append(recent_data, in.read_bytes(len))
             in.read_line() // terminator
             unless len == 0
@@ -190,3 +190,13 @@ check recent_data ~is_now #"oooo"
 
 check put(here, ~data: payload.json({"key": ["value", 7]})).status_code ~is 200
 check recent_data ~is_now Bytes.copy(#"{\"key\":[\"value\",7]}")
+
+block:
+  let u = url.URL.from_string("https://example.com")
+  let kv = url.KeyValue("param", "value")
+  let auf = auth.bearer(~token: "RhombusRulez")
+  check auf(u, {}, []) ~is_now values({"authorization": Bytes.copy(#"Bearer RhombusRulez")}, [])
+  check auf(u, {}, [kv]) ~is_now values({"authorization": Bytes.copy(#"Bearer RhombusRulez")},
+                                        [url.KeyValue("param", "value")])
+  check payload.form([kv])({}) ~is values({"content-type": #"application/x-www-form-urlencoded; charset=utf-8"},
+                                          "param=value")
