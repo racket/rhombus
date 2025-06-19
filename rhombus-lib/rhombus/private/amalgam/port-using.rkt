@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "tag.rkt")
          "expression.rkt"
          "parse.rkt"
          "parens.rkt"
@@ -10,19 +11,27 @@
 (provide Port.Input.using
          Port.Output.using)
 
-(define-for-syntax (build-using who what port? close param pre e blk)
+(define-for-syntax (build-using who what
+                                port? close param
+                                pres make-e blk)
   (syntax-parse blk
     [(tag::block body ...+)
+     #:do [(define pre-ids (generate-temporaries pres))]
+     #:with (pre ...) pres
+     #:with (pre-id ...) pre-ids
      (values
       #`(call-with-continuation-barrier
          (lambda ()
            (let ([p #f]
-                 [pre #,pre])
+                 [pre-id pre]
+                 ...)
              (#||# dynamic-wind
               (lambda ()
-                (set! p #,e)
-                (unless (#,port? p)
-                  (raise-annotation-failure '#,who '#,what p)))
+                (set! p #,(make-e pre-ids))
+                #,@(if port?
+                       (list #`(unless (#,port? p)
+                                 (raise-annotation-failure '#,who '#,what p)))
+                       '()))
               (lambda ()
                 (parameterize ([#,param p])
                   (rhombus-body-at tag body ...)))
@@ -35,47 +44,64 @@
 (define-syntax Port.Input.using
   (expression-transformer
    (lambda (stx)
-     (define (build pre e blk pred)
-       (build-using 'Port.Input.using "Port.Input" pred #'close-input-port #'current-input-port pre e blk))
+     (define (build pre make-e blk checked?)
+       (build-using 'Port.Input.using "Port.Input"
+                    (and checked? #'input-port?) #'close-input-port #'current-input-port
+                    pre make-e blk))
      (syntax-parse stx
        #:datum-literals (group)
        [(_ #:file t ... (~and blk (_::block . _)))
-        #:with e::expression #'(group t ...)
-        (build #'e.parsed #'(open-input-file* pre) #'blk #'(lambda (x) #t))]
+        (build (list #`(rhombus-expression (#,group-tag t ...)))
+               (lambda (pre-ids)
+                 #`(open-input-file* #,(car pre-ids)))
+               #'blk
+               #f)]
        [(_ t ... (~and blk (_::block body . _)))
-        #:with e::expression #'(group t ...)
-        (build #'#f #'e.parsed #'blk #'input-port?)]))))
+        (build '()
+               (lambda (pre-ids)
+                 #`(rhombus-expression (#,group-tag t ...)))
+               #'blk
+               #t)]))))
 
 (define-syntax Port.Output.using
   (expression-transformer
    (lambda (stx)
-     (define (build pre e blk pred)
-       (build-using 'Port.Output.using "Port.Output" pred #'close-output-port #'current-output-port pre e blk))
+     (define (build pre make-e blk checked?)
+       (build-using 'Port.Output.using "Port.Output"
+                    (and checked? #'output-port?) #'close-output-port #'current-output-port
+                    pre make-e blk))
      (syntax-parse stx
        #:datum-literals (group)
        [(_ #:file t ... (tag::block
                          (group #:exists (xtag::block xbody ...+))
                          body ...))
-        #:with e::expression #'(group t ...)
-        (build #'(rhombus-body-at xtag xbody ...)
-               #'(open-output-file* e.parsed pre)
+        (build (list #`(rhombus-expression (#,group-tag t ...))
+                     #'(rhombus-body-at xtag xbody ...))
+               (lambda (pre-ids)
+                 #`(open-output-file* #,(car pre-ids) #,(cadr pre-ids)))
                (datum->syntax #f (syntax-e #'(tag body ...)))
-               #'(lambda (x) #t))]
+               #f)]
        [(_ #:file t ... (tag::block
                          (group #:exists tx ...+)
                          body ...))
-        #:with e::expression #'(group t ...)
-        #:with ex::expression #'(group tx ...)
-        (build #'(cons e.parsed ex.parsed)
-               #'(open-output-file* (car pre) (cdr pre))
+        (build (list #`(rhombus-expression (#,group-tag t ...))
+                     #`(rhombus-expression (#,group-tag tx ...)))
+               (lambda (pre-ids)
+                 #`(open-output-file* #,(car pre-ids) #,(cadr pre-ids)))
                (datum->syntax #f (syntax-e #'(tag body ...)))
-                #'(lambda (x) #t))]
+               #f)]
        [(_ #:file t ... (~and blk (_::block . _)))
-        #:with e::expression #'(group t ...)
-        (build #'e.parsed #'(open-output-file* pre 'error) #'blk #'(lambda (x) #t))]
+        (build (list #`(rhombus-expression (#,group-tag t ...)))
+               (lambda (pre-ids)
+                 #`(open-output-file* #,(car pre-ids) 'error))
+               #'blk
+               #f)]
        [(_ t ... (~and blk (_::block . _)))
-        #:with e::expression #'(group t ...)
-        (build #'#f #'e.parsed #'blk #'output-port?)]))))
+        (build '()
+               (lambda (pre-ids)
+                 #`(rhombus-expression (#,group-tag t ...)))
+               #'blk
+               #t)]))))
 
 (define (open-input-file* p)
   (with-error-adjust-primitive ([open-input-file Port.Input.using])

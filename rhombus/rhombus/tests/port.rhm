@@ -437,3 +437,16 @@ block:
   s.copy_to(o1, o2)
   check o1.get_string() ~is "aλb\nc"
   check o2.get_string() ~is "aλb\nc"
+
+// regression test: evaluation order in `Port.Output.using`
+check:
+  Port.Output.using ~file error("file"):
+    ~exists error("exists")
+    #void
+  ~throws "file"
+
+check:
+  Port.Output.using ~file error("file"):
+    ~exists: error("exists")
+    #void
+  ~throws "file"
