@@ -13,6 +13,12 @@ check:
   ~is 18
 
 check:
+  cond
+  | #false: 17
+  | #false: 18
+  ~throws "no successful case"
+
+check:
   use_static
   (if #true | [1] | ["one"])[0]
   ~is 1
@@ -460,3 +466,8 @@ check:
      | C())
     .whoarewe()
   ~throws "no such field or method (based on static information)"
+
+// empty block, no alts after
+check:
+  cond:«»
+  ~throws "no successful case"

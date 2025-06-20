@@ -89,3 +89,12 @@ block:
     | _ :: Int: "can't happen"
     | s: s.length()
     ~is 1
+
+// empty block, no alts after
+check:
+  match 1:«»
+  ~throws "no matching case"
+
+check:
+  match error("here"):«»
+  ~throws "here"

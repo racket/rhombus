@@ -18,6 +18,7 @@
          "order.rkt"
          "order-primitive.rkt"
          "provide.rkt"
+         "srcloc-error.rkt"
          "../version-case.rkt")
 
 ;; TEMP approximate `case/equal-always`
@@ -80,13 +81,15 @@
              (lambda (val-id statinfos bs b-parseds rhss)
                (handle-normal-match
                 val-id statinfos bs b-parseds rhss
-                #`(match-fallthrough 'form-id #,val-id #,(syntax-srcloc (respan stx))))))))
+                #`(match-fallthrough 'form-id '#,(syntax-srcloc (respan stx))))))))
          #'())]
        [(form-id in ...+ (block-tag::block))
         (values
          (relocate+reraw
           (respan stx)
-          #`(match-fallthrough 'form-id (rhombus-expression (#,group-tag in ...)) #,(syntax-srcloc (respan stx))))
+          #`(begin
+              (rhombus-expression (#,group-tag in ...))
+              (match-fallthrough 'form-id '#,(syntax-srcloc (respan stx)))))
          #'())]
        [(form-id in ...+ (_::alts clause ...))
         (for ([c (in-list (syntax->list #'(clause ...)))])
@@ -165,24 +168,8 @@
               [else
                (fallback-k #'val statinfos bs b-parseds rhss)])))]))
 
-(struct exn:fail:contract:srcloc exn:fail:contract (srclocs)
-  #:property prop:exn:srclocs (lambda (exn) (exn:fail:contract:srcloc-srclocs exn)))
-
-(define (raise-srcloc-error who v loc)
-  (raise
-   (exn:fail:contract:srcloc
-    (error-message->adjusted-string
-     who
-     rhombus-realm
-     "no matching case"
-     rhombus-realm)
-    (current-continuation-marks)
-    (if loc
-        (list loc)
-        null))))
-
-(define (match-fallthrough who v loc)
-  (raise-srcloc-error who v loc))
+(define (match-fallthrough who loc)
+  (raise-srcloc-error who "no matching case" loc))
 
 (define-for-syntax (parse-matches form tail mode)
   (syntax-parse tail

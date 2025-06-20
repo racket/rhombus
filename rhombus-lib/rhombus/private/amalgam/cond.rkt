@@ -7,7 +7,8 @@
          "else-clause.rkt"
          "static-info.rkt"
          "parens.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "srcloc-error.rkt")
 
 (provide (rename-out [rhombus-if if]
                      [rhombus-cond cond]
@@ -79,10 +80,10 @@
            (wrap-static-info*
             (relocate+reraw
              (respan stx)
-             #'(cond
+             #`(cond
                  [(rhombus-expression (group pred ...)) rhs]
                  ...
-                 [else (cond-fallthrough 'form-id)]))
+                 [else (cond-fallthrough 'form-id '#,(syntax-srcloc (respan stx)))]))
             (for/fold ([si (extract-static-infos (car rhs-es))]) ([rhs-e (in-list (cdr rhs-es))])
               (static-infos-or si (extract-static-infos rhs-e)))))
          #'())]
@@ -90,11 +91,11 @@
         (values
          (relocate+reraw
           (respan stx)
-          #'(cond-fallthrough 'form-id))
+          #`(cond-fallthrough 'form-id '#,(syntax-srcloc (respan stx))))
          #'())]))))
 
-(define (cond-fallthrough who)
-  (raise-arguments-error* who rhombus-realm "no matching case"))
+(define (cond-fallthrough who loc)
+  (raise-srcloc-error who "no successful case" loc))
 
 (define-syntax rhombus-when
   (expression-transformer
