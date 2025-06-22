@@ -805,11 +805,13 @@
                                            arg-bind-infos body]))
      #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-bind-infos
      #'(begin
-         (arg-committer-id arg-id evidence-ids arg-data)
-         (arg-binder-id arg-id evidence-ids arg-data)
-         (define-static-info-syntax/maybe bind-id . bind-static-infos)
-         ...
-         (define converted-id body)
+         (define converted-id
+           (let ()
+             (arg-committer-id arg-id evidence-ids arg-data)
+             (arg-binder-id arg-id evidence-ids arg-data)
+             (define-static-info-syntax/maybe bind-id . bind-static-infos)
+             ...
+             body))
          (left-committer-id converted-id () left-data))]))
 
 (define-syntax (bind-after-converted stx)
@@ -835,11 +837,13 @@
                        arg-data
                        IF
                        (begin
-                         (arg-committer-id arg-id arg-evidence-ids arg-data)
-                         (arg-binder-id arg-id arg-evidence-ids arg-data)
-                         (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                         ...
-                         (define converted-id body)
+                         (define converted-id
+                           (let ()
+                             (arg-committer-id arg-id arg-evidence-ids arg-data)
+                             (arg-binder-id arg-id arg-evidence-ids arg-data)
+                             (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                             ...
+                             body))
                          (left-matcher-id converted-id
                                           left-data
                                           IF

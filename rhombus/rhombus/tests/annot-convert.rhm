@@ -203,3 +203,28 @@ block:
     #"\316\273" :: UTF8Bytes ~is "λ"
     #"\316" is_a UTF8Bytes ~is #false
     #"\316" :: UTF8Bytes ~throws "value does not satisfy annotation"
+
+// `converting`'s inner binding shouldn't leak to outer scope
+check:
+  def x :: converting(fun (x): x+1) = 1
+  x
+  ~is 2
+
+check:
+  def [x, y] :: converting(fun ([y, x]): [y+1, x+2]) = [1, 2]
+  [x, y]
+  ~is [2, 4]
+
+check:
+  def (x :: converting(fun (y): y+1),
+       y :: converting(fun (x): x+2)):
+    values(1, 2)
+  [x, y]
+  ~is [2, 4]
+
+check:
+  def ([x, y] :: converting(fun ([z, w]): [z+1, w+2]),
+       [z, w] :: converting(fun ([x, y]): [x+3, y+4])):
+    values([1, 2], [3, 4])
+  [x, y, z, w]
+  ~is [2, 4, 6, 8]
