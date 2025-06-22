@@ -139,6 +139,7 @@ namespace Evt:
     rename:
       evt.Evt.sync as sync
       evt.Evt.wrap as wrap
+      evt.WrapReturn as WrapReturn
     always
     never
 

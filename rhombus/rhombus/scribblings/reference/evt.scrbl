@@ -45,7 +45,7 @@ count.
 
 @doc(
   method (evt :: Evt).wrap(
-    ~tail_call: tail_call :: Any.to_boolean = #false,
+    ~return: return :: Evt.WrapReturn = #'no_break,
     wrapf :: (Any, ...) -> Any
   ) :: Evt
 ){
@@ -55,9 +55,17 @@ count.
  The number of arguments accepted by @rhombus(wrapf) must match the number of
  values for the synchronization result of @rhombus(evt).
 
- If @rhombus(tail_call) is @rhombus(#true) then @rhombus(wrapf) is call in tail
+ If @rhombus(return) is @rhombus(#'tail) then @rhombus(wrapf) is called in tail
  position with respect to the synchronization request when it is no wrapped by
  another @rhombus(Evt.wrap).
+}
+
+@doc(
+  enum Evt.WrapReturn:
+    no_break
+    tail
+){
+ Function return styles for @rhombus(Evt.wrap).
 }
 
 @doc(
