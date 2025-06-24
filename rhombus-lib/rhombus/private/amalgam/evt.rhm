@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   lib("racket/base.rkt")
+  "enum.rhm" open
   "maybe.rhm" open
   "evt.rkt".#{set-evt!}
 
@@ -10,6 +11,8 @@ export:
   Evt
   _Evt
   __Evt
+  WrapEvt
+  WrapReturn
   ProgressEvt
   CommitEvt
 
@@ -32,6 +35,26 @@ interface Evt:
     if enable_break
     | base.#{sync/timeout/enable-break}(timeout, h(this), h(evt), ...)
     | base.#{sync/timeout}(timeout, h(this), h(evt), ...)
+
+  method wrap(wr_fun, ~return: return :: WrapReturn = #'no_break) :~ Evt:
+    fun h(e :~ Evt):
+      match e
+      | e :: __Evt: e.sync_handle
+      | ~else: e.handle
+    def hand:
+      match return
+      | #'tail: base.#{handle-evt}(h(this), wr_fun)
+      | #'no_break: base.#{wrap-evt}(h(this), wr_fun)
+    WrapEvt(hand)
+
+enum WrapReturn:
+  tail
+  no_break
+
+class WrapEvt(hand):
+  implements Evt
+  opaque
+  override property handle: hand
 
 class ProgressEvt(hand):
   implements Evt

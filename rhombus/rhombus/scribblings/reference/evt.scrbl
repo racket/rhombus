@@ -2,7 +2,8 @@
 @(import:
     "common.rhm" open
     meta_label:
-      rhombus/thread open)
+      rhombus/thread open
+      rhombus/network.TCPListener)
 
 @title(~tag: "evt"){Synchronizable Events}
 
@@ -18,8 +19,9 @@ count.
 ){
 
  An annotation that recognizes @tech{synchronizable events}, which
- include @tech{threads}, @tech{semaphores}, an objects returned by
- methods like @rhombus(TCPListener.accept_evt).
+ include @tech{threads}, @tech{semaphores}, objects returned by
+ methods like @rhombus(TCPListener.accept_evt), and objects that implement
+ the @rhombus(Synchronizable, ~class) interface.
 
  The @rhombus(Evt, ~annot) annotation interface-like in the sense that
  every @rhombus(Evt, ~annot) supports the @rhombus(Evt.sync) method.
@@ -42,6 +44,33 @@ count.
 
 }
 
+@doc(
+  method (evt :: Evt).wrap(
+    ~return: return :: Evt.WrapReturn = #'no_break,
+    wrapf :: (Any, ...) -> Any
+  ) :: Evt
+
+  enum Evt.WrapReturn:
+    no_break
+    tail
+){
+
+ Creates an @rhombus(Evt, ~annot) that is ready for synchronization when @rhombus(evt)
+ is ready for synchronization, but whose synchronization result is determined
+ by applying @rhombus(wrapf) to the synchronization result of @rhombus(evt).
+ The number of arguments accepted by @rhombus(wrapf) must match the number of
+ values for the synchronization result of @rhombus(evt).
+
+ If @rhombus(return) is @rhombus(#'no_break), then @rhombus(wrapf) is
+ called with breaks (in the sense of @rhombus(Thread.break)) disabled.
+
+ If @rhombus(return) is @rhombus(#'tail), then @rhombus(wrapf) is called
+ in tail position with respect to a synchronization request via
+ @rhombus(Evt.sync). When the @rhombus(Evt, ~annot) produced by
+ @rhombus(Evt.wrap) is wrapped by another @rhombus(Evt.wrap) with
+ @rhombus(#'no_break), however, this tail-call behavior is disabled.
+
+}
 
 @doc(
   def Evt.always :: Evt
@@ -71,5 +100,32 @@ count.
  A @rhombus(CommitEvt, ~annot) is either a @rhombus(Semaphore, ~annot),
  channel-put event, channel, semaphore-peek event, @rhombus(Evt.always),
  or @rhombus(Evt.never).
+
+}
+
+@doc(
+  interface Synchronizable
+){
+ An interface that a class can implement to make instances of the class usable
+ as an @rhombus(Evt, ~annot).  When a class that implements
+ @rhombus(Synchronizable, ~class) is used with @rhombus(Evt.sync), the
+ @rhombus(Synchronizable.as_evt) method is called, and the result is used in
+ the synchronization.
+
+ The interface has a single abstract method:
+
+@itemlist(
+  @item{@rhombus(#,(@rhombus(as_evt, ~datum))()) --- produces an
+  @tech{synchronizable event} that can be used in @rhombus(Evt.sync).}
+)
+
+}
+
+@doc(
+  method (obj :: Synchronizable).as_evt() :: Evt
+){
+
+ Obtains a @tech{synchronizable event} for a
+ @rhombus(Synchronizable, ~class) object.
 
 }

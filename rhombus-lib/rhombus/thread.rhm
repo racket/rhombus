@@ -8,6 +8,7 @@ export:
   Thread
   Semaphore
   Channel
+  Synchronizable
   except_space class:
     evt.ProgressEvt
     evt.CommitEvt
@@ -114,6 +115,11 @@ namespace ~open:
       override property handle: hand
       private override property sync_handle: rkt.#{wrap-evt}(hand, fun (e): this)
 
+interface Synchronizable:
+  extends evt.Evt
+  override property handle: rkt.#{guard-evt}(fun (): as_evt().handle)
+  method as_evt() :~ evt.Evt
+
 class AlwaysEvt():
   implements evt.Evt
   private implements evt._Evt
@@ -132,6 +138,8 @@ namespace Evt:
   export:
     rename:
       evt.Evt.sync as sync
+      evt.Evt.wrap as wrap
+      evt.WrapReturn as WrapReturn
     always
     never
 
