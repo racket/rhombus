@@ -44,7 +44,7 @@ interface Evt:
     def hand:
       match return
       | #'tail: base.#{handle-evt}(h(this), wr_fun)
-      | #'no_wrap: base.#{wrap-evt}(h(this), wr_fun)
+      | #'no_break: base.#{wrap-evt}(h(this), wr_fun)
     WrapEvt(hand)
 
 enum WrapReturn:
