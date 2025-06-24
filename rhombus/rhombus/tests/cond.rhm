@@ -471,3 +471,14 @@ check:
 check:
   cond:«»
   ~throws "no successful case"
+
+// `~else` only
+check:
+  cond
+  | ~else: "else"
+  ~is "else"
+
+check:
+  cond
+  | ~else "else"
+  ~is "else"

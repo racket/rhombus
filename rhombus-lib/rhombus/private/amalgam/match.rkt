@@ -88,7 +88,7 @@
          (relocate+reraw
           (respan stx)
           #`(begin
-              (rhombus-expression (#,group-tag in ...))
+              (void (rhombus-expression (#,group-tag in ...)))
               (match-fallthrough 'form-id '#,(syntax-srcloc (respan stx)))))
          #'())]
        [(form-id in ...+ (_::alts clause ...))

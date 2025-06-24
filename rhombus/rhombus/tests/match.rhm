@@ -98,3 +98,38 @@ check:
 check:
   match error("here"):«»
   ~throws "here"
+
+check:
+  match values(1, 2):«»
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 1",
+    "received: 2",
+  )
+
+// `~else` only
+check:
+  match 1
+  | ~else: "else"
+  ~is "else"
+
+check:
+  match 1
+  | ~else "else"
+  ~is "else"
+
+check:
+  match error("here")
+  | ~else: "else"
+  ~throws "here"
+
+check:
+  match values(1, 2)
+  | ~else: "else"
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 1",
+    "received: 2",
+  )
