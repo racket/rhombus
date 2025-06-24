@@ -23,6 +23,7 @@
          "pack.rkt"
          "parens.rkt"
          "forwarding-sequence.rkt"
+         "sequence-pattern.rkt"
          (only-in "static-info.rkt" static-infos-or)
          (rename-in "ellipsis.rkt"
                     [... rhombus...])
@@ -385,7 +386,8 @@
                                              (cond
                                                [(eq? kind 'multi)
                                                 #`(_ #,@ps)]
-                                               [(and (pair? ps) (null? (cdr ps)))
+                                               [(and (pair? ps) (null? (cdr ps))
+                                                     (not (is-sequence-pattern? (car ps))))
                                                 (car ps)]
                                                [else
                                                 (raise-syntax-error #f

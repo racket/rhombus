@@ -1342,3 +1342,11 @@ check:
   match '1'
   | '$(f :: Foo)': f.result
   ~is Pair(1, 2)
+
+check:
+  ~eval
+  syntax_class Nonsense:
+    kind: ~term
+    fields
+  | '$(term_option_sequence | '~foo')'
+  ~throws "not a single-term pattern"
