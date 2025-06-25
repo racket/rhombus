@@ -333,3 +333,8 @@ check:
     "expected: 2",
     "received: 1",
   )
+
+// check evaluation order in `matches`
+check:
+  error("left") matches (_ :: satisfying(error("right")))
+  ~throws "left"

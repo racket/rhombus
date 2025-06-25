@@ -61,7 +61,6 @@ check:
   #false is_a satisfying(fun (): #false)
   ~throws values(error.annot_msg(), error.annot("Function.of_arity(1)").msg)
 
-
 block:
   check:
     def List(_) :: List = [1]
@@ -347,3 +346,20 @@ block:
   let [str, ...] = ["a", "ab", "abc"]
   check:
     [str :: converting(fun (x): x.length()), ...] ~is [1, 2, 3]
+
+// check evaluation order in `::`/`is_a`
+check:
+  error("left") :: satisfying(error("right"))
+  ~throws "left"
+
+check:
+  error("left") is_a satisfying(error("right"))
+  ~throws "left"
+
+check:
+  error("left") :: converting(fun (x :: satisfying(error("right"))): x)
+  ~throws "left"
+
+check:
+  error("left") is_a converting(fun (x :: satisfying(error("right"))): x)
+  ~throws "left"

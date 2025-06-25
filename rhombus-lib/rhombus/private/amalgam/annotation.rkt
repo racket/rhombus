@@ -637,7 +637,8 @@
      (values
       (syntax-parse #'t.parsed
         [c-parsed::annotation-predicate-form
-         (let ([r #`(c-parsed.predicate #,(discard-static-infos form))])
+         (let ([r #`(let ([val #,(discard-static-infos form)])
+                      (c-parsed.predicate val))])
            (if (eq? mode 'invert)
                #`(not #,r)
                r))]

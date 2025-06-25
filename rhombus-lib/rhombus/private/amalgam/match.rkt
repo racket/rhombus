@@ -249,15 +249,14 @@
         [b::binding-form
          #:with b-impl::binding-impl #'(b.infoer-id () b.data)
          #:with b-info::binding-info #'b-impl.info
-         #`(let ()
+         #`(let ([val-in (let ([b-info.name-id #,(discard-static-infos form)])
+                           b-info.name-id)])
              (b-info.oncer-id b-info.data)
-             (let ([val-in (let ([b-info.name-id #,(discard-static-infos form)])
-                             b-info.name-id)])
-               (b-info.matcher-id val-in
-                                  b-info.data
-                                  if/blocked
-                                  #,(eq? mode 'normal)
-                                  #,(not (eq? mode 'normal)))))])
+             (b-info.matcher-id val-in
+                                b-info.data
+                                if/blocked
+                                #,(eq? mode 'normal)
+                                #,(not (eq? mode 'normal))))])
       #'t.tail)]))
 
 (define-syntax matches
