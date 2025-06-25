@@ -21,7 +21,7 @@
 @rhombus(body) sequence if so. If @rhombus(test_expr) produces
 @rhombus(#false), then @rhombus(body) is skipped and @rhombus(failure_body)
 is evaluated, instead. This is equivalent to
-@rhombus(if $test_expr | $body ... | $failure_body ...), and is primarily
+@rhombus(if test_expr | body ... | failure_body ...), and is primarily
 useful when @rhombus(body) is much more complex than @rhombus(failure_body)
 or contains a mixture of definitions and additional @rhombus(guard) forms
 interleaved with each other.
@@ -44,17 +44,17 @@ Static information works the same way as it would in an equivalent
 
 @doc(
   ~nonterminal:
-    test_bind: block expr
+    test_values_bind: def values_bind ~defn
     target_expr: block expr
     target_body: block body
     failure_body: block body
     body: block body
-  defn.sequence_macro 'guard.let $test_bind = $target_expr
+  defn.sequence_macro 'guard.let $test_values_bind = $target_expr
                        | $failure_body
                          ...
                        $body
                        ...'
-  defn.sequence_macro 'guard.let $test_bind:
+  defn.sequence_macro 'guard.let $test_values_bind:
                          $target_body
                          ...
                        | $failure_body
@@ -63,10 +63,10 @@ Static information works the same way as it would in an equivalent
                        ...'
 ){
 
- Checks that @rhombus(target_expr) produces a value that matches
-@rhombus(test_bind) and makes the bindings of @rhombus(test_bind)
+ Checks that @rhombus(target_expr) produces values that match
+@rhombus(test_values_bind) and makes the bindings of @rhombus(test_values_bind)
 available in the subsequent @rhombus(body) sequence. If
-@rhombus(target_expr) does not match @rhombus(test_bind), then the
+@rhombus(target_expr) does not match @rhombus(test_values_bind), then the
 @rhombus(body) sequence is skipped and @rhombus(failure_body) is
 evaluated, instead. This is the pattern matching variant of
 @rhombus(guard), see its documentation for general advice on using

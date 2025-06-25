@@ -14,43 +14,51 @@
     result_body: block body
     result_expr: block expr
 
-  expr.macro 'match $target_expr
-              | $bind:
+  expr.macro 'match $target_expr:
+                $maybe_arity_decl
+              | $values_bind:
                   $result_body
                   ...
               | ...'
-  expr.macro 'match $target_expr
-              | $bind:
+  expr.macro 'match $target_expr:
+                $maybe_arity_decl
+              | $values_bind:
                   $result_body
                   ...
               | ...
               | ~else:
                   $result_body
                   ...'
-  expr.macro 'match $target_expr
-              | $bind:
+  expr.macro 'match $target_expr:
+                $maybe_arity_decl
+              | $values_bind:
                   $result_body
                   ...
               | ...
               | ~else $result_expr'
+
+  grammar maybe_arity_decl:
+    ~arity: $given_arity_num
+    ~arity $given_arity_num
+    #,(epsilon)
 ){
 
- Tries matching the result of @rhombus(target_expr) against each
- @rhombus(bind) in sequence, and as soon as one matches, returns the
+ Tries matching the results of @rhombus(target_expr) against each
+ @rhombus(values_bind) in sequence, and as soon as one matches, returns the
  result of the corresponding @rhombus(result_body) block. The keyword
- @rhombus(~else) can be used as a synonym for @rhombus(_, ~bind) (which matches
- any value without binding any identifiers) in the last clause.
+ @rhombus(~else) can be used as a synonym for a pattern that always
+ matches without binding any identifiers in the last clause.
 
- Typically, a @rhombus(bind) imposes requires on a value and binds
+ Typically, a @nontermref(bind) in @rhombus(values_bind) imposes requirement on a value and binds
  some number of identifiers as a result of a successful match. For
- example, a literal number works as a @rhombus(bind) pattern, but it
- binds zero identifiers. An identifier as a @rhombus(bind) pattern
- matches any value and binds the identifier the the matching value. A
- list form is a @rhombus(bind) pattern with subpatterns as its
+ example, a literal number works as a @nontermref(bind) pattern, but it
+ binds zero identifiers. An identifier as a @nontermref(bind) pattern
+ matches any value and binds the identifier to the matching value. A
+ list form is a @nontermref(bind) pattern with subpatterns as its
  elements, and it matches a list with the right number of elements that
- match match the corresponding pattern. A @rhombus(when, ~bind) or
+ match the corresponding pattern. A @rhombus(when, ~bind) or
  @rhombus(unless, ~bind) can impose a side condition on a match.
- The set of @rhombus(bind) forms is extensible, so it cannot be
+ The set of @nontermref(bind) forms is extensible, so it cannot be
  completely enumerated here.
 
 @examples(
@@ -70,9 +78,9 @@
     | n when n > 4: "ok"
 )
 
- If no @rhombus(target_expr) produces a true value and there is no
+ If no @rhombus(values_bind) matches the values and there is no
  @rhombus(~else) clause, a run-time exception is thrown. In that case,
- when all of the @rhombus(bind) forms are syntax-object patterns, the
+ when all of the @rhombus(values_bind) forms are single-value syntax-object patterns, the
  generated exception's message may be specialized to report the expected
  pattern, instead of just reporting that no cases matched.
 
@@ -85,7 +93,7 @@
     | '4': "four"
 )
 
- If an initial segment of @rhombus(bind) patterns are ``literal-like''
+ If an initial segment of single-value @rhombus(values_bind) patterns are ``literal-like''
  or combinations of such patterns with @rhombus(||, ~bind), then the
  match is implemented as a case dispatch, and a match is found with
  logarithmic rather than linear time complexity in the number of
@@ -104,13 +112,54 @@
       | ~else: "more"
 )
 
+ Since each clause is allowed to use a multiple-value
+ @rhombus(values_bind) pattern, @rhombus(target_expr) is also allowed
+ to produce multiple values. All clauses in a @rhombus(match) form
+ must match the same number of values, otherwise a syntax error is
+ reported. When no clause or only @rhombus(~else) clause is present,
+ @rhombus(target_expr) is expected to produce one value, but this can
+ be overridden by an optional @rhombus(maybe_arity_decl)
+ declaration. The @rhombus(given_arity_num) number must be a literal
+ nonnegative integer.@margin_note{If a macro expands into a
+ @rhombus(match) form that matches a known number of multiple values,
+ and the expansion can produce no clauses, it is recommended that you
+ should explicitly include the @rhombus(maybe_arity_decl), so that a
+ proper fallthrough error is thrown instead of an arity error.}
+
+@examples(
+  match values(1, 2)
+  | (1, 1): "both one"
+  | (1, 2): "one and two"
+  | (2, 2): "both two"
+  match 1
+  | ~else: "one value"
+  match 1
+  | _: "one value"
+  ~error:
+    match 1:
+      ~arity: 2
+    | ~else: "two values"
+  match values(1, 2):
+    ~arity: 2
+  | ~else: "two values"
+  match values(1, 2)
+  | (_, _): "two values"
+  ~error:
+    match values(1, 2)
+    | ~else: "one value"
+)
+
  Static information for @rhombus(target_expr) is propagated to each
- @rhombus(bind).
+ @rhombus(values_bind).
 
 @examples(
   use_static
   match (["apple", "banana"] :: List.of(String))
   | [s, ...]: [s.length(), ...]
+  match values(["apple", "banana"] :: List.of(String),
+               [1, 2] :: List.of(Int))
+  | ([s, ...], [i, j]):
+      values([s.length(), ...], i < j)
 )
 
 }
@@ -128,7 +177,7 @@
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr) matches
- @rhombus(bind), @rhombus(#false) otherwise. Equivalent to
+ @nontermref(bind), @rhombus(#false) otherwise. Equivalent to
  @rhombus(expr is_a matching(bind)). The operator combination
  @rhombus(!matches) inverts the test. Either form works as a
  @tech{repetition} given a repetition to match.

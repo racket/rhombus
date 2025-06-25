@@ -150,11 +150,17 @@ identifiers, expressions, or binding patterns.
 @doc(
   ~nonterminal_key: def ~defn
   grammar bind
+  grammar values_bind:
+    $bind
+    #,(@rhombus(values, ~bind))($bind, ...)
+    ($bind, ...)
 ){
 
  In syntax descriptions, @rhombus(bind) refers to any binding form,
  which might be simply an identifier, a binding form annotated with
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
+ Some forms also handle multiple-value binding forms, as indicated by
+ @rhombus(values_bind).
 
  Besides all of the binding forms provided by @rhombuslangname(rhombus),
  new ones can be defined with @top_rhombus(bind.macro).

@@ -7,7 +7,6 @@
          "else-clause.rkt"
          "static-info.rkt"
          "parens.rkt"
-         "realm.rkt"
          "srcloc-error.rkt")
 
 (provide (rename-out [rhombus-if if]
@@ -51,13 +50,7 @@
                   e::else-clause))
         (define rhs-es (map enforest-expression-block
                             (syntax->list #'((tag rhs ...) ...))))
-        (define els-e (syntax-parse #'e.parsed
-                        #:literals (rhombus-body-at)
-                        [(rhombus-body-at tag else-rhs ...)
-                         (enforest-expression-block #'(tag else-rhs ...))]
-                        [(rhombus-expression g)
-                         (enforest-expression-block #'g)]
-                        [_ #'e.parsed]))
+        (define els-e (enforest-expression-block #'e.rhs))
         (values
          (with-syntax ([(rhs ...) (map discard-static-infos rhs-es)])
            (wrap-static-info*

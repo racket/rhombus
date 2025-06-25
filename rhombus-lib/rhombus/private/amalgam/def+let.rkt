@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/name-parse
                      "tag.rkt"
                      "srcloc.rkt")
          "definition.rkt"
@@ -9,8 +8,7 @@
          "parse.rkt"
          "static-info.rkt"
          "forwarding-sequence.rkt"
-         (only-in "values.rkt"
-                  [values rhombus-values])
+         (submod "values.rkt" for-parse)
          (submod "equal.rkt" for-parse)
          "parens.rkt"
          "if-blocked.rkt")
@@ -23,15 +21,6 @@
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(begin-for-syntax
-  (define-syntax-class :values-id
-    #:attributes (name)
-    #:description "the literal `values`"
-    #:opaque
-    (pattern ::name
-             #:when (free-identifier=? (in-binding-space #'name)
-                                       (bind-quote rhombus-values)))))
-
 (define-for-syntax (make-def #:make-wrap-definition [make-wrap-definition (lambda (stx) values)]
                              #:check-context [check-context void]
                              #:check-bind-uses [check-bind-uses void])
@@ -41,12 +30,12 @@
       (define wrap-definition (make-wrap-definition stx))
       (syntax-parse stx
         #:datum-literals (group)
-        [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block body ...)))
+        [(form-id (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block body ...)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'rhs
                                    wrap-definition
                                    #:check-bind-uses check-bind-uses)]
-        [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
+        [(form-id (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
          (check-multiple-equals stx)
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)

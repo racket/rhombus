@@ -18,7 +18,7 @@
   ~nonterminal:
     expected_expr: block expr
     expected_body: block body
-    expected_bind: def lhs_bind ~defn
+    expected_values_bind: def values_bind ~defn
     evaluator_expr: block expr
   expr.macro 'check:
                 $maybe_eval
@@ -44,8 +44,8 @@
     ~is_a: $annot
     ~prints_like $expected_expr
     ~prints_like: $expected_body; ...
-    ~matches $expected_bind
-    ~matches: $expected_bind
+    ~matches $expected_values_bind
+    ~matches: $expected_values_bind
     ~prints $expected_expr
     ~prints: $expected_body; ...
     ~throws $expected_expr
@@ -76,8 +76,8 @@
 
  @item{In @rhombus(~matches) mode, checks that the original result is
   not an exception, that the number of result values matches the number of
-  supplied @rhombus(expected_bind)s, and that each value matches the
-  corresponding @rhombus(expected_bind).}
+  supplied @nontermref(bind)s in @rhombus(expected_values_bind), and that
+  each value matches the corresponding @nontermref(bind).}
 
  @item{In @rhombus(~prints) mode, evaluates the @rhombus(expected_expr)
   or @rhombus(expected_body) in a mode that captures output to

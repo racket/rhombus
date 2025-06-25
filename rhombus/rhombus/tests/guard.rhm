@@ -46,7 +46,6 @@ check:
     x + y
   ~is 3
 
-
 check:
   block:
     guard.let Point(x, y) = #false
@@ -67,7 +66,6 @@ check:
     z
   ~is 3
 
-
 check:
   block:
     guard.let Point(x, y):
@@ -85,6 +83,26 @@ check:
     | 100
     x + y
   ~is 3
+
+check:
+  block:
+    guard.let (Point(x, y),
+               Point(z, w)):
+      values(#false,
+             #false)
+    | 100
+    x + y + z + w
+  ~is 100
+
+check:
+  block:
+    guard.let values(Point(x, y),
+                     Point(z, w)):
+      values(Point(1, 2),
+             Point(3, 4))
+    | 100
+    x + y + z + w
+  ~is 10
 
 check:
   ~eval

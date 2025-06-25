@@ -76,3 +76,11 @@ look more the same:
     n
     s
 )
+
+The @rhombus(match) form also supports matching multiple values this
+way.
+
+@examples(
+  match values(1, "apple")
+  | (n, s): n + s.length()
+)

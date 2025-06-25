@@ -84,7 +84,6 @@ block:
     | s: s.length()
     ~is 1
   check:
-    use_static
     match "s"
     | _ :: Int: "can't happen"
     | s: s.length()
@@ -99,15 +98,6 @@ check:
   match error("here"):«»
   ~throws "here"
 
-check:
-  match values(1, 2):«»
-  ~throws values(
-    "result arity mismatch",
-    "expected number of values not received",
-    "expected: 1",
-    "received: 2",
-  )
-
 // `~else` only
 check:
   match 1
@@ -119,17 +109,227 @@ check:
   | ~else "else"
   ~is "else"
 
+
 check:
   match error("here")
   | ~else: "else"
   ~throws "here"
 
+// multiple-value patterns
 check:
-  match values(1, 2)
-  | ~else: "else"
+  match values()
+  | (): "first"
+  | values(): "second"
+  ~is "first"
+
+block:
+  fun matcher(x):
+    match x
+    | 1: "1"
+    | (2): "2"
+    | values(3): "3"
+  check:
+    matcher(1) ~is "1"
+    matcher(2) ~is "2"
+    matcher(3) ~is "3"
+    matcher(4) ~throws "no matching case"
+
+block:
+  fun matcher(x, y):
+    match values(x, y)
+    | (1, 1): "1, 1"
+    | values(2, 2): "2, 2"
+    | ~else: "other"
+  check:
+    matcher(1, 1) ~is "1, 1"
+    matcher(2, 2) ~is "2, 2"
+    matcher(3, 3) ~is "other"
+
+block:
+  fun is_same_length(xs, ys):
+    match values(xs, ys)
+    | ([], []): #true
+    | ([_, _, ...], []): #false
+    | ([], [_, _, ...]): #false
+    | ([_, x, ...], [_, y, ...]):
+        is_same_length([x, ...], [y, ...])
+  check:
+    is_same_length([], []) ~is #true
+    is_same_length([1, 2], [3, 4]) ~is #true
+    is_same_length([1], [2, 3, 4]) ~is #false
+    is_same_length([1, 2, 3], [4]) ~is #false
+    is_same_length("oops", "not list") ~throws "no matching case"
+
+// explicit `~arity` declaration
+check:
+  match values():
+    ~arity: 0
+  | (): ""
+  ~is ""
+
+check:
+  match 1:
+    ~arity 1
+  | 1: "one"
+  ~is "one"
+
+check:
+  match values(1, 2):
+    ~arity: 2
+  | (1, 2): "one, two"
+  ~is "one, two"
+
+check:
+  match values(1, 2, 3):
+    ~arity 3
+  | (1, 2, 3): "one, two, three"
+  ~is "one, two, three"
+
+// correctness: patterns are matched left-to-right
+check:
+  match values(1, 2, 3)
+  | (_ :: converting(fun (x): println("first:", x); x),
+     _ :: converting(fun (x): println("second:", x); x),
+     _ :: converting(fun (x): println("third:", x); x)):
+       #void
+  ~prints "first: 1"
+    ++ "\n" ++ "second: 2"
+    ++ "\n" ++ "third: 3"
+    ++ "\n"
+
+// make sure static info propagates, in multiple-value patterns
+block:
+  use_static
+  check:
+    match values("hello", #"world", [1, 2], PairList[3, 4, 5])
+    | (s, bs, l, pl):
+        values(s.length(), bs.length(), l.length(), pl.length())
+    ~is values(5, 5, 2, 3)
+  check:
+    match values("hello", #"world", [1, 2], PairList[3, 4, 5])
+    | (_ :: Char, _ :: Byte, _ :: Int, _ :: Int):
+        "cannot happen"
+    | (s, bs, l, pl):
+        values(s.length(), bs.length(), l.length(), pl.length())
+    ~is values(5, 5, 2, 3)
+
+// make sure static info does *not* propagate, in multiple-value
+// patterns, when wrong number of values
+check:
+  ~eval
+  use_static
+  match "hello"
+  | (s, bs): s.length()
+  ~throws "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  match values("hello", #"world")
+  | s: s.length()
+  ~throws "no such field or method (based on static information)"
+
+// patterns with inconsistent arity shouldn't compile at all
+check:
+  ~eval
+  match 1
+  | (): "0 values"
+  | _: "1 value"
+  ~throws values(
+    "all clauses must match the same number of values",
+    "previous clauses match 0 values, but current clause matches 1 value",
+  )
+
+check:
+  ~eval
+  match 1
+  | 1: "value is 1"
+  | 2: "value is 2"
+  | _: "1 value"
+  | (_, _): "2 values"
+  ~throws values(
+    "all clauses must match the same number of values",
+    "previous clauses match 1 value, but current clause matches 2 values",
+  )
+
+check:
+  ~eval
+  match 1:
+    ~arity: 0
+  | _: "1 value"
+  ~throws values(
+    "current clause is inconsistent with declared arity",
+    "arity is declared to be 0, but current clause matches 1 value",
+  )
+
+check:
+  ~eval
+  match 1:
+    ~arity 1
+  | _: "1 value"
+  | (_, _): "2 values"
+  ~throws values(
+    "current clause is inconsistent with declared arity",
+    "arity is declared to be 1, but current clause matches 2 values",
+  )
+
+// when wrong number of values, produce arity error
+check:
+  match values(1, 2):
+  | _: "one value"
   ~throws values(
     "result arity mismatch",
     "expected number of values not received",
     "expected: 1",
     "received: 2",
+  )
+
+check:
+  match values(1, 2)
+  | ~else: "one value"
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 1",
+    "received: 2",
+  )
+
+check:
+  match values(1, 2):«»
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 1",
+    "received: 2",
+  )
+
+check:
+  match 1
+  | (_, _): "two values"
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 2",
+    "received: 1",
+  )
+
+check:
+  match 1:
+    ~arity: 2
+  | ~else: "two values"
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 2",
+    "received: 1",
+  )
+
+check:
+  match 1:
+    ~arity: 2
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 2",
+    "received: 1",
   )

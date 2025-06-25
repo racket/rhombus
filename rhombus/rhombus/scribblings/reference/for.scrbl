@@ -7,7 +7,7 @@
 
 @doc(
   ~nonterminal:
-    lhs_bind: def ~defn
+    rhs_expr: block expr
 
   expr.macro 'for $maybe_each:
                 $clause_or_body
@@ -39,8 +39,8 @@
     $other_for_clause
     $body
   grammar bind_each:
-    $lhs_bind in $expr
-    $lhs_bind:
+    $values_bind in $rhs_expr
+    $values_bind:
       $body
       ...
   grammar expr_or_block:
@@ -49,8 +49,8 @@
       $body
       ...
   grammar bind_let:
-    $lhs_bind = $expr
-    $lhs_bind:
+    $values_bind = $rhs_expr
+    $values_bind:
       $body
       ...
 ){
@@ -71,10 +71,10 @@
  sequence; see also @rhombus(Sequence, ~annot) and @rhombus(statinfo_meta.sequence_constructor_key).
  A fresh @tech{instantiation} of the sequence is used each
  time the @rhombus(for) form is evaluated. Each element of that sequence is bound in turn to
- the @rhombus(lhs_bind) variables of the @rhombus(each, ~for_clause). If a sequence
+ the @rhombus(values_bind) bindings of the @rhombus(each, ~for_clause). If a sequence
  can have multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
- @rhombus(lhs_bind) can be a @rhombus(values, ~bind) pattern or just a
+ @rhombus(values_bind) can be a @rhombus(values, ~bind) pattern or just a
  parenthesized sequence of bindings to receive a matching number of
  element values.
 

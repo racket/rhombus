@@ -10,6 +10,7 @@ export:
   entry_point
   immediate_callee
   bind
+  values_bind
   annot
   reducer
   body
@@ -33,6 +34,7 @@ manual.nonterminal:
   entry_point: block
   immediate_callee: block
   bind: def ~defn
+  values_bind: def ~defn
   annot: ::
   reducer: for
   body: block

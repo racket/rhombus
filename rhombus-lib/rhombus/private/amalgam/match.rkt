@@ -8,17 +8,16 @@
          "binding.rkt"
          "parse.rkt"
          "else-clause.rkt"
-         "realm.rkt"
          "parens.rkt"
          (submod "quasiquote.rkt" for-match)
          (only-in "literal.rkt" literal-infoer)
          "if-blocked.rkt"
-         "nested-bindings.rkt"
          "static-info.rkt"
          "order.rkt"
          "order-primitive.rkt"
          "provide.rkt"
          "srcloc-error.rkt"
+         (submod "values.rkt" for-parse)
          "../version-case.rkt")
 
 ;; TEMP approximate `case/equal-always`
@@ -33,140 +32,210 @@
                      matches))
 
 (begin-for-syntax
-  (define-syntax-class :pattern-clause
-    #:attributes ([bind 1] rhs)
+  (define-syntax-class :arity-decl
+    #:description "arity declaration"
+    #:opaque
+    #:attributes (num)
     #:datum-literals (group)
-    (pattern (_::block (group bind ...
-                              (~and rhs (_::block . _)))))))
+    (pattern (group #:arity (_::block (group num:exact-nonnegative-integer))))
+    (pattern (group #:arity num:exact-nonnegative-integer)))
+
+  (define-syntax-class :pattern-clause
+    #:description "pattern clause"
+    #:opaque
+    #:attributes ([bind-g 1] rhs)
+    #:datum-literals (group)
+    (pattern (_::block (group (~optional _::values-id-bind) (_::parens bind-g ...)
+                              (~and rhs (_::block . _)))))
+    (pattern (_::block (group bind ...+
+                              (~and rhs (_::block . _))))
+             #:with (bind-g ...) #`((#,group-tag bind ...))))
+
+  ;; also checks consistent arity
+  (define (extract-arity stx given-arity clauses bss)
+    (define (n->vals n)
+      (string-append (number->string n)
+                     (if (eqv? n 1)
+                         " value"
+                         " values")))
+    (for/fold ([arity given-arity]
+               #:result (or arity 1))
+              ([clause (in-list clauses)]
+               [bs (in-list bss)])
+      (define current-arity (length bs))
+      (unless (or (not arity)
+                  (eqv? current-arity arity))
+        (raise-syntax-error
+         #f
+         (if given-arity
+             (string-append "current clause is inconsistent with declared arity;"
+                            "\n arity is declared to be " (number->string given-arity)
+                            ", but current clause matches " (n->vals current-arity))
+             (string-append "all clauses must match the same number of values;"
+                            "\n previous clauses match " (n->vals arity)
+                            ", but current clause matches " (n->vals current-arity)))
+         stx
+         clause))
+      current-arity)))
 
 (define-syntax match
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id in ...+ (alts-tag::alts
-                          clause::pattern-clause
-                          ...
-                          e::else-clause))
-        #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
-        (values
-         (handle-literal-case-dispatch
-          stx
-          #`(#,group-tag in ...)
-          #'(b ...)
-          #'(b.parsed ...)
-          #'(clause.rhs ...)
-          ;; `fallback-k` is called with the remaining non-literal patterns
-          (lambda (val-id statinfos bs b-parseds rhss)
-            (handle-normal-match
-             val-id statinfos bs b-parseds rhss
-             #'e.parsed)))
-         #'())]
-       [(form-id in ...+ (alts-tag::alts
-                          clause::pattern-clause
-                          ...))
-        #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
+       [(~or* (form-id in ...+
+                       (~and (_::block . _) arity-b)
+                       (~and (_::alts . _) clauses-a))
+              (form-id in ...+
+                       (~and (_::alts . _) clauses-a))
+              (form-id in ...+
+                       (_::block))
+              (form-id in ...+
+                       (~and (_::block . _) arity-b)))
+        #:do [(define given-arity
+                (and (attribute arity-b)
+                     (syntax-parse #'arity-b
+                       #:context stx
+                       [(_ arity-g::arity-decl) (syntax-e #'arity-g.num)])))
+              (define-values (clauses bss rhss else-expr)
+                (cond
+                  [(attribute clauses-a)
+                   (syntax-parse #'clauses-a
+                     #:context stx
+                     [(~or* (_ clause::pattern-clause
+                               ...
+                               e::else-clause)
+                            (_ clause::pattern-clause
+                               ...))
+                      (values (syntax->list #'(clause ...))
+                              (map syntax->list (syntax->list #'((clause.bind-g ...) ...)))
+                              (syntax->list #'(clause.rhs ...))
+                              (and (attribute e)
+                                   #'(rhombus-body-expression e.rhs)))])]
+                  [else
+                   (values '() '() '() #f)]))
+              (define arity (extract-arity stx given-arity clauses bss))]
+        #:with ((b::binding ...) ...) bss
         (define in-expr #`(#,group-tag in ...))
-        (define b-parseds-stx #'(b.parsed ...))
-        (define rhss-stx #'(clause.rhs ...))
-        (values
-         (handle-syntax-parse-dispatch
-          stx #'form-id in-expr b-parseds-stx rhss-stx
-          ;; thunk is called if any `b.parsed` is not a syntax pattern
-          (lambda ()
-            (handle-literal-case-dispatch
-             stx in-expr
-             #'(b ...) b-parseds-stx rhss-stx
-             ;; `fallback-k` is called with the remaining non-literal patterns
-             (lambda (val-id statinfos bs b-parseds rhss)
-               (handle-normal-match
-                val-id statinfos bs b-parseds rhss
-                #`(match-fallthrough 'form-id '#,(syntax-srcloc (respan stx))))))))
-         #'())]
-       [(form-id in ...+ (block-tag::block))
+        (define b-parsedss (map syntax->list (syntax->list #'((b.parsed ...) ...))))
         (values
          (relocate+reraw
           (respan stx)
-          #`(begin
-              (void (rhombus-expression (#,group-tag in ...)))
-              (match-fallthrough 'form-id '#,(syntax-srcloc (respan stx)))))
-         #'())]
-       [(form-id in ...+ (_::alts clause ...))
-        (for ([c (in-list (syntax->list #'(clause ...)))])
-          (syntax-parse c
-            [_::pattern-clause (void)]
-            [_ (raise-syntax-error #f
-                                   "expected a pattern followed by a result block"
-                                   c)]))]))))
+          (bind-target-expr
+           arity in-expr
+           (lambda (val-ids statinfoss)
+             (define (do-handle-normal-match b-parsedss rhss)
+               (handle-normal-match val-ids statinfoss
+                                    b-parsedss rhss
+                                    (or else-expr
+                                        #`(match-fallthrough 'form-id '#,(syntax-srcloc (respan stx))))))
+             (define (do-handle-literal-case-dispatch)
+               (handle-literal-case-dispatch val-ids b-parsedss rhss
+                                             ;; `fallback-k` is called with the remaining non-literal patterns
+                                             do-handle-normal-match))
+             (define (do-handle-syntax-parse-dispatch)
+               (handle-syntax-parse-dispatch #'form-id
+                                             val-ids b-parsedss rhss
+                                             do-handle-literal-case-dispatch))
+             (if (eqv? arity 1)
+                 (if (not else-expr)
+                     (do-handle-syntax-parse-dispatch)
+                     (do-handle-literal-case-dispatch))
+                 (do-handle-normal-match b-parsedss rhss)))))
+         #'())]))))
 
-(define-for-syntax (handle-normal-match val-id statinfos bs b-parseds rhss else-expr)
+(define-for-syntax (bind-target-expr arity in-expr
+                                     build-body-k)
+  (define val-ids (generate-temporaries
+                   (for/list ([_ (in-range arity)])
+                     'val)))
+  (define-values (parsed-expr statinfoss)
+    (syntax-parse in-expr
+      [e::expression
+       (define parsed-expr (rhombus-local-expand #'e.parsed))
+       (values (discard-static-infos parsed-expr)
+               (normalize-static-infos/values
+                arity
+                (extract-static-infos parsed-expr)))]))
+  #`(let-values ([(#,@val-ids) #,parsed-expr])
+      #,(build-body-k val-ids statinfoss)))
+
+(define-for-syntax (handle-normal-match val-ids statinfoss
+                                        b-parsedss rhss
+                                        else-expr)
   (for/foldr ([next else-expr])
-             ([b (in-list bs)]
-              [b-parsed (in-list b-parseds)]
+             ([b-parseds (in-list b-parsedss)]
               [rhs (in-list rhss)])
-    (syntax-parse b-parsed
-      [b-parsed::binding-form
-       #:with b-impl::binding-impl #`(b-parsed.infoer-id #,statinfos b-parsed.data)
-       #:with b-info::binding-info #'b-impl.info
+    (syntax-parse b-parseds
+      [(b-parsed::binding-form ...)
+       #:with (val-id ...) val-ids
+       #:with (statinfos ...) statinfoss
+       #:with (b-impl::binding-impl ...) #'((b-parsed.infoer-id statinfos b-parsed.data) ...)
+       #:with (b-info::binding-info ...) #'(b-impl.info ...)
+       (define rhs-body
+         #`(begin
+             (b-info.committer-id val-id b-info.evidence-ids b-info.data)
+             ...
+             (b-info.binder-id val-id b-info.evidence-ids b-info.data)
+             ...
+             (define-static-info-syntax/maybe b-info.bind-id b-info.bind-static-info ...)
+             ... ...
+             (rhombus-body-expression #,rhs)))
        ;; use `((lambda ....) ....)` to keep textual order
        #`((lambda (try-next)
-            (nested-bindings
-             match
-             try-next
-             #f ; failure
-             #t ; eager-bind?
-             (#,val-id b-info #,b #f)
-             (begin
-               (b-info.committer-id #,val-id b-info.evidence-ids b-info.data)
-               (b-info.binder-id #,val-id b-info.evidence-ids b-info.data)
-               (define-static-info-syntax/maybe b-info.bind-id b-info.bind-static-info ...)
-               ...
-               (rhombus-body-expression #,rhs))))
+            (b-info.oncer-id b-info.data)
+            ...
+            #,(for/foldr ([success rhs-body])
+                         ([b-info-matcher-id (in-list (syntax->list #'(b-info.matcher-id ...)))]
+                          [val-id (in-list val-ids)]
+                          [b-info-data (in-list (syntax->list #'(b-info.data ...)))])
+                #`(#,b-info-matcher-id #,val-id
+                                       #,b-info-data
+                                       if/blocked
+                                       #,success
+                                       (try-next))))
           (lambda () #,next))])))
 
-(define-for-syntax (handle-literal-case-dispatch stx in-expr
-                                                 bs-stx b-parseds-stx rhss-stx
+(define-for-syntax (handle-literal-case-dispatch val-ids
+                                                 b-parsedss rhss
                                                  fallback-k)
-  (syntax-parse in-expr
-    [e::expression
-     (define statinfos (extract-static-infos #'e.parsed))
-     (define (split-at lst idx)
-       (cond
-         [(eqv? idx 0)
-          (values '() lst)]
-         [else
-          (define-values (l-lst r-lst) (split-at (cdr lst) (sub1 idx)))
-          (values (cons (car lst) l-lst) r-lst)]))
-     (define bs (syntax->list bs-stx))
-     (define b-parseds (syntax->list b-parseds-stx))
-     (define rhss (syntax->list rhss-stx))
-     ;; index at which the initial literal segment ends, if any
-     (define maybe-idx
-       (for/fold ([maybe-idx #f])
-                 ([parsed (in-list b-parseds)]
-                  [idx (in-naturals 1)])
-         #:break (syntax-parse parsed
-                   [b::binding-form
-                    (not (free-identifier=? #'b.infoer-id #'literal-infoer))])
-         idx))
-     (relocate+reraw
-      (respan stx)
-      #`(let ([val #,(discard-static-infos #'e.parsed)])
-          #,(cond
-              [maybe-idx
-               (define rst-bs (list-tail bs maybe-idx))
-               (define-values (lit-parseds rst-parseds) (split-at b-parseds maybe-idx))
-               (define-values (lit-rhss rst-rhss) (split-at rhss maybe-idx))
-               #`(case/equal-always val
-                                    #,@(for/list ([parsed (in-list lit-parseds)]
-                                                  [rhs (in-list lit-rhss)])
-                                         (syntax-parse parsed
-                                           [b::binding-form
-                                            #:with ([datum _] ...) #'b.data
-                                            #`[(datum ...) (rhombus-body-expression #,rhs)]]))
-                                    [else #,(fallback-k #'val statinfos rst-bs rst-parseds rst-rhss)])]
-              [else
-               (fallback-k #'val statinfos bs b-parseds rhss)])))]))
+  (define (split-at lst idx)
+    (cond
+      [(eqv? idx 0)
+       (values '() lst)]
+      [else
+       (define-values (l-lst r-lst) (split-at (cdr lst) (sub1 idx)))
+       (values (cons (car lst) l-lst) r-lst)]))
+  (define (literal-binding? parsed)
+    (syntax-parse parsed
+      [b::binding-form
+       (free-identifier=? #'b.infoer-id #'literal-infoer)]))
+  ;; index at which the initial literal segment ends, if any
+  (define maybe-idx
+    (for/fold ([maybe-idx #f])
+              ([parseds (in-list b-parsedss)]
+               [idx (in-naturals 1)])
+      (unless (null? (cdr parseds))
+        (error "handle-literal-case-dispatch: must only apply to single-value pattern"))
+      #:break (not (literal-binding? (car parseds)))
+      idx))
+  (cond
+    [maybe-idx
+     (define-values (lit-parsedss rst-parsedss) (split-at b-parsedss maybe-idx))
+     (unless (or (null? rst-parsedss)
+                 (not (literal-binding? (caar rst-parsedss))))
+       (error "handle-literal-case-dispatch: literal bindings left over"))
+     (define-values (lit-rhss rst-rhss) (split-at rhss maybe-idx))
+     #`(case/equal-always #,(car val-ids)
+         #,@(for/list ([parseds (in-list lit-parsedss)]
+                       [rhs (in-list lit-rhss)])
+              (syntax-parse (car parseds)
+                [b::binding-form
+                 #:with ([datum _] ...) #'b.data
+                 #`[(datum ...) (rhombus-body-expression #,rhs)]]))
+         [else #,(fallback-k rst-parsedss rst-rhss)])]
+    [else
+     (fallback-k b-parsedss rhss)]))
 
 (define (match-fallthrough who loc)
   (raise-srcloc-error who "no matching case" loc))

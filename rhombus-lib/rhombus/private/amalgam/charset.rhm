@@ -90,11 +90,11 @@ class Charset(private _ranges):
     _Charset(
       recur loop(a = _ranges,
                  b = other._ranges):
-        match [a, b]
-        | [[], b]: b
-        | [a, []]: a
-        | [[[as, ae], ar, ...],
-           [[bs, be], br, ...]]:
+        match values(a, b)
+        | ([], b): b
+        | (a, []): a
+        | ([[as, ae], ar, ...],
+           [[bs, be], br, ...]):
             cond
             | bs .< as:
                 loop(b, a)
@@ -115,11 +115,11 @@ class Charset(private _ranges):
     _Charset(
       recur loop(a = _ranges,
                  b = other._ranges):
-        match [a, b]
-        | [[], b]: []
-        | [a, []]: []
-        | [[[as, ae], ar, ...],
-           [[bs, be], br, ...]]:
+        match values(a, b)
+        | ([], b): []
+        | (a, []): []
+        | ([[as, ae], ar, ...],
+           [[bs, be], br, ...]):
             cond
             | bs .< as:
                 loop(b, a)

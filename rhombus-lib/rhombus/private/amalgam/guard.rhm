@@ -90,7 +90,7 @@ namespace guard:
         match '$g.condition ...'
         | '$(gb :: GuardBindAndRightHandSide(who))':
             values(
-              'match $gb.rhs_expression
+              'match ($gb.rhs_expression)
                | $gb.bind ...: $g.success_body
                | ~else: $g.failure_body',
               ''

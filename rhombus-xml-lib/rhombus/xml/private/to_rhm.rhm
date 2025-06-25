@@ -27,8 +27,8 @@ fun prolog_to_rhm(prolog, keep_pi):
          ~post_misc: filter_pi([misc_to_rhm(post_misc), ...], keep_pi))
 
 fun element_to_rhm(e, normalize, keep_pi):
-  let PairList[attr, ...] = rkt.#{element-attributes}(e) 
-  let PairList[content, ...] = rkt.#{element-content}(e) 
+  let PairList[attr, ...] = rkt.#{element-attributes}(e)
+  let PairList[content, ...] = rkt.#{element-content}(e)
   Element(~srcloc: source_to_rhm(e),
           ~name: to_string(rkt.#{element-name}(e)),
           ~attributes: [attribute_to_rhm(attr), ...],
@@ -111,7 +111,7 @@ fun attribute_to_rhm(attr):
               if v is_a ReadableString
               | to_string(v)
               | v)
-  
+
 fun entity_to_rhm(e, normalize):
   let v = rkt.#{entity-text}(e)
   let srcloc = source_to_rhm(e)
@@ -142,7 +142,7 @@ fun normalize_text(content :: List, normalize):
                          ~text: String.append(t.text, ...))
         new_content.drop_last(1).add(new_t)
     let (new_content, tail_strs):
-      for fold (new_content :~ List = [], tail_strs :~ List = []) (c in content):        
+      for fold (new_content :~ List = [], tail_strs :~ List = []) (c in content):
         if new_content == [] || tail_strs == []:
         | values(new_content.add(c),
                  match c
@@ -158,13 +158,13 @@ fun normalize_text(content :: List, normalize):
 
 
 fun merge_srclocs(new_srcloc, srcloc):
-  match [new_srcloc, srcloc]
-  | [#false, srcloc]: srcloc
-  | [new_srcloc, #false]: new_srcloc
-  | [SrclocRange(Srcloc(src, line, col, offset, _),
+  match values(new_srcloc, srcloc)
+  | (#false, srcloc): srcloc
+  | (new_srcloc, #false): new_srcloc
+  | (SrclocRange(Srcloc(src, line, col, offset, _),
                  Srcloc(_, end_line, end_col, end_offset, _)),
      SrclocRange(Srcloc(_, line2, col2, offset2, _),
-                 Srcloc(_, end_line2 :~ Int, end_col2, end_offset2, _))]:
+                 Srcloc(_, end_line2 :~ Int, end_col2, end_offset2, _))):
       let new_line = math.min(line, line2)
       let new_col = math.min(col, col2)
       let new_offset = math.min(offset, offset2)
@@ -177,4 +177,3 @@ fun merge_srclocs(new_srcloc, srcloc):
       let new_end_offset = math.max(end_offset, end_offset2)
       SrclocRange(Srcloc(src, new_line, new_col, new_offset, new_end_offset - new_offset),
                   Srcloc(src, new_end_line, new_end_col, new_end_offset, #false))
-    

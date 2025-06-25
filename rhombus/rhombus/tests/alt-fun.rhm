@@ -94,9 +94,9 @@ block:
     let c2 = fun (): 2
     fun
     | (tmp1, & rst):
-        match [tmp1, rst]
-        | [[], _]: c0(rst)
-        | [_, []]: c1(tmp1)
+        match values(tmp1, rst)
+        | ([], _): c0(rst)
+        | (_, []): c1(tmp1)
     | ():
         let tmp2: [1]
         match tmp2
@@ -119,9 +119,9 @@ block:
     let c2 = fun (): 2
     fun
     | (tmp1, & rst):
-        match [tmp1, rst]
-        | [[], _]: c0(rst)
-        | [_, []]: c1(tmp1)
+        match values(tmp1, rst)
+        | ([], _): c0(rst)
+        | (_, []): c1(tmp1)
     | ():
         let tmp2: []
         match tmp2

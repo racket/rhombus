@@ -1,15 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     enforest/name-parse
                      "srcloc.rkt"
                      "tag.rkt")
          "for-clause.rkt"
          "parens.rkt"
          "parse.rkt"
-         "binding.rkt"
-         (rename-in "values.rkt"
-                    [values rhombus-values])
+         (submod "values.rkt" for-parse)
          (submod "membership-testable.rkt" in-operator)
          (submod "equal.rkt" for-parse))
 
@@ -22,14 +19,6 @@
                     keep_let))
 
 (begin-for-syntax
-  (define-syntax-class :values-id
-    #:attributes (name)
-    #:description "the literal `values`"
-    #:opaque
-    (pattern ::name
-             #:when (free-identifier=? (in-binding-space #'name)
-                                       (bind-quote rhombus-values))))
-
   (define (check-multiple-ins stx)
     (syntax-parse stx
       [(_ _ ... in::in (~seq _ ... more::in) ...+ _ ...)
@@ -46,9 +35,9 @@
   (define-splicing-syntax-class (:each-decl stx)
     #:datum-literals (group)
     #:attributes ([bind-g 1] blk)
-    (pattern (~seq (~optional _::values-id) (_::parens bind-g ...) (~and blk (_::block . _))))
+    (pattern (~seq (~optional _::values-id-bind) (_::parens bind-g ...) (~and blk (_::block . _))))
     (pattern (~and (~seq t ...)
-                   (~seq (~optional _::values-id) (_::parens bind-g ...) _::in expr ...+))
+                   (~seq (~optional _::values-id-bind) (_::parens bind-g ...) _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
              #:with blk #`(block (#,group-tag expr ...)))
     (pattern (~and (~seq t ...)
@@ -109,9 +98,9 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (~optional op::values-id) (_::parens g ...) (~and rhs (_::block . _)))
+       [(form-id (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block . _)))
         #`(#:let (g ...) rhs)]
-       [(form-id (~optional op::values-id) (_::parens g ...) _::equal rhs ...+)
+       [(form-id (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
         (check-multiple-equals stx)
         #`(#:let (g ...) (#,group-tag rhs ...))]
        [(form-id bind ...+ _::equal rhs ...+)

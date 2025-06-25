@@ -234,7 +234,7 @@
     [(_ (parsed #:rhombus/expr rhs))
      #'rhs]
     [(_ rhs)
-     (datum->syntax #f (list #'rhombus-expression (list #'group #'rhs)))]))
+     (datum->syntax #f (list #'rhombus-expression #'rhs))]))
 
 ;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body-sequence stx)

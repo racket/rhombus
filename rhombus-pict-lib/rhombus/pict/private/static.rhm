@@ -1748,11 +1748,11 @@ fun connect(~on: p :: Pict,
       if label
       | fun ([p, label, from, to]): retry(p, label, from, to, dt, n)
       | fun ([p, from, to]): retry(p, #false, from, to, dt, n)
-    let desc: p.identity
-    match [p, label]
-    | [_ :: NothingPict, _]:
+    let desc = p.identity
+    match values(p, label)
+    | (_ :: NothingPict, _):
         nothing
-    | [p :: _StaticPict, _ :: maybe(_StaticPict)]:
+    | (p :: _StaticPict, _ :: maybe(_StaticPict)):
         let (from_x, from_y) = from.maybe_in(p, dt, n)
         let (to_x, to_y) = to.maybe_in(p, dt, n)
         cond
@@ -2049,7 +2049,7 @@ fun group_by(elems, n):
     | ~else:
         let [l0, & ls] = loop(elems.rest, i + 1)
         [[elems.first] ++ l0, & ls]
-  
+
 // ----------------------------------------
 
 fun explain_bbox(p :: Pict,

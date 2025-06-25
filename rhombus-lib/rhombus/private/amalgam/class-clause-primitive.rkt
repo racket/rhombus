@@ -21,7 +21,7 @@
          "var-decl.rkt"
          (only-in "function.rkt" fun)
          (submod "function.rkt" for-method)
-         (only-in (submod "function-parse.rkt" for-build) :values-id)
+         (submod "values.rkt" for-parse)
          "op-literal.rkt"
          "not-block.rkt"
          "realm.rkt")
@@ -192,7 +192,7 @@
        (for/list ([ret (syntax->list rets-stx)])
          (syntax-parse ret
            #:datum-literals (group)
-           [(op::annotate-op (~optional _::values-id) (~and p (_::parens (~and g (group ret-seq ...)) ...)))
+           [(op::annotate-op (~optional _::values-id-annot) (~and p (_::parens (~and g (group ret-seq ...)) ...)))
             #:when (attribute op.check?)
             #:with (id ...) (map relocate+reraw
                                  (syntax->list #'(g ...))
@@ -608,7 +608,7 @@
       [(_ _::property (~var m (:property-impl #'#:protected-property))) #'m.form]
       [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
       [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
-      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]      
+      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]
       [(_ (~var m (:method-impl stx #'#:protected))) #'m.form])))
 
 (define-class-clause-syntax protected

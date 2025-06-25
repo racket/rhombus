@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "srcloc.rkt")
          "provide.rkt"
          "binding.rkt"
@@ -33,6 +34,10 @@
                       rhombus/statinfo)
                      (rename-out
                       [call-with-values call_with_values])))
+
+(module+ for-parse
+  (provide (for-syntax :values-id-annot
+                       :values-id-bind)))
 
 (define-syntax rhombus-values
   (expression-transformer
@@ -112,6 +117,18 @@
                             (string-append "not allowed as an annotation (except as a non-nested"
                                            " annotation by forms that specifically recognize it)")
                             #'head)]))))
+
+(begin-for-syntax
+  (define-syntax-rule (define-values-id-class class in-space quote)
+    (define-syntax-class class
+      #:attributes (name)
+      #:description "the literal `values`"
+      #:opaque
+      (pattern ::name
+               #:when (free-identifier=? (in-space #'name)
+                                         (quote values)))))
+  (define-values-id-class :values-id-annot in-annotation-space annot-quote)
+  (define-values-id-class :values-id-bind in-binding-space bind-quote))
 
 (begin-for-syntax
   (define-splicing-syntax-class :accum

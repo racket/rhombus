@@ -94,10 +94,10 @@
                         (not (identifier? #'term))
                         (not (unquote-binding-id? #'term))
                         (free-identifier=? (in-unquote-binding-space #'term)
-                                           (unquote-bind-quote _)))))  
+                                           (unquote-bind-quote _)))))
   (define-splicing-syntax-class (:cut dotted?)
     #:datum-literals (op)
-    (pattern seq::dotted-operator-or-identifier-sequence             
+    (pattern seq::dotted-operator-or-identifier-sequence
              #:when (not dotted?)
              #:with (~var name (:hier-name-seq in-name-root-space in-unquote-binding-space name-path-op name-root-ref)) #'seq
              #:when (free-identifier=? (in-unquote-binding-space #'name.name)
@@ -518,7 +518,7 @@
                   (lambda ($-id e in-e)
                     (handle-escape/match-head $-id e in-e 'group1 #f))
                   ;; handle-multi-escape:
-                  (lambda ($-id e in-e splice?)                    
+                  (lambda ($-id e in-e splice?)
                     (define kind
                       (syntax-parse in-e
                         [(head . _) (if (eq? (syntax-e #'head) 'block)
@@ -1225,44 +1225,44 @@
          (define-syntaxes (sid ...) sid-ref)
          ...)]))
 
-(define-for-syntax (handle-syntax-parse-dispatch stx who in-expr binds-stx rhss-stx default-k)
-  (define binds (syntax->list binds-stx))
+(define-for-syntax (handle-syntax-parse-dispatch who
+                                                 val-ids b-parsedss rhss
+                                                 default-k)
   (cond
-    [(for/and ([bind-stx (in-list binds)])
-       (syntax-parse bind-stx
-         [b::binding-form
-          (free-identifier=? #'b.infoer-id #'syntax-infoer)]))
+    [(and (not (null? b-parsedss))
+          (for/and ([parseds (in-list b-parsedss)])
+            (unless (null? (cdr parseds))
+              (error "handle-syntax-parse-dispatch: must only apply to single-value pattern"))
+            (syntax-parse (car parseds)
+              [b::binding-form
+               (free-identifier=? #'b.infoer-id #'syntax-infoer)])))
      ;; since all bindings are syntax patterns, generate a `syntax-parse` form
      ;; without an "else" case, so it synthesize a message when matching fails
      (define repack-multi?
-       (for/or ([bind (in-list binds)])
-         (syntax-parse bind
+       (for/or ([parseds (in-list b-parsedss)])
+         (syntax-parse (car parseds)
            [b::binding-form
             (syntax-parse #'b.data
               [(annotation-str pattern repack . _)
                (free-identifier=? #'repack #'repack-as-multi)])])))
-     (relocate+reraw
-      (respan stx)
-      #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) (rhombus-expression #,in-expr))
-          #:disable-colon-notation
-          #:context '#,who
-          #,@(for/list ([bind (in-list binds)]
-                        [rhs (in-list (syntax->list rhss-stx))])
-               (syntax-parse bind
-                 [b::binding-form
-                  #:with b-impl::binding-impl #'(b.infoer-id () b.data)
-                  (syntax-parse #'b-impl.info
-                    [b::binding-info
-                     (syntax-parse #'b.data
-                       [(pattern repack tmp-ids (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...))
-                        #`[#,(if (and repack-multi?
-                                      (free-identifier=? #'repack #'repack-as-term))
-                                 #`((~datum multi) ((~datum group) pattern))
-                                 #'pattern)
-                           (define id id-ref) ...
-                           (define-syntaxes (sid ...) sid-ref)
-                           ...
-                           #,(syntax-parse rhs
-                               [(block-tag g ...)
-                                #'(rhombus-body-at block-tag g ...)])]])])]))))]
-    [else (default-k)]))
+     #`(syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,(car val-ids))
+         #:disable-colon-notation
+         #:context '#,who
+         #,@(for/list ([parseds (in-list b-parsedss)]
+                       [rhs (in-list rhss)])
+              (syntax-parse (car parseds)
+                [b::binding-form
+                 #:with b-impl::binding-impl #'(b.infoer-id () b.data)
+                 #:with b-info::binding-info #'b-impl.info
+                 #:with (pattern repack tmp-ids (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)) #'b-info.data
+                 #`[#,(if (and repack-multi?
+                               (free-identifier=? #'repack #'repack-as-term))
+                          #'((~datum multi) ((~datum group) pattern))
+                          #'pattern)
+                    (define id id-ref)
+                    ...
+                    (define-syntaxes (sid ...) sid-ref)
+                    ...
+                    (rhombus-body-expression #,rhs)]])))]
+    [else
+     (default-k)]))

@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      racket/keyword
                      syntax/parse/pre
-                     enforest/name-parse
                      enforest/syntax-local
                      shrubbery/print
                      "treelist.rkt"
@@ -49,8 +48,7 @@
          "if-blocked.rkt"
          "realm.rkt"
          "mutability.rkt"
-         (only-in "values.rkt"
-                  [values rhombus-values])
+         (submod "values.rkt" for-parse)
          "rhombus-primitive.rkt")
 
 (module+ for-build
@@ -62,7 +60,6 @@
                        :ret-annotation/prepass
                        :maybe-arg-rest
                        :non-...-binding
-                       :values-id
                        check-arg-for-unsafe
                        build-function
                        build-case-function
@@ -250,21 +247,13 @@
                      predicate? ; all predicate annotations?
                      count))    ; the expected number of values
 
-  (define-syntax-class :values-id
-    #:attributes (name)
-    #:description "the literal `values`"
-    #:opaque
-    (pattern ::name
-             #:when (free-identifier=? (in-annotation-space #'name)
-                                       (annot-quote rhombus-values))))
-
   (define-splicing-syntax-class (:ret-annotation [ctx empty-annot-context])
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
                   converter    ; a `converter` struct, or `#f`
                   annot-str)   ; the raw text of annotation, or `#f`
     #:description "return annotation"
     #:datum-literals (group)
-    (pattern (~seq ann-op::annotate-op (~optional op::values-id) (~and p (_::parens g ...)))
+    (pattern (~seq ann-op::annotate-op (~optional op::values-id-annot) (~and p (_::parens g ...)))
              #:do [(define gs #'(g ...))]
              #:with ((~var c (:annotation ctx)) ...) gs
              #:with (arg ...) (generate-temporaries gs)

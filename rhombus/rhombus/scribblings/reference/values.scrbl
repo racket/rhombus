@@ -40,14 +40,14 @@
 
 @doc(
   ~nonterminal:
-    lhs_bind: def ~defn
+    values_bind: def ~defn
   bind.macro 'values($bind, ...)'
 ){
 
  The @rhombus(values, ~bind) binding operator can only be used in
  places where it's specifically recognized, normally to match multiple
- result values. For example, the @rhombus(lhs_bind) position of
- @rhombus(def) recognizes @rhombus(values, ~bind).
+ result values. For example, the left-hand side @rhombus(values_bind)
+ position of @rhombus(def) recognizes @rhombus(values, ~bind).
 
  Plain parentheses as a binding (as implemented by the
  @rhombus(#%parens, ~bind) form) work as an alias for

@@ -123,3 +123,36 @@ check:
   block:
     def [1, 2] = [1, 2]
   ~throws "block does not end with an expression"
+
+// correctness: patterns are matched left-to-right
+check:
+  def (_ :: converting(fun (x): println("first:", x); x),
+       _ :: converting(fun (x): println("second:", x); x),
+       _ :: converting(fun (x): println("third:", x); x)):
+    values(1, 2, 3)
+  #void
+  ~prints "first: 1"
+    ++ "\n" ++ "second: 2"
+    ++ "\n" ++ "third: 3"
+    ++ "\n"
+
+// when wrong number of values, produce arity error
+check:
+  def (_, _) = 1
+  #void
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 2",
+    "received: 1",
+  )
+
+check:
+  def _ = values(1, 2)
+  #void
+  ~throws values(
+    "result arity mismatch",
+    "expected number of values not received",
+    "expected: 1",
+    "received: 2",
+  )
