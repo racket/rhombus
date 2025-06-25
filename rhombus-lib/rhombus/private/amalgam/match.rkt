@@ -136,6 +136,8 @@
              (define (do-handle-syntax-parse-dispatch)
                (handle-syntax-parse-dispatch #'form-id
                                              val-ids b-parsedss rhss
+                                             (lambda ()
+                                               #`(not-syntax 'form-id '#,(syntax-srcloc (respan stx))))
                                              do-handle-literal-case-dispatch))
              (if (eqv? arity 1)
                  (if (not else-expr)
@@ -239,6 +241,9 @@
 
 (define (match-fallthrough who loc)
   (raise-srcloc-error who "no matching case" loc))
+
+(define (not-syntax who loc)
+  (raise-srcloc-error who "expected a syntax object" loc))
 
 (define-for-syntax (parse-matches form tail mode)
   (syntax-parse tail

@@ -338,3 +338,19 @@ check:
 check:
   error("left") matches (_ :: satisfying(error("right")))
   ~throws "left"
+
+// `syntax-parse` case shouldn't coerce non-syntax
+check:
+  match 1
+  | '1': "shouldn't match"
+  ~throws "expected a syntax object"
+
+check:
+  match #true
+  | '#true': "shouldn't match"
+  ~throws "expected a syntax object"
+
+check:
+  match "hello world"
+  | '"hello world"': "shouldn't match"
+  ~throws "expected a syntax object"

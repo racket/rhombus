@@ -247,7 +247,7 @@ block:
     ~matches [['6', '7', '8'], ["yes", "no"]]
 
 check:
-  match #void
+  match '#void'
   | '#void': "ok"
   ~is "ok"
 
