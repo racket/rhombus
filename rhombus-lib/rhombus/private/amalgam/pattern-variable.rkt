@@ -110,7 +110,7 @@
     (lambda (stx)
       (syntax-parse stx
         [(_ . tail) (values (if (null? (syntax-e attributes))
-                                (wrap-static-info* temp-id (get-syntax-static-infos))
+                                (wrap-static-info* temp-id statinfos)
                                 (wrap-static-info* #`(maybe-syntax-wrap
                                                       (syntax-unwrap #,temp-id)
                                                       0

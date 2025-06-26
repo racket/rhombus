@@ -1238,8 +1238,7 @@ check:
   ~completes
 
 block:
-  syntax_class Option:
-    root_swap: o orig
+  syntax_class Option
   | '~opt_a: $n':
       field o = {#'a: n}
   | '~opt_b':
@@ -1248,10 +1247,10 @@ block:
   syntax_class.together:
     syntax_class Options:
       fields: o
-    | '$(opt :: Option)': field o = opt
+    | '$(opt :: Option)': field o = opt.o
     | '$(opt :: Option)
        $(tail :: Options)': // multi-group escape allowed here
-        field o = opt ++ tail.o
+        field o = opt.o ++ tail.o
 
   check:
     match '~opt_a: 10; ~opt_b'
@@ -1366,3 +1365,175 @@ block:
   check [matched.wrapped.elem, ...] ~matches ['1', '2', '3']
   let matched_wrapped = matched.wrapped;
   check [matched_wrapped.elem, ...] ~matches ['1', '2', '3']
+
+block:
+  // annotation on field
+  use_static
+  syntax_class C
+  | '~val $n':
+      field val :: Int = n.unwrap()
+  check:
+    match '~val 1'
+    | '$(v :: C)': v.val
+    ~is 1
+  check:
+    match '~val 1'
+    | '$(v :: C)': v.val < v.val // `<` specialized to `Int`
+    ~is #false
+  check:
+    match '~val #false'
+    | '$(v :: C)': v.val
+    ~throws values(error.annot_msg(),
+                   error.annot("Int").msg)
+
+block:
+  // different annotations on different fields
+  use_static
+  syntax_class C
+  | '~str $v':
+      field val :: String = v.unwrap()
+  | '~int $v':
+      field val :: Int = v.unwrap()
+  check:
+    match '~int 1'
+    | '$(v :: C)': v.val
+    ~is 1
+  check:
+    match '~str "1"'
+    | '$(v :: C)': v.val
+    ~is "1"
+  check:
+    match '~str 1'
+    | '$(v :: C)': v.val
+    ~throws values(error.annot_msg(),
+                   error.annot("String").msg)
+
+check:
+  // different annotations => no static info
+  ~eval
+  use_static
+  syntax_class C
+  | '~str $v':
+      field val :: String = v.unwrap()
+  | '~int $v':
+      field val :: Int = v.unwrap()
+  match '~str "1"'
+  | '$(v :: C)': v.val.length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+block:
+  // declared field => static info, but one case cannot succeed
+  use_static
+  syntax_class C:
+    fields:
+      val :: String
+  | '~str $v':
+      field val :: String = v.unwrap()
+  | '~int $v':
+      field val :: Int = v.unwrap()
+  check:
+    match '~str "1"'
+    | '$(v :: C)': v.val
+    ~is "1"
+  check:
+    match '~str "100"'
+    | '$(v :: C)': v.val.length()
+    ~is 3
+  check:
+    match '~int 1'
+    | '$(v :: C)': v.val
+    ~throws values(error.annot_msg(),
+                   error.annot("String").msg)
+
+check:
+  syntax_class Option:
+    // root swap implies `:: Syntax`
+    root_swap: o orig
+  | '~opt_a: $n':
+      field o = {#'a: n}
+  | '~opt_b':
+      field o = {#'b: #true}
+  def '$(o :: Option)' = '~opt_b'
+  o
+  ~throws values(error.annot_msg(),
+                 error.annot("Syntax").msg)
+
+block:
+  // converting annotations
+  use_static
+  syntax_class C:
+    fields:
+      val :: ReadableString.to_string
+  | '~str $v':
+      field val = String.copy(v.unwrap())
+  syntax_class C2
+  | '~str $v':
+      field val :: ReadableString.to_string = String.copy(v.unwrap())
+  check:
+    match '~str "1"'
+    | '$(v :: C)': v.val
+    ~is "1"
+  check:
+    match '~str "1"'
+    | '$(v :: C2)': v.val
+    ~is "1"
+
+check:
+  use_static
+  match '~str "abc"'
+  | '$(pattern
+       | '~str $v':
+           field val :: String = v.unwrap())':
+      val.length()
+  ~is 3
+
+check:
+  use_static
+  match '~str "abc"'
+  | '$(pattern:
+         fields:
+           val :: String
+       | '~str $v':
+           field val = v.unwrap())':
+      val.length()
+  ~is 3
+
+// check interaction of lifting to avoid duplicated code and
+// whether state for that code is instantiated every time
+block:
+  import rhombus/meta open
+  annot.macro 'WeirdCounter':
+    annot_meta.pack_predicate('block:
+                                 let mutable count = 0
+                                 fun (x):
+                                   count := count + 1
+                                   x == count',
+                              '()')
+  syntax_class C:
+    fields:
+      w :: WeirdCounter
+  | '$w_stx':
+      field w = w_stx.unwrap()
+  check:
+    match '1'
+    | '$(c :: C)':
+        c.w
+    ~is 1  
+  check:
+    match '1'
+    | '$(pattern:
+           fields:
+             w :: WeirdCounter
+         | '$w_stx':
+             field w = w_stx.unwrap())':
+        w
+    ~is 1
+  check:
+    match '1'
+    | '$(c :: C)':
+        c.w
+    | ~else:
+        "no"
+    ~is 1

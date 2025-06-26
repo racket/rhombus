@@ -234,8 +234,13 @@
     $id_maybe_rep: #,(@rhombus(kind, ~syntax_class_clause)) $kind_decl
 
   grammar id_maybe_rep:
-    $id
+    $id_maybe_annot
     [$id_maybe_rep, $ellipsis]
+
+  grammar id_maybe_annot:
+    $id
+    $id #,(@rhombus(::, ~bind)) $annot
+    $id #,(@rhombus(:~, ~bind)) $annot
 
   grammar ellipsis:
     #,(dots)
@@ -247,11 +252,20 @@
  @rhombus(..., ~bind) like a repetition binding. If no @rhombus(spec)
  is present at all, no fields will be provided.
 
+ If an @rhombus(annot) is supplied for a @rhombus(id_maybe_annot), then
+ the field has the static information of @rhombus(annot), and the
+ annotation is checked or converted when @rhombus(::, ~bind) is used. If
+ a field with the same name has an annotation in a pattern clause, then
+ the one supplied in @rhombus(fields, ~syntax_class_clause) applies
+ afterward, and static information is combined as with
+ @rhombus(statinfo_meta.and). When not within @brackets, a field with an
+ @rhombus(annot) must be in its own group (i.e., on its own line, usually).
+
  If a @rhombus(kind, ~syntax_class_clause) is not declared for a field
  identifier, then the context kind is inferred from patterns within the
  syntax class. If @rhombus(kind, ~syntax_class_clause) is declared, then
  it must match the context kind that would be inferred for the field from
- all patterns.
+ all patterns, and an @rhombus(annot) cannot be provided.
 
 }
 
@@ -271,6 +285,9 @@
  Meanwhile, the matching terms that would otherwise be the variable's
  value are associated instead with a fresh field named by the second
  @rhombus(root_to_field_id).
+
+ A @rhombus(:: Syntax, ~bind) annotation is implicitly added to
+ @rhombus(field_to_root_id) to ensure that its value is a syntax object.
 
 @examples(
   ~defn:
@@ -366,8 +383,13 @@
   pattern_clause.macro 'field $id_maybe_rep = $expr'
 
   grammar id_maybe_rep:
-    $id
+    $id_maybe_annot
     [$id_maybe_rep, $ellipsis]
+
+  grammar id_maybe_annot:
+    $id
+    $id #,(@rhombus(::, ~bind)) $annot
+    $id #,(@rhombus(:~, ~bind)) $annot
 
   grammar ellipsis:
     #,(dots)
@@ -383,6 +405,13 @@
  lists. If the field is referenced so that it's value is included in a
  syntax template, a non-syntax value is converted to syntax at that point.
  Otherwise, the field can be used directly to access non-syntax values.
+
+ If an @rhombus(annot) is supplied in @rhombus(id_maybe_annot), then the
+ field has the static information of @rhombus(annot), and the annotation
+ is checked or converted when @rhombus(::, ~bind) is used. Annotations
+ from different pattern clauses are combined using
+ @rhombus(statinfo_meta.or) to determine static information for accesses
+ of the field.
 
  See also @rhombus(syntax_class).
 

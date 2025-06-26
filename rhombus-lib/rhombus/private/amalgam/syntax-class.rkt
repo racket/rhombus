@@ -5,6 +5,7 @@
                      enforest/name-parse
                      "attribute-name.rkt")
          syntax/parse/pre
+         "treelist.rkt"
          "provide.rkt"
          (only-in "binding.rkt" in-binding-space)
          (submod "quasiquote.rkt" convert)
@@ -24,10 +25,14 @@
          "parens.rkt"
          "forwarding-sequence.rkt"
          "sequence-pattern.rkt"
-         (only-in "static-info.rkt" static-infos-or)
+         (only-in "static-info.rkt"
+                  static-infos-or
+                  static-infos-and)
          (rename-in "ellipsis.rkt"
                     [... rhombus...])
-         "syntax-wrap.rkt")
+         "syntax-wrap.rkt"
+         "annotation-failure.rkt"
+         (submod "syntax-object.rkt" for-quasiquote))
 
 (provide (for-spaces (rhombus/defn
                       rhombus/namespace)
@@ -151,7 +156,7 @@
                          #:expected-kind expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
 
-;; returns a `rhombus-syntax-class` if `define-syntaxed-id` is #f, otherwise
+;; returns a `rhombus-syntax-class` if `define-class?` is #f, otherwise
 ;; returns a list of definitions
 (define-for-syntax (build-syntax-class stx
                                        alts
@@ -186,6 +191,10 @@
      ;; shortcut to avoid redundant parsing when it's not going to work out
      #f]
     [else
+     (define-values (declared-converter-defs declared-converter-ht)
+       (cond
+         [for-together? (values null #hasheq())]
+         [else (declared-fields-converter-definitions fields-ht)]))
      (define-values (patterns attributess descs defaultss)
        (cond
          [for-together?
@@ -203,8 +212,8 @@
                                         (if (syntax-e (declared-field-unpack*-id df))
                                             (declared-field-unpack*-id df)
                                             (quote-syntax unpack-term*))
-                                        #'()))]))
-          (values #`((#:delayed-patterns #,stx #,alts #,fields-ht
+                                        (declared-field-static-infos df)))]))
+          (values #`((#:delayed-patterns #,stx #,alts #,fields-ht #,swap-root
                       #,(map (lambda (pv)
                                (list (pattern-variable-sym pv)
                                      (pattern-variable-val-id pv)))
@@ -217,6 +226,7 @@
          [else
           (for/lists (patterns attributess descs defaultss) ([alt-stx (in-list alts)])
             (parse-pattern-cases stx alt-stx kind splicing?
+                                 declared-converter-ht swap-root
                                  #:keep-attr-id? (not define-class?)
                                  #:for-option? for-option?))]))
      (check-defaults-names stx attributess defaultss)
@@ -226,7 +236,9 @@
         ;; return a `rhombus-syntax-class` directly
         (define rsc
           (rhombus-syntax-class kind
-                                (syntax-class-body->inline patterns class/inline-name option-tags splicing?)
+                                (converter-defs->inline-wrapper
+                                 (syntax-class-body->inline patterns class/inline-name option-tags splicing?)
+                                 declared-converter-defs)
                                 (datum->syntax #f (map pattern-variable->list attributes))
                                 splicing?
                                 (syntax->datum class-arity)
@@ -247,47 +259,56 @@
                                  #'define-syntax-class))
         (define (track-all stx) (for/fold ([stx stx]) ([track-stx (in-list track-stxes)])
                                   (syntax-track-origin stx track-stx #'none)))
+        ;; return a list of definitions;
         ;; in `for-together?` mode, expects a list of 2 definitions:
-        (list
-         ;; return a list of definitions
-         (track-all
-          (build-syntax-definition/maybe-extension
-           'rhombus/stxclass class-name name-extends
-           #`(rhombus-syntax-class '#,kind
-                                   (quote-syntax #,internal-class-name)
-                                   (quote-syntax #,(for/list ([var (in-list attributes)])
-                                                     (pattern-variable->list var #:keep-id? #f)))
-                                   #,splicing?
-                                   '#,class-arity
-                                   '#,swap-root
-                                   #f
-                                   #,(if (null? attributes)
-                                         #f
-                                         #`(gensym '#,class-name)))))
-         #`(#,define-class #,(if (syntax-e class-formals)
-                                 #`(#,internal-class-name . #,class-formals)
-                                 internal-class-name)
-            #:description #,(or description-expr #f)
-            #:disable-colon-notation
-            #:attributes #,(for/list ([var (in-list attributes)])
-                             #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
-            #,@(if opaque? '(#:opaque) '())
-            #,@patterns))])]))
+        (append
+         (list
+          (track-all
+           (build-syntax-definition/maybe-extension
+            'rhombus/stxclass class-name name-extends
+            #`(rhombus-syntax-class '#,kind
+                                    (quote-syntax #,internal-class-name)
+                                    (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                      (pattern-variable->list var #:keep-id? #f)))
+                                    #,splicing?
+                                    '#,class-arity
+                                    '#,swap-root
+                                    #f
+                                    #,(if (null? attributes)
+                                          #f
+                                          #`(gensym '#,class-name))))))
+         declared-converter-defs
+         (list
+          #`(#,define-class #,(if (syntax-e class-formals)
+                                  #`(#,internal-class-name . #,class-formals)
+                                  internal-class-name)
+             #:description #,(or description-expr #f)
+             #:disable-colon-notation
+             #:attributes #,(for/list ([var (in-list attributes)])
+                              #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
+             #,@(if opaque? '(#:opaque) '())
+             #,@patterns)))])]))
 
 (define-syntax (finish-together-syntax-class stx)
   (syntax-parse stx
     #:datum-literals (delayed-patterns)
-    [(_ (form content ... (#:delayed-patterns orig-stx alts fields-ht key+tmp-ids kind splicing?)))
+    [(_ (form content ... (#:delayed-patterns orig-stx alts fields-ht swap-root key+tmp-ids kind splicing?)))
+     (define-values (declared-converter-defs declared-converter-ht)
+       (declared-fields-converter-definitions (syntax-e #'fields-ht)))
      (define-values (patterns attributess descs defaults)
        (for/lists (patterns attributess descs defaults) ([alt-stx (in-list (syntax->list #'alts))])
          (parse-pattern-cases stx alt-stx (syntax-e #'kind) (syntax-e #'splicing?)
+                              declared-converter-ht (syntax-e #'swap-root)
                               #:tmp-ids (for/hasheq ([key+tmp-id-stx (in-list (syntax->list #'key+tmp-ids))])
                                           (define key+tmp-id (syntax->list key+tmp-id-stx))
                                           (values (syntax-e (car key+tmp-id)) (cadr key+tmp-id))))))
      ;; check against `fields-ht`:
      (intersect-attributes #'orig-stx attributess (syntax-e #'fields-ht) #f #f)
      ;; return `form` with parsed patterns in place:
-     #`(form content ... #,@patterns)]))
+     (define def #`(form content ... #,@patterns))
+     (if (null? declared-converter-defs)
+         def
+         #`(begin #,@declared-converter-defs #,def))]))
 
 ;; ----------------------------------------
 
@@ -338,6 +359,7 @@
 ;;     of the syntax class
 ;; The first result has a restricted form that is recognized by `syntax-class-body->inline`
 (define-for-syntax (parse-pattern-cases orig-stx stx kind splicing?
+                                        declared-converter-ht swap-root
                                         #:keep-attr-id? [keep-attr-id? #f]
                                         #:for-option? [for-option? #f]
                                         #:tmp-ids [tmp-id-ht #f])
@@ -440,16 +462,26 @@
                         rev-attrs
                         desc
                         defaults)]
-                 [(#:field id depth rhs)
+                 [(#:field id depth rhs converter static-infos annotation-str)
                   #:with (tmp-id) (or (and tmp-id-ht
                                            (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])
                                              (and id (list id))))
                                       (generate-temporaries #'(id)))
                   #:with (pat-ids pat-rhs . pat-statinfos) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
-                                                                                       (syntax-e #'depth))
+                                                                                       (syntax-e #'depth)
+                                                                                       #:statinfos #'static-infos)
                   (loop (cdr body)
                         null
-                        (list* #'[(define tmp-id rhs)
+                        (list* #`[(define tmp-id #,(let ([e (if (syntax-e #'converter)
+                                                                #`(apply-converter rhs 'id depth converter (quote annotation-str))
+                                                                #'rhs)])
+                                                     (define c (hash-ref declared-converter-ht (syntax-e #'id) #f))
+                                                     (let ([e (if c
+                                                                  #`(#,c #,e)
+                                                                  e)])
+                                                       (if (and swap-root (eq? (syntax-e #'id) (syntax-e (car swap-root))))
+                                                           #`(ensure-syntax-for-root #,e 'id)
+                                                           e))))
                                   (define-syntaxes pat-ids pat-rhs)] '#:do
                                (accum-do))
                         (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*) #'pat-statinfos)
@@ -569,6 +601,32 @@
                                  null)
                           #,@(convert-body (syntax->list #'(body ...))))]))))
 
+(define-for-syntax (converter-defs->inline-wrapper pat declared-converter-defs)
+  (if (null? declared-converter-defs)
+      pat
+      #`(~and (~do #,@declared-converter-defs) #,pat)))
+
+(define-for-syntax (declared-fields-converter-definitions fields-ht)
+  (cond
+    [(not fields-ht) (values null #hasheq())]
+    [else
+     (for/fold ([defs null] [ht #hasheq()]) ([(k df/stx) (in-hash fields-ht)]) 
+       (define df (if (syntax? df/stx) (syntax-e df/stx) df/stx))
+       (cond
+         [(and (declared-field-converter df)
+               (syntax-e (declared-field-converter df)))
+          (define id (car (generate-temporaries '(converter))))
+          (define depth (declared-field-depth df))
+          (define annotation-str (declared-field-annotation-str df))
+          (values (cons #`(define #,id
+                            (let ([converter #,(declared-field-converter df)])
+                              (lambda (val)
+                                (apply-converter val '#,k #,depth converter (quote #,annotation-str)))))
+                        defs)
+                  (hash-set ht k id))]
+         [else
+          (values defs ht)]))]))
+
 ;; ----------------------------------------
 
 (define-for-syntax (check-defaults-names stx attributess defaultss)
@@ -630,8 +688,8 @@
                              (struct-copy pattern-variable var
                                           [unpack* #'unpack-element*])))))
            ht1))
-     ;; filter by declared fields
-     (define filtered-ht
+     ;; filter by declared fields, "and"ing any static information for declared fields
+     (define filtered-ht0
        (if fields-ht
            (for/hasheq ([(k df-stx) (in-hash fields-ht)])
              (define df (syntax-e df-stx))
@@ -655,26 +713,40 @@
                                    "field implementation does not match declared kind"
                                    stx
                                    (declared-field-id df)))
-             (values k var))
+             (values k (if (null? (syntax-e (declared-field-static-infos df)))
+                           var
+                           (struct-copy pattern-variable var
+                                        [statinfos (static-infos-and (declared-field-static-infos df)
+                                                                     (normalize-pvar-statinfos (pattern-variable-statinfos var)))]))))
            ht))
      ;; check swap root
-     (when swap-root
-       (define var (hash-ref filtered-ht (syntax-e (car swap-root)) #f))
-       (unless var
-         (raise-syntax-error #f
-                             "field to swap as root not found"
-                             stx
-                             (car swap-root)))
-       (when (hash-ref filtered-ht (syntax-e (cdr swap-root)) #f)
-         (raise-syntax-error #f
-                             "field for root already exists"
-                             stx
-                             (cdr swap-root)))
-       (unless (= 0 (pattern-variable-depth var))
-         (raise-syntax-error #f
-                             "field for root cannot be a repetition"
-                             stx
-                             (car swap-root))))
+     (define filtered-ht
+       (cond
+         [swap-root
+          (define k (syntax-e (car swap-root)))
+          (define var (hash-ref filtered-ht0 k #f))
+          (unless var
+            (raise-syntax-error #f
+                                "field to swap as root not found"
+                                stx
+                                (car swap-root)))
+          (when (hash-ref filtered-ht0 (syntax-e (cdr swap-root)) #f)
+            (raise-syntax-error #f
+                                "field for root already exists"
+                                stx
+                                (cdr swap-root)))
+          (unless (= 0 (pattern-variable-depth var))
+            (raise-syntax-error #f
+                                "field for root cannot be a repetition"
+                                stx
+                                (car swap-root)))
+          (hash-set filtered-ht0 k
+                    (if (eq? 'stx (pattern-variable-statinfos var))
+                        var
+                        (struct-copy pattern-variable var
+                                     [statinfos (static-infos-and (get-syntax-static-infos)
+                                                                  (normalize-pvar-statinfos (pattern-variable-statinfos var)))])))]
+         [else filtered-ht0]))
      ;; convert back to list
      (hash-values filtered-ht #t)]))
 
@@ -704,4 +776,23 @@
                       (pattern-variable-unpack* a)
                       #'unpack-element*))]
                [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
-                                              (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
+                                           (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
+
+(define (apply-converter val sym depth converter annotation-str)
+  (cond
+    [(= depth 0)
+     (converter val sym (lambda (val who) (raise-annotation-failure who val annotation-str)))]
+    [(treelist? val)
+     (for/list ([val (in-treelist val)])
+       (apply-converter val sym (sub1 depth) converter annotation-str))]
+    [(list? val)
+     (for/list ([val (in-list val)])
+       (apply-converter val sym (sub1 depth) converter annotation-str))]
+    [else
+     ;; let repetition binding report the error
+     val]))
+
+(define (ensure-syntax-for-root val sym)
+  (if (syntax*? val)
+      val
+      (raise-annotation-failure sym val "Syntax")))
