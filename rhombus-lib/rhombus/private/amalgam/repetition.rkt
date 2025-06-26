@@ -16,7 +16,8 @@
          "index-result-key.rkt"
          "indirect-static-info-key.rkt"
          "parse.rkt"
-         "treelist.rkt")
+         "treelist.rkt"
+         "name-root-ref.rkt")
 
 (provide define-repetition-syntax)
 (begin-for-syntax
@@ -123,7 +124,8 @@
     #:infix-operator-ref repetition-infix-operator-ref
     #:check-result check-repetition-result
     #:make-identifier-form identifier-repetition-use/maybe
-    #:relative-precedence repetition-relative-precedence)
+    #:relative-precedence repetition-relative-precedence
+    #:name-root-ref name-root-ref/or-expr)
 
   (define (make-expression+repetition for-clausess for-body element-get-static-infos
                                       #:expr-handler [expr-handler (lambda (stx fail) (fail))]

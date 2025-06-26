@@ -18,6 +18,7 @@
 
 (provide (for-syntax name-root-ref
                      name-root-ref/maybe
+                     name-root-ref/or-expr
                      make-name-root-ref
                      import-root-ref
                      extensible-name-root
@@ -50,7 +51,8 @@
                                        #:non-portal-ref [non-portal-ref #f] ;; see above
                                        #:binding-extension-combine [binding-extension-combine (lambda (prefix field-id id) id)]
                                        #:dot-name-construction [dot-name-construction (lambda (names id) id)]
-                                       #:quiet-fail? [quiet-fail? #f])
+                                       #:quiet-fail? [quiet-fail? #f]
+                                       #:fallback-to-expr? [fallback-to-expr? #f])
   (lambda (v)
     (define (make self-id get)
       (enforest:name-root
@@ -90,7 +92,7 @@
                         (define sub-id (if prefix
                                            (build-name prefix field-id)
                                            field-id))
-                        (let ([id (get #f what sub-id in-id-space)])
+                        (let ([id (get #f what sub-id in-id-space fallback-to-expr?)])
                           (and id
                                (or ns?
                                    (not binding-end?)
@@ -115,7 +117,7 @@
                      [else
                       ;; try again with the shallowest to report an error
                       (let ([get (caar gets)])
-                        (get form-id what field-id in-id-space))])))
+                        (get form-id what field-id in-id-space fallback-to-expr?))])))
              ;; keep looking at dots?
              (define more-dots?
                (syntax-parse tail
@@ -171,6 +173,7 @@
 
 (define-for-syntax name-root-ref (make-name-root-ref))
 (define-for-syntax name-root-ref/maybe (make-name-root-ref #:quiet-fail? #t))
+(define-for-syntax name-root-ref/or-expr (make-name-root-ref #:fallback-to-expr? #t))
 
 (define-for-syntax (portal-syntax->lookup portal-stx make [phase 'default])
   (syntax-parse portal-stx
@@ -179,7 +182,7 @@
      (define pre-ctx #'pre-ctx-s)
      (define ctx #'ctx-s)
      (make #f
-           (lambda (who-stx what name in-space)
+           (lambda (who-stx what name in-space [fallback-to-expr? #f])
              (cond
                [(syntax-e name)
                 (define id (datum->syntax ctx
@@ -209,12 +212,18 @@
      (define vals (syntax->list #'(val ...)))
      (define rules (syntax->list #'(rule ...)))
      (make #'self-id
-           (lambda (who-stx what name in-space)
+           (lambda (who-stx what name in-space [fallback-to-expr? #f])
              (or (for/or ([key (in-list keys)]
                           [val (in-list vals)]
                           [rule (in-list rules)])
                    (and (eq? (syntax-e key) (syntax-e name))
                         (rule->identifier in-space rule val)))
+                 (and fallback-to-expr?
+                      (for/or ([key (in-list keys)]
+                               [val (in-list vals)]
+                               [rule (in-list rules)])
+                        (and (eq? (syntax-e key) (syntax-e name))
+                             (rule->identifier (lambda (x) x) rule val))))
                  (and who-stx
                       (raise-syntax-error #f
                                           (format "~a not provided by ~a"
@@ -245,7 +254,7 @@
          (for/or ([sp-stx (in-list (syntax->list #'(space ...)))])
            (target-space? (syntax-e sp-stx) x)))
        (and (if (eq? (syntax-e #'mode) '#:only)
-                match?
+                 match?
                 (not match?))
             val-id)])))
 
@@ -301,7 +310,7 @@
                                                   (if space-sym
                                                       (make-interned-syntax-introducer space-sym)
                                                       (lambda (x) x)))
-                                                (define id (get #f #f name in-space))]
+                                                (define id (get #f #f name in-space #f))]
                                           #:when (and id
                                                       (if space-sym
                                                           (identifier-distinct-binding* (in-space id 'add)
@@ -338,7 +347,7 @@
         [else
          (portal-syntax->lookup portal-stx
                                 (lambda (self-id get)
-                                  (define id (get #f #f (car ids) in-name-root-space))
+                                  (define id (get #f #f (car ids) in-name-root-space #f))
                                   (and id
                                        (relocate-field prev-who (car ids) id #f))))]))
     (define v
@@ -376,7 +385,8 @@
                                 (lambda (self-id get)
                                   (define id (get #f #f (car ids) (if (null? (cdr ids))
                                                                       (lambda (id) (in-space id 'add))
-                                                                      in-name-root-space)))
+                                                                      in-name-root-space)
+                                                  #f))
                                   (and id
                                        (relocate-field prev-who (car ids) id #f))))]))
     (cond

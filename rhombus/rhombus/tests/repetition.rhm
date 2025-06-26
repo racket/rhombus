@@ -362,3 +362,27 @@ check:
   def [x, ...] = [1, 2, 3]
   [x, ..., ...]
   ~throws "used with wrong repetition depth"
+
+// check that fallback to expression binding works with namespaces
+block:
+  import rhombus/meta open
+  namespace A1:
+    export fun add1(x):
+      x + 1
+  namespace A2:
+    export:
+      only_space expr:
+        add2
+    fun add2(x):
+      x + 2
+  namespace A3:
+    export:
+      except_space repet:
+        add3
+    fun add3(x):
+      x + 3
+
+  let [num, ...] = [1, 2, 3]
+  check [A1.add1(num), ...] ~is [2, 3, 4]  
+  check [A2.add2(num), ...] ~is [3, 4, 5]
+  check [A3.add3(num), ...] ~is [4, 5, 6]
