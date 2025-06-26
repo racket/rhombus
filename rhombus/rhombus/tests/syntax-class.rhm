@@ -1350,3 +1350,19 @@ check:
     fields
   | '$(term_option_sequence | '~foo')'
   ~throws "not a single-term pattern"
+
+
+block:
+  syntax_class HasRepet:
+    kind: ~term
+  | '($elem, ...)'
+
+  syntax_class WrapsHasRepet:
+    kind: ~term
+  | '$(wrapped :: HasRepet)'
+
+  let '$(matched :: WrapsHasRepet)' = '(1, 2, 3)'
+  check matched.wrapped ~matches '(1, 2, 3)'
+  check [matched.wrapped.elem, ...] ~matches ['1', '2', '3']
+  let matched_wrapped = matched.wrapped;
+  check [matched_wrapped.elem, ...] ~matches ['1', '2', '3']

@@ -205,12 +205,10 @@
                            field-id))
      (cond
        [attr
-        (unless (eq? (and repetition? #t)
-                     (not (eqv? 0 (+ depth (pattern-variable-depth attr)))))
+        (unless (or repetition?
+                    (eqv? 0 (+ depth (pattern-variable-depth attr))))
           (raise-syntax-error #f
-                              (if repetition?
-                                  "field is not a repetition"
-                                  "field is a repetition")
+                              "field is a repetition"
                               (datum->syntax #f (list form1 dot field-id))
                               field-id))
         (values
