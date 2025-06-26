@@ -16,6 +16,7 @@
          "space-provide.rkt"
          "pack.rkt"
          (submod "syntax-class-primitive.rkt" for-syntax-class)
+         (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
          (submod "syntax-object.rkt" for-quasiquote)
          (for-syntax racket/base)
          "name-root.rkt"
@@ -153,12 +154,12 @@
          (define (build-name-start-syntax-class)
            (if (syntax-e name-start-class-name)
                (with-syntax ([name (quote-syntax name)])
-                 #`((define-syntax #,name-start-class-name (make-syntax-class #':name-start
-                                                                              #:auto-args #'(in-new-space)
-                                                                              #:kind 'group
-                                                                              #:fields #'((name name #f 0 unpack-term* stx)
-                                                                                          (head #f head tail unpack-tail-list* stx)
-                                                                                          (tail #f tail tail unpack-tail-list* stx))))))
+                 #`((define-syntax-class-syntax #,name-start-class-name (make-syntax-class #':name-start
+                                                                                           #:auto-args #'(in-new-space)
+                                                                                           #:kind 'group
+                                                                                           #:fields #'((name name #f 0 unpack-term* stx)
+                                                                                                       (head #f head tail unpack-tail-list* stx)
+                                                                                                       (tail #f tail tail unpack-tail-list* stx))))))
                null))
          (cond
            [(syntax-e #'enforest?)
@@ -196,27 +197,27 @@
                   #:make-identifier-form #,identifier-transformer)
                 (maybe-skip
                  #,class-name
-                 (define-syntax #,class-name (make-syntax-class #':base
-                                                                #:kind 'group
-                                                                #:arity-mask base-arity-mask
-                                                                #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag stx))
-                                                                #:root-swap '(parsed . group))))
+                 (define-syntax-class-syntax #,class-name (make-syntax-class #':base
+                                                                             #:kind 'group
+                                                                             #:arity-mask base-arity-mask
+                                                                             #:fields #'((parsed parsed parsed 0 unpack-parsed*/tag stx))
+                                                                             #:root-swap '(parsed . group))))
                 (maybe-skip
                  #,prefix-more-class-name
-                 (define-syntax #,prefix-more-class-name (make-syntax-class #':prefix-more
-                                                                            #:kind 'group
-                                                                            #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
-                                                                                        (tail #f tail tail unpack-tail-list* stx))
-                                                                            #:root-swap '(parsed . group)
-                                                                            #:arity-mask more-arity-mask)))
+                 (define-syntax-class-syntax #,prefix-more-class-name (make-syntax-class #':prefix-more
+                                                                                         #:kind 'group
+                                                                                         #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
+                                                                                                     (tail #f tail tail unpack-tail-list* stx))
+                                                                                         #:root-swap '(parsed . group)
+                                                                                         #:arity-mask more-arity-mask)))
                 (maybe-skip
                  #,infix-more-class-name
-                 (define-syntax #,infix-more-class-name (make-syntax-class #':infix-more
-                                                                           #:kind 'group
-                                                                           #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
-                                                                                       (tail #f tail tail unpack-tail-list* stx))
-                                                                           #:root-swap '(parsed . group)
-                                                                           #:arity-mask more-arity-mask)))
+                 (define-syntax-class-syntax #,infix-more-class-name (make-syntax-class #':infix-more
+                                                                                        #:kind 'group
+                                                                                        #:fields #'((parsed parsed #f 0 unpack-parsed*/tag stx)
+                                                                                                    (tail #f tail tail unpack-tail-list* stx))
+                                                                                        #:root-swap '(parsed . group)
+                                                                                        #:arity-mask more-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
                                                                         (quote #,(and pack-and-unpack? parsed-tag))))
@@ -253,11 +254,11 @@
                    #:check-result #,macro-result))
                 (maybe-skip
                  #,class-name
-                 (define-syntax #,class-name (make-syntax-class #':base
-                                                                #:kind 'group
-                                                                #:fields #'((parsed parsed parsed 0 unpack-term* stx))
-                                                                #:root-swap '(parsed . group)
-                                                                #:arity-mask base-arity-mask)))
+                 (define-syntax-class-syntax #,class-name (make-syntax-class #':base
+                                                                             #:kind 'group
+                                                                             #:fields #'((parsed parsed parsed 0 unpack-term* stx))
+                                                                             #:root-swap '(parsed . group)
+                                                                             #:arity-mask base-arity-mask)))
                 #,@(build-name-start-syntax-class)
                 (maybe-skip
                  #,class-name

@@ -108,3 +108,17 @@ space.enforest ident2:
     private parsed_packer pack
     private parsed_unpacker unpack
     private reflection space
+
+// make sure `myspace_meta.Parsed` is bound in the `stxclass` space,
+// so that `alias` works right:
+space.enforest myspace:
+  space_path myspace
+  meta_namespace myspace_meta:
+    parse_syntax_class Parsed
+meta:
+  import rhombus open
+  namespace foo:
+    export alias 'Parsed':
+      'myspace_meta.Parsed'
+  fun bar('$(_ :: foo.Parsed)'):
+    #void
