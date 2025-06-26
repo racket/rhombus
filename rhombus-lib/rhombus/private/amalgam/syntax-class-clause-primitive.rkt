@@ -8,7 +8,8 @@
          "parens.rkt"
          "parse.rkt"
          "op-literal.rkt"
-         "pack.rkt")
+         "pack.rkt"
+         (submod "annotation.rkt" for-class))
 
 (provide (for-space rhombus/syntax_class_clause
                     description
@@ -95,7 +96,7 @@
         #`(#:description #,stx (rhombus-expression (#,group-tag e ...)))]))))
 
 (begin-for-syntax
-  (struct declared-field (id depth unpack*-id) #:prefab)
+  (struct declared-field (id depth unpack*-id converter static-infos annotation-str) #:prefab)
   (define-syntax-class :kind-id
     #:attributes (name)
     #:description "the literal `kind`"
@@ -109,8 +110,8 @@
    (lambda (stx)
      (define (parse-fields field-lines-stx)
        (define ht (for/fold ([ht #hasheq()]) ([field-line-stx (in-list (syntax->list field-lines-stx))])
-                    (let loop ([field-line-stx field-line-stx] [ht ht])
-                      (define (one id depth)
+                    (let loop ([field-line-stx field-line-stx] [ht ht] [head? #t])
+                      (define (one id depth converter static-infos annotation-str maybe-rest)
                         (define sym (syntax-e id))
                         (when (hash-ref ht sym #f)
                           (raise-syntax-error #f
@@ -129,7 +130,7 @@
                                          (~and kind (~or* #:term #:sequence #:group #:multi #:block))))))
                              (values #'kind #'())]
                             [(_ . rest)
-                             (values #'#f #'rest)]))
+                             (values #'#f (or maybe-rest #'rest))]))
                         (define unpack*-id
                           (case (syntax-e kind)
                             [(#:term) #'unpack-term*]
@@ -137,19 +138,27 @@
                             [(#:group) #'unpack-group*]
                             [(#:multi) #'unpack-multi*]
                             [else #'#f]))
-                        (loop rest (hash-set ht sym (declared-field id depth unpack*-id))))
-                      (syntax-parse field-line-stx
-                        #:datum-literals (group)
-                        [() ht]
-                        [(id:identifier . _)
-                         (one #'id 0)]
-                        [((_::brackets g (group _::...-bind)) . _)
-                         (let loop ([g #'g] [depth 1])
-                           (syntax-parse g
-                             #:datum-literals (group)
-                             [(group id:identifier) (one #'id depth)]
-                             [(group (_::brackets g (group _::...-bind)))
-                              (loop #'d (add1 depth))]))]))))
+                        (loop rest (hash-set ht sym (declared-field id depth unpack*-id converter static-infos annotation-str)) #f))
+                      (or
+                       (and head?
+                            (syntax-parse field-line-stx
+                              [(id:identifier ann::inline-annotation)
+                               (one #'id 0 #'ann.converter #'ann.static-infos #'ann.annotation-str #'())]
+                              [_ #f]))
+                       (syntax-parse field-line-stx
+                         #:datum-literals (group)
+                         [() ht]
+                         [(id:identifier . _)
+                          (one #'id 0 #'#f #'() #f #f)]
+                         [((_::brackets g (group _::...-bind)) . _)
+                          (let loop ([g #'g] [depth 1])
+                            (syntax-parse g
+                              #:datum-literals (group)
+                              [(group id:identifier ann::inline-annotation)
+                               (one #'id depth #'ann.converter #'ann.static-infos #'ann.annotation-str #f)]
+                              [(group id:identifier) (one #'id depth #f #'() #f #f)]
+                              [(group (_::brackets g (group _::...-bind)))
+                               (loop #'g (add1 depth))]))])))))
        #`(#:fields #,stx #,ht))
      (syntax-parse stx
        #:datum-literals (group)
