@@ -173,7 +173,7 @@
   #:order logical_conjunction
   #:merge-static-infos (lambda (form1 form2 staticinfos)
                          (define si (extract-static-infos form2))
-                         (if si
+                         (if (not (null? si))
                              #`((#%maybe #,si))
                              #'())))
 

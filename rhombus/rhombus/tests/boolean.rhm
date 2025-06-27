@@ -89,17 +89,36 @@ check:
   1 ! = 2
   ~throws "expected a negatable operator"
 
-block:
+check:
   use_static
   fun f1(x :: maybe(String)):
     (x || "a").length()
   fun f2(x):
     (x && "a")?.length()
-  #void
+  ~completes
+
+check:
+  use_static
+  fun f1(x :: maybe(String), y :: maybe(String), ...):
+    any(x, "z").length()
+    any(y, ..., "z").length()
+    any(x, y, ..., "z").length()
+  fun f2(x, y, ...):
+    all(x, "z")?.length()
+    all(y, ..., "z")?.length()
+    all(x, y, ..., "z")?.length()
+  ~completes
 
 check:
   ~eval
   use_static
   fun (x :: maybe(String)):
     (x && "a").length()
+  ~throws "based on static information"
+
+check:
+  ~eval
+  use_static
+  fun (x :: maybe(String), y :: maybe(String), ...):
+    all(x, y, ..., "b").length()
   ~throws "based on static information"

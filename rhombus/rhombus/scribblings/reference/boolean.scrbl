@@ -46,7 +46,7 @@
  @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
  position with respect to the @rhombus(||) form, if evaluated at all.
 
- The static information of a @rhombus(||) is the
+ The static information of a @rhombus(||) expression is the
  @rhombus(statinfo_meta.or) of static information from
  @rhombus(left_expr) and @rhombus(right_expr). Since a @rhombus(#false)
  result from @rhombus(left_expr) is never returned, if
@@ -96,7 +96,7 @@
  Creates an annotation that accepts a value satisfying either
  @rhombus(left_annot) or @rhombus(right_annot). The static information
  implied by the annotation is the @rhombus(statinfo_meta.or) of information for
- @rhombus(left_annot) and @rhombus(right_annot), which information for a key
+ @rhombus(left_annot) and @rhombus(right_annot), which means information for a key
  must appear in both for the key to be part of the implied annotation.
 
  The annotations are checked in other. Either or both of
@@ -138,7 +138,9 @@
  through a repetition as soon as a non-@rhombus(#false) result is found.
  When the last @rhombus(expr_or_splice) is an @nontermref(expr), it is in
  tail position. When no @rhombus(expr_or_splice) is provided, the result
- is @rhombus(#false).
+ is @rhombus(#false). The static information of an @rhombus(any)
+ expression is derived as in @rhombus(||), but generalized to multiple
+ arguments.
 
 @examples(
   def [x, ...] = [1, 2, 3, 4]
@@ -165,7 +167,7 @@
  @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
  position with respect to the @rhombus(&&) form, if evaluated at all.
 
- The static information of the @rhombus(&&) expression is like that of
+ The static information of a @rhombus(&&) expression is like that of
  @rhombus(maybe(#,(@nontermref(annot))), ~annot) if the static
  information of @rhombus(right_expr) is like that of @nontermref(annot).
 
@@ -266,7 +268,9 @@
  through a repetition as soon as a @rhombus(#false) result is found. When
  the last @rhombus(expr_or_splice) is a @nontermref(expr), it is in tail
  position. When no @rhombus(expr_or_splice) is provided, the result is
- @rhombus(#true).
+ @rhombus(#true). The static information of an @rhombus(all)
+ expression is derived as in @rhombus(&&), but generalized to multiple
+ arguments.
 
 @examples(
   def [x, ...] = [1, 2, 3, 4]
