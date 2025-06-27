@@ -18,8 +18,8 @@ block:
 
 block:
   use_static
-  let [x :: String, ...] = ["a", "bc"]  
-  check values(x.length(), ...) ~is values(1, 2)  
+  let [x :: String, ...] = ["a", "bc"]
+  check values(x.length(), ...) ~is values(1, 2)
   check [values(x).length(), ...] ~is [1, 2]
 
 block:
@@ -27,3 +27,13 @@ block:
   let g = values("one", _, "three")
   check f(10) ~is 10
   check g(10) ~is values("one", 10, "three")
+
+check:
+  ~eval
+  "hello" :: values(String)
+  ~throws "not allowed as an annotation"
+
+check:
+  ~eval
+  "hello" matches values("hello")
+  ~throws "not allowed as a pattern"

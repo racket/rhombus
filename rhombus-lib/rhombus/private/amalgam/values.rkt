@@ -110,7 +110,7 @@
    #f
    '((default . stronger))
    'macro
-   (lambda (stx)
+   (lambda (stx ctx)
      (syntax-parse stx
        [(head . _)
         (raise-syntax-error #f
