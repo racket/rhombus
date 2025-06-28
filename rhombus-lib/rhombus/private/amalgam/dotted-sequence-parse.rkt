@@ -14,7 +14,8 @@
            build-definitions/maybe-extension
            build-syntax-definition/maybe-extension
            build-syntax-definitions/maybe-extension
-           identifier-extension-binding?))
+           identifier-extension-binding?
+           identifier-extension-binding-tail-name))
 
 ;; A dotted identifier as a binding form does not go though `:dotted-identifier-sequence`.
 ;; Instead, suitable binding information is created by `name-root-ref` via the
@@ -128,3 +129,25 @@
                                (and (identifier? extends)
                                     (free-identifier=? prefix extends))]
                               [else #f]))))
+
+(define-for-syntax (identifier-extension-binding-tail-name id)
+  (define-values (v next-id) (syntax-local-value/immediate id (lambda () (values #f #f))))
+  (cond
+    [(extension-rename-transformer? v)
+     ;; This is a little hacky. Currently, `build-definitions/maybe-extension` take a
+     ;; binding name and a namespace name, but not the "tail" name that is written
+     ;; after the last dot. We know that the name for the binding is constructed by
+     ;; adding a `.` to the the namespace name, so we recover the "tail" name by string
+     ;; operations. We don't recur to handle chains of rename transformer, because we're
+     ;; only using this operation for `export` prefixing a definition, and we're interested
+     ;; in the immediate definition.
+     (define prefix (string-append
+                     (symbol->string (syntax-e (extension-rename-transformer-extends-id v)))
+                     "."))
+     (define full (symbol->string (syntax-e id)))
+     (cond
+       [(and ((string-length full) . > . (string-length prefix))
+             (string=? prefix (substring full 0 (string-length prefix))))
+        (string->symbol (substring full (string-length prefix)))]
+       [else #f])]
+    [else #f]))
