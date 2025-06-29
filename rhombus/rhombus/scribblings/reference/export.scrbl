@@ -84,7 +84,9 @@
  @rhombus(id) are exported. Defined names are exported only in
  the @tech(~doc: meta_doc){spaces} where they are bound by @rhombus(defn), and not in other
  spaces where the same name happens to be defined in the same definition
- context.
+ context. If @rhombus(defn) extends a namespace, then just the added name is
+ exported (the same as providing a dotted name to a plain @rhombus(export)),
+ not the extended namespace.
 
 @(block:
     let defn = "hack to avoid nonterminal"

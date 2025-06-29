@@ -4,7 +4,8 @@
                      "id-binding.rkt"
                      "introducer.rkt")
          "only-spaces-out.rkt"
-         "all-spaces-out.rkt")
+         "all-spaces-out.rkt"
+         "dotted-sequence-parse.rkt")
 
 (provide maybe-provide-id
          maybe-provide-req)
@@ -25,7 +26,13 @@
                          #:when (and (free-identifier=? maybe-id-in-space (intro id))
                                      (or (not space-sym)
                                          (identifier-distinct-binding* maybe-id-in-space maybe-id))))
-               #`(only-spaces-out (all-spaces-out #,maybe-id) #,space-sym)))])))
+               (define id/rename
+                 (cond
+                   [(identifier-extension-binding-tail-name maybe-id-in-space)
+                    => (lambda (tail-name)
+                         #`(#,maybe-id #,tail-name))]
+                   [else maybe-id]))
+               #`(only-spaces-out (all-spaces-out #,id/rename) #,space-sym)))])))
 
 (define-syntax (maybe-provide-req stx)
   (syntax-parse stx
