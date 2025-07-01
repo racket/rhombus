@@ -14,6 +14,7 @@
 
 (provide shrubbery-indentation
          shrubbery-range-indentation
+         shrubbery-range-indentation/reverse-choices
          shrubbery-paren-matches
          shrubbery-quote-matches)
 
@@ -21,6 +22,7 @@
 (define BAR-INDENT 0)
 
 (define (shrubbery-indentation t pos
+                               #:reverse? [reverse? #f]
                                #:multi? [multi? #f]
                                #:always? [always? multi?]
                                #:stop-pos [stop-pos 0])
@@ -44,6 +46,7 @@
                                #:as-operator? [as-operator? #f]
                                #:also-zero? [also-zero? #f])
          (indent-like-enclosing-group t start current-tab
+                                      #:reverse? reverse?
                                       #:multi? multi?
                                       #:as-bar? as-bar?
                                       #:as-operator? as-operator?
@@ -67,7 +70,7 @@
          [else
           (like-enclosing)])])))
 
-(define (shrubbery-range-indentation t s e)
+(define (shrubbery-range-indentation t s e #:reverse [reverse? #f])
   (define s-line (send t position-paragraph s))
   (define e-line (let ([line (send t position-paragraph e)])
                    (if (and (s . < . e)
@@ -78,15 +81,16 @@
     [(= s-line e-line)
      ;; use single-line mode
      (define pos (send t paragraph-start-position s-line))
-     (define amt (shrubbery-indentation t pos #:always? #t))
+     (define amt (shrubbery-indentation t pos #:reverse? reverse? #:always? #t))
      (define current-amt (get-current-tab t pos))
      (list (list (max 0 (- current-amt amt))
                  (make-string (max 0 (- amt current-amt)) #\space)))]
     [else
      (define changes (indent-interior t s-line e-line
+                                      #:reverse? reverse?
                                       ;; when trying to reindent within parentheses and similar,
                                       ;; we want to get indentation suggestions that line up
-                                           ;; with the first argument in the range, not the `(`
+                                      ;; with the first argument in the range, not the `(`
                                       #:stop-pos (send t paragraph-start-position s-line)))
      (cond
        [(or (not changes)
@@ -101,7 +105,7 @@
           [else
            (define (line-position line) (send t paragraph-start-position line))
            (define pos (line-position (car lines)))
-           (define amt-or-multi-amt (shrubbery-indentation t pos #:multi? #t))
+           (define amt-or-multi-amt (shrubbery-indentation t pos #:reverse? reverse? #:multi? #t))
            (define amts (if (list? amt-or-multi-amt)
                             amt-or-multi-amt
                             (list amt-or-multi-amt)))
@@ -126,12 +130,16 @@
             '())])]
        [else (cons '(0 "") changes)])]))
 
-(define (indent-interior t s-line e-line #:stop-pos [stop-pos 0])
+(define (shrubbery-range-indentation/reverse-choices t s e)
+  (shrubbery-range-indentation t s e #:reverse #t))
+
+(define (indent-interior t s-line e-line #:reverse? [reverse? #f] #:stop-pos [stop-pos 0])
   (cond
     [(= s-line e-line) '()]
     [else
      (define pos (send t paragraph-start-position (add1 s-line)))
      (define indent (shrubbery-indentation t pos
+                                           #:reverse? reverse?
                                            #:multi? #t
                                            #:stop-pos stop-pos))
      (define amt
@@ -152,6 +160,7 @@
                                (make-delta-text t pos (- amt current)))
                            (add1 s-line)
                            e-line
+                           #:reverse? reverse?
                            #:stop-pos (if (= current amt)
                                           stop-pos
                                           0)))
@@ -160,6 +169,7 @@
        [else #f])]))
 
 (define (indent-like-enclosing-group t start current-tab
+                                     #:reverse? [reverse? #f]
                                      #:as-bar? [as-bar? #f]
                                      #:as-operator? [as-operator? #f]
                                      #:multi? [multi? #f]
@@ -173,7 +183,10 @@
                                                           #:as-bar? as-bar?
                                                           #:as-operator? as-operator?
                                                           #:stop-pos stop-pos)))
-  (define tabs (leftmost (add-zero candidates)))
+  (define tabs (let ([tabs (leftmost (add-zero candidates))])
+                 (if reverse?
+                     (reverse tabs)
+                     tabs)))
   ;; if the current state matches a candidate tab, we'll
   ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))

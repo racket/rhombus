@@ -47,6 +47,9 @@
     [(drracket:range-indentation)
      (dynamic-require 'shrubbery/indentation
                       'shrubbery-range-indentation)]
+    [(drracket:range-indentation/reverse-choices)
+     (dynamic-require 'shrubbery/indentation
+                      'shrubbery-range-indentation/reverse-choices)]
     [(drracket:paren-matches)
      (dynamic-require 'shrubbery/indentation
                       'shrubbery-paren-matches)]
