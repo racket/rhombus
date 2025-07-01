@@ -57,6 +57,7 @@
                                           #,(attribute ann-op.check?) ann-op.name (ann-term ...)]
                                 ;; data accumulated from parsed clauses:
                                 ()))
+         (annotation-to-be-defined! #'name)
          #`(#,(cond
                 [(null? (syntax-e body))
                  #`(veneer-annotation+finish #,finish-data [#:ctx base-stx base-stx] ())]
@@ -67,6 +68,7 @@
 
 (define-class-body-step veneer-body-step
   :veneer-clause
+  veneer-clause?
   veneer-expand-data
   class-clause-accum)
 
@@ -222,7 +224,7 @@
 
        (define exs (parse-exports #'(combine-out . exports) expose))
        (define replaced-ht (check-exports-distinct stxes exs null method-mindex dots))
-<
+
        (define has-private?
          ((hash-count method-private) . > . 0))
 
@@ -238,6 +240,8 @@
        (define-values (container? here-container? public-container?)
          (able-method-status 'contains super interfaces method-mindex method-vtable method-private
                              #:name 'contains))
+
+       (define post-forms (hash-ref options 'post-forms null))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -352,7 +356,9 @@
                                      #'super-call-statinfo-indirect
                                      #:checked-append? #f
                                      #:checked-compare? #f))))
-           #`(begin . #,defns)))])))
+           #`(begin
+               #,@defns
+               #,@post-forms)))])))
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert

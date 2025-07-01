@@ -545,3 +545,35 @@ check:
       _World
       _Some
   ~throws "internal: multiple ids not allowed"
+
+// Make sure `class_clause.macro` in `class` takes effect
+check:
+  class Posn(x, y):
+    class_clause.macro 'foo':
+      'method m(): "M"'
+    foo
+  Posn(0, 1).m()
+  ~is "M"
+check:
+  class Posn(x, y):
+    class_and_interface_clause.macro 'foo':
+      'method m(): "M2"'
+    foo
+  Posn(0, 1).m()
+  ~is "M2"
+check:
+  interface Pointy:
+    interface_clause.macro 'foo':
+      'method m(): "M2"'
+    foo
+  class Posn(x, y):
+    implements Pointy  
+  Posn(0, 1).m()
+  ~is "M2"
+check:
+  veneer Posn(this :: Int):
+    veneer_clause.macro 'foo':
+      'method m(): "M"'
+    foo
+  (10 :: Posn).m()
+  ~is "M"

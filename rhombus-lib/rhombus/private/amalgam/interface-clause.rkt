@@ -17,7 +17,8 @@
 (begin-for-syntax
   (provide (property-out interface-clause-transformer)
            :interface-clause
-           :interface-clause-form)
+           :interface-clause-form
+           interface-clause?)
 
   (property interface-clause-transformer transformer)
 
@@ -33,6 +34,7 @@
 
   (define-rhombus-transform
     #:syntax-class (:interface-clause intf-data)
+    #:predicate interface-clause?
     #:desc "interface clause"
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-interface-clause-space

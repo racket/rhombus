@@ -8,7 +8,9 @@
                      "syntax-wrap.rkt")
          "space-provide.rkt"
          "veneer-clause.rkt"
-         "macro-macro.rkt")
+         "macro-macro.rkt"
+         "definition.rkt"
+         "bounce-to-definition.rkt")
 
 (define+provide-space veneer_clause rhombus/veneer_clause
   #:fields
@@ -27,3 +29,9 @@
      (unless (syntax*? defns)
        (raise-bad-macro-result (proc-name proc) "`veneer` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))
+
+;; See use of `bounce-to-definition` in "class-clause-macro.rkt"
+(define-veneer-clause-syntax macro
+  (veneer-clause-transformer
+   (lambda (stx data)
+     (bounce-to-definition (defn-quote macro) stx))))

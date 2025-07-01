@@ -12,7 +12,9 @@
          "class+interface.rkt"
          "class-clause.rkt"
          "name-root.rkt"
-         "macro-macro.rkt")
+         "macro-macro.rkt"
+         "definition.rkt"
+         "bounce-to-definition.rkt")
 
 (provide (for-space rhombus/namespace
                     class_and_interface_clause))
@@ -51,3 +53,14 @@
     (unless (syntax*? defns)
       (raise-bad-macro-result (proc-name proc) "`class` clause" defns))
     (datum->syntax #f (unpack-multi defns proc #f))))
+
+;; Binding as a class clause ensures that use within a `class` takes
+;; effect for later `class forms
+(define-class-clause-syntax macro
+  (class-clause-transformer
+   (lambda (stx data)
+     (bounce-to-definition (defn-quote macro) stx))))
+(define-class-clause-syntax both_macro
+  (make-class+interface-clause-transformer
+   (lambda (stx data)
+     (bounce-to-definition (defn-quote both_macro) stx))))

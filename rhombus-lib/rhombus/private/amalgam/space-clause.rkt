@@ -13,7 +13,8 @@
 
 (begin-for-syntax
   (provide (property-out space-clause-transformer)
-           :space-clause)
+           :space-clause
+           space-clause?)
 
   (property space-clause-transformer transformer)
 
@@ -21,6 +22,7 @@
 
   (define-rhombus-transform
     #:syntax-class :space-clause
+    #:predicate space-clause?
     #:desc "space transform clause"
     #:parsed-tag #:rhombus/space_clause
     #:in-space in-space-clause-space

@@ -175,5 +175,7 @@
       [(_ (#:identifier_transformer stx e))
        (check "identifier parser expressions" #:enforest-only? #t)
        (hash-set options '#:identifier_transformer #'e)]
+      [(_ (#:post-forms (form ...))) ; added directly in `enforest-meta-body-step`
+       (hash-set options '#:post-forms (syntax->list #'(form ...)))]
       [else
        (error "unhandled" option)])))

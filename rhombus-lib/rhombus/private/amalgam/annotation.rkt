@@ -113,7 +113,9 @@
 
              annotation-relative-precedence
              build-annotated-expression
-             raise-unchecked-disallowed))
+             raise-unchecked-disallowed
+
+             annotation-to-be-defined!))
 
   (provide define-annotation-syntax
            define-annotation-constructor
@@ -133,7 +135,18 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/annot) #'id))]))
 
+  ;; improve some error messages, such as for a class name as an annotation,
+  ;; where it's easy to refer to the name too early
+  (define to-be-defined-ids null)
+  (define (annotation-to-be-defined! id)
+    (set! to-be-defined-ids (cons id to-be-defined-ids)))
+
   (define (raise-not-a-annotation id ctx)
+    (when (for/or ([to-be-defined-id (in-list to-be-defined-ids)])
+            (free-identifier=? id (in-annotation-space to-be-defined-id)))
+      (raise-syntax-error #f
+                          "use of an annotation before its definition is complete"
+                          id))
     (raise-syntax-error #f
                         "not bound as an annotation"
                         id))

@@ -73,6 +73,8 @@
                (hash-set options 'primitive-properties
                          (cons (cons #'prop-id #'val-id)
                                (hash-ref options 'primitive-properties null)))]
+              [(#:post-forms (form ...)) ; added directly in "class-step.rkt"
+               (hash-set options 'post-forms (syntax->list #'(form ...)))]
               [_
                (parse-method-clause orig-stx options clause (car stx-paramss))]))
           (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))

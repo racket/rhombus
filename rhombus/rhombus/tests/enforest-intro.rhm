@@ -122,3 +122,15 @@ meta:
       'myspace_meta.Parsed'
   fun bar('$(_ :: foo.Parsed)'):
     #void
+
+// check that edefinitions at the end of `meta_namespace` can
+// see the syntax class
+space.enforest myspace2:
+  space_path myspace
+  meta_namespace myspace2_meta:
+    parse_syntax_class Parsed
+    fun parse_1(stx):
+      let '$(parsed :: Parsed)' = stx
+      parsed
+    fun parse_2('$(parsed :: Parsed)'):
+      parsed

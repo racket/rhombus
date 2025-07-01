@@ -121,4 +121,6 @@
        (when (hash-ref options '#:meta_namespace #f)
          (raise-syntax-error #f "multiple meta namespaces declared" orig-stx #'name))
        (hash-set options '#:meta_namespace (cons #'name #'content))]
+      [(_ (#:post-forms (form ...))) ; added directly in `enforest-body-step`
+       (hash-set options '#:post-forms (syntax->list #'(form ...)))]
       [_ (error "unhandled option" option)])))
