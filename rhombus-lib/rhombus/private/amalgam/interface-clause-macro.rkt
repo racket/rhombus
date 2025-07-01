@@ -8,7 +8,9 @@
                      "syntax-wrap.rkt")
          "space-provide.rkt"
          "interface-clause.rkt"
-         "macro-macro.rkt")
+         "macro-macro.rkt"
+         "definition.rkt"
+         "bounce-to-definition.rkt")
 
 (define+provide-space interface_clause rhombus/interface_clause
   #:fields
@@ -27,3 +29,9 @@
      (unless (syntax*? defns)
        (raise-bad-macro-result (proc-name proc) "`interface` clause" defns))
      (datum->syntax #f (unpack-multi defns proc #f)))))
+
+;; See use of `bounce-to-definition` in "class-clause-macro.rkt"
+(define-interface-clause-syntax macro
+  (interface-clause-transformer
+   (lambda (stx data)
+     (bounce-to-definition (defn-quote macro) stx))))

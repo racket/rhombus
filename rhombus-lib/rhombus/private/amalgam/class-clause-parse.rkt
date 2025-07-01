@@ -212,6 +212,8 @@
                                                                     #,(and (syntax-e #'deserialize-fill-rhs)
                                                                            (extract-rhs #'deserialize-fill-rhs))))
                          'serializer-stx-params (car stx-paramss))]
+              [(#:post-forms (form ...)) ; added directly in "class-step.rkt"
+               (hash-set options 'post-forms (syntax->list #'(form ...)))]
               [_
                (parse-method-clause orig-stx options clause (car stx-paramss))]))
           (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))

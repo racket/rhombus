@@ -97,7 +97,9 @@ driver and macro-definitions forms.
  defined as a @tech(~doc: ref_doc){namespace}. Among the
  @rhombus(space_clause_or_body_or_export)s, @rhombus(nestable_body)
  forms can add definitions and exports to the namespace, the same as for
- @rhombus(namespace). However, the namespace is particularly intended to
+ @rhombus(namespace) and @rhombus(class) (and definitions among the
+ @rhombus(space_clause_or_body_or_export)s are ordered as in a @rhombus(class)
+ body with respect to the definition of the space itself). However, the namespace is particularly intended to
  export the name specified by @rhombus(macro_definer, ~space_clause).
  That name is conventionally @rhombus(macro, ~datum).
  As a somewhat lower-level mechanism, @rhombus(bridge_definer, ~space_clause)

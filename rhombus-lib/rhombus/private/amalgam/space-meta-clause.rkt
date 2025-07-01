@@ -16,7 +16,8 @@
 
 (begin-for-syntax
   (provide (property-out space-meta-clause-transformer)
-           :space-meta-clause)
+           :space-meta-clause
+           space-meta-clause?)
 
   (property space-meta-clause-transformer transformer)
 
@@ -27,6 +28,7 @@
 
   (define-rhombus-transform
     #:syntax-class :space-meta-clause
+    #:predicate space-meta-clause?
     #:desc "class clause"
     #:parsed-tag #:rhombus/space_meta_clause
     #:in-space in-space-meta-clause-space

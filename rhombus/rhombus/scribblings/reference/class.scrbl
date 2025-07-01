@@ -193,11 +193,16 @@
  to @rhombus(namespace) in that local definitions can be exported.
  Exported names can replace non-private field, method, and property
  names, which are otherwise exported automatically, but exported names
- must be distinct from dot-syntax names. Since the definitions and expressions of a @rhombus(class)
- body must be processed to find @tech{class clauses} in the body, the
- class is not available for use until after the definitions and
- expressions, as if the definitions and expressions appeared before the
- @rhombus(class) form.
+ must be distinct from dot-syntax names. The definitions and expressions of a @rhombus(class)
+ body are expanded and parsed in order as mixed with @tech{class clauses}, and
+ a definition might even introduce a new class-clause form for use in the same
+ body. Any definition
+ or expression that is not followed by a class clause or @tech(~doc: meta_doc){nestable declaration}
+ is deferred until after the class is defined (but still can be exported).
+ Definitions and expressions before a class clause or nestable declaration are effectively
+ moved before the class definition, which limits the ways that the class name can be
+ used in those definitions. When an expression or definition is in the expansion
+ of a @tech{class clauses}, then it is treated as having a class clause afterward.
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form,
  then an additional field is added to the class, but the additional field

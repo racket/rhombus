@@ -13,7 +13,7 @@
 ){
 
  The @tech{space} for bindings of identifiers that can be used in
- declaration and nestable-declaration positions.
+ @tech{declaration} and @tech{nestable-declaration} positions.
 
 }
 
@@ -37,8 +37,9 @@
   defn.macro 'decl.macro $prefix_macro_patterns'
 ){
 
- Like @rhombus(defn.macro) but for defining a macro that can be used
- only in a module or interactive position --- the same places where
+ Like @rhombus(defn.macro) but for defining a macro in
+ @deftech{declaration} positions, which are in
+ in a module or interactive position---the same places where
  @rhombus(meta) and @rhombus(module) are allowed, for example.
 
 }
@@ -50,7 +51,8 @@
 ){
 
  Like @rhombus(defn.macro), but for forms that can also be used in
- namespaces that are within a module or interactive position --- the same
+ @deftech{nestable-declaration} positions, which includes
+ namespaces that are within a module or interactive position---the same
  places where @rhombus(export) is allowed, for example.
 
 }
@@ -63,8 +65,8 @@
     kind: ~group
 ){
 
- Like @rhombus(defn_meta.Group, ~stxclass), but for declarations and
- nestable declarations. The @rhombus(decl_meta.Group, ~stxclass) syntax
+ Like @rhombus(defn_meta.Group, ~stxclass), but for @tech{declarations} and
+ @tech{nestable declarations}. The @rhombus(decl_meta.Group, ~stxclass) syntax
  class matches all groups that
  @rhombus(decl_meta.NestableGroup, ~stxclass) matches, plus ones that
  cannot be nested.

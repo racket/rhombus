@@ -33,7 +33,8 @@
          "macro-result.rkt"
          (for-template (only-in "space.rkt" space-name))
          (submod "annotation.rkt" for-class)
-         "syntax-wrap.rkt")
+         "syntax-wrap.rkt"
+         "sentinel-declaration.rkt")
 
 (provide enforest-meta
          transform-meta
@@ -65,6 +66,21 @@
 (define-syntax enforest-meta-body-step
   (lambda (stx)
     (syntax-parse stx
+      [(_) #'(begin)]
+      [(_ . forms)
+       ;; Like `class-body-step` in "class-step.rkt"
+       (if (ormap (lambda (e) (or (nestable-declaration? e)
+                                  (space-meta-clause? e)))
+                  (syntax->list #'forms))
+           #'(enforest-meta-body-step/to-clause-or-decl . forms)
+           #'(quote-syntax (rhombus-meta-enforest (#:post-forms ((rhombus-nested
+                                                                  #f
+                                                                  . forms))))
+                           #:local))])))
+
+(define-syntax enforest-meta-body-step/to-clause-or-decl
+  (lambda (stx)
+    (syntax-parse stx
       [(_ form . rest)
        #:with clause::space-meta-clause (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
@@ -72,10 +88,12 @@
          [((group (parsed #:rhombus/space_meta_clause p)) ...)
           #`(begin p ... (enforest-meta-body-step . rest))]
          [(form ...)
-          #`(enforest-meta-body-step form ... . rest)])]
+          #`(enforest-meta-body-step form ...  (group sentinel_declaration) . rest)])]
       [(_ form . rest)
        #`(rhombus-top-step
-          enforest-meta-body-step
+          #,(if (nestable-declaration? #'form)
+                #'enforest-meta-body-step
+                #'enforest-meta-body-step/to-clause-or-decl)
           #f
           #f
           ()
@@ -120,6 +138,7 @@
                                                                       (apply parse-group e env))))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define private-kws (hash-ref options '#:private #hasheq()))
+       (define post-forms (hash-ref options '#:post-forms null))
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
@@ -227,7 +246,8 @@
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
-                 (define #,space-reflect-name (space-name 'space-path-name))))]
+                 (define #,space-reflect-name (space-name 'space-path-name)))
+                #,@post-forms)]
            [else
             #`(begin
                 (define-name-root #,(expose #'meta-name)
@@ -266,7 +286,8 @@
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
-                 (define #,space-reflect-name (space-name 'space-path-name))))]))])))
+                 (define #,space-reflect-name (space-name 'space-path-name)))
+                #,@post-forms)]))])))
 
 (define-for-syntax (filter-missing-or-private private-kws flds)
   (for/list ([fld (in-list (syntax->list flds))]

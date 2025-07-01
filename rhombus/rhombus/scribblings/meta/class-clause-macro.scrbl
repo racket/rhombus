@@ -45,6 +45,7 @@
                    $body
                    ...
                | ...»'
+  class_clause.macro 'class_clause.macro $macro_decl'
   grammar option:
     ~op_stx: $id
     ~op_stx $id
@@ -56,7 +57,10 @@
 
  Like @rhombus(defn.macro), but defines a name in the
  @rhombus(class_clause, ~space) @tech{space} as a clause form for use
- within a @rhombus(class) body.
+ within a @rhombus(class) body. The @rhombus(class_clause.macro) is itself
+ bound as a @tech(~doc: ref_doc){class clause} so that it will take effect within a
+ @rhombus(class) body for later forms, even if no other clause
+ or declaration follows it.
 
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
@@ -104,6 +108,8 @@
                    $body
                    ...
                | ...»'
+
+  interface_clause.macro 'interface_clause.macro $macro_decl'
 ){
 
  Like @rhombus(class_clause.macro), but for @rhombus(interface)
@@ -128,6 +134,9 @@
                    $body
                    ...
                | ...»'
+
+  class_clause.macro 'class_and_interface_clause.macro $macro_decl'
+  interface_clause.macro 'class_and_interface_clause.macro $macro_decl'
 ){
 
  Like @rhombus(class_clause.macro), but defines for use both in
@@ -152,6 +161,8 @@
                    $body
                    ...
                | ...»'
+
+  veneer_clause.macro 'veneer_clause.macro $macro_decl'
 ){
 
  Like @rhombus(class_clause.macro), but for @rhombus(veneer)

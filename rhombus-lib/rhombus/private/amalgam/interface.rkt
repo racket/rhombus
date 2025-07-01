@@ -63,6 +63,7 @@
                                       reflect-name name name-extends tail-name]
                             ;; data accumulated from parsed clauses:
                             ()))
+     (annotation-to-be-defined! #'name)
      #`(#,(cond
             [(null? (syntax-e body))
              #`(interface-annotation+finish #,finish-data [#:ctx base base] ())]
@@ -73,6 +74,7 @@
 
 (define-class-body-step interface-body-step
   :interface-clause
+  interface-clause?
   interface-expand-data
   class-clause-accum)
 
@@ -238,6 +240,8 @@
          (able-method-status 'contains #f supers method-mindex method-vtable method-private
                              #:name 'contains))
 
+       (define post-forms (hash-ref options 'post-forms null))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
@@ -319,7 +323,9 @@
                                      #'compare-statinfo-indirect comparable?
                                      #'contains-statinfo-indirect container?
                                      #'super-call-statinfo-indirect))))
-           #`(begin . #,defns)))])))
+           #`(begin
+               #,@defns
+               #,@post-forms)))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
   (with-syntax ([(name prop:name name? name-ref name-ref-or-error

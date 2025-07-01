@@ -19,7 +19,8 @@
          "export-check.rkt"
          (submod "space-clause-primitive.rkt" for-space-macro)
          (submod "namespace.rkt" for-exports)
-         (submod "meta.rkt" for-bridge))
+         (submod "meta.rkt" for-bridge)
+         "sentinel-declaration.rkt")
 
 (provide (for-syntax
           (for-spaces (rhombus/namespace
@@ -63,6 +64,21 @@
 
 (define-syntax enforest-body-step
   (lambda (stx)
+    (syntax-parse stx
+      [(_) #'(begin)]
+      [(_ . forms)
+       ;; Like `class-body-step` in "class-step.rkt"
+       (if (ormap (lambda (e) (or (nestable-declaration? e)
+                                  (space-clause? e)))
+                  (syntax->list #'forms))
+           #'(enforest-body-step/to-clause-or-decl . forms)
+           #'(quote-syntax (rhombus-space-clause (#:post-forms ((rhombus-nested
+                                                                 #f
+                                                                 . forms))))
+                           #:local))])))
+
+(define-syntax enforest-body-step/to-clause-or-decl
+  (lambda (stx)
     ;; parse the first form as a space clause, if possible, otherwise assume
     ;; an expression or definition
     (syntax-parse stx
@@ -73,10 +89,12 @@
          [((group (parsed #:rhombus/space_clause p)) ...)
           #`(begin p ... (enforest-body-step . rest))]
          [(form ...)
-          #`(enforest-body-step form ... . rest)])]
+          #`(enforest-body-step form ...  (group sentinel_declaration) . rest)])]
       [(_ form . rest)
        #`(rhombus-top-step
-          enforest-body-step
+          #,(if (nestable-declaration? #'form)
+                #'enforest-body-step
+                #'enforest-body-step/to-clause-or-decl)
           #f
           #f
           ()
@@ -106,6 +124,7 @@
        (define macro-kws (hash-ref options '#:export_macro_keywords #'()))
        (define define-bridge (hash-ref options '#:export_bridge #'#f))
        (define private-kws (hash-ref options '#:private #hasheq()))
+       (define post-forms (hash-ref options '#:post-forms null))
        (define exs (parse-exports #'(combine-out . exports) (make-expose #'scope-stx #'base-stx)))
        (check-distinct-exports (exports->names exs) define-macro define-bridge #'orig-stx)
        (register-field-check #`(base-ctx scope-ctx . #,exs))
@@ -142,7 +161,8 @@
                 [name #,space-path-name
                       make-prefix-operator make-infix-operator make-prefix+infix-operator
                       (extra-kw ...)]
-                #,(cdr meta-namespace)))))])))
+                #,(cdr meta-namespace)))
+             #,@post-forms))])))
 
 (define-syntax-rule (define-identifier-syntax-definition-transformer* _define-macro
                       protocol

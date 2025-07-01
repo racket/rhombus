@@ -1228,3 +1228,34 @@ block:
   check Orange() ~is_a Pear
   check Orange() ~is_a Apple
   check Orange() ~is_a IB
+
+check:
+  ~eval
+  class Posn(x, y):
+    def origin = Posn(0, 0)
+    export:
+      origin
+  ~throws "cannot reference an identifier before its definition"
+
+check:
+  ~eval
+  class Posn(x, y):
+    fun make_origin() :: Posn: Posn(0, 0)
+    export:
+      make_origin
+  ~throws "use of an annotation before its definition is complete"
+
+block:
+  class Posn(x, y):
+    export:
+      origin
+    def origin = Posn(0, 0)
+  check Posn.origin ~is Posn(0, 0)
+
+block:
+  class Posn(x, y):
+    export:
+      make_origin
+    fun make_origin() :: Posn: Posn(0, 0)
+  check Posn.make_origin() ~is Posn(0, 0)
+

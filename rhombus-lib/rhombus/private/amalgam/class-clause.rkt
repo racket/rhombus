@@ -19,7 +19,8 @@
 (begin-for-syntax
   (provide (property-out class-clause-transformer)
            :class-clause
-           :class-clause-form)
+           :class-clause-form
+           class-clause?)
 
   (property class-clause-transformer transformer)
 
@@ -38,6 +39,7 @@
 
   (define-rhombus-transform
     #:syntax-class (:class-clause class-data)
+    #:predicate class-clause?
     #:desc "class clause"
     #:parsed-tag #:rhombus/class_clause
     #:in-space in-class-clause-space

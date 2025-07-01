@@ -12,6 +12,8 @@
          "forwarding-sequence.rkt"
          "definition.rkt"
          (submod "dot.rkt" for-dot-provider)
+         (only-in (submod "annotation.rkt" for-class)
+                  annotation-to-be-defined!)
          "space.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
@@ -79,6 +81,7 @@
                                       (field.ann-seq ...)]
                             ;; data accumulated from parsed clauses:
                             ()))
+     (annotation-to-be-defined! #'name)
      #`(#,(cond
             [(null? (syntax-e body))
              #`(class-annotation+finish #,finish-data [#:ctx base-stx base-stx] ())]
@@ -89,6 +92,7 @@
 
 (define-class-body-step class-body-step
   :class-clause
+  class-clause?
   class-expand-data
   class-clause-accum)
 
@@ -500,6 +504,8 @@
                              prefab? has-private-fields?))
        (define serializer-stx-params (hash-ref options 'serializer-stx-params #f))
 
+       (define post-forms (hash-ref options 'post-forms null))
+
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
 
@@ -835,7 +841,9 @@
                                                serializable
                                                deserializer-name
                                                constructor-name)))))
-           #`(begin . #,defns)))])))
+           #`(begin
+               #,@defns
+               #,@post-forms)))])))
 
 (define-for-syntax (build-class-struct super
                                        fields mutables constructor-keywords exposures final? authentic? prefab? opaque?

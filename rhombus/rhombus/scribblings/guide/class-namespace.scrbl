@@ -33,7 +33,8 @@ definitions are accessible outside the class only if they are exported.
 
 There's a subtlety, however, when definitions within the @rhombus(class)
 body try to refer to the class. Unless the reference is sufficiently
-nested, it can't work, because the class is not defined until all of the
+nested or late enough in the @rhombus(class) body, it can't work,
+because the class is not defined until enough of the
 class body forms are processed.
 
 @examples(
@@ -45,7 +46,26 @@ class body forms are processed.
           origin
 )
 
-One way around this problem is to not put the definition inside the
+In this example, the solution can be simply to move the @rhombus(export)
+declaration earlier:
+
+@examples(
+  ~repl:
+    class Posn(x, y):
+      export:
+        origin
+      def origin = Posn(0, 0)
+    Posn.origin
+)
+
+This change works because definitions and expressions in a
+@rhombus(class) body are effectively moved after the class's definition
+when there is no class clause or declaration form afterward. Moving the
+@rhombus(export) declaration form before the definition of
+@rhombus(origin) means that @rhombus(Posn) can be defined before
+@rhombus(origin)'s right-hand side is evaluated.
+
+A related way around the problem is to not put the definition inside the
 class, but still export it from the class. Just like in
 @rhombus(namespace), an @rhombus(export) form in @rhombus(class) can
 export any binding that is visible in the environment, including things
@@ -63,8 +83,13 @@ defined outside the @rhombus(class) form.
     Posn.origin.x
 )
 
-Another solution is to use @rhombus(class.together), as described in the
-next section, but putting helper definitions after the class can avoid a
+The only drawback with this strategy is that the inferred name in a
+definition (typically for error-reporting purposes) will not have the
+class name as a prefix automatically.
+
+Yet another solution is to use @rhombus(class.together), as described in the
+next section, but putting helper definitions at the end of the @rhombus(class)
+body or after the class can avoid a
 small amount of overhead for instance checks.
 
 

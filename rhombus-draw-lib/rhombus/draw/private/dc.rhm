@@ -214,14 +214,6 @@ interface DC:
   | layered_transformation := a :: LayeredTransformation:
       rkt.send handle.#{set-transformation}(_LayeredTransformation.hand(a))
 
-  export:
-    BitmapOverlay
-    TextCombine
-    Fill
-    Transformation
-    LayeredTransformation
-    Smoothing
-
   symbol_set_annot Smoothing:
     { unsmoothed, aligned, smoothed }
 
@@ -231,6 +223,14 @@ interface DC:
   symbol_map_annot Fill fill_convert:
     { odd_even: #{odd-even},
       winding: winding }
+
+  export:
+    BitmapOverlay
+    TextCombine
+    Fill
+    Transformation
+    LayeredTransformation
+    Smoothing
 
 fun from_handle(handle) :: DC:
   unless handle rkt.is_a rkt.#{dc<%>}

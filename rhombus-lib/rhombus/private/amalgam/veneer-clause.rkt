@@ -19,7 +19,8 @@
 (begin-for-syntax
   (provide (property-out veneer-clause-transformer)
            :veneer-clause
-           :veneer-clause-form)
+           :veneer-clause-form
+           veneer-clause?)
 
   (property veneer-clause-transformer transformer)
 
@@ -38,6 +39,7 @@
 
   (define-rhombus-transform
     #:syntax-class (:veneer-clause veneer-data)
+    #:predicate veneer-clause?
     #:desc "veneer clause"
     #:parsed-tag #:rhombus/veneer_clause
     #:in-space in-veneer-clause-space
