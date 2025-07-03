@@ -28,9 +28,9 @@
 (define BAR-INDENT 0)
 
 (define (shrubbery-indentation t pos
-                               #:reverse? [reverse? #f]
                                #:multi? [multi? #f]
                                #:always? [always? multi?]
+                               #:reverse? [reverse? (not always?)]
                                #:stop-pos [stop-pos 0]
                                #:variant [variant default-variant])
   (parameterize ([current-classify-range (or (for/or ([r (in-list (send t get-regions))])
@@ -215,8 +215,8 @@
                                                           #:variant variant)))
   (define tabs (let ([tabs (leftmost (add-zero candidates))])
                  (if reverse?
-                     (reverse tabs)
-                     tabs)))
+                     tabs
+                     (reverse tabs))))
   ;; if the current state matches a candidate tab, we'll
   ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))

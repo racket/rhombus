@@ -23,7 +23,7 @@ shrubbery-based programs. They generally follow DrRacket's protocols,
 but they are also intended to support other tools where the protocols
 can be adapted.
 
-@section{Language Configration}
+@section{Language Configuration}
 
 @defmodule[(submod shrubbery reader)]
 
@@ -122,9 +122,9 @@ the @racketmodname[(submod shrubbery reader)] module also provides
 
 @defproc[(shrubbery-indentation [text (is-a?/c color-textoid<%>)]
                                 [pos exact-nonnegative-integer?]
-                                [#:reverse? reverse? any/c #f]
                                 [#:multi? multi? any/c #f]
                                 [#:always? always? any/c multi?]
+                                [#:reverse? reverse? any/c (not always?)]
                                 [#:stop-pos stop-pos exact-nonnegative-integer? 0]
                                 [#:variant variant variant? default-variant])
          (or/c #f
@@ -146,15 +146,18 @@ the @racketmodname[(submod shrubbery reader)] module also provides
 
  @itemlist[
 
- @item{@racket[reverse?]: When true, causes the a sequence of valid
-   indentations to be used or returned in reverse order.}
-
  @item{@racket[multi?]: Returns all possible indentations, instead of
    just the first one.}
 
  @item{@racket[always?]: When @racket[#f], returns the line's current
    indentation if that indentation is valid instead of cycling to the next
-   valid indentation.}
+   valid indentation. This argument is provided as @racket[#f] when
+   indenting for a newly created line, for example.}
+
+ @item{@racket[reverse?]: When true, causes the a sequence of valid
+   indentations to be used or returned in reverse order. This argument's
+   default is @racket[#t] when @racket[always?] is @racket[#f] so that a
+   new line starts at the most-indented possibility.}
 
  @item{@racket[stop-pos]: Indicates a position in @racket[text] where
    indentation should stop inspecting, instead of considering the effect of

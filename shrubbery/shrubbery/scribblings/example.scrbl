@@ -175,7 +175,8 @@ same indentation as @rhombus(if), @rhombus(match), or @rhombus(cond) to
 create the alternative cases within those forms:
 
 @margin_note_block{In DrRacket, hit Tab to cycle through the possible
- indentations for a line. See also @secref("drracket-shrubbery").}
+ indentations for a line, or use Shift-Tab to cycle in reverse order.
+ See also @secref("drracket-shrubbery").}
 
 @rhombusblock(
   block:

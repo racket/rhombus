@@ -10,8 +10,9 @@ provides hints for using other editors.
 
 @section(~tag: "drracket-shrubbery"){Shrubbery Support in DrRacket}
 
-Tab cycles through the possible indentations for a line based on
-preceding lines. The indentation possibilities can be different if a
+In DrRacket, the Tab key cycles through the possible indentations for a
+line based on preceding lines, and Shift-Tab cycles through the same
+possibilities in reverse order. The indentation possibilities can be different if a
 line is empty or starts with @litchar{|} or an operator. If multiple
 lines are selected, if they start out with a valid indentation relative
 to that first line, and if all lines can be shifted by the same amount
