@@ -291,6 +291,7 @@
   doc '«bind.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...'»'
   doc '«repet.macro '$op_or_id_name $quoted_term ...'»'
   doc '«repet.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...'»'
+  doc '«meta.bridge $op_or_id_name $term ...»'
 
   grammar maybe_fallback:
     $(epsilon)
@@ -298,8 +299,8 @@
     ~method_fallback: $id
 ){
 
- A @tech{doc entry} form to documents an expression, definition,
- declaration, annotation, binding, or repetition macro
+ A @tech{doc entry} form to document an expression, definition,
+ declaration, annotation, binding, repetition macro, or other binding
  @rhombus(op_or_id_name) or @rhombus(id_name).
 
  In the @rhombus(quoted_term)s, a use of @rhombus($, ~bind) indicates
@@ -390,7 +391,7 @@
   doc 'dot ($id :: $in_id_name) . $dot_id $term ...'
 ){
 
- A @tech{doc entry} forms to document a class @rhombus(id_name),
+ A @tech{doc entry} form to document a class @rhombus(id_name),
  interface @rhombus(id_name), method @rhombus(method_id) in
  @rhombus(in_id_name), property @rhombus(property_id) in
  @rhombus(in_id_name), or dot-accessed @rhombus(dot_id) in

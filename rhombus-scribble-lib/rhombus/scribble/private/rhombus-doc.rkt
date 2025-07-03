@@ -360,6 +360,13 @@
          #`(group #,@(subst #'id.name) e ...))]
     [_ (identifier-macro-extract-typeset stx space-name subst)]))
 
+(define-doc meta.bridge meta
+  "bridge"
+  #f
+  head-dot-head-extract-name
+  (lambda (stx space-name vars) vars)
+  head-dot-head-extract-typeset)
+
 (define-doc space.enforest space
   "space"
   rhombus/space
@@ -1050,9 +1057,10 @@
    (lambda (stx space-name vars)
      (syntax-parse stx
        #:datum-literals (group)
-       [(group _ id) vars]
+       [(group _ id) (extract-term-metavariables #'id vars #t)]
        [(group _ id b)
-        (extract-pattern-metavariables #'(group b) vars)]))
+        (let ([vars  (extract-term-metavariables #'id vars #t)])
+          (extract-pattern-metavariables #'(group b) vars))]))
    #:extract-typeset
    (lambda (stx space-name subst)
      (syntax-parse stx

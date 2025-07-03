@@ -88,6 +88,16 @@ different than the enclosing (sub)module.
  @rhombus(~lang) with the same @rhombus(module_path) after
  @rhombus(~lang).
 
+ The @rhombus(body) sequence in a module is implicitly wrapped as a
+ @rhombus(#%module_block, ~datum) form, which allows a module that is
+ used as another module's language to customize the treatment of the
+ other module's content. The wrapper is on the outside of any
+ @rhombus(import, ~defn) forms that appear in the module body, so
+ @rhombus(#%module_block, ~datum) is useful only as exported by a module
+ that is used as the language for another module. The
+ @rhombus(#%module_block, ~decl) form exported by
+ @rhombuslangname(rhombus) adds submodules.
+
 }
 
 @doc(
@@ -116,5 +126,70 @@ different than the enclosing (sub)module.
   for the module.}
 
 )
+
+}
+
+@doc(
+  decl.macro '#%module_block:
+                $body
+                ...'
+){
+
+ A @rhombus(#%module_block, ~datum) form is implicitly added around the
+ body of a module. A module that implements a language can export its own
+ @rhombus(#%module_block, ~datum) to customize the treatment of a body
+ sequence in any module that uses the exporting module as its language.
+
+ The @rhombus(#%module_block, ~decl) form from @rhombuslangname(rhombus)
+ mostly expands as its @rhombus(body) sequence to serve as the body of the
+ enclosing module, but it also adds submodule declarations depending on
+ ones that are already immediately declared in the @rhombus(body)
+ sequence (see @secref(~doc: guide_doc, "configure") for more information):
+
+@itemlist(
+
+ @item{If a @rhombus(configure_runtime, ~datum) submodule is declared,
+  it is instantiated when the enclosing module is used as the main
+  module for a program.
+
+  The @rhombus(#%module_block, ~decl) form always adds a
+  @rhombus(#{configure-runtime}, ~datum) submodule, which is the
+  configuration submodule name that is recognized at the Racket level.
+  When @rhombus(configure_runtime, ~datum) is declared, then the added
+  @rhombus(#{configure-runtime}, ~datum) submodule depends on the declared
+  submodule as is otherwise empty. Otherwise, the added
+  @rhombus(#{configure-runtime}, ~datum) submodule performs suitable
+  configuration for Rhombus run-time behavior (e.g., a specific formatting
+  for error messages).}
+
+ @item{If a @rhombus(reader, ~datum) submodule is declared, it provides
+  a parser and IDE configuration that applies when the enclosing module is
+  used as a language via @hash_lang(). A @rhombus(reader, ~datum)
+  submodule is never added automatically.
+
+  If a @rhombus(configure_expand, ~datum) submodule is not also declared
+  when a @rhombus(reader, ~datum) submodule is declared,
+  then a @rhombus(#{configure-expand}, ~datum) submodule is added to
+  configure expansion-time behavior (e.g., a specific formatting of syntax
+  errors).
+
+  If a @rhombus(configure_expand, ~datum) submodule is declared, then it
+  is expected to export @rhombus(enter_parameterization, ~datum) and
+  @rhombus(exit_parameterization, ~datum), and those bindings are
+  reexported by an added @rhombus(#{configure-expand}, ~datum) submodule
+  as @rhombus(#{enter-parameterization}, ~datum) and
+  @rhombus(#{exit-parameterization}, ~datum).}
+
+)
+
+}
+
+@doc(
+  meta.bridge #{#%module-begin}
+){
+
+ Not for direct use, but exported from @rhombuslangname(rhombus) as part
+ of the protocol for a language. See
+ @secref(~doc: guide_doc, "tilde-lang") for more information.
 
 }

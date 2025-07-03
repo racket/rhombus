@@ -3,7 +3,7 @@
 (define collection 'multi)
 
 (define deps
-  '(["base" #:version "8.8.0.5"]
+  '(["base" #:version "8.14"]
     "compiler-lib"
     ["pretty-expressive" #:version "1.1"]
     ["shrubbery-lib" #:version "0.3"]
@@ -17,4 +17,4 @@
 (define license '(Apache-2.0 OR MIT))
 
 ;; keep in sync with runtime version at "rhombus/private/amalgam/version.rkt"
-(define version "0.37")
+(define version "0.38")

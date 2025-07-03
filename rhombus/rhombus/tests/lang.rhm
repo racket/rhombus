@@ -1,0 +1,22 @@
+#lang rhombus
+
+module mod1 ~lang rhombus/tests/noisy_lang:
+  export:
+    all_from(rhombus/tests/noisy_lang)
+
+module test:
+  check:
+    ~eval
+    import rhombus/tests/use_noisy_lang
+    ~prints "1 + 2\n3\n"
+
+  check:
+    ~eval
+    import rhombus/tests/lang!mod1
+    ~prints "export:\n  all_from(rhombus/tests/noisy_lang)\n"
+
+  check:
+    ~eval
+    import rhombus/tests/lang!mod1
+    println(mod1.List())
+    ~prints "export:\n  all_from(rhombus/tests/noisy_lang)\n[]\n"

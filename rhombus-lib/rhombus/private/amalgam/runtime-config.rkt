@@ -5,6 +5,8 @@
          shrubbery/print
          shrubbery/property
          racket/lazy-require
+         (only-in syntax/parse/report-config
+                  current-report-configuration)
          (prefix-in rhombus: (submod "print.rkt" for-runtime))
          (submod "print.rkt" redirect)
          "rhombus-primitive.rkt"
@@ -17,18 +19,7 @@
 (provide install-runtime-config!
          parameters)
 
-(meta-if-version-at-least
- "8.13.0.4"
- (#%declare #:flatten-requires)
- (void))
-
-;; TEMP accommodate Racket versions before `syntax/parse/report-config`
-(meta-if-version-at-least
- "8.9.0.5"
- (require (only-in syntax/parse/report-config
-                   current-report-configuration))
- (require (only-in racket/base
-                   [void current-report-configuration])))
+(#%declare #:flatten-requires)
 
 (meta-if-version-at-least
  "8.15.0.2"

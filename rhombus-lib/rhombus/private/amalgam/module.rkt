@@ -50,9 +50,12 @@
        [(_ name:identifier #:lang mp ...+ (_::block body ...))
         #:with lang::module-path #'(group mp ...)
         #`((module name #,(module-path-convert-parsed #'lang.parsed)
-             (#,(datum->syntax #'lang.parsed '#%module-begin)
-              (multi body
-                     ...))))]
+             #,(datum->syntax
+                #'lang.parsed
+                `(#%module-begin
+                  ,#`(multi body
+                            ...))
+                #'lang.parsed)))]
        [(_ (~optional (~and order (~or* #:late #:early))
                       #:defaults ([order #'#:early]))
            name:identifier
@@ -66,9 +69,12 @@
                               stx
                               #'order))
         #`((module name #,(module-path-convert-parsed #'lang.parsed)
-             (#,(datum->syntax #'lang.parsed '#%module-begin)
-              (multi body
-                     ...))))]))))
+             #,(datum->syntax
+                #'lang.parsed
+                `(#%module-begin
+                  ,#`(multi body
+                            ...))
+                #'lang.parsed)))]))))
 
 (define-for-syntax (check-splicing stx)
   (when (eq? 'top-level (syntax-local-context))

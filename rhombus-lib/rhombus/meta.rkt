@@ -1,6 +1,5 @@
 #lang racket/base
-(require "private/bounce.rkt"
-         "private/version-case.rkt")
+(require "private/bounce.rkt")
 
 (bounce (submod "private/amalgam.rkt" core-meta)
         (submod "private/amalgam.rkt" core-meta sequence_meta))
@@ -18,7 +17,4 @@
 (bounce #:only (meta) #:spaces (rhombus/impo rhombus/expo)
         (submod "private/amalgam.rkt" core))
 
-(meta-if-version-at-least
- "8.13.0.4"
- (#%declare #:flatten-requires)
- (void))
+(#%declare #:flatten-requires)

@@ -1,6 +1,6 @@
 #lang rhombus
-import: "and_meta.rkt"
-export: all_from(.and_meta)
+import: "reader.rkt"
+export: all_from(.reader)
 
 module configure_expand ~lang rhombus:
   import: "expand_config.rhm"

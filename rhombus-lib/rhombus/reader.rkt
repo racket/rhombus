@@ -1,17 +1,21 @@
 #lang racket/base
-(require "private/bounce.rkt")
+(require (for-syntax racket/base)
+         "private/bounce.rkt"
+         "private/lang-helper.rkt")
 
-(bounce "main.rkt"
-        "meta.rkt")
+(provide (rename-out [module-begin #%module-begin]))
+
+(bounce #:except (#%module-begin)
+        "main.rkt")
 
 (module reader syntax/module-reader
-  #:language '(lib "rhombus/and_meta.rhm")
+  #:language '(lib "rhombus/reader.rhm")
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
-  #:info rhombus:get-info-proc
+  #:info get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           (prefix-in rhombus: (submod "private/core.rkt" reader))))
+           (only-in (submod "private/core.rkt" reader) get-info-proc)))
 
 (module configure-runtime racket/base
   (require rhombus/runtime-config))
@@ -20,3 +24,6 @@
   (require rhombus/expand-config)
   (provide enter-parameterization
            exit-parameterization))
+
+(define-syntax (module-begin stx)
+  (parse-module-begin stx 'reader))

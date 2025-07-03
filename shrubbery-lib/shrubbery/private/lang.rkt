@@ -16,6 +16,7 @@
   ;; any newlines by checking the prefix of the first group.
   (define-values (line col pos) (port-next-location in))
   (define lang (parse-all in #:mode 'line #:variant variant))
+  (define-values (content-line content-col content-pos) (port-next-location in))
   (define shrubbery (parse-all in #:mode mode #:source src #:variant variant))
   (define p-name (object-name in))
   (define module-name
@@ -24,15 +25,19 @@
           (string->symbol
            (path->string (path-replace-extension name #""))))
         'anonymous-module))
-  (strip-context
-   (cond
-     [(and (not (eof-object? lang))
-           (not (stx-null? (stx-cdr lang))))
-      #`(module #,module-name #,(parse-module-path-as-shrubbery lang)
-          #,shrubbery)]
-     [else
-      #`(module #,module-name racket/base
-          '#,shrubbery)])))
+  (define (add-srcloc stx)
+    (datum->syntax #f (syntax-e stx) (vector src line col pos
+                                             (and pos content-pos (- content-pos pos)))))
+  (add-srcloc
+   (strip-context
+    (cond
+      [(and (not (eof-object? lang))
+            (not (stx-null? (stx-cdr lang))))
+       #`(module #,module-name #,(parse-module-path-as-shrubbery lang)
+           #,shrubbery)]
+      [else
+       #`(module #,module-name racket/base
+           '#,shrubbery)]))))
 
 (define (shrubbery-get-info-proc/mode key default make-default
                                       #:mode [mode 'top]

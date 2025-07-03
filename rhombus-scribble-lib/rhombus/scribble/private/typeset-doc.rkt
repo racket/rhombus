@@ -384,7 +384,8 @@
                                                      [immed-introducer (in-list introducers)]
                                                      [immed-space-name (in-list space-names)])
                               (cond
-                                [(eq? immed-space-name 'grammar)
+                                [(and (eq? immed-space-name 'grammar)
+                                      immed-def-ht)
                                  (define target (hash-ref immed-def-ht 'target))
                                  (hash-set vars (syntax-e target) target)]
                                 [else vars]))))

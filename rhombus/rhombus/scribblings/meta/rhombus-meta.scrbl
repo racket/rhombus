@@ -43,3 +43,4 @@ alternative to starting with @rhombuslangname(rhombus) and importing
 @include_section("stxobj.scrbl")
 @include_section("operator-order.scrbl")
 @include_section("doc.scrbl")
+@include_section("lang.scrbl")

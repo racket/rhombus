@@ -116,3 +116,33 @@ by an evaluator, for example.
  A @tech{context parameter} for the current evaluator.
 
 }
+
+@doc(
+  decl.macro '#%interaction:
+                $body
+                ...'
+){
+
+ An @rhombus(#%interaction, ~datum) form is implicitly wrapped around a
+ sequence of forms to evaluate interactively, usually in a
+ read-eval-print loop (REPL). The @rhombus(#%interaction, ~datum) form is
+ used when @rhombus(eval) is called with
+ @rhombus(~as_interaction: #true). A module that is used as a language
+ can export @rhombus(#%interaction, ~datum) to customize the behavior of
+ interactive evaluation when using the language.
+
+ The @rhombus(#%interaction, ~decl) form exported by
+ @rhombuslangname(rhombus) expands simply to the declarations,
+ definitions, and forms in its @rhombus(body) sequence.
+
+}
+
+
+@doc(
+  meta.bridge #{#%top-interaction}
+){
+
+ Not for direct use, but exported from @rhombuslangname(rhombus) as part
+ of the protocol for a language that supports interactive evaluation.
+
+}

@@ -41,7 +41,6 @@
            module-path-index-or-resolved
            module-path-s-exp-or-index-or-resolved))
 
-
 (define/method (ModulePath.s_exp mp)
   (check-module-path who mp)
   (module-path-s-exp mp))

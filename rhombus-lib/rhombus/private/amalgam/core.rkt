@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/print
                      (only-in "ellipsis.rkt"
                               [... rhombus...])
                      (only-in "quasiquote.rkt"
@@ -15,14 +16,20 @@
                      (only-space-in rhombus/stxclass
                                     "syntax-class-primitive.rkt")
                      (only-in "implicit.rkt"
-                              #%parens))
+                              #%parens)
+                     "srcloc.rkt")
          (only-in "declaration.rkt"
                   in-decl-space
-                  decl-quote)
+                  decl-quote
+                  define-decl-syntax
+                  declaration-transformer)
+         (only-in "definition.rkt"
+                  in-defn-space)
          "builtin-dot.rkt"
          "../bounce.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
+         "parens.rkt"
          (submod "expression.rkt" for-top-expand)
          (only-in (submod "module.rkt" for-module-begin)
                   rhombus:module))
@@ -30,6 +37,9 @@
 (provide (rename-out [rhombus-module-begin #%module-begin])
          #%top-interaction
          #%top
+         (for-space rhombus/decl
+                    #%module_block
+                    #%interaction)
          (for-syntax
           ;; anything exported in the default space needs
           ;; to be exported in all of its spaces
@@ -172,16 +182,20 @@
 (module+ module-begin
   (provide (for-syntax check-unbound-identifier-early!)))
 
+(module+ module-block
+  (provide (for-space rhombus/decl
+                      module_block_no_submodules)))
+
 (define-syntax (rhombus-module-begin stx)
-  (do-rhombus-module-begin stx #'(require rhombus/runtime-config)))
+  (do-rhombus-module-begin stx #t))
 
 (define-syntax (rhombus-amalgam-module-begin stx)
-  (do-rhombus-module-begin stx #'(begin)))
+  (do-rhombus-module-begin stx #f))
 (module+ amalgam-module-begin
   (provide (rename-out [rhombus-amalgam-module-begin
                         #%module-begin])))
 
-(define-for-syntax (do-rhombus-module-begin stx configure-runtime-body)
+(define-for-syntax (do-rhombus-module-begin stx use-module-block?)
   (check-unbound-identifier-early!)
   (syntax-parse stx
     [(_ body)
@@ -191,38 +205,129 @@
                       [(group . _) (list #'body)]
                       [else
                        (raise-syntax-error #f "ill-formed body" stx)])
-     #`(#%module-begin
-        (#%declare #:realm rhombus
-                   #:require=define)
-        (rhombus-module-forwarding-sequence
+     (with-syntax ([#%module_block (datum->syntax stx '#%module_block)])
+       (unless (declaration-bound? #'#%module_block)
+         (raise-no-module-block stx #'content))
+       #`(#%printing-module-begin
+          (#%declare #:realm rhombus
+                     #:require=define)
+          #,(if use-module-block?
+                #`(rhombus-top
+                   (group #%module_block (block . content)))
+                #`(rhombus-top . content))))]))
+
+(define-decl-syntax #%module_block
+  (declaration-transformer
+   (lambda (stx)
+     (parse-module-block stx #t))))
+
+(define-decl-syntax module_block_no_submodules
+  (declaration-transformer
+   (lambda (stx)
+     (parse-module-block stx #f))))
+
+(define-for-syntax (parse-module-block stx submodules?)
+  (syntax-parse stx
+    #:datum-literals ()
+    [(_ (_::block . content))
+     (define contents (syntax->list #'content))
+     #`((rhombus-module-forwarding-sequence
          (rhombus-top . content))
-        #,(let ([mode (ormap contigure-runtime-module-mode (syntax->list #'content))])
-            (if mode
-                #`(#,mode configure-runtime racket/base
-                   (require (submod ".." configure_runtime)))
-                #`(module configure-runtime racket/base
-                    #,configure-runtime-body))))]))
+        #,@(cond
+             [submodules?
+              (cons
+               (let ([mode (ormap (configure-module-mode 'configure_runtime) contents)])
+                 (if mode
+                     #`(#,mode configure-runtime racket/base
+                        (require (submod ".." configure_runtime)))
+                     #`(module configure-runtime racket/base
+                         (require rhombus/runtime-config))))
+               (cond
+                 [(ormap (configure-module-mode 'configure_expand) contents)
+                  => (lambda (mode)
+                       #`((#,mode configure-expand racket/base
+                           (require (only-in (submod ".." configure_expand)
+                                             enter_parameterization
+                                             exit_parameterization))
+                           (provide (rename-out [enter_parameterization enter-parameterization]
+                                                [exit_parameterization exit-parameterization])))))]
+                 [(ormap (configure-module-mode 'reader) contents)
+                  ;; `reader` but no `configure_expand` => add Rhombusy `configure-expand`
+                  #`((module configure-expand racket/base
+                       (require rhombus/expand-config)
+                       (provide enter-parameterization
+                                exit-parameterization)))]
+                 [else
+                  null]))]
+             [else null]))]))
 
 ;; splices content of any block as its own top-level group:
 (define-syntax (#%top-interaction stx)
-  (syntax-parse stx
-    #:datum-literals (group block multi)
-    [(form-id . (multi form ... (group (block inner-form ...)) . content))
-     #'(form-id . (multi form ... inner-form ... . content))]
-    [(_ . (multi . content))
-     #'(rhombus-top . content)]
-    [(form-id . (~and g (group . _)))
-     #'(form_id . (multi g))]))
+  (with-syntax ([#%interaction (datum->syntax stx '#%interaction)])
+    (syntax-parse stx
+      #:datum-literals (group multi)
+      [(_ . (multi . content))
+       (unless (declaration-bound? #'#%interaction)
+         (raise-no-interaction stx #'content))
+       #'(rhombus-top
+          (group #%interaction (block . content)))]
+      [(form-id . (~and g (group . _)))
+       (unless (declaration-bound? #'#%interaction)
+         (raise-no-interaction stx #'(g)))
+       #'(rhombus-top
+          (group #%interaction (block g)))])))
 
-(define-for-syntax (contigure-runtime-module-mode g)
+(define-decl-syntax #%interaction
+  (declaration-transformer
+   (lambda (stx)
+     (let loop ([stx stx])
+       (syntax-parse stx
+         [(form-id (tag::block form ... (group (_::block inner-form ...)) . content))
+          (loop #'(form-id (tag form ... inner-form ... . content)))]
+         [(_ (_::block . content))
+          #'((rhombus-top . content))])))))
+
+(define-for-syntax ((configure-module-mode name) g)
+  (define (hit? id)
+    (eq? (syntax-e id) name))
   (define (rhombus-mod? mod-id)
     (free-identifier=? (in-decl-space mod-id)
                        (decl-quote rhombus:module)))
   (syntax-parse g
-    #:datum-literals (group parsed configure_runtime)
+    #:datum-literals (group parsed)
     #:literals (module module*)
-    [(group mod #:early configure_runtime . _) #:when (rhombus-mod? #'mod) #'module]
-    [(group mod #:late configure_runtime . _) #:when (rhombus-mod? #'mod) #'module*]
-    [(group (parsed #:rhombus/decl (module configure_runtime . _))) #'module]
-    [(group (parsed #:rhombus/decl (module* configure_runtime . _))) #'module*]
+    [(group mod #:early name . _) #:when (and (hit? #'name) (rhombus-mod? #'mod)) #'module]
+    [(group mod #:late name . _) #:when (and  (hit? #'name) (rhombus-mod? #'mod)) #'module*]
+    [(group mod #:splice name . _) #:when (and  (hit? #'name) (rhombus-mod? #'mod)) #'module*]
+    [(group mod name #:lang . _) #:when (and  (hit? #'name) (rhombus-mod? #'mod)) #'module]
+    [(group (parsed #:rhombus/decl (module name . _))) #:when (hit? #'name) #'module]
+    [(group (parsed #:rhombus/decl (module* name . _))) #:when (hit? #'name) #'module*]
     [_ #f]))
+
+(define-for-syntax (declaration-bound? id)
+  (or (identifier-binding id)
+      (identifier-binding (in-decl-space id))
+      (identifier-binding (in-defn-space id))))
+
+(define-for-syntax (raise-no-module-block stx content)
+  ;; Since the module didn't export `#%module_block`, it probably also didn't
+  ;; have a `configure_expand` submodule, so manually configure syntax reporting:
+  (parameterize ([error-syntax->string-handler
+                  (lambda (stx len)
+                    (define str (shrubbery-syntax->string stx #:max-length len))
+                    (if (equal? str "")
+                        "[end of group]"
+                        str))])
+    (raise-syntax-error 'module
+                        "no `#%module_block` from the module used as a language"
+                        (if (null? (syntax-e content))
+                            (datum->syntax #f '(multi) stx)
+                            (respan
+                             (no-srcloc #`(multi . #,content)))))))
+
+(define-for-syntax (raise-no-interaction stx content)
+  (raise-syntax-error 'module
+                      "no `#%interaction` available for interactive evaluation"
+                      (if (null? (syntax-e content))
+                          (datum->syntax #f '(multi) stx)
+                          (respan (no-srcloc #`(multi . #,content))))))

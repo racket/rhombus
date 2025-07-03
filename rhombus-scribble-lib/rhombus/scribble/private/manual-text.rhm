@@ -18,6 +18,7 @@ export:
   exec
   exec_flag
   hash_lang
+  filebox
 
 fun litchar :~ Element:
   ~doc
@@ -86,3 +87,10 @@ fun exec_flag(content :: Content) :~ Element:
 fun hash_lang() :~ Element:
   ~doc
   manual.#{hash-lang}()
+
+
+fun filebox(name :: String || Content,
+            pre_flow :: PreFlow) :: FlowBlock:
+  ~doc
+  manual.filebox(name,
+                 pre_flow)

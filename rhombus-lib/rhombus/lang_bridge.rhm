@@ -1,6 +1,6 @@
 #lang rhombus
-import: "and_meta.rkt"
-export: all_from(.and_meta)
+import: "lang_bridge.rkt"
+export: all_from(.lang_bridge)
 
 module configure_expand ~lang rhombus:
   import: "expand_config.rhm"

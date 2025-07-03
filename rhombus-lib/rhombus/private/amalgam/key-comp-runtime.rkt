@@ -2,14 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          "key-comp-property.rkt"
-         "../version-case.rkt")
-
-(meta-if-version-at-least
- "8.13.0.2"
- (require (only-in '#%unsafe unsafe-impersonate-hash))
- (define (unsafe-impersonate-hash x ht . _)
-   ;; does not work right, but lets things compile
-   ht))
+         (only-in '#%unsafe unsafe-impersonate-hash))
 
 (provide (for-syntax build-key-comp-runtime))
 

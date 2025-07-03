@@ -81,6 +81,9 @@
           "amalgam/forwarding-sequence.rkt"
           (submod "amalgam/core.rkt" module-begin)))
 
+(module+ module-block
+  (bounce (submod "amalgam/core.rkt" module-block)))
+
 (module+ srcloc
   (bounce "amalgam/srcloc.rkt"
           "amalgam/parsed-relocate.rkt"))
@@ -93,11 +96,13 @@
 
 (module+ modpath
   (require (only-in (submod "amalgam/module-path.rkt" for-import-export)
-                    :module-path)
+                    :module-path
+                    current-module-path-context)
            (for-syntax
             (only-in "amalgam/module-path-parse.rkt" module-path-convert-parsed)))
   (provide (for-syntax :module-path
-                       module-path-convert-parsed)))
+                       module-path-convert-parsed
+                       current-module-path-context)))
 
 (module+ pack
   (bounce "amalgam/pack.rkt"))

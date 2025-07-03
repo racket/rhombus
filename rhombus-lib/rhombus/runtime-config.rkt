@@ -1,10 +1,6 @@
 #lang racket/base
-(require (submod "private/amalgam.rkt" runtime-config)
-         "private/version-case.rkt")
+(require (submod "private/amalgam.rkt" runtime-config))
 
-(meta-if-version-at-least
- "8.13.0.4"
- (#%declare #:flatten-requires)
- (void))
+(#%declare #:flatten-requires)
 
 (void (install-runtime-config!))

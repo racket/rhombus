@@ -2,6 +2,6 @@
 import: "static.rkt"
 export: all_from(.static)
 
-module reader ~lang lib("rhombus/main.rkt"):
-  import: "static.rkt"!reader
-  export: all_from(.reader)
+module configure_expand ~lang rhombus:
+  import: "expand_config.rhm"
+  export: all_from(.expand_config)

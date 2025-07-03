@@ -12,7 +12,8 @@ For more Rhombus bindings that support metaprograming, see @docref(meta_doc).
 @docmodule(~lang,
            ~use_sources: lib("rhombus/private/amalgam.rkt")!core
                          lib("rhombus/private/amalgam.rkt")!#{core-macro}
-                         lib("rhombus/private/amalgam.rkt")!#{core-meta},
+                         lib("rhombus/private/amalgam.rkt")!#{core-meta}
+                         lib("rhombus/private/amalgam.rkt")!#{core-derived},
            rhombus)
 
 @margin_note_block{Unless otherwise specified at the start of a section, the

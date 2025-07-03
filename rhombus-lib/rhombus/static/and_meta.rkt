@@ -5,7 +5,7 @@
         "meta.rkt")
 
 (module reader syntax/module-reader
-  #:language 'rhombus/static/and_meta
+  #:language '(lib "rhombus/static/and_meta.rhm")
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
   #:info rhombus:get-info-proc

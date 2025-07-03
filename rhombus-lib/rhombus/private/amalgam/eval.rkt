@@ -35,14 +35,14 @@
   (define this-ns (variable-reference->empty-namespace (#%variable-reference)))
   (define ns (make-base-empty-namespace))
   (namespace-attach-module this-ns
-                           'rhombus
+                           '(lib "rhombus/main.rhm")
                            ns)
   ns)
 
 (define/arity (make_rhombus)
   (define ns (make_rhombus_empty))
   (parameterize ([current-namespace ns])
-    (namespace-require 'rhombus))
+    (namespace-require '(lib "rhombus/main.rhm")))
   ns)
 
 (define/arity #:name eval (rhombus-eval e

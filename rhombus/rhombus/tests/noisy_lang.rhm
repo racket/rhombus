@@ -1,0 +1,2 @@
+#lang rhombus/lang_bridge
+~lang: "noisy_lang.rkt"

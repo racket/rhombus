@@ -16,39 +16,46 @@ Here are all of the implicit forms:
 
 @itemlist(
 
- @item{@rhombus(#%literal) --- used for anything other than an
-       identifier, keyword, operator, or compound form}
+ @item{@rhombus(#%literal): Used for anything other than an
+       identifier, keyword, operator, or compound form.}
 
- @item{@rhombus(#%parens) --- used for @parens}
+ @item{@rhombus(#%parens): Used for @parens.}
 
- @item{@rhombus(#%brackets) --- used for @brackets}
+ @item{@rhombus(#%brackets): Used for @brackets.}
 
- @item{@rhombus(#%braces) --- used for @braces}
+ @item{@rhombus(#%braces): Used for @braces.}
 
- @item{@rhombus(#%quotes) --- used for @quotes}
+ @item{@rhombus(#%quotes): Used for @quotes.}
 
- @item{@rhombus(#%call) --- used as an infix form when a parsed form
-       is followed immediately by a @parens term}
+ @item{@rhombus(#%call): Used as an infix form when a parsed form
+       is followed immediately by a @parens term.}
 
- @item{@rhombus(#%index) --- used as an infix form when a parsed form
-       is followed immediately by a @brackets term}
+ @item{@rhombus(#%index): Used as an infix form when a parsed form
+       is followed immediately by a @brackets term.}
 
- @item{@rhombus(#%comp) --- used as an infix form when a
+ @item{@rhombus(#%comp): Used as an infix form when a
        parsed form is followed immediately by a @braces term;
-       this implicit form is not bound by @rhombuslangname(rhombus)}
+       this implicit form is not bound by @rhombuslangname(rhombus).}
 
- @item{@rhombus(#%juxtapose) --- used as an infix form when a
+ @item{@rhombus(#%juxtapose): Used as an infix form when a
        parsed form is followed immediately by a non-compound term;
-       this implicit form is not bound by @rhombuslangname(rhombus)}
+       this implicit form is not bound by @rhombuslangname(rhombus).}
 
- @item{@rhombus(#%block) --- used for a block formed with
+ @item{@rhombus(#%block): Used for a block formed with
        @litchar{:} (by itself as a would-be parsed term); this
        implicit form is bound by @rhombuslangname(rhombus) as
-       an expression or binding to always report an error}
+       an expression or binding to always report an error.}
 
- @item{@rhombus(#%alts) --- used for a block formed with
+ @item{@rhombus(#%alts): Used for a block formed with
        @litchar{|} (by itself as a would-be parsed term); this
-       implicit form is not bound by @rhombuslangname(rhombus)}
+       implicit form is not bound by @rhombuslangname(rhombus).}
+
+ @item{@rhombus(#%module_block, ~decl): Used for a block formed from the
+       body of a @tech{module}.}
+
+ @item{@rhombus(#%interaction, ~decl): Used for a block of forms that are
+       interactively evaluated, usually in a read-eval-print loop (REPL).}
+
 )
 
 

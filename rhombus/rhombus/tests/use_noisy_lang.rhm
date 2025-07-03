@@ -1,0 +1,2 @@
+#lang rhombus/tests/noisy_lang
+1 + 2

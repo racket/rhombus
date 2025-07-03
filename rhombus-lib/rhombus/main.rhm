@@ -1,7 +1,17 @@
-#lang rhombus
-import: "main.rkt"
-export: all_from(.main)
+#lang racket/base
+(require "private/bounce.rkt")
 
-module reader ~lang lib("rhombus/main.rkt"):
-  import: "main.rkt"!reader
-  export: all_from(.reader)
+;; Even though this file is named "main.rhm", it's implemented in
+;; `racket/base` so that the "main.rkt" reader can also point here,
+;; which in turn makes `export all_from(rhombus)` work as expected
+;; within a `#lang rhombus` module
+
+(bounce "main.rkt")
+
+(module configure-runtime racket/base
+  (require rhombus/runtime-config))
+
+(module configure-expand racket/base
+  (require rhombus/expand-config)
+  (provide enter-parameterization
+           exit-parameterization))

@@ -10,7 +10,7 @@
 (provide #%dynamism)
 
 (module reader syntax/module-reader
-  #:language 'rhombus/static
+  #:language '(lib "rhombus/static.rhm")
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
   #:info rhombus:get-info-proc
