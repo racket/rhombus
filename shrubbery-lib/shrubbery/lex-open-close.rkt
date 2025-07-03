@@ -2,7 +2,8 @@
 (require racket/port
          "lex.rkt"
          "lex-comment.rkt"
-         "private/column.rkt")
+         "private/column.rkt"
+         "variant.rkt")
 
 (provide lex/open-close/status
          lex/open-close-nested-status?
@@ -60,7 +61,7 @@
 (define open-tag 'invisible-open-count)
 (define close-tag 'invisible-close-count)
 
-(define (lex/open-close/status in pos status0 racket-lexer/status)
+(define (lex/open-close/status in pos status0 racket-lexer/status #:variant [variant default-variant])
   (define-values (orig-status inner-status)
     (cond
       [(open-close-tracked? status0)
@@ -73,7 +74,7 @@
   ;; Here's where we call `lex/comment/status`, which in turn calls
   ;; `lex/status` to perform the main lexing task:
   (define-values (tok type paren start-pos end-pos backup new-inner-status)
-    (lex/comment/status in pos inner-status racket-lexer/status))
+    (lex/comment/status in pos inner-status racket-lexer/status #:variant variant))
 
   (define new-status
     (struct-copy open-close-tracked orig-status

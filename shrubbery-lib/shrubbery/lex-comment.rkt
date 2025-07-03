@@ -1,6 +1,7 @@
 #lang racket/base
 (require "lex.rkt"
-         "private/column.rkt")
+         "private/column.rkt"
+         "variant.rkt")
 
 (provide lex/comment/status
          lex/comment-nested-status?
@@ -10,12 +11,12 @@
 (struct pending-comment (line column so-far stack bar?) #:prefab)
 
 ;; wraps `lex/status` to track group comments
-(define (lex/comment/status in pos status racket-lexer/status)
+(define (lex/comment/status in pos status racket-lexer/status #:variant [variant default-variant])
   (define inner-status (if (comment-tracked? status)
                            (comment-tracked-status status)
                            status))
   (define-values (tok type paren start-pos end-pos backup new-inner-status)
-    (lex/status in pos inner-status racket-lexer/status))
+    (lex/status in pos inner-status racket-lexer/status #:variant variant))
   (define-values (start-line start-column end-line end-column)
     (cond
       [(token? tok) (values (token-line tok) (column-floor (token-column tok))

@@ -1,6 +1,8 @@
 #lang racket/base
 (require racket/pretty
          racket/syntax-srcloc
+         racket/symbol
+         shrubbery/variant
          "lex.rkt"
          (rename-in "private/column.rkt"
                     [column+ lex:column+])
@@ -23,7 +25,8 @@
                can-empty?      ; in a context where a `:` can be empty?
                delta           ; a `cont-delta`, tracks `\` continuations
                raw             ; reversed whitespace (and comments) to be remembered
-               at-mode))       ; `@` continuation after term: #f or `at-mode`
+               at-mode         ; `@` continuation after term: #f or `at-mode`
+               variant))       ; shrubbery variant selectors
 
 (define (make-state #:count? count?
                     #:line line
@@ -37,7 +40,8 @@
                     #:at-mode [at-mode #f]
                     #:can-empty? [can-empty? #t]
                     #:delta delta
-                    #:raw [raw null])
+                    #:raw [raw null]
+                    #:variant variant)
   (state count?
          line
          column
@@ -50,7 +54,8 @@
          can-empty?
          delta
          raw
-         at-mode))
+         at-mode
+         variant))
 
 (struct at-mode (rev-prefix
                  initial?
@@ -86,7 +91,8 @@
                      delta          ; a `cont-delta`, tracks `\` continuations
                      commenting     ; pending group-level `#//` token; exclusive with `tail-commenting`
                      tail-commenting ; pending group-level `#//` at end (so far)
-                     raw))          ; reversed whitespace (and comments) to be remembered
+                     raw            ; reversed whitespace (and comments) to be remembered
+                     variant))      ; shrubbery variant selectors
 
 (struct in-block-mode (token parent-column))
 
@@ -103,7 +109,8 @@
                           #:last-line last-line
                           #:delta delta
                           #:commenting [commenting #f]
-                          #:raw [raw null])
+                          #:raw [raw null]
+                          #:variant variant)
   (group-state count?
                closer
                paren-immed
@@ -120,7 +127,8 @@
                delta
                #f
                commenting
-               raw))
+               raw
+               variant))
 
 (struct cont-delta (column      ; accumulated column offset created by `\` continuations
                     line-span)) ; number of extra lines accumulated by `\` continuations
@@ -185,14 +193,17 @@
 ;; locations.
 
 ;; Parse all groups in a stream
-(define (parse-top-groups l #:interactive? [interactive? #f])
+(define (parse-top-groups l
+                          #:interactive? interactive?
+                          #:variant variant)
   (define-values (gs rest-l end-line end-delta end-t tail-commenting tail-raw)
     (parse-groups l (make-group-state #:count? #t
                                       #:closer eof
                                       #:column #f
                                       #:check-column? #f
                                       #:last-line -1
-                                      #:delta zero-delta)))
+                                      #:delta zero-delta
+                                      #:variant variant)))
   (when tail-commenting (fail-no-comment-group tail-commenting))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
@@ -363,7 +374,8 @@
                                                             #:last-line splice-last-line
                                                             #:delta splice-delta
                                                             #:commenting group-commenting
-                                                            #:raw splice-raw)))
+                                                            #:raw splice-raw
+                                                            #:variant (group-state-variant sg))))
                  (when (group-state-paren-immed sg)
                    (unless (and (pair? gs) (null? (cdr gs)))
                      (fail t (format "multi-group splice not allowed (immediately ~a)" within-parens-str))))
@@ -440,7 +452,8 @@
                                 #:delta (group-state-delta sg)
                                 #:raw (if commenting
                                           null
-                                          pre-raw)))
+                                          pre-raw)
+                                #:variant (group-state-variant sg)))
                  (define-values (gs rest-rest-l end-line end-delta end-t tail-commenting tail-raw)
                    (parse-groups rest-l (struct-copy group-state sg
                                                      [column (if same-line?
@@ -500,7 +513,8 @@
                                            #:block-mode (group-state-block-mode sg)
                                            #:can-empty? (group-state-can-empty? sg)
                                            #:delta (group-state-delta sg)
-                                           #:raw null)))
+                                           #:raw null
+                                           #:variant (group-state-variant sg))))
               (define-values (gs rest-rest-l end-line end-delta end-t tail-commenting tail-raw)
                 (parse-groups rest-l (struct-copy group-state sg
                                                   [column use-column]
@@ -565,7 +579,7 @@
              (get-suffix-comments (cdr l) post-line delta)
              (values null (cdr l) post-line delta)))
        (define-values (at-adjust new-at-mode at-l at-line at-delta)
-         (continue-at at-mode #f suffix-l suffix-line suffix-delta (state-count? s)))
+         (continue-at at-mode #f suffix-l suffix-line suffix-delta (state-count? s) (state-variant s)))
        (define-values (g rest-l end-line end-delta tail-commenting tail-raw)
          (parse-group at-l (struct-copy state s
                                         [line at-line]
@@ -604,7 +618,8 @@
                        #:drop-empty? #t ;; possible when `commenting`
                        #:delta delta
                        #:raw raw
-                       #:group-commenting group-commenting)]))
+                       #:group-commenting group-commenting
+                       #:variant (state-variant s))]))
      ;; Dispatch
      (cond
        [(and (state-count? s)
@@ -647,11 +662,13 @@
                               #:drop-empty? #t ;; possible when `group-commenting`
                               #:delta delta
                               #:raw raw
-                              #:group-commenting group-commenting)]
+                              #:group-commenting group-commenting
+                              #:variant (state-variant s))]
                 [(and (eq? 'operator (token-name use-t))
                       (or (not (state-operator-column s))
                           (column=? column (state-operator-column s)
-                                    #:incomparable (make-incomparable use-t))))
+                                    #:incomparable (make-incomparable use-t)))
+                      ((variant-indented-operator-continue? (state-variant s)) (token-op-string use-t)))
                  (when group-commenting (fail group-commenting "misplaced group comment"))
                  (keep zero-delta #:operator-column column)]
                 [(and (eq? 'opener (token-name use-t))
@@ -689,7 +706,8 @@
                         #:bar-closes-line (state-bar-closes-line s)
                         #:can-empty? (state-can-empty? s)
                         #:could-empty-if-start? #t
-                        #:parent-column (state-column s))]
+                        #:parent-column (state-column s)
+                        #:variant (state-variant s))]
           [(bar-operator)
            (parse-alts-block t l)]
           [(opener)
@@ -735,7 +753,8 @@
                                                     #:delta delta
                                                     #:commenting group-commenting
                                                     #:raw raw
-                                                    #:sequence-mode (if (eq? tag 'at) 'one 'any))))
+                                                    #:sequence-mode (if (eq? tag 'at) 'one 'any)
+                                                    #:variant (state-variant s))))
            (define-values (rest-l close-line close-delta end-t group-tail-raw)
              (cond
                [quote-nested?
@@ -761,7 +780,7 @@
            (define-values (suffix-raw suffix-l suffix-line suffix-delta)
              (get-suffix-comments rest-l close-line close-delta))
            (define-values (at-adjust new-at-mode at-l at-line at-delta)
-             (continue-at (state-at-mode s) (equal? closer ")") suffix-l suffix-line suffix-delta (state-count? s)))
+             (continue-at (state-at-mode s) (equal? closer ")") suffix-l suffix-line suffix-delta (state-count? s) (state-variant s)))
            (define-values (g rest-rest-l end-line end-delta tail-commenting tail-raw)
              (parse-group at-l (struct-copy state s
                                             [line at-line]
@@ -890,6 +909,7 @@
                      #:drop-empty? [drop-empty? #f]
                      #:delta in-delta
                      #:raw in-raw
+                     #:variant variant
                      #:group-commenting [in-group-commenting #f]
                      #:parent-column [parent-column +inf.0]
                      #:block-mode [block-mode (in-block-mode t parent-column)]
@@ -928,7 +948,8 @@
                                        #:can-empty? #f
                                        #:delta delta
                                        #:commenting group-commenting
-                                       #:raw raw)))
+                                       #:raw raw
+                                       #:variant variant)))
      (when (and (not can-empty?) (null? indent-gs) t (not opener-t))
        (fail-empty))
      (define-values (tail-raw rev-suffix-raw)
@@ -947,7 +968,8 @@
                                            #:bar-closes-line bar-closes-line
                                            #:block-mode 'end
                                            #:delta end-delta
-                                           #:raw null))
+                                           #:raw null
+                                           #:variant variant))
            (values '() rest-l end-line end-delta tail-commenting (if used-closer?
                                                                      null
                                                                      tail-raw))))
@@ -1036,7 +1058,7 @@
 ;; Look for `{` (as 'at-opener) next or a `(` that might be followed
 ;; by a `{`, and prepare to convert by rearranging info a splice
 ;; followed by parentheses
-(define (continue-at am after-paren? l line delta count?)
+(define (continue-at am after-paren? l line delta count? variant)
   (define (at-call rator parens g)
     (cond
       [(not (at-mode-initial? am))
@@ -1088,6 +1110,7 @@
         line delta
         #:opener-t init-t
         #:count? count?
+        #:variant variant
         (lambda (seq l line delta)
           (define c (list group-tag seq))
           (cond
@@ -1132,7 +1155,8 @@
 (define (parse-text-sequence l line delta
                              done-k
                              #:opener-t [opener-t #f]
-                             #:count? [count? #t])
+                             #:count? [count? #t]
+                             #:variant variant)
   (let loop ([l l] [content '()])
     (case (if (null? l) 'at-closer (token-name (car l)))
       [(at-closer)
@@ -1181,7 +1205,8 @@
                                   #:delta zero-delta
                                   #:at-mode (make-at-mode #:initial? #t
                                                           #:stop-at-next-at? #t)
-                                  #:raw null)))
+                                  #:raw null
+                                  #:variant variant)))
        (loop rest-l
              (cons (if comment?
                        (list 'comment (cons (token-raw t) (syntax-to-raw #`(group . #,g))))
@@ -1489,6 +1514,9 @@
      ;; keep block mode to allow a `|` continuation afterward
      mode]
     [else #f]))
+
+(define (token-op-string t)
+  (symbol->immutable-string (syntax-e (cadr (token-e t)))))
 
 ;; ----------------------------------------
 
@@ -1879,15 +1907,20 @@
 (define (parse-all in
                    #:source [source (object-name in)]
                    #:mode [mode 'top] ; 'top, 'text, 'interactive, or 'line
-                   #:start-column [start-column 0])
+                   #:start-column [start-column 0]
+                   #:variant [variant default-variant])
   (define l (lex-all in fail
                      #:source source
                      #:mode mode
                      #:consume-eof? #t
-                     #:start-column start-column))
+                     #:start-column start-column
+                     #:variant variant))
   (define v (if (eq? mode 'text)
-                (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
-                (parse-top-groups l #:interactive? (memq mode '(interactive line)))))
+                (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c))
+                                     #:variant variant)
+                (parse-top-groups l
+                                  #:interactive? (memq mode '(interactive line))
+                                  #:variant variant)))
   (if (syntax? v)
       (normalize-group-raw v)
       v))

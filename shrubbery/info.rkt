@@ -14,7 +14,10 @@
                      "rhombus-scribble-lib"
                      "scribble-doc"
                      "scribble-lib"
-                     "syntax-color-lib"))
+                     "syntax-color-lib"
+                     "gui-doc"
+                     "gui-lib"
+                     "syntax-color-doc"))
 
 (define pkg-desc "Shrubbery notation parser and printer")
 

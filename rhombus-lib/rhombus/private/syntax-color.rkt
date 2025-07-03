@@ -7,8 +7,8 @@
          racket/string
          shrubbery/syntax-color)
 
-(provide
- rhombus-lexer)
+(provide rhombus-lexer
+         make-rhombus-lexer)
 
 (define-runtime-path builtins.txt
   "syntax-color/builtins.txt")
@@ -16,41 +16,49 @@
   "syntax-color/keywords.txt")
 
 (define (make-identifier?-procedure path)
-  (define re-promise
+  (define ht-promise
     (delay/sync
-     (define idents (call-with-input-file path port->lines))
-     (define alts (string-join (map regexp-quote idents) "|"))
-     (regexp (string-append "^(?:" alts ")$"))))
+     (for/hash ([str (in-list (call-with-input-file path port->lines))])
+       (values str #t))))
   (lambda (tok)
-    (regexp-match? (force re-promise) tok)))
+    (hash-ref (force ht-promise) tok #f)))
 
 (define builtin-identifier?
   (make-identifier?-procedure builtins.txt))
 (define keyword-identifier?
   (make-identifier?-procedure keywords.txt))
 
-(define (operator-like? s)
-  (not (regexp-match? #rx"^[a-zA-Z_]" s)))
+(define (rhombus-semantic-type-guess tok)
+  (cond
+    [(keyword-identifier? tok) 'keyword]
+    [(builtin-identifier? tok) 'builtin]
+    [else #f]))
 
-(define (rhombus-lexer in pos status)
-  (define-values (tok type paren start end backup res-status)
-    (shrubbery-lexer in pos status))
-  (define type-sym
-    (and (hash? type)
-         (hash-ref type 'type)))
-  (define res-type
-    (case type-sym
-      [(symbol)
-       (cond
-         [(keyword-identifier? tok)
-          (hash-set type 'semantic-type-guess 'keyword)]
-         [(builtin-identifier? tok)
-          (hash-set type 'semantic-type-guess 'builtin)]
-         [else
-          type])]
-      [else
-       type]))
-  (values tok res-type paren start end backup res-status))
+(define (default-semantic-type-guess tok default)
+  (default tok))
+
+(define (make-rhombus-lexer #:variant [variant #hasheq()]
+                            #:semantic-type-guess [semantic-type-guess default-semantic-type-guess])
+  (lambda (in pos status)
+    (define-values (tok type paren start end backup res-status)
+      (shrubbery-lexer in pos status #:variant variant))
+    (define type-sym
+      (and (hash? type)
+           (hash-ref type 'type)))
+    (define res-type
+      (case type-sym
+        [(symbol)
+         (cond
+           [(semantic-type-guess tok rhombus-semantic-type-guess)
+            => (lambda (guess)
+                 (hash-set type 'semantic-type-guess guess))]
+           [else type])]
+        [else
+         type]))
+    (values tok res-type paren start end backup res-status)))
+
+(define rhombus-lexer
+  (make-rhombus-lexer))
 
 ;; Run this submodule to refresh the keywords and builtins lists.
 (module+ main
@@ -60,6 +68,8 @@
   (dynamic-require rhombus/and_meta #f)
   (define-values (vars stxs)
     (module->exports rhombus/and_meta))
+  (define (operator-like? s)
+    (not (regexp-match? #rx"^[a-zA-Z_]" s)))
   (define (get-syms phase+exportss [include? (λ (_sym _sym-str) #t)])
     (sort
      (remove-duplicates

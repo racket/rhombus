@@ -5,6 +5,7 @@
          racket/symbol
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
+         "variant.rkt"
          "private/column.rkt"
          "private/property.rkt"
          "private/peek-port.rkt"
@@ -450,7 +451,7 @@
                     status)])
     (pending-backup-mode? status)))
 
-(define (lex/status in pos status/loc-in racket-lexer*/status)
+(define (lex/status in pos status/loc-in racket-lexer*/status #:variant [variant default-variant])
   (define-values (start-line start-column status-in)
     (if (counter? status/loc-in)
         (values (counter-start-line status/loc-in)
@@ -475,7 +476,7 @@
                        [(and (zero? depth)
                              (eqv? #\} (peek-char in)))
                         ;; go out of S-expression mode by using shrubbery lexer again
-                        (adjust-for-quotes shrubbery-lexer/status in (out-of-s-exp-mode status #t))]
+                        (adjust-for-quotes shrubbery-lexer/status variant in (out-of-s-exp-mode status #t))]
                        [else
                         (define in* (peeking-input-port/count in))
                         (define start-pos (file-position in*))
@@ -526,17 +527,17 @@
                          (and (in-quotes? status)
                               (eq? (in-quotes-status status) 'continuing)))
                      ;; normal mode, after a form
-                     (adjust-for-quotes shrubbery-lexer-continuing/status in status)]
+                     (adjust-for-quotes shrubbery-lexer-continuing/status variant in status)]
                     [else
                      ;; normal mode, at start or after an operator or whitespace
-                     (adjust-for-quotes shrubbery-lexer/status in status)]))])
+                     (adjust-for-quotes shrubbery-lexer/status variant in status)]))])
     (cond
       [(and (token? tok)
             (eq? (token-name tok) 'at-content)
             (eqv? 0 (string-length (token-e tok))))
        ;; a syntax coloring lexer must not return a token that
        ;; consumes no characters, so just drop it by recurring
-       (lex/status in pos (counter start-line start-column status) racket-lexer*/status)]
+       (lex/status in pos (counter start-line start-column status) racket-lexer*/status #:variant variant)]
       [else
        (define new-backup (cond
                             [(zero? prev-pending-backup) backup]
@@ -716,49 +717,57 @@
 (define shrubbery-lexer/status (make-lexer/status number bad-number))
 (define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
 
-;; converts 'squote to 'opener or 'closer and wrap status with `in-quotes`
-(define (adjust-for-quotes shrubbery-lexer/status in old-status)
+;; converts 'squote to 'opener or 'closer and wrap status with `in-quotes`,
+;; and also checks that an operator is allowed by `variant`
+(define (adjust-for-quotes shrubbery-lexer/status variant in old-status)
   (let-values ([(tok type paren start end backup status pending-backup) (shrubbery-lexer/status in)])
-    (cond
-      [(eq? (token-name tok) 'squote)
-       (define (finish name status)
-         (let ([tok (struct-copy token tok [name name])]
-               [type (hash-set type 'rhombus-type name)]
-               [paren (if (eq? name 'opener) '|'(| '|)'|)])
-           (values tok type paren start end backup status pending-backup)))
-       (cond
-         [(in-quotes? old-status)
-          (define openers (in-quotes-openers old-status))
-          (cond
-            [(null? openers)
-             (finish 'closer status)]
-            [(eq? 'squote (car openers))
-             (finish 'closer (struct-copy in-quotes old-status
-                                          [openers (cdr openers)]
-                                          [status 'continuing]))]
-            [else
-             (finish 'opener (struct-copy in-quotes old-status
-                                          [openers (cons 'squote openers)]
-                                          [status 'initial]))])]
-         [else
-          (finish 'opener (in-quotes 'initial '()))])]
-      [(in-quotes? old-status)
-       (cond
-         [(s-exp-mode? status)
-          (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
-            (values tok type paren start end backup (struct-copy s-exp-mode status [in-quotes old-status]) pending-backup))]
-         [(in-at? status)
-          (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
-            (values tok type paren start end backup (struct-copy in-at status [shrubbery-status old-status]) pending-backup))]
-         [else
-          (let ([status (in-quotes status (case (token-name tok)
-                                            [(opener) (cons 'opener (in-quotes-openers old-status))]
-                                            [(closer) (let ([p (in-quotes-openers old-status)])
-                                                        (if (pair? p) (cdr p) '()))]
-                                            [else (in-quotes-openers old-status)]))])
-            (values tok type paren start end backup status pending-backup))])]
-      [else
-       (values tok type paren start end backup status pending-backup)])))
+    (let-values ([(tok type) (cond
+                               [(and (eq? (token-name tok) 'operator)
+                                     (not ((variant-allow-operator? variant)
+                                           (symbol->immutable-string (syntax-e (cadr (token-e tok)))))))
+                                (values (struct-copy token tok [name 'fail]) 'error)]
+                               [else
+                                (values tok type)])])
+      (cond
+        [(eq? (token-name tok) 'squote)
+         (define (finish name status)
+           (let ([tok (struct-copy token tok [name name])]
+                 [type (hash-set type 'rhombus-type name)]
+                 [paren (if (eq? name 'opener) '|'(| '|)'|)])
+             (values tok type paren start end backup status pending-backup)))
+         (cond
+           [(in-quotes? old-status)
+            (define openers (in-quotes-openers old-status))
+            (cond
+              [(null? openers)
+               (finish 'closer status)]
+              [(eq? 'squote (car openers))
+               (finish 'closer (struct-copy in-quotes old-status
+                                            [openers (cdr openers)]
+                                            [status 'continuing]))]
+              [else
+               (finish 'opener (struct-copy in-quotes old-status
+                                            [openers (cons 'squote openers)]
+                                            [status 'initial]))])]
+           [else
+            (finish 'opener (in-quotes 'initial '()))])]
+        [(in-quotes? old-status)
+         (cond
+           [(s-exp-mode? status)
+            (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
+              (values tok type paren start end backup (struct-copy s-exp-mode status [in-quotes old-status]) pending-backup))]
+           [(in-at? status)
+            (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
+              (values tok type paren start end backup (struct-copy in-at status [shrubbery-status old-status]) pending-backup))]
+           [else
+            (let ([status (in-quotes status (case (token-name tok)
+                                              [(opener) (cons 'opener (in-quotes-openers old-status))]
+                                              [(closer) (let ([p (in-quotes-openers old-status)])
+                                                          (if (pair? p) (cdr p) '()))]
+                                              [else (in-quotes-openers old-status)]))])
+              (values tok type paren start end backup status pending-backup))])]
+        [else
+         (values tok type paren start end backup status pending-backup)]))))
 
 ;; after reading `@`, we enter an at-exp state machine for whether
 ;; we're in the initial part, within `[]`, or within `{}`; we have to
@@ -1260,7 +1269,8 @@
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
                  #:consume-eof? [consume-eof? #f]
-                 #:start-column [start-column 0])
+                 #:start-column [start-column 0]
+                 #:variant [variant default-variant])
   (define status (advance-location
                   (if (eq? mode 'text)
                       (make-in-text-status)
@@ -1276,7 +1286,7 @@
          '()]
         [else
          (define-values (tok type paren start-pos end-pos backup new-status)
-           (lex/status in 0 status #f))
+           (lex/status in 0 status #f #:variant variant))
          (define (wrap r)
            (if keep-type?
                (vector r type paren)

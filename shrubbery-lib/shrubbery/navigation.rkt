@@ -1,12 +1,15 @@
 #lang racket/base
 (require racket/class
+         "variant.rkt"
          "private/edit-help.rkt")
 
 ;; Conventions are the same as in "indentation.rkt"
 
-(provide shrubbery-grouping-position)
+(provide shrubbery-grouping-position
+         make-shrubbery-grouping-position)
 
-(define (shrubbery-grouping-position t pos limit-pos direction)
+(define (shrubbery-grouping-position t pos limit-pos direction
+                                     #:variant [variant default-variant])
   (case direction
     [(backward)
      (cond
@@ -61,6 +64,10 @@
                 (not (eq? sog pos))
                 (min pos sog))])])]
     [else #f]))
+
+(define (make-shrubbery-grouping-position #:variant [variant default-variant])
+  (lambda (t pos limit-pos direction)
+    (shrubbery-grouping-position t pos limit-pos direction #:variant variant)))
 
 ;; give a `pos` that's right before a bar, return the start of the
 ;; first `|` in the block, or return the start of the enclsing block

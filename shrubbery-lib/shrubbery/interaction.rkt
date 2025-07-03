@@ -1,11 +1,13 @@
 #lang racket/base
 (require "lex.rkt"
+         "variant.rkt"
          "private/paren.rkt"
          syntax-color/racket-lexer)
 
-(provide shrubbery-submit-predicate)
+(provide shrubbery-submit-predicate
+         make-shrubbery-submit-predicate)
 
-(define (shrubbery-submit-predicate in whitespace-after?)
+(define (shrubbery-submit-predicate in whitespace-after? #:variant [variant default-variant])
   (and whitespace-after?
        ;; siilar to `lex-all` with `#:interactive? #t`, but staying in lexer
        ;; land by using `racket-lexer/status`:
@@ -33,6 +35,10 @@
                     (or multi? (and (not (lex-nested-status? prev-status))
                                     (zero? depth))))]
              [else (loop status #t depth 0 multi?)])))))
+
+(define (make-shrubbery-submit-predicate #:variant [variant default-variant])
+  (lambda (in whitespace-after?)
+    (shrubbery-submit-predicate in whitespace-after? #:variant variant)))
 
 (define (count-newlines s)
   (for/sum ([c (in-string s)])

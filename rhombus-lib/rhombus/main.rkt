@@ -15,10 +15,11 @@
   #:language 'rhombus
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
-  #:info rhombus:get-info-proc
+  #:info get-info-proc
   #:whole-body-readers? #t
+  (provide get-info-proc)
   (require shrubbery/parse
-           (prefix-in rhombus: (submod "private/core.rkt" reader))))
+           (only-in (submod "private/core.rkt" reader) get-info-proc)))
 
 (module configure-runtime racket/base
   (require rhombus/runtime-config))

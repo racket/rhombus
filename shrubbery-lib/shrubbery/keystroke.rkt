@@ -1,7 +1,9 @@
 #lang racket/base
-(require "armor.rkt")
+(require "variant.rkt"
+         "armor.rkt")
 
-(provide shrubbery-keystrokes)
+(provide shrubbery-keystrokes
+         make-shrubbery-keystrokes)
 
 (define (map-meta key proc)
   (append
@@ -14,3 +16,6 @@
 (define shrubbery-keystrokes
   (append
    (map-meta "a" toggle-armor)))
+
+(define (make-shrubbery-keystrokes #:variant [variant default-variant])
+  shrubbery-keystrokes)

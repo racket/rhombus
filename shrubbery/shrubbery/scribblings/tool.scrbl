@@ -1,84 +1,258 @@
-#lang rhombus/scribble/manual
-@(import:
-    "quote.rhm" open)
+#lang scribble/manual
+@(require (for-label racket/base
+                     racket/contract/base
+                     racket/gui/base
+                     framework
+                     syntax-color/color-textoid
+                     (only-in (submod shrubbery reader)
+                              get-info-proc
+                              make-get-info-proc)
+                     shrubbery/syntax-color
+                     shrubbery/indentation
+                     shrubbery/navigation
+                     shrubbery/keystroke
+                     shrubbery/variant))
 
-@title(~tag: "tool-support"){Editor Support}
+@(define dr-doc '(lib "scribblings/tools/tools.scrbl"))
 
-The shrubbery package includes support for shrubbery syntax coloring and
-editor operations for DrRacket. Where possible, this section also
-provides hints for using other editors.
+@title[#:tag "tool"]{Tool Support}
 
-@section(~tag: "drracket-shrubbery"){Shrubbery Support in DrRacket}
+Librraies such as @racketmodname[shrubbery/syntax-color] and
+@racketmodname[shrubbery/indentation] provide tools for working with
+shrubbery-based programs. They generally follow DrRacket's protocols,
+but they are also intended to support other tools where the protocols
+can be adapted.
 
-Tab cycles through the possible indentations for a line based on
-preceding lines. The indentation possibilities can be different if a
-line is empty or starts with @litchar{|} or an operator. If multiple
-lines are selected, if they start out with a valid indentation relative
-to that first line, and if all lines can be shifted by the same amount
-in tandem with the first line, then Tab cycles through possibilities for
-the first selected line and shifts remaining lines by same amount;
-otherwise, Tab attempts to indent each line independently.
+@section{Language Configration}
 
-Meta-A toggles the armor of the currently selected region. Armoring adds
-@guillemets to make the selected region indentation-insensitive, and
-unarmoring removes the added @guillemets. A potential use of armoring is
-to protect a region of code while moving it from one context to another
-context with a different indentation: armor in the source context, copy
-and reindent with Tab in the target context, and then unarmor.
+@defmodule[(submod shrubbery reader)]
 
-@section(~tag: "type-guillemet"){How to Type @guillemets}
+The @racketmodname[(submod shrubbery reader)] module provides
+@racketidfont{read}, @racketidfont{read-syntax}, and @racket{get-info}
+functions as normal for a @racketidfont{reader} submodule, but
+@racketidfont{read} and @racketidfont{read-syntax} accept an extra
+@racket[#:variant] argument in the sense of
+@racketmodname[shrubbery/variant]. To better cooperate with new
+languages that are defined with @racketmodname[syntax/module-reader],
+the @racketmodname[(submod shrubbery reader)] module also provides
+@racket[get-info-proc] and @racket[make-get-info-proc].
 
-The way to type @guillemets on a keyboard depends on your operating
-system, program editor, and configuration, but here are some
-possibilities:
+@defproc[(get-info-proc [key symbol?]
+                        [default any/c]
+                        [make-default (-> symbol? any/c -> any/c)]
+                        [#:variant variant variant? default-variant])
+         any/c]{
 
-@itemlist(
-  
- @item{@bold{DrRacket}:
- @//
- Type @litchar{\guillemetleft} for @litchar{«} or
- @litchar{\guillemetright} for @litchar{»}, then hit Control-@litchar{\}
- or Meta-@litchar{\} (where a Meta key combination is an Alt combination,
- Option combination, or Esc prefix, depending on your keyboard and
- configuration). Note that @litchar{\gui} followed by Control-@litchar{\}
- or Meta-@litchar{\} expands to @litchar{\guillemet} via autocomplete,
- and then @litchar{l} or @litchar{r} followed by Ctl-@litchar{\} or
- Meta-@litchar{\} again will complete to @litchar{«} or @litchar{»}.}
+ Returns language-configuration results that are suitable for any
+ shrubbery-based languages. The results are based on modules such as
+ @racketmodname[shrubbery/syntax-color],
+ @racketmodname[shrubbery/indentation],
+ @racketmodname[shrubbery/navigation], and
+ @racketmodname[shrubbery/keystroke].
 
- @item{@bold{Mac OS with an English keyboard layout}:
- @//
- Hit Option-@litchar{\} for @litchar{«}, or hit
- Option-Shift-@litchar{|} for @litchar{»}.}
+}
 
- @item{@bold{Windows}:
- @//
- Hold Alt while typing @litchar{174} on the numpad for @litchar{«}, or
- hold Alt and type @litchar{175} on the numpad for @litchar{»}.}
+@defproc[(make-get-info-proc [#:variant variant variant? default-variant])
+         procedure?]{
 
- @item{@bold{Unix variants with a typical window manager}:
- @//
- Hit Control-Shift-U, then type @litchar{00AB} (or just @litchar{AB})
- for @litchar{«}, or type @litchar{00BB} (or just @litchar{BB}) for
- @litchar{»}, then hit Enter or Space.}
+ Returns a procedure like @racket[get-info-proc], but with
+ @racket[variant] already supplied as the @racket[#:variant] argument.
 
- @item{@bold{Unix variants with a Compose key configured}:
- @//
- Hit Compose, then type @litchar{<<} for @litchar{«} or @litchar{>>} for
- @litchar{»}.}
+}
 
- @item{@bold{Vim}:
- @//
- Type Control-K then @litchar{<<} for @litchar{«} or @litchar{>>} for
- @litchar{»}.}
+@section{Syntax Coloring}
 
- @item{@bold{Emacs}:
- @//
- Run @litchar{insert-char} (via Control-X, 8, Enter), then provide
- @litchar{00AB} (or just @litchar{AB}) for @litchar{«}, or provide
- @litchar{00BB} (or just @litchar{BB}) for @litchar{»}.}
+@defmodule[shrubbery/syntax-color]
 
-)
+@defproc[(shrubbery-lexer [in input-port?]
+                          [pos exact-nonnegative-integer?]
+                          [status any/c]
+                          [#:variant variant variant? default-variant])
+         (values (or/c string? eof-object?)
+                 (or/c symbol?
+                       (and/c (hash/c symbol? any/c) immutable?))
+                 (or/c symbol? #f)
+                 (or/c number? #f)
+                 (or/c number? #f)
+                 exact-nonnegative-integer?
+                 any/c)]{
 
-See also the
-@hyperlink("https://en.wikipedia.org/wiki/Guillemet#Keyboard_entry"){Keyboard
- entry section of the Guillemet article on Wikipedia}.
+ A syntax-coloring lexer that follows the
+ @method[color:text<%> start-colorer] protocol
+ @seclink["Syntax_Coloring" #:doc dr-doc #:indirect? #t]{used by DrRacket}, but with
+ an additional optional @racket[#:variant] argument.
+
+}
+
+@defproc[(shrubbery-text-mode-lexer [in input-port?]
+                                    [pos exact-nonnegative-integer?]
+                                    [status any/c]
+                                    [#:variant variant variant? default-variant])
+         (values (or/c string? eof-object?)
+                 (or/c symbol?
+                       (and/c (hash/c symbol? any/c) immutable?))
+                 (or/c symbol? #f)
+                 (or/c number? #f)
+                 (or/c number? #f)
+                 exact-nonnegative-integer?
+                 any/c)]{
+
+ Like @racket[shrubbery-lexer], but starting in ``text'' mode as if
+ surrounded by an @litchar["@"] form and inside the form's @litchar["{"]
+ and @litchar["}"].
+
+}
+
+@deftogether[(
+@defproc[(make-shrubbery-lexer [#:variant variant variant? default-variant])
+          procedure?]
+@defproc[(make-shrubbery-text-mode-lexer [#:variant variant variant? default-variant])
+          procedure?]
+)]{
+
+ Returns a procedure like @racket[shrubbery-lexer] or @racket[shrubbery-text-mode-lexer],
+ but where @racket[variant] is already supplied as the @racket[#:variant] argument.
+
+}
+
+
+@section{Indentation}
+
+@defmodule[shrubbery/indentation]
+
+@defproc[(shrubbery-indentation [text (is-a?/c color-textoid<%>)]
+                                [pos exact-nonnegative-integer?]
+                                [#:reverse? reverse? any/c #f]
+                                [#:multi? multi? any/c #f]
+                                [#:always? always? any/c multi?]
+                                [#:stop-pos stop-pos exact-nonnegative-integer? 0]
+                                [#:variant variant variant? default-variant])
+         (or/c #f
+               exact-nonnegative-integer?
+               (list/c exact-nonnegative-integer? string?)
+               (listof (or/c exact-nonnegative-integer?
+                             (list/c exact-nonnegative-integer? string?))))]{
+
+ Returns a suggested indentation for the line containing @racket[pos] in
+ @racket[text] following a protocol
+ @seclink["Indentation" #:doc dr-doc #:indirect? #t]{used by DrRacket}, but with several
+ extra options described below. The result includes an integer and a
+ string only when tab characters force a description of indentation in
+ terms of tab and space characters.
+
+ If the current indentation matches a valid indentation but others are
+ possible, the result when @racket[multi?] is @racket[#f] corresponds to
+ the next valid indentation in a sequence of possibilities.
+
+ @itemlist[
+
+ @item{@racket[reverse?]: When true, causes the a sequence of valid
+   indentations to be used or returned in reverse order.}
+
+ @item{@racket[multi?]: Returns all possible indentations, instead of
+   just the first one.}
+
+ @item{@racket[always?]: When @racket[#f], returns the line's current
+   indentation if that indentation is valid instead of cycling to the next
+   valid indentation.}
+
+ @item{@racket[stop-pos]: Indicates a position in @racket[text] where
+   indentation should stop inspecting, instead of considering the effect of
+   earlier characters.}
+
+ @item{@racket[variant]: See @racketmodname[shrubbery/variant].}
+
+ ]
+
+
+ }
+
+@defproc[(shrubbery-range-indentation [text (is-a?/c color-textoid<%>)]
+                                      [start-pos exact-nonnegative-integer?]
+                                      [end-pos exact-nonnegative-integer?]
+                                      [#:reverse? reverse? any/c #f]
+                                      [#:variant variant variant? default-variant])
+         (or/c #f
+               (listof (list/c exact-nonnegative-integer? string?)))]{
+
+ Similar to @racket[shrubbery-indentation], returns a suggested
+ indentation for multiple lines following a character-range protocol
+ @seclink["Indentation" #:doc dr-doc #:indirect? #t]{used by DrRacket}.
+
+}
+
+@defproc[(shrubbery-range-indentation/reverse-choices [text (is-a?/c color-textoid<%>)]
+                                                      [start-pos exact-nonnegative-integer?]
+                                                      [end-pos exact-nonnegative-integer?]
+                                                      [#:variant variant variant? default-variant])
+         (or/c #f
+               (listof (list/c exact-nonnegative-integer? string?)))]{
+
+ Like @racket[shrubbery-range-indentation] with @racket[#:reverse? #t].
+
+}
+
+
+@deftogether[(
+@defproc[(make-shrubbery-indentation [#:variant variant variant? default-variant])
+         procedure?]
+@defproc[(make-shrubbery-range-indentation [#:variant variant variant? default-variant])
+         procedure?]
+@defproc[(make-shrubbery-range-indentation/reverse-choices [#:variant variant variant? default-variant])
+         procedure?]
+)]{
+
+ Returns a procedure like @racket[shrubbery-indentation],
+ @racket[shrubbery-range-indentation], or
+ @racket[shrubbery-range-indentation/reverse-choices], but with
+ @racket[variant] already supplied as the @racket[#:variant] argument.
+   
+}
+
+
+@section{Term and Group Navigation}
+
+@defmodule[shrubbery/navigation]
+
+@defproc[(shrubbery-grouping-position [text (is-a?/c color-textoid<%>)]
+                                      [pos exact-nonnegative-integer?]
+                                      [limit-pos exact-nonnegative-integer?]
+                                      [direction (or/c 'up 'down 'backward 'forward)]
+                                      [#:variant variant variant? default-variant])
+         (or/c #f #t natural?)]{
+
+ Returns navigation guidance starting at @racket[pos] in
+ @racket[text] following a protocol
+ @seclink["Keystrokes" #:doc dr-doc #:indirect? #t]{used by DrRacket}.
+
+}
+
+@defproc[(make-shrubbery-grouping-position [#:variant variant variant? default-variant])
+         procedure?]{
+
+ Returns a procedure like @racket[shrubbery-grouping-position], but with
+ @racket[variant] already supplied as the @racket[#:variant] argument.
+
+}
+
+@section{Keystrokes}
+
+@defmodule[shrubbery/keystroke]
+
+@defthing[shrubbery-keystrokes (listof (list/c string?
+                                               (-> (is-a?/c text%)
+                                                   (is-a?/c event%)
+                                                   any)))]{
+
+ Extra keystrokes suitable for shrubbery forms following a protocol
+ @seclink["Keystrokes" #:doc dr-doc #:indirect? #t]{used by DrRacket}.
+
+}
+
+@defproc[(make-shrubbery-keystrokes [#:variant variant variant? default-variant])
+         list?]{
+
+ Returns a list like @racket[shrubbery-keystrokes], but suitable for a
+ form of shrubbery notation selected by @racket[variant].
+
+}

@@ -1,6 +1,7 @@
 #lang racket/base
 (require syntax/strip-context
          syntax/stx
+         "../variant.rkt"
          "../parse.rkt"
          "module-path.rkt")
 
@@ -8,13 +9,14 @@
          shrubbery-get-info-proc/mode)
 
 (define (shrubbery-read-syntax/mode src in
-                                    #:mode [mode 'top])
+                                    #:mode [mode 'top]
+                                    #:variant [variant default-variant])
   ;; If there's something on the first line, use that as a module
   ;; language. Otherwise, just quote. Detect whether there are
   ;; any newlines by checking the prefix of the first group.
   (define-values (line col pos) (port-next-location in))
-  (define lang (parse-all in #:mode 'line))
-  (define shrubbery (parse-all in #:mode mode #:source src))
+  (define lang (parse-all in #:mode 'line #:variant variant))
+  (define shrubbery (parse-all in #:mode mode #:source src #:variant variant))
   (define p-name (object-name in))
   (define module-name
     (if (path? p-name)
@@ -33,38 +35,48 @@
           '#,shrubbery)])))
 
 (define (shrubbery-get-info-proc/mode key default make-default
-                                      #:mode [mode 'top])
+                                      #:mode [mode 'top]
+                                      #:variant [variant default-variant])
   (case key
     [(color-lexer)
-     (dynamic-require 'shrubbery/syntax-color
-                      (case mode
-                        [(top) 'shrubbery-lexer]
-                        [(text) 'shrubbery-text-mode-lexer]
-                        [else (error "invalid mode")]))]
+     ((dynamic-require 'shrubbery/syntax-color
+                       (case mode
+                         [(top) 'make-shrubbery-lexer]
+                         [(text) 'make-shrubbery-text-mode-lexer]
+                         [else (error "invalid mode")]))
+      #:variant variant)]
     [(drracket:indentation)
-     (dynamic-require 'shrubbery/indentation
-                      'shrubbery-indentation)]
+     ((dynamic-require 'shrubbery/indentation
+                       'make-shrubbery-indentation)
+      #:variant variant)]
     [(drracket:range-indentation)
-     (dynamic-require 'shrubbery/indentation
-                      'shrubbery-range-indentation)]
+     ((dynamic-require 'shrubbery/indentation
+                       'make-shrubbery-range-indentation)
+      #:variant variant)]
     [(drracket:range-indentation/reverse-choices)
-     (dynamic-require 'shrubbery/indentation
-                      'shrubbery-range-indentation/reverse-choices)]
+     ((dynamic-require 'shrubbery/indentation
+                       'make-shrubbery-range-indentation/reverse-choices)
+      #:variant variant)]
     [(drracket:paren-matches)
-     (dynamic-require 'shrubbery/indentation
-                      'shrubbery-paren-matches)]
+     ((dynamic-require 'shrubbery/indentation
+                       'make-shrubbery-paren-matches)
+      #:variant variant)]
     [(drracket:quote-matches)
-     (dynamic-require 'shrubbery/indentation
-                      'shrubbery-quote-matches)]
+     ((dynamic-require 'shrubbery/indentation
+                       'make-shrubbery-quote-matches)
+      #:variant variant)]
     [(drracket:grouping-position)
-     (dynamic-require 'shrubbery/navigation
-                      'shrubbery-grouping-position)]
+     ((dynamic-require 'shrubbery/navigation
+                       'make-shrubbery-grouping-position)
+      #:variant variant)]
     [(drracket:submit-predicate)
-     (dynamic-require 'shrubbery/interaction
-                      'shrubbery-submit-predicate)]
+     ((dynamic-require 'shrubbery/interaction
+                       'make-shrubbery-submit-predicate)
+      #:variant variant)]
     [(drracket:keystrokes)
-     (dynamic-require 'shrubbery/keystroke
-                      'shrubbery-keystrokes)]
+     ((dynamic-require 'shrubbery/keystroke
+                       'make-shrubbery-keystrokes)
+      #:variant variant)]
     [(drracket:comment-delimiters)
      '((line "//" " ")
        (region "/*" " *" "*/" " "))]

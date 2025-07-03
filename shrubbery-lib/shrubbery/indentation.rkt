@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/class
          racket/list
+         "variant.rkt"
          "private/edit-help.rkt"
          "private/paren.rkt"
          "private/delta-text.rkt")
@@ -16,7 +17,12 @@
          shrubbery-range-indentation
          shrubbery-range-indentation/reverse-choices
          shrubbery-paren-matches
-         shrubbery-quote-matches)
+         shrubbery-quote-matches
+         make-shrubbery-indentation
+         make-shrubbery-range-indentation
+         make-shrubbery-range-indentation/reverse-choices
+         make-shrubbery-paren-matches
+         make-shrubbery-quote-matches)
 
 (define NORMAL-INDENT 2)
 (define BAR-INDENT 0)
@@ -25,7 +31,8 @@
                                #:reverse? [reverse? #f]
                                #:multi? [multi? #f]
                                #:always? [always? multi?]
-                               #:stop-pos [stop-pos 0])
+                               #:stop-pos [stop-pos 0]
+                               #:variant [variant default-variant])
   (parameterize ([current-classify-range (or (for/or ([r (in-list (send t get-regions))])
                                                (and (pos . >= . (car r))
                                                     (or (eq? (cadr r) 'end)
@@ -43,34 +50,37 @@
        current-tab]
       [else
        (define (like-enclosing #:as-bar? [as-bar? #f]
-                               #:as-operator? [as-operator? #f]
+                               #:as-operator [as-operator #f]
                                #:also-zero? [also-zero? #f])
          (indent-like-enclosing-group t start current-tab
                                       #:reverse? reverse?
                                       #:multi? multi?
                                       #:as-bar? as-bar?
-                                      #:as-operator? as-operator?
+                                      #:as-operator as-operator
                                       #:also-zero? also-zero?
-                                      #:stop-pos stop-pos))
+                                      #:stop-pos stop-pos
+                                      #:variant variant))
        (case (classify-position t (+ start current-tab))
          [(closer)
-          (indent-like-parenthesis t start current-tab)]
+          (indent-like-parenthesis t start current-tab #:variant variant)]
          [(bar-operator)
           (like-enclosing #:as-bar? #t)]
          [(comment)
-          (like-enclosing #:as-operator? (next-is-operator? t (+ start current-tab)))]
+          (like-enclosing #:as-operator (next-as-operator t (+ start current-tab)))]
          [(group-comment)
           (like-enclosing #:as-bar? (bar-after-group-comment? t (+ start current-tab) start)
                           #:also-zero? #t)]
          [(operator)
-          (like-enclosing #:as-operator? #t)]
+          (like-enclosing #:as-operator (next-as-operator t (+ start current-tab)))]
          [(at-content)
           ;; no indenting in `@` context
           current-tab]
          [else
           (like-enclosing)])])))
 
-(define (shrubbery-range-indentation t s e #:reverse [reverse? #f])
+(define (shrubbery-range-indentation t s e
+                                     #:reverse [reverse? #f]
+                                     #:variant [variant default-variant])
   (define s-line (send t position-paragraph s))
   (define e-line (let ([line (send t position-paragraph e)])
                    (if (and (s . < . e)
@@ -81,7 +91,7 @@
     [(= s-line e-line)
      ;; use single-line mode
      (define pos (send t paragraph-start-position s-line))
-     (define amt (shrubbery-indentation t pos #:reverse? reverse? #:always? #t))
+     (define amt (shrubbery-indentation t pos #:reverse? reverse? #:always? #t #:variant variant))
      (define current-amt (get-current-tab t pos))
      (list (list (max 0 (- current-amt amt))
                  (make-string (max 0 (- amt current-amt)) #\space)))]
@@ -91,7 +101,8 @@
                                       ;; when trying to reindent within parentheses and similar,
                                       ;; we want to get indentation suggestions that line up
                                       ;; with the first argument in the range, not the `(`
-                                      #:stop-pos (send t paragraph-start-position s-line)))
+                                      #:stop-pos (send t paragraph-start-position s-line)
+                                      #:variant variant))
      (cond
        [(or (not changes)
             (for/and ([change (in-list changes)])
@@ -105,7 +116,7 @@
           [else
            (define (line-position line) (send t paragraph-start-position line))
            (define pos (line-position (car lines)))
-           (define amt-or-multi-amt (shrubbery-indentation t pos #:reverse? reverse? #:multi? #t))
+           (define amt-or-multi-amt (shrubbery-indentation t pos #:reverse? reverse? #:multi? #t #:variant variant))
            (define amts (if (list? amt-or-multi-amt)
                             amt-or-multi-amt
                             (list amt-or-multi-amt)))
@@ -130,10 +141,25 @@
             '())])]
        [else (cons '(0 "") changes)])]))
 
-(define (shrubbery-range-indentation/reverse-choices t s e)
-  (shrubbery-range-indentation t s e #:reverse #t))
+(define (shrubbery-range-indentation/reverse-choices t s e
+                                                     #:variant [variant default-variant])
+  (shrubbery-range-indentation t s e
+                               #:reverse #t
+                               #:variant variant))
 
-(define (indent-interior t s-line e-line #:reverse? [reverse? #f] #:stop-pos [stop-pos 0])
+(define (make-shrubbery-indentation #:variant [variant default-variant])
+  (lambda (t pos)
+    (shrubbery-indentation t pos #:variant variant)))
+
+(define (make-shrubbery-range-indentation #:variant [variant default-variant])
+  (lambda (t s e)
+    (shrubbery-range-indentation t s e #:variant variant)))
+
+(define (make-shrubbery-range-indentation/reverse-choices #:variant [variant default-variant])
+  (lambda (t s e)
+    (shrubbery-range-indentation/reverse-choices t s e #:variant variant)))
+
+(define (indent-interior t s-line e-line #:reverse? [reverse? #f] #:stop-pos [stop-pos 0] #:variant variant)
   (cond
     [(= s-line e-line) '()]
     [else
@@ -141,7 +167,8 @@
      (define indent (shrubbery-indentation t pos
                                            #:reverse? reverse?
                                            #:multi? #t
-                                           #:stop-pos stop-pos))
+                                           #:stop-pos stop-pos
+                                           #:variant variant))
      (define amt
        (cond
          [(and (pair? indent) (null? (cdr indent))) (car indent)]
@@ -163,7 +190,8 @@
                            #:reverse? reverse?
                            #:stop-pos (if (= current amt)
                                           stop-pos
-                                          0)))
+                                          0)
+                           #:variant variant))
         (and changes
              (cons one changes))]
        [else #f])]))
@@ -171,18 +199,20 @@
 (define (indent-like-enclosing-group t start current-tab
                                      #:reverse? [reverse? #f]
                                      #:as-bar? [as-bar? #f]
-                                     #:as-operator? [as-operator? #f]
+                                     #:as-operator [as-operator #f]
                                      #:multi? [multi? #f]
                                      #:also-zero? [also-zero? #f]
                                      #:leftmost? [leftmost? #f]
-                                     #:stop-pos [stop-pos 0])
+                                     #:stop-pos [stop-pos 0]
+                                     #:variant variant)
   ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define (add-zero l) (if also-zero? (add-zero-to-end l) l))
   (define (leftmost l) (if (and leftmost? (pair? l)) (list (last l)) l))
   (define candidates (remove-dups (indentation-candidates t (sub1 start)
                                                           #:as-bar? as-bar?
-                                                          #:as-operator? as-operator?
-                                                          #:stop-pos stop-pos)))
+                                                          #:as-operator as-operator
+                                                          #:stop-pos stop-pos
+                                                          #:variant variant)))
   (define tabs (let ([tabs (leftmost (add-zero candidates))])
                  (if reverse?
                      (reverse tabs)
@@ -203,7 +233,7 @@
      ;; default to rightmost:
      (car tabs)]))
 
-(define (indent-like-parenthesis t start current-tab)
+(define (indent-like-parenthesis t start current-tab #:variant variant)
   (define-values (s e) (get-token-range t (+ start current-tab)))
   (define o-s (send t backward-match e 0))
   (define (own-line? t pos #:direction dir)
@@ -236,7 +266,8 @@
      ;; didn't find match, so treat mostly like other tokens,
      ;; but use only the leftmost possibility
      (indent-like-enclosing-group t start current-tab
-                                  #:leftmost? #t)]))
+                                  #:leftmost? #t
+                                  #:variant variant)]))
 
 ;; Gets list of candidates with further-right candidates first starting
 ;; search with the token that contains `pos` (inclusive on the left
@@ -244,8 +275,9 @@
 ;; The search works going backwards to find enclosing groups.
 (define (indentation-candidates t pos
                                 #:as-bar? [as-bar? #f]
-                                #:as-operator? [as-operator? #f]
-                                #:stop-pos [stop-pos 0])
+                                #:as-operator [as-operator #f]
+                                #:stop-pos [stop-pos 0]
+                                #:variant variant)
   (let loop ([pos pos]
              ;; possible target column, depending on what's we
              ;; find by looking further back; for example, this
@@ -258,7 +290,8 @@
              ;; saw a bar in this group?
              [bar-after? as-bar?]
              ;; can also indent by an extra step?
-             [plus-one-more? as-operator?]
+             [plus-one-more? (and as-operator
+                                  ((variant-indented-operator-continue? variant) as-operator))]
              ;; did we just skip over and armored sequence?
              [armored? #f])
     ;; helper
@@ -561,7 +594,7 @@
          [(opener) (equal? (send t get-text s e) "«")]
          [else #f])])))
 
-(define (next-is-operator? t pos)
+(define (next-as-operator t pos)
   (let loop ([pos pos])
     (cond
       [(= pos (send t last-position)) #f]
@@ -570,7 +603,7 @@
        (define category (classify-position t s))
        (case category
          [(whitespace comment) (loop e)]
-         [(operator) #t]
+         [(operator) (send t get-text s e)]
          [else #f])])))
 
 (define (get-non-empty-lines t s-line e-line)
