@@ -103,7 +103,9 @@
                      converter
                      annotation-str)]]
           [else
-           #`[#,f #,(build-converted who f tmp converter annotation-str)]])))
+           #`[#,f (let ()
+                    #,@static-info-decls
+                    #,(build-converted who f tmp converter annotation-str))]])))
     (define (build-added-field-bindings)
       (let loop ([non-constructor-fields non-constructor-fields]
                  [args constructor-fields])
@@ -149,16 +151,7 @@
                                                                                 (map (lambda (v) #'#f) super-constructor+-defaults)]
                                                                                [else
                                                                                 super-constructor+-defaults])
-                                                                             defaults))]
-                                                        [static-info-decls (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
-                                                                                              '())
-                                                                                            static-info-declss))]
-                                                        [converter (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
-                                                                                      #'#f)
-                                                                                    constructor-converters))]
-                                                        [annotation-str (in-list (append (for/list ([cf (in-list super-constructor+-fields)])
-                                                                                           #f)
-                                                                                         constructor-annotation-strs))])
+                                                                             defaults))])
                                                (let ([arg (if (syntax-e df)
                                                               #`[#,f unsafe-undefined]
                                                               f)])

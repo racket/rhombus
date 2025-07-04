@@ -1259,3 +1259,8 @@ block:
     fun make_origin() :: Posn: Posn(0, 0)
   check Posn.make_origin() ~is Posn(0, 0)
 
+// make sure later annotations can see earlier fields with static info
+block:
+  class TwoLists(x :: List, y :: satisfying(fun (y :: List): x.length() == y.length()))
+  check TwoLists([], []) ~is_a TwoLists
+  check TwoLists([], [1]) ~throws error.annot_msg()

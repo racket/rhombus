@@ -162,6 +162,9 @@
  or @rhombus(protected, ~class_clause) modifier,
  however, then it is not included as an argument for the default
  constructor, binding form, or annotation form.
+ When a @rhombus(field_spec) has an annotation, then if the annotation
+ embeds an expression form, it can refer to earlier field names in the
+ same @rhombus(class).
 
  When a default-value expression or block is provided for a field after
  @rhombus(=) or @litchar{:}, then the default constructor evaluates the
