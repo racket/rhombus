@@ -563,6 +563,7 @@ check:
     nonfinal
   def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn.of(Int, ~y: String)
+  p :: Posn.of(Int)
   p :: _Posn.now_of(Int, ~y: String, Int)
   p :: Posn3D.now_of(Int, ~y: String, Symbol)
   p :: Posn4D.now_of(Int, ~y: String, Symbol, Keyword)
@@ -1264,3 +1265,21 @@ block:
   class TwoLists(x :: List, y :: satisfying(fun (y :: List): x.length() == y.length()))
   check TwoLists([], []) ~is_a TwoLists
   check TwoLists([], [1]) ~throws error.annot_msg()
+
+block:
+  class Foo(~x: x, ~y: y)
+  let foo = Foo(~x: 1, ~y: 2)
+  let Foo(~x: x0) = foo
+  let Foo(~y: y0) = foo
+  let Foo() = foo
+  check x0 ~is 1
+  check y0 ~is 2
+  check foo is_a Foo.of(~x: Int) ~is #true
+  check foo is_a Foo.of(~x: String) ~is #false
+  check foo is_a Foo.of(~y: Int) ~is #true
+  check foo is_a Foo.of(~y: String) ~is #false
+  check foo is_a Foo.of(~x: Int, ~y: Int) ~is #true
+  check foo is_a Foo.of(~x: String, ~y: Int) ~is #false
+  check foo is_a Foo.of(~x: Int, ~y: String) ~is #false
+
+

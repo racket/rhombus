@@ -14,7 +14,9 @@
          "values-key.rkt"
          "repetition.rkt"
          "if-blocked.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_]))
 
 (provide (for-syntax composite-binding-transformer))
 
@@ -49,7 +51,8 @@
      #:do [(define stx (or stx-in
                            (quasisyntax/loc #'form-id
                              (#,group-tag form-id (tag a-g ...)))))]
-     #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a-g ...)) stx)
+     #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a-g ...)) stx
+                                                            #:make-missing (lambda (kw) #'(group rhombus-_)))
      #:with (a-parsed::binding-form ...) #'(a.parsed ...)
      ;; `rest-a` will have either 0 items or 1 item
      #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)

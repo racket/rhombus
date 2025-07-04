@@ -155,7 +155,9 @@
  implies that the default constructor expects the corresponding argument
  as a keyword argument instead of a by-position argument. The default
  annotation and binding pattern similarly expect a keyword-tagged subform
- instead of a by-position form for the corresponding fields. The name of
+ instead of a by-position form for the corresponding fields, but a keyword
+ subform is optional (and, when omitted, corresponds to a @rhombus(_, ~bind) binding
+ or @rhombus(Any, ~annot) annotation for the field). The name of
  the field for access with @rhombus(.) is the identifier, if present,
  otherwise the name is the symbolic form of the keyword. When a
  @rhombus(field_spec) has the @rhombus(private, ~class_clause)

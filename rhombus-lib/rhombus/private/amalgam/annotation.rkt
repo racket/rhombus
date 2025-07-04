@@ -307,11 +307,12 @@
       [(form-id (~and subs (_::parens g ...)) . tail)
        (define new-stx #'(form-id subs))
        (define unsorted-gs (syntax->list #'(g ...)))
-       (unless (eqv? (length unsorted-gs) sub-n)
+       (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx
+                                                 #:make-missing (lambda (kw) #'(group Any))))
+       (unless (eqv? (length gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
                              (respan new-stx)))
-       (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx))
        (values new-stx
                gs
                (for/list ([g (in-list gs)])
