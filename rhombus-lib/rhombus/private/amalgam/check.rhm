@@ -146,7 +146,7 @@ fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
     match maybe_loc_mode
     | [mode, srcloc]: maybe_loc_mode
     | mode: [mode, loc_where[1]]
-  let (got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints)
+  let (got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints, mode != #'~throws)
   let expected :~ List = call_capturing_values(expected_thunk)
   let ok:
     match mode

@@ -8,7 +8,7 @@
          display_as_exn
          reindent_exn_msg)
 
-(define (call_capturing_exn thunk capture-output?)
+(define (call_capturing_exn thunk capture-output? use-error-display?)
   (define s (and capture-output? (open-output-string)))
   (define (get-output) (and s (string->immutable-string (get-output-string s))))
   (let ([thunk (if capture-output?
@@ -18,7 +18,16 @@
                    thunk)])
     (with-handlers ([exn:fail?
                      (lambda (exn)
-                       (values #f (exn-message exn) (get-output)))])
+                       (values #f
+                               (cond
+                                 [use-error-display?
+                                  (define o (open-output-string))
+                                  (parameterize ([current-error-port o])
+                                    ((error-display-handler) (exn-message exn) exn))
+                                  (get-output-string o)]
+                                 [else
+                                  (exn-message exn)])
+                               (get-output)))])
       (values (call-with-values
                (lambda ()
                  (call-with-continuation-prompt
