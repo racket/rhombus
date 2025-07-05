@@ -453,6 +453,14 @@
        (define exs (parse-exports #'(combine-out . exports) expose))
        (define replaced-ht (check-exports-distinct stxes exs fields method-mindex dots))
 
+       (define custom-constructor-maybe-arity
+         (cond
+           [expression-macro-rhs #t]
+           [given-constructor-rhs (or (extract-constructor-arity given-constructor-rhs
+                                                                 given-constructor-stx-params)
+                                      #t)]
+           [else #f]))           
+       
        (define reconstructor-rhs
          (cond
            [(hash-ref options 'reconstructor-rhs #f)
@@ -795,7 +803,7 @@
                                  final? has-private-fields? exposures
                                  parent-name interface-names all-interfaces private-interfaces protected-interfaces
                                  method-mindex method-names method-vtable method-results method-private
-                                 dots
+                                 dots custom-constructor-maybe-arity
                                  authentic? prefab? (not (syntax-e #'reconstructor-name))
                                  here-callable? public-callable?
                                  here-indexable? public-indexable?
@@ -1128,7 +1136,7 @@
                                      final? has-private-fields? exposures
                                      parent-name interface-names all-interfaces private-interfaces protected-interfaces
                                      method-mindex method-names method-vtable method-results method-private
-                                     dots
+                                     dots custom-constructor-maybe-arity
                                      authentic? prefab? no-recon?
                                      here-callable? public-callable?
                                      here-indexable? public-indexable?
@@ -1245,9 +1253,7 @@
                                                                      #f)))
                                                      '())))]
                             [else #'#f])
-                        #,(and (or (hash-ref options 'expression-rhs #f)
-                                   (hash-ref options 'constructor-rhs #f))
-                               #t)
+                        '#,custom-constructor-maybe-arity
                         #,(and (hash-ref options 'binding-rhs #f) #t)
                         #,(and (hash-ref options 'annotation-rhs #f) #t)
                         #,(if force-custom-recon?

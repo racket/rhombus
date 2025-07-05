@@ -8,6 +8,7 @@
          "parens.rkt"
          "call-result-key.rkt"
          "dot-provider-key.rkt"
+         "function-arity-key.rkt"
          "static-info.rkt"
          "class-this.rkt"
          "entry-point.rkt"
@@ -20,7 +21,8 @@
 
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
-                     encode-protocol))
+                     encode-protocol
+                     extract-constructor-arity))
 
 ;; Note: `constructor.macro` is handed in "class-dot.rkt"
 
@@ -182,18 +184,43 @@
          null)
      (cond
        [constructor-rhs
+        (define (encode-arity keywords defaults)
+          (define-values (count opt req-kws allow-kws)
+            (for/fold ([count 0] [opt 0] [req-kws '()] [allow-kws '()])
+                      ([kw (in-list keywords)]
+                       [def (in-list defaults)])
+              (cond
+                [(syntax-e kw)
+                 (values count
+                         opt
+                         (if (syntax-e def) req-kws (cons kw req-kws))
+                         (cons kw allow-kws))]
+                [else
+                 (values (add1 count)
+                         (if (syntax-e def) (add1 opt) opt)
+                         req-kws
+                         allow-kws)])))
+          (define mask (arithmetic-shift (sub1 (arithmetic-shift 1 (add1 opt))) (- count opt)))
+          (if (null? allow-kws)
+              mask
+              (list mask req-kws allow-kws)))
         (define constructor-body
           #`(let ([visible-name
                    (syntax-parameterize
                        ([this-id
-                         (quote-syntax (#:c #,(wrap-static-info
+                         (quote-syntax (#:c #,(wrap-static-info*
                                                #'make-name
-                                               #'#%call-result
-                                               (let ([si #`((#%dot-provider dot-providers)
-                                                            . indirect-static-infos)])
-                                                 (if super
-                                                     #`((#%call-result #,si))
-                                                     si)))))]
+                                               #`((#%call-result
+                                                   #,(let ([si #`((#%dot-provider dot-providers)
+                                                                  . indirect-static-infos)])
+                                                       (if super
+                                                           #`((#%call-result #,si)
+                                                              (#%function-arity #,(encode-arity keywords defaults)))
+                                                           si)))
+                                                  (#%function-arity #,(if super
+                                                                          (or (class-desc-custom-constructor-maybe-arity super)
+                                                                              (encode-arity super-keywords super-defaults))
+                                                                          (encode-arity keywords defaults)))))))]
                         [private-tables
                          #,(with-syntax ([((private-method-name private-method-id/property) ...)
                                           (for/list ([m-name (in-list (sort (hash-keys method-private)
@@ -320,6 +347,15 @@
       (syntax-parse #'g
         [(~var lam (:entry-point adjustments))
          #'lam.parsed]))]))
+
+(define-for-syntax (extract-constructor-arity stx stx-params)
+  (syntax-parse stx
+    [(_::block g)
+     (with-continuation-mark
+         syntax-parameters-key #'stx-params
+         (syntax-parse #'g
+           [(~var lam :entry-point-shape)
+            (hash-ref (syntax->datum #'lam.parsed) 'arity #f)]))]))
 
 (define (raise-constructor-result-error who val)
   (raise-arguments-error* who rhombus-realm

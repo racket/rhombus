@@ -1282,4 +1282,40 @@ block:
   check foo is_a Foo.of(~x: String, ~y: Int) ~is #false
   check foo is_a Foo.of(~x: Int, ~y: String) ~is #false
 
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    constructor ():
+      super()(1)
+  ~throws "wrong number of arguments in function call"
 
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+    constructor ():
+      super(1, 1)
+  class Posn3D(z):
+    extends Posn
+    constructor():
+      super(1, 1)(1)
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+    constructor:
+      fun ():
+        super(1, 1)
+  class Posn3D(z):
+    extends Posn
+    constructor():
+      super(1, 1)(1)
+  ~throws "wrong number of arguments in function call"

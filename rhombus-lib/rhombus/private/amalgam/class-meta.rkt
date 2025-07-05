@@ -103,7 +103,7 @@
            (define super (class-desc-super-id desc))
            (if super (list super) null)]
           [(uses_default_constructor)
-           (not (class-desc-custom-constructor? desc))]
+           (not (class-desc-custom-constructor-maybe-arity desc))]
           [(uses_default_binding)
            (not (class-desc-custom-binding? desc))]
           [(uses_default_annotation)

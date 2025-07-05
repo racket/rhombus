@@ -83,7 +83,7 @@
    all-fields            ; #f or (list a-field ...), includes private and protected fields; see below for a-field
    inherited-field-count ; number of fields that are inherited
    constructor-makers    ; (list constructor-maker ... maybe-default-constructor-desc)
-   custom-constructor?
+   custom-constructor-maybe-arity ; #f, #t, or arity
    custom-binding?
    custom-annotation?
    reconstructor-fields  ; #f or (list (cons field-sym accessor-id) ...)
