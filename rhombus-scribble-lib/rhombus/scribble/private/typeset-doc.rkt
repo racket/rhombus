@@ -60,7 +60,8 @@
                   style
                   table-cells
                   part-relative-element
-                  collect-put!)
+                  collect-put!
+                  content->string)
          (only-in scribble/tag
                   intern-taglet)
          (only-in scribble/private/manual-vars
@@ -556,7 +557,15 @@
        (if (and can-prefix? prefix-str)
            (list (racketidfont prefix-str) c)
            c))
-     (define content (annote-exporting-library (make-content #t)))
+     (define content
+       (let-values ([(req-kws allow-kws) (procedure-keywords annote-exporting-library)])
+         ;; keyword added in "scribble-lib" version 1.56 (circa Racket version 8.17)
+         (cond
+           [(and allow-kws (memq '#:format-module-path allow-kws))
+            (annote-exporting-library (make-content #t)
+                                      #:format-module-path (lambda (p)
+                                                             (content->string (module-path->rhombus-module-path p))))]
+           [else (annote-exporting-library (make-content #t))])))
      (define spacer-infos/resolved
        (and spacer-infos
             (for/hash ([(k v) (in-hash spacer-infos)])
