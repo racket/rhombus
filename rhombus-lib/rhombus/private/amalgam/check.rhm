@@ -3,8 +3,7 @@ import:
   "core-meta.rkt" open
   "call-capture-exn.rkt" open
   lib("racket/base.rkt").#{error-print-source-location}
-  lib("rackunit/log.rkt").#{test-log!}
-  lib("racket/base.rkt")
+  lib("raco/testing.rkt").#{test-log!}
 
 use_static
 

@@ -1,16 +1,16 @@
 #lang rhombus/and_meta
 import:
-  lib("rackunit/log.rkt")
+  lib("raco/testing.rkt")
 
 fun check_error(thunk, is_ok, form_str, should_str):
   let str:
     let out = Port.Output.open_string()
     parameterize { Port.Output.current_error: out,
-                   log.#{test-log-enabled?}: #false }:
+                   testing.#{test-log-enabled?}: #false }:
       thunk()
     out.get_string()
   let ok = is_ok(str)
-  log.#{test-log!}(ok)
+  testing.#{test-log!}(ok)
   unless ok
   | print("`" ++ form_str ++ "` did not " ++ should_str
             ++ "\n" ++ str,

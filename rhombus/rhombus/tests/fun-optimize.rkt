@@ -3,7 +3,7 @@
                      racket/syntax-srcloc
                      syntax/parse/pre)
          racket/symbol
-         rackunit/log
+         raco/testing
          syntax/modread
          syntax/parse/pre)
 

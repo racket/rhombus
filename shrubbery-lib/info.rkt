@@ -5,8 +5,7 @@
 (define deps
   '(["base" #:version "8.8.0.5"]
     "syntax-color-lib"
-    "parser-tools-lib"
-    "testing-util-lib"))
+    "parser-tools-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"shrubbery\"")
 
