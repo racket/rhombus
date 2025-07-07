@@ -1,8 +1,8 @@
 #lang racket/base
-(require "dot-property.rkt"
+(require racket/mutability
+         "dot-property.rkt"
          "annotation-failure.rkt"
-         "syntax-map.rkt"
-         "mutability.rkt")
+         "syntax-map.rkt")
 
 (provide (struct-out annotation-context)
          empty-annot-context

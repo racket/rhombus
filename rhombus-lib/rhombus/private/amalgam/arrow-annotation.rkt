@@ -8,8 +8,8 @@
                      "syntax-map.rkt"
                      "annot-context.rkt")
          racket/unsafe/undefined
+         racket/treelist
          shrubbery/print
-         "treelist.rkt"
          (only-in "annotation.rkt" ::)
          (submod "annotation.rkt" for-class)
          (submod "annotation.rkt" for-arrow)

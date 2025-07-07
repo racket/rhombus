@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/treelist
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "treelist.rkt"
                      "entry-point-adjustment.rkt")
          syntax/parse/pre
          "pack.rkt"

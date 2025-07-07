@@ -1,12 +1,12 @@
 #lang racket/base
-(require syntax/parse/pre
-         (for-syntax racket/base
+(require (for-syntax racket/base
+                     racket/treelist
                      syntax/stx
                      syntax/parse/pre
-                     "treelist.rkt"
                      "pack.rkt"
                      "entry-point-adjustment.rkt"
                      "srcloc.rkt")
+         syntax/parse/pre
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"

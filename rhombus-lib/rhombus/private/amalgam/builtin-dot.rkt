@@ -1,7 +1,7 @@
 #lang racket/base
-(require "mutability.rkt"
-         "treelist.rkt"
-         "mutable-treelist.rkt"
+(require racket/mutability
+         racket/treelist
+         racket/mutable-treelist
          "pipe-port.rkt"
          "syntax-wrap.rkt"
          (submod "dot.rkt" for-builtin)

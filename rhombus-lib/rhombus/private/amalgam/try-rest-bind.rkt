@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "annotation-string.rkt")
+         racket/treelist
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -9,8 +10,6 @@
          "parse.rkt"
          "static-info.rkt"
          "if-blocked.rkt"
-         "treelist.rkt"
-         "list-bounds-key.rkt"
          "maybe-list-tail.rkt"
          (submod "composite.rkt" for-rest))
 

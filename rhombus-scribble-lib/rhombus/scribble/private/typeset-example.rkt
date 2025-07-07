@@ -31,7 +31,6 @@
                   plain)
          "rhombus.rhm"
          "hspace.rkt"
-         rhombus/private/version-case
          ;; so a sandbox can attach these:
          (only-in rhombus)
          (only-in rhombus/meta)
@@ -118,12 +117,9 @@
     (parameterize ([sandbox-namespace-specs
                     (append (sandbox-namespace-specs)
                             (if attach?
-                                (meta-if-version-at-least
-                                 "8.13.0.4"
-                                 '(rhombus
-                                   rhombus/meta
-                                   rhombus/private/runtime-config)
-                                 '())
+                                '(rhombus
+                                  rhombus/meta
+                                  rhombus/private/runtime-config)
                                 '()))])
       (make-base-eval #:lang lang
                       '(multi))))

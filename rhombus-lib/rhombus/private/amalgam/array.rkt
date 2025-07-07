@@ -3,10 +3,11 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "annot-context.rkt")
+         racket/treelist
+         racket/mutability
          (except-in racket/vector
                     vector-member)
          "vector-member.rkt"
-         "treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -25,7 +26,6 @@
          "reducer.rkt"
          "parens.rkt"
          "parse.rkt"
-         "mutability.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "../version-case.rkt"
@@ -337,13 +337,7 @@
 (define/method (Array.set_in_copy v i val)
   #:primitive (vector-set/copy)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
-  (meta-if-version-at-least
-   "8.11.1.10"
-   (vector-set/copy v i val)
-   (begin
-     (define v2 (vector-copy v))
-     (vector-set! v2 i val)
-     v2)))
+  (vector-set/copy v i val))
 
 (define/method (Array.to_list v)
   #:static-infos ((#%call-result ((#%dependent-result (select-elem index))

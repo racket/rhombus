@@ -44,7 +44,7 @@
 
   (module+ interface-meta
     (bounce-meta "amalgam/interface-meta.rkt"))
-  
+
   (module+ veneer-meta
     (bounce-meta "amalgam/veneer-meta.rkt")))
 
@@ -59,9 +59,6 @@
 
 (module+ dynamic-static
   (bounce "amalgam/dynamic-static.rkt"))
-
-(module+ treelist
-  (bounce "amalgam/treelist.rkt"))
 
 (module+ name-root
   (bounce "amalgam/name-root.rkt"

@@ -1,6 +1,5 @@
 #lang racket/base
-(require racket/unsafe/undefined
-         (for-syntax racket/base
+(require (for-syntax racket/base
                      racket/syntax
                      syntax/parse/pre
                      shrubbery/print
@@ -8,7 +7,9 @@
                      "tag.rkt"
                      "list-last.rkt"
                      "annot-context.rkt")
-         "treelist.rkt"
+         racket/unsafe/undefined
+         racket/mutability
+         racket/treelist
          "to-list.rkt"
          "provide.rkt"
          "expression.rkt"
@@ -41,7 +42,6 @@
          (only-in "pair.rkt"
                   Pair)
          "hash-snapshot.rkt"
-         "mutability.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "class-primitive.rkt"

@@ -1,12 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      racket/unsafe/undefined
+                     racket/phase+space
+                     racket/treelist
                      syntax/parse/pre
                      enforest/name-parse
-                     enforest/hier-name-parse
                      shrubbery/print
-                     racket/phase+space
-                     "annotation-failure.rkt"
                      "pack.rkt"
                      "dotted-sequence.rkt"
                      "define-arity.rkt"
@@ -16,7 +15,6 @@
                      (for-syntax racket/base)
                      (submod "syntax-object.rkt" for-quasiquote)
                      "srcloc.rkt"
-                     "treelist.rkt"
                      "context-stx.rkt"
                      "syntax-wrap.rkt"
                      "definition-context.rkt"
@@ -24,7 +22,6 @@
                      "name-equal.rkt")
          "space.rkt"
          "is-static.rkt"
-         "static-info.rkt"
          "operator-compare.rkt"
          "forwarding-sequence.rkt"
          "syntax-parameter.rkt"

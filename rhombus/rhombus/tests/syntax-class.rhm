@@ -987,19 +987,18 @@ block:
         | (pattern | '$('$')x $('$')$ex'): $ex»'
     matcher x
     ~matches '2'
-  version_guard.at_least "8.10":
-    check:
-      expr.macro 'matcher $(ex :: Term)':
-        '«match '1 2'
-          | (pattern | '$('$')$ex $('$')x'): x»'
-      matcher x
-      ~matches '2'
-    check:
-      expr.macro 'matcher $(ex :: Term)':
-        '«match '1 2'
-          | (pattern | '$('$')$ex $('$')x'): $ex»'
-      matcher x
-      ~matches '1'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern | '$('$')$ex $('$')x'): x»'
+    matcher x
+    ~matches '2'
+  check:
+    expr.macro 'matcher $(ex :: Term)':
+      '«match '1 2'
+        | (pattern | '$('$')$ex $('$')x'): $ex»'
+    matcher x
+    ~matches '1'
 
 // field names are recognized symbolically, so  make
 // sure they're not ambigious

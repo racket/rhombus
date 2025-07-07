@@ -10,7 +10,7 @@
                   unsafe-fx+
                   unsafe-fx<
                   unsafe-fx<=)
-         "treelist.rkt"
+         racket/treelist
          "range-struct.rkt"
          "expression.rkt"
          "repetition.rkt"

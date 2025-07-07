@@ -4,10 +4,10 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      "annot-context.rkt")
+         racket/treelist
+         (submod racket/treelist unsafe)
+         racket/mutable-treelist
          "../version-case.rkt"
-         "treelist.rkt"
-         (submod "treelist.rkt" unsafe)
-         "mutable-treelist.rkt"
          "to-list.rkt"
          "provide.rkt"
          "composite.rkt"
@@ -593,7 +593,7 @@
             (raise-reelementer-error 'List '#,what idx v '#,(car annot-strs)))
           (values v state)))
     #`(let ([pred #,(car predicate-stxes)])
-        (lambda (lst)       
+        (lambda (lst)
           (chaperone-treelist lst
                               #:state #f
                               #:ref (lambda (lst idx v state)
@@ -651,7 +651,7 @@
             (raise-reelementer-error 'MutableList '#,what idx v '#,(car annot-strs)))
           v))
     #`(let ([pred #,(car predicate-stxes)])
-        (lambda (mlst)        
+        (lambda (mlst)
           (chaperone-mutable-treelist mlst
                                       #:ref #,(make-reelementer "current")
                                       #:set #,(make-reelementer "new")

@@ -2,9 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse)
+         racket/mutability
          "space-provide.rkt"
          "definition.rkt"
-         "mutability.rkt"
          "key-comp.rkt"
          "key-comp-runtime.rkt"
          "parens.rkt"

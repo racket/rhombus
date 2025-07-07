@@ -1,7 +1,6 @@
 #lang rhombus
-
 import:
-  lib("rhombus/private/treelist.rkt") open
+  lib("racket/treelist.rkt") open
 
 def orig = #{treelist}(1, 2, 3, -4)
 def tl = #{chaperone-treelist}(orig,

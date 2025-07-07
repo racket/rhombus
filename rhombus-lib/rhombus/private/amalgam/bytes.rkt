@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         racket/mutability
          "provide.rkt"
          (submod "literal.rkt" for-info)
          "define-arity.rkt"
@@ -11,7 +12,6 @@
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
          (submod "annotation.rkt" for-class)
-         "mutability.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"

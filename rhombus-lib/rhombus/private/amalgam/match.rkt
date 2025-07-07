@@ -3,6 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "tag.rkt")
+         (only-in racket/case
+                  case/equal-always)
          "expression.rkt"
          "repetition.rkt"
          "binding.rkt"
@@ -17,14 +19,7 @@
          "order-primitive.rkt"
          "provide.rkt"
          "srcloc-error.rkt"
-         (submod "values.rkt" for-parse)
-         "../version-case.rkt")
-
-;; TEMP approximate `case/equal-always`
-(meta-if-version-at-least
- "8.11.1.8"
- (require (only-in racket/case case/equal-always))
- (require (only-in racket/base [case case/equal-always])))
+         (submod "values.rkt" for-parse))
 
 (provide match
          (for-spaces (#f

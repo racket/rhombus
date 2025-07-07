@@ -4,8 +4,8 @@
                      syntax/parse/pre
                      enforest/name-parse
                      "attribute-name.rkt")
+         racket/treelist
          syntax/parse/pre
-         "treelist.rkt"
          "provide.rkt"
          (only-in "binding.rkt" in-binding-space)
          (submod "quasiquote.rkt" convert)

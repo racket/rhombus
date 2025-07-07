@@ -7,8 +7,8 @@
                      shrubbery/print
                      "name-path-op.rkt"
                      "attribute-name.rkt")
+         racket/treelist
          syntax/parse/pre
-         "treelist.rkt"
          "pack.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
@@ -20,7 +20,6 @@
          "unquote-binding-identifier.rkt"
          "name-root-space.rkt"
          "name-root-ref.rkt"
-         "op-literal.rkt"
          "order.rkt"
          "order-primitive.rkt"
          "parens.rkt"
@@ -29,9 +28,7 @@
          (submod  "import.rkt" for-meta)
          (submod "syntax-class.rkt" for-anonymous-syntax-class)
          "sequence-pattern.rkt"
-         (only-in "static-info.rkt" unwrap-static-infos)
-         (submod "syntax-object.rkt" for-quasiquote)
-         "parse.rkt")
+         (only-in "static-info.rkt" unwrap-static-infos))
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -49,7 +46,7 @@
   (provide (for-space rhombus/unquote_bind
                       delimit
                       commit)))
-                    
+
 (module+ for-parse-pattern
   (provide (for-syntax parse-pattern)))
 
@@ -589,7 +586,7 @@
 
 (define-unquote-binding-syntax delimit
   (make-match-operator #'~delimit-cut))
-  
+
 (define-unquote-binding-syntax commit
   (make-match-operator #'~commit))
 

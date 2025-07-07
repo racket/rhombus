@@ -1,11 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/for-clause
                      syntax/parse/pre
                      enforest/syntax-local
                      "tag.rkt"
                      "srcloc.rkt"
-                     "statically-str.rkt"
-                     "for-clause-expand.rkt")
+                     "statically-str.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"

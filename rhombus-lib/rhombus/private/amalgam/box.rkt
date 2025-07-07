@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      "annot-context.rkt")
+         racket/mutability
          "provide.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
@@ -8,10 +9,8 @@
          "define-arity.rkt"
          "call-result-key.rkt"
          "composite.rkt"
-         "mutability.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt"
-         "realm.rkt")
+         "rhombus-primitive.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f

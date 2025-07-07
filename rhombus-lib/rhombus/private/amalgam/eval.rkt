@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
+         racket/treelist
          "../version-case.rkt"
-         "treelist.rkt"
          "provide.rkt"
          "parse.rkt"
          "pack.rkt"

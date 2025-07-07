@@ -8,7 +8,7 @@
                      "annot-context.rkt")
          (only-in racket/vector
                   vector-append)
-         "treelist.rkt"
+         racket/treelist
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"

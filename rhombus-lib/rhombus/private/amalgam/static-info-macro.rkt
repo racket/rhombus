@@ -1,9 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/treelist
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/hier-name-parse
-                     "treelist.rkt"
                      "name-root.rkt"
                      "parse.rkt"
                      "pack.rkt"

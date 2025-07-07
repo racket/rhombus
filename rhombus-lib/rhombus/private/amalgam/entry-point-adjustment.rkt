@@ -1,5 +1,5 @@
 #lang racket/base
-(require "treelist.rkt"
+(require racket/treelist
          "to-list.rkt"
          "dot-property.rkt"
          "annotation-failure.rkt")

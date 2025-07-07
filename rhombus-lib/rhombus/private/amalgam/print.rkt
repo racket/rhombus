@@ -3,15 +3,15 @@
                      )
          racket/symbol
          racket/keyword
+         racket/mutability
+         racket/treelist
+         racket/mutable-treelist
          shrubbery/write
-         "treelist.rkt"
-         "mutable-treelist.rkt"
          "provide.rkt"
          (submod "set.rkt" for-print)
          (submod "map-maybe.rkt" for-print)
          "printer-property.rkt"
          "define-arity.rkt"
-         "mutability.rkt"
          "annotation-failure.rkt"
          "print-desc.rkt"
          "key-comp-property.rkt"

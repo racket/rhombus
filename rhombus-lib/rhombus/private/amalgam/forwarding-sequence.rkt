@@ -369,7 +369,7 @@
                 #,(syntax-parse exp-form
                     #:literals (#%declare begin-for-syntax module module*)
                     [((~or* #%declare begin-for-syntax module module*) . _)
-                     exp-form]                    
+                     exp-form]
                     [_
                      (syntax-parse #'state
                        [(#:bridge) (raise-syntax-error #f "expressions not allowed in this context" (maybe-respan exp-form))]
@@ -385,15 +385,6 @@
                          [(#:module wrap . _) #`(wrap #,exp-form)]
                          [_ exp-form]))])
                 (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] . forms))])])))
-
-;; TEMP approximate `syntax-local-make-definition-context-introducer`
-(meta-if-version-at-least
- "8.12.0.8"
- (begin)
- (define-for-syntax (syntax-local-make-definition-context-introducer [name 'intdef])
-   (define intdef-ctx (syntax-local-make-definition-context))
-   (lambda (stx [mode 'flip])
-     (internal-definition-context-introduce intdef-ctx stx mode))))
 
 (define-syntax (rhombus-forward stx)
   (syntax-parse stx

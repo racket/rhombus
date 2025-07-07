@@ -1,6 +1,4 @@
 #lang rhombus/and_meta
-import:
-  "version_guard.rhm"
 
 block:
   def mutable accum = []
@@ -274,23 +272,21 @@ check:
   set ++ {36}
   ~is {9, 16, 25, 36}
 
-version_guard.at_least "8.11.1.4":
-  check:
-    use_static
-    for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
-      each i in 0..8
-      keep_when i in set
-      set.remove(i)
-    ~is {9, 16, 25}
+check:
+  use_static
+  for values(set :~ Set = dynamic({1, 4, 9, 16, 25})):
+    each i in 0..8
+    keep_when i in set
+    set.remove(i)
+  ~is {9, 16, 25}
 
-version_guard.at_least "8.11.1.4":
-  check:
-    use_static
-    for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
-      each i in 0..8
-      keep_when i in set
-      set.remove(i)
-    ~is {9, 16, 25}
+check:
+  use_static
+  for values(set :: Set = dynamic({1, 4, 9, 16, 25})):
+    each i in 0..8
+    keep_when i in set
+    set.remove(i)
+  ~is {9, 16, 25}
 
 check:
   for values(_ = 0, _ = 0+1):
@@ -672,7 +668,7 @@ check:
     num
   ~is [1, 2, 3, 4, 5]
 
-version_guard.at_least "8.11.1.4":
+block:
   // check `import` across clause boundary
   check:
     for List:

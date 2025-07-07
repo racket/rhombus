@@ -1,8 +1,8 @@
 #lang racket/base
-(require syntax/stx
+(require racket/treelist
+         syntax/stx
          enforest/proc-name
          shrubbery/property
-         "treelist.rkt"
          "to-list.rkt"
          "realm.rkt"
          "annotation-failure.rkt"
@@ -84,7 +84,7 @@
          pack-success*
          pack-parsed*
          unpack-parsed*
-         
+
          repack-as-term
          repack-as-multi
 

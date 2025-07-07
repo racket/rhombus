@@ -1,10 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      racket/keyword
+                     racket/treelist
                      syntax/parse/pre
                      enforest/syntax-local
                      shrubbery/print
-                     "treelist.rkt"
                      "srcloc.rkt"
                      "tag.rkt"
                      "static-info-pack.rkt"
@@ -16,7 +16,8 @@
                      "annot-context.rkt"
                      "syntax-map.rkt")
          racket/unsafe/undefined
-         "treelist.rkt"
+         racket/mutability
+         racket/treelist
          "to-list.rkt"
          "parens.rkt"
          "binding.rkt"
@@ -47,7 +48,6 @@
          (submod "symbol.rkt" for-static-info)
          "if-blocked.rkt"
          "realm.rkt"
-         "mutability.rkt"
          (submod "values.rkt" for-parse)
          "rhombus-primitive.rkt")
 

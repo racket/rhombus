@@ -1,6 +1,4 @@
 #lang rhombus
-import:
-  "version_guard.rhm"
 
 check:
   match Pair.cons(7, 8)
@@ -50,7 +48,7 @@ check (match 3 | 1 || 2: "yes") ~throws "no matching case"
 
 check (match 'ok (1)' | '«ok '$x'»': "ok") ~throws "expected quotes"
 
-version_guard.at_least "8.11.1.8":
+block:
   // check `==` semantics applies as opposed to `is_now`
   // in other words, `case/equal-always` is really used
   check:
@@ -58,7 +56,6 @@ version_guard.at_least "8.11.1.8":
     | #"byte string": "matched"
     | ~else: "unmatched"
     ~is "unmatched"
-
   check:
     match "string".copy():
     | "string": "matched"

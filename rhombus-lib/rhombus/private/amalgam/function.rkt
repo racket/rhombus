@@ -8,7 +8,7 @@
                      "dotted-sequence.rkt"
                      "srcloc.rkt")
          racket/keyword
-         "treelist.rkt"
+         racket/treelist
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
@@ -24,8 +24,6 @@
          "immediate-callee.rkt"
          "parse.rkt"
          "call-result-key.rkt"
-         "values-key.rkt"
-         "maybe-key.rkt"
          "function-arity-key.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "arithmetic.rkt" static-infos)

@@ -6,9 +6,9 @@
                      "statically-str.rkt"
                      "interface-parse.rkt"
                      "class-method-result.rkt")
+         racket/treelist
+         racket/mutable-treelist
          "vector-member.rkt"
-         "treelist.rkt"
-         "mutable-treelist.rkt"
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"

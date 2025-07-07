@@ -7,7 +7,8 @@
                      "tag.rkt"
                      "annot-context.rkt")
          racket/private/serialize-structs
-         "treelist.rkt"
+         racket/mutability
+         racket/treelist
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -32,7 +33,6 @@
          "composite.rkt"
          "op-literal.rkt"
          "hash-snapshot.rkt"
-         "mutability.rkt"
          "define-arity.rkt"
          (submod "define-arity.rkt" for-info)
          "class-primitive.rkt"

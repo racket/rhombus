@@ -145,7 +145,7 @@ block:
       x
     ~is [49, 50, 51]
 
-version_guard.at_least "8.13.0.1":
+block:
   check:
     Bytes.to_sequence("oops")
     ~throws values(

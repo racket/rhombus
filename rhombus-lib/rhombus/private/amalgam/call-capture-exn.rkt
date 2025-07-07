@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/string
-         "treelist.rkt")
+         racket/treelist)
 
 (provide call_capturing_exn
          call_capturing_values

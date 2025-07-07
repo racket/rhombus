@@ -2,15 +2,14 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print)
-         "treelist.rkt"
          racket/private/port
+         racket/treelist
          "../version-case.rkt"
          "expression.rkt"
          "pipe-port.rkt"
          "provide.rkt"
          (submod "annotation.rkt" for-class)
          "call-result-key.rkt"
-         "function-arity-key.rkt"
          "index-result-key.rkt"
          (submod "bytes.rkt" static-infos)
          (submod "string.rkt" static-infos)

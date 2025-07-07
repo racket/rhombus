@@ -1,5 +1,5 @@
 #lang racket/base
-(require "mutability.rkt"
+(require racket/mutability
          "same-hash.rkt")
 
 (provide hash-snapshot)

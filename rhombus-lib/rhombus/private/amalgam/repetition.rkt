@@ -10,13 +10,13 @@
                      "macro-result.rkt"
                      "srcloc.rkt"
                      (for-syntax racket/base))
+         racket/treelist
          "enforest.rkt"
          "expression.rkt"
          "static-info.rkt"
          "index-result-key.rkt"
          "indirect-static-info-key.rkt"
          "parse.rkt"
-         "treelist.rkt"
          "name-root-ref.rkt")
 
 (provide define-repetition-syntax)

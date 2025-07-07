@@ -7,6 +7,8 @@
          racket/symbol
          racket/keyword
          racket/unsafe/undefined
+         racket/mutability
+         racket/treelist
          "../version-case.rkt"
          "provide.rkt"
          "define-operator.rkt"
@@ -19,7 +21,6 @@
          "append-key.rkt"
          "compare-key.rkt"
          "sequence-constructor-key.rkt"
-         "maybe-key.rkt"
          "realm.rkt"
          "define-arity.rkt"
          "binding.rkt"
@@ -27,12 +28,10 @@
          (submod "annotation.rkt" for-class)
          (submod "char.rkt" for-static-info)
          (submod "list.rkt" for-compound-repetition)
-         "mutability.rkt"
          "pack.rkt"
          "define-arity.rkt"
          "class-primitive.rkt"
          "number.rkt"
-         "treelist.rkt"
          "static-info.rkt"
          "rx-object.rkt"
          "order-primitive.rkt"

@@ -6,8 +6,9 @@
                      "interface-parse.rkt"
                      "class-method-result.rkt"
                      "annot-context.rkt")
-         "treelist.rkt"
-         "mutable-treelist.rkt"
+         racket/mutability
+         racket/treelist
+         racket/mutable-treelist
          "provide.rkt"
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
@@ -20,7 +21,6 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          "index-property.rkt"
-         "mutability.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "parens.rkt"
          (submod "map-maybe.rkt" for-print)

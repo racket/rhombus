@@ -433,7 +433,7 @@ block:
       x
     ~is [Char"a", Char"b", Char"c"]
 
-version_guard.at_least "8.13.0.1":
+block:
   check:
     String.to_sequence(#"oops")
     ~throws values(

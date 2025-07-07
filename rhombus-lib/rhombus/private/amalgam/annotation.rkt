@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/treelist
                      syntax/parse/pre
                      shrubbery/print
                      enforest/property
@@ -7,7 +8,6 @@
                      enforest/name-parse
                      enforest/hier-name-parse
                      enforest/syntax-local
-                     "treelist.rkt"
                      "srcloc.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"

@@ -1,6 +1,6 @@
 #lang racket/base
-(require "treelist.rkt"
-         "mutable-treelist.rkt"
+(require racket/treelist
+         racket/mutable-treelist
          "range-struct.rkt"
          "annotation-failure.rkt")
 

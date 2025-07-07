@@ -3,12 +3,12 @@
                      syntax/parse/pre
                      "pack.rkt"
                      "srcloc.rkt")
+         racket/symbol
+         racket/treelist
          syntax/parse/pre
          syntax/strip-context
-         racket/symbol
          shrubbery/property
          shrubbery/print
-         "treelist.rkt"
          "to-list.rkt"
          "injected.rkt"
          "provide.rkt"
@@ -33,8 +33,7 @@
          "parens.rkt"
          "syntax-wrap.rkt"
          "context-stx.rkt"
-         "static-info.rkt"
-         (submod "key-comp-macro.rkt" for-key-comp))
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -819,7 +818,7 @@
           (syntax-opaque-raw-property stx (or raw null))]
          [else
           (syntax-raw-property stx (or raw null))])))))
-  
+
 ;; also reraws, but in a mode that attaches raw test as permanent text,
 ;; instead of just ephmeral on the wrapper syntax object
 (define/method (Syntax.relocate_span stx-in ctx-stxes-in)

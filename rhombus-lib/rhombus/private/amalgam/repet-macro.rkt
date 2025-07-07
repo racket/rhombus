@@ -18,13 +18,12 @@
                      "syntax-wrap.rkt"
                      "srcloc.rkt"
                      (for-syntax racket/base))
+         racket/treelist
          (only-in "space.rkt" space-syntax)
-         "treelist.rkt"
          "space-provide.rkt"
          "repetition.rkt"
          "space.rkt"
          "macro-macro.rkt"
-         "parse.rkt"
          "parens.rkt"
          "wrap-expression.rkt"
          (submod "dot.rkt" for-syntax-meta))
