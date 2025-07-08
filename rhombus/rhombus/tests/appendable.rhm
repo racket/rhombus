@@ -159,3 +159,7 @@ check:
   let [[s :: List.of(String)], ...] = [[["1"]]]
   [s ++ ["2"], ...][0][0].length()
   ~is 1
+
+check:
+  List.append(dynamic(["x"]), dynamic([1])).length()
+  ~is 2

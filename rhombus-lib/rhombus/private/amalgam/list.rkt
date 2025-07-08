@@ -14,6 +14,7 @@
          "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "annotation.rkt" for-map-function)
          "static-info.rkt"
          "reducer.rkt"
          "index-key.rkt"
@@ -291,7 +292,7 @@
   (syntax-parse data
     [(lst-i-stx elem-i-stx kind)
      (define lst-i (syntax-e #'lst-i-stx))
-     (define elem-i (syntax-e #'elem-i-stx))
+     (define elem-i* (syntax-e #'elem-i-stx))
      (define res-statinfos (if (eq? (syntax-e #'kind) 'treelist)
                                (get-treelist-static-infos)
                                (get-list-static-infos)))
@@ -303,12 +304,15 @@
                         #'()))
      (define si
        (cond
-         [(not elem-i) lst-si]
+         [(not elem-i*) lst-si]
          [else
+          (define elem-i (if (eq? elem-i* 'call1) 1 elem-i*))
           (define elem-si (or (and (< elem-i (length args))
                                    (list-ref args elem-i))
                               #'()))
-          (static-infos-or lst-si elem-si)]))
+          (if (eq? elem-i* 'call1)
+              (or (extract-call-result elem-si) #'())
+              (static-infos-or lst-si elem-si))]))
      (if (not (static-infos-empty? si))
          #`((#%index-result #,si)
             #,@res-statinfos)
@@ -893,7 +897,7 @@
                                              ")"))))
 
 (define/method (List.map lst proc)
-  #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%dependent-result (merge-elem (0 call1 treelist))))))
   (check-treelist who lst)
   (check-function-of-arity 1 who proc)
   (for/treelist ([e (in-treelist lst)])

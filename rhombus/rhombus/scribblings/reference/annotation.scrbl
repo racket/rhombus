@@ -120,6 +120,7 @@
   annot.macro 'Any.like_value($arg_id)'
   annot.macro 'Any.like_first($arg_id)'
   annot.macro 'Any.like_rest($arg_id)'
+  annot.macro 'Any.like_result($arg_id)'
   annot.macro 'Any.like_field($class_name . $field_id($arg_id))'
 ){
 
@@ -190,9 +191,9 @@
     lst[1].rest.reverse()
 )
 
- The @rhombus(Any.like_first, ~annot) or @rhombus(Any.like_rest, ~annot)
+ The @rhombus(Any.like_first, ~annot) or @rhombus(Any.like_rest, ~annot) annotations
  are similar to @rhombus(Any.like_element, ~annot), but for the components of
- @tech{pairs}. 
+ @tech{pairs}.
 
 @examples(
   ~defn:
@@ -203,6 +204,19 @@
   ~repl:
     use_static
     pick_part(Pair("apples", "banana")).length()
+)
+
+ The @rhombus(Any.like_result, ~annot) annotation is
+ similar to @rhombus(Any.like_element, ~annot), but for the result of
+ a @tech{function}.
+
+@examples(
+  ~defn:
+    fun apply_2(f, a, b) :: Any.like_result(f):
+      f(a, b)
+  ~repl:
+    use_static
+    apply_2(String.append, "a", "b").length()
 )
 
  An @rhombus(Any.like_field(class_name.field_id(arg_id)), ~annot)

@@ -184,3 +184,35 @@ class Posn():
 check Posn().m1(-1, -2) ~is [1, { #'this: 0, #'x: 1, #'y: 2 }]
 check Posn().m2(-1, -2) ~is [[#'repet, 1], [#'keyword_splice], { #'this: 0, #'x: [#'repet, 1], #'y: [#'keyword_splice] }]
 check Posn().m3(-1) ~is [#'~z, { #'this: 0, #'z: #'~z, #'x: 1, #'y: [#'keyword_splice, #'~z] }]
+
+fun pick_first(a :: List.of(Int), b) :: List.of(Int):
+  a
+fun apply_2(f, a, b) :: Any.like_result(f):
+  f(a, b)
+fun
+| some_list() :: List.of(Int):
+    [0]
+| some_list(s :: String, t :: String) :: List.of(String):
+    [s, t]
+
+check apply_2(pick_first, [1, 2], [3, 4])[0] ~is 1
+check apply_2(List.append, [1, 2], [3, 4])[3] ~is 4
+check apply_2(some_list, "a", "b")[0] ~is "a"
+
+check:
+  ~eval
+  use_static
+  fun apply_2(f, a, b) :: Any.like_result(f):
+    f(a, b)
+  fun
+  | some_list() :: List.of(Int):
+      [0]
+  | some_list(s :: String, t :: String) :: List.of(String):
+      [s, t]
+  apply_2(some_list, "a", "b")[0].length()
+  ~throws values("no such field or method",
+                 "based on static information")
+
+check to_string.map([10, 20, 30])[0].length() ~is 2
+check [10, 20, 30].map(to_string)[1].length() ~is 2
+check String.append.map(["a", "b", "c"], ["zzz", "zz", "z"])[1].length() ~is 3

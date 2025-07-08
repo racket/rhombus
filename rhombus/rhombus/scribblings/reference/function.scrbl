@@ -475,7 +475,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 
 @doc(
   method (f :: Function).map(args0 :: List, args :: List, ...)
-    :: List
+    :: List.of(Any.like_result(f))
   method (f :: Function).for_each(args0 :: List, args :: List, ...)
     :: Void
 ){

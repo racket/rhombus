@@ -126,6 +126,12 @@
   (provide (for-space rhombus/annot
                       ::)))
 
+(module+ for-map-function
+  (provide (for-syntax extract-call-result)))
+
+(module+ for-function-parse
+  (provide (for-syntax set-find-call-result-at!)))
+
 (begin-for-syntax
   ;; see also "annotation-operator.rkt"
 
@@ -1051,6 +1057,7 @@
    [like_value Any.like_value]
    [like_first Any.like_first]
    [like_rest Any.like_rest]
+   [like_result Any.like_result]
    [like_field Any.like_field]))
 
 (define-name-root Int
@@ -1375,6 +1382,18 @@
 (define-annotation-syntax Any.like_rest
   (make-like #'like-rest-accessor))
 
+(define-syntax (like-result-accessor data deps)
+  (extract-call-result (get-argument-static-infos data deps)))
+
+(define-for-syntax (extract-call-result statinfos)
+  (define results (static-info-lookup statinfos #'#%call-result))
+  (and results
+       (find-call-result-at results #f #f #f
+                            (lambda () (annotation-dependencies null #hasheq() #f #f)))))
+
+(define-annotation-syntax Any.like_result
+  (make-like #'like-result-accessor))
+
 (define-for-syntax (like-sequence-values-accessor data deps key?)
   (define si (get-argument-static-infos data deps))
   (define se (static-info-lookup si #'#%sequence-element))
@@ -1484,3 +1503,8 @@
   (syntax-parse stx
     [(_ arg-id () (converted-val val))
      #'(define val converted-val)]))
+
+(begin-for-syntax
+  (define find-call-result-at (lambda (results arity kws kw-rest? get-arg-static-infos) #f))
+  (define (set-find-call-result-at! proc)
+    (set! find-call-result-at proc)))

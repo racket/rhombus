@@ -6,7 +6,8 @@
                      "consistent.rkt"
                      "entry-point-adjustment.rkt"
                      "dotted-sequence.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "annot-context.rkt")
          racket/keyword
          racket/treelist
          "provide.rkt"
@@ -25,11 +26,14 @@
          "parse.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
+         "call-result-key.rkt"
+         "index-result-key.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "arithmetic.rkt" static-infos)
          (submod "symbol.rkt" for-static-info)
          "static-info.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "annotation.rkt" for-map-function)
          "dotted-sequence-parse.rkt"
          "realm.rkt"
          "define-arity.rkt"
@@ -186,8 +190,20 @@
                        (treelist-ref lst i))))]))]))
 
 (define-map map for/treelist
-  #:static-infos ((#%call-result #,(get-treelist-static-infos))))
+  #:static-infos ((#%call-result ((#%dependent-result (merge-map-result #f))))))
 (define-map for_each for)
+
+(define-syntax (merge-map-result data deps)
+  (define args (annotation-dependencies-args deps))
+  (define fun-i 0)
+  (define fun-si (or (and (fun-i . < . (length args))
+                          (list-ref args fun-i))
+                     #'()))
+  (define elem-si (or (extract-call-result fun-si) #'()))
+  (if (not (static-infos-empty? elem-si))
+      #`((#%index-result #,elem-si)
+         #,@(get-treelist-static-infos))
+      (get-treelist-static-infos)))
 
 (define-for-syntax (wrap-function-static-info expr)
   (wrap-static-info* expr (get-function-static-infos)))

@@ -624,7 +624,7 @@ it supplies its elements in order.
 
 @doc(
   method (lst :: List).map(f :: Function.of_arity(1))
-    :: List,
+    :: List.of(Any.like_result(f)),
   method (lst :: List).for_each(f :: Function.of_arity(1))
     :: Void,
 ){

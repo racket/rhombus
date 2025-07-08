@@ -33,6 +33,7 @@
          (submod "ellipsis.rkt" for-parse)
          (only-in "list.rkt" List)
          (submod "annotation.rkt" for-class)
+         (submod "annotation.rkt" for-function-parse)
          (submod "equal.rkt" for-parse)
          "not-block.rkt"
          "lambda-kwrest.rkt"
@@ -1433,21 +1434,29 @@
      (let loop ([r #'r])
        (syntax-parse r
          [((a results) . rest)
-          (define-values (mask req-kws allow-kws)
-            (syntax-parse #'a
-              [(mask req-kws allow-kws) (values #'mask #'req-kws #'allow-kws)]
-              [mask (values #'mask #'() #'())]))
-          (if (and (bitwise-bit-set? (syntax-e mask) arity)
-                   (or kw-rest? (sorted-list-subset? (syntax->datum req-kws) kws))
-                   (or (not (syntax-e allow-kws))
-                       (sorted-list-subset? kws (syntax->datum allow-kws))))
-              (if (or (not kw-rest?)
-                      (and (not (syntax-e allow-kws))
-                           (sorted-list-subset? (syntax->datum req-kws) kws)))
-                  (force-call-results #'results get-arg-static-infos)
-                  ;; we don't know whether the call matches or not, so stop searching
-                  #'())
-              (loop #'rest))]
+          (cond
+            [(not arity)
+             ;; intersect all cases
+             (define res (force-call-results #'results get-arg-static-infos))
+             (if (null? (syntax-e #'rest))
+                 res
+                 (static-infos-and res (loop #'rest)))]
+            [else
+             (define-values (mask req-kws allow-kws)
+               (syntax-parse #'a
+                 [(mask req-kws allow-kws) (values #'mask #'req-kws #'allow-kws)]
+                 [mask (values #'mask #'() #'())]))
+             (if (and (bitwise-bit-set? (syntax-e mask) arity)
+                      (or kw-rest? (sorted-list-subset? (syntax->datum req-kws) kws))
+                      (or (not (syntax-e allow-kws))
+                          (sorted-list-subset? kws (syntax->datum allow-kws))))
+                 (if (or (not kw-rest?)
+                         (and (not (syntax-e allow-kws))
+                              (sorted-list-subset? (syntax->datum req-kws) kws)))
+                     (force-call-results #'results get-arg-static-infos)
+                     ;; we don't know whether the call matches or not, so stop searching
+                     #'())
+                 (loop #'rest))])]
          [_ #'()]))]
     [_ (force-call-results results get-arg-static-infos)]))
 
@@ -1859,4 +1868,5 @@
                       (and this? 0)))
 
 (begin-for-syntax
-  (set-parse-function-call! parse-function-call))
+  (set-parse-function-call! parse-function-call)
+  (set-find-call-result-at! find-call-result-at))
