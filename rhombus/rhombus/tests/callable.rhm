@@ -7,6 +7,8 @@ class O(v):
 class O2(w):
   extends O  
 
+O2("B1", "B1")
+
 class A0():
   implements Callable
   override method call() :: O:

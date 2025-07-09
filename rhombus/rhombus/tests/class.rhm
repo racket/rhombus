@@ -1319,3 +1319,17 @@ check:
     constructor():
       super(1, 1)(1)
   ~throws "wrong number of arguments in function call"
+
+block:
+  use_dynamic
+  class Hello():
+    nonfinal
+  class World(a):
+    extends Hello
+    internal _World
+    constructor(a):
+      super(a)
+
+  check World(42) ~throws "super to Hello"
+  check _World(1) ~throws "_World curried"
+  check _World()() ~throws "_World super"

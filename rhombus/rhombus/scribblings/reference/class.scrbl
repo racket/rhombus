@@ -865,14 +865,14 @@
  subclass assumes that the superclass constructor accepts the same
  argument as the default superclass constructor.
 
- When a @rhombus(class) has a @rhombus(expression, ~class_clause) form,
+ When a @rhombus(class) has an @rhombus(expression, ~class_clause) form,
  then a use of the new class's @rhombus(id_name) as an
  expression invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. This macro replaces the default meaning of the
  @rhombus(id_name) as a reference to the constructor. When
- @rhombus(expression, ~class_clause), then the default
+ @rhombus(expression, ~class_clause) is present, then the default
  @rhombus(id_name#,(@rhombus(.of, ~datum))) annotation constructor accepts only
  @tech(~doc: guide_doc){predicate annotations}.
 

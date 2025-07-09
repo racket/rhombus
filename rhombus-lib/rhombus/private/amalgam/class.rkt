@@ -455,11 +455,12 @@
 
        (define custom-constructor-maybe-arity
          (cond
-           [expression-macro-rhs #t]
+           [expression-macro-rhs #f] ; assume default constructor protocol
            [given-constructor-rhs (or (extract-constructor-arity given-constructor-rhs
                                                                  given-constructor-stx-params)
+                                      ;; `#t` means "unknown"
                                       #t)]
-           [else #f]))           
+           [else #f]))
        
        (define reconstructor-rhs
          (cond
@@ -717,7 +718,7 @@
                                         constructor-static-infoss constructor-converters constructor-annotation-strs
                                         method-private
                                         need-constructor-wrapper?
-                                        abstract-name
+                                        abstract-name internal-id
                                         has-defaults? super-has-defaults?
                                         final?
                                         #'(name make-name make-all-name constructor-name constructor-maker-name
@@ -1243,14 +1244,17 @@
                               0)
                         #,(cond
                             [(syntax-e #'constructor-maker-name)
-                             #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults
-                                                                  constructor-keywords constructor-defaults)
+                             #`(quote-syntax ([#,(replace-public-protocol-with-arity
+                                                  (encode-protocol constructor-public-keywords constructor-public-defaults
+                                                                   constructor-keywords constructor-defaults)
+                                                  custom-constructor-maybe-arity)
+                                               name
                                                constructor-maker-name]
                                               #,@(if super
                                                      (or (class-desc-constructor-makers super)
                                                          (list (list (encode-protocol super-keywords super-defaults
                                                                                       super-constructor+-keywords super-constructor+-defaults)
-                                                                     #f)))
+                                                                     (class-desc-id super))))
                                                      '())))]
                             [else #'#f])
                         '#,custom-constructor-maybe-arity
