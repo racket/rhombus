@@ -1,11 +1,13 @@
 #lang racket/base
-(require racket/stxparam
-         (for-syntax racket/base
+(require (for-syntax racket/base
+                     racket/private/immediate-default
                      syntax/parse/pre)
+         racket/stxparam
          "static-info.rkt"
          "function-arity-key.rkt"
          "rhombus-primitive.rkt"
-         "error-adjust.rkt")
+         "error-adjust.rkt"
+         "function-arity.rkt")
 
 (provide who
          define/arity
@@ -28,23 +30,8 @@
 (define-syntax (with-who stx)
   (syntax-parse stx
     [(_ who . body)
-     (define-values (wrapped-expr opaque-expr)
-       (syntax-local-expand-expression
-        #'(syntax-parameterize ([who-sym 'who])
-            . body)))
-     ;; HACK remove vacuous `let-values` wrappers from the
-     ;; fully-expanded expression
-     ;; We could've used `splicing-syntax-parameterize`, but using
-     ;; this instead accommodate for versions before
-     ;; racket/racket#4832, as well as avoid a dependency on
-     ;; `racket/splicing`.  Moreover, `splicing-syntax-parameterize`
-     ;; intercepts expansion in a way that doesn't cooperate well with
-     ;; how `define` optimizes functions with keyword arguments.
-     (let loop ([expr wrapped-expr])
-       (syntax-parse expr
-         #:literals (let-values)
-         [(let-values () expr) (loop #'expr)]
-         [_ expr]))]))
+     #'(syntax-parameterize ([who-sym 'who])
+         . body)]))
 
 (define-syntax (define/arity stx)
   (expand-define/arity stx build-define/arity))
@@ -52,9 +39,13 @@
 (define-syntax (define/method stx)
   (syntax-parse stx
     [(self (~seq #:direct-id direct-id) . tail)
-     (expand-define/arity #'(self . tail) (build-define/method/direct-id #'direct-id))]
+     (expand-define/arity #'(self . tail)
+                          (lambda (id name primitive-ids local-primitive-ids static-infos rhs)
+                            (build-define/method id #'direct-id name primitive-ids local-primitive-ids static-infos rhs)))]
     [_
-     (expand-define/arity stx build-define/method)]))
+     (expand-define/arity stx
+                          (lambda (id name primitive-ids local-primitive-ids static-infos rhs)
+                            (build-define/method id id name primitive-ids local-primitive-ids static-infos rhs)))]))
 
 (define-for-syntax (expand-define/arity stx build)
   (syntax-parse stx
@@ -63,7 +54,7 @@
                     (~optional (~seq #:local-primitive (local-primitive-id ...)))
                     (~optional (~seq #:static-infos static-infos))
                     . body)
-                 (~parse rhs #'(lambda args . body)))
+                 (~parse rhs (syntax/loc stx (lambda args . body))))
            (_ (~optional (~seq #:name name)) id
               (~optional (~seq #:primitive (primitive-id ...)))
               (~optional (~seq #:local-primitive (local-primitive-id ...)))
@@ -88,21 +79,30 @@
                   [name/id name/id])
       (syntax-parse rhs
         #:literals (lambda case-lambda)
-        [(lambda ((~seq (~optional kw:keyword) (~or* [id expr] id))
+        [(lambda ((~seq (~optional kw:keyword)
+                        (~or* (~and [id expr]
+                                    (~parse wrapped-expr
+                                            ;; duplicate a check here
+                                            (if (immediate-default? #'expr)
+                                                #'expr
+                                                #'(with-who name/id expr))))
+                              id))
                   ... . rst)
            . body)
-         #`(lambda ((~@ (~? kw) (~? [id (with-who name/id expr)] id))
+         (syntax/loc rhs
+           (lambda ((~@ (~? kw) (~? [id wrapped-expr] id))
                     ... . rst)
              (with-error-adjust-primitive ([local-primitive name/id] ...)
-               (with-who name/id . body)))]
+               (with-who name/id . body))))]
         [(case-lambda
            [args . body]
            ...)
-         #`(case-lambda
+         (syntax/loc rhs
+           (case-lambda
              [args
               (with-error-adjust-primitive ([local-primitive name/id] ...)
                 (with-who name/id . body))]
-             ...)])))
+             ...))])))
   (append
    (for/list ([primitive-id (in-list primitive-ids)])
      #`(void (set-primitive-who! '#,primitive-id '#,name/id)))
@@ -116,17 +116,7 @@
                (#%function-arity arity-mask)
                . #,(get-function-static-infos))))))
 
-(define-for-syntax ((build-define/method/direct-id direct-id)
-                    id name primitive-ids local-primitive-ids static-infos rhs)
-  (build-define/method id name primitive-ids local-primitive-ids static-infos rhs
-                       #:direct-id direct-id))
-
-(define-for-syntax (build-define/method id name primitive-ids local-primitive-ids static-infos rhs
-                                        #:direct-id [direct-id id])
-  (define (arithmetic-shift* a k)
-    (if (exact-integer? a)
-        (arithmetic-shift a k)
-        (cons (arithmetic-shift (car a) k) (cdr a))))
+(define-for-syntax (build-define/method id direct-id name primitive-ids local-primitive-ids static-infos rhs)
   (define (format-id fmt)
     (datum->syntax id (string->symbol (format fmt (syntax-e id)))))
   (define dispatch-id (format-id "~a/dispatch"))
@@ -139,21 +129,21 @@
                      (~and args (~parse obj #'obj)))
          . _)
        (values #'obj
-               #`(lambda args
-                   #,(make-apply id #'obj #'args)))]
+               (quasisyntax/loc rhs
+                 (lambda args
+                   #,(make-apply id #'obj #'args))))]
       [(case-lambda [(~or* () (_ . argss) argss) . _] ...)
        (values #'obj
-               #`(case-lambda
+               (quasisyntax/loc rhs
+                 (case-lambda
                    #,@(for/list ([args (in-list (attribute argss))]
                                  #:when args)
-                        #`[#,args #,(make-apply id #'obj args)])))]))
+                        #`[#,args #,(make-apply id #'obj args)]))))]))
   (list* #`(define-for-syntax #,dispatch-id
              (lambda (nary)
-               (nary '#,(arithmetic-shift* arity-mask -1) (quote-syntax #,direct-id) (quote-syntax #,method-id))))
+               (nary '#,(shift-arity arity-mask -1) (quote-syntax #,direct-id) (quote-syntax #,method-id))))
          #`(define #,method-id
              (lambda (#,obj)
-               ;; TODO what should we name the partially applied method?
-               ;; This also applies to class methods in general
                #,(syntax-property method 'inferred-name (or name id))))
          (build-define/arity id name primitive-ids local-primitive-ids static-infos rhs arity-mask)))
 
