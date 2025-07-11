@@ -145,7 +145,7 @@
            (list (with-syntax ([id id]
                                [result-infos
                                 (cond
-                                  [(null? (syntax-e all-static-infos)) all-static-infos]
+                                  [(static-infos-empty? all-static-infos) #'()]
                                   [(eq? (syntax-e #'kind) 'property)
                                    #`(#:at_arities ((#,(arithmetic-shift 1 (if de-method? 0 1)) #,all-static-infos)))]
                                   [else all-static-infos])]
@@ -156,7 +156,7 @@
                                                                     #'arity)))
                                     '())])
                    (with-syntax ([(maybe-call-result ...)
-                                  (if (null? (syntax-e #'result-infos))
+                                  (if (static-infos-empty? #'result-infos)
                                       null
                                       (list #'(#%call-result result-infos)))])
                      #'(define-static-info-syntax id

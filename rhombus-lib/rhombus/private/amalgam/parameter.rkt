@@ -81,7 +81,7 @@
                                 #f)
                           'reflect-name
                           rhombus-realm))
-       (list (if (null? (syntax-e #'static-infos))
+       (list (if (static-infos-empty? #'static-infos)
                  #'(define-static-info-syntax name
                      #:getter get-parameter-static-infos)
                  #'(define-static-info-syntax name

@@ -53,7 +53,7 @@
   (combiner #'and #'for/and #''#t
             (lambda (rev-statinfoss)
               (define last-statinfos (car rev-statinfoss))
-              (if (not (null? last-statinfos))
+              (if (not (static-infos-empty? last-statinfos))
                   #`((#%maybe #,last-statinfos))
                   #'()))))
 

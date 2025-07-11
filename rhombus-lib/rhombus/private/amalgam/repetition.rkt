@@ -220,7 +220,7 @@
            (build-for for-form
                       (insert-clause-separators (syntax->list #'rep-info.for-clausess))
                       #'rep-info.body)))
-        (if (null? (syntax-e infos))
+        (if (static-infos-empty? infos)
             seq-expr
             (wrap-static-info seq-expr #'#%index-result infos))])]))
 

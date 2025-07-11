@@ -1787,7 +1787,7 @@
                #`(lambda (#,@prefix-args #,@formals)
                    #,(discard-static-infos body)))]
          [fun (wrap-static-info* fun (indirect-get-function-static-infos))]
-         [fun (if (null? static-infos)
+         [fun (if (static-infos-empty? static-infos)
                   fun
                   (wrap-static-info fun #'#%call-result static-infos))]
          [fun (wrap-static-info fun #'#%function-arity shifted-arity)])

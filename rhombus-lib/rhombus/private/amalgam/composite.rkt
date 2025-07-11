@@ -193,7 +193,7 @@
                                           #`((bounds-key (group #,min-len #,max-len)) . #,composite-static-infos)
                                           composite-static-infos)]
               [composite-static-infos (static-infos-and composite-static-infos #'static-infos)]
-              [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
+              [composite-static-infos (if (or (static-infos-empty? rest-static-infos)
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos
                                           #`(#,@(case rest-repetition?
@@ -239,7 +239,7 @@
        (binding-info (build-annotation-str #'constructor-str
                                            (if (zero? num-post-strs)
                                                all-annotation-strs
-                                               (reverse (list-tail (reverse all-annotation-strs) num-post-strs))) 
+                                               (reverse (list-tail (reverse all-annotation-strs) num-post-strs)))
                                            rest-annotation-str
                                            (list-tail all-annotation-strs (- (length all-annotation-strs) num-post-strs))
                                            #:rest-repetition? rest-repetition?

@@ -296,8 +296,8 @@
 ;; note that `||` at the annotation level feels like "intersection" on statinfo tables
 (define-for-syntax (static-infos-or as bs)
   (cond
-    [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) as]
-    [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) bs]
+    [(static-infos-empty? as) as]
+    [(static-infos-empty? bs) bs]
     [else
      (let ([as (flatten-indirects (if (syntax? as) (syntax->list as) as))]
            [bs (flatten-indirects (if (syntax? bs) (syntax->list bs) bs))])
@@ -337,8 +337,8 @@
 ;; note that `&&` at the annotation level feels like "union" on statinfo tables
 (define-for-syntax (static-infos-and as bs)
   (cond
-    [(or (null? as) (and (syntax? as) (null? (syntax-e as)))) bs]
-    [(or (null? bs) (and (syntax? bs) (null? (syntax-e bs)))) as]
+    [(static-infos-empty? as) bs]
+    [(static-infos-empty? bs) as]
     [else
      (let ([as (flatten-indirects (if (syntax? as) (syntax->list as) as))]
            [bs (flatten-indirects (if (syntax? bs) (syntax->list bs) bs))])

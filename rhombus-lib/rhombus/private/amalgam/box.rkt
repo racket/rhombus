@@ -58,8 +58,7 @@
                             #'unbox)
         #'()))
   (cond
-    [(or (null? si)
-         (and (syntax? si) (null? (syntax-e si))))
+    [(static-infos-empty? si)
      #'()]
     [else
      (case (syntax-e data)

@@ -31,8 +31,7 @@
          [else #'()]))
      (define synthesized-annot
        (cond
-         [(or (null? static-infos)
-              (and (syntax? static-infos) (null? (syntax-e static-infos))))
+         [(static-infos-empty? static-infos)
           #'()]
          [else
           #`((op :~) (parsed #:rhombus/annot #,(annotation-predicate-form #'(lambda xs #t) static-infos)))]))

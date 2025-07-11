@@ -32,7 +32,8 @@
                     [... rhombus...])
          "syntax-wrap.rkt"
          "annotation-failure.rkt"
-         (submod "syntax-object.rkt" for-quasiquote))
+         (submod "syntax-object.rkt" for-quasiquote)
+         "static-info.rkt")
 
 (provide (for-spaces (rhombus/defn
                       rhombus/namespace)
@@ -610,7 +611,7 @@
   (cond
     [(not fields-ht) (values null #hasheq())]
     [else
-     (for/fold ([defs null] [ht #hasheq()]) ([(k df/stx) (in-hash fields-ht)]) 
+     (for/fold ([defs null] [ht #hasheq()]) ([(k df/stx) (in-hash fields-ht)])
        (define df (if (syntax? df/stx) (syntax-e df/stx) df/stx))
        (cond
          [(and (declared-field-converter df)
@@ -713,7 +714,7 @@
                                    "field implementation does not match declared kind"
                                    stx
                                    (declared-field-id df)))
-             (values k (if (null? (syntax-e (declared-field-static-infos df)))
+             (values k (if (static-infos-empty? (declared-field-static-infos df))
                            var
                            (struct-copy pattern-variable var
                                         [statinfos (static-infos-and (declared-field-static-infos df)
