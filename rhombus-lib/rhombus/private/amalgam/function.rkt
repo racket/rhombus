@@ -765,9 +765,8 @@
 
 (define Function.pass
   (make-keyword-procedure
-   (let ([kw-proc (lambda (kws kw-args . args)
-                    (void))])
-     kw-proc)
+   (lambda (kws kw-args . args)
+     (void))
    (let ([Function.pass (lambda args
                           (void))])
      Function.pass)))
