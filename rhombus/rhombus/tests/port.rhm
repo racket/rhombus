@@ -332,6 +332,30 @@ check:
   stderr.write_bytes(#"") ~is 0
 
 block:
+  let [bstr, ...] = [#"1", #"2", #"3"]
+  check:
+    let out = Port.Output.open_bytes()
+    parameterize { Port.Output.current: out }:
+      Function.pass(stdout.write_bytes(bstr), ...)
+    out.get_bytes()
+    ~is_now #"123"
+  check:
+    let out = Port.Output.open_bytes()
+    parameterize { Port.Output.current_error: out }:
+      Function.pass(stderr.write_bytes(bstr), ...)
+    out.get_bytes()
+    ~is_now #"123"
+
+block:
+  let bstr = #"123"
+  let [amt, ...] = [1, 1, 1]
+  check:
+    let in = Port.Input.open_bytes(bstr)
+    parameterize { Port.Input.current: in }:
+      [stdin.read_bytes(amt), ...]
+    ~is_now [#"1", #"2", #"3"]
+
+block:
   let (in, out) = Port.Pipe.make(~input_name: #'my_in, ~output_name: #'my_out)
   check in ~is_a Port.Pipe
   check out ~is_a Port.Pipe

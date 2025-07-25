@@ -1,11 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/print)
+                     shrubbery/print
+                     "srcloc.rkt")
          racket/private/port
          racket/treelist
          "../version-case.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "pipe-port.rkt"
          "provide.rkt"
          (submod "annotation.rkt" for-class)
@@ -35,9 +37,11 @@
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
                      Port)
-         stdin
-         stdout
-         stderr)
+         (for-spaces (#f
+                      rhombus/repet)
+                     stdin
+                     stdout
+                     stderr))
 
 (module+ for-builtin
   (provide input-port-method-table
@@ -771,28 +775,49 @@
 (define-syntax stdin
   (expression-transformer
    (lambda (stx)
-     (syntax-parse stx
-       [(_ . tail)
-        (values (wrap-static-info* #'(current-input-port)
-                                   (get-input-port-static-infos))
-                #'tail)]))))
+     (parse-stdin-expr stx #'(current-input-port) (get-input-port-static-infos)))))
+
+(define-repetition-syntax stdin
+  (repetition-transformer
+   (lambda (stx)
+     (parse-stdin-repet stx #'(current-input-port) (get-input-port-static-infos)))))
 
 (define-syntax stdout
   (expression-transformer
    (lambda (stx)
-     (syntax-parse stx
-       [(_ . tail)
-        (values (wrap-static-info* #'(current-output-port)
-                                   (get-output-port-static-infos))
-                #'tail)]))))
+     (parse-stdin-expr stx #'(current-output-port) (get-output-port-static-infos)))))
+
+(define-repetition-syntax stdout
+  (repetition-transformer
+   (lambda (stx)
+     (parse-stdin-repet stx #'(current-output-port) (get-output-port-static-infos)))))
 
 (define-syntax stderr
   (expression-transformer
    (lambda (stx)
-     (syntax-parse stx
-       [(_ . tail)
-        (values (wrap-static-info* #'(current-error-port)
-                                   (get-output-port-static-infos))
-                #'tail)]))))
+     (parse-stdin-expr stx #'(current-error-port) (get-output-port-static-infos)))))
+
+(define-repetition-syntax stderr
+  (repetition-transformer
+   (lambda (stx)
+     (parse-stdin-repet stx #'(current-error-port) (get-output-port-static-infos)))))
+
+(define-for-syntax (parse-stdin-expr stx expr statinfos)
+  (syntax-parse stx
+    [(form-id . tail)
+     (values (wrap-static-info*
+              (relocate+reraw #'form-id expr)
+              statinfos)
+             #'tail)]))
+
+(define-for-syntax (parse-stdin-repet stx expr statinfos)
+  (syntax-parse stx
+    [(form-id . tail)
+     (values (make-repetition-info #'form-id
+                                   '()
+                                   expr
+                                   statinfos
+                                   0)
+             #'tail)]))
 
 (void (set-primitive-contract! '(or/c 'binary 'text) "Port.Mode"))

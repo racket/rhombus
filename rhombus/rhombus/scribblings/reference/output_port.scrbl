@@ -34,7 +34,9 @@ an @deftech{output string port} writes to a @tech{byte string}.
   Parameter.def Port.Output.current_error :: Port.Output
 
   expr.macro 'stdout'
+  repet.macro 'stdout'
   expr.macro 'stderr'
+  repet.macro 'stderr'
 
   expr.macro 'Port.Output.using $port_expr:
                 $body

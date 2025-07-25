@@ -35,6 +35,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
   Parameter.def Port.Input.current :: Port.Input
 
   expr.macro 'stdin'
+  repet.macro 'stdin'
 
   expr.macro 'Port.Input.using $port_expr:
                 $body
