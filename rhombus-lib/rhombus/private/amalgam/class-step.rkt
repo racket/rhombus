@@ -24,14 +24,15 @@
             ;; class is expanded. Those definitions might be exported, but
             ;; maybe they want to refer to the class annotation, or even
             ;; its namespace.
-            (if (ormap (lambda (e) (or (nestable-declaration? e)
-                                       (class-clause? e)))
-                       (syntax->list #'forms))
-                #'(class-body-step/to-clause-or-decl data+accum . forms)
-                #'(quote-syntax (rhombus-class (#:post-forms ((rhombus-nested
-                                                               reflect-name
-                                                               . forms))))
-                                #:local))])))
+            #:when (ormap (lambda (e) (or (nestable-declaration? e)
+                                          (class-clause? e)))
+                          (syntax->list #'forms))
+            #'(class-body-step/to-clause-or-decl data+accum . forms)]
+           [(_ ([orig-stx base-stx scope-stx reflect-name . _] . _) . forms)
+            #'(quote-syntax (rhombus-class (#:post-forms ((rhombus-nested
+                                                           reflect-name
+                                                           . forms))))
+                            #:local)])))
      (define-syntax class-body-step/to-clause-or-decl
        (lambda (stx)
          ;; parse the first form as a class clause, if possible, otherwise assume

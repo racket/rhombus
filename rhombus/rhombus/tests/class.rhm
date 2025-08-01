@@ -1333,3 +1333,30 @@ block:
   check World(42) ~throws "super to Hello"
   check _World(1) ~throws "_World curried"
   check _World()() ~throws "_World super"
+
+// check prefix in post forms
+block:
+  class A():
+    export:
+      whoami
+      try_input
+      try_output
+    fun whoami():
+      ~who: who
+      who
+    fun try_input(_ :: None):
+      error("should not get here")
+    fun try_output() :: None:
+      "oops"
+  check:
+    A.whoami() ~is #'#{A.whoami}
+    A.try_input("oops") ~throws values(
+      "A.try_input: " ++ error.annot_msg("argument"),
+      error.annot("None").msg,
+      error.val("oops", ~label: "argument").msg,
+    )
+    A.try_output() ~throws values(
+      "A.try_output: " ++ error.annot_msg("result"),
+      error.annot("None").msg,
+      error.val("oops", ~label: "result").msg,
+    )

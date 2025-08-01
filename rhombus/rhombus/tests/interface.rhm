@@ -683,3 +683,30 @@ block:
     abstract method n()
   check print(Pointy.m) ~prints "#<function:Dotty.m>"
   check print(Pointy.n) ~prints "#<function:Dotty.n>"
+
+// check prefix in post forms
+block:
+  interface A:
+    export:
+      whoami
+      try_input
+      try_output
+    fun whoami():
+      ~who: who
+      who
+    fun try_input(_ :: None):
+      error("should not get here")
+    fun try_output() :: None:
+      "oops"
+  check:
+    A.whoami() ~is #'#{A.whoami}
+    A.try_input("oops") ~throws values(
+      "A.try_input: " ++ error.annot_msg("argument"),
+      error.annot("None").msg,
+      error.val("oops", ~label: "argument").msg,
+    )
+    A.try_output() ~throws values(
+      "A.try_output: " ++ error.annot_msg("result"),
+      error.annot("None").msg,
+      error.val("oops", ~label: "result").msg,
+    )
