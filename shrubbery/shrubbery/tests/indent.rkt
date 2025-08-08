@@ -15,13 +15,12 @@
   (define clean-e (regexp-replace* #rx"\\!" (regexp-replace* #rx"\\^" e "  ") "x"))
   (define m (regexp-match-positions #rx"[ ]*(?:\\^|[!])" e))
   (define start-pos (caar m))
-  (define expected (reverse
-                    (let loop ([pos start-pos])
-                      (cond
-                        [(= pos (string-length e)) '()]
-                        [(memv (string-ref e pos) '(#\^ #\!))
-                         (cons (- pos start-pos) (loop (add1 pos)))]
-                        [else (loop (add1 pos))]))))
+  (define expected (let loop ([pos start-pos])
+                     (cond
+                       [(= pos (string-length e)) '()]
+                       [(memv (string-ref e pos) '(#\^ #\!))
+                        (cons (- pos start-pos) (loop (add1 pos)))]
+                       [else (loop (add1 pos))])))
   (define t (new like-text% [content clean-e]))
   (define raw-candidates (shrubbery-indentation t start-pos #:multi? #t))
   (define candidates (if (list? raw-candidates) raw-candidates (list raw-candidates)))
