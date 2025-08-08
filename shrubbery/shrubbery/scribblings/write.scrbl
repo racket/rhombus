@@ -2,7 +2,8 @@
 @(require (for-label racket/base
                      racket/contract/base
                      shrubbery/write
-                     shrubbery/parse))
+                     shrubbery/parse
+                     shrubbery/print))
 
 @title[#:tag "write"]{Writing Shrubbery Notation}
 

@@ -2,6 +2,10 @@
 @(require (for-label racket/base
                      racket/contract/base
                      racket/gui/base
+                     (only-in racket/class
+                              is-a?/c)
+                     (only-in racket/math
+                              natural?)
                      framework
                      syntax-color/color-textoid
                      (only-in (submod shrubbery reader)
@@ -39,7 +43,7 @@ the @racketmodname[(submod shrubbery reader)] module also provides
 
 @defproc[(get-info-proc [key symbol?]
                         [default any/c]
-                        [make-default (-> symbol? any/c -> any/c)]
+                        [make-default (symbol? any/c . -> . any/c)]
                         [#:variant variant variant? default-variant])
          any/c]{
 
@@ -209,7 +213,7 @@ the @racketmodname[(submod shrubbery reader)] module also provides
  @racket[shrubbery-range-indentation], or
  @racket[shrubbery-range-indentation/reverse-choices], but with
  @racket[variant] already supplied as the @racket[#:variant] argument.
-   
+
 }
 
 
@@ -243,9 +247,9 @@ the @racketmodname[(submod shrubbery reader)] module also provides
 @defmodule[shrubbery/keystroke]
 
 @defthing[shrubbery-keystrokes (listof (list/c string?
-                                               (-> (is-a?/c text%)
-                                                   (is-a?/c event%)
-                                                   any)))]{
+                                               ((is-a?/c text%)
+                                                (is-a?/c event%)
+                                                . -> . any)))]{
 
  Extra keystrokes suitable for shrubbery forms following a protocol
  @seclink["Keystrokes" #:doc dr-doc #:indirect? #t]{used by DrRacket}.

@@ -1,4 +1,7 @@
 #lang scribble/manual
+@(require (for-label racket/base
+                     racket/contract/base
+                     shrubbery/print))
 
 @title[#:tag "print"]{Reconstructing Shrubbery Notation}
 
@@ -75,7 +78,7 @@
                                 [#:keep-prefix? keep-prefix? any/c #f]
                                 [#:keep-suffix? keep-suffix? any/c #f]
                                 [#:inner? inner? any/c #f])
-         (values any? any? any?)]{
+         (values any/c any/c any/c)]{
 
  Similar to @racket[shrubbery-syntax->string] but delivers raw text
  encodings with the prefix, main, and suffix raw text as separate result
