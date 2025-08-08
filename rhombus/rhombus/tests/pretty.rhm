@@ -6,11 +6,11 @@ check:
   print('(1, 2: x; y, 3)') ~prints "(1, 2:« x; y », 3)"
   print('a | b
              | c
-           | d') ~prints "a|« b|« c » » |« d »"
+           | d') ~prints "a |« b |« c » » |« d »"
   print(':«»') ~prints ":«»"
   print('|«»') ~prints "|«»"
 
-parameterize { Printable.current_pretty: #true}:
+parameterize { Printable.current_pretty: #true }:
   // Pretty mode avoids `«»`s if possible
   check:
     print('f(1)') ~prints "f (1)"
@@ -30,3 +30,21 @@ parameterize { Printable.current_pretty: #true}:
     print('one line:«option; also» | case 1 | case 2') ~prints "one line:\n  option\n  also\n| case 1\n| case 2"
     print('empty:«»') ~prints "empty:«»"
     print('|«»') ~prints "|«»"
+
+// issue #695
+check:
+  print('letrec rec = (fn(n): if n == 0 | 0 | rec(n - 1)):
+           let _ = rec(5):
+             rec(1)')
+  ~prints "letrec rec = (fn (n):« if n == 0 |« 0 » |« rec (n - 1) » »):« let _ = rec (5):« rec (1) » »"
+
+check:
+  parameterize { Printable.current_pretty: #true }:
+    print('letrec rec = (fn(n): if n == 0 | 0 | rec(n - 1)):
+             let _ = rec(5):
+               rec(1)')
+  ~prints @str{letrec rec = (fn (n):
+                               if n == 0
+                               | 0
+                               | rec (n - 1)):
+                 let _ = rec (5): rec (1)}

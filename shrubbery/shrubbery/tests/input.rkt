@@ -1672,6 +1672,17 @@ cond | null: 0 | list(x): 1
 
 op :: :
   ok
+
+// issue #695
+letrec rec = (fn(n): if n == 0 | 0 | rec(n - 1)):
+  let _ = rec(5):
+    rec(1)
+
+something (alts | 1 | 2):
+  block
+| followed
+| by
+| alts
 INPUT
   )
 
@@ -1846,7 +1857,22 @@ INPUT
      cons
      (parens (group a) (group d))
      (block (group f (parens (group a)) (op +) f (parens (group d))))))))
- (group op (op ::) (block (group ok)))))
+ (group op (op ::) (block (group ok)))
+ (group letrec rec (op =) (parens (group fn (parens (group n))
+                                         (block (group if n (op ==) 0
+                                                       (alts
+                                                        (block (group 0))
+                                                        (block (group rec (parens (group n (op -) 1)))))))))
+        (block (group let _ (op =) rec (parens (group 5))
+                      (block (group rec (parens (group 1)))))))
+ (group something (parens (group alts (alts
+                                       (block (group 1))
+                                       (block (group 2)))))
+        (block (group block))
+        (alts
+         (block (group followed))
+         (block (group by))
+         (block (group alts))))))
 
 (define input3
 #<<INPUT

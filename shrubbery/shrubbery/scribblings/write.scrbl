@@ -76,11 +76,11 @@
  @item{@racket[`(align ,_doc)]: print @racket[_doc] with the current
    indentation set to the current output column.}
 
- @item{@racket[`(or ,_doc ,_doc)]: print either @racket[_doc]; always
-   taking the first @racket[_doc] in an @racket['or] will produce
-   single-line output if @racket[prefer-multiline?] is @racket[#f],
-   while always taking the second @racket[_doc] will
-   print a maximal number of lines.}
+ @item{@racket[`(or ,_doc ,_doc)]: print either @racket[_doc]; if
+   @racket[prefer-multiline?] is @racket[#f], always taking the first
+   @racket[_doc] in an @racket['or] will produce single-line output,
+   while always taking the second @racket[_doc] will print a maximal
+   number of lines.}
 
 ]
 
@@ -89,4 +89,3 @@
  instructions can be exponentially larger than the DAG representation.
 
 }
-

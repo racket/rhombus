@@ -35,14 +35,14 @@
       `(or ,inside ,inside-multi)
       inside-multi))
 
-;; returns three values when `op` is a symbol:
+;; returns four values when `op` is a symbol:
 ;;   - instructions for single-line mode
 ;;   - instructions for multi-line mode
 ;;   - whether exposed quotes appear (in either mode)
 ;;   - whether an enclosing `|` can do without '«»' around its single-line content
 (define (do-write-shrubbery-term v op)
   (let loop ([v v]
-             [non-tail? #f] ; => unarmored single-line block still will needs « and »
+             [non-tail? #f] ; => unarmored single-line block still needs « and »
              [head? #t]     ; => '|' doesn't need a leading newline in 'multi-doc mode
              [before-block? #f]) ; => ':' is next
     (cond
@@ -152,39 +152,52 @@
           (define-values (align? q-open q-line-open
                                  sep sep+space block-sep+space
                                  q-line-close q-close
-                                 one-line? is-quotes? use-non-tail? can-tail? wraps?
-                                 no-line?)
+                                 one-line-ish? is-quotes? use-non-tail? can-tail? wraps?
+                                 no-line?
+                                 multi-just-multi?)
             (case (car v)
               [(group) (values #t "" "" "" " " "" "" ""
                                #t #f #t (not non-tail?) #f
+                               #f
                                #f)]
               [(block) (values #f (if a/mt? ":«" ":") (if mt? ":«" (if a/nt? ":« " ": "))
                                (if armor? ";" "") "; " "; "
                                (if mt? "»" (if a/nt? " »" "")) (if a/mt? "»" #f)
                                #f #f #t #t #f
-                               (and prefer-multi? (or a/mt? (pair? (cddr v)))))]
+                               (and prefer-multi? (or a/mt? (pair? (cddr v))))
+                               ;; always print multi-line blocks in multi-line mode;
+                               ;; because this block must be in a group, an outer
+                               ;; `or` wrapper will be added on the group, which allows
+                               ;; printing of single-line blocks when the whole group is
+                               ;; printed in single line
+                               #t)]
               [(parens) (values #f "(" "("
                                 "," ", " ", "
                                 ")" ")"
                                 #f #f #f #t #t
+                                #f
                                 #f)]
               [(brackets) (values #f "[" "["
                                   "," ", " ", "
                                   "]" "]"
                                   #f #f #f #t #t
+                                  #f
                                   #f)]
               [(braces) (values #f "{" "{"
                                 "," ", " ", "
                                 "}" "}"
                                 #f #f #f #t #t
+                                #f
                                 #f)]
               [(quotes) (values #f '("'«" "'") '("'«" "'")
                                 (if armor? ";" "") "; " "; "
                                 '("»'" "'") '("»'" "'")
                                 #f #t #t #t #t
-                                (and prefer-multi? (pair? (cdr v)) (pair? (cddr v))))]
+                                (and prefer-multi? (pair? (cdr v)) (pair? (cddr v)))
+                                #f)]
               [else (values #f #f #f #f #f #f #f #f
                             #f #f #f #f #f
+                            #f
                             #f)]))
           (cond
             [q-open
@@ -196,9 +209,11 @@
                   ;; specially for 'group mode
                   (let inside-loop ([l (cdr v)] [first? #t])
                     (cond
-                      [(null? l) (values null null null null #f)]
+                      [(null? l)
+                       (values null null null null #f)]
                       [(null? (cdr l))
-                       (define-values (inside inside-multi quotes? atomic?) (loop (car l) (not can-tail?) (or wraps? (and first? head?)) #f))
+                       (define-values (inside inside-multi quotes? atomic?)
+                         (loop (car l) (not can-tail?) (or wraps? (and first? head?)) #f))
                        (values (and inside
                                     (list inside))
                                (list inside-multi)
@@ -211,33 +226,21 @@
                        (define v (car l))
                        (define next-v (cadr l))
                        (define next-is-block? (and (pair? next-v) (eq? (car next-v) 'block)))
-                       (define-values (inside inside-multi inside-quotes? inside-atomic?) (loop v use-non-tail? (or wraps? (and first? head?)) next-is-block?))
-                       (define-values (insides insides-semi insides-line-multi insides-multi insides-quotes?) (inside-loop (cdr l) #f))
-                       (define this-sep+space (if (and (pair? next-v)
-                                                       (memq (car next-v) '(block alts)))
+                       (define next-is-alts? (and (pair? next-v) (eq? (car next-v) 'alts)))
+                       (define-values (inside inside-multi inside-quotes? inside-atomic?)
+                         (loop v use-non-tail? (or wraps? (and first? head?)) next-is-block?))
+                       (define-values (insides insides-semi insides-line-multi insides-multi insides-quotes?)
+                         (inside-loop (cdr l) #f))
+                       (define this-sep+space (if next-is-block?
                                                   block-sep+space
                                                   sep+space))
+                       (define this-semi-sep+space (if (or next-is-block? next-is-alts?)
+                                                       block-sep+space
+                                                       sep+space))
                        (values (and inside
                                     insides
-                                    (list* inside this-sep+space insides))                               
-                               (let ([semi (and inside
-                                                insides-semi
-                                                (list* inside this-sep+space insides-semi))])
-                                 (cond
-                                   [(and (null? (cddr l))
-                                         (pair? (car l))
-                                         (eq? (car (car l)) 'block))
-                                    ;; must be a block with alts after
-                                    (if semi
-                                        (list `(or (seq ,@semi)
-                                                   (seq ,inside-multi
-                                                        ,@insides-semi)))
-                                        ;; In this case, we're in 'multi-doc mode, and
-                                        ;; `insides-semi` cannot be #f, since the last part
-                                        ;; can use multi mode. Along those lines, it's ok to
-                                        ;; use multi mode for the next-to-last element
-                                        (list `(seq ,inside-multi ,@insides-semi)))]
-                                   [else semi]))
+                                    (list* inside this-sep+space insides))
+                               (list* inside-multi this-semi-sep+space insides-semi)
                                (cons `(nest ,open-length (seq ,(if first? '(seq) 'nl)
                                                               ,inside-multi
                                                               ,sep))
@@ -256,34 +259,33 @@
                   (and insides
                        `(seq ,line-open ,@insides ,line-close)))
                 (cond
-                  [(null? (cdr v)) (values line line quotes? wraps?)]
+                  [(null? (cdr v))
+                   (values line line quotes? wraps?)]
                   [else
                    (values (and (not no-line?) line)
-                           (let* ([multi
-                                   (cond
-                                     [one-line?
-                                      `(seq ,line-open ,@insides-semi ,line-close)]
-                                     [else (if close
-                                               `(seq ,open ,@insides-multi nl ,close)
-                                               `(seq ,open ,@insides-multi))])]
-                                  [multi* (if align? `(align ,multi) multi)])
-                             (cond
-                               [(or one-line?
-                                    (and (not wraps?)
-                                         (pair? (cdr insides-multi))))
-                                multi*]
-                               [prefer-multi?
-                                (define multi**
-                                  (if wraps?
-                                      `(or ,multi*
-                                           (align (seq ,line-open ,@insides-line-multi ,line-close)))
-                                      multi*))
-                                (if (and (not no-line?) line)
-                                    `(or ,line ,multi**)
-                                    multi**)]
-                               [else
-                                `(or ,line
-                                     ,multi*)]))
+                           (let* ([multi (cond
+                                           [one-line-ish?
+                                            `(seq ,line-open ,@insides-semi ,line-close)]
+                                           [else
+                                            (if close
+                                                `(seq ,open ,@insides-multi nl ,close)
+                                                `(seq ,open ,@insides-multi))])]
+                                  [multi (if align? `(align ,multi) multi)]
+                                  [multi (if (and prefer-multi?
+                                                  wraps?)
+                                             `(or ,multi
+                                                  (align (seq ,line-open ,@insides-line-multi ,line-close)))
+                                             multi)]
+                                  [multi (if (and (not no-line?)
+                                                  (not multi-just-multi?)
+                                                  (or wraps?
+                                                      one-line-ish?
+                                                      (null? (cdr insides-multi)))
+                                                  line)
+                                             `(or ,line
+                                                  ,multi)
+                                             multi)])
+                             multi)
                            quotes?
                            wraps?)])]
                [else
