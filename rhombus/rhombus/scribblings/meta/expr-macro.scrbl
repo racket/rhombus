@@ -76,13 +76,11 @@
  tail for the unconsumed part. Returning a single value is the same as
  return an empty tail.
 
- When a @rhombus(macro_pattern) does not end with
- @rhombus(#,(@rhombus($, ~bind))()) or
- @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))),
- then the result of the @rhombus(body) is automatically relocated using
- @rhombus(Syntax.relocate_ephemeral_span). This relocation is skipped if
- the result of the @rhombus(body) has a @rhombus(#'relocated) syntax
- property.
+ The result of @rhombus(body) is automatically relocated using
+ @rhombus(Syntax.relocate_ephemeral_span) under the same circumstances
+ (determined by @rhombus(macro_pattern)) as for @rhombus(macro, ~defn).
+ This relocation is skipped, however, if the result of @rhombus(body)
+ has a @rhombus(#'relocated) syntax property.
 
  The @rhombus(expr.macro) form does not define an @tech{assignment operator}
  that works with mutable targets. To define an assignment operator, use

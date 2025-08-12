@@ -134,3 +134,106 @@ space.enforest myspace2:
       parsed
     fun parse_2('$(parsed :: Parsed)'):
       parsed
+
+
+// check that syntax is relocated automatically
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro 'prefx $x':
+    'not_original'
+  widget.macro 'plain':
+    'also_not_original'
+  wchk prefx plain
+  ~throws "prefx plain"
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro '$x infx $y':
+    'not_original'
+  widget.macro 'plain':
+    'also_not_original'
+  wchk plain infx plain
+  ~throws "plain infx plain"
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro 'prefx $x':
+    'not_original'
+  widget.macro 'plain':
+    'also_not_original'
+  wchk prefx plain
+  ~throws "prefx plain"
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro '$x infx $y':
+    'not_original'
+  widget.macro 'plain':
+    'also_not_original'
+  wchk plain infx plain
+  ~throws "plain infx plain"
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro 'prefx $x':
+    widget_meta.pack('not_original')
+  widget.macro 'plain':
+    'also_not_original'
+  wchk prefx plain
+  ~throws "prefx plain"
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
+    syntax_meta.error("oops", b)
+  widget.macro '$x infx $y':
+    widget_meta.pack('not_original')
+  widget.macro 'plain':
+    'also_not_original'
+  wchk plain infx plain
+  ~throws "plain infx plain"

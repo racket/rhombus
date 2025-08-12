@@ -116,7 +116,9 @@
   identifier (optionally parenthesized), then the macro is applied with an
   already-parsed term after the macro name in a use of the macro. That
   parse heeds precedence and associativity declarations for other macros
-  and for operators defined with @rhombus(op).}
+  and for operators defined with @rhombus(op). Each result of the macro
+  is automatically relocated via @rhombus(Syntax.relocate_ephemeral_span) using
+  the source terms that were expanded by the macro.}
 
  @item{Otherwise, the right-hand side is an arbitrary pattern that is
   matched to a sequence of terms after the macro name in its enclosing
@@ -127,7 +129,8 @@
   a block pattern, or an alternatives pattern, then
   all terms after the macro operator must match the right-hand pattern.
   The position before @rhombus(#,(@rhombus($, ~bind))()) is itself treated
-  as a group position.}
+  as a group position. The macro's result is @emph{not} automatically adjusted
+  using @rhombus(Syntax.relocate_ephemeral_span).}
 
 )
 
@@ -145,8 +148,8 @@
  can only refer to an input pattern variable or a literal syntax
  object, optionally parenthesized, or an operator (e.g.,
  @rhombus($('$')) to generate a literal @rhombus($)). More general
- compile-time expressions are not allowed; use @rhombus(expr.macro)
- or @rhombus(expr.macro), instead, to enable compile-time expressions.
+ compile-time expressions are not allowed; use @rhombus(expr.macro),
+ instead, to enable compile-time expressions.
 
  Before the @rhombus(template) body of a @rhombus(macro_pattern),
  @rhombus(option) keywords can appear. The options

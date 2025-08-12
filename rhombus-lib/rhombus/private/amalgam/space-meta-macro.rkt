@@ -313,6 +313,15 @@
          (datum->syntax #f (list 'parsed parsed-tag form))])
       form))
 
+(define (relocate-result parsed-tag in-stx result)
+  (syntax-parse result
+    #:datum-literals (parsed)
+    [(parsed tag in)
+     #:when (eq? (syntax-e #'tag) parsed-tag)
+     #`(parsed tag #,(relocate+reraw in-stx #'in))]
+    [_
+     (relocate+reraw in-stx result)]))
+
 (define ((make-make-prefix-operator new-prefix-operator parsed-tag) order prec protocol proc)
   (new-prefix-operator
    order
@@ -320,11 +329,11 @@
    protocol
    (cond
      [(eq? protocol 'automatic)
-      (if parsed-tag
-          (procedure-rename
-           (lambda (form stx . more) (apply proc (tag form parsed-tag) stx more))
-           (object-name proc))
-          proc)]
+      (procedure-rename
+       (lambda (form stx . more)
+         (define result (apply proc (tag form parsed-tag) stx more))
+         (relocate-result parsed-tag (datum->syntax #f (list stx form)) result))
+       (object-name proc))]
      [else
       (procedure-rename
        (lambda (tail . more)
@@ -340,11 +349,11 @@
    protocol
    (cond
      [(eq? protocol 'automatic)
-      (if parsed-tag
-          (procedure-rename
-           (lambda (form1 form2 stx . more) (apply proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx more))
-           (object-name proc))
-          proc)]
+      (procedure-rename
+       (lambda (form1 form2 stx . more)
+         (define result (apply proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx more))
+         (relocate-result parsed-tag (datum->syntax #f (list form1 stx form2)) result))
+       (object-name proc))]
      [else
       (procedure-rename
        (lambda (form1 tail . more)
