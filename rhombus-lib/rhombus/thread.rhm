@@ -2,6 +2,7 @@
 import:
   lib("racket/base.rkt") as rkt
   lib("rhombus/private/amalgam.rkt")!evt
+  "private/thread.rkt" as rkt_thd
 
 export:
   thread
@@ -16,8 +17,17 @@ export:
   only_space annot:
     evt.Evt
 
-expr.macro 'thread: $(body :: Block)':
-  'Thread(fun () $body)'
+expr.macro 'thread:
+              $(group_option_sequence
+                | '~pool: $(pool :: Block)':
+                    default pool = ': #false'
+                | '~keep: $(keep :: Block)':
+                    default keep = ': #false')
+              $body
+              ... ~nonempty':
+  'Thread(fun (): $body; ...,
+          ~pool $pool,
+          ~keep $keep)'
 
 namespace ~open:
   export: Thread
@@ -26,12 +36,19 @@ namespace ~open:
     internal _Thread
     implements evt.Evt
     private implements evt._Evt
-    constructor (thunk :: Function.of_arity(0)):
-      super(rkt.thread(thunk))
+    constructor (thunk :: Function.of_arity(0),
+                 ~pool: pool :: maybe(Thread.Pool || Any.of(#'own)) = #false,
+                 ~keep: keep :: maybe(Thread.Keep) = #false):
+      super(rkt_thd.thread(thunk,
+                           ~pool:
+                             match pool
+                             | pool :: Thread.Pool: pool.handle
+                             | ~else: pool,
+                           ~keep: keep))
     override property handle: hand
     private override property sync_handle: rkt.#{wrap-evt}(hand, fun (v): this)
-    method wait():
-      rkt.#{thread-wait}(hand)
+    method wait(fail_k :: Function.of_arity(0) = Function.pass):
+      rkt_thd.#{thread-wait}(hand, fail_k)
     method break(kind :: Thread.Break = #'interrupt):
       rkt.#{break-thread}(hand, match kind
                                 | #'interrupt: #false
@@ -44,21 +61,48 @@ namespace ~open:
       from_handle
       sleep
       Break
+      Pool
+      Keep
 
     fun sleep(n :: NonnegReal):
       rkt.sleep(n)
 
-  fun from_handle(hand) :: Thread:
-    ~who: who
-    unless rkt.#{thread?}(hand)
-    | error(~who: who, "not a thread handle",
-            error.val(hand))
-    _Thread(hand)
+    fun from_handle(hand) :~ Thread:
+      ~who: who
+      unless rkt.#{thread?}(hand)
+      | error(~who: who, "not a thread handle",
+              error.val(hand))
+      _Thread(hand)
 
-  enum Break:
-    interrupt
-    hang_up
-    terminate
+    enum Break:
+      interrupt
+      hang_up
+      terminate
+
+    class Pool(private hand):
+      opaque
+      internal _Pool
+      constructor (n :: PosInt = processor_count()):
+        super(rkt_thd.#{make-parallel-thread-pool}(n))    
+      property handle: hand
+      method close():
+        rkt_thd.#{parallel-thread-pool-close}(hand)
+      export:
+        processor_count
+        own
+        from_handle
+      fun processor_count():
+        rkt_thd.#{processor-count}()
+      def own = #'own
+      fun from_handle(hand) :~ Pool:
+        ~who: who
+        unless rkt_thd.#{parallel-thread-pool?}(hand)
+        | error(~who: who, "not a parallel thread pool handle",
+                error.val(hand))
+        _Pool(hand)
+
+    enum Keep:
+      results
 
 namespace ~open:
   export: Semaphore

@@ -1,6 +1,7 @@
 #lang rhombus/static
 import:
   rhombus/thread open
+  "version_guard.rhm"
 
 block:
   let s = Semaphore(0)
@@ -24,6 +25,32 @@ block:
   check v ~is 1
   check th ~is_a Evt
   check th.sync() ~is th
+
+version_guard.at_least "8.18.0.11":
+  check: Thread(~pool: Thread.Pool.own,
+                ~keep: Thread.Keep.results,
+                fun (): values(1, 2)).wait()
+         ~is values(1, 2)
+  check: (thread:
+            ~keep: #'results
+            1).wait()
+         ~is 1
+  check: (thread:
+            ~pool: Thread.Pool.own
+            ~keep: #'results
+            values(1, 2)).wait()
+         ~is values(1, 2)
+  check: (thread:
+            5).wait(fun (): #'esc)
+         ~is #void
+  check: (thread:
+            Continuation.escape(Function.pass)).wait(fun (): #'esc)
+         ~is #'esc
+  check Thread.Pool.from_handle(Thread.Pool().handle) ~is_a Thread.Pool
+  check Thread.Pool.own ~is #'own
+  let p = Thread.Pool(1)
+  check p.close() ~is #void
+  check Thread(Function.pass, ~pool: p) ~throws "rallel thread pool has been closed"
 
 block:
   let mutable v = 0
