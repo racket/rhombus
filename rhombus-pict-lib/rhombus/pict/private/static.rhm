@@ -240,7 +240,7 @@ class Pict():
   abstract method colorize(c :: (Color || String)) :~ Pict
   abstract method line_width(w :: NonnegReal) :~ Pict
 
-  abstract method alpha(n :: Real.in(0, 1)) :~ Pict
+  abstract method alpha(n :: Real.in(0, 1), ~composite: composite = #true) :~ Pict
 
   abstract method clip() :~ Pict
 
@@ -517,8 +517,8 @@ class StaticPict(private _handle,
   override method line_width(w :: NonnegReal) :~ Pict:
     static_pict(rkt.linewidth(w, _handle), this, _instances, METHOD(line_width, w))
 
-  override method alpha(n :: Real.in(0, 1)) :~ Pict:
-    static_pict(rkt.cellophane(_handle, n), this, _instances, METHOD(alpha, n))
+  override method alpha(n :: Real.in(0, 1), ~composite: composite = #true) :~ Pict:
+    static_pict(rkt.cellophane(_handle, n, ~#{composite?}: composite), this, _instances, METHOD(alpha, n))
 
   override method clip() :~ Pict:
     static_pict(rkt.clip(_handle), this, _instances, METHOD(clip))
@@ -661,7 +661,7 @@ class NothingPict():
   override method colorize(c :: (Color || String)): this
   override method line_width(w :: NonnegReal): this
 
-  override method alpha(n :: Real.in(0, 1)): this
+  override method alpha(n :: Real.in(0, 1), ~composite: composite = #true): this
 
   override method clip(): this
 

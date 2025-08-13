@@ -172,7 +172,10 @@
 }
 
 @doc(
-  method (pict :: Pict).alpha(n :: Real.in(0, 1)) :: Pict
+  method (pict :: Pict).alpha(
+    n :: Real.in(0, 1),
+    ~composite: composite = #true
+  ) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but whose drawing is
@@ -186,6 +189,14 @@
     p.alpha(0.5)
     p.alpha(0.25)
 )
+
+ But default, all drawn elements of @rhombus(pict) are rendered
+ together, and then an alpha adjustment is applied to the combined
+ drawing. If @rhombus(composite) is @rhombus(#false), then individual
+ elements of @rhombus(pict) are drawn with an alpha adjustment. When the
+ two modes produce different output, the default one is normally the
+ intended effect, but drawing with @rhombus(composite) as
+ @rhombus(#false) can be significantly faster in some cases.
 
 }
 

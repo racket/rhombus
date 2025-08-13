@@ -790,8 +790,8 @@ class AnimPict(_identity_f :~ PictIdentity,
   override method line_width(w :: NonnegReal) :~ Pict:
     anim_pict_adjust(this, fun (p :~ Pict): p.line_width(w))
 
-  override method alpha(n :: Real.in(0, 1)) :~ Pict:
-    anim_pict_adjust(this, fun (p :~ Pict): p.alpha(n))
+  override method alpha(n :: Real.in(0, 1), ~composite: composite = #true) :~ Pict:
+    anim_pict_adjust(this, fun (p :~ Pict): p.alpha(n, ~composite: composite))
 
   override method clip() :~ Pict:
     anim_pict_adjust(this, fun (p :~ Pict): p.clip())
