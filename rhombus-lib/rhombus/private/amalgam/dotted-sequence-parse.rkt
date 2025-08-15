@@ -67,17 +67,24 @@
   (define (id-as-ext-target tmp)
     (syntax-property tmp 'not-free-identifier=? #t)))
 
-(define-for-syntax (build-definitions/maybe-extension space-sym name-in extends rhs)
+(define-for-syntax (build-definitions/maybe-extension space-sym name-in extends rhs
+                                                      #:simple-rhs? [simple-rhs? #f])
   (define name ((space->introducer space-sym) name-in))
   (cond
     [(syntax-e extends)
-     (define tmp ((space->introducer space-sym)
-                  ((make-syntax-introducer)
-                   (datum->syntax #f (syntax-e name) name))))
-     (list
-      #`(define #,tmp #,rhs)
-      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
-                                                            (quote-syntax #,extends))))]
+     (define (make-rhs tmp)
+       #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
+                                                             (quote-syntax #,extends))))
+     (cond
+       [simple-rhs?
+        (list (make-rhs rhs))]
+       [else
+        (define tmp ((space->introducer space-sym)
+                     ((make-syntax-introducer)
+                      (datum->syntax #f (syntax-e name) name))))
+        (list
+         #`(define #,tmp #,rhs)
+         (make-rhs tmp))])]
     [else
      (list
       #`(define #,name #,rhs))]))

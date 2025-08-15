@@ -174,7 +174,7 @@
  @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pairs.
  Like @rhombus(var_static_key, ~var)s, the meaning of
  @rhombus(var_use, ~var)s is up to cooperating parts in general, but
- two shapes are recognized by built-in forms:
+ some shapes are recognized by built-in forms:
 
 @itemlist(
 

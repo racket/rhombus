@@ -169,6 +169,8 @@
        #:with (statinfos ...) statinfoss
        #:with (b-impl::binding-impl ...) #'((b-parsed.infoer-id statinfos b-parsed.data) ...)
        #:with (b-info::binding-info ...) #'(b-impl.info ...)
+       (for ([b-info (in-list (syntax->list #'(b-impl.info ...)))])
+         (disallow-binding-as-namespace-extension b-info))
        (define rhs-body
          #`(begin
              (b-info.committer-id val-id b-info.evidence-ids b-info.data)
@@ -249,6 +251,7 @@
         [b::binding-form
          #:with b-impl::binding-impl #'(b.infoer-id () b.data)
          #:with b-info::binding-info #'b-impl.info
+         (disallow-binding-as-namespace-extension #'b-impl.info)
          #`(let ([val-in (let ([b-info.name-id #,(discard-static-infos form)])
                            b-info.name-id)])
              (b-info.oncer-id b-info.data)

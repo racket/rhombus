@@ -119,3 +119,9 @@ check:
       'import rhombus as $id'
     m x
   ~throws "duplicate import"
+
+check:
+  enum Foo: a b c
+  let Foo.d = 5
+  Foo.d
+  ~is 5

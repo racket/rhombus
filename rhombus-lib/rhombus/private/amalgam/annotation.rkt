@@ -1107,6 +1107,7 @@
         #:with arg-parsed::binding-form #'arg.parsed
         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
         #:with arg-info::binding-info #'arg-impl.info
+        (disallow-binding-as-namespace-extension #'arg-impl.info)
         (values
          (relocate+reraw
           (datum->syntax #f (list #'form-id #'args))

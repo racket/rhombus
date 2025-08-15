@@ -162,6 +162,21 @@
       values([s.length(), ...], i < j)
 )
 
+ A @nontermref(bind) is not allowed extend a namespace (as indicated by
+ @rhombus(~extends) use information in a binding's expansion; see
+ @rhombus(bind_meta.pack_info)). This constraint is imposed to avoid
+ accidentally extending a namespace where a dotted reference to a
+ namespace member was intended, bu the member's name was misspelled.
+
+@examples(
+  enum Greek: alpha omega
+  match #'alpha
+  | Greek.alpha: "ok"
+  ~error:
+    match #'omega
+    | Greek.alfa: "oops"
+)
+
 }
 
 

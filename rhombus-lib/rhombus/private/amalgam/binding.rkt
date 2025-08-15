@@ -36,6 +36,7 @@
            bind-quote
 
            binding-extension-combine
+           disallow-binding-as-namespace-extension
 
            (struct-out binding-prefix+infix-operator)))
 
@@ -135,7 +136,20 @@
 
   (define extension-syntax-property-key (gensym 'extension))
   (define (binding-extension-combine prefix field-id id)
-    (syntax-property id extension-syntax-property-key prefix)))
+    (syntax-property id extension-syntax-property-key prefix))
+
+  (define (disallow-binding-as-namespace-extension b-info)
+    (syntax-parse b-info
+      [b::binding-info
+       (for ([id (in-list (syntax->list #'(b.bind-id ...)))]
+             [uses (in-list (syntax->list #'(b.bind-uses ...)))])
+         (when (for/or ([use (in-list (syntax->list uses))])
+                 (let ([u (syntax-e use)])
+                   (and (pair? u)
+                        (eq? (syntax-e (car u)) '#:extends))))
+           (raise-syntax-error #f
+                               "binding a namespace extension is not allowed in this context"
+                               id)))])))
 
 (begin-for-syntax
   (struct binding-prefix+infix-operator (prefix infix)
@@ -182,7 +196,8 @@
   (syntax-parse stx
     [(_ arg-id () [bind-id prefix-id])
      (define l (build-definitions/maybe-extension #f #'bind-id #'prefix-id
-                                                  #'arg-id))
+                                                  #'arg-id
+                                                  #:simple-rhs? #t))
      (if (and (pair? l) (null? (cdr l)))
          (car l)
          #`(begin #,@l))]
