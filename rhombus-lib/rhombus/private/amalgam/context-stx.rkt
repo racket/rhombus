@@ -5,7 +5,8 @@
          "syntax-wrap.rkt")
 
 (provide extract-ctx
-         extract-group-ctx)
+         extract-group-ctx
+         extract-ephemeral-ctx)
 
 (define (extract-ctx who ctx-stx
                      #:false-ok? [false-ok? #t]
@@ -70,3 +71,15 @@
               [else
                #'tag])]
            [_ (error "not a group")]))))
+
+(define (extract-ephemeral-ctx who stx #:update update)
+  (let ([t (and (syntax*? stx)
+                (unpack-term stx #f #f))])
+    (syntax-parse t
+      #:datum-literals (parsed)
+      [((~and tag parsed) space o)
+       (let ([inner-stx (update #'o 's-exp)])
+         (update (datum->syntax t (list #'tag #'space inner-stx) t t)
+                 's-exp))]
+      [else
+       (update stx 's-exp)])))

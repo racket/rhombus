@@ -318,7 +318,7 @@
     #:datum-literals (parsed)
     [(parsed tag in)
      #:when (eq? (syntax-e #'tag) parsed-tag)
-     #`(parsed tag #,(relocate+reraw in-stx #'in))]
+     (relocate+reraw in-stx #`(parsed tag #,(relocate+reraw in-stx #'in)))]
     [_
      (relocate+reraw in-stx result)]))
 

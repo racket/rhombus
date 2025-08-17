@@ -836,8 +836,7 @@
 (define/method (Syntax.relocate_ephemeral_span stx-in ctx-stxes-in)
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (unless (syntax*? stx-in) (raise-annotation-failure who stx-in "Syntax"))
-  (relocate-span who stx-in ctx-stxes-in (lambda (who stx #:update update)
-                                           (update stx 's-exp))))
+  (relocate-span who stx-in ctx-stxes-in extract-ephemeral-ctx))
 
 (define (to-list-of-stx who v-in)
   (define stxs (to-list #f v-in))
