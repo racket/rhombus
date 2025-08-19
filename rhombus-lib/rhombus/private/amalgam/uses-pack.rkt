@@ -12,7 +12,7 @@
      #:with (g ...) (for/list ([stx (in-list (syntax->list #'(stx ...)))])
                       (syntax-parse stx
                         [(#:repet (id ...))
-                         #'(group #:repet (#%parens (group (parsed #:rhombus/sequencer id)) ...))]
+                         #'(group #:repet (parens (group (parsed #:rhombus/sequencer id)) ...))]
                         [kw:keyword
                          #'(group kw)]
                         [(#:group g)
@@ -28,8 +28,8 @@
     [(_::brackets g ...)
      #:with (stx ...) (for/list ([g (in-list (syntax->list #'(g ...)))])
                         (syntax-parse g
-                          #:datum-literals (group) 
-                          [(group #:repet (#%parens (group (parsed #:rhombus/sequencer id:identifier)) ...))
+                          #:datum-literals (group parens parsed)
+                          [(group #:repet (parens (group (parsed #:rhombus/sequencer id:identifier)) ...))
                            #'(#:repet (id ...))]
                           [(group kw:keyword) #'kw]
                           [_ #`(#:group #,g)]))
