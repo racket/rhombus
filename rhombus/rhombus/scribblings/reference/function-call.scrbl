@@ -98,15 +98,12 @@ normally bound to implement @tech{function} calls.
  the textual order.
  @margin_note{This form is known as a ``pipeline.'' Accordingly,
  @rhombus(|>) is the ``pipe-forward'' operator.}
- The conversion is performed syntactically so that
- static checking and propagation of static information may apply, but
- @rhombus(arg_expr) and @rhombus(fun_expr) are parsed as expressions before the
- conversion. The @rhombus(|>) operator declares weaker precedence than
- all other operators.
 
- Alternatively, the right-hand side can be an @tech(~doc: meta_doc){immediate callee},
- in which case the static information for @rhombus(arg_expr) is
- supplied to it.
+ The left-handle side of @rhombus(|>) is always parsed as an expression,
+ @rhombus(arg_expr). The right-hand side of @rhombus(|>) is parsed as an
+ @tech(~doc: meta_doc){immediate callee} if possible, propagating of
+ static information from @rhombus(arg_expr) in that case, or else the
+ right-hand side is parsed as an expression.
 
  A @rhombus(_) function shorthand can be especially useful with
  @rhombus(|>).
