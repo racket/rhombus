@@ -1,0 +1,55 @@
+#lang rhombus/static/and_meta
+import:
+  scribble/doc_meta open
+  scribble/spacer
+  parser/lex open
+
+export:
+  lex_pattern
+  only_space spacer.typeset:
+    lexer
+    #%brackets
+
+namespace lex_pattern:
+  export:
+    macro
+  doc.bridge macro:
+    doc_meta.transformer(
+      ~extract_desc: fun (stx): "lex pattern operator",
+      ~extract_space: fun (stx): #'#{rhombus/parser/lex_pattern},
+      ~extract_name: operator_macro_extract_name,
+      ~extract_metavariables: operator_macro_extract_metavariables,
+      ~extract_typeset: operator_macro_extract_typeset
+    )
+
+spacer.bridge lexer(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$expr ... $(a && '| $(b :: Block) | ...')':
+      let new_expr = spacer.adjust_sequence('$expr ...', #'~expr, esc)
+      let new_a:
+        fun adjust_block(b):
+          match b
+          | ': $(case :: Group && '$pat ...: $(body :: Block)')':
+              let new_case:
+                let new_bind = spacer.adjust_sequence('$pat ...', #'#{rhombus/parser/lex_pattern}, esc)
+                let new_body = spacer.adjust_term(body, #'~expr, esc)
+                '$new_bind $new_body'.relocate_group(case)
+              ': $new_case'.relocate(b)
+          | ~else: b
+        Syntax.make([#'alts, adjust_block(b), ...]).relocate(a)
+      '$self $new_expr $new_a'
+  | ~else: '$self $tail'
+
+spacer.bridge #%brackets(self, tail, context, esc):
+  ~in: #{rhombus/parser/lex_pattern}
+  let new_tail:
+    match tail
+    | '[$(g :: Group)]':
+        let g = spacer.adjust_group(g, #'#{rhombus/rx_charset}, esc)
+        '[$g]'
+    | ~else:
+        tail
+  if self
+  | '$self $new_tail'
+  | new_tail

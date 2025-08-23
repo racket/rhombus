@@ -8,7 +8,7 @@ import:
     lib("racket/base.rkt") as meta_base
     "when_unless.rhm" open
     "recur.rhm" open
-  "rx_charset.rhm".rx_charset_meta
+  "rx_charset.rhm"!meta.rx_charset_meta
 
 export:
   meta:

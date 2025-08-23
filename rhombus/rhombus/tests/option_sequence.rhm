@@ -167,3 +167,15 @@ block:
     | '$(v :: Options)':
         [v.a, v.b]
     ~matches ['10', #false]
+
+check:
+  match '1:
+           2
+         | inside'
+  | '1 $(term_option_sequence
+         | ':
+              $(group_option_sequence
+                | '2')')
+     | inside':
+      "yes"
+  ~is "yes"

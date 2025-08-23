@@ -253,8 +253,8 @@
            (cond
              [(zero? (hash-count use-spaces)) ht]
              [else (add-name-at-all-spaces ht id id use-spaces '#:only)]))]
-        [(except-out starting-e exclude-e)
-         (define all-except-ht (loop #'exclude-e except-ht #hasheq() spaces spaces-mode))
+        [(except-out starting-e exclude-e ...)
+         (define all-except-ht (loop #'(combine-out exclude-e ...) except-ht #hasheq() spaces spaces-mode))
          (loop #'starting-e ht all-except-ht spaces spaces-mode)]
         [(all-from-out mod-path)
          (raise-syntax-error #f

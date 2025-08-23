@@ -445,4 +445,17 @@ bytes to match for a byte-mode @tech{regexp}.
 }
 
 
+@doc(
+  ~meta
+  fun rx_charset_meta.unpack_ranges(parsed :: Syntax)
+    :: List.of(Range)
+){
+
+ Returns a list of character ranges for a parsed result from
+ @rhombus(rx_charset_meta.Parsed, ~stxclass) and related. Each range
+ represents the characters whose @rhombus(Char.to_int) values are the
+ range.
+
+}
+
 @close_eval(rx_eval)

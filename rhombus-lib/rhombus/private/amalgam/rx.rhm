@@ -6,7 +6,10 @@ import:
   meta:
     "charset.rhm".Charset
   "rx_order.rhm" open
-  "rx_charset.rhm".rx_charset_meta
+  "rx_charset.rhm"!meta:
+    expose:
+      rx_charset_meta
+      rx_charset_meta_public
   "rx_charset.rhm" open
   "rx_compile.rhm" open
   "rx_object.rhm" open
@@ -50,6 +53,9 @@ export:
 
   all_from("rx_order.rhm")
   all_from("rx_charset.rhm")
+  meta:
+    rename:
+      rx_charset_meta_public as rx_charset_meta
 
   RX
   RXMatch

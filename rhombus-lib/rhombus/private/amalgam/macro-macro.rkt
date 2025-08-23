@@ -7,16 +7,19 @@
                                 [module-identifier-mapping-get free-identifier-mapping-get]
                                 [module-identifier-mapping-put! free-identifier-mapping-put!])
                      enforest/name-parse
+                     enforest/hier-name-parse
                      enforest/operator
                      enforest/syntax-local
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
                      "macro-rhs.rkt"
                      "introducer.rkt"
+                     "name-path-op.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "definition.rkt"
          "name-root-ref.rkt"
+         "name-root-space.rkt"
          "dollar.rkt"
          "binding.rkt"
          (only-in "unquote-binding-primitive.rkt"
@@ -137,11 +140,15 @@
 
   (define-syntax-class-mixin order-options
     #:datum-literals (op group)
-    (~alt (~optional (group #:order ~! (~or order::name
-                                            (_::block (group order::name))))))
-    #:with order-name (if (attribute order)
-                          #'(order.name)
-                          #'()))
+    (~alt (~optional (group #:order . order-tail)))
+    #:with order-name
+    (if (attribute order-tail)
+        (syntax-parse #'order-tail
+          [((~or order::dotted-identifier-sequence
+                 (_::block (group order::dotted-identifier-sequence))))
+           #:with (~var h-order (:hier-name-seq in-name-root-space in-order-space name-path-op name-root-ref)) #'order
+           #`(h-order.name)])
+        #'()))
 
   (define-syntax-class-mixin operator-options
     #:datum-literals (op group
@@ -561,7 +568,7 @@
                                            (if (attribute main-options) #'main-options.assc #'())
                                            (if (attribute main-options)
                                                (extract-extra-binds stx extra-kws extra-shapes #'main-options #f)
-                                               #'())
+                                               '())
                                            #:extra-kws extra-kws
                                            #:extra-shapes extra-shapes))]
         [(form-id q::operator-syntax-quote

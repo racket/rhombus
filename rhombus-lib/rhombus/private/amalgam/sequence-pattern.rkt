@@ -10,4 +10,5 @@
   (syntax-parse pat
     [((~datum ~seq) . _) #t]
     [((~datum ~and) ((~datum ~seq) . _) . _) #t]
+    [((~datum ~delimit-cut) p) (is-sequence-pattern? #'p)]
     [_ #f]))

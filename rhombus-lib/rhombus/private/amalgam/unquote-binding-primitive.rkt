@@ -620,6 +620,7 @@
         (cond
           [(eq? (current-unquote-binding-kind) for-kind)
            (define option-tags (generate-temporaries (attribute blk)))
+           (define options-id (car (generate-temporaries '(options))))
            (define-values (rsc descs defaultss)
              (parse-anonymous-syntax-class (syntax-e #'form-id)
                                            stx
@@ -630,7 +631,7 @@
                                            #:for-option? #t
                                            #:commonize-fields? #t
                                            #:option-tags option-tags
-                                           #'options
+                                           options-id
                                            #'(all-alts)))
            (define duplicate-messages
              (for/list ([desc (in-list descs)])
@@ -642,7 +643,7 @@
                                                      #'#f
                                                      #'form-id
                                                      #f
-                                                     #'options
+                                                     options-id
                                                      #t)
              [(pat idrs sidrs vars)
               (define default-name-map ; sym -> expression
@@ -679,11 +680,12 @@
                                        #`[lhs (msw ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth) . tail)]]))])
                 (with-syntax ([pat (with-syntax ([(option-tag ...) option-tags]
                                                  [(duplicate-message ...) duplicate-messages])
-                                     #'(~and (~seq pat (... ...))
-                                             ~!
-                                             (~fail #:when (check-duplicate-matches (attribute option-tag))
-                                                    duplicate-message)
-                                             ...))])
+                                     #'(~delimit-cut
+                                        (~and (~seq pat (... ...))
+                                              ~!
+                                              (~fail #:when (check-duplicate-matches (attribute option-tag))
+                                                     duplicate-message)
+                                              ...)))])
                   (values #'(pat idrs sidrs vars) #'())))])]
           [else
            (when (memq (current-unquote-binding-kind) fail-contexts)

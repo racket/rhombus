@@ -16,23 +16,33 @@ space.enforest rx_charset:
     parse_syntax_class Parsed
     parse_prefix_more_syntax_class AfterPrefixParsed
     parse_infix_more_syntax_class AfterInfixParsed
-    parsed_packer do_pack
-    parsed_unpacker do_unpack
+    private parsed_packer do_pack
+    private parsed_unpacker do_unpack
     export:
       pack
       unpack
+      unpack_ranges
     fun pack(charset :: Charset, stx) :~ Syntax:
       do_pack(Syntax.inject(Array(charset.raw_int_ranges()), 'here')).relocate_span([stx])
     fun unpack(stx :: Syntax) :~ Charset:
       Charset.from_raw_int_ranges(Array.get(do_unpack(stx, #false).unwrap_all(), 0))
+    fun unpack_ranges(stx :: Syntax) :~ Charset:
+      let PairList[PairList[start, end], ...] = Array.get(do_unpack(stx, #false).unwrap_all(), 0)
+      [start ..= end, ...]
 
     identifier_parser: fun (id):
                          syntax_meta.error("not a character set form", id)
 
+meta:
+  namespace rx_charset_meta_public:
+    export:
+      all_from(.rx_charset_meta):
+        except:
+          pack
+          unpack
+
 export:
   rx_charset
-  meta:
-    rx_charset_meta
 
   only_space rx_charset:
     !
@@ -60,6 +70,12 @@ export:
     any
 
   unicode
+
+module meta:
+  export:
+    meta:
+      rx_charset_meta
+      rx_charset_meta_public
 
 use_static
 

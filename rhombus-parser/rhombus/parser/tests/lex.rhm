@@ -1,0 +1,191 @@
+#lang rhombus/static/and_meta
+import:
+  parser/lex open
+
+check:
+  ~eval
+  import parser/lex open
+  lexer:
+  | (): #'zero
+  ~throws "lexer can accept the empty string"
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | ~eof: lexeme
+  ~throws "misuse in an end-of-file lexer clause"
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | ~eof: 1
+  | ~eof: 2
+  ~throws "second end-of-file clause not allowed"
+
+block:
+  def none:
+    lexer:
+      ~allow_empty
+    | (): #'zero
+  let i = Port.Input.open_string("abc")
+  check none(i) ~is #'zero
+  check none(i) ~is #'zero
+  check none(i) ~is #'zero
+  check i.read_string(3) ~is "abc"
+
+block:
+  def abc:
+    lexer
+    | "a": #'a
+    | "b": #'b
+    | "c": #'c
+  let i = Port.Input.open_string("abc")
+  check abc(i) ~is #'a
+  check abc(i) ~is #'b
+  check abc(i) ~is #'c
+  check abc(i) ~is Port.eof
+
+block:
+  def abc:
+    lexer
+    | "a"+: #'as
+    | "b" "b"?: #'bs
+    | "c"{1 ..= 3}: #'cs
+    | "d"{2}: #'ds
+    | "e"{2 ..}: #'es
+  let i = Port.Input.open_string("aaabccccddddeeeee")
+  check abc(i) ~is #'as
+  check abc(i) ~is #'bs
+  check abc(i) ~is #'cs
+  check abc(i) ~is #'cs
+  check abc(i) ~is #'ds
+  check abc(i) ~is #'ds
+  check abc(i) ~is #'es
+  check abc(i) ~is Port.eof
+
+block:
+  def as:
+    lexer
+    | ("a"+) - "aaa":
+        [lexeme.length(), // static
+         lexeme]
+  let i = Port.Input.open_string("aaa")
+  check as(i) ~is [2, "aa"]
+  check as(i) ~is [1, "a"]
+  check as(i) ~is Port.eof
+
+block:
+  def bs:
+    lexer
+    | ("b" () "b") || "bbb": lexeme
+  let i = Port.Input.open_string("bbbbb")
+  check bs(i) ~is "bbb"
+  check bs(i) ~is "bb"
+  check bs(i) ~is Port.eof
+
+block:
+  def bs:
+    lexer
+    | "a" ["b" - "e"] "z": lexeme
+  let i = Port.Input.open_string("abzaez")
+  check bs(i) ~is "abz"
+  check bs(i) ~is "aez"
+  check bs(i) ~is Port.eof
+
+block:
+  def bs:
+    lexer
+    | "a" ["b" - "e"] "z": [1, lexeme]
+    | "a" [! "b" - "e"] "z": [2, lexeme]
+  let i = Port.Input.open_string("abzaqzaez")
+  check bs(i) ~is [1, "abz"]
+  check bs(i) ~is [2, "aqz"]
+  check bs(i) ~is [1, "aez"]
+  check bs(i) ~is Port.eof
+
+block:
+  def bs:
+    lexer
+    | "a" (! "bc") "d": #'ok
+  let i = Port.Input.open_string("axyzdabcd")
+  check bs(i) ~is #'ok
+  check bs(i) ~is Port.eof
+  let i2 = Port.Input.open_string("abcd")
+  check bs(i2) ~throws "No match found"
+
+block:
+  def bs:
+    lexer
+    | (any any "c") && ("a" any any): #'ok
+  let i = Port.Input.open_string("abc")
+  check bs(i) ~is #'ok
+  check bs(i) ~is Port.eof
+  let i2 = Port.Input.open_string("acb")
+  check bs(i2) ~throws "No match found"
+
+block:
+  def bs:
+    lexer
+    | alpha digit: #'ad
+    | digit alpha: #'da
+  let i = Port.Input.open_string("1a2bc34d")
+  check bs(i) ~is #'da
+  check bs(i) ~is #'da
+  check bs(i) ~is #'ad
+  check bs(i) ~is #'da
+  check bs(i) ~is Port.eof
+
+block:
+  def none:
+    lexer:
+      ~allow_empty
+    | (): #'zero
+  let i = Port.Input.open_string("abc")
+  check none(i) ~is #'zero
+  check none(i) ~is #'zero
+  check none(i) ~is #'zero
+  check i.read_string(3) ~is "abc"
+
+block:
+  def go:
+    lexer:
+    | ~eof: #'end_of_file
+    | any && !"c": "alpha"
+    | alpha: "c" +& [srcloc, line, column, position, span, line_span, end_column] +& input_port
+    | "str" "STR" +: "strs"
+  let i = Port.Input.open_string("cdstrSTR")
+  i.locations_enabled(#true)
+  check go(i) ~is "c[Srcloc(#'string, 1, 0, 1, 1), 1, 0, 1, 1, 0, 1]Port.Input(#'string)"
+  check go(i) ~is "alpha"
+  check go(i) ~is "strs"
+  check go(i) ~is #'end_of_file
+
+block:
+  def u:
+    lexer
+    | unicode.L: #'alpha
+    | [unicode.N]: #'numeric
+  let i = Port.Input.open_string("a1")
+  check u(i) ~is #'alpha
+  check u(i) ~is #'numeric
+  check u(i) ~is Port.eof
+
+block:
+  def u:
+    lexer:
+      ~allow_empty
+    | "": #'empty
+    | ~eof: #'eof
+  let i = Port.Input.open_string("")
+  check u(i) ~is #'eof
+
+block:
+  def u:
+    lexer:
+      ~allow_empty
+    | "abc": #'abc
+    | any any any: #'any
+  let i = Port.Input.open_string("abc")
+  check u(i) ~is #'abc

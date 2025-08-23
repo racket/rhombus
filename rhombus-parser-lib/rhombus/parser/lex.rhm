@@ -1,0 +1,396 @@
+#lang rhombus/static/and_meta
+import:
+  lib("parser-tools/lex.rkt"):
+    expose:
+      lexer as rkt_lexer
+  rhombus/rx
+  rhombus/rx open:
+    only_space rx.rx_charset
+  meta:
+    lib("version/utils.rkt")
+
+space.enforest lex_pattern:
+  space_path rhombus/parser/lex_pattern
+  macro_definer macro
+  meta_namespace lex_pattern_meta:
+    parse_syntax_class Parsed
+    parse_infix_more_syntax_class AfterInfixParsed
+    parse_prefix_more_syntax_class AfterPrefixParsed
+    reflection space
+    private parsed_packer _pack
+    private parsed_unpacker _unpack
+    export:
+      pack
+      unpack
+    fun pack(s_exp):
+      _pack(
+        recur pack(s_exp = s_exp):
+          match s_exp
+          | [e, ...]:
+              Syntax.make([#'parens, pack(e), ...])
+          | ~else:
+              s_exp
+      )
+    fun unpack(stx):
+      recur unpack(s = _unpack(stx)):
+        match s
+        | '($t, ...)': [unpack(t), ...]
+        | ~else: s
+    identifier_parser: fun (id):
+                         syntax_meta.error("not a regexp form", id)
+
+export:
+  lexer
+  lex_pattern
+  meta:
+    lex_pattern_meta
+  only_space rx.rx_charset:
+    all_from(.rx)
+
+  only_space lex_pattern:
+    ||        // union
+    &&        // intersection
+    -         // difference
+    !         // complement
+    * ? +     // repetition
+    any
+    names:
+      #%literal #%comp #%parens #%juxtapose #%call #%brackets #%index
+
+    // recognized by `#%comp`
+    .. ..=
+
+    // same as #%juxtapose, but supports continuing on the next line
+    ++
+
+    // same names as charsets to allow direct use as patterns
+    alpha
+    upper
+    lower
+    digit
+    xdigit
+    alnum
+    word
+    blank
+    newline
+    space
+    graph
+    print
+    cntrl
+    ascii
+    latin1
+
+  unicode
+
+  // for use only within lexer clauses
+  lexeme
+  srcloc
+  line
+  column
+  position
+  span
+  line_span
+  end_column
+  input_port
+
+lex_pattern.macro '#%literal $(s :: String)':
+  ~order: rx.rx_repetition
+  lex_pattern_meta.pack(s)
+
+lex_pattern.macro
+| '#%parens ()':
+    ~order: rx.rx_concatenation
+    lex_pattern_meta.pack('""')
+| '#%parens ($(p :: lex_pattern_meta.Parsed))':
+    p
+
+lex_pattern.macro '$left #%juxtapose $right':
+  ~order: rx.rx_concatenation
+  lex_pattern_meta.pack(['concatenation',
+                         lex_pattern_meta.unpack(left),
+                         lex_pattern_meta.unpack(right)])
+
+lex_pattern.macro '$left ++ $right':
+  ~order: rx.rx_concatenation
+  lex_pattern_meta.pack(['concatenation',
+                         lex_pattern_meta.unpack(left),
+                         lex_pattern_meta.unpack(right)])
+
+lex_pattern.macro '$left #%call $(right :: lex_pattern_meta.AfterInfixParsed('#%juxtapose')) $()':
+  ~order: rx.rx_concatenation
+  values(lex_pattern_meta.pack(['concatenation',
+                                lex_pattern_meta.unpack(left),
+                                lex_pattern_meta.unpack(right)]),
+         '$right.tail ...')
+
+lex_pattern.macro '$left *':
+  ~order: rx.rx_repetition
+  lex_pattern_meta.pack(['repetition', '0', '#inf',
+                         lex_pattern_meta.unpack(left)])
+
+lex_pattern.macro '$left +':
+  ~order: rx.rx_repetition
+  lex_pattern_meta.pack(['repetition', '1', '#inf',
+                         lex_pattern_meta.unpack(left)])
+
+lex_pattern.macro '$left ?':
+  ~order: rx.rx_repetition
+  lex_pattern_meta.pack(['repetition', '0', '1',
+                         lex_pattern_meta.unpack(left)])
+
+lex_pattern.macro '! $right':
+  lex_pattern_meta.pack(['complement',
+                         lex_pattern_meta.unpack(right)])
+
+lex_pattern.macro #%comp:
+  ~order: rx.rx_repetition
+| '$left #%comp {$(min :: Int) $(bound_as lex_pattern_meta.space: '..')}':
+    lex_pattern_meta.pack(['repetition', min, '#inf',
+                           lex_pattern_meta.unpack(left)])
+| '$left #%comp {$(min :: Int) $(bound_as lex_pattern_meta.space: '..=') $(max :: Int)}':
+    lex_pattern_meta.pack(['repetition', min, max,
+                           lex_pattern_meta.unpack(left)])
+| '$left #%comp {$(count :: Int)}':
+    lex_pattern_meta.pack(['repetition', count, count,
+                           lex_pattern_meta.unpack(left)])
+
+lex_pattern.macro ||:
+  ~order: rx.rx_disjunction
+| '$left || $right':
+    lex_pattern_meta.pack(['union',
+                           lex_pattern_meta.unpack(left),
+                           lex_pattern_meta.unpack(right)])
+
+lex_pattern.macro &&:
+  ~order: rx.rx_conjunction
+| '$left && $right':
+    lex_pattern_meta.pack(['intersection',
+                           lex_pattern_meta.unpack(left),
+                           lex_pattern_meta.unpack(right)])
+
+lex_pattern.macro -:
+  ~order: rx.rx_subtraction
+| '$left - $right':
+    lex_pattern_meta.pack(['intersection',
+                           lex_pattern_meta.unpack(left),
+                           ['complement', lex_pattern_meta.unpack(right)]])
+
+lex_pattern.macro '..':
+  ~stronger_than: ~other
+  ~op_stx: self
+  syntax_meta.error("misuse outside of a repetition pattern", self)
+
+lex_pattern.macro '..=':
+  ~stronger_than: ~other
+  ~op_stx: self
+  syntax_meta.error("misuse outside of a repetition pattern", self)
+
+lex_pattern.macro 'any':
+   lex_pattern_meta.pack(['#{char-range}', '#{#\u0000}', '#{#\U1FFFF}'])
+
+meta:
+  fun pack_charset(cs):
+    let [start ..= end, ...] = rx.rx_charset_meta.unpack_ranges(cs)
+    lex_pattern_meta.pack(['union',
+                           ['#{char-range}',
+                            Syntax.inject(Char.from_int(start)),
+                            Syntax.inject(Char.from_int(end))],
+                           ...])
+
+lex_pattern.macro
+| '#%brackets [$(cs_g :: Group)]':
+    ~order: rx.rx_concatenation
+    let '$(cs :: rx.rx_charset_meta.Parsed)' = cs_g
+    pack_charset(cs)
+| '#%brackets []':
+    lex_pattern_meta.pack(['union'])
+
+lex_pattern.macro'$left #%index $(right :: lex_pattern_meta.AfterInfixParsed('#%juxtapose')) $()':
+  ~order: rx.rx_concatenation
+  values(lex_pattern_meta.pack(['concatenation',
+                                lex_pattern_meta.unpack(left),
+                                lex_pattern_meta.unpack(right)]),
+         '$right.tail ...')
+
+defn.macro 'def_charset_alias:
+              $name
+              ...':
+  '«
+     lex_pattern.macro '$name':
+       let '$('$')(cs :: rx.rx_charset_meta.Parsed)' = '$name'
+       pack_charset(cs)
+     ...
+   »'
+
+def_charset_alias:
+  alpha
+  upper
+  lower
+  digit
+  xdigit
+  alnum
+  word
+  blank
+  newline
+  space
+  graph
+  print
+  cntrl
+  ascii
+  latin1
+
+namespace unicode:
+  import rhombus/rx.unicode open:
+    only_space rx.rx_charset
+
+  decl.nestable_macro 'def_cats:
+                         $c
+                         ...':
+   '«
+      export: $c ...
+      lex_pattern.macro '$c':
+        let '$('$')(cs :: rx.rx_charset_meta.Parsed)' = 'unicode . $c'
+        pack_charset(cs)
+      ...
+    »'
+
+  def_cats:
+    Ll
+    Lu
+    Lt
+    Lm
+    Lx
+    Lo
+    L
+    Nd
+    Nl
+    No
+    N
+    Ps
+    Pe
+    Pi
+    Pf
+    Pc
+    Pd
+    Po
+    P
+    Mn
+    Mc
+    Me
+    M
+    Sc
+    Sk
+    Sm
+    So
+    S
+    Zl
+    Zp
+    Zs
+    Z
+    Cc
+    Cf
+    Cs
+    Cn
+    Co
+    C
+
+
+syntax_parameter.bridge _in_clause: #false
+meta:
+  fun check_in_clause(self):
+    unless syntax_parameter_meta.lookup('_in_clause')
+    | syntax_meta.error("misuse outside of a lexer clause", self)
+
+expr.macro 'lexeme':
+  ~op_stx: self
+  check_in_clause(self)
+  if syntax_parameter_meta.lookup('_in_clause') == #'string
+  | 'adjust_lexeme(lex.#{lexeme})'
+  | syntax_meta.error("misuse in an end-of-file lexer clause", self)
+expr.macro 'line':
+  ~op_stx: self
+  check_in_clause(self)
+  'lex.#{position-line}(lex.#{start-pos}) :~ maybe(Int)'
+expr.macro 'column':
+  ~op_stx: self
+  check_in_clause(self)
+  'lex.#{position-col}(lex.#{start-pos}) :~ maybe(Int)'
+expr.macro 'position':
+  ~op_stx: self
+  check_in_clause(self)
+  'lex.#{position-offset}(lex.#{start-pos}) :~ maybe(Int)'
+expr.macro 'span':
+  ~op_stx: self
+  check_in_clause(self)
+  'minus(lex.#{position-offset}(lex.#{end-pos}), lex.#{position-offset}(lex.#{start-pos})) :~ maybe(Int)'
+expr.macro 'line_span':
+  ~op_stx: self
+  check_in_clause(self)
+  'minus(lex.#{position-line}(lex.#{end-pos}), lex.#{position-line}(lex.#{start-pos})) :~ maybe(Int)'
+expr.macro 'end_column':
+  ~op_stx: self
+  check_in_clause(self)
+  'lex.#{position-col}(lex.#{end-pos}) :~ maybe(Int)'
+expr.macro 'srcloc':
+  ~op_stx: self
+  check_in_clause(self)
+  '(block:
+      let pos = lex.#{position-offset}(lex.#{start-pos})
+      Srcloc(Port.name(lex.#{input-port}),
+             lex.#{position-line}(lex.#{start-pos}),
+             lex.#{position-col}(lex.#{start-pos}),
+             pos,
+             minus(lex.#{position-offset}(lex.#{end-pos}), pos))) :~ Srcloc'
+expr.macro 'input_port':
+  ~op_stx: self
+  check_in_clause(self)
+  'lex.#{input-port} :~ Port.Input'
+
+fun adjust_lexeme(lexeme) :~ String:
+  to_string(lexeme)
+
+fun minus(a, b): a && b && (a - b)
+
+meta:
+  syntax_class Trigger:
+    kind: ~group
+    fields: pat context
+  | '~eof':
+      field context = 'eof'
+      field pat = lex_pattern_meta.pack(['eof'])
+  | '$(pat :: lex_pattern_meta.Parsed)':
+      field context = 'string'
+      pat
+
+expr.macro'lexer $(term_option_sequence
+                   | ': $(group_option_sequence
+                          | '$(allow && '~allow_empty')')')
+           | $(trigger :: Trigger):
+               $body
+               ...
+           | ...':
+  ~all_stx: stx
+  let extras:
+    let eofs:
+      for List (trigger in [trigger, ...]):
+        keep_when trigger.context matches 'eof'
+        trigger
+    match eofs
+    | []: [[['eof'], expr_meta.pack_expr('Port.eof')]]
+    | [_]: []
+    | [_, t2, _, ...]: syntax_meta.error("second end-of-file clause not allowed",
+                                         stx,
+                                         t2)
+  expr_meta.pack_s_exp(['rkt_lexer',
+                        & (if utils.#{version<?}(system.racket_version(), "8.18.0.3")
+                           | []
+                           | [if allow
+                              | '~#{suppress-warnings}'
+                              | '~#{disallow-empty}']),
+                        [lex_pattern_meta.unpack(trigger.pat),
+                         expr_meta.pack_expr('block:
+                                                syntax_parameter.relet _in_clause: #' $(trigger.context)
+                                                $body
+                                                ...')],
+                        ...,
+                        & extras]).relocate_span([stx])
