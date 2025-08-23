@@ -1,0 +1,38 @@
+#lang rhombus/static/and_meta
+
+space.enforest pattern:
+  space_path rhombus/lex/pattern
+  macro_definer macro
+  meta_namespace pattern_meta:
+    parse_syntax_class Parsed
+    private parsed_packer _pack
+    private parsed_unpacker _unpack
+    export:
+      pack
+      unpack
+    fun pack(s_exp):
+      _pack(s_exp)
+    fun unpack(stx):
+      _unpack(stx)
+
+pattern.macro '#%literal $(s :: String)':
+  pattern_meta.pack(s)
+
+pattern.macro 'Char $(s :: String)':
+  pattern_meta.pack((s.unwrap() :~ String)[0])
+
+meta:
+  syntax_class Trigger:
+    kind: ~group
+    fields: pat
+  | 'eof':
+      field pat = pattern_meta.pack(PairList[#'eof])
+  | '$(pat :: pattern_meta.Parsed)': pat
+
+expr.macro 'lexer
+            | $(trigger :: Trigger):
+                $body
+                ...
+            | ...':
+  "ok"
+  

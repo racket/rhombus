@@ -250,3 +250,55 @@ module ~early more_namespace_alias ~lang rhombus:
     ~is 42
 
 import self!more_namespace_alias
+
+module ~early module_alias_export ~lang rhombus:
+  module ~early A ~lang rhombus:
+    export namespace a
+    def a.favorite_number = 1
+
+  module ~early B ~lang rhombus:
+    export namespace b
+    def b.favorite_number = 2
+
+  module ~early C ~lang rhombus:
+    import:
+      parent!A open
+      parent!B open
+
+    export alias 'a2': 'a'
+    export alias 'b2': 'b'
+
+    check a2.favorite_number ~is 1
+    check b2.favorite_number ~is 2
+
+  import self!C
+
+  check C.a2.favorite_number ~is 1
+  check C.b2.favorite_number ~is 2
+
+import self!module_alias_export
+
+module ~early namespace_alias_export ~lang rhombus:
+  namespace A:
+    export namespace a
+    def a.favorite_number = 1
+
+  namespace B:
+    export namespace b
+    def b.favorite_number = 2
+
+  namespace C:
+    import:
+      .A open
+      .B open
+
+    export alias 'a2': 'a'
+    export alias 'b2': 'b'
+
+    check a2.favorite_number ~is 1
+    check b2.favorite_number ~is 2
+
+  check C.a2.favorite_number ~is 1
+  check C.b2.favorite_number ~is 2
+
+import self!namespace_alias_export
