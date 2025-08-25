@@ -1,13 +1,15 @@
 #lang rhombus/static/and_meta
 import:
   parser/lex open
+  rhombus/tests/version_guard open
 
-check:
-  ~eval
-  import parser/lex open
-  lexer:
-  | (): #'zero
-  ~throws "lexer can accept the empty string"
+at_least "8.18.0.13":
+  check:
+    ~eval
+    import parser/lex open
+    lexer:
+    | (): #'zero
+    ~throws "lexer can accept the empty string"
 
 check:
   ~eval
@@ -24,16 +26,17 @@ check:
   | ~eof: 2
   ~throws "second end-of-file clause not allowed"
 
-block:
-  def none:
-    lexer:
-      ~allow_empty
-    | (): #'zero
-  let i = Port.Input.open_string("abc")
-  check none(i) ~is #'zero
-  check none(i) ~is #'zero
-  check none(i) ~is #'zero
-  check i.read_string(3) ~is "abc"
+at_least "8.18.0.13":
+  block:
+    def none:
+      lexer:
+        ~allow_empty
+      | (): #'zero
+    let i = Port.Input.open_string("abc")
+    check none(i) ~is #'zero
+    check none(i) ~is #'zero
+    check none(i) ~is #'zero
+    check i.read_string(3) ~is "abc"
 
 block:
   def abc:
@@ -137,16 +140,17 @@ block:
   check bs(i) ~is #'da
   check bs(i) ~is Port.eof
 
-block:
-  def none:
-    lexer:
-      ~allow_empty
-    | (): #'zero
-  let i = Port.Input.open_string("abc")
-  check none(i) ~is #'zero
-  check none(i) ~is #'zero
-  check none(i) ~is #'zero
-  check i.read_string(3) ~is "abc"
+at_least "8.18.0.13":
+  block:
+    def none:
+      lexer:
+        ~allow_empty
+      | (): #'zero
+    let i = Port.Input.open_string("abc")
+    check none(i) ~is #'zero
+    check none(i) ~is #'zero
+    check none(i) ~is #'zero
+    check i.read_string(3) ~is "abc"
 
 block:
   def go:
@@ -172,14 +176,15 @@ block:
   check u(i) ~is #'numeric
   check u(i) ~is Port.eof
 
-block:
-  def u:
-    lexer:
-      ~allow_empty
-    | "": #'empty
-    | ~eof: #'eof
-  let i = Port.Input.open_string("")
-  check u(i) ~is #'eof
+at_least "8.18.0.13":
+  block:
+    def u:
+      lexer:
+        ~allow_empty
+      | "": #'empty
+      | ~eof: #'eof
+    let i = Port.Input.open_string("")
+    check u(i) ~is #'eof
 
 block:
   def u:
