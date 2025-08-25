@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/treelist
+         syntax/parse/pre
          syntax/stx
          enforest/proc-name
          shrubbery/property
@@ -510,7 +511,13 @@
 
 ;; `stx` comes from Racket, so it should be in `parsed`
 (define ((pack-parsed kw) stx)
-  (relocate+reraw stx #`(parsed #,kw #,stx)))
+  (syntax-parse stx
+    #:datum-literals (parsed)
+    [(parsed k e)
+     #:when (eq? (syntax-e #'k) kw)
+     stx]
+    [_
+     (relocate+reraw stx #`(parsed #,kw #,stx))]))
 
 (define ((pack-parsed* kw) r depth)
   (pack* r depth (pack-parsed kw)))

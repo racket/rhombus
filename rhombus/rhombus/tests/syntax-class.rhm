@@ -1536,3 +1536,32 @@ block:
     | ~else:
         "no"
     ~is 1
+
+check:
+  ~eval
+  import rhombus/meta open
+  meta:
+    syntax_class MyParsed:
+      kind: ~group
+    | '$(parsed :: expr_meta.Parsed)'
+    def '$(good :: expr_meta.Parsed)' = '42'
+    def '$(indirect :: MyParsed)' = '42'
+    check indirect.parsed ~matches good
+    check indirect.parsed ~prints_like good
+  ~completes
+
+check:
+  ~eval
+  import rhombus/meta open
+  meta:
+    syntax_class MyParsed:
+      kind: ~group
+      fields: parsed
+      root_swap: parsed group
+    | '$(parsed :: expr_meta.Parsed)'
+
+    def '$(good :: expr_meta.Parsed)' = '42'
+    def '$(indirect :: MyParsed)' = '42'
+    check indirect ~matches good
+    check indirect ~prints_like good
+  ~completes
