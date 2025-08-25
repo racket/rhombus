@@ -72,7 +72,7 @@
                                     (add-name-prefix name-prefix #'name))])
       (append
        (build-definitions/maybe-extension
-        #f #'name #'extend
+        #f #'name #'extends
         #`(make-parameter #,rhs
                           #,(if (syntax-e #'converter)
                                 #`(lambda (v)

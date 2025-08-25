@@ -151,3 +151,13 @@ check:
   Parameter.def p :: String = ""
   p("Hello").length()
   ~throws "no such field or method (based on static information)"
+
+block:
+  namespace one:
+    export namespace a
+    Parameter.def a.foo = "hi"
+    check a.foo() ~is "hi"
+  namespace two:
+    import .one open
+    check a.foo() ~is "hi"
+  #void
