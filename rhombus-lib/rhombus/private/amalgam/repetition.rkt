@@ -28,6 +28,7 @@
             repetition-transformer
 
             make-expression+repetition
+            expression-and-repetition-transformer
 
             repetition-as-list
             repetition-as-nested-lists
@@ -84,6 +85,17 @@
   (struct repetition-prefix+infix-operator (prefix infix)
     #:property prop:repetition-prefix-operator (lambda (self) (repetition-prefix+infix-operator-prefix self))
     #:property prop:repetition-infix-operator (lambda (self) (repetition-prefix+infix-operator-infix self)))
+
+  ;; for contexts where a expression-space binding is good enough for a repetition
+  (struct expression-and-repetition-transformer (proc)
+    #:property prop:expression-prefix-operator (lambda (self)
+                                                 (expression-transformer
+                                                  (lambda (stx)
+                                                    ((expression-and-repetition-transformer-proc self) stx #f))))
+    #:property prop:repetition-prefix-operator (lambda (self)
+                                                 (repetition-transformer
+                                                  (lambda (stx)
+                                                    ((expression-and-repetition-transformer-proc self) stx #t)))))
 
   (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repet))
   (define-syntax (repet-quote stx)

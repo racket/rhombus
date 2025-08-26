@@ -580,7 +580,7 @@
  In the body of a method or property, the special expression form @rhombus(this)
  refers to the object whose method was called. Fields (in the case of a
  class) and methods can be accessed using @rhombus(this) and @rhombus(.),
- but they can also be used directly.
+ but they can also be used directly as expressions or repetitions.
  Using a field, method, or property name
  directly is the same as using @rhombus(this) and @rhombus(.) in static
  mode (which implies that a direct reference to a method name must be a
@@ -707,6 +707,7 @@
 
 @doc(
   expr.macro 'this'
+  repet.macro 'this'
 ){
 
  The @rhombus(this) form can only be used within a method or property. See

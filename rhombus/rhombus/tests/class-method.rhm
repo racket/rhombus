@@ -675,3 +675,41 @@ block:
     a.ppp(_)
   check get_intf_fun(F())(10) ~is 10
   check get_class_fun(F())(10) ~is 10
+
+block:
+  class TestClass():
+    method square(x):
+      x * x
+
+    method square_all([x, ...]):
+      [square(x), ...]
+
+    private field counter = 0
+    property count:
+      counter := counter + 1
+      counter
+
+    method test_this([x, ...]):
+      [this || x, ...]
+
+    method test_count([x, ...]):
+      [count || x, ...]
+
+    method test_count_via_this([x, ...]):
+      [this.count || x, ...]
+
+    method test_counter([x, ...]):
+      [counter || x, ...]
+
+    method square_all_with_workaround([x, ...]):
+      // Workaround using let binding still works
+      let self = this
+      [self.square(x), ...]
+
+  def test = TestClass()
+  check test.square_all([1, 2, 3]) ~is [1, 4, 9]
+  check test.test_this([1, 2, 3]) ~is [test, test, test]
+  check test.test_count([0, 0, 0]) ~is [1, 2, 3]
+  check test.test_counter([0, 0, 0]) ~is [3, 3, 3]
+  check test.test_count_via_this([0, 0, 0]) ~is [4, 5, 6]
+  check test.square_all_with_workaround([1, 2, 3]) ~is [1, 4, 9]

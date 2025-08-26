@@ -42,7 +42,9 @@
          "name-prefix.rkt"
          "field-case-lambda.rkt")
 
-(provide this
+(provide (for-spaces (#f
+                      rhombus/repet)
+                     this)
          super
          (for-spaces (rhombus/space
                       rhombus/defn)

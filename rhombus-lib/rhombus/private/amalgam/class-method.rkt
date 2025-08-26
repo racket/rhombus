@@ -11,6 +11,7 @@
                      "entry-point-adjustment.rkt"
                      "maybe-as-original.rkt")
          racket/stxparam
+         "provide.rkt"
          "expression.rkt"
          (only-in "annotation.rkt"
                   :~)
@@ -18,6 +19,7 @@
                   annotation-predicate-form)
          "parse.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "entry-point.rkt"
          "class-this.rkt"
          "class-this-id.rkt"
@@ -53,7 +55,9 @@
                      get-private-table
                      objects-desc-ref)
 
-         this
+         (for-spaces (#f
+                      rhombus/repet)
+                     this)
          super
 
          prop:methods
@@ -740,12 +744,16 @@
                   (eq? sym (field-desc-name (protect-v a-field))))))))
 
 (define-for-syntax (make-field-syntax id static-infos accessor-id maybe-mutator-id)
-  (expression-transformer
-   (lambda (stx)
+  (expression-and-repetition-transformer
+   (lambda (stx repet?)
      (syntax-parse stx
        [(head . tail)
         #:when (syntax-e maybe-mutator-id)
         #:with assign::assign-op-seq #'tail
+        (when repet?
+          (raise-syntax-error #f
+                              "field assignment not allowed as a repetition"
+                              id))
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
            (build-assign (attribute assign.op)
@@ -758,11 +766,18 @@
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
-           (values (wrap-static-info* (datum->syntax #'here
-                                                     (list accessor-id #'id)
-                                                     #'head
-                                                     #'head)
-                                      static-infos)
+           (define call (datum->syntax #'here
+                                       (list accessor-id #'id)
+                                       #'head
+                                       #'head))
+           (values (if repet?
+                       (make-repetition-info #'head
+                                             null
+                                             call
+                                             static-infos
+                                             0)
+                       (wrap-static-info* call
+                                          static-infos))
                    #'tail)])]))))
 
 (define-for-syntax (make-method-syntax id index/id/intf result-id kind methods-ref-id)
@@ -772,8 +787,8 @@
         call))
   (cond
     [(eq? kind 'property)
-     (expression-transformer
-      (lambda (stx)
+     (expression-and-repetition-transformer
+      (lambda (stx repet?)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
            (define rator (cond
@@ -792,6 +807,10 @@
                 (raise-syntax-error #f
                                     (string-append "property does not support assignment" statically-str)
                                     id))
+              (when repet?
+                (raise-syntax-error #f
+                                    "property assignment not allowed as a repetition"
+                                    id))
               (build-assign (attribute assign.op)
                             #'assign.op-name
                             #'assign.name
@@ -803,11 +822,19 @@
               (define call (relocate+reraw #'head #`(#,rator obj-id)))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
-              (values (add-method-result call r)
+              (values (if repet?
+                          (make-repetition-info #'head
+                                                null
+                                                call
+                                                (if r
+                                                    (method-result-static-infos r)
+                                                    #'())
+                                                0)
+                          (add-method-result call r))
                       #'tail)])])))]
     [else
-     (expression-transformer
-      (lambda (stx)
+     (expression-and-repetition-transformer
+      (lambda (stx repet?)
         (syntax-parse stx
           [(head (~and args (tag::parens arg ...)) . tail)
            (syntax-parse (syntax-parameter-value #'this-id)
@@ -820,16 +847,28 @@
                                #`(vector-ref (#,ref-id id) #,pos)]
                               [else
                                #`(vector-ref (#,methods-ref-id id) #,index/id/intf)]))
+              (define rator* (if repet?
+                                 (make-repetition-info (list #'head)
+                                                       null
+                                                       rator
+                                                       #'()
+                                                       0)
+                                 rator))
+              (define obj-id (if repet?
+                                 (identifier-repetition-use #'id)
+                                 #'id))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (define-values (call new-tail to-anon-function?)
-                (parse-function-call rator (list #'id) #'(head args)
+                (parse-function-call rator* (list obj-id) #'(head args)
+                                     #:repetition? repet?
                                      #:static? (is-static-context? #'tag)
                                      #:rator-stx #'head
                                      #:rator-arity (and r (method-result-arity r))
                                      #:rator-kind 'method
                                      #:can-anon-function? #t))
-              (define wrapped-call (if to-anon-function?
+              (define wrapped-call (if (or to-anon-function?
+                                           repet?)
                                        call
                                        (add-method-result call r)))
               (values wrapped-call #'tail)])]
