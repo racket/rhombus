@@ -1605,3 +1605,16 @@ check:
   ~throws values("length",
                  "no such field or method",
                  "based on static information")
+
+block:
+  import rhombus/meta open
+  namespace one:
+    export namespace a
+    key_comp.def 'a.foo':
+      ~equals: fun (a, b, recur): a == b
+      ~hash_code: fun (a, recur): 42
+    check Map.by(a.foo)() ~is Map.by(a.foo){}
+  namespace two:
+    import .one open
+    check Map.by(a.foo)() ~is Map.by(a.foo){}
+  #void

@@ -15,5 +15,6 @@
         #:datum-literals (group)
         [(_ id)
          (build-key-comp #'id
+                         #f
                          #'equal-name-and-scopes-map?
                          #'wrap-equal-name-and-scopes-map)]))))

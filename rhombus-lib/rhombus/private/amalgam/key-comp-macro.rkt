@@ -14,6 +14,7 @@
          "annotation-failure.rkt"
          "parse.rkt"
          "key-comp-property.rkt"
+         "dotted-sequence-parse.rkt"
          "../version-case.rkt")
 
 (module+ for-key-comp
@@ -28,7 +29,7 @@
     (lambda (stx name-prefix)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ (_::quotes (group name::name))
+        [(_ (_::quotes (group name-seq::dotted-identifier-sequence))
             (body-tag::block
              (~and
               (~seq (group kw clause-block) ...)
@@ -40,17 +41,22 @@
                                        (hash-code-tag::block
                                         hash-code-body ...))))
                ...))))
+         #:with full-name::dotted-identifier #'name-seq
+         #:with name #'full-name.name
+         #:with name-extends #'full-name.extends
+         #:with tail-name #'full-name.tail-name
          (unless (attribute equals-tag)
            (raise-syntax-error #f "missing an `~equals` clause" stx))
          (unless (attribute hash-code-tag)
            (raise-syntax-error #f "missing a `~hash_code` clause" stx))
          #`((define-values (x-equals? x-hash-code)
               (hash-procedures (~@ kw (rhombus-body-expression clause-block)) ...))
-            #,@(build-key-comp-runtime #'name.name #'x-equals? #'x-hash-code #'x-map? #'wrap)
-            #,@(build-key-comp #'name.name #'x-map? #'wrap))]))))
+            #,@(build-key-comp-runtime #'name #'x-equals? #'x-hash-code #'x-map? #'wrap)
+            #,@(build-key-comp #'name #'name-extends #'x-map? #'wrap))]))))
 
-(define-for-syntax (build-key-comp name-id x-map?-id wrap-id)
+(define-for-syntax (build-key-comp name-id name-extends-stx x-map?-id wrap-id)
   (with-syntax ([name name-id]
+                [name-extends name-extends-stx]
                 [x-map? x-map?-id]
                 [wrap wrap-id])
     (with-syntax ([x-map-pair-build (datum->syntax #'here (string->symbol
@@ -101,18 +107,19 @@
          (define (x-weak-mutable-set-build . args)
            (define ht (wrap (make-weak-hash)))
            (build-mutable-set 'x-weak-mutable-set-build ht args))
-         (define-key-comp-syntax name
-           (key-comp-maker
-            (lambda ()
-              (key-comp 'name #'x-map?
-                        #'x-map-build #'x-map-pair-build #'for/x-map
-                        #'mutable-x-map? #'x-mutable-map-build
-                        #'weak-mutable-x-map? #'x-weak-mutable-map-build
-                        #'empty-x-map
-                        #'immutable-x-set?
-                        #'x-set-build #'x-set-build #'for/x-set
-                        #'mutable-x-set? #'x-mutable-set-build
-                        #'weak-mutable-x-set? #'x-weak-mutable-set-build))))))))
+         #,(build-syntax-definition/maybe-extension
+            'rhombus/key_comp #'name #'name-extends
+            #`(key-comp-maker
+               (lambda ()
+                 (key-comp 'name #'x-map?
+                           #'x-map-build #'x-map-pair-build #'for/x-map
+                           #'mutable-x-map? #'x-mutable-map-build
+                           #'weak-mutable-x-map? #'x-weak-mutable-map-build
+                           #'empty-x-map
+                           #'immutable-x-set?
+                           #'x-set-build #'x-set-build #'for/x-set
+                           #'mutable-x-set? #'x-mutable-set-build
+                           #'weak-mutable-x-set? #'x-weak-mutable-set-build))))))))
 
 (define (hash-procedures #:equals equals #:hash_code hash_code)
   (unless (and (procedure? equals) (procedure-arity-includes? equals 3))
