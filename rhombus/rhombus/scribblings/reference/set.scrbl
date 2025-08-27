@@ -353,6 +353,27 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
+  method (st :: Set).subtract(another_st :: Set, ...)
+    :: Set.of(Any.like_element(st))
+){
+
+ Returns the subtract from @rhombus(st) of @rhombus(another_st)s.
+
+ Even when some @rhombus(another_st) uses a different @tech(~doc: meta_doc){map
+  configuration} than @rhombus(st), the @tech(~doc: meta_doc){map configuration} of @rhombus(st)
+ is preserved in the result set.
+
+@examples(
+  {1, 2, 3}.subtract({0, 2}, {3, 4, 5})
+  {1, 2, 3}.subtract(
+    Set.by(is_same_number_or_object){0, 2},
+    Set.by(is_now){3, 4, 5},
+  )
+)
+
+}
+
+@doc(
   method (st :: Set).add(val :: Any)
     :: Set.of(Any.like_element(st) || Any.like(val))
 ){

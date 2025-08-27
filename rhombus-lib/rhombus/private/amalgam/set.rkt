@@ -227,6 +227,7 @@
    append
    union
    intersect
+   subtract
    remove))
 
 (define-primitive-class MutableSet mutable-set
@@ -1143,6 +1144,36 @@
      (set (for/fold ([ht (set-ht s1)])
                     ([s (in-list ss)])
             (set-intersect/hash ht (set-ht s))))]))
+
+(define (set-subtract/hash a b)
+  (if ((hash-count a) . < . (hash-count b))
+      (for/fold ([a a])
+                ([k (in-immutable-hash-keys a)])
+        (if (hash-ref b k #f)
+            (hash-remove a k)
+            a))
+      (for/fold ([a a])
+                ([k (in-immutable-hash-keys b)])
+        (hash-remove a k))))
+
+(define/method Set.subtract
+  #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))
+                                  #,@(get-set-static-infos))))
+  (case-lambda
+    [(s)
+     (check-set who s)
+     s]
+    [(s1 s2)
+     (check-set who s1)
+     (check-set who s2)
+     (set (set-subtract/hash (set-ht s1) (set-ht s2)))]
+    [(s1 . ss)
+     (check-set who s1)
+     (for ([s (in-list ss)])
+       (check-set who s))
+     (set (for/fold ([ht (set-ht s1)])
+                    ([s (in-list ss)])
+            (set-subtract/hash ht (set-ht s))))]))
 
 (define/method (Set.remove s v)
   #:static-infos ((#%call-result ((#%dependent-result (select-elem sequence))

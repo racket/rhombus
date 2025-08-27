@@ -13,6 +13,7 @@ block:
     Set.append(st0, st, ...) ~method
     Set.union(st0, st, ...) ~method
     Set.intersect(st0, st, ...) ~method
+    Set.subtract(st0, st, ...) ~method
     Set.add(st, v) ~method
     Set.remove(st, v) ~method
     MutableSet.add(st, v) ~method
@@ -291,8 +292,13 @@ block:
     {1, 2, 3}.to_list().length() ~is 3
     {1, 2, 3}.to_list(#true) ~is [1, 2, 3]
     {1, 3}.intersect() ~is {1, 3}
+    {1, 3}.intersect(Set{}) ~is Set{}
     {1, 3}.intersect({2, 3}) ~is {3}
     {1, 3}.intersect({2, 3}, {3, 4}) ~is {3}
+    {1, 3}.subtract() ~is {1, 3}
+    {1, 3}.subtract(Set{}) ~is {1, 3}
+    {1, 3}.subtract({2, 3}) ~is {1}
+    {1, 3}.subtract({2, 3}, {3, 1, 0}) ~is Set{}
     {1, 3}.union() ~is {1, 3}
     {1, 3}.union({2, 3}) ~is {1, 2, 3}
     {1, 3}.union({2, 3}, {3, 4}) ~is {1, 2, 3, 4}
@@ -306,6 +312,10 @@ block:
       dynamic({1, 3}).intersect() ~is {1, 3}
       dynamic({1, 3}).intersect({2, 3}) ~is {3}
       dynamic({1, 3}).intersect({2, 3}, {3, 4}) ~is {3}
+      dynamic({1, 3}).subtract() ~is {1, 3}
+      dynamic({1, 3}).subtract(Set{}) ~is {1, 3}
+      dynamic({1, 3}).subtract({2, 3}) ~is {1}
+      dynamic({1, 3}).subtract({2, 3}, {3, 0}) ~is {1}
       dynamic({1, 3}).union() ~is {1, 3}
       dynamic({1, 3}).union({2, 3}) ~is {1, 2, 3}
       dynamic({1, 3}).union({2, 3}, {3, 4}) ~is {1, 2, 3, 4}
@@ -332,7 +342,14 @@ block:
       error.annot("Set").msg,
       error.val(MutableSet{1, 3}).msg,
     )
-
+  check:
+    Set.subtract(MutableSet{1, 3}, {2, 3}, {3, 4})
+    ~throws values(
+      "Set.subtract: " ++ error.annot_msg(),
+      error.annot("Set").msg,
+      error.val(MutableSet{1, 3}).msg,
+    )
+  
 block:
   use_static
   check {1, 2}.remove(1) ~is {2}
@@ -956,6 +973,21 @@ block:
       Set.by(is_now){#'equal},
       Set.by(equals){#'custom},
     ) ~is Set{}
+  check:
+    Set{#'equal_always, #'eq, #'eqv, #'equal, #'custom}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set{#'custom}
+  check:
+    Set{}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+      Set.by(equals){#'custom},
+    ) ~is Set{}
 
   check:
     Set.by(===){}.append(
@@ -988,7 +1020,7 @@ block:
       Set.by(equals){#'custom},
     ) ~is Set.by(===){#'equal_always, #'eq, #'eqv, #'equal, #'custom}
   check:
-    Set.by(===){}.intersect(
+    Set.by(===){#'equal_always, #'eq, #'eqv, #'equal, #'custom}.intersect(
       {#'equal_always},
       Set.by(===){#'eq},
       Set.by(is_same_number_or_object){#'eqv},
@@ -996,6 +1028,21 @@ block:
     ) ~is Set.by(===){}
   check:
     Set.by(===){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+      Set.by(equals){#'custom},
+    ) ~is Set.by(===){}
+  check:
+    Set.by(===){#'equal_always, #'eq, #'eqv, #'equal, #'custom}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(===){#'custom}
+  check:
+    Set.by(===){}.subtract(
       {#'equal_always},
       Set.by(===){#'eq},
       Set.by(is_same_number_or_object){#'eqv},
@@ -1042,6 +1089,21 @@ block:
     ) ~is Set.by(is_same_number_or_object){}
   check:
     Set.by(is_same_number_or_object){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+      Set.by(equals){#'custom},
+    ) ~is Set.by(is_same_number_or_object){}
+  check:
+    Set.by(is_same_number_or_object){#'equal_always, #'eq, #'eqv, #'equal, #'custom}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_same_number_or_object){#'custom}
+  check:
+    Set.by(is_same_number_or_object){}.subtract(
       {#'equal_always},
       Set.by(===){#'eq},
       Set.by(is_same_number_or_object){#'eqv},
@@ -1088,6 +1150,21 @@ block:
     ) ~is Set.by(is_now){}
   check:
     Set.by(is_now){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+      Set.by(equals){#'custom},
+    ) ~is Set.by(is_now){}
+  check:
+    Set.by(is_now){#'equal_always, #'eq, #'eqv, #'equal, #'custom}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(is_now){#'custom}
+  check:
+    Set.by(is_now){}.subtract(
       {#'equal_always},
       Set.by(===){#'eq},
       Set.by(is_same_number_or_object){#'eqv},
@@ -1132,6 +1209,21 @@ block:
       Set.by(is_same_number_or_object){#'eqv},
       Set.by(is_now){#'equal},
     ) ~is Set.by(equals){}
+  check:
+    Set.by(equals){}.intersect(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+      Set.by(equals){#'custom},
+    ) ~is Set.by(equals){}
+  check:
+    Set.by(equals){#'equal_always, #'eq, #'eqv, #'equal, #'custom}.subtract(
+      {#'equal_always},
+      Set.by(===){#'eq},
+      Set.by(is_same_number_or_object){#'eqv},
+      Set.by(is_now){#'equal},
+    ) ~is Set.by(equals){#'custom}
   check:
     Set.by(equals){}.intersect(
       {#'equal_always},
