@@ -145,7 +145,10 @@
 (module+ for-key-comp-macro
   (provide set?
            set
-           set-ht))
+           set-ht
+
+           (for-syntax get-set-static-infos
+                       get-mutable-set-static-infos)))
 
 (struct set (ht)
   #:sealed

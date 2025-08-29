@@ -661,6 +661,15 @@ block:
                                                      Set.by($key_comp){ 2 },
                                                      Set.by($key_comp){ 3 }]
 
+       block:
+         use_static
+         check Set.by($key_comp){}.length() ~is 0
+         check Set.by($key_comp)().length() ~is 0
+         check MutableSet.by($key_comp){}.length() ~is 0
+         check MutableSet.by($key_comp)().length() ~is 0
+         check WeakMutableSet.by($key_comp){}.length() ~is 0
+         check WeakMutableSet.by($key_comp)().length() ~is 0
+
        check (for Set.by($key_comp) (i in 0..1): i) ~is Set.by($key_comp){ 0 }
        block:
          let Set.by($key_comp){ v, $('...') } = Set.by($key_comp){ "x" }

@@ -140,7 +140,9 @@
                       WeakMutableNumberOrObjectMap-build)))
 
 (module+ for-key-comp-macro
-  (provide build-map))
+  (provide build-map
+           (for-syntax get-map-static-infos
+                       get-mutable-map-static-infos)))
 
 (define-static-info-getter get-any-map-static-infos
   (#%index-get Map.get)

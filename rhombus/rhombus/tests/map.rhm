@@ -1076,6 +1076,15 @@ block:
        check [Map.by($key_comp){ x: x }, $('...')] ~is [Map.by($key_comp){ 1: 1 },
                                                         Map.by($key_comp){ 2: 2 },
                                                         Map.by($key_comp){ 3: 3 }]
+       block:
+         use_static
+         check Map.by($key_comp){}.length() ~is 0
+         check Map.by($key_comp)().length() ~is 0
+         check MutableMap.by($key_comp){}.length() ~is 0
+         check MutableMap.by($key_comp)().length() ~is 0
+         check WeakMutableMap.by($key_comp){}.length() ~is 0
+         check WeakMutableMap.by($key_comp)().length() ~is 0
+
        check (for Map.by($key_comp) (i in 0..1): values(i, i+1)) ~is Map.by($key_comp){ 0: 1 }
        block:
          let Map.by($key_comp){ 1: v } = Map.by($key_comp){ 1: "x" }

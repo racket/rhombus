@@ -5,12 +5,16 @@
          racket/mutability
          "space-provide.rkt"
          "definition.rkt"
+         (submod "define-arity.rkt" for-info)
+         "static-info.rkt"
          "key-comp.rkt"
          "key-comp-runtime.rkt"
          "parens.rkt"
          "to-list.rkt"
          (submod "map.rkt" for-key-comp-macro)
          (submod "set.rkt" for-key-comp-macro)
+         "call-result-key.rkt"
+         "function-arity-key.rkt"
          "annotation-failure.rkt"
          "parse.rkt"
          "key-comp-property.rkt"
@@ -54,6 +58,32 @@
             #,@(build-key-comp-runtime #'name #'x-equals? #'x-hash-code #'x-map? #'wrap)
             #,@(build-key-comp #'name #'name-extends #'x-map? #'wrap))]))))
 
+(define-static-info-getter map*-getter
+  (#%call-result #,(get-map-static-infos))
+  (#%function-arity -1)
+  . #,(indirect-get-function-static-infos))
+(define-static-info-getter map1-getter
+  (#%call-result #,(get-map-static-infos))
+  (#%function-arity 2)
+  . #,(indirect-get-function-static-infos))
+(define-static-info-getter mutable-map*-getter
+  (#%call-result #,(get-mutable-map-static-infos))
+  (#%function-arity -1)
+  . #,(indirect-get-function-static-infos))
+
+(define-static-info-getter set*-getter
+  (#%call-result #,(get-set-static-infos))
+  (#%function-arity -1)
+  . #,(indirect-get-function-static-infos))
+(define-static-info-getter set1-getter
+  (#%call-result #,(get-set-static-infos))
+  (#%function-arity 2)
+  . #,(indirect-get-function-static-infos))
+(define-static-info-getter mutable-set*-getter
+  (#%call-result #,(get-mutable-set-static-infos))
+  (#%function-arity -1)
+  . #,(indirect-get-function-static-infos))
+
 (define-for-syntax (build-key-comp name-id name-extends-stx x-map?-id wrap-id)
   (with-syntax ([name name-id]
                 [name-extends name-extends-stx]
@@ -80,16 +110,21 @@
          (define-syntax for/x-map (make-map-for #'list->x-map))
          (define (list->x-map pairs)
            (build-map 'list->x-map empty-x-map (to-pairs (to-list 'list->x-map pairs))))
+         (define-static-info-syntax x-map-build #:getter map*-getter)
+         (define-static-info-syntax x-map-pair-build #:getter map*-getter)
+         (define-static-info-syntax list->x-map  #:getter map1-getter)
          (define (mutable-x-map? v)
            (and (mutable-hash? v) (x-map? v)))
-         (define (x-mutable-map-build args)
+         (define (x-mutable-map-build . args)
            (define ht (wrap (make-hash)))
            (build-mutable-map 'x-mutable-map-build ht (to-list 'x-mutable-map-build args)))
          (define (weak-mutable-x-map? v)
            (and (mutable-hash? v) (hash-ephemeron? v) (x-map? v)))
-         (define (x-weak-mutable-map-build args)
+         (define (x-weak-mutable-map-build . args)
            (define ht (wrap (make-ephemeron-hash)))
            (build-mutable-map 'x-weak-mutable-map-build ht (to-list 'x-weak-mutable-map-build args)))
+         (define-static-info-syntax x-mutable-map-build #:getter mutable-map*-getter)
+         (define-static-info-syntax x-weak-mutable-map-build #:getter mutable-map*-getter)
          (define (immutable-x-set? v)
            (and (set? v) (immutable-hash? (set-ht v)) (x-map? (set-ht v))))
          (define (x-set-build . args)
@@ -97,6 +132,8 @@
          (define-syntax for/x-set (make-set-for #'list->x-set))
          (define (list->x-set args)
            (x-map-set-build args empty-x-map))
+         (define-static-info-syntax x-set-build #:getter set*-getter)
+         (define-static-info-syntax list->x-set #:getter set1-getter)
          (define (mutable-x-set? v)
            (and (set? v) (mutable-hash? (set-ht v)) (x-map? (set-ht v))))
          (define (x-mutable-set-build . args)
@@ -107,6 +144,8 @@
          (define (x-weak-mutable-set-build . args)
            (define ht (wrap (make-weak-hash)))
            (build-mutable-set 'x-weak-mutable-set-build ht args))
+         (define-static-info-syntax x-mutable-set-build #:getter mutable-set*-getter)
+         (define-static-info-syntax x-weak-mutable-set-build #:getter mutable-set*-getter)
          #,(build-syntax-definition/maybe-extension
             'rhombus/key_comp #'name #'name-extends
             #`(key-comp-maker
@@ -134,8 +173,13 @@
      (hash-set ht e #t))))
 
 (define (build-mutable-map who ht args)
-  (for ([p (in-list (args->pairs who args))])
-    (hash-set! ht (car p) (cadr p)))
+  (for ([p-arg (in-list args)])
+    (define p (to-list who p-arg))
+    (cond
+      [(and (pair? p) (pair? (cdr p)) (null? (cddr p)))
+       (hash-set! ht (car p) (cadr p))]
+      [else
+       (raise-annotation-failure who p "Listable.to_list && matching([_, _])")]))
   ht)
 
 (define (build-mutable-set who ht args)
