@@ -12,20 +12,20 @@ annot.macro '(View.SizeInt)':
   'Int.in(0, 1000000)'
 
 annot.macro '(View.Size)':
-  'matching([_ :: maybe(View.SizeInt), _ :: maybe(View.SizeInt)])'
+  '[maybe(View.SizeInt), maybe(View.SizeInt)]'
 
 annot.macro '(View.PositionInt)':
   'Int.in(-1000000, 1000000)'
 
 enum View.Position:
   center
-  ~is_a matching([_ :: View.PositionInt, _ :: View.PositionInt])
+  ~is_a [View.PositionInt, View.PositionInt]
 
 annot.macro '(View.SpacingInt)':
   'Int.in(0, 1000)'
 
 annot.macro '(View.Margin)':
-  'matching([_ :: View.SpacingInt, _ :: View.SpacingInt])'
+  '[View.SpacingInt, View.SpacingInt]'
 
 enum View.HorizAlignment:
   left
@@ -38,10 +38,10 @@ enum View.VertAlignment:
   bottom
 
 annot.macro '(View.Alignment)':
-  'matching([_ :: View.HorizAlignment, _ :: View.VertAlignment])'
+  '[View.HorizAlignment, View.VertAlignment]'
 
 annot.macro '(View.Stretch)':
-  'matching([_ :: Boolean, _ :: Boolean])'
+  '[Boolean, Boolean]'
 
 
 annot.macro '(View.LabelString)':

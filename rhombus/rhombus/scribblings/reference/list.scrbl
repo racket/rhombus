@@ -25,10 +25,41 @@ it supplies its elements in order.
 @doc(
   annot.macro 'List'
   annot.macro 'List.of($annot)'
+  annot.macro 'List.tuple_of[$annot, ..., $maybe_ellipsis]'
+  annot.macro '#%brackets [$annot, ..., $maybe_ellipsis]'
+  grammar maybe_ellipsis:
+    #,(epsilon)
+    $ellipsis
+  grammar ellipsis:
+    #,(dots)
 ){
 
- Matches any list in the form without @rhombus(of). The @rhombus(of)
- variant matches a list whose elements satisfy @rhombus(annot).
+ The @rhombus(List, ~annot) annotation by itself matches any list. The
+ @rhombus(List.of, ~annot) variant matches a list whose elements all satisfy
+ @rhombus(annot).
+
+ The @rhombus(List.tuple_of, ~annot) annotation matches a list whose
+ elements each match the corresponding @rhombus(annot). If the last
+ @rhombus(annot) is not followed by @rhombus(ellipsis), then the
+ annotation matches only lists that have the same number of elements as
+ the number of @rhombus(annot)s. If the last @rhombus(annot) is followed
+ by @rhombus(ellipsis), then the annotation matches lists that have at
+ least as many elements as @rhombus(annot)s except the last one, and all
+ additional elements must match the last @rhombus(annot). For example,
+ @rhombus(List.tuple_of[String, ...], ~annot) is the same as
+ @rhombus(List.of(String), ~annot). If any @rhombus(annot) is a
+ @tech(~doc: guide_doc){converter annotation}, then the
+ @rhombus(List.tuple_of, ~annot) annotation is also a converter
+ annotation where a converted list has converted elements. When all
+ @rhombus(annot)s are @tech(~doc: guide_doc){predicate annotations}, then
+ @rhombus(List.tuple_of(annot, ...), ~annot) is equivalent to
+ @rhombus(matching(List[_ :: annot, ...]), ~annot).
+
+ @see_implicit(@rhombus(#%brackets, ~annot), @brackets, "annotation")
+ A @rhombus(#%brackets, ~annot) annotation is equivalent to a
+ @rhombus(List.tuple_of, ~annot) annotation, so
+ @rhombus([String, ...], ~annot) is also the same as
+ @rhombus(List.of(String), ~annot).
 
  Static information associated by @rhombus(List, ~annot) or
  @rhombus(List.of, ~annot) makes an expression acceptable as a sequence

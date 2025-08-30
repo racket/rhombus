@@ -1007,3 +1007,49 @@ check:
   ~throws values("length",
                  "no such field or method",
                  "based on static information")
+
+block:
+  use_static
+  let [x, y] :: [String, String] = dynamic(["a", "b"])
+  check x.length() ~is 1
+  check y.length() ~is 1
+
+block:
+  use_static
+  let xs :: [String, ...] = dynamic(["a", "bb"])
+  check xs[0].length() ~is 1
+  check xs[1].length() ~is 2
+
+block:
+  use_static
+  let xs :: List.tuple_of[String, ...] = dynamic(["a", "bb"])
+  check xs[0].length() ~is 1
+  check xs[1].length() ~is 2
+
+block:
+  use_static
+  let ps :: [[Bytes, String], ...] = dynamic([[#"a", "a"], [#"bb", "bb"]])
+  check ps[0].length() ~is 2
+  let [[pa, pa2], [pb, pb2]] = ps
+  check pa.length() ~is 1
+  check pa2.length() ~is 1
+  check pb.length() ~is 2
+  check pb2.length() ~is 2
+
+block:
+  use_static
+  let ps = [[#"a", "a"], [#"bb", "bb"]]
+  check ps[0].length() ~is 2
+  let [[pa, pa2], [pb, pb2]] = ps
+  check pa.length() ~is 1
+  check pa2.length() ~is 1
+  check pb.length() ~is 2
+  check pb2.length() ~is 2
+
+block:
+  use_static
+  class Posn(x, y): nonfinal
+  class Posn3D(z): extends Posn
+  let [x, y, ...] :: [Posn3D, Posn, ...] = dynamic([Posn3D(1, 2, 3), Posn(4, 5), Posn(6, 7)])
+  check x.z ~is 3
+  check [y.y, ...] ~is [5, 7]

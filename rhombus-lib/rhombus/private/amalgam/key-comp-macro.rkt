@@ -179,7 +179,7 @@
       [(and (pair? p) (pair? (cdr p)) (null? (cddr p)))
        (hash-set! ht (car p) (cadr p))]
       [else
-       (raise-annotation-failure who p "Listable.to_list && matching([_, _])")]))
+       (raise-annotation-failure who p "Listable.to_list && [Any, Any]")]))
   ht)
 
 (define (build-mutable-set who ht args)

@@ -291,7 +291,7 @@
       [else
        (define lst (to-list #f arg))
        (unless (and (pair? lst) (pair? (cdr lst)) (null? (cddr lst)))
-         (raise-annotation-failure who arg "Listable.to_list && matching([_, _])"))
+         (raise-annotation-failure who arg "Listable.to_list && [Any, Any]"))
        (hash-set ht (car lst) (cadr lst))])))
 
 (define (list->map key+vals)

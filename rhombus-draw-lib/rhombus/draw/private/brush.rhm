@@ -37,7 +37,7 @@ class LinearGradient(private _handle):
     let (x1, y1, x2, y2) = rkt.send handle.#{get-line}()
     [Point(x1, y1), Point(x2, y2)]
 
-  property stops :: List.of(matching([_ :: Real, _ :: Color])):
+  property stops :: List.of([Real, Color]):
     let PairList[PairList[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
 
@@ -53,11 +53,11 @@ class RadialGradient(private _handle):
                           pt2.x, pt2.y, r2,
                           PairList[PairList[stop, color.handle], ...]))
 
-  property circles:: List.of(matching([_ :: Point, _ :: Real])):
+  property circles:: List.of([Point, Real]):
     let (x0, y0, r0, x1, y1, r1) = rkt.send handle.#{get-circles}()
     [[Point(x0, y0), r0], [Point(x1, y1), r1]]
 
-  property stops :: List.of(matching([_ :: Real, _ :: Color])):
+  property stops :: List.of([Real, Color]):
     let PairList[PairList[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
 

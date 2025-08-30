@@ -181,6 +181,49 @@
 
 @doc(
   ~meta
+  fun statinfo_meta.pack_index_result(
+    default_statinfo_stx :: maybe(Syntax),
+    [[key :: Any, statinfo_stx :: Syntax],
+     ...]
+  ) :: Syntax
+  fun statinfo_meta.unpack_index_result(call_stx :: Syntax)
+    :: values(maybe(Syntax), [[Any, Syntax], ...])
+  fun statinfo_meta.unpack_uniform_index_result(call_stx :: Syntax)
+    :: Syntax
+  fun statinfo_meta.unpack_index_result_at_index(call_stx :: Syntax,
+                                                 key :: Any)
+    :: Syntax
+){
+
+ Analogous to @rhombus(statinfo_meta.pack) and
+ @rhombus(statinfo_meta.unpack), but for information that represents an
+ indexing result via @rhombus([]) (i.e., @rhombus(#%index)).
+
+ In the simple case, the static information for indexing is packed
+ static information (in the sense of @rhombus(statinfo_meta.pack)) that
+ applies to all indices. In the more general case, a specific indexing
+ key can have specific packed information. The
+ @rhombus(statinfo_meta.pack_index_result) and
+ @rhombus(statinfo_meta.unpack_index_result) functions work on that
+ general form. The @rhombus(default_statinfo_stx) information applies to
+ any key that is not among the specifically listed @rhombus(key)s. If
+ @rhombus(default_statinfo_stx) is @rhombus(#false), the implication is
+ that only keys listed as @rhombus(key)s are available.
+
+ For an unknown index, the right static information is not just
+ @rhombus(default_statinfo_stx), but that information combined via
+ @rhombus(statinfo_meta.or) with all @rhombus(key)-specific
+ @rhombus(statinfo_stx)s. The
+ @rhombus(statinfo_meta.unpack_uniform_index_result) convenience function
+ performs that combination, while the
+ @rhombus(statinfo_meta.unpack_index_result_at_index) convenience
+ function extracts a key-specific value, if available, or uses
+ @rhombus(default_statinfo_stx) otherwise.
+
+}
+
+@doc(
+  ~meta
   fun statinfo_meta.lookup(expr_stx :: Syntax,
                            key :: Identifier)
     :: maybe(Syntax)
@@ -330,7 +373,8 @@
 
   @item{@rhombus(statinfo_meta.index_result_key): Packed static information
         for the result value if the expression is used with
-        @rhombus([]) to access an element.}
+        @rhombus([]) to access an element, potentially with static information
+        for specific index values. See @rhombus(statinfo_meta.unpack_index_result).}
 
   @item{@rhombus(statinfo_meta.index_get_key): An identifier bound to a
         function to call (instead of falling back to a generic dynamic

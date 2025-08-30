@@ -71,9 +71,9 @@
                  pt2 :: PointLike,
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
   property (grad :: draw.LinearGradient).line
-    :: matching([_ :: Point, _ :: Point])
+    :: [Point, _ :: Point]
   property (grad :: draw.LinearGradient).stops
-    :: List.of(matching([_ :: Real.in(0.0, 1.0), _ :: Color]))
+    :: List.of([Real.in(0.0, 1.0), Color])
 ){
 
  A linear gradient for a @rhombus(Brush, ~class).
@@ -86,10 +86,10 @@
                  [[pt2 :: PointLike], r2 :: Real],
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
   property (grad :: draw.RadialGradient).circles
-    :: matching([[_ :: PointLike, _ :: Real],
-                 [_ :: PointLike, _ :: Real]])
+    :: [[PointLike, Real],
+        [PointLike, Real]]
   property (grad :: draw.RadialGradient).stops
-    :: List.of(matching([_ :: Real.in(0.0, 1.0), _ :: Color]))
+    :: List.of([Real.in(0.0, 1.0), Color])
 ){
 
  A radial gradient for a @rhombus(Brush, ~class).

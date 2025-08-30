@@ -36,7 +36,7 @@
 
  @item{@rhombus(Point, ~annot): a @rhombus(Point, ~class) instance;}
 
- @item{@rhombus(matching([_ :: Real, _ :: Real]), ~annot): a
+ @item{@rhombus([Real, Real], ~annot): a
   @rhombus(List) containing two @rhombus(Real, ~annot) values; or}
 
  @item{@rhombus(matching({#'x: _ :: Real, #'y: _ :: Real}), ~annot):
@@ -79,7 +79,7 @@
 
  @item{@rhombus(Size, ~annot); a @rhombus(Size, ~class) instance;}
 
- @item{@rhombus(matching([_ :: NonnegReal, _ :: NonnegReal]), ~annot):
+ @item{@rhombus([NonnegReal, NonnegReal], ~annot):
   a @rhombus(List) containing two @rhombus(NonnegReal, ~annot)
   values; or}
 
@@ -125,11 +125,11 @@
 
  @item{a @rhombus(Rect, ~class) instance;}
 
- @item{@rhombus(matching([_ :: Real, _ :: Real, _ :: NonnegReal, _ :: NonnegReal]), ~annot):
+ @item{@rhombus([Real, Real, NonnegReal, NonnegReal], ~annot):
   a @rhombus(List) containing two @rhombus(Real, ~annot) values for the top-left point
   followed by two @rhombus(NonnegReal, ~annot) values for the size;}
 
- @item{@rhombus(matching([_ :: PointLike, _ :: SizeLike]), ~annot):
+ @item{@rhombus([PointLike, SizeLike], ~annot):
   a @rhombus(List) containing a @rhombus(PointLike, ~annot) value
   followed by a @rhombus(SizeLike, ~annot) value;}
 

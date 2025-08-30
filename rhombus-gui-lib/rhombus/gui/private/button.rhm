@@ -17,9 +17,9 @@ class Button(private _handle):
 
   constructor (label :: ObsOrValue.of(View.LabelString
                                         || Bitmap
-                                        || matching([_ :: Bitmap,
-                                                     _ :: View.LabelString,
-                                                     _ :: Button.LabelPosition])),
+                                        || [Bitmap,
+                                            View.LabelString,
+                                            Button.LabelPosition]),
                ~action: action :: () -> ~any = values,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Button.Style)) = [],

@@ -29,8 +29,8 @@ def zero = Rect(0, 0, 0, 0)
 
 dotting.annot_macro 'RectLike' ('to_rect' => 'RectLike.to_rect'):
   'Rect
-     || matching([_ :: Real, _ :: Real, _ :: NonnegReal, _ :: NonnegReal])
-     || matching([_ :: PointLike, _ :: SizeLike])
+     || [Real, Real, NonnegReal, NonnegReal]
+     || [PointLike, SizeLike]
      || matching({#'x: _ :: Real, #'y: _ :: Real, #'width: _ :: NonnegReal, #'height: _ :: NonnegReal})
      || matching({#'point: _ :: PointLike, #'size: _ :: Size})'
 

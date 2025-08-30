@@ -14,7 +14,7 @@ def zero = Point(0, 0)
 
 dotting.annot_macro 'PointLike' ('to_point' => 'PointLike.to_point'):
   'Point
-     || matching([_ :: Real, _ :: Real])
+     || [Real, Real]
      || matching({#'x: _ :: Real, #'y: _ :: Real})'
 
 namespace PointLike:

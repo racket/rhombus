@@ -115,10 +115,21 @@ which case it supplies its elements in order.
 @doc(
   annot.macro 'PairList'
   annot.macro 'PairList.of($annot)'
+  annot.macro 'PairList.tuple_of[$annot, ..., $maybe_ellipsis]'
+  grammar maybe_ellipsis:
+    #,(epsilon)
+    $ellipsis
+  grammar ellipsis:
+    #,(dots)
+
 ){
 
- Matches any @tech{pair list} in the form without @rhombus(of). The @rhombus(of)
- variant matches a pair list whose elements satisfy @rhombus(annot).
+ The @rhombus(PairList, ~annot) annotation by itself matches any
+ @tech{pair list}. The @rhombus(PairList.of, ~annot) variant matches a
+ pair list whose elements all satisfy @rhombus(annot).
+
+ The @rhombus(PairList.tuple_of, ~annot) annotation is analogous to the
+ @rhombus(List.tuple_of, ~annot) annotation, but for pair lists.
 
  Static information associated by @rhombus(PairList, ~annot) or
  @rhombus(PairList.of, ~annot) makes an expression acceptable as a sequence

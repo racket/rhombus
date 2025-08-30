@@ -12,3 +12,4 @@ and @secref("annotation"), and annotation macros are described in
 @include_section("annotation-maybe.scrbl")
 @include_section("annotation-satisfying.scrbl")
 @include_section("annotation-convert.scrbl")
+@include_section("annotation-list.scrbl")

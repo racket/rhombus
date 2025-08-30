@@ -45,7 +45,8 @@
          "list-last.rkt"
          "maybe-list-tail.rkt"
          (submod "range.rkt" for-substring)
-         "treelist-statinfo.rkt")
+         "treelist-statinfo.rkt"
+         "tuple-annot.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -68,7 +69,8 @@
 (module+ for-binding
   (provide (for-syntax parse-list-binding
                        parse-list-expression
-                       parse-list-repetition)))
+                       parse-list-repetition
+                       parse-list-annotation)))
 
 (module+ for-builtin
   (provide treelist-method-table
@@ -86,12 +88,14 @@
            (for-syntax get-treelist-static-infos)))
 
 (define-for-syntax (extract-result-statinfo lhs-si)
-  (or (static-info-lookup lhs-si #'#%index-result)
+  (or (extract-index-uniform-result
+       (static-info-lookup lhs-si #'#%index-result))
       #'()))
 
 (define-for-syntax (add-result-statinfo lhs-si base-si)
   (define maybe-index-result
-    (static-info-lookup lhs-si #'#%index-result))
+    (extract-index-uniform-result
+     (static-info-lookup lhs-si #'#%index-result)))
   (if maybe-index-result
       #`((#%index-result #,maybe-index-result)
          #,@base-si)
@@ -113,7 +117,8 @@
    [iota List.iota]
    [repet List.repet]
    [of List.of]
-   [later_of List.later_of])
+   [later_of List.later_of]
+   [tuple_of List.tuple_of])
   #:properties
   ([first List.first extract-result-statinfo]
    [last List.last extract-result-statinfo]
@@ -163,7 +168,8 @@
    [empty null]
    [iota PairList.iota]
    [repet PairList.repet]
-   [of PairList.of])
+   [of PairList.of]
+   [tuple_of PairList.tuple_of])
   #:properties
   ([first PairList.first extract-result-statinfo]
    [last PairList.last extract-result-statinfo]
@@ -297,10 +303,11 @@
                                (get-treelist-static-infos)
                                (get-list-static-infos)))
      (define args (annotation-dependencies-args deps))
-     (define lst-si (or (static-info-lookup (or (and (< lst-i (length args))
-                                                     (list-ref args lst-i))
-                                                #'())
-                                            #'#%index-result)
+     (define lst-si (or (extract-index-uniform-result
+                         (static-info-lookup (or (and (< lst-i (length args))
+                                                      (list-ref args lst-i))
+                                                 #'())
+                                             #'#%index-result))
                         #'()))
      (define si
        (cond
@@ -321,23 +328,25 @@
 (define-syntax (select-elem data deps)
   (define args (annotation-dependencies-args deps))
   (define lst-i (syntax-e data))
-  (or (static-info-lookup (or (and (< lst-i (length args))
-                                   (list-ref args lst-i))
-                              #'())
-                          #'#%index-result)
+  (or (extract-index-uniform-result
+       (static-info-lookup (or (and (< lst-i (length args))
+                                    (list-ref args lst-i))
+                               #'())
+                           #'#%index-result))
       #'()))
 
 (define-syntax (sequence-elem data deps)
   (define args (annotation-dependencies-args deps))
   (define lst-i (syntax-e data))
   (define elem-statinfo
-    (static-info-lookup (or (and (< lst-i (length args))
-                                 (list-ref args lst-i))
-                            #'())
-                        #'#%index-result))
+    (extract-index-uniform-result
+     (static-info-lookup (or (and (< lst-i (length args))
+                                  (list-ref args lst-i))
+                             #'())
+                         #'#%index-result)))
   (define seq-si #'((#%sequence-constructor #t)))
   (if (and elem-statinfo
-           (pair? (syntax-e elem-statinfo)))
+           (not (static-infos-empty? elem-statinfo)))
       #`((#%sequence-element #,elem-statinfo)
          #,@seq-si)
       seq-si))
@@ -353,9 +362,11 @@
      res-statinfos]
     [else
      (define si
-       (for/fold ([si (or (static-info-lookup (car args) #'#%index-result) #'())])
+       (for/fold ([si (extract-index-uniform-result
+                       (or (static-info-lookup (car args) #'#%index-result) #'()))])
                  ([arg (in-list (cdr args))])
-         (static-infos-or si (or (static-info-lookup arg #'#%index-result) #'()))))
+         (static-infos-or si (extract-index-uniform-result
+                              (or (static-info-lookup arg #'#%index-result) #'())))))
      (if (not (static-infos-empty? si))
          #`((#%index-result #,si)
             #,@res-statinfos)
@@ -619,6 +630,43 @@
   "converter annotation not supported for elements;\n checking needs a predicate annotation for the list content"
   #'()
   #:parse-of parse-annotation-of/chaperone)
+
+(define-for-syntax (parse-list-annotation stx ctx [list-id #'List] [list-static-infos (get-treelist-static-infos)] [kind 'treelist])
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(form-id (~and args (_::brackets arg ... last-arg (group _::...-bind))) . tail)
+     #:with (ann::annotation ...) #'(arg ...)
+     #:with last-ann::annotation #'last-arg
+     (values (build-tuple-annotation (list #'form-id #'args) list-id
+                                     #'(ann.parsed ...)
+                                     #'last-ann.parsed
+                                     list-static-infos
+                                     kind)
+             #'tail)]
+    [(form-id (~and args (_::brackets arg ...)) . tail)
+     #:with (ann::annotation ...) #'(arg ...)
+     (values (build-tuple-annotation (list #'form-id #'args) list-id
+                                     #'(ann.parsed ...)
+                                     #f
+                                     list-static-infos
+                                     kind)
+             #'tail)]))
+
+(define-annotation-syntax List.tuple_of
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx ctx)
+     (parse-list-annotation stx ctx))))
+
+(define-annotation-syntax PairList.tuple_of
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx ctx)
+     (parse-list-annotation stx ctx #'PairList (get-list-static-infos) 'list))))
 
 (define-annotation-constructor (PairList PairList.of)
   ()
@@ -1438,7 +1486,7 @@
   (define pred #`(lambda (min-len max-len)
                    (lambda (v)
                      (and (treelist? v)
-                          ;; constant propoagation and folding should pick one case:
+                          ;; constant propagation and folding should pick one case:
                           (cond
                             [(not max-len)
                              (>= (treelist-length v) min-len)]
@@ -1458,6 +1506,7 @@
                                  (for/list ([i (in-range len)])
                                    #'())
                                  #:index-result-info? #t
+                                 #:list-index-static-infos? #t
                                  #:rest-accessor (and make-rest-selector (make-rest-selector pre-len post-len))
                                  #:rest-repetition? (and rest-repetition/min #t)
                                  #:rest-repetition-min (or rest-repetition/min 0)
@@ -1527,13 +1576,16 @@
     [(form-id (~and args (tag arg ...)) . tail)
      ;; a list of syntax, (list-rest-splice syntax), or (list-rest-rep syntax):
      (define solo? (= 2 (length (syntax->list #'(arg ...)))))
-     (define (combine-static-infos new-si si)
+     (define (combine-static-infos index new-si si)
        (cond
-         [(not si) new-si]
-         [(static-infos-empty? si) si]
-         [else (static-infos-or new-si si)]))
+         [(not si) (if index
+                       (add-index-result new-si index new-si)
+                       new-si)]
+         [(and (static-infos-empty? si) (not index)) si]
+         [(not index) (or-index-results si new-si)]
+         [else (add-index-result si index new-si)]))
      (define-values (content elem-static-infos)
-       (let loop ([gs-stx #'(arg ...)])
+       (let loop ([gs-stx #'(arg ...)] [index 0])
          (syntax-parse gs-stx
            #:datum-literals (group)
            [() (values '() (if mutable? #'() #f))]
@@ -1551,9 +1603,9 @@
                                                 the-rep))
                          (syntax-parse #'rep.parsed
                            [rep::repetition-info #'rep.element-static-infos]))]))
-            (define-values (content elem-static-infos) (loop new-gs))
+            (define-values (content elem-static-infos) (loop new-gs #f))
             (values (cons (list-rest-rep e) content)
-                    (combine-static-infos si elem-static-infos))]
+                    (combine-static-infos #f si elem-static-infos))]
            [((~or* (~and (group _::&-expr rand ...+)
                          (~parse g #`(#,group-tag rand ...))
                          (~bind [splice? #t]))
@@ -1564,19 +1616,24 @@
                             [rep::repetition #'rep.parsed])
                           (syntax-parse #'g
                             [e::expression (rhombus-local-expand #'e.parsed)])))
-            (define-values (content elem-static-infos) (loop #'gs))
+            (define-values (content elem-static-infos) (loop #'gs (and (not (attribute splice?))
+                                                                       index
+                                                                       (add1 index))))
             (values (cons (if (attribute splice?)
                               (list-rest-splice e)
                               e)
                           content)
                     (combine-static-infos
+                     (and (not (attribute splice?))
+                          index)
                      (let ([si (if repetition?
                                    (syntax-parse e
                                      [rep::repetition-info #'rep.element-static-infos])
                                    (extract-static-infos e))])
                        (if (attribute splice?)
-                           (or (static-info-lookup si #'#%index-result)
-                               #'())
+                           (extract-index-uniform-result
+                            (or (static-info-lookup si #'#%index-result)
+                                #'()))
                            si))
                      elem-static-infos))])))
      (define src-span (if span-form-name?

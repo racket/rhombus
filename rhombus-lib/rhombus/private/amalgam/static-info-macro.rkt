@@ -45,7 +45,8 @@
          "maybe-key.rkt"
          "values-key.rkt"
          "indirect-static-info-key.rkt"
-         "is-static.rkt")
+         "is-static.rkt"
+         (submod "arithmetic.rkt" static-infos))
 
 (provide (for-syntax (for-space rhombus/namespace
                                 statinfo_meta)))
@@ -67,6 +68,10 @@
      [pack_dependent_result statinfo_meta.pack_dependent_result]
      [unpack_dependent_result statinfo_meta.unpack_dependent_result]
      [check_function_arity statinfo_meta.check_function_arity]
+     [pack_index_result statinfo_meta.pack_index_result]
+     [unpack_index_result statinfo_meta.unpack_index_result]
+     [unpack_index_result_at_index statinfo_meta.unpack_index_result_at_index]
+     [unpack_uniform_index_result statinfo_meta.unpack_uniform_index_result]
      [wrap statinfo_meta.wrap]
      [lookup statinfo_meta.lookup]
      [gather statinfo_meta.gather]
@@ -223,7 +228,7 @@
                         (syntax*? (treelist-ref r 1)))))
       (raise-annotation-failure who
                                 infos
-                                "matching([[_ :: Int, _ :: Syntax], ...])"))
+                                "[[Int, Syntax], ...]"))
     (cond
       [(and (= 1 (treelist-length infos))
             (eqv? -1 (treelist-ref (treelist-ref infos 0) 0)))
@@ -287,6 +292,57 @@
                               "ill-formed packed arity description"
                               "syntax object" stx))
     (check-arity #f #f a n (treelist->list kws) #f #f #f #:always? #t))
+    
+  (define/arity (statinfo_meta.pack_index_result infos keyed-infos)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (or (not infos) (syntax*? infos))
+      (raise-annotation-failure who infos "maybe(Syntax)"))
+    (unless (and (treelist? keyed-infos)
+                 (for/and ([r (in-treelist keyed-infos)])
+                   (and (treelist? r)
+                        (= 2 (treelist-length r))
+                        (syntax*? (treelist-ref r 1)))))
+      (raise-annotation-failure who keyed-infos "[[Any, Syntax], ...]"))
+    (define packed-infos (and infos (pack-static-infos who infos)))
+    (cond
+      [(and (treelist-empty? keyed-infos)
+            packed-infos)
+       packed-infos]
+      [else
+       #`(#:at_index
+          #,packed-infos
+          #,@(for/list ([i (in-treelist infos)])
+               `(,(treelist-ref i 0)
+                 ,(pack-static-infos who (treelist-ref i 1)))))]))
+
+  (define/arity (statinfo_meta.unpack_index_result stx)
+    #:static-infos ((#%call-result ((#%values #,(get-syntax-static-infos)
+                                              ((#%index-result
+                                                ((#%index-result (#:at_index
+                                                                  #f
+                                                                  ((0 ())
+                                                                   (1 #,(get-syntax-static-infos)))))
+                                                 . #,(get-treelist-static-infos)))
+                                               . #,(get-treelist-static-infos))))))
+    (check-syntax who stx)
+    (syntax-parse stx
+      [(#:at_index other-si (idx i-si) ...)
+       (values (and (syntax-e #'othersi) #'othersi)
+               (for/treelist ([idx (in-list (syntax->list #'(idx ...)))]
+                              [i-si (in-list (syntax->list #'(i-si ...)))])
+                 (treelist (syntax->datum idx) i-si)))]
+      [_
+       (values stx empty-treelist)]))
+    
+  (define/arity (statinfo_meta.unpack_index_result_at_index stx key)
+    #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+    (check-syntax who stx)
+    (extract-index-result stx key))
+
+  (define/arity (statinfo_meta.unpack_uniform_index_result stx key)
+    #:static-infos ((#%call-result #,(get-treelist-static-infos)))
+    (check-syntax who stx)
+    (extract-index-uniform-result stx))
 
   (define/arity (statinfo_meta.wrap form info)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

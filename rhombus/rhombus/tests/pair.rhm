@@ -183,3 +183,16 @@ block:
   def p = Pair("a", #"bb")
   check Pair.first(p).length() ~is 1
   check Pair.rest(p).length() ~is 2
+
+block:
+  use_static
+  let PairList[x, y] :: PairList.tuple_of[String, String] = dynamic(PairList["a", "bb"])
+  check x.length() ~is 1
+  check y.length() ~is 2
+
+block:
+  use_static
+  let xs :: PairList.tuple_of[String, ...] = dynamic(PairList["a", "bb"])
+  check xs[0].length() ~is 1
+  check xs[1].length() ~is 2
+

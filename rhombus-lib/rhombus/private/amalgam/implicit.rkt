@@ -7,6 +7,7 @@
          "expression.rkt"
          "binding.rkt"
          "repetition.rkt"
+         (submod "annotation.rkt" for-class)
          "entry-point.rkt"
          "immediate-callee.rkt"
          "parse.rkt"
@@ -47,6 +48,8 @@
                     #%brackets
                     #%braces
                     #%call)
+         (for-space rhombus/annot
+                    #%brackets)
          (for-space rhombus/entry_point
                     #%parens)
          (for-space rhombus/immediate_callee
@@ -324,6 +327,14 @@
    (lambda (stxes)
      (check-brackets stxes)
      (parse-list-repetition stxes))))
+
+(define-annotation-syntax #%brackets
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx ctx)
+     (parse-list-annotation stx ctx))))
 
 (define-for-syntax (check-brackets stxes)
   (syntax-parse stxes

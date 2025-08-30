@@ -14,7 +14,7 @@ def zero = Size(0, 0)
 
 dotting.annot_macro 'SizeLike' ('to_size' => 'SizeLike.to_size'):
   'Size
-     || matching([_ :: NonnegReal, _ :: NonnegReal])
+     || [NonnegReal, NonnegReal]
      || matching({#'width: _ :: NonnegReal, #'height: _ :: NonnegReal})'
 
 namespace SizeLike:

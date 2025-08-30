@@ -175,7 +175,8 @@
                                 (span-srcloc indexable #'head)
                                 #'head))
        (define result-static-infos (cond
-                                     [(or (indexable-static-info #'#%index-result)
+                                     [(or (extract-index-uniform-result
+                                           (indexable-static-info #'#%index-result))
                                           (syntax-local-static-info indexable-ref-id #'#%call-result))
                                       => (lambda (results)
                                            (find-call-result-at results 2 null #f

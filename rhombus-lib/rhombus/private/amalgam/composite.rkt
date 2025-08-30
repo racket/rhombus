@@ -41,6 +41,7 @@
                                                   #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                   #:index-result-info? [index-result-info? #f]
                                                   #:sequence-element-info? [sequence-element-info? #f]
+                                                  #:list-index-static-infos? [list-index-static-infos? #f]
                                                   #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
                                                   #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
                                                   #:rest-repetition? [rest-repetition? #t] ; #t, #f, or 'pair
@@ -76,7 +77,7 @@
           #,steppers #,accessors #,static-infoss
           (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
           #,(length post-args)
-          #,accessor->info? #,index-result-info? #,sequence-element-info?
+          #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos?
           #,(and rest-arg
                  #`(#,rest-accessor
                     #,rest-to-repetition
@@ -97,17 +98,25 @@
                       steppers accessors ((static-info ...) ...)
                       (infoer-id ...) (data ...)
                       num-post
-                      accessor->info? index-result-info? sequence-element-info?
+                      accessor->info? index-result-info? sequence-element-info? list-index-static-infos?
                       rest-data))
      #:with (arg-static-infos ...) (cond
                                      [(syntax-e #'accessor->info?)
                                       (for/list ([accessor (in-list (syntax->list #'accessors))])
                                         (or (static-info-lookup #'static-infos accessor)
                                             #'()))]
+                                     [(and (syntax-e #'list-index-static-infos?)
+                                           (syntax-e #'index-result-info?)
+                                           (static-info-lookup #'static-infos #'#%index-result))
+                                      => (lambda (si)
+                                           (for/list ([accessor (in-list (syntax->list #'accessors))]
+                                                      [i (in-naturals)])
+                                             (extract-index-result si i)))]
                                      [else
                                       (define infos
                                         (or (and (syntax-e #'index-result-info?)
-                                                 (static-info-lookup #'static-infos #'#%index-result))
+                                                 (extract-index-uniform-result
+                                                  (static-info-lookup #'static-infos #'#%index-result)))
                                             (and (syntax-e #'sequence-element-info?)
                                                  (static-info-lookup #'static-infos #'#%sequence-element))
                                             #'()))
@@ -115,6 +124,11 @@
                                         infos)])
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
+
+     (define (add-index-static-infos si)
+       (for/fold ([si si]) ([a-si (in-list (syntax->list #'(a-info.static-infos ...)))]
+                            [i (in-naturals)])
+         (add-index-result si i a-si)))
 
      (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos
                                    rest-repetition? rest-repetition-min rest-repetition-max
@@ -132,13 +146,13 @@
                       [(() ()) #f]
                       [(car-infos cdr-infos) #'((car car-infos) (cdr cdr-infos))])))
              (or (and (syntax-e #'index-result-info?)
-                      (static-info-lookup/pair #'static-infos #'#%index-result))
+                      (extract-index-uniform-result (static-info-lookup/pair #'static-infos #'#%index-result)))
                  (and (syntax-e #'sequence-element-info?)
                       (static-info-lookup/pair #'static-infos #'#%sequence-element))
                  #'())]
             [(#t)
              (or (and (syntax-e #'index-result-info?)
-                      (static-info-lookup #'static-infos #'#%index-result))
+                      (extract-index-uniform-result (static-info-lookup #'static-infos #'#%index-result)))
                  (and (syntax-e #'sequence-element-info?)
                       (static-info-lookup #'static-infos #'#%sequence-element))
                  #'())]
@@ -148,7 +162,7 @@
                (and maybe-infos (list #`(#,key #,maybe-infos))))
              (append
               (or (and (syntax-e #'index-result-info?)
-                       (static-info-lookup/wrap #'static-infos #'#%index-result))
+                       (extract-index-uniform-result (static-info-lookup/wrap #'static-infos #'#%index-result)))
                   '())
               (or (and (syntax-e #'sequence-element-info?)
                        (static-info-lookup/wrap #'static-infos #'#%sequence-element))
@@ -195,7 +209,13 @@
               [composite-static-infos (static-infos-and composite-static-infos #'static-infos)]
               [composite-static-infos (if (or (static-infos-empty? rest-static-infos)
                                               (not (null? (syntax-e #'accessors))))
-                                          composite-static-infos
+                                          (cond
+                                            [(and (syntax-e #'list-index-static-infos?)
+                                                  (pair? (syntax-e #'accessors)))
+                                             #`((#%index-result #,(add-index-static-infos #f))
+                                                . #,composite-static-infos)]
+                                            [else
+                                             composite-static-infos])
                                           #`(#,@(case rest-repetition?
                                                   [(pair)
                                                    (define car-infos
@@ -215,7 +235,9 @@
                                                   [(#t)
                                                    (append
                                                     (if (syntax-e #'index-result-info?)
-                                                        (list #`(#%index-result #,rest-static-infos))
+                                                        (list #`(#%index-result #,(if (syntax-e #'list-index-static-infos?)
+                                                                                      (add-index-static-infos rest-static-infos)
+                                                                                      rest-static-infos)))
                                                         '())
                                                     (if (syntax-e #'sequence-element-info?)
                                                         (list #`(#%sequence-element #,rest-static-infos))

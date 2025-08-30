@@ -1365,7 +1365,7 @@
 (define-syntax (like-element-accessor data deps)
   (define si (get-argument-static-infos data deps))
   (or (static-info-lookup si #'#%sequence-element)
-      (static-info-lookup si #'#%index-result)
+      (extract-index-uniform-result (static-info-lookup si #'#%index-result))
       #'()))
 
 (define-annotation-syntax Any.like_element

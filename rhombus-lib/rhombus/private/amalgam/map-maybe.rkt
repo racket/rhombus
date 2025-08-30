@@ -72,7 +72,8 @@
   arg-id)
 
 (define-for-syntax (do-extract-maybe-statinfo lhs-si)
-  (define si (static-info-lookup lhs-si #'#%index-result))
+  (define si (extract-index-uniform-result
+              (static-info-lookup lhs-si #'#%index-result)))
   (cond
     [(not si) #f]
     [(static-info-lookup si #'#%maybe)
@@ -107,10 +108,11 @@
 (define-syntax (select-elem data deps)
   (define args (annotation-dependencies-args deps))
   (define mm-i 0)
-  (or (static-info-lookup (or (and (< mm-i (length args))
-                                   (list-ref args mm-i))
-                              #'())
-                          #'#%index-result)
+  (or (extract-index-uniform-result
+       (static-info-lookup (or (and (< mm-i (length args))
+                                    (list-ref args mm-i))
+                               #'())
+                           #'#%index-result))
       #'()))
 
 (define/arity (Map.maybe ht)

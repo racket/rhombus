@@ -257,7 +257,8 @@
      #:with (static-infos ...) (normalize-static-infos/values
                                 (length lhs-parsed-stxes)
                                 (or (syntax-local-static-info #'rhs #'#%sequence-element)
-                                    (syntax-local-static-info #'rhs #'#%index-result)
+                                    (extract-index-uniform-result
+                                     (syntax-local-static-info #'rhs #'#%index-result))
                                     #'()))
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)

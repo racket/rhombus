@@ -11,10 +11,10 @@
     implements View
     constructor (
       label :: ObsOrValue.of(View.LabelString
-                               || Bitmap
-                               || matching([_ :: Bitmap,
-                                            _ :: LabelString,
-                                            _ :: Button.LabelPosition])),
+                               || draw.Bitmap
+                               || [draw.Bitmap,
+                                   View.LabelString,
+                                   Button.LabelPosition]),
       ~action: action :: () -> ~any = fun (): #void,
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Button.Style)) = [],

@@ -167,56 +167,56 @@ block:
     Map([1, "1", "oops"])
     ~throws values(
       "Map: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "[1, \"1\", \"oops\"]",
     )
   check:
     Map(PairList[1, "1", "oops"])
     ~throws values(
       "Map: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     Map(Array(1, "1", "oops"))
     ~throws values(
       "Map: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "Array(1, \"1\", \"oops\")",
     )
   check:
     Map(Broken())
     ~throws values(
       "Map: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "Broken()",
     )
   check:
     MutableMap([1, "1", "oops"])
     ~throws values(
       "MutableMap: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(PairList[1, "1", "oops"])
     ~throws values(
       "MutableMap: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "PairList[1, \"1\", \"oops\"]",
     )
   check:
     MutableMap(Array(1, "1", "oops"))
     ~throws values(
       "MutableMap: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "Array(1, \"1\", \"oops\")",
     )
   check:
     MutableMap(Broken())
     ~throws values(
       "MutableMap: " ++ error.annot_msg(),
-      error.annot("Listable.to_list && matching([_, _])").msg,
+      error.annot("Listable.to_list && [Any, Any]").msg,
       "Broken()",
     )
 
