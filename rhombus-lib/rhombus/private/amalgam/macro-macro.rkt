@@ -48,10 +48,12 @@
                      convert-assc))
 
 (begin-for-syntax
-  (define-syntax-class :op/other
+  (define-splicing-syntax-class :op/other
     #:datum-literals (op)
     (pattern (op name))
-    (pattern name:identifier)
+    (pattern (~seq s::dotted-operator-or-identifier-sequence)
+             #:with (~var n (:hier-name-seq in-name-root-space in-order-space name-path-op name-root-ref)) #'s
+             #:with name #'n.name)
     (pattern (~and name #:other)))
 
   (define-splicing-syntax-class :reflect-name
@@ -107,7 +109,7 @@
                 (values (list (intro op)) #f)]))
            (for ([space-op (in-list space-ops)])
              (define old-kind (free-identifier-mapping-get ht space-op (lambda () #f)))
-             (when (and old-kind (or (not (eq? old-kind kind) (not order?))))
+             (when (and old-kind (or (not (eq? old-kind kind)) (not order?)))
                (raise-syntax-error #f
                                    (format "operator~a multiple ~a in precedence specifications"
                                            (if order? " order" "")

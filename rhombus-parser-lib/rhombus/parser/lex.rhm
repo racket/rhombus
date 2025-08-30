@@ -139,6 +139,10 @@ lex_pattern.macro '$left ?':
                          lex_pattern_meta.unpack(left)])
 
 lex_pattern.macro '! $right':
+  ~stronger_than:
+    rx.rx_disjunction
+    rx.rx_conjunction
+    rx.rx_concatenation
   lex_pattern_meta.pack(['complement',
                          lex_pattern_meta.unpack(right)])
 
