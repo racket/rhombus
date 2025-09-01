@@ -447,6 +447,7 @@
 (define-for-syntax (expand-bridge-definition-sequence defs def-ctx expand-context params-box)
   (define seq #`(sequence [(#:bridge) base-ctx add-ctx remove-ctx all-ctx #,(unbox params-box) #f #f] #,defs))
   (define (eval forms stx-params)
+    (set-box! params-box stx-params)
     (syntax-parse forms
       #:literals (define-syntaxes)
       [((define-syntaxes ids rhs) ...)

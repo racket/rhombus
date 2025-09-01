@@ -84,6 +84,6 @@
       (define-values (ht-stx next-iter) (iter))
       (cond
         [(not ht-stx) (syntax-parameter-default-val p)]
-        [(hash-ref (syntax-e ht-stx) (syntax-parameter-key p) #f)
+        [(hash-ref (if (syntax? ht-stx) (syntax-e ht-stx) ht-stx) (syntax-parameter-key p) #f)
          => (lambda (v) (syntax-local-value v))]
         [else (loop next-iter)]))))

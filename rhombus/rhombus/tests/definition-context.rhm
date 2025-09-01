@@ -33,4 +33,20 @@ check:
     hi any_id
   ~is "also ok"
 
-  
+// interaction with syntax parameters
+syntax_parameter.bridge current_favorite_color:
+  '"blue"'
+expr.macro 'favorite_color':
+  syntax_parameter_meta.lookup('current_favorite_color')
+expr.macro 'with_favorite_color $(new_color :: String): $body':
+  let ctx = syntax_meta.make_definition_context()
+  ctx.add_definitions('«syntax_parameter.relet current_favorite_color: '$new_color'»')
+  ctx.call_using(
+    fun():
+      let '$(parsed_body :: expr_meta.Parsed)' = 'block: $body'
+      let (a, b) = expr_meta.parse_all(parsed_body)
+      b)
+check favorite_color ~is "blue"
+check: with_favorite_color "red":
+         favorite_color
+       ~is "red"
