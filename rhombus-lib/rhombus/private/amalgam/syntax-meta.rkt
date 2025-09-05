@@ -12,6 +12,7 @@
                      "call-result-key.rkt"
                      "name-root.rkt"
                      (submod "annotation.rkt" for-class)
+                     (only-in "static-info.rkt" #%none)
                      (for-syntax racket/base)
                      (submod "syntax-object.rkt" for-quasiquote)
                      "srcloc.rkt"
@@ -125,6 +126,7 @@
                                    form/msg
                                    [form unsafe-undefined]
                                    [detail unsafe-undefined])
+    #:static-infos ((#%call-result ((#%none #t))))
     (define who-in
       (cond
         [(or (not m-who) (symbol? m-who)) m-who]

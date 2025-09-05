@@ -58,7 +58,7 @@ fun error(~srcloc: srcloc :: maybe(Srcloc) = #false,
           // or `error.text`; each `clause` starts its own line with
           // a 2-space prefix:
           clause :: error.Clause,
-          ...):
+          ...) :~ None:
   let msg = message(~srcloc: srcloc,
                     ~who: who,
                     ~realm: realm,

@@ -85,7 +85,7 @@ block:
     meta -1: rhombus/meta open
   check:
     statinfo_meta.and() ~matches '()'
-    statinfo_meta.or() ~matches '()'
+    statinfo_meta.or() ~matches '(($(statinfo_meta.none_key), #true))'
 
 block:
   use_static

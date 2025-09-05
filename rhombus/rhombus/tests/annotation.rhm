@@ -363,3 +363,19 @@ check:
 check:
   error("left") is_a converting(fun (x :: satisfying(error("right"))): x)
   ~throws "left"
+
+block:
+  use_static
+  check ([] || (0 :: None)).length() ~is 0
+  check ((0 :: None) || []).length() ~throws error.annot_msg()
+  check ((dynamic([]) :: maybe(List))!! || error("oops")).length() ~is 0
+  check ((dynamic([]) :: maybe(List))!! || throw #'bye).length() ~is 0
+  check (fun (x :: (List || None)): x.length()) ~completes
+  check (fun (x :: (List && None)): x.length()) ~completes // analogous to `List && String`
+  check 10 is_a (Int && None) ~is #false
+
+check:
+  ~eval
+  use_static
+  fun (x :: None): x.length()
+  ~throws "no such field or method"

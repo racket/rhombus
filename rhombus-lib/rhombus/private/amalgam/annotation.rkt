@@ -1026,7 +1026,7 @@
 (void (set-primitive-contract! 'flonum? "Flonum"))
 (void (set-primitive-contract! 'fixnum? "Fixnum"))
 (define-annotation-syntax Any (identifier-annotation (lambda (x) #t) ()))
-(define-annotation-syntax None (identifier-annotation (lambda (x) #f) ()))
+(define-annotation-syntax None (identifier-annotation (lambda (x) #f) ((#%none #t))))
 (define-annotation-syntax Boolean (identifier-annotation boolean? ()))
 (define-annotation-syntax Int (identifier-annotation exact-integer? #,(get-int-static-infos)))
 (define-annotation-syntax PosInt (identifier-annotation exact-positive-integer? #,(get-int-static-infos)))
@@ -1269,7 +1269,9 @@
                        (lambda (v)
                          (or (equal-always? lit v)
                              ...)))
-                   #'())
+                   (if (null? (syntax->list #'(lit ...)))
+                       #'((#%none #true))
+                       #'()))
                   #'tail))]))))
 
 (define-annotation-syntax Any.to_boolean
