@@ -15,6 +15,7 @@
          (submod "function-parse.rkt" for-build)
          (submod "equal.rkt" for-parse)
          "function-arity-key.rkt"
+         "call-result-key.rkt"
          "static-info.rkt"
          (submod "function.rkt" for-info)
          "if-blocked.rkt"
@@ -173,7 +174,10 @@
    '((default . weaker))
    'automatic
    (lambda (form1 op-stx)
-     #`(raise #,(discard-static-infos form1)))))
+     (wrap-static-info
+      #`(raise #,(discard-static-infos form1))
+      #'#%none
+      #'#true))))
 
 (void (set-primitive-who! 'call-with-composable-continuation 'Continuation.capture))
 (define-syntax capture
@@ -311,6 +315,7 @@
                #:tag [prompt-tag (default-continuation-prompt-tag)]
                . vals)
   #:primitive (abort-current-continuation)
+  #:static-infos ((#%call-result ((#%none #t))))
   (apply abort-current-continuation prompt-tag vals))
 
 (define Continuation.PromptTag.default

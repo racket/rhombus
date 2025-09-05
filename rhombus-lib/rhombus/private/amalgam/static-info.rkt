@@ -55,7 +55,8 @@
 
          #%indirect-static-info
          #%values
-         #%maybe)
+         #%maybe
+         #%none)
 
 (begin-for-syntax
   (property static-info (get-stxs))
@@ -207,6 +208,10 @@
                      (lambda (a b)
                        (merge a b static-infos-and)))))
 
+(define-syntax #%none
+  (static-info-key (lambda (a b) a)
+                   (lambda (a b) a)))
+
 (define-for-syntax (make-static-info-getter stx)
   (define (->compact rhss)
     (for/list ([rhs (in-list rhss)])
@@ -301,38 +306,47 @@
     [else
      (let ([as (flatten-indirects (if (syntax? as) (syntax->list as) as))]
            [bs (flatten-indirects (if (syntax? bs) (syntax->list bs) bs))])
-       ;; special generalization of `maybe`
-       (define ma (and as (static-info-lookup as (quote-syntax #%maybe))))
-       (define mb (and bs (static-info-lookup bs (quote-syntax #%maybe))))
-       (let ([as (if (and mb (not ma))
-                     (cons #`(#%maybe #,as) as)
-                     as)]
-             [bs (if (and ma (not mb))
-                     (cons #`(#%maybe #,bs) bs)
-                     bs)])
-         (or
-          (and as
-               bs
-               (for/list ([a (in-list as)]
-                          #:do [(define new-val
-                                  (syntax-parse a
-                                    [(a-key a-val)
-                                     (for/or ([b (in-list bs)])
-                                       (syntax-parse b
-                                         [(b-key b-val)
-                                          #:when (free-identifier=? #'a-key #'b-key)
-                                          (let ([key (syntax-local-value* #'a-key static-info-key-ref)])
-                                            (cond
-                                              [key
-                                               ((static-info-key-or key) #'a-val #'b-val)]
-                                              [else
-                                               (static-infos-result-or #'a-val #'b-val)]))]
-                                         [_ #f]))]
-                                    [_ #f]))]
-                          #:when new-val)
-                 (syntax-parse a
-                   [(a-key . _) (datum->syntax #f (list #'a-key new-val))])))
-          #'())))]))
+       (define (merge)
+         ;; special generalization of `maybe`
+         (define ma (and as (static-info-lookup as (quote-syntax #%maybe))))
+         (define mb (and bs (static-info-lookup bs (quote-syntax #%maybe))))
+         (let ([as (if (and mb (not ma))
+                       (cons #`(#%maybe #,as) as)
+                       as)]
+               [bs (if (and ma (not mb))
+                       (cons #`(#%maybe #,bs) bs)
+                       bs)])
+           (or
+            (and as
+                 bs
+                 (for/list ([a (in-list as)]
+                            #:do [(define new-val
+                                    (syntax-parse a
+                                      [(a-key a-val)
+                                       (for/or ([b (in-list bs)])
+                                         (syntax-parse b
+                                           [(b-key b-val)
+                                            #:when (free-identifier=? #'a-key #'b-key)
+                                            (let ([key (syntax-local-value* #'a-key static-info-key-ref)])
+                                              (cond
+                                                [key
+                                                 ((static-info-key-or key) #'a-val #'b-val)]
+                                                [else
+                                                 (static-infos-result-or #'a-val #'b-val)]))]
+                                           [_ #f]))]
+                                      [_ #f]))]
+                            #:when new-val)
+                   (syntax-parse a
+                     [(a-key . _) (datum->syntax #f (list #'a-key new-val))])))
+            #'())))
+       (define (none? as) (and as (static-info-lookup as (quote-syntax #%none))))
+       ;; if one has `None` and the other doesn't, ignore the one with `None`
+       (cond
+         [(none? as) (if (none? bs)
+                         (merge)
+                         bs)]
+         [(none? bs) as]
+         [else (merge)]))]))
 
 ;; note that `&&` at the annotation level feels like "union" on statinfo tables
 (define-for-syntax (static-infos-and as bs)

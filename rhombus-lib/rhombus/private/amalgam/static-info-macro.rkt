@@ -97,7 +97,8 @@
      pairlist_bounds_key
      maybe_key
      values_key
-     indirect_key)))
+     indirect_key
+     none_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space convert-id)
   (definition-transformer
@@ -181,7 +182,7 @@
      [(group t) #'t]
      [g #'g])))
 
-(define-for-syntax (static-infos-merge who statinfos-unpacked merge)
+(define-for-syntax (static-infos-merge who statinfos-unpacked merge zero)
   (define statinfos
     (for/list ([stx (in-list statinfos-unpacked)])
       (check-syntax who stx)
@@ -189,7 +190,7 @@
   (unpack-static-infos
    who
    (if (null? statinfos)
-       #'()
+       zero
        (for/fold ([merged (car statinfos)]) ([statinfo (in-list (cdr statinfos))])
          (merge merged statinfo)))))
 
@@ -382,11 +383,11 @@
 
   (define/arity (statinfo_meta.or . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-or))
+    (static-infos-merge who statinfos static-infos-or #'((#%none #t))))
 
   (define/arity (statinfo_meta.and . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-and)))
+    (static-infos-merge who statinfos static-infos-and #'())))
 
 (define-syntax-rule (define-key key id)
   (begin-for-syntax
@@ -412,3 +413,4 @@
 (define-key fixnum_key #%fixnum)
 (define-key values_key #%values)
 (define-key indirect_key #%indirect-static-info)
+(define-key none_key #%none)

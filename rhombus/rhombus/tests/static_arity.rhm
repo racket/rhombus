@@ -85,7 +85,7 @@ expr.macro 'static_arity_check $(pattern:
            | '($(_ :: Identifier), $arg, ...)':
                let '$annot ... . $(method :: Term)' = pres
                let annot = method_annot || '$annot ...'
-               let pres = '($(make_error(#false)) :~ $annot) . $method'
+               let pres = '(dynamic($(make_error(#false))) :~ $annot) . $method'
                let args = '($arg, ...)'
                finish("method", pres, args)
            | ~else:
