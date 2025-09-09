@@ -263,17 +263,32 @@
             = 0,
     ~line: line_c :: maybe(ColorMode) = #false,
     ~line_width: line_width :: LineWidth = #'inherit,
-    ~hline: hline :: maybe(ColorMode) = line_c,
-    ~hline_width: hline_width :: LineWidth = line_width,
-    ~vline: vline :: maybe(ColorMode) = line_c,
-    ~vline_width: vline_width :: LineWidth = line_width
+    ~hline: hline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
+    ~hline_width: hline_width :: LineWidth || List.of(LineWidth) = line_width,
+    ~vline: vline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
+    ~vline_width: vline_width :: LineWidth || List.of(LineWidth) = line_width
   ) :: Pict
 ){
 
  Creates a table @tech{pict}. For @rhombus(horiz), @rhombus(vert),
- @rhombus(vsep), and @rhombus(hsep), a value or final list element is
+ @rhombus(vsep), and @rhombus(hsep), @rhombus(hline), @rhombus(hline_width),
+ @rhombus(vline), or @rhombus(vline_width), a value or final list element is
  repeated as meany times as needed to cover all rows, columns, or
  positions between them, and extra list elements are ignored.
+
+ The @rhombus(hsep) argument determines space added between rows of the
+ table, and the @rhombus(vsep) argument determines space added between
+ columns of the table. The @rhombus(pad) argument applies to the table as
+ a whole (as opposed to individual cells in the table) before any frame
+ and lines between rows and columns are added.
+
+ The @rhombus(line_c) and @rhombus(line_width) arguments determine a
+ frame to be drawn around the whole table when @rhombus(line_c) is not
+ @rhombus(#false). Those arguments also supply the defaults for
+ @rhombus(hline) and @rhombus(hline_width), which determine lines drawn
+ between rows of the table, as well as the defaults for @rhombus(vline)
+ and @rhombus(vline_width), which determine lines drawn between columns
+ of the table.
 
 @examples(
   ~eval: pict_eval

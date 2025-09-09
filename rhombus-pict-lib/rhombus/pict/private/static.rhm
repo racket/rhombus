@@ -1918,10 +1918,10 @@ fun table(rows :: List.of(List.of(Pict)),
           ~line: line_c :: maybe(ColorMode) = #false,
           ~line_width: line_width :: LineWidth = #'inherit,
           ~order: order :: OverlayOrder = #'front,
-          ~hline: hline :: maybe(ColorMode) = line_c,
-          ~hline_width: hline_width :: LineWidth = line_width,
-          ~vline: vline :: maybe(ColorMode) = line_c,
-          ~vline_width: vline_width :: LineWidth = line_width,
+          ~hline: hline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
+          ~hline_width: hline_width :: LineWidth || List.of(LineWidth) = line_width,
+          ~vline: vline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
+          ~vline_width: vline_width :: LineWidth || List.of(LineWidth) = line_width,
           ~epoch: epoch :: EpochAlignment = #'center,
           ~duration: duration :: DurationAlignment = #'sustain) :~ Pict:
   recur retry (rows :~ List.of(List.of(Pict)) = rows):
@@ -1959,8 +1959,14 @@ fun table(rows :: List.of(List.of(Pict)),
                     picts,
                     h_align,
                     v_align,
-                    if hsep is_a List | PairList[& hsep] | hsep,
-                    if vsep is_a List | PairList[& vsep] | vsep)
+                    match hsep
+                    | []: 0
+                    | [h, ...]: PairList[h, ...]
+                    | ~else: hsep,
+                    match vsep
+                    | []: 0
+                    | [v, ...]: PairList[v, ...]
+                    | ~else: vsep)
         let r = build(picts)
         if !hline && !vline && !line_c
         | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...], build)
@@ -1988,6 +1994,13 @@ fun table(rows :: List.of(List.of(Pict)),
           let pin: if order == #'front
                    | rkt.#{pin-under}
                    | rkt.#{pin-over}
+          fun sel(v, i):
+            match v
+            | []: #false
+            | v :: List: if i >= v.length()
+                         | v.last
+                         | v[i]
+            | ~else: v
           let r:
             if !vline
             | r
@@ -1997,15 +2010,20 @@ fun table(rows :: List.of(List.of(Pict)),
                 |  let dx = dx + ws[i-1]
                    let sep:
                      match hsep:
+                     | []: 0
                      | hsep :: List: if hsep.length() > i-1
                                      | hsep[i-1]
-                                     | hsep[hsep.length() - 1]
+                                     | hsep.last
                      | else: hsep
-                   loop(pin(r,
-                            dx + sep / 2, 0,
-                            line(~dy: rkt.#{pict-height}(r),
-                                 ~line: vline,
-                                 ~line_width: vline_width).snapshot().handle),
+                   let vline = sel(vline, i-1)
+                   let vline_width = sel(vline_width, i-1)
+                   loop(if vline
+                        | pin(r,
+                              dx + sep / 2, 0,
+                              line(~dy: rkt.#{pict-height}(r),
+                                   ~line: vline,
+                                   ~line_width: vline_width).snapshot().handle)
+                        | r,
                         i + 1,
                         dx + sep)
           fun add_lines(r):
@@ -2021,11 +2039,15 @@ fun table(rows :: List.of(List.of(Pict)),
                                      | vsep[i-1]
                                      | vsep[vsep.length() - 1]
                      | else: vsep
-                   loop(pin(r,
-                            0, dy + sep / 2,
-                            line(~dx: rkt.#{pict-width}(r),
-                                 ~line: hline,
-                                 ~line_width: hline_width).snapshot().handle),
+                   let hline = sel(hline, i-1)
+                   let hline_width = sel(hline_width, i-1)
+                   loop(if hline
+                        | pin(r,
+                              0, dy + sep / 2,
+                              line(~dx: rkt.#{pict-width}(r),
+                                   ~line: hline,
+                                   ~line_width: hline_width).snapshot().handle)
+                        | r,
                         i + 1,
                         dy + sep)
           let r = add_lines(r)
