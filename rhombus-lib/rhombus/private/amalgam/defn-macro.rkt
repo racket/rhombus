@@ -61,8 +61,16 @@
      (define-values (defns new-tail)
        (syntax-parse stx
          [(head . h-tail) (proc (pack-tail #'h-tail) orig-head (pack-multi tail) #'head name-prefix)]))
-     (values (unpack-definitions defns proc)
+     (values (unpack-definition-sequence defns proc)
              (unpack-multi new-tail proc #f)))))
+
+(define-for-syntax (unpack-definition-sequence form proc)
+  (syntax-parse (and (syntax*? form) (unpack-multi form proc #f))
+    [(g ...)
+     #`((rhombus-body-sequence
+         g
+         ...))]
+    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form)]))
 
 ;; ----------------------------------------
 

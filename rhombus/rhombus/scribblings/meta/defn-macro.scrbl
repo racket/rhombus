@@ -124,6 +124,8 @@
  The macro result is two values: a sequence of groups to
  splice in place of the sequence-macro use, and a sequence of
  groups that represent the tail of the definition context that was not consumed.
+ If the result sequence includes a use of a definition-sequence form,
+ that form will not extend into the separately returned tail.
 
 @examples(
   ~eval: macro_eval

@@ -155,3 +155,16 @@ check:
      values(stx, self)',
     'check_options',
   )
+
+check:
+  defn.sequence_macro 'guard_let_pos $lhs ... $(bound_as expr_meta.space: '=') $(rhs :: Group)
+                       $tail
+                       ...':
+    values('guard.let ($lhs ...) :: PosInt = $rhs
+            | error("not positive!!!")
+            $tail
+            ...',
+           '')
+  guard_let_pos x = 7
+  "done!"
+  ~is "done!"
