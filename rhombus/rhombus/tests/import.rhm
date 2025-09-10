@@ -8,6 +8,12 @@ check:
 
 check:
   ~eval
+  import: (lib("rhombus/tests/example-a.rhm")) as ex_a
+  [ex_a.alpha, ex_a.beta]
+  ~is ["alpha", "beta"]
+
+check:
+  ~eval
   import: lib("rhombus/tests/example-a.rhm") as ex_a:
             expose: beta
   [ex_a.alpha, beta, ex_a.beta]
@@ -276,3 +282,41 @@ check:
       rename #{a.x} as _x_
   _x_
   ~is "x"
+
+check:
+  import:
+    namespace ns:
+      export def x = 1
+      export def y = 2
+  [ns.x, ns.y]
+  ~is [1, 2]
+
+check:
+  import:
+    (namespace ns:
+       export def x = 1
+       export def y = 2) as imm:
+      expose:
+        x
+        y
+  [x, y, imm.x, imm.y]
+  ~is [1, 2, 1, 2]
+
+check:
+  import:
+    (namespace ns:
+       export def x = 1
+       export def y = 2) as ~none:
+      expose:
+        x
+        y
+  [x, y]
+  ~is [1, 2]
+
+check:
+  import:
+    namespace ns:
+      export fun f(x :: Int): x
+  ns.f("bad")
+  ~throws values(error.annot_msg("argument"),
+                 "ns.f")

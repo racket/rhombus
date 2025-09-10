@@ -27,7 +27,8 @@
 
   grammar import_item:
     $module_path
-    $import_item #,(@rhombus(#%juxtapose, ~impo)) $import_item
+    #,(@rhombus(namespace, ~impo)) $id: $body; ...
+    ($import_item)
     $other_import_item
 
   grammar module_path:
@@ -94,8 +95,10 @@
 )
 
  An @rhombus(import_item) is typically a @rhombus(module_path), but it
- can be a juxtaposed combination of parsed @rhombus(module_path)s, or it
- can be another import clause form defined with @rhombus(impo.macro).
+ can be an inline namespace declaration via @rhombus(namespace, ~impo), a
+ parenthesized @rhombus(import_item) (handled by
+ @rhombus(#%parens, ~impo)), or another import clause form defined with
+ @rhombus(impo.macro).
 
  By default, each clause with a @rhombus(module_path) binds a prefix
  name that is derived from the @rhombus(module_path)'s last element.
@@ -427,17 +430,53 @@
 }
 
 @doc(
-  ~nonterminal:
-    import_item: import ~defn
-  impo.macro '$import_item #%juxtapose $import_item'
+  impo.macro 'namespace $id:
+                $body
+                ...'
 ){
 
- Imports the union of modules described by the two
- @rhombus(import_item)s. This form is typically useful only to create
- @tech{parsed} import forms, because parsing will otherwise attempt to
- treat juxtaposed sequences as an import and modifier.
+ A @rhombus(namespace, ~impo) import form is the same as defining a
+ @rhombus(id) using the @rhombus(namespace, ~defn) definition form and
+ then importing @rhombus(.id, ~impo), except that the name @rhombus(id)
+ is not visible of the enclosing @rhombus(import) form suppresses it---by
+ renaming with @rhombus(as, ~impo) or selecting a component with
+ @rhombus(., ~impo) afterward, for example, as a modification of the
+ @rhombus(namespace, ~impo) form. Modifying a @rhombus(namespace, ~impo)
+ form typically requires parentheses around the
+ @rhombus(namespace, ~impo) form.
 
- @see_implicit(@rhombus(#%juxtapose, ~impo), "an import", "import", ~is_infix: #true)
+ The @rhombus(namespace, ~impo) import form is useful for new import
+ macros (defined with @rhombus(impo.macro)) to expand into, because
+ @rhombus(namespace, ~impo) supports definitions synthesized by the macro
+ that do not reside already in a module or namespace.
+
+}
+
+@doc(
+  ~nonterminal:
+    import_item: import ~defn
+    modifier: import ~defn
+  impo.macro '$import_item #%juxtapose $modifier'
+){
+
+ Imports the @rhombus(import_item) as modified by @rhombus(modifier).
+
+ @see_implicit(@rhombus(#%juxtapose, ~impo), "an import modifier", "import", ~is_infix: #true)
+
+}
+
+@doc(
+  ~nonterminal:
+    import_item: import ~defn
+    modifier: import ~defn
+  impo.macro '#%parens ($import_item)'
+){
+
+ Equivalent to @rhombus(import_item), and particularly useful if
+ @rhombus(import_item) has a block, which would otherwise preclude
+ putting a @rhombus(modifier) afterward.
+
+ @see_implicit(@rhombus(#%parens, ~impo), "a set of parentheses", "import")
 
 }
 

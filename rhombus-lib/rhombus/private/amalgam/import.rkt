@@ -29,7 +29,9 @@
          "import-lower-require.rkt"
          "import-from-namespace.rkt"
          "space-in.rkt"
-         "dotted-sequence-parse.rkt")
+         "dotted-sequence-parse.rkt"
+         "parse.rkt"
+         (only-in "namespace.rkt" namespace))
 
 (provide (for-space rhombus/defn
                     import)
@@ -37,6 +39,7 @@
          (for-space rhombus/impo
                     #%juxtapose
                     #%literal
+                    #%parens
                     (rename-out [rhombus/ /]
                                 [rhombus-file file]
                                 [rhombus-lib lib]
@@ -55,7 +58,8 @@
                     meta
                     meta_label
                     only_meta
-                    only_meta_label))
+                    only_meta_label
+                    namespace))
 
 (module+ for-meta
   (provide (for-syntax import-modifier
@@ -263,9 +267,12 @@
      ;; module path from the modifiers
      (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
                                        #'r.parsed))
-     (define-values (mod-path-stx r-stx) (import-invert r-parsed #'orig #'r))
+     (define-values (mod-path-stx r-stx lifted-nss) (import-invert r-parsed #'orig #'r))
      (shift-origin
       #`(begin
+          #,@(for/list ([lifted-ns (in-list lifted-nss)])
+               (syntax-parse lifted-ns
+                 [(name body) #'(rhombus-definition (group namespace name body))]))
           (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
           (rhombus-import orig mods . more))
       #'r.parsed)]))
@@ -507,7 +514,7 @@
                (syntax-parse i
                  #:datum-literals (parsed nspace)
                  [(parsed mod-path parsed-r)
-                  (define-values (mp r) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
+                  (define-values (mp r no-lifted-nss) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
                   #`(reimport #,id #,(datum->syntax id (syntax-e mp)) #,r)]
                  [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
   (cond
@@ -535,8 +542,8 @@
       [(import-spaces id (s mp) ...)
        #:with (i-mp ...) (map loop (syntax->list #'(mp ...)))
        #`(import-spaces id (s i-mp) ...)]
-      [(import-root id map space-id)
-       #`(import-root #,(intro #'id) map space-id)]
+      [(import-root id map/id space-id/delay)
+       #`(import-root #,(intro #'id) map/id space-id/delay)]
       [(singleton lookup-id id)
        #`(singleton lookup-id #,(intro #'id))]
       [_ (intro mod-path)])))
@@ -549,7 +556,7 @@
       [(import-spaces id (s mp) . _)
        (loop #'mp)]
       [(import-spaces id) #f]
-      [(import-root id map space-id)
+      [(import-root id map/id space-id/delay)
        #'id]
       [(singleton _ id)
        #'id]
@@ -575,6 +582,11 @@
   (define open-all-spaces? (not only-space-sym))
   (syntax-parse im
     #:datum-literals (import-root nspace)
+    [(import-root id ns-id #:delay)
+     (syntax-parse (bound-identifier-as-import #'ns-id #'ns-id #'id #f #t)
+       #:datum-literals (import-spaces)
+       [(import-spaces _ (#:all im))
+        (imports-from-namespace #'im r-parsed covered-ht accum? dotted-id only-space-sym)])]
     [(import-root id (nspace orig-id _ [key val . rule] ...) lookup-id)
      (define-values (prefix open-id) (extract-prefix+open-id #'id r-parsed))
      (define bound-prefix (string-append (symbol->immutable-string (syntax-e #'id))
@@ -815,6 +827,24 @@
                                  form1)
                 #'())]))
    'left))
+
+(define-import-syntax #%parens
+  (import-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (_::parens im::import) . tail)
+        (values #'im.parsed
+                #'tail)]
+       [(_ (~and parens (_::parens im ...)) . tail)
+        (raise-syntax-error #f
+                            (if (null? (syntax->list #'(im ...)))
+                                "missing import in parentheses"
+                                "multiple groups in import parentheses")
+                            stx
+                            #'parens)]))))
 
 (define-import-syntax #%literal
   (make-module-path-literal-operator import-prefix-operator))
@@ -1064,3 +1094,14 @@
                                                 #'only-meta-in)
                                 #f
                                 req))]))))
+
+(define-import-syntax namespace
+  (import-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ mod-id:identifier (~and body (_::block . _)))
+        (values #`(immediate-namespace-in mod-id body)
+                #'())]))))
