@@ -77,14 +77,14 @@
 @itemlist(
 
  @item{@rhombus(import_item modifier) is the same as
-   @rhombus(import_item: modifier), where @rhombus(modifier) might include
-   a block argument. This form is handy when only one modifier is needed.},
+   @rhombus(import_item: modifier), where @rhombus(modifier) cannot include
+   a block argument. This form is handy when only a simple modifier is needed.},
 
  @item{@rhombus(import_item modifier: modifier; ...) is the same as
    @rhombus(import_item: modifier; modifier; ...) where the initial
-   @rhombus(modifier) does not accept a block argument. This form is
-   especially handy when the initial @rhombus(modifier) is @rhombus(open)
-   or @rhombus(as #,(@rhombus(id, ~var))) and additional modifiers
+   @rhombus(modifier) does not include a block argument. This form is
+   especially handy when the initial @rhombus(modifier) is @rhombus(open, ~impo)
+   or @rhombus(as #,(@rhombus(id, ~var)), ~impo) and additional modifiers
    are needed.},
 
  @item{@rhombus(modifier: import_clause; ...) is the same as the
@@ -93,6 +93,10 @@
    when @rhombus(modifier) is @rhombus(meta).}
 
 )
+
+ Note that a @rhombus(modifier) used immediately before a
+ @rhombus(import_item) or or as the start of an @rhombus(import_clause)
+ can never include a block as part of the @rhombus(modifier).
 
  An @rhombus(import_item) is typically a @rhombus(module_path), but it
  can be an inline namespace declaration via @rhombus(namespace, ~impo), a

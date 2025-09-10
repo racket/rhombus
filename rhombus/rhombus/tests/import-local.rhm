@@ -54,7 +54,7 @@ block:
 
 block:
   import:
-    "example-a.rhm" expose: ExList
+    "example-a.rhm".ExList
   check:
     ExList(1, 2, 3)
     ~is [1, 2, 3]

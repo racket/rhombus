@@ -185,14 +185,14 @@
 ){
 
  Exports all identifiers defined within the enclosing module or
- namespace that could be referenced by a @rhombus(names) form using the
+ namespace that could be referenced by a @rhombus(names, ~expo) form using the
  same scopes as @rhombus(id) or (when no @rhombus(id) is provided) the
  @rhombus(all_defined, ~expo) identifier itself. Supplying
  @rhombus(~scope_like id) is particularly useful in the case of a
  macro-introduced @rhombus(all_defined) form.
 
  Imports using @rhombus(import) count as definitions only when the
- import is from a namespace. Imports from a module do no count as
+ import is from a namespace. Imports from a module do not count as
  definitions.
 
 }

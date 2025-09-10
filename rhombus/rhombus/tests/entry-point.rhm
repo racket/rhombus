@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   meta:
-    rhombus expose: check
+    rhombus.check
 
 block:
   import "static_arity.rhm"

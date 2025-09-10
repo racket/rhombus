@@ -63,7 +63,7 @@ check:
   ~eval
   import:
     lib("rhombus/tests/example-a.rhm") as ex_a
-    .ex_a expose: beta
+    .ex_a: expose beta
   [ex_a.alpha, beta]
   ~is ["alpha", "beta"]
 
@@ -312,6 +312,14 @@ check:
         y
   [x, y]
   ~is [1, 2]
+
+check:
+  import:
+    (namespace ns:
+       export def x3 = 3
+       export def y = 2).x3
+  x3
+  ~is 3
 
 check:
   import:

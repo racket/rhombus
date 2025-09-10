@@ -63,7 +63,6 @@
 
 (module+ for-meta
   (provide (for-syntax import-modifier
-                       import-modifier-block
                        in-import-space
                        impo-quote
                        :import
@@ -85,7 +84,6 @@
     #:property prop:import-infix-operator (lambda (self) (import-prefix+infix-operator-infix self)))
 
   (property import-modifier transformer)
-  (property import-modifier-block transformer)
 
   (define in-import-space (make-interned-syntax-introducer/add 'rhombus/impo))
   (define-syntax (impo-quote stx)
@@ -124,8 +122,7 @@
   (define (make-import-modifier-ref req)
     ;; "accessor" closes over `req` with suitable scope introductions
     (lambda (v)
-      (define mod (or (import-modifier-ref v)
-                      (import-modifier-block-ref v)))
+      (define mod (import-modifier-ref v))
       (and mod
            (transformer (let ([req (syntax-local-introduce req)]) ; import transformer scope
                           (lambda (stx ignored-req)
@@ -939,7 +936,7 @@
              #:with ext-name #'ext.name)))
 
 (define-import-syntax rename
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (group)
@@ -954,12 +951,12 @@
                        req)]))))
 
 (define-import-syntax only
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (parse-expose req stx #'only-in))))
 
 (define-import-syntax except
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (group)
@@ -973,7 +970,7 @@
                        req)]))))
 
 (define-import-syntax only_space
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (with-syntax ([(name ...)
                     (syntax-parse stx
@@ -987,7 +984,7 @@
                       req)))))
 
 (define-import-syntax except_space
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (with-syntax ([(name ...)
                     (syntax-parse stx
@@ -1016,7 +1013,7 @@
                                 #f))]))))
 
 (define-import-syntax expose
-  (import-modifier-block
+  (import-modifier
    (lambda (req stx)
      (parse-expose req stx #'expose-in))))
 

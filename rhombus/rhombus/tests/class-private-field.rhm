@@ -1,7 +1,7 @@
 #lang rhombus/and_meta
 import:
   meta:
-    rhombus expose: macro
+    rhombus.macro
 
 use_static
 
