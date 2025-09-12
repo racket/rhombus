@@ -1,6 +1,7 @@
 #lang racket/base
 (require syntax/stx
-         "../proc-name.rkt")
+         "../proc-name.rkt"
+         "version-case.rkt")
 
 (provide transform-in
          transform-out
@@ -20,7 +21,12 @@
    (lambda ()
      (apply syntax-local-apply-transformer
             proc
-            id
+            (meta-if-version-at-least
+             "8.18.0.15"
+             (list id
+                   (variable-reference->module-declaration-inspector
+                    (#%variable-reference)))
+             id)
             (cond
               [use-site-scopes?
                (define context (syntax-local-context))
