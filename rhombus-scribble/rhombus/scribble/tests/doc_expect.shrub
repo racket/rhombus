@@ -5,1020 +5,1047 @@ html:
     div {class: "maincolumn"}:
       div {class: "main"}:
         div {class: "versionbox"}
-        h2:
-          a:«»
-          a:«»
-          "Example"
-          span {class: "button-group"}:
-            a {class: "heading-anchor"}: "🔗"
-            span: " "
-        p:
-          table:
-            tr:
-              td:
-                span {class: "hspace"}: nbsp
-                span {class: "stt"}: span {class: "RktSym"}: "import"
-                span {class: "stt"}: ": "
-                a {class: "RktModLink"}: span {class: "stt"}: "rhombus"
-              td:
-                span {class: "RpackageSpec"}:
-                  span {class: "Smaller"}:
-                    nbsp
-                    "package:"
-                  " "
-                  a: span {class: "stt"}: "rhombus-lib"
-        p: "Starting example:"
-        blockquote:
-          table:
-            tr: td: p: span {class: "RktCmt"}: "// should be linked"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "get"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "println"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}:
-                    a {class: "RktValLink"}: "String.snapshot"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}:
-                    "rhombus."
-                    a {class: "RktValLink"}: "String.copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "upcase"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p: span {class: "stt"}: a {class: "RktValLink"}: "String.more"
-        blockquote:
-          table:
-            tr: td: p: span {class: "RktCmt"}: "// also linked"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
+        section:
+          h1:«»
+          p:
+            table:
+              tr:
+                td:
                   span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s1"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "RktVal"}: "\"Hello\""
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s1"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s2"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s2"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s3"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: a {class: "RktValLink"}: "println"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s2"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s1"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s4"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: a {class: "RktValLink"}: "println"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s4"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s5"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s5"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "def"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "s6"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "="
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}:
-                    a {class: "RktValLink"}: "String.snapshot"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktVal"}: "\"Hello\""
-                  span {class: "RktPn"}: ")"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: "s6"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-            tr: td: p: span {class: "hspace"}: nbsp
-            tr:
-              td:
-                p:
-                  span {class: "RktCmt"}:
-                    "// keep trailing whitespace in above line"
-            tr:
-              td:
-                p:
-                  span {class: "stt"}: span {class: "RktSym"}: "fun"
-                  span {class: "hspace"}: nbsp
-                  span {class: "RktPn"}: "("
-                  span {class: "stt"}: "s"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: "::"
-                  span {class: "hspace"}: nbsp
-                  span {class: "stt"}: a {class: "RktValLink"}: "String"
-                  span {class: "RktPn"}: ")"
-                  span {class: "stt"}: ":"
-            tr:
-              td:
-                p:
-                  span {class: "hspace"}:
-                    nbsp
-                    nbsp
-                  span {class: "stt"}: "s"
-                  span {class: "stt"}: "."
-                  span {class: "stt"}: a {class: "RktValLink"}: "length"
-                  span {class: "RktPn"}: "("
-                  span {class: "RktPn"}: ")"
-        blockquote:
-          table:
-            tr:
-              td:
+                  span {class: "stt"}: span {class: "RktSym"}: "import"
+                  span {class: "stt"}: ": "
+                  a {class: "RktModLink"}: span {class: "stt"}: "rhombus"
+                td:
+                  span {class: "RpackageSpec"}:
+                    span {class: "Smaller"}:
+                      nbsp
+                      "package:"
+                    " "
+                    a: span {class: "stt"}: "rhombus-lib"
+          p: "Starting example:"
+          blockquote:
+            table:
+              tr: td: p: span {class: "RktCmt"}: "// should be linked"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "get"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "println"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink"}: "String.snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      "rhombus."
+                      a {class: "RktValLink"}: "String.copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "upcase"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: a {class: "RktValLink"}: "String.more"
+          blockquote:
+            table:
+              tr: td: p: span {class: "RktCmt"}: "// also linked"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s1"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "RktVal"}: "\"Hello\""
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s1"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s2"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s2"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s3"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: a {class: "RktValLink"}: "println"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s2"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s1"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s4"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: a {class: "RktValLink"}: "println"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s4"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s5"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s5"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "def"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "s6"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "="
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}:
+                      a {class: "RktValLink"}: "String.snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: "s6"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr: td: p: span {class: "hspace"}: nbsp
+              tr:
+                td:
+                  p:
+                    span {class: "RktCmt"}:
+                      "// keep trailing whitespace in above line"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}: span {class: "RktSym"}: "fun"
+                    span {class: "hspace"}: nbsp
+                    span {class: "RktPn"}: "("
+                    span {class: "stt"}: "s"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: "::"
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: a {class: "RktValLink"}: "String"
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: ":"
+              tr:
+                td:
+                  p:
+                    span {class: "hspace"}:
+                      nbsp
+                      nbsp
+                    span {class: "stt"}: "s"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+          blockquote:
+            table:
+              tr:
+                td:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "hspace"}:«»
+                          span {class: "stt"}:
+                            ">"
+                            span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValLink"}: "println"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktVal"}: "\"1\\n\\n2\""
+                          span {class: "RktPn"}: ")"
+              tr: td: p: span {class: "RktOut"}: "1"
+              tr:
+                td:
+                  p:
+                    span {class: "RktOut"}:«»
+                    span {class: "hspace"}: nbsp
+              tr: td: p: span {class: "RktOut"}: "2"
+          p:
+            div {class: "SIntrapara"}:
+              table:
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "definition"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            a:«»
+                            span:
+                              span {class: "RktSym"}: "rhombus."
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "fun"
+                            span {class: "stt"}: ":"
+                      tr:
+                        td:
+                          p:
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:«»
+                            span {class: "RktVar"}: "apple"
+                      tr:
+                        td:
+                          p:
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:«»
+                            span {class: "RktVar"}: "banana"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "definition"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "RktSym"}:
+                              a {class: "RktValDef RktValLink"}: "fun"
+                            span {class: "stt"}: ":"
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:
+                                nbsp
+                                nbsp
+                            span {class: "RktVar"}: "apple"
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:
+                                nbsp
+                                nbsp
+                            span {class: "RktVar"}: "banana"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "function"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}: "rhombus."
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "to_string"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktVar"}: "a"
+                            span {class: "stt"}: ","
+                      tr:
+                        td:
+                          p:
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                            span {class: "hspace"}: nbsp
+                            span {class: "RktVar"}: "b"
+                            span {class: "stt"}: ","
+                      tr:
+                        td:
+                          p:
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                            span {class: "hspace"}: nbsp
+                            span {class: "RktVar"}: "c"
+                            span {class: "stt"}: ":"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "hspace"}: nbsp
+                            span {class: "RktPn"}: "("
+                            span {class: "stt"}: "x"
+                            span {class: "RktPn"}: ")"
+                            span {class: "stt"}: ":"
+                      tr:
+                        td:
+                          p:
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "stt"}:
+                              span {class: "RktValDef RktValLink"}:
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                                nbsp
+                            span {class: "hspace"}:
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                              nbsp
+                            span {class: "stt"}: "x"
+                            span {class: "RktPn"}: ")"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "function"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "repr"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "String"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "method"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: "method"
+                            span {class: "hspace"}: nbsp
+                            span {class: "RktPn"}: "("
+                            span {class: "RktVar"}: "s"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValDef RktValLink"}: "String"
+                            span {class: "RktPn"}: ")"
+                            span {class: "stt"}: "."
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "length"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "method"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: "method"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "String.get"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "function"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "println"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "ReadableString"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "annotation"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "String"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "annotation"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}:
+                                  "ReadableString"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "method"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: "method"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}:
+                                  "String.copy"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktVar"}: "some_s"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "String"
+                            span {class: "RktPn"}: ")"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "ReadableString"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "method"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: "method"
+                            span {class: "hspace"}: nbsp
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}:
+                                  "String.snapshot"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "String"
+                tr: td: p: span {class: "hspace"}: nbsp
+                tr:
+                  td:
+                    div {class: "RBackgroundLabel SIEHidden"}:
+                      div {class: "RBackgroundLabelInner"}: p: "method"
+                tr:
+                  td:
+                    table:
+                      tr:
+                        td:
+                          p:
+                            span {class: "stt"}: "method"
+                            span {class: "hspace"}: nbsp
+                            span {class: "RktPn"}: "("
+                            span {class: "RktVar"}: "some_other_s"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValDef RktValLink"}: "String"
+                            span {class: "RktPn"}: ")"
+                            span {class: "stt"}: "."
+                            a:«»
+                            span:
+                              span {class: "RktSym"}:
+                                a {class: "RktValDef RktValLink"}: "upcase"
+                            span {class: "RktPn"}: "("
+                            span {class: "RktPn"}: ")"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}: "::"
+                            span {class: "hspace"}: nbsp
+                            span {class: "stt"}:
+                              a {class: "RktValLink"}: "String"
+            div {class: "SIntrapara"}:
+              "Description, where "
+              span {class: "RktVar"}: "some_s"
+              span {class: "stt"}: "."
+              span {class: "stt"}: a {class: "RktValLink"}: "length"
+              span {class: "RktPn"}: "("
+              span {class: "RktPn"}: ")"
+              " and\n"
+              span {class: "RktVar"}: "some_other_s"
+              span {class: "stt"}: "."
+              span {class: "stt"}: a {class: "RktValLink"}: "length"
+              span {class: "RktPn"}: "("
+              span {class: "RktPn"}: ")"
+              " are linked."
+          p:
+            "See "
+            span {class: "stt"}: span {class: "RktSym"}: "fun"
+            " versus "
+            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            "."
+          section:
+            h2:
+              "1"
+              span {class: "stt"}: nbsp
+              a:«»
+              a:«»
+              "Draw"
+              span {class: "button-group"}:
+                a {class: "heading-anchor"}: "🔗"
+                span: " "
+            p:
+              table:
+                tr:
+                  td:
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: span {class: "RktSym"}: "import"
+                    span {class: "stt"}: ": "
+                    a {class: "RktModLink"}:
+                      span {class: "stt"}: "rhombus"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "draw"
+                  td:
+                    span {class: "RpackageSpec"}:
+                      span {class: "Smaller"}:
+                        nbsp
+                        "package:"
+                      " "
+                      a: span {class: "stt"}: "rhombus-draw-lib"
+            p:
+              div {class: "SIntrapara"}:
                 table:
                   tr:
                     td:
-                      p:
-                        span {class: "hspace"}:«»
-                        span {class: "stt"}:
-                          ">"
-                          span {class: "hspace"}: nbsp
-                        span {class: "stt"}: a {class: "RktValLink"}: "println"
-                        span {class: "RktPn"}: "("
-                        span {class: "RktVal"}: "\"1\\n\\n2\""
-                        span {class: "RktPn"}: ")"
-            tr: td: p: span {class: "RktOut"}: "1"
-            tr:
-              td:
-                p:
-                  span {class: "RktOut"}:«»
-                  span {class: "hspace"}: nbsp
-            tr: td: p: span {class: "RktOut"}: "2"
-        p:
-          div {class: "SIntrapara"}:
-            table:
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "definition"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          a:«»
-                          span:
-                            span {class: "RktSym"}: "rhombus."
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "fun"
-                          span {class: "stt"}: ":"
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:«»
-                          span {class: "RktVar"}: "apple"
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:«»
-                          span {class: "RktVar"}: "banana"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "definition"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "RktSym"}:
-                            a {class: "RktValDef RktValLink"}: "fun"
-                          span {class: "stt"}: ":"
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:
-                              nbsp
-                              nbsp
-                          span {class: "RktVar"}: "apple"
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:
-                              nbsp
-                              nbsp
-                          span {class: "RktVar"}: "banana"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "function"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}: "rhombus."
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "to_string"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "a"
-                          span {class: "stt"}: ","
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktVar"}: "b"
-                          span {class: "stt"}: ","
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktVar"}: "c"
-                          span {class: "stt"}: ":"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktPn"}: "("
-                          span {class: "stt"}: "x"
-                          span {class: "RktPn"}: ")"
-                          span {class: "stt"}: ":"
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "stt"}:
-                            span {class: "RktValDef RktValLink"}:
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                              nbsp
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                            nbsp
-                          span {class: "stt"}: "x"
-                          span {class: "RktPn"}: ")"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "function"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "repr"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "String"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "method"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "method"
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "s"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValDef RktValLink"}: "String"
-                          span {class: "RktPn"}: ")"
-                          span {class: "stt"}: "."
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "length"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "method"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "method"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "String.get"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "function"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "println"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "ReadableString"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "annotation"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "String"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "annotation"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}:
-                                "ReadableString"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "method"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "method"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "String.copy"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "some_s"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "String"
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "ReadableString"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "method"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "method"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}:
-                                "String.snapshot"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "String"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "method"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "method"
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "some_other_s"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValDef RktValLink"}: "String"
-                          span {class: "RktPn"}: ")"
-                          span {class: "stt"}: "."
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "upcase"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "String"
-          div {class: "SIntrapara"}:
-            "Description, where "
-            span {class: "RktVar"}: "some_s"
-            span {class: "stt"}: "."
-            span {class: "stt"}: a {class: "RktValLink"}: "length"
-            span {class: "RktPn"}: "("
-            span {class: "RktPn"}: ")"
-            " and\n"
-            span {class: "RktVar"}: "some_other_s"
-            span {class: "stt"}: "."
-            span {class: "stt"}: a {class: "RktValLink"}: "length"
-            span {class: "RktPn"}: "("
-            span {class: "RktPn"}: ")"
-            " are linked."
-        p:
-          "See "
-          span {class: "stt"}: span {class: "RktSym"}: "fun"
-          " versus "
-          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-          "."
-        h3:«»
-        p:
-          table:
-            tr:
-              td:
-                span {class: "hspace"}: nbsp
-                span {class: "stt"}: span {class: "RktSym"}: "import"
-                span {class: "stt"}: ": "
-                a {class: "RktModLink"}:
-                  span {class: "stt"}: "rhombus"
-                  span {class: "stt"}: "/"
-                  span {class: "stt"}: "draw"
-              td:
-                span {class: "RpackageSpec"}:
-                  span {class: "Smaller"}:
-                    nbsp
-                    "package:"
-                  " "
-                  a: span {class: "stt"}: "rhombus-draw-lib"
-        p:
-          div {class: "SIntrapara"}:
-            table:
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "property"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "property"
-                          span {class: "hspace"}: nbsp
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "dc"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            "draw."
-                            span {class: "RktStxDef RktStxLink"}: "DC"
-                          span {class: "RktPn"}: ")"
-                          span {class: "stt"}: "."
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "handle"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "Any"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "function"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: a {class: "RktValLink"}: "fun"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}: "draw."
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}:
-                                "DC.from_handle"
-                          span {class: "RktPn"}: "("
-                          span {class: "RktVar"}: "hand"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "Any"
-                          span {class: "RktPn"}: ")"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            "draw."
-                            span {class: "RktSym"}: "DC"
-              tr: td: p: span {class: "hspace"}: nbsp
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "enumeration"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "enum"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}: "draw."
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "DC.Fill"
-                          span {class: "stt"}: ":"
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                          a:«»
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "even_odd"
-                    tr:
-                      td:
-                        p:
-                          span {class: "hspace"}:
-                            nbsp
-                            nbsp
-                          a:«»
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "winding"
-          div {class: "SIntrapara"}: "Draw description."
-        h3:«»
-        p:
-          table:
-            tr:
-              td:
-                span {class: "hspace"}: nbsp
-                span {class: "stt"}: span {class: "RktSym"}: "import"
-                span {class: "stt"}: ": "
-                a {class: "RktModLink"}:
-                  span {class: "stt"}: "rhombus"
-                  span {class: "stt"}: "/"
-                  span {class: "stt"}: "cmdline"
-              td:
-                span {class: "RpackageSpec"}:
-                  span {class: "Smaller"}:
-                    nbsp
-                    "package:"
-                  " "
-                  a: span {class: "stt"}: "rhombus-lib"
-        p:
-          div {class: "SIntrapara"}:
-            table:
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "annotation"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          a:«»
-                          span:
-                            span {class: "RktSym"}: "cmdline."
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}:
-                                "String.to_lib_module_path"
-          div {class: "SIntrapara"}: "Annotation via namespace extension."
-        h3:«»
-        p:
-          table:
-            tr:
-              td:
-                span {class: "hspace"}: nbsp
-                span {class: "stt"}: span {class: "RktSym"}: "import"
-                span {class: "stt"}: ": "
-                a {class: "RktModLink"}:
-                  span {class: "stt"}: "rhombus"
-                  span {class: "stt"}: "/"
-                  span {class: "stt"}: "scribble"
-                  span {class: "stt"}: "/"
-                  span {class: "stt"}: "tests"
-                  span {class: "stt"}: "/"
-                  span {class: "stt"}: "string_ext"
-            tr:
-              td: nbsp
-              td:
-                span {class: "RpackageSpec"}:
-                  span {class: "Smaller"}:
-                    nbsp
-                    "package:"
-                  " "
-                  a: span {class: "stt"}: "rhombus-scribble"
-        p:
-          div {class: "SIntrapara"}:
-            table:
-              tr:
-                td:
-                  div {class: "RBackgroundLabel SIEHidden"}:
-                    div {class: "RBackgroundLabelInner"}: p: "value"
-              tr:
-                td:
-                  table:
-                    tr:
-                      td:
-                        p:
-                          span {class: "stt"}: "def"
-                          span {class: "hspace"}: nbsp
-                          a:«»
-                          span:
-                            span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "String.more"
-                          span {class: "stt"}: "::"
-                          span {class: "hspace"}: nbsp
-                          span {class: "stt"}:
-                            a {class: "RktValLink"}: "String"
-          div {class: "SIntrapara"}: "Defined by extension."
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "property"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "property"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "dc"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "draw."
+                                span {class: "RktStxDef RktStxLink"}: "DC"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}: "handle"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "Any"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "function"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}:
+                                a {class: "RktValLink"}: "fun"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "draw."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}:
+                                    "DC.from_handle"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "hand"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "Any"
+                              span {class: "RktPn"}: ")"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "draw."
+                                span {class: "RktSym"}: "DC"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "enumeration"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "enum"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "draw."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}: "DC.Fill"
+                              span {class: "stt"}: ":"
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              a:«»
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}: "even_odd"
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              a:«»
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}: "winding"
+              div {class: "SIntrapara"}: "Draw description."
+          section:
+            h2:
+              "2"
+              span {class: "stt"}: nbsp
+              a:«»
+              a:«»
+              "Command Line"
+              span {class: "button-group"}:
+                a {class: "heading-anchor"}: "🔗"
+                span: " "
+            p:
+              table:
+                tr:
+                  td:
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: span {class: "RktSym"}: "import"
+                    span {class: "stt"}: ": "
+                    a {class: "RktModLink"}:
+                      span {class: "stt"}: "rhombus"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "cmdline"
+                  td:
+                    span {class: "RpackageSpec"}:
+                      span {class: "Smaller"}:
+                        nbsp
+                        "package:"
+                      " "
+                      a: span {class: "stt"}: "rhombus-lib"
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "cmdline."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}:
+                                    "String.to_lib_module_path"
+              div {class: "SIntrapara"}: "Annotation via namespace extension."
+          section:
+            h2:
+              "3"
+              span {class: "stt"}: nbsp
+              a:«»
+              a:«»
+              "Extension"
+              span {class: "button-group"}:
+                a {class: "heading-anchor"}: "🔗"
+                span: " "
+            p:
+              table:
+                tr:
+                  td:
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: span {class: "RktSym"}: "import"
+                    span {class: "stt"}: ": "
+                    a {class: "RktModLink"}:
+                      span {class: "stt"}: "rhombus"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "scribble"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "tests"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "string_ext"
+                tr:
+                  td: nbsp
+                  td:
+                    span {class: "RpackageSpec"}:
+                      span {class: "Smaller"}:
+                        nbsp
+                        "package:"
+                      " "
+                      a: span {class: "stt"}: "rhombus-scribble"
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "value"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "def"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}:
+                                    "String.more"
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValLink"}: "String"
+              div {class: "SIntrapara"}: "Defined by extension."
     div: nbsp

@@ -26,7 +26,7 @@ def html:
   xml.#{xml->xexpr}(xml.#{document-element}(xml.#{read-xml}(in)))
 
 def keep_with_attrs = { #'div, #'span, #'a }
-def keeps = { #'html, #'body, #'table, #'tr, #'td, #'p, #'blockquote, #'h2 }
+def keeps = { #'html, #'body, #'section, #'table, #'tr, #'td, #'p, #'blockquote, #'h2 }
 def skip_attr = { "tocset", "versionbox" }
 
 fun filter(html):
@@ -68,8 +68,7 @@ fun read(expect):
   let o = Port.Input.open_file(expect)
   shrubbery.read(o)
 
-#//
-println(filter(html), ~pretty: #true)
+// println(filter(html), ~pretty: #true)
 
 check:
   filter(html)
