@@ -208,7 +208,8 @@
      (wrap-static-info*
       (relocate+reraw
        (respan (datum->syntax #f (list #'form-id #'arg)))
-       e)
+       e
+       #:prop-stx e)
       (get-syntax-static-infos))]))
 
 (define-syntax literal

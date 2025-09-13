@@ -602,11 +602,11 @@
        (define (adjust-args args)
          (append (treelist->list (entry-point-adjustment-prefix-arguments adjustments))
                  args))
+       (define (reloc stx) (relocate+reraw (respan src-ctx) stx))
        (values
-        (relocate+reraw
-         (respan src-ctx)
          ;; Racket `define` needs to recognize an immediate `lambda`
-         (if (syntax-e kwrest-arg)
+        (if (syntax-e kwrest-arg)
+            (reloc
              #`(lambda/kwrest
                 #:name #,function-name
                 #:arity #,shifted-arity
@@ -615,15 +615,16 @@
                 maybe-kwrest-tmp ...
                 #,(adjust-args #'(arg-form ... ...))
                 rest-def ...
-                #,body)
-             (let* ([proc #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
+                #,body))
+            (let* ([proc (reloc
+                          #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
                               rest-def ...
-                              #,body)]
-                    [proc (syntax-property proc 'inferred-name function-name)]
-                    [proc (if (entry-point-adjustment-method? adjustments)
-                              (syntax-property proc 'method-arity-error #t)
-                              proc)])
-               proc)))
+                              #,body))]
+                   [proc (syntax-property proc 'inferred-name function-name)]
+                   [proc (if (entry-point-adjustment-method? adjustments)
+                             (syntax-property proc 'method-arity-error #t)
+                             proc)])
+              proc))
         shifted-arity)]))
 
   (define (build-unsafe-function kws args arg-parseds

@@ -1110,12 +1110,16 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (quoted-shape-dispatch stx
-                            in-expression-space
-                            convert-template
-                            #f
-                            convert-template
-                            (lambda (e) #`(quote-syntax #,e))))))
+     (define-values (form tail)
+       (quoted-shape-dispatch stx
+                              in-expression-space
+                              convert-template
+                              #f
+                              convert-template
+                              (lambda (e) #`(quote-syntax #,e))))
+     (define q-stx (syntax-parse stx [(_ q . _) #'q]))
+     (values (relocate-wrapped q-stx form)
+             tail))))
 
 (define-binding-syntax #%quotes
   (binding-prefix-operator

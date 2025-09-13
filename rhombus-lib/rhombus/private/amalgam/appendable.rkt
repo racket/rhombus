@@ -117,6 +117,7 @@
 (define-for-syntax (build-append append-id direct? form1 form2 orig-stxes)
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
+   #:prop-stx (cadr orig-stxes)
    (datum->syntax (quote-syntax here)
                   (let ([form1 (discard-static-infos form1)]
                         [form2 (discard-static-infos form2)])

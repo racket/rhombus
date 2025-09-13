@@ -143,10 +143,19 @@
 
 ;; `stx` should be a Racket expression, while `src-stx` can be a srcloc
 ;; or a shrubbery form
-(define (relocate+reraw src-stx stx #:keep-mode [keep-mode #f])
+(define (relocate+reraw src-stx stx
+                        #:keep-mode [keep-mode #f]
+                        #:prop-stx [maybe-prop-stx #f])
+  (define prop-stx
+    (or maybe-prop-stx
+        (let loop ([src-stx src-stx])
+          (syntax-case src-stx ()
+            [(head . _) (loop #'head)]
+            [_ src-stx]))))
   (cond
-    [(syntax? src-stx) (reraw src-stx (relocate (maybe-respan src-stx) stx) #:keep-mode keep-mode)]
-    [else (relocate src-stx stx)]))
+    [(syntax? src-stx)
+     (reraw src-stx (relocate (maybe-respan src-stx) stx prop-stx) #:keep-mode keep-mode)]
+    [else (relocate src-stx stx prop-stx)]))
 
 (define (extract-raw stx)
   (define l (find-shrubberies stx))

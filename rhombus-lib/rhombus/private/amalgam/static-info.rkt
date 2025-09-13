@@ -65,10 +65,12 @@
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
   (define (wrap-static-info expr key-id val-stx)
-    (relocate+reraw
-     expr
-     #`(begin (quote-syntax (#,key-id #,val-stx))
-              #,expr)))
+    (let ([expr (maybe-respan expr)])
+      (relocate
+       expr
+       #`(begin (quote-syntax (#,key-id #,val-stx))
+                #,expr)
+       expr)))
 
   (define (wrap-static-info* expr stxes)
     (for/foldr ([expr expr]) ([stx (in-list (if (syntax? stxes)
@@ -181,7 +183,7 @@
       #:literals (begin quote-syntax)
       [((~and tag begin) (~and qs (quote-syntax (_:identifier _))) e)
        (define e2 (relocate-wrapped srcloc #'e))
-       (relocate+reraw e2 #`(tag qs #,e2))]
+       (relocate e2 #`(tag qs #,e2) e2)]
       [_ (relocate+reraw srcloc e)])))
 
 (define-syntax (define-static-info-key-syntax/provide stx)

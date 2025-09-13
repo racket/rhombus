@@ -76,19 +76,21 @@
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information
   (define loc (maybe-respan form))
-  (define expr (relocate+reraw loc (rhombus-local-expand form)))
-  (relocate+reraw expr #`(parsed #:rhombus/expr #,expr)))
+  (define expr (rhombus-local-expand form))
+  (relocate expr #`(parsed #:rhombus/expr #,expr) expr))
 
-(define-for-syntax (extract-expression form #:srcloc [loc (maybe-respan form)])
-  (relocate+reraw
-   loc
-   (syntax-parse form
-     #:datum-literals (parsed group multi)
-     [(multi (group (parsed #:rhombus/expr e))) #'e]
-     [(group (parsed #:rhombus/expr e)) #'e]
-     [(parsed #:rhombus/expr e) #'e]
-     [_ (syntax-parse (unpack-group form 'expression #f)
-          [e::expression #'e.parsed])])))
+(define-for-syntax (extract-expression form #:srcloc [loc #f])
+  (define stx
+    (syntax-parse form
+      #:datum-literals (parsed group multi)
+      [(multi (group (parsed #:rhombus/expr e))) #'e]
+      [(group (parsed #:rhombus/expr e)) #'e]
+      [(parsed #:rhombus/expr e) #'e]
+      [_ (syntax-parse (unpack-group form 'expression #f)
+           [e::expression #'e.parsed])]))
+  (if loc
+      (relocate+reraw loc stx)
+      stx))
 
 (define-for-syntax (make-expression-infix-operator order prec protocol proc assc)
   (expression-infix-operator
@@ -147,20 +149,20 @@
   (define/arity (expr_meta.pack_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
-    (define g (unpack-group s who #f))
-    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g))))
+    (define g (maybe-respan (unpack-group s who #f)))
+    (relocate g #`(parsed #:rhombus/expr (rhombus-expression #,g)) g))
 
   (define/arity (expr_meta.pack_meta_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
-    (define g (unpack-group s who #f))
-    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g))))
+    (define g (maybe-respan (unpack-group s who #f)))
+    (relocate g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g)) g))
 
   (define/arity (expr_meta.pack_and_meta_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
-    (define g (unpack-group s who #f))
-    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g))))
+    (define g (maybe-respan (unpack-group s who #f)))
+    (relocate g #`(parsed #:rhombus/expr (rhombus-expression/both #,g)) g))
 
   (define/arity (expr_meta.parse_all s)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
@@ -170,10 +172,8 @@
       [e::expression
        (define-values (expr opaque)
          (syntax-local-expand-expression #'e.parsed))
-       (values (relocate+reraw expr #`(parsed #:rhombus/expr
-                                              #,expr))
-               (relocate+reraw expr #`(parsed #:rhombus/expr
-                                              #,opaque)))]))
+       (values (relocate expr #`(parsed #:rhombus/expr #,expr) expr)
+               (relocate expr #`(parsed #:rhombus/expr #,opaque) expr))]))
 
   (define/arity (expr_meta.parse_dot form1 tail
                                      #:as_static [more-static? #f]
@@ -190,7 +190,7 @@
         [_
          (raise-syntax-error who "not a parsed expression" form1)]))
     (if expr
-        (values (relocate+reraw expr #`(parsed #:rhombus/expr #,expr))
+        (values (relocate expr #`(parsed #:rhombus/expr #,expr) expr)
                 (pack-tail new-tail))
         (values #f #f)))
 

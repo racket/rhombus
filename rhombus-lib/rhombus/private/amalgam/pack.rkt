@@ -517,7 +517,7 @@
      #:when (eq? (syntax-e #'k) kw)
      stx]
     [_
-     (relocate+reraw stx #`(parsed #,kw #,stx))]))
+     (relocate+reraw stx #`(parsed #,kw #,stx) #:prop-stx stx)]))
 
 (define ((pack-parsed* kw) r depth)
   (pack* r depth (pack-parsed kw)))

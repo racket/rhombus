@@ -8,11 +8,11 @@
 (provide (for-syntax wrap-expression))
 
 (define-for-syntax (wrap-expression form #:srcloc [loc (maybe-respan form)])
-  (relocate+reraw
-   loc
-   (syntax-parse form
-     #:datum-literals (parsed group multi)
-     [(multi (group (parsed #:rhombus/expr e))) #'e] ; shortcut
-     [(group (parsed #:rhombus/expr e)) #'e]         ; shortcut
-     [(parsed #:rhombus/expr e) #'e]                 ; shortcut
-     [_ #`(rhombus-expression #,(unpack-group form 'expression #f))])))
+  (define stx
+    (syntax-parse form
+      #:datum-literals (parsed group multi)
+      [(multi (group (parsed #:rhombus/expr e))) #'e] ; shortcut
+      [(group (parsed #:rhombus/expr e)) #'e]         ; shortcut
+      [(parsed #:rhombus/expr e) #'e]                 ; shortcut
+      [_ #`(rhombus-expression #,(unpack-group form 'expression #f))]))
+  (relocate+reraw loc stx #:prop-stx stx))

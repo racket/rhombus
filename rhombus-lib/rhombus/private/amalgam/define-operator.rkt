@@ -153,6 +153,7 @@
                    #`())
             (wrap-static-info*
              (relocate+reraw (respan (datum->syntax #f (list form1 stx form2)))
+                             #:prop-stx stx
                              #,(let ([r #`(datum->syntax (quote-syntax here)
                                                          (list (relocate-id stx
                                                                             #,(if (syntax-e #'flprim)

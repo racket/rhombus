@@ -1,4 +1,4 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 block:
   import "static_arity.rhm"
@@ -24,3 +24,27 @@ block:
   check s.column!! < dynamic(0) ~is #false
   check s.position!! < dynamic(0) ~throws "actual value is false"
   check s.span!! < dynamic(0) ~is #false
+
+block:
+  expr.macro 'show $x':
+    ~weaker_than: ~other
+    '$(x.to_source_string())'
+  check show '1 + 2' ~is "'1 + 2'"
+  check show 1 ++ 2 ~is "1 ++ 2"
+
+// check that properties on key identifers/operator
+// are propagated to a parsed form ovarll; this is
+// needed for things like code-coverage tools to recognize
+// original-like terms
+block:
+  expr.macro 'prop $rep $term ... $()':
+    fun maybe_prop(term :~ Syntax):
+      if term.unwrap_all() == rep.unwrap_all()
+      | term.property(#'keep_me, #'kept)
+      | term
+    'go $(maybe_prop(term)) ...'
+  expr.macro 'go $x':
+    ~weaker_than: ~other
+    '#' $(x.property(#'keep_me) || 'no')'
+  check prop + 1 + 2 ~is #'kept
+  check prop ++ 1 ++ 2 ~is #'kept
