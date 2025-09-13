@@ -9,6 +9,7 @@
          "private/transform.rkt"
          "syntax-local.rkt"
          "name-parse.rkt"
+         "private/dotted-name-parse.rkt"
          "name-root.rkt"
          (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
@@ -150,7 +151,7 @@
          (define-syntax-class (prefix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
-                    #:with (~var op-name :name/group) op-name
+                    #:with (~var op-name (:dotted-name in-name-root-space in-space name-path-op name-root-ref)) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
                           (define env (list sc-arg-name ...))
@@ -160,7 +161,7 @@
          (define-syntax-class (infix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
            (pattern ((~datum group) . in-tail)
-                    #:with (~var op-name :name/group) op-name
+                    #:with (~var op-name (:dotted-name in-name-root-space in-space name-path-op name-root-ref)) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
                           (define env (list sc-arg-name ...))
