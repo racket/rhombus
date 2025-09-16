@@ -29,8 +29,10 @@ block:
   expr.macro 'show $x':
     ~weaker_than: ~other
     '$(x.to_source_string())'
+  def the_name = "ok"
   check show '1 + 2' ~is "'1 + 2'"
   check show 1 ++ 2 ~is "1 ++ 2"
+  check show the_name ~is "the_name"
 
 // check that properties on key identifers/operator
 // are propagated to a parsed form ovarll; this is

@@ -77,7 +77,7 @@
   ;; use `rhombus-local-expand` to expose static information
   (define loc (maybe-respan form))
   (define expr (rhombus-local-expand form))
-  (relocate expr #`(parsed #:rhombus/expr #,expr) expr))
+  (relocate+reraw expr #`(parsed #:rhombus/expr #,expr) #:prop-stx expr))
 
 (define-for-syntax (extract-expression form #:srcloc [loc #f])
   (define stx
@@ -150,19 +150,19 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (maybe-respan (unpack-group s who #f)))
-    (relocate g #`(parsed #:rhombus/expr (rhombus-expression #,g)) g))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression #,g)) #:prop-stx g))
 
   (define/arity (expr_meta.pack_meta_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (maybe-respan (unpack-group s who #f)))
-    (relocate g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g)) g))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/meta #,g)) #:prop-stx g))
 
   (define/arity (expr_meta.pack_and_meta_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who s)
     (define g (maybe-respan (unpack-group s who #f)))
-    (relocate g #`(parsed #:rhombus/expr (rhombus-expression/both #,g)) g))
+    (relocate+reraw g #`(parsed #:rhombus/expr (rhombus-expression/both #,g)) #:prop-stx g))
 
   (define/arity (expr_meta.parse_all s)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
@@ -172,8 +172,9 @@
       [e::expression
        (define-values (expr opaque)
          (syntax-local-expand-expression #'e.parsed))
-       (values (relocate expr #`(parsed #:rhombus/expr #,expr) expr)
-               (relocate expr #`(parsed #:rhombus/expr #,opaque) expr))]))
+       (let ([expr (maybe-respan expr)])
+         (values (relocate+reraw expr #`(parsed #:rhombus/expr #,expr) #:prop-stx expr)
+                 (relocate+reraw expr #`(parsed #:rhombus/expr #,opaque) #:prop-stx expr)))]))
 
   (define/arity (expr_meta.parse_dot form1 tail
                                      #:as_static [more-static? #f]
@@ -190,8 +191,9 @@
         [_
          (raise-syntax-error who "not a parsed expression" form1)]))
     (if expr
-        (values (relocate expr #`(parsed #:rhombus/expr #,expr) expr)
-                (pack-tail new-tail))
+        (let ([expr (maybe-respan expr)])
+          (values (relocate+reraw expr #`(parsed #:rhombus/expr #,expr) #:prop-stx expr)
+                  (pack-tail new-tail)))
         (values #f #f)))
 
   (define/arity (expr_meta.relative_precedence left-mode left-stx right-stx)

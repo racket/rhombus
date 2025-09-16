@@ -66,11 +66,11 @@
 
   (define (wrap-static-info expr key-id val-stx)
     (let ([expr (maybe-respan expr)])
-      (relocate
+      (relocate+reraw
        expr
        #`(begin (quote-syntax (#,key-id #,val-stx))
                 #,expr)
-       expr)))
+       #:prop-stx expr)))
 
   (define (wrap-static-info* expr stxes)
     (for/foldr ([expr expr]) ([stx (in-list (if (syntax? stxes)
