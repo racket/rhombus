@@ -348,21 +348,16 @@
                                        full-k)))))]
            [else
             ;; specific ids, some exposed or renamed
-            (define l
-              (for/list ([(k v) (in-hash renames)]
-                         #:do [(define spaces->exts
-                                 (and (or (not for-expose?)
-                                          (expose? v))
-                                      (hash-ref syms (syntax-e (plain-id v)) #f)))]
-                         #:when spaces->exts
-                         [full-plain-id+k (in-list (full-symbols spaces->exts (plain-id v) k))])
-                (define full-plain-id (car full-plain-id+k))
-                (define full-k (cdr full-plain-id+k))
-                #`(rename #,mod-path #,full-plain-id #,full-k)))
-            (if (null? l)
-                ;; don't lose track of the module completely
-                (list #`(only #,mod-path))
-                l)])]
+            (for/list ([(k v) (in-hash renames)]
+                       #:do [(define spaces->exts
+                               (and (or (not for-expose?)
+                                        (expose? v))
+                                    (hash-ref syms (syntax-e (plain-id v)) #f)))]
+                       #:when spaces->exts
+                       [full-plain-id+k (in-list (full-symbols spaces->exts (plain-id v) k))])
+              (define full-plain-id (car full-plain-id+k))
+              (define full-k (cdr full-plain-id+k))
+              #`(rename #,mod-path #,full-plain-id #,full-k))])]
         [(and for-expose?
               (or (zero? (hash-count renames))
                   (for/and ([(k v) (in-hash renames)])
@@ -438,15 +433,23 @@
                                                #,s-prefix-id
                                                #,(prefix-intro s-prefix-id))))))
            null)))
+    (define (empty-req? req)
+      (syntax-parse req
+        #:datum-literals (for-meta just-space)
+        [(for-meta _ r ...) (andmap empty-req? (syntax->list #'(r ...)))]
+        [(just-space _ r ...) (andmap empty-req? (syntax->list #'(r ...)))]
+        [_ #f]))
+    (define norm-reqs (map car reqs+defss))
+    (define reqs (if (andmap empty-req? norm-reqs)
+                     ;; don't lose track of the dependency:
+                     (list #`(for-meta #,phase-shift (only #,mod-path)))
+                     norm-reqs))
     (values
-     (if (null? r-phase+spaces)
-         ;; don't lose track of the dependency:
-         #`(#%require (for-meta #,phase-shift) (only #,mod-path))
-         (if module?
-             #`(#%require #,@(map car reqs+defss))
-             #`(begin
-                 (#%require #,@(map car reqs+defss))
-                 #,@(apply append (map cdr reqs+defss)))))
+     (if module?
+         #`(#%require #,@reqs)
+         #`(begin
+             (#%require #,@reqs)
+             #,@(apply append (map cdr reqs+defss))))
      new-covered-ht))
 
   (define (extract-symbol-root+ext sym mentioned)

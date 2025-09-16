@@ -328,3 +328,13 @@ check:
   ns.f("bad")
   ~throws values(error.annot_msg("argument"),
                  "ns.f")
+
+check:
+  ~eval
+  import lib("rhombus/tests/example-h.rhm") as ex_h
+  check ex_h.counter ~is 1
+  ex_h.inc()
+  check ex_h.counter ~is 2
+  import lib("rhombus/tests/example-i.rhm") as ~none
+  check ex_h.counter ~is 3
+  ~completes

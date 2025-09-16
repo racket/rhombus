@@ -1,0 +1,7 @@
+#lang rhombus
+import:
+  "example-h.rhm".inc
+
+// doesn't export anything, but has a side effect
+
+inc()

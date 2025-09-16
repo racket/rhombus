@@ -1,0 +1,9 @@
+#lang rhombus
+export:
+  counter
+  inc
+
+def mutable counter = 1
+
+fun inc():
+  counter := counter + 1
