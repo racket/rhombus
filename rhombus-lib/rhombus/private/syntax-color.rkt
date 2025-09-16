@@ -5,7 +5,8 @@
          racket/promise
          racket/runtime-path
          racket/string
-         shrubbery/syntax-color)
+         shrubbery/syntax-color
+         shrubbery/variant)
 
 (provide rhombus-lexer
          make-rhombus-lexer)
@@ -37,7 +38,7 @@
 (define (default-semantic-type-guess tok default)
   (default tok))
 
-(define (make-rhombus-lexer #:variant [variant #hasheq()]
+(define (make-rhombus-lexer #:variant [variant default-variant]
                             #:semantic-type-guess [semantic-type-guess default-semantic-type-guess])
   (lambda (in pos status)
     (define-values (tok type paren start end backup res-status)
