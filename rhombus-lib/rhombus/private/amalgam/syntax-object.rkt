@@ -494,8 +494,8 @@
        [(injected? u)
         (injected-e u)]
        [(needs-injected? u)
-        ;; treat as opaque
-        v]
+        ;; treat as opaque, but nomalized to term form
+        unpacked]
        [else
         ;; assume that this is some injected value
         u])]
