@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
+                     shrubbery/property
                      "srcloc.rkt"
                      "injected.rkt")
          "expression.rkt"

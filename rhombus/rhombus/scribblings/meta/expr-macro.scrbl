@@ -76,11 +76,11 @@
  tail for the unconsumed part. Returning a single value is the same as
  return an empty tail.
 
- The result of @rhombus(body) is automatically relocated using
- @rhombus(Syntax.relocate_ephemeral_span) under the same circumstances
- (determined by @rhombus(macro_pattern)) as for @rhombus(macro, ~defn).
- This relocation is skipped, however, if the result of @rhombus(body)
- has a @rhombus(#'relocated) syntax property.
+ The result of @rhombus(body) is relocated using
+ @rhombus(Syntax.relocate_ephemeral_span) when a single value is returned
+ from the macro @rhombus(body). Returning a tail (i.e., a second result)
+ for unconsumed terms enables a macro to perform its own relocation for
+ its expansion (i.e., the first result).
 
  The @rhombus(expr.macro) form does not define an @tech{assignment operator}
  that works with mutable targets. To define an assignment operator, use

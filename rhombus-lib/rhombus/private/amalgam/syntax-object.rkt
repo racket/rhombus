@@ -847,33 +847,31 @@
 
 (define (relocate-span who stx ctx-stxes-in extract-ctx)
   (define ctx-stxes (to-list-of-stx who ctx-stxes-in))
-  (define new-stx
-    (extract-ctx
-     who stx
-     #:update
-     (lambda (stx container-mode)
-       (define new-stx
-         (if (null? ctx-stxes)
-             ;; empty sequence: set everything to blank
-             (let* ([stx (datum->syntax stx (syntax-e stx) #f stx)]
-                    [stx (syntax-raw-property stx '())]
-                    [stx (syntax-raw-prefix-property stx #f)]
-                    [stx (syntax-raw-inner-prefix-property stx #f)]
-                    [stx (syntax-raw-inner-suffix-property stx #f)]
-                    [stx (syntax-raw-suffix-property stx #f)])
-               (case container-mode
-                 [(container)
-                  (syntax-raw-opaque-content-property stx '())]
-                 [(s-expr)
-                  (syntax-opaque-raw-property stx '())]
-                 [else stx]))
-             (relocate+reraw (datum->syntax #f ctx-stxes) stx
-                             #:keep-mode (case container-mode
-                                           [(container) 'content]
-                                           [(s-exp) #f]
-                                           [else 'term]))))
-       (syntax-relocated-property new-stx #t))))
-  (syntax-relocated-property new-stx #t))
+  (extract-ctx
+   who stx
+   #:update
+   (lambda (stx container-mode)
+     (if (null? ctx-stxes)
+         ;; empty sequence: set everything to blank
+         (let* ([stx (datum->syntax stx (syntax-e stx) #f stx)]
+                [stx (syntax-raw-property stx '())]
+                [stx (syntax-raw-prefix-property stx #f)]
+                [stx (syntax-raw-inner-prefix-property stx #f)]
+                [stx (syntax-raw-inner-suffix-property stx #f)]
+                [stx (syntax-raw-suffix-property stx #f)])
+           (case container-mode
+             [(container)
+              (syntax-raw-opaque-content-property stx '())]
+             [(s-expr)
+              (syntax-opaque-raw-property stx '())]
+             [else stx]))
+         (relocate+reraw (datum->syntax #f ctx-stxes) stx
+                         #:keep-mode (case container-mode
+                                       [(container) 'content]
+                                       [(s-exp) #f]
+                                       [else 'term]))))
+   #:update-outer
+   (lambda (stx inner-stx) (datum->syntax #f (syntax-e stx)))))
 
 (define (to-list-of-term-stx who v-in)
   (define stxs (to-list #f v-in))

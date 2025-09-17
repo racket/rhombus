@@ -244,10 +244,10 @@ space.enforest example:
   meta_namespace example_meta:
     parse_syntax_class Parsed
     parsed_packer pack
-example.macro 'ex':
+example.macro 'ex $tail ...':
   let p = Syntax.relocate_ephemeral_span(example_meta.pack('ex2'), ['2', '3'])
   check p.to_source_string() ~is "23"
-  p
+  values(p, '$tail ...')
 example.macro 'ex2':
   ~all_stx: self
   example_meta.pack(self)

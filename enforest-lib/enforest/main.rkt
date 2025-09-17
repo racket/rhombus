@@ -4,6 +4,7 @@
          racket/symbol
          syntax/parse/pre
          syntax/stx
+         shrubbery/property
          "operator.rkt"
          (submod "operator.rkt" for-parse)
          "private/transform.rkt"
@@ -138,12 +139,12 @@
          tl-decl ...
          (define-syntax-class form-class
            #:attributes (parsed)
-           (pattern ((~datum group) . tail)
+           (pattern (~and all ((~datum group) . tail))
                     #:cut
                     ;; The calls to `transform-out` and `transform-in` here are in case
                     ;; of an enclosing macro transformer, analogous to the use of
                     ;; `syntax-local-introduce` within `local-expand`
-                    #:with parsed (transform-in (enforest (transform-out #'tail) sc-arg-name ...))))
+                    #:with parsed (transform-in (enforest (transform-out (relocate #'tail #'all)) sc-arg-name ...))))
 
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`
@@ -430,6 +431,9 @@
                         (format "not bound as ~a operator" what)
                         id))
   op)
+
+(define (relocate stx src-stx)
+  (datum->syntax stx (syntax-e stx) src-stx src-stx))
 
 (define stop-on-unbound #hasheq((stop-on-unbound . #t)))
 (define no-flags #hasheq())

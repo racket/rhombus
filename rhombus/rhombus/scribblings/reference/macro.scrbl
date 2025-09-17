@@ -116,9 +116,7 @@
   identifier (optionally parenthesized), then the macro is applied with an
   already-parsed term after the macro name in a use of the macro. That
   parse heeds precedence and associativity declarations for other macros
-  and for operators defined with @rhombus(op). Each result of the macro
-  is automatically relocated via @rhombus(Syntax.relocate_ephemeral_span) using
-  the source terms that were expanded by the macro.}
+  and for operators defined with @rhombus(op).}
 
  @item{Otherwise, the right-hand side is an arbitrary pattern that is
   matched to a sequence of terms after the macro name in its enclosing
@@ -129,10 +127,13 @@
   a block pattern, or an alternatives pattern, then
   all terms after the macro operator must match the right-hand pattern.
   The position before @rhombus(#,(@rhombus($, ~bind))()) is itself treated
-  as a group position. The macro's result is @emph{not} automatically adjusted
-  using @rhombus(Syntax.relocate_ephemeral_span).}
+  as a group position.}
 
 )
+
+ An expanded result from the macro is relocated via
+ @rhombus(Syntax.relocate_ephemeral_span) using the input terms that were
+ expanded by the macro.
 
  Using @vbar alternatives, a single definition can have any number of
  @rhombus(macro_pattern)s. The patterns describe any number of prefix and

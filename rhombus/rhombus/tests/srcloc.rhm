@@ -26,13 +26,234 @@ block:
   check s.span!! < dynamic(0) ~is #false
 
 block:
+  expr.macro 'literal $(a :: Term)':
+    expr_meta.pack_expr('#%literal $a')
+  expr.macro 'literal_reloc_v1 $(a :: Term) $tail ...':
+    values(expr_meta.pack_expr('#%literal $a'.relocate_group_span([a])),
+           '$tail ...')
+  expr.macro 'literal_reloc_v2 $(a :: Term) $tail ...':
+    values(expr_meta.pack_expr('#%literal $a').relocate_span([a]),
+           '$tail ...')
+  expr.macro 'literal_reloc_v2g $(a :: Term) $tail ...':
+    values(expr_meta.pack_expr('#%literal $a').relocate_group_span([a]),
+           '$tail ...')
+  expr.macro 'literal_reloc_v2e $(a :: Term) $tail ...':
+    values(expr_meta.pack_expr('#%literal $a').relocate_ephemeral_span([a]),
+           '$tail ...')
+  expr.macro 'literal_reloc_v3 $(a :: Term) $tail ...':
+    values('#%literal $a'.relocate_group_span([a]),
+           '$tail ...')
+  expr.macro 'literal_reloc_v4 $(a :: Term) $tail ...':
+    values('(#%literal $a)'.relocate_span([a]),
+           '$tail ...')
+  expr.macro 'literal_futile_reloc_v1 $(a :: Term)':
+    expr_meta.pack_expr('#%literal $a'.relocate_group_span([a]))
+  expr.macro 'literal_futile_reloc_v2 $(a :: Term)':
+    expr_meta.pack_expr('#%literal $a').relocate_span([a])
+  expr.macro 'literal_futile_reloc_v2g $(a :: Term)':
+    expr_meta.pack_expr('#%literal $a').relocate_group_span([a])
+  expr.macro 'literal_futile_reloc_v2e $(a :: Term)':
+    expr_meta.pack_expr('#%literal $a').relocate_ephemeral_span([a])
+  expr.macro 'literal_futile_reloc_v3 $(a :: Term)':
+    '#%literal $a'.relocate_group_span([a])
+  expr.macro 'literal_futile_reloc_v4 $(a :: Term)':
+    '(#%literal $a)'.relocate_span([a])
+  expr.macro 'blocky: $body':
+    'fun (): $body'
+  expr.macro 'blocky2: $body':
+    '1 + 2'
+  expr.macro 'blocky3: $body':
+    values('1 + 2'.relocate_group_span(['made this up']),
+           '')
+  expr.macro 'blocky4: $body':
+    '1 + 2'.relocate_group_span(['made this up'])
+  expr.macro '$a ifx $b':
+    '1 + 2 + 8'
+  expr.macro '$a ifx2 $b $()':
+    '1 + 2 + 8'
+  expr.macro '$a ifx3 $b $tail ...':
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span(['made up']),
+           '$tail ...')
+  expr.macro '$a ifx4 $b $()':
+    '1 + 2 + 8'.relocate_group_span(['made up'])
+  expr.macro '$a ifx5 $b $tail ...':
+    ~op_stx: self
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span([a, self, b]),
+           '$tail ...')
   expr.macro 'show $x':
     ~weaker_than: ~other
     '$(x.to_source_string())'
-  def the_name = "ok"
-  check show '1 + 2' ~is "'1 + 2'"
-  check show 1 ++ 2 ~is "1 ++ 2"
-  check show the_name ~is "the_name"
+
+  check: show literal 0
+         ~is "literal 0"
+  check: show literal_reloc_v1 0
+         ~is "0"
+  check: show literal_reloc_v2 0
+         ~is "0"
+  check: show literal_reloc_v2g 0
+         ~is "0"
+  check: show literal_reloc_v2e 0
+         ~is "0"
+  check: show literal_reloc_v3 0
+         ~is "0"
+  check: show literal_reloc_v4 0
+         ~is "0"
+  check: show literal_futile_reloc_v1 0
+         ~is "literal_futile_reloc_v1 0"
+  check: show literal_futile_reloc_v2 0
+         ~is "literal_futile_reloc_v2 0"
+  check: show literal_futile_reloc_v2g 0
+         ~is "literal_futile_reloc_v2g 0"
+  check: show literal_futile_reloc_v2e 0
+         ~is "literal_futile_reloc_v2e 0"
+  check: show literal_futile_reloc_v3 0
+         ~is "literal_futile_reloc_v3 0"
+  check: show literal_futile_reloc_v4 0
+         ~is "literal_futile_reloc_v4 0"
+  check: show blocky: 10
+         ~is "blocky: 10"
+  check: show blocky2: 10
+         ~is "blocky2: 10"
+  check: show blocky3: 10
+         ~is "made this up"
+  check: show blocky4: 10
+         ~is "blocky4: 10"
+  check: show 3 ifx 4
+         ~is "3 ifx 4"
+  check: show 3 ifx2 4
+         ~is "3 ifx2 4"
+  check: show 3 ifx3 4
+         ~is "made up"
+  check: show 3 ifx3 4 + 7
+         ~is "made up+ 7"
+  check: show 3 ifx4 4
+         ~is "3 ifx4 4"
+  check: show 3 ifx5 4 + 7
+         ~is "3 ifx5 4 + 7"
+
+space.enforest myform:
+  space_path rhombus/example/myform
+  macro_definer macro
+  meta_namespace myform_meta:
+    parse_syntax_class Parsed
+
+block:
+  expr.macro 'show $(x :: myform_meta.Parsed) $()':
+    '$(x.to_source_string())'
+  myform.macro 'blocky: $body':
+    'anything'
+  myform.macro 'blocky3: $body':
+    values('something else'.relocate_group_span(['made this up']),
+           '')
+  myform.macro 'blocky4: $body':
+    '1 + 2'.relocate_group_span(['made this up'])
+  myform.macro '#%literal $(a :: Term)':
+    'anything'
+  myform.macro 'futile_reloc $(a :: Term)':
+    'anything'.relocate_span([a])
+  myform.macro '$a + $b':
+    'anything'
+  myform.macro '$a ifx $b':
+    '1 + 2 + 8'
+  myform.macro '$a ifx2 $b $()':
+    '1 + 2 + 8'
+  myform.macro '$a ifx3 $b $tail ...':
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span(['made up']),
+           '$tail ...')
+  myform.macro '$a ifx4 $b $()':
+    '1 + 2 + 8'.relocate_group_span(['made up'])
+  myform.macro '$a ifx5 $b $tail ...':
+    ~op_stx: self
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span([a, self, b]),
+           '$tail ...')
+  check: show blocky: x
+         ~is "blocky: x"
+  check: show blocky3: x
+         ~is "made this up"
+  check: show blocky3: x
+         ~is "made this up"
+  check: show blocky4: 10
+         ~is "blocky4: 10"
+  check: show futile_reloc 10
+         ~is "futile_reloc 10"
+  check: show 3 ifx 4
+         ~is "3 ifx 4"
+  check: show 3 ifx2 4
+         ~is "3 ifx2 4"
+  check: show 3 ifx3 4
+         ~is "made up"
+  check: show 3 ifx3 4 + 7
+         ~is "made up+ 7"
+  check: show 3 ifx4 4
+         ~is "3 ifx4 4"
+  check: show 3 ifx5 4 + 7
+         ~is "3 ifx5 4 + 7"
+
+space.enforest myform2:
+  space_path rhombus/example/myform2
+  macro_definer macro
+  meta_namespace myform2_meta:
+    parse_syntax_class Parsed
+    parsed_packer pack
+    parsed_unpacker unpack
+
+block:
+  expr.macro 'show $(x :: myform2_meta.Parsed) $()':
+    '$(x.to_source_string())'
+  myform2.macro '#%literal $(a :: Term)':
+    myform2_meta.pack('unything')
+  myform2.macro '$a #%juxtapose $b':
+    myform2_meta.pack('unything')
+  myform2.macro 'blocky: $body':
+    '3'
+  myform2.macro 'blocky3: $body':
+    values('3 4'.relocate_group_span(['made this up']),
+           '')
+  myform2.macro 'blocky4: $body':
+    '1 + 2'.relocate_group_span(['made this up'])
+  myform2.macro '$a + $b':
+    '0'
+  myform2.macro '$a ifx $b':
+    '1 + 2 + 8'
+  myform2.macro '$a ifx2 $b $()':
+    '1 + 2 + 8'
+  myform2.macro '$a ifx3 $b $tail ...':
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span(['made up']),
+           '$tail ...')
+  myform2.macro '$a ifx4 $b $()':
+    '1 + 2 + 8'.relocate_group_span(['made up'])
+  myform2.macro '$a ifx5 $b $tail ...':
+    ~op_stx: self
+    ~stronger_than: ~other
+    values('1 + 2 + 8'.relocate_group_span([a, self, b]),
+           '$tail ...')
+  check: show 1
+         ~is "1"
+  check: show blocky: x
+         ~is "blocky: x"
+  check: show blocky3: x
+         ~is "made this up"
+  check: show blocky3: x
+         ~is "made this up"
+  check: show blocky4: 10
+         ~is "blocky4: 10"
+  check: show 3 ifx 4
+         ~is "3 ifx 4"
+  check: show 3 ifx2 4
+         ~is "3 ifx2 4"
+  check: show 3 ifx3 4
+         ~is "made up"
+  check: show 3 ifx3 4 + 7
+         ~is "made up+ 7"
+  check: show 3 ifx4 4
+         ~is "3 ifx4 4"
+  check: show 3 ifx5 4 + 7
+         ~is "3 ifx5 4 + 7"
 
 // check that properties on key identifers/operator
 // are propagated to a parsed form ovarll; this is

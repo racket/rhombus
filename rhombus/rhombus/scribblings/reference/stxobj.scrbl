@@ -1241,10 +1241,6 @@ class's name.
  intended for communicating source information from a macro expansion in
  the case that it cannot be inferred automatically.
 
- All three functions add an immediate, ephemeral @rhombus(#'relocated)
- syntax property to the result syntax object, which overrides any default
- automatic relocation, such as by @rhombus(expr.macro, ~defn).
-
 }
 
 @doc(

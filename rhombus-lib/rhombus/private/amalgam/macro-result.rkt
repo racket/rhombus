@@ -15,8 +15,11 @@
       "\n  expected: " (if syntax-for?
                            (string-append "syntax object for " what)
                            what)
-      "\n  received: " ((error-value->string-handler)
-                        form
-                        (error-print-width)))
+      "\n  received:" (let ([str ((error-value->string-handler)
+                                  form
+                                  (error-print-width))])
+                        (if (regexp-match? #rx"\n" str)
+                            (regexp-replace* "\n" (string-append "\n" str) "\n    ")
+                            (string-append " " str))))
      rhombus-realm)
     (current-continuation-marks))))

@@ -72,7 +72,9 @@
                #'tag])]
            [_ (error "not a group")]))))
 
-(define (extract-ephemeral-ctx who stx #:update update)
+(define (extract-ephemeral-ctx who stx
+                               #:update update
+                               #:update-outer [update-outer (lambda (outer-stx innner-stx) outer-stx)])
   (let ([t (and (syntax*? stx)
                 (unpack-term stx #f #f))])
     (syntax-parse t

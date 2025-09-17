@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      enforest/transformer-result
                      enforest/transformer
+                     enforest/proc-name
                      "srcloc.rkt"
                      "pack.rkt"
                      "pack-s-exp.rkt"
@@ -15,6 +16,7 @@
                      "call-result-key.rkt"
                      "values-key.rkt"
                      "maybe-key.rkt"
+                     "macro-result.rkt"
                      "syntax-wrap.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
@@ -75,22 +77,44 @@
 
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information
-  (define loc (maybe-respan form))
   (define expr (rhombus-local-expand form))
-  (relocate+reraw expr #`(parsed #:rhombus/expr #,expr) #:prop-stx expr))
+  (relocate+reraw form #`(parsed #:rhombus/expr #,expr) #:prop-stx form))
 
-(define-for-syntax (extract-expression form #:srcloc [loc #f])
+(define-for-syntax (extract-expression form proc
+                                       #:relocate [relocate-to/in #f]
+                                       #:srcloc [loc #f])
+  (define relocate-to (and relocate-to/in (maybe-respan relocate-to/in)))
   (define stx
     (syntax-parse form
       #:datum-literals (parsed group multi)
       [(multi (group (parsed #:rhombus/expr e))) #'e]
       [(group (parsed #:rhombus/expr e)) #'e]
       [(parsed #:rhombus/expr e) #'e]
-      [_ (syntax-parse (unpack-group form 'expression #f)
-           [e::expression #'e.parsed])]))
-  (if loc
-      (relocate+reraw loc stx)
+      [_
+       (define norm-form (normalize-result form proc))
+       (define reloc-form (if relocate-to
+                              (relocate+reraw relocate-to norm-form)
+                              norm-form))
+       (syntax-parse (unpack-group reloc-form 'expression #f)
+         [e::expression #'e.parsed])]))
+  (if (or relocate-to loc)
+      (relocate+reraw (or relocate-to loc) stx)
       stx))
+
+(define-for-syntax (normalize-result form proc)
+  ;; make sure the result is a single group, and also strip away `multi`
+  ;; so that a relocation (if any) is attached to te group, not a sequence
+  ;; that will be immediately discarded
+  (syntax-parse form
+    #:datum-literals (multi)
+    [(multi g) #'g]
+    [(multi . _) (raise-bad-macro-result (proc-name proc)
+                                         "single-group syntax object"
+                                         form
+                                         #:syntax-for? #f)]
+    [_ form]))
+
+(define-for-syntax empty-tail #'(multi)) ; recognize by `eq?`
 
 (define-for-syntax (make-expression-infix-operator order prec protocol proc assc)
   (expression-infix-operator
@@ -102,14 +126,20 @@
          (extract-expression (check-expression-result
                               (proc (parsed-argument form1) (parsed-argument form2) stx)
                               proc)
+                             proc
                              #:srcloc (datum->syntax #f (list form1 stx form2))))
        (lambda (form1 tail)
          (define-values (form new-tail)
            (tail-returner
+            #:empty-tail empty-tail
             proc
             (syntax-parse tail
               [(head . tail) (proc (parsed-argument form1) (pack-tail #'tail #:after #'head) #'head)])))
-         (check-transformer-result (extract-expression (check-expression-result form proc))
+         (check-transformer-result (extract-expression (check-expression-result form proc)
+                                                       proc
+                                                       #:relocate (and (eq? new-tail empty-tail)
+                                                                       (datum->syntax #f (cons form1 tail)))
+                                                       #:srcloc form)
                                    (unpack-tail new-tail proc #f)
                                    proc)))
    assc))
@@ -124,14 +154,20 @@
          (extract-expression (check-expression-result
                               (proc (parsed-argument form) stx)
                               proc)
+                             proc
                              #:srcloc (datum->syntax #f (list stx form))))
        (lambda (tail)
          (define-values (form new-tail)
            (tail-returner
+            #:empty-tail empty-tail
             proc
             (syntax-parse tail
               [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
-         (check-transformer-result (extract-expression (check-expression-result form proc))
+         (check-transformer-result (extract-expression (check-expression-result form proc)
+                                                       proc
+                                                       #:relocate (and (eq? new-tail empty-tail)
+                                                                       tail)
+                                                       #:srcloc form)
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
 

@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/symbol
          racket/syntax-srcloc
+         syntax/parse/pre
          shrubbery/property
          shrubbery/print)
 
@@ -12,12 +13,13 @@
          relocate-id
          reraw
          relocate+reraw
+         relocate+reraw-shrubbery
+         relocate-tail
          respan-empty
          respan
          maybe-respan
          with-syntax-error-respan
-         shift-origin
-         syntax-relocated-property)
+         shift-origin)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
 ;; objects:
@@ -156,6 +158,34 @@
     [(syntax? src-stx)
      (reraw src-stx (relocate (maybe-respan src-stx) stx prop-stx) #:keep-mode keep-mode)]
     [else (relocate src-stx stx prop-stx)]))
+
+;; Like `relocate+reraw`, but normalizes to a simpler term/group shape, if possible,
+;; and pushes into `parsed` forms like `Syntax.relocate`
+(define (relocate+reraw-shrubbery src-stx stx-in)
+  (define stx
+    ;; stip unneeded `multi` and `group` wrappers so that a relocation
+    ;; applies to the innermost form possible
+    (syntax-parse stx-in
+      #:datum-literals (multi group)
+      [(multi (group e)) #'e]
+      [(multi g) #'g]
+      [(group e) #'e]
+      [_ stx-in]))
+  (syntax-parse stx
+    #:datum-literals (parsed)
+    [((~and tag parsed) kw e)
+     (let ([e (relocate+reraw src-stx #'e)])
+       (relocate e #`(tag kw #,e) e))]
+    [_ (relocate+reraw src-stx stx)]))
+
+(define (relocate-tail tail src-stx)
+  (log-error "?? ~s" src-stx)
+  (if (syntax-parse src-stx
+        #:datum-literals (group)
+        [((~and g group) . _)
+         (syntax-raw-opaque-content-property #'g)])
+      (relocate+reraw src-stx tail)
+      (datum->syntax tail (syntax-e tail) src-stx src-stx)))
 
 (define (extract-raw stx)
   (define l (find-shrubberies stx))
@@ -347,8 +377,3 @@
         (let ([o2 (syntax-property stx 'origin)])
           (syntax-property stx 'origin (if o2 (cons o o2) o)))
         stx)))
-
-(define syntax-relocated-property
-  (case-lambda
-    [(stx) (syntax-property stx 'relocated)]
-    [(stx on) (syntax-property stx 'relocated on)]))

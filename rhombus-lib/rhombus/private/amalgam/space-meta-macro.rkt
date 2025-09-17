@@ -313,14 +313,15 @@
          (datum->syntax #f (list 'parsed parsed-tag form))])
       form))
 
-(define (relocate-result parsed-tag in-stx result)
+(define (relocate-result parsed-tag srcloc-stx result)
   (syntax-parse result
     #:datum-literals (parsed)
     [(parsed tag in)
      #:when (eq? (syntax-e #'tag) parsed-tag)
-     (relocate+reraw in-stx #`(parsed tag #,(relocate+reraw in-stx #'in)))]
+     (define new-in (relocate+reraw srcloc-stx #'in))
+     (relocate new-in #`(parsed tag #,new-in) new-in)]
     [_
-     (relocate+reraw in-stx result)]))
+     (relocate+reraw srcloc-stx result)]))
 
 (define ((make-make-prefix-operator new-prefix-operator parsed-tag) order prec protocol proc)
   (new-prefix-operator
@@ -332,14 +333,16 @@
       (procedure-rename
        (lambda (form stx . more)
          (define result (apply proc (tag form parsed-tag) stx more))
-         (relocate-result parsed-tag (datum->syntax #f (list stx form)) result))
+         (relocate+reraw-shrubbery (datum->syntax #f (list stx form)) result))
        (object-name proc))]
      [else
       (procedure-rename
        (lambda (tail . more)
          (finish (lambda () (syntax-parse tail
-                              [(head . tail) (apply proc (pack-tail #'tail #:after #'head) #'head more)]))
-                 proc))
+                              [(head . tail)
+                               (apply proc (pack-tail #'tail #:after #'head) #'head more)]))
+                 proc
+                 tail))
        (object-name proc))])))
 
 (define ((make-make-infix-operator new-infix-operator parsed-tag) order prec protocol proc assc)
@@ -352,7 +355,7 @@
       (procedure-rename
        (lambda (form1 form2 stx . more)
          (define result (apply proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx more))
-         (relocate-result parsed-tag (datum->syntax #f (list form1 stx form2)) result))
+         (relocate+reraw-shrubbery (datum->syntax #f (list form1 stx form2)) result))
        (object-name proc))]
      [else
       (procedure-rename
@@ -360,7 +363,8 @@
          (finish
           (lambda () (syntax-parse tail
                        [(head . tail) (apply proc (tag form1 parsed-tag) (pack-tail #'tail #:after #'head) #'head more)]))
-          proc))
+          proc
+          (cons form1 tail)))
        (object-name proc))])
    assc))
 
@@ -370,13 +374,13 @@
      (syntax-parse stx
        [(head . tail) (apply proc (pack-tail #'tail) #'head more)]))))
 
-(define (finish thunk proc)
+(define (finish thunk proc orig-stx)
   (define-values (form new-tail)
     (call-with-values
      thunk
      (case-lambda
        [(form new-tail) (values form new-tail)]
-       [(form) (values form #'(group))])))
+       [(form) (values (relocate+reraw-shrubbery (datum->syntax #f orig-stx) form) #'(group))])))
   (values form
           (unpack-tail new-tail proc #f)))
 
@@ -393,9 +397,9 @@
         [_
          (cond
            [(unpack-tail form #f #f)
-            => (lambda (g) (recur g env))]
+            => (lambda (g) (relocate+reraw form (recur g env)))]
            [else
-            (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form)])])
+            (raise-bad-macro-result (proc-name proc) "single-group syntax object" #:syntax-for? #f form)])])
       form))
 
 (define-for-syntax (check-distinct-exports ex-ht

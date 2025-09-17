@@ -46,12 +46,9 @@
 (define (make-all-sequence l) (pack-multi-tail l))
 
 (define (maybe-relocate-span in out)
-  (if (or (not (syntax? out))
-          (syntax-relocated-property out))
+  (if (not (syntax? out))
       out
-      (syntax-relocated-property
-       (relocate+reraw (unpack-tail in #f #f) out)
-       #t)))
+      (relocate+reraw-shrubbery (unpack-tail in #f #f) out)))
 
 (define-unquote-binding-syntax _Term
   (unquote-binding-transformer
