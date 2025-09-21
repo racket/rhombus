@@ -136,6 +136,48 @@
 
 @doc(
   ~meta
+  fun syntax_meta.lift_expr_to_before(expr_stx :: Group)
+    :: Identifier
+  fun syntax_meta.can_lift_expr_to_before() :: Boolean
+){
+
+ The @rhombus(syntax_meta.lift_expr_to_before) function adjusts the current
+ expansion so that @rhombus(expr_stx) is added to a top-level definition
+ before the current expression. Expansion of the new expression is forced
+ immediately, and the result is an identifier that is generated for the
+ definition and that will be bound to the value produced by the
+ expression.
+
+ The @rhombus(syntax_meta.lift_expr_to_before) function can be called only
+ during expansion. The @rhombus(syntax_meta.can_lift_expr_to_before) function
+ reports whether an expansion is currently in process so that
+ @rhombus(syntax_meta.lift_expr_to_before) can be used.
+
+}
+
+@doc(
+  ~meta
+  fun syntax_meta.lift_expr_to_module_end(expr_stx :: Group)
+    :: Void
+  fun syntax_meta.can_lift_expr_to_module_end() :: Boolean
+){
+
+ The @rhombus(syntax_meta.lift_expr_to_module_end) function adjusts the
+ current expansion so that @rhombus(expr_stx) is added as an expression
+ to the end of the module being expanded. The expression is @emph{not}
+ immediately expanded, and it will be expanded when the expansion process
+ reaches the lifted expression at the (current) end of the module.
+
+ The @rhombus(syntax_meta.lift_expr_to_module_end) function can be called
+ only during expansion of a module. The
+ @rhombus(syntax_meta.can_lift_expr_to_module_end) function reports whether a
+ module expansion is currently in process so that
+ @rhombus(syntax_meta.lift_expr_to_module_end) can be used.
+
+}
+
+@doc(
+  ~meta
   fun syntax_meta.make_definition_context(
     parent :: maybe(syntax_meta.DefinitionContext) = #false
   ) :: syntax_meta.DefinitionContext

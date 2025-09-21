@@ -1,0 +1,23 @@
+#lang rhombus/and_meta
+
+def mutable counter = 0
+
+expr.macro 'add_defn':
+  check syntax_meta.can_lift_expr_to_before() ~is #true
+  let id = syntax_meta.lift_expr_to_before('5')
+  syntax_meta.lift_expr_to_module_end('check $id ~is 5')
+  '#void'
+
+add_defn
+
+expr.macro 'add_test':
+  check syntax_meta.can_lift_expr_to_module_end() ~is #true
+  syntax_meta.lift_expr_to_module_end('counter := counter + 1')
+  syntax_meta.lift_expr_to_module_end('check counter ~is 1')
+  '#void'
+
+add_test
+
+module test:
+  // double check that lifted expresson happened
+  check counter ~is 1

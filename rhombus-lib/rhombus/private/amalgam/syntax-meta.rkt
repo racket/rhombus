@@ -48,6 +48,10 @@
      [flip_introduce syntax_meta.flip_introduce]
      [is_static syntax_meta.is_static]
      [dynamic_name syntax_meta.dynamic_name]
+     [can_lift_expr_to_before syntax_meta.can_lift_expr_to_before]
+     [lift_expr_to_before syntax_meta.lift_expr_to_before]
+     [can_lift_expr_to_module_end syntax_meta.can_lift_expr_to_module_end]
+     [lift_expr_to_module_end syntax_meta.lift_expr_to_module_end]
      [parse_dot_expr syntax_meta.parse_dot_expr]
      [parse_dot_repet syntax_meta.parse_dot_repet]
      [make_definition_context syntax_meta.make_definition_context]
@@ -191,6 +195,29 @@
        (relocate+reraw name-stx (add-dynamism-context #'n.name static? (space-name-symbol sp)))]
       [_
        (raise-annotation-failure who name-stx "Name")]))
+
+  (define/arity (syntax_meta.can_lift_expr_to_before)
+    (syntax-transforming-with-lifts?))
+
+  (define/arity (syntax_meta.lift_expr_to_before stx)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (define g (unpack-group stx #f #f))
+    (unless g (raise-annotation-failure who stx "Group"))
+    (unless (syntax-transforming-with-lifts?)
+      (error who "not currently expanding in a liftable context"))
+    (syntax-local-lift-expression
+     #`(rhombus-expression #,g)))
+
+  (define/arity (syntax_meta.can_lift_expr_to_module_end)
+    (syntax-transforming-module-expression?))
+
+  (define/arity (syntax_meta.lift_expr_to_module_end stx)
+    (define g (unpack-group stx #f #f))
+    (unless g (raise-annotation-failure who stx "Group"))
+    (unless (syntax-transforming-module-expression?)
+      (error who "not currently expanding within a module"))
+    (syntax-local-lift-module-end-declaration
+     #`(rhombus-expression #,g)))
 
   (define/arity (syntax_meta.make_definition_context [parent #f])
     #:static-infos ((#%call-result #,(get-definition-context-static-infos)))
