@@ -191,16 +191,29 @@
   (define op (syntax-local-value* op-stx operator-ref))
   (unless op
     (raise-syntax-error #f
-                        (format (string-append
-                                 "misplaced term;\n"
-                                 " no infix operator is between this term and the preceding ~a"
-                                 #;
-                                 ",\n and `~a` is not bound as an implicit prefix ~a")
-                                form-kind
-                                #;
-                                alone-name
-                                #;
-                                operator-kind)
+                        (cond
+                          [(identifier? adj-form)
+                           (format (string-append
+                                    "misplaced term;\n"
+                                    " no infix operator is between this term and the preceding ~a")
+                                   form-kind)]
+                          [else
+                           ;; Rationale for mentioning the implicit here, but not other cases:
+                           ;; we won't get here for operators, since they'll just be reported as
+                           ;; unbound, and identifier are covered above, so that leaves things like
+                           ;; parentheses, integers, brackets, and blocks, where being explicit
+                           ;; about what could be missing is helpful to a language implementer.
+                           ;; If a user of a language gets to this message, hopefully, the implicit
+                           ;; is mentioned late enough in the message to be no too distracting
+                           ;; (and a language implementer can add a definition of the implicit to
+                           ;; improve the message].
+                           (format (string-append
+                                    "misplaced term;\n"
+                                    " no infix operator is between this term and the preceding ~a"
+                                    ",\n and `~a` is not bound as an implicit prefix ~a")
+                                   form-kind
+                                   alone-name
+                                   operator-kind)])
                         adj-form))
   (values op op-stx))
 
@@ -217,23 +230,21 @@
                                  (string-append
                                   "~a ~a;\n"
                                   " the identifier is not bound as a macro,"
-                                  " and no infix operator appears afterward"
-                                  #;
-                                  ",\n and `~a` is not bound as an implicit infix ~a")
+                                  " and no infix operator appears afterward")
                                  (if (identifier-binding (in-space prev-id))
                                      "misplaced"
                                      "unbound or misplaced")
-                                 form-kind
-                                 #;
-                                 adjacent-name
-                                 #;
-                                 operator-kind)
+                                 form-kind)
                                 prev-id
                                 #f
                                 null
                                 (information-about-bindings prev-id lookup-space-description)))]
       [(not (hash-ref flags 'stop-on-unbound #f))
        (raise-syntax-error #f
+                           ;; Unlike the prefix case, we don't mention implicit names. Since
+                           ;; there's somethign before an implicit prefix, it make sense
+                           ;; to always view it as a juxtaposition error as happening before
+                           ;; whatever went wrong afterward.
                            (format
                             (string-append
                              "misplaced term;\n"
