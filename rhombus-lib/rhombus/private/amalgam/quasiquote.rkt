@@ -951,7 +951,7 @@
                    deepened))]
       [(id-pat (converter depth (qs t) . args))
        (values (cons #`[(id-pat (... ...))
-                        (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]
+                        (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...))) . args)]
                      new-idrs)
                (hash-set deepened (extract-idr-name idr) #t))])))
 

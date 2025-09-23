@@ -543,3 +543,30 @@ check:
    | $alt
    | ...'
   ~matches 'foo: bar'
+
+
+check:
+  let [[x, ...], ...] = [[1, 2], [3]]
+  'x
+   | y
+     | $x
+     | ...
+   | ...'
+  ~matches 'x
+            | y
+              | 1
+              | 2
+            | y
+              | 3'
+
+check:
+  let [[y, ...], ...] = [[], [3]]
+  'x
+   | y
+     | $y
+     | ...
+   | ...'
+  ~matches 'x
+            | y:«»
+            | y
+              | 3'

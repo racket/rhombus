@@ -33,7 +33,7 @@
                  (list l)
                  l)])]
     [else (for/list ([g (in-list (syntax->list l))])
-            (convert-empty-alts (sub1 at-depth) g))]))
+            (convert-empty-alts (sub1 at-depth) g #f))]))
 
 (define (check-group at-depth l empty-ok?)
   (cond
