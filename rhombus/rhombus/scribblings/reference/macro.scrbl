@@ -106,24 +106,28 @@
  In the case of an infix macro, the left-hand @rhombus($, ~bind) escape
  must be an identifier. It stands for a match to preceding terms that
  have been parsed as an expression, and the identifier is bound to an
- opaque representation of the expression. The right-hand side of the
- macro (for either a prefix or infix form) can be either
- @rhombus($, ~bind) followed by an identifier or an arbitrary pattern:
+ opaque representation of the expression.
+
+ For either a prefix or infix form, the remainder of the pattern
+ can be either @rhombus($, ~bind) followed by an identifier
+ or an arbitrary pattern, and the choice triggers different handling:
 
 @itemlist(
 
- @item{When the right-hand side is @rhombus($, ~bind) followed by an
-  identifier (optionally parenthesized), then the macro is applied with an
-  already-parsed term after the macro name in a use of the macro. That
-  parse heeds precedence and associativity declarations for other macros
-  and for operators defined with @rhombus(op).}
+ @item{When portion of the pattern following the @rhombus(defined_name) is @rhombus($, ~bind)
+  followed by an identifier (optionally parenthesized), then
+  the expander machinery uses the precedence and associativity
+  declarations for other macros and for operators defined with
+  @rhombus(op) to complete the parse for the right-hand side
+  of @rhombus(op) before invoking the transformer.
+  Consequently, the identifier is bound to a @tech{parsed} term.}
 
- @item{Otherwise, the right-hand side is an arbitrary pattern that is
-  matched to a sequence of terms after the macro name in its enclosing
+ @item{Otherwise, the portion of the pattern following the @rhombus(defined_name) may be an arbitrary pattern,
+  and that pattern is matched to a sequence of terms after the macro name in its enclosing
   group. Unless the pattern ends with @rhombus(#,(@rhombus($, ~bind))()),
   a block pattern, or an alternatives pattern,
   the use of the macro can be followed by additional terms in the same
-  group. If the pattern ends with @rhombus(#,(@rhombus($, ~bind))()),
+  group. If the pattern does end with @rhombus(#,(@rhombus($, ~bind))()),
   a block pattern, or an alternatives pattern, then
   all terms after the macro operator must match the right-hand pattern.
   The position before @rhombus(#,(@rhombus($, ~bind))()) is itself treated
