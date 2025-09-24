@@ -280,7 +280,7 @@
                (for/fold ([new-revnames revnames]
                           [new-renames renames])
                          ([(name orig) (in-hash revnames)])
-                 (if (hash-ref new-syms name)
+                 (if (hash-ref new-syms name #f)
                      (values new-revnames new-renames)
                      (values (hash-remove new-revnames name)
                              (hash-remove new-renames orig)))))

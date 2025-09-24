@@ -79,3 +79,13 @@ check:
     [a, b]
   1 < 20 $$ 3
   ~throws "explicit parenthesization needed"
+
+block:
+  import:
+    only_space operator_order:
+      rhombus.order_comparison as comp
+  operator (a $$$ b):
+    ~weaker_than: comp
+    [a, b]
+  check: 1 < 2 $$$ 5 < 4
+         ~is [#true, #false]

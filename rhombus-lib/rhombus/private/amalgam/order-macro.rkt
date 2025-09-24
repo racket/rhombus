@@ -23,7 +23,7 @@
          (for-syntax (for-space rhombus/namespace
                                 operator_order_meta)))
 
-(define+provide-space operator_order #f
+(define+provide-space operator_order rhombus/operator_order
   #:fields
   (def
    def_set))
@@ -34,7 +34,7 @@
     (space)))
 
 (define-for-syntax space
-  (space-syntax 'rhombus/operator-order))
+  (space-syntax rhombus/operator_order))
 
 (define-defn-syntax def
   (definition-transformer
