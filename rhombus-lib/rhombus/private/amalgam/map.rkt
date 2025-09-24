@@ -1208,13 +1208,14 @@
     (raise-annotation-failure who ht "Map")))
 
 (define (hash-append a b)
-  (let-values ([(a b)
-                (if (and ((hash-count a) . < . (hash-count b))
-                         (same-hash? a b))
-                    (values b a)
-                    (values a b))])
-    (for/fold ([a a]) ([(k v) (in-immutable-hash b)])
-      (hash-set a k v))))
+  (if (and ((hash-count a) . < . (hash-count b))
+           (same-hash? a b))
+      (for/fold ([b b]) ([(k v) (in-immutable-hash a)])
+        (if (hash-has-key? b k)
+            b
+            (hash-set b k v)))
+      (for/fold ([a a]) ([(k v) (in-immutable-hash b)])
+        (hash-set a k v))))
 
 (define/method Map.append
   #:static-infos ((#%call-result ((#%dependent-result (merge-keys-and-values #f))

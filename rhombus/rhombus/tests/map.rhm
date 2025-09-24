@@ -87,6 +87,9 @@ block:
     {"a": 1, "b": 2}.append({"a": 2})["a"] ~is 2
     {"a": 1, "b": 2}.append({"a": 2}, {"a": 3})["a"] ~is 3
   check:
+    { 3: 4 } ++ { 3: 8, 9: 10}
+    ~is { 3: 8, 9: 10}
+  check:
     Map{"a": 1, "b": 2}.length()
     ~is 2
   check:
