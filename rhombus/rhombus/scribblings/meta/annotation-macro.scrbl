@@ -48,16 +48,6 @@
  The result of the macro expansion can be a result
  created with @rhombus(annot_meta.pack_predicate).
 
- In addition to the @rhombus(option) forms supported by
- @rhombus(expr.macro), @rhombus(annot.macro) supports a
- @rhombus(~context) option, which declares an identifier be bound to
- context information. Context is represented by a
- @rhombus(annot_meta.Context) object, which records argument names that
- can be referenced by @rhombus(Any.like, ~annot), for example. Normally,
- when nested annotations are parsed directly via
- @rhombus(annot_meta.Parsed) and similar, the same context object should
- be passed along.
-
 @examples(
   ~eval: macro_eval
   annot.macro 'two_of($ann)':
@@ -69,15 +59,31 @@
     [1, "x"] :: two_of(Number)
 )
 
+ See @secref("stxobj-track") for information about expansion tracking,
+ which applies automatically for some pattern forms in
+ @rhombus(macro_patterns).
+
+ In addition to the @rhombus(option) forms supported by
+ @rhombus(expr.macro), @rhombus(annot.macro) supports a
+ @rhombus(~context) option, which declares an identifier be bound to
+ context information. Context is represented by a
+ @rhombus(annot_meta.Context) object, which records argument names that
+ can be referenced by @rhombus(Any.like, ~annot), for example. Normally,
+ when nested annotations are parsed directly via
+ @rhombus(annot_meta.Parsed) and similar, the same context object should
+ be passed along.
+
 }
 
 
 @doc(
   ~meta
   fun annot_meta.is_predicate(stx :: Syntax) :: Boolean
-  fun annot_meta.pack_predicate(fun_stx :: Syntax,
-                                statinfo_stx :: Syntax = '()')
-    :: Syntax
+  fun annot_meta.pack_predicate(
+    fun_stx :: Syntax,
+    statinfo_stx :: Syntax = '()',
+    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
+  ) :: Syntax
   fun annot_meta.unpack_predicate(stx :: Syntax)
     :: (Syntax, Syntax)
 ){
@@ -94,6 +100,10 @@
  also associates the static information in @rhombus(statinfo_stx) with
  the value. The given @rhombus(statinfo_stx) is in unpacked form
  (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
+ The optional @rhombus(track_stxes) argument is passed along to
+ @rhombus(Syntax.track_origin) on the resulting syntax object to connect
+ expansion tracking from the @rhombus(track_stxes) members to the packed
+ binding expansion; see also @secref("stxobj-track").
 
  The @rhombus(annot_meta.unpack_predicate) function is
  the inverse of @rhombus(annot_meta.pack_predicate), returning two
@@ -107,10 +117,12 @@
 @doc(
   ~meta
   fun annot_meta.is_converter(stx :: Syntax) :: Boolean
-  fun annot_meta.pack_converter(bind_stx :: Syntax,
-                                body_stx :: Syntax,
-                                statinfo_stx :: Syntax = '()')
-    :: Syntax
+  fun annot_meta.pack_converter(
+    bind_stx :: Syntax,
+    body_stx :: Syntax,
+    statinfo_stx :: Syntax = '()',
+    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
+  ) :: Syntax
   fun annot_meta.unpack_converter(stx :: Syntax)
     :: (Syntax, Syntax, Syntax)
 ){
@@ -130,6 +142,8 @@
  It also associates the static information in @rhombus(statinfo_stx) with
  the converted value. The given @rhombus(statinfo_stx) is in unpacked
  form (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
+ The optional @rhombus(track_stxes) argument is used as by
+ @rhombus(annot_meta.pack_predicate).
 
  The @rhombus(annot_meta.unpack_converter) function is
  the inverse of @rhombus(annot_meta.pack_converter), returning three

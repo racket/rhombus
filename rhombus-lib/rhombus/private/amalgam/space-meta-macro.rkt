@@ -34,7 +34,8 @@
          (for-template (only-in "space.rkt" space-name))
          (submod "annotation.rkt" for-class)
          "syntax-wrap.rkt"
-         "sentinel-declaration.rkt")
+         "sentinel-declaration.rkt"
+         "origin.rkt")
 
 (provide enforest-meta
          transform-meta
@@ -333,7 +334,9 @@
       (procedure-rename
        (lambda (form stx . more)
          (define result (apply proc (tag form parsed-tag) stx more))
-         (relocate+reraw-shrubbery (datum->syntax #f (list stx form)) result))
+         (transfer-origins
+          (list form)
+          (relocate+reraw-shrubbery (datum->syntax #f (list stx form)) result)))
        (object-name proc))]
      [else
       (procedure-rename
@@ -342,7 +345,8 @@
                               [(head . tail)
                                (apply proc (pack-tail #'tail #:after #'head) #'head more)]))
                  proc
-                 tail))
+                 tail
+                 null))
        (object-name proc))])))
 
 (define ((make-make-infix-operator new-infix-operator parsed-tag) order prec protocol proc assc)
@@ -355,7 +359,9 @@
       (procedure-rename
        (lambda (form1 form2 stx . more)
          (define result (apply proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx more))
-         (relocate+reraw-shrubbery (datum->syntax #f (list form1 stx form2)) result))
+         (transfer-origins
+          (list form1 form2)
+          (relocate+reraw-shrubbery (datum->syntax #f (list form1 stx form2)) result)))
        (object-name proc))]
      [else
       (procedure-rename
@@ -364,7 +370,8 @@
           (lambda () (syntax-parse tail
                        [(head . tail) (apply proc (tag form1 parsed-tag) (pack-tail #'tail #:after #'head) #'head more)]))
           proc
-          (cons form1 tail)))
+          (cons form1 tail)
+          (list form1)))
        (object-name proc))])
    assc))
 
@@ -374,14 +381,14 @@
      (syntax-parse stx
        [(head . tail) (apply proc (pack-tail #'tail) #'head more)]))))
 
-(define (finish thunk proc orig-stx)
+(define (finish thunk proc orig-stx origins)
   (define-values (form new-tail)
     (call-with-values
      thunk
      (case-lambda
        [(form new-tail) (values form new-tail)]
        [(form) (values (relocate+reraw-shrubbery (datum->syntax #f orig-stx) form) #'(group))])))
-  (values form
+  (values (transfer-origins origins form)
           (unpack-tail new-tail proc #f)))
 
 (define ((make-check-syntax name parsed-tag recur) form-in proc . env)

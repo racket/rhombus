@@ -18,7 +18,9 @@
                      (for-syntax racket/base)
                      "srcloc.rkt"
                      "syntax-wrap.rkt"
-                     "annot-context-meta.rkt")
+                     "annot-context-meta.rkt"
+                     "origin.rkt"
+                     "origin-check.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (only-in "binding.rkt" :binding-form)
@@ -88,11 +90,15 @@
 (define-for-syntax (wrap-parsed stx)
   (no-srcloc #`(parsed #:rhombus/annot #,stx)))
 
-(define-for-syntax (parse-annotation-macro-result form proc #:srcloc [loc (maybe-respan form)])
+(define-for-syntax (parse-annotation-macro-result form proc
+                                                  #:srcloc [loc (maybe-respan form)]
+                                                  #:origins [origins null])
   (unless (syntax*? form)
     (raise-bad-macro-result (proc-name proc) "annotation" form))
-  (syntax-parse (unpack-group form proc #f)
-    [c::annotation (relocate+reraw loc #'c.parsed)]))
+  (transfer-origins
+   origins
+   (syntax-parse (unpack-group form proc #f)
+     [c::annotation (relocate+reraw loc #'c.parsed)])))
 
 (define-for-syntax (make-annotation-infix-operator order prec protocol proc assc)
   (annotation-infix-operator
@@ -112,7 +118,8 @@
        (lambda (form1 form2 stx ctx)
          (parse-annotation-macro-result (proc (wrap-parsed form1) (wrap-parsed form2) stx ctx)
                                         proc
-                                        #:srcloc (datum->syntax #f (list form1 stx form2)))))
+                                        #:srcloc (datum->syntax #f (list form1 stx form2))
+                                        #:origins (list form1 form2))))
    assc))
 
 (define-for-syntax (make-annotation-prefix-operator order prec protocol proc)
@@ -133,7 +140,8 @@
        (lambda (form stx ctx)
          (parse-annotation-macro-result (proc (wrap-parsed form) stx ctx)
                                         proc
-                                        #:srcloc (datum->syntax #f (list stx form)))))))
+                                        #:srcloc (datum->syntax #f (list stx form))
+                                        #:origins (list form))))))
 
 (define-for-syntax (check-syntax who s)
   (unless (syntax*? s)
@@ -153,14 +161,18 @@
   (define/arity (annot_meta.is_predicate stx)
     (eq? (annotation-kind stx who) 'predicate))
 
-  (define/arity (annot_meta.pack_predicate predicate [static-infos #'(parens)])
+  (define/arity (annot_meta.pack_predicate predicate [static-infos #'(parens)]
+                                           #:track [components-in null])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who predicate)
     (check-syntax who static-infos)
+    (define components (check-origins who components-in))
     (no-srcloc #`(parsed #:rhombus/annot
-                         #,(annotation-predicate-form
-                            (wrap-expression predicate)
-                            (pack-static-infos who (unpack-term static-infos who #f))))))
+                         #,(transfer-origins
+                            components
+                            (annotation-predicate-form
+                             (wrap-expression predicate)
+                             (pack-static-infos who (unpack-term static-infos who #f)))))))
 
   (define/arity (annot_meta.unpack_predicate stx)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
@@ -178,24 +190,27 @@
   (define/arity (annot_meta.is_converter stx)
     (eq? (annotation-kind stx who) 'converter))
 
-  (define/arity (annot_meta.pack_converter binding body [static-infos #'(parens)])
+  (define/arity (annot_meta.pack_converter binding body [static-infos #'(parens)]
+                                           #:track [components-in null])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who binding)
     (check-syntax who body)
     (check-syntax who static-infos)
+    (define components (check-origins who components-in))
     (syntax-parse binding
       #:datum-literals (parsed)
       [(parsed #:rhombus/bind b::binding-form)
        (no-srcloc
         #`(parsed #:rhombus/annot
-                  #,(annotation-binding-form
-                     #'b
-                     (wrap-expression body)
-                     (pack-static-infos who (unpack-term static-infos who #f)))))]
+                  #,(transfer-origins
+                     components
+                     (annotation-binding-form
+                      #'b
+                      (wrap-expression body)
+                      (pack-static-infos who (unpack-term static-infos who #f))))))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a parsed binding form"
                                  "syntax object" binding)]))
-
   (define/arity (annot_meta.unpack_converter stx)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)
                                                #,(get-syntax-static-infos)

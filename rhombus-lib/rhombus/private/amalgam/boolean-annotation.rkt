@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "annotation-string.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "static-info.rkt"
@@ -28,23 +29,25 @@
    null
    'automatic
    (lambda (lhs rhs stx ctx)
-     (relocate+reraw
-      (datum->syntax #f (list lhs stx rhs))
-      (syntax-parse (list lhs rhs)
-        [(l::annotation-predicate-form r::annotation-predicate-form)
-         (annotation-predicate-form
-          #`(let ([l-pred l.predicate]
-                  [r-pred r.predicate])
-              (lambda (v)
-                (and (l-pred v) (r-pred v))))
-          (static-infos-and #'r.static-infos #'l.static-infos))]
-        [(l::annotation-binding-form r::annotation-binding-form)
-         (annotation-binding-form
-          (binding-form
-           #'and-infoer
-           #`[result l.binding r.binding l.body r.body r.static-infos])
-          #'result
-          (static-infos-and #'r.static-infos #'l.static-infos))])))
+     (transfer-origins
+      (list lhs rhs)
+      (relocate+reraw
+       (datum->syntax #f (list lhs stx rhs))
+       (syntax-parse (list lhs rhs)
+         [(l::annotation-predicate-form r::annotation-predicate-form)
+          (annotation-predicate-form
+           #`(let ([l-pred l.predicate]
+                   [r-pred r.predicate])
+               (lambda (v)
+                 (and (l-pred v) (r-pred v))))
+           (static-infos-and #'r.static-infos #'l.static-infos))]
+         [(l::annotation-binding-form r::annotation-binding-form)
+          (annotation-binding-form
+           (binding-form
+            #'and-infoer
+            #`[result l.binding r.binding l.body r.body r.static-infos])
+           #'result
+           (static-infos-and #'r.static-infos #'l.static-infos))]))))
    'left))
 
 (define-syntax (and-infoer stx)
@@ -114,23 +117,25 @@
    null
    'automatic
    (lambda (lhs rhs stx ctx)
-     (relocate+reraw
-      (datum->syntax #f (list lhs stx rhs))
-      (syntax-parse (list lhs rhs)
-        [(l::annotation-predicate-form r::annotation-predicate-form)
-         (annotation-predicate-form
-          #'(let ([l-pred l.predicate]
-                  [r-pred r.predicate])
-              (lambda (v)
-                (or (l-pred v) (r-pred v))))
-          (static-infos-or #'l.static-infos #'r.static-infos))]
-        [(l::annotation-binding-form r::annotation-binding-form)
-         (annotation-binding-form
-          (binding-form
-           #'or-infoer
-           #'[result l.binding l.body l.static-infos r.binding r.body r.static-infos])
-          #'result
-          (static-infos-or #'l.static-infos #'r.static-infos))])))
+     (transfer-origins
+      (list lhs rhs)
+      (relocate+reraw
+       (datum->syntax #f (list lhs stx rhs))
+       (syntax-parse (list lhs rhs)
+         [(l::annotation-predicate-form r::annotation-predicate-form)
+          (annotation-predicate-form
+           #'(let ([l-pred l.predicate]
+                   [r-pred r.predicate])
+               (lambda (v)
+                 (or (l-pred v) (r-pred v))))
+           (static-infos-or #'l.static-infos #'r.static-infos))]
+         [(l::annotation-binding-form r::annotation-binding-form)
+          (annotation-binding-form
+           (binding-form
+            #'or-infoer
+            #'[result l.binding l.body l.static-infos r.binding r.body r.static-infos])
+           #'result
+           (static-infos-or #'l.static-infos #'r.static-infos))]))))
    'left))
 
 (define-syntax (or-infoer stx)

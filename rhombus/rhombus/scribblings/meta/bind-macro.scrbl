@@ -57,6 +57,10 @@
  See @secref(~doc: guide_doc, "bind-macro-protocol") for examples using the low-level
  protocol.
 
+ See @secref("stxobj-track") for information about expansion tracking,
+ which applies automatically for some pattern forms in
+ @rhombus(macro_patterns).
+
 }
 
 @doc(
@@ -124,7 +128,10 @@
 
 @doc(
   ~meta
-  fun bind_meta.pack_info(stx :: Syntax) :: Syntax
+  fun bind_meta.pack_info(
+    stx :: Syntax,
+    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
+  ) :: Syntax
   grammar evidence_id_tree:
     $id
     ($evidence_id_tree, ...)
@@ -209,6 +216,11 @@
 
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
+
+ The optional @rhombus(track_stxes) argument is passed along to
+ @rhombus(Syntax.track_origin) on the resulting syntax object to connect
+ expansion tracking from the @rhombus(track_stxes) members to the packed
+ binding expansion.
 
  See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
  examples.

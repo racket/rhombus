@@ -1,0 +1,35 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+class Posn(x, y)
+
+fun f1(Posn(x, y :: Posn)):
+  x + y + x
+
+fun
+| f2(Posn(x, y)):
+    x + y
+| f2([_ :: Posn]):
+    0
+| f2([_ :: Posn, ...]):
+    0
+| f2(PairList[_ :: Posn, _ :: Posn, ...]):
+    0
+
+operator ((x :~ Posn) &&.) :~ Posn:
+  x
+operator ((x :~ Posn) &&& (y :~ Posn)) :~ Posn:
+  x
+operator (.&& (y :~ Posn)) :~ Posn:
+  y
+operator &&? :~ Posn
+| ((x :~ Posn) &&?) :~ Posn:
+    x
+| (&&? (y :~ Posn)) :~ Posn:
+    y
+operator &&?? :~ Posn
+| ((x :~ Posn) &&?? (y :~ Posn)) :~ Posn:
+    y
+| (&&?? (x :~ Posn)) :~ Posn:
+    x

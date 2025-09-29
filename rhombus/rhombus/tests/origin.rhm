@@ -1,0 +1,89 @@
+#lang rhombus/and_meta
+import:
+  rhombus/runtime_path
+  lib("racket/base.rkt")
+  lib("syntax/modread.rkt")
+
+runtime_path.def annot_rhm: "origin-annot.rhm"
+runtime_path.def bind_rhm: "origin-bind.rhm"
+runtime_path.def repet_rhm: "origin-repet.rhm"
+runtime_path.def rx_rhm: "origin-rx.rhm"
+
+fun check_origins(o_rhm, space_sym, expect :: Map):
+  Closeable.let in = Port.Input.open_file(o_rhm)
+  let stx:
+    modread.#{with-module-reading-parameterization}(
+      fun ():
+        base.#{read-syntax}(Port.name(in), in)
+    )
+  let exp_stx:
+    parameterize { base.#{current-load-relative-directory}:
+                     Path.parent(o_rhm),
+                   base.#{current-namespace}:
+                     base.#{make-base-namespace}() }:
+      base.#{expand}(stx)
+  let intro = base.#{make-interned-syntax-introducer}(space_sym)
+  let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
+  let origins: MutableMap()
+  fun search_props(v):
+    cond
+    | v is_a Identifier:
+        when base.#{syntax-original?}(v) && (base.#{bound-identifier=?}(v, intro(v, #'add))
+                                               || base.#{bound-identifier=?}(v, ns_intro(v, #'add)))
+        | origins[v.unwrap()] := (origins.maybe[v.unwrap()] || Set{}) ++ { v.srcloc() }
+        search(v)
+    | v is_a Pair:
+        search_props(Pair.first(v))
+        search_props(Pair.rest(v))
+    | ~else:
+        #void
+  fun search(stx):
+    cond
+    | stx is_a Syntax:
+        search_props(base.#{syntax-property}(stx, #'origin))
+        search(base.#{syntax-e}(stx))
+    | stx is_a Pair:
+        search(Pair.first(stx))
+        search(Pair.rest(stx))
+    | ~else:
+        #void
+  search(exp_stx)
+  for:
+    each (sym, n): expect
+    check:
+      [sym, origins.maybe[sym]?.length()]
+      ~is [sym, n]
+
+check_origins(annot_rhm,
+              #'#{rhombus/annot},
+              { #'Posn: 5,
+                #'Pt: 8,
+                #'Foo: 1,
+                #'Sequence: 1,
+                #'maybe: 1,
+                #'List: 2,
+                #'Map: 1,
+                #'False: 1,
+                #'OR: 1,
+                #'Array: 1,
+                #'#{->}: 1,
+                #'#{\|\|}: 1  })
+
+check_origins(bind_rhm,
+              #'#{rhombus/annot},
+              { #'Posn: 23 })
+
+check_origins(repet_rhm,
+              #'#{rhombus/repet},
+              { #'an_x: 3,
+                #'a_y: 2,
+                #'a_t: 1 })
+
+check_origins(rx_rhm,
+              #'#{rhombus/rx},
+              { #'#{++}: 12,
+                #'#{*}: 1,
+                #'#{?}: 1,
+                #'#{~~}: 1,
+                #'#{case_sensitive}: 1,
+                #'#{case_insensitive}: 1 })

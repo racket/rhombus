@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "origin.rkt")
          "provide.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -32,9 +33,11 @@
            rest-arg::binding)
         #:with rest::binding-form #'rest-arg.parsed
         (values
-         (binding-form
-          #'rest-bind-infoer
-          #'[static-infos annot-prefix? rest.infoer-id rest.data])
+         (transfer-origin
+          #'rest
+          (binding-form
+           #'rest-bind-infoer
+           #'[static-infos annot-prefix? rest.infoer-id rest.data]))
          #'())]))))
 
 (define-syntax (rest-bind-infoer stx)

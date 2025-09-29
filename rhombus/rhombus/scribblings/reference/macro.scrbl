@@ -106,7 +106,7 @@
  In the case of an infix macro, the left-hand @rhombus($, ~bind) escape
  must be an identifier. It stands for a match to preceding terms that
  have been parsed as an expression, and the identifier is bound to an
- opaque representation of the expression.
+ opaque @tech{parsed} representation of the expression.
 
  For either a prefix or infix form, the remainder of the pattern
  can be either @rhombus($, ~bind) followed by an identifier

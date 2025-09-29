@@ -24,14 +24,16 @@ annot.macro 'maybe($(ann :: Group))':
                                  let p = $pred
                                  fun (v): !v || p(v)',
                               '(($statinfo_meta.maybe_key,
-                                 $(statinfo_meta.pack(statinfos))))').relocate_span([stx])
+                                 $(statinfo_meta.pack(statinfos))))',
+                              ~track: [ann])
   | let (_, _, statinfos) = annot_meta.unpack_converter(ann)
     let '$(f_ann :: annot_meta.Parsed)' = 'False || $ann'
     let (bind, body, _) = annot_meta.unpack_converter('$f_ann')
     annot_meta.pack_converter(bind,
                               body,
                               '(($statinfo_meta.maybe_key,
-                                 $(statinfo_meta.pack(statinfos))))')
+                                 $(statinfo_meta.pack(statinfos))))',
+                              ~track: [ann])
 
 meta:
   fun demaybe_statinfos(statinfos):

@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "tag.rkt")
+                     "tag.rkt"
+                     "origin.rkt")
          "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
@@ -185,20 +186,21 @@
   (define-values (for-clausesss bodys)
     (for/lists (for-clausesss bodys)
                ([form (in-list forms)])
-      (syntax-parse (extract form)
+      (define rep-parsed (extract form))
+      (syntax-parse rep-parsed
         [rep::repetition-info
          (define for-clausess (syntax->list #'rep.for-clausess))
-         (define (add-disappeared stx)
-           (add-repetition-disappeared stx #'rep.rep-expr))
+         (define (add-origin stx)
+           (transfer-origin rep-parsed stx))
          (cond
            [(is-sequence? form)
             (define rev-for-clausess (reverse for-clausess))
             (values (reverse (cdr rev-for-clausess))
-                    (add-disappeared
+                    (add-origin
                      #`(#,sequence-for-form #,(car rev-for-clausess)
                         rep.body)))]
            [else
-            (define body (add-disappeared #'rep.body))
+            (define body (add-origin #'rep.body))
             (values for-clausess
                     (if element-statinfo?
                         (wrap-static-info*

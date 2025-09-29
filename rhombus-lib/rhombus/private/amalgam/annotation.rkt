@@ -17,6 +17,7 @@
                      "name-path-op.rkt"
                      "annot-context.rkt"
                      "class-parse.rkt"
+                     "origin.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
@@ -325,6 +326,7 @@
                  (syntax-parse g
                    [(~var c (:annotation ctx)) #'c.parsed]))
                (datum->syntax #f (list #'form-id #'subs))
+               #'form-id
                #'tail)]))
 
   (define (parse-annotation-of stx ctx predicate-stx static-infos
@@ -333,7 +335,7 @@
                                predicate-maker info-maker-id info-maker-data
                                ;; binding-maker-id can be #f or an error string if a converter is not supported
                                binding-maker-id binding-maker-data)
-    (define-values (new-stx gs c-parseds loc tail)
+    (define-values (new-stx gs c-parseds loc form-id tail)
       (parse-annotation-of/one stx ctx sub-n kws))
     (values
      (cond
@@ -342,16 +344,18 @@
                [(c::annotation-predicate-form ...)
                 (define c-predicates (syntax->list #'(c.predicate ...)))
                 (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-                (relocate+reraw
-                 loc
-                 (annotation-predicate-form #`(let ([immed-pred #,predicate-stx]
-                                                    [pred #,(predicate-maker c-predicates)])
-                                                (lambda (v)
-                                                  (and (immed-pred v)
-                                                       (pred v))))
-                                            #`(#,@(compound-static-infos info-maker-id info-maker-data
-                                                                         c-static-infoss)
-                                               . #,static-infos)))]
+                (transfer-origins
+                 c-parseds
+                 (relocate+reraw
+                  loc
+                  (annotation-predicate-form #`(let ([immed-pred #,predicate-stx]
+                                                     [pred #,(predicate-maker c-predicates)])
+                                                 (lambda (v)
+                                                   (and (immed-pred v)
+                                                        (pred v))))
+                                             #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                                                          c-static-infoss)
+                                                . #,static-infos))))]
                [_ #f]))]
        [else
         (unless (identifier? binding-maker-id)
@@ -362,18 +366,20 @@
         (syntax-parse c-parseds
           [(c::annotation-binding-form ...)
            (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-           (relocate+reraw
-            loc
-            (annotation-binding-form
-             (binding-form #'annotation-of-infoer
-                           #`[#,(shrubbery-tail->string new-stx)
-                              #,predicate-stx #,binding-maker-id #,binding-maker-data
-                              ([c.binding c.body] ...) #,static-infos result
-                              #,kws])
-             #'result
-             #`(#,@(compound-static-infos info-maker-id info-maker-data
-                                          c-static-infoss)
-                . #,static-infos)))])])
+           (transfer-origins
+            c-parseds
+            (relocate+reraw
+             loc
+             (annotation-binding-form
+              (binding-form #'annotation-of-infoer
+                            #`[#,(shrubbery-tail->string new-stx)
+                               #,predicate-stx #,binding-maker-id #,binding-maker-data
+                               ([c.binding c.body] ...) #,static-infos result
+                               #,kws])
+              #'result
+              #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                           c-static-infoss)
+                 . #,static-infos))))])])
      tail))
 
   ;; This one is for converters that produce chaperones/impersonators.
@@ -385,7 +391,7 @@
                                          sub-n kws
                                          predicate-maker info-maker-id info-maker-data
                                          binding-maker-id binding-maker-data)
-    (define-values (new-stx gs c-parseds loc tail)
+    (define-values (new-stx gs c-parseds loc form-id tail)
       (parse-annotation-of/one stx ctx sub-n kws))
     (define annot-strs (map shrubbery-tail->string gs))
     (values
@@ -393,21 +399,23 @@
        [(c::annotation-predicate-form ...)
         (define c-predicates (syntax->list #'(c.predicate ...)))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-        (relocate+reraw
-         loc
-         (annotation-binding-form
-          (binding-form #'annotation-of-infoer/chaperone
-                        #`[#,(shrubbery-tail->string new-stx)
-                           (let ([immed-pred #,predicate-stx]
-                                 [pred #,(predicate-maker c-predicates annot-strs)])
-                             (lambda (val-in)
-                               (and (immed-pred val-in)
-                                    (pred val-in))))
-                           #,static-infos
-                           result])
-          #'result
-          #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
-             . #,static-infos)))]
+        (transfer-origins
+         c-parseds
+         (relocate+reraw
+          loc
+          (annotation-binding-form
+           (binding-form #'annotation-of-infoer/chaperone
+                         #`[#,(shrubbery-tail->string new-stx)
+                            (let ([immed-pred #,predicate-stx]
+                                  [pred #,(predicate-maker c-predicates annot-strs)])
+                              (lambda (val-in)
+                                (and (immed-pred val-in)
+                                     (pred val-in))))
+                            #,static-infos
+                            result])
+           #'result
+           #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
+              . #,static-infos))))]
        [(c::annotation-binding-form ...)
         (unless (identifier? binding-maker-id)
           (raise-syntax-error #f
@@ -415,17 +423,19 @@
                                   "argument converter annotations are not supported")
                               new-stx))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-        (relocate+reraw
-         loc
-         (annotation-binding-form
-          (binding-form #'annotation-of-infoer
-                        #`[#,(shrubbery-tail->string new-stx)
-                           #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
-                           ([c.binding c.body] ...) #,static-infos result
-                           #,kws])
-          #'result
-          #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
-             . #,static-infos)))])
+        (transfer-origins
+         c-parseds
+         (relocate+reraw
+          loc
+          (annotation-binding-form
+           (binding-form #'annotation-of-infoer
+                         #`[#,(shrubbery-tail->string new-stx)
+                            #,predicate-stx #,binding-maker-id [#,annot-strs #,binding-maker-data]
+                            ([c.binding c.body] ...) #,static-infos result
+                            #,kws])
+           #'result
+           #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
+              . #,static-infos))))])
      tail))
 
   (define (annotation-constructor predicate-stx get-static-infos
@@ -567,12 +577,14 @@
   (syntax-parse t-parsed
     [c-parsed::annotation-predicate-form
      (k
-      (if checked?
-          #`(let ([val #,form])
-              (if (c-parsed.predicate val)
-                  val
-                  #,(build-fail #'val)))
-          form)
+      (transfer-origin
+       t-parsed
+       (if checked?
+           #`(let ([val #,form])
+               (if (c-parsed.predicate val)
+                   val
+                   #,(build-fail #'val)))
+           form))
       (static-infos-and #'c-parsed.static-infos static-infos))]
     [c-parsed::annotation-binding-form
      #:do [(unless checked?
@@ -582,20 +594,22 @@
      #:with arg-info::binding-info #'arg-impl.info
      #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
      (k
-      #`(let* ([tmp-id (let ([arg-info.name-id #,(discard-static-infos form)])
-                         arg-info.name-id)]
-               [fail-k (lambda () #,(build-fail #'tmp-id))])
-          (arg-info.oncer-id arg-info.data)
-          (arg-info.matcher-id tmp-id
-                               arg-info.data
-                               if/blocked
-                               (begin
-                                 (arg-info.committer-id tmp-id arg-info.evidence-ids arg-info.data)
-                                 (arg-info.binder-id tmp-id arg-info.evidence-ids arg-info.data)
-                                 (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                                 ...
-                                 c-parsed.body)
-                               (fail-k)))
+      (transfer-origin
+       t-parsed
+       #`(let* ([tmp-id (let ([arg-info.name-id #,(discard-static-infos form)])
+                          arg-info.name-id)]
+                [fail-k (lambda () #,(build-fail #'tmp-id))])
+           (arg-info.oncer-id arg-info.data)
+           (arg-info.matcher-id tmp-id
+                                arg-info.data
+                                if/blocked
+                                (begin
+                                  (arg-info.committer-id tmp-id arg-info.evidence-ids arg-info.data)
+                                  (arg-info.binder-id tmp-id arg-info.evidence-ids arg-info.data)
+                                  (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                                  ...
+                                  c-parsed.body)
+                                (fail-k))))
       #'c-parsed.static-infos)]))
 
 (define-for-syntax (raise-unchecked-disallowed in at)
@@ -614,26 +628,28 @@
        [(op::name . (~var t (:annotation-seq #'::)))
         #:with left::binding-form form
         (values
-         (syntax-parse #'t.parsed
-           [c-parsed::annotation-predicate-form
-            (binding-form
-             #'annotation-predicate-infoer
-             #`(#,(shrubbery-syntax->string #'t.parsed)
-                #,(and checked? #'c-parsed.predicate)
-                c-parsed.static-infos
-                left.infoer-id
-                left.data))]
-           [c-parsed::annotation-binding-form
-            #:do [(unless checked?
-                    (raise-unchecked-disallowed #'op.name #'t))]
-            (binding-form
-             #'annotation-binding-infoer
-             #`(#,(shrubbery-syntax->string #'t.parsed)
-                c-parsed.binding
-                c-parsed.body
-                c-parsed.static-infos
-                left.infoer-id
-                left.data))])
+         (transfer-origin
+          #'t.parsed
+          (syntax-parse #'t.parsed
+            [c-parsed::annotation-predicate-form
+             (binding-form
+              #'annotation-predicate-infoer
+              #`(#,(shrubbery-syntax->string #'t.parsed)
+                 #,(and checked? #'c-parsed.predicate)
+                 c-parsed.static-infos
+                 left.infoer-id
+                 left.data))]
+            [c-parsed::annotation-binding-form
+             #:do [(unless checked?
+                     (raise-unchecked-disallowed #'op.name #'t))]
+             (binding-form
+              #'annotation-binding-infoer
+              #`(#,(shrubbery-syntax->string #'t.parsed)
+                 c-parsed.binding
+                 c-parsed.body
+                 c-parsed.static-infos
+                 left.infoer-id
+                 left.data))]))
          #'t.tail)]))
    'none))
 
@@ -655,26 +671,28 @@
   (syntax-parse tail
     [(op . (~var t (:annotation-seq #'is_a)))
      (values
-      (syntax-parse #'t.parsed
-        [c-parsed::annotation-predicate-form
-         (let ([r #`(let ([val #,(discard-static-infos form)])
-                      (c-parsed.predicate val))])
-           (if (eq? mode 'invert)
-               #`(not #,r)
-               r))]
-        [c-parsed::annotation-binding-form
-         #:with arg-parsed::binding-form #'c-parsed.binding
-         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-         #:with arg-info::binding-info #'arg-impl.info
-         #`(let ([val-in (let ([arg-info.name-id #,(discard-static-infos form)])
-                           arg-info.name-id)])
-             (arg-info.oncer-id arg-info.data)
-             (arg-info.matcher-id val-in
-                                  arg-info.data
-                                  if/blocked
-                                  #,(eq? mode 'normal)
-                                  #,(not (eq? mode 'normal))))])
-      #'t.tail)]))
+      (transfer-origin
+       #'t.parsed
+       (syntax-parse #'t.parsed
+         [c-parsed::annotation-predicate-form
+          (let ([r #`(let ([val #,(discard-static-infos form)])
+                       (c-parsed.predicate val))])
+            (if (eq? mode 'invert)
+                #`(not #,r)
+                r))]
+         [c-parsed::annotation-binding-form
+          #:with arg-parsed::binding-form #'c-parsed.binding
+          #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+          #:with arg-info::binding-info #'arg-impl.info
+          #`(let ([val-in (let ([arg-info.name-id #,(discard-static-infos form)])
+                            arg-info.name-id)])
+              (arg-info.oncer-id arg-info.data)
+              (arg-info.matcher-id val-in
+                                   arg-info.data
+                                   if/blocked
+                                   #,(eq? mode 'normal)
+                                   #,(not (eq? mode 'normal))))]))
+       #'t.tail)]))
 
 (define-syntax is_a
   (expression-infix-operator

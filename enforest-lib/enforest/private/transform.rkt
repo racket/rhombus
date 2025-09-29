@@ -1,5 +1,6 @@
 #lang racket/base
 (require syntax/stx
+         syntax/parse/pre
          "../proc-name.rkt"
          "version-case.rkt")
 
@@ -43,15 +44,22 @@
    (lambda stxes
      (apply values
             (map (lambda (stx)
-                   (track track-origin id (syntax-local-introduce stx)))
+                   (let ([stx (syntax-local-introduce stx)])
+                     ;; push tracking into `parsed` forms;
+                     ;; we don't go into shrubbery structure,
+                     ;; though, since the syntax object does
+                     ;; not necessarily represent a shrubbery
+                     (syntax-parse stx
+                       #:datum-literals (parsed)
+                       [((~and tag parsed) kw:keyword e)
+                        (datum->syntax stx (list #'tag #'kw (track track-origin id #'e)) stx stx)]
+                       [else
+                        (track track-origin id stx)])))
                  stxes)))))
 
 (define (track track-origin id stx)
   (track-origin stx
-                (let ([du (syntax-property id 'disappeared-use)])
-                  (if du
-                      (syntax-property no-props 'disappeared-use du)
-                      no-props))
+                no-props
                 id))
 
 (define (check-transformer-result form tail proc)

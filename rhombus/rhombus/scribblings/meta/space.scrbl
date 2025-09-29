@@ -237,6 +237,7 @@ driver and macro-definitions forms.
   identifier serve as options along the same lines as @rhombus(~op_stx) in
   @rhombus(expr.macro), and they receive arguments passed to the syntax
   class as declared by @rhombus(parse_syntax_class, ~space_meta_clause).
+  See also @secref("stxobj-track").
   This clause form can prefixed with @rhombus(private, ~space_clause).}
 
  @item{@rhombus(bridge_definer, ~space_clause): Declares an identifier to

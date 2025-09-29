@@ -14,7 +14,8 @@
                      "sorted-list-subset.rkt"
                      "dotted-sequence.rkt"
                      "annot-context.rkt"
-                     "syntax-map.rkt")
+                     "syntax-map.rkt"
+                     "origin.rkt")
          racket/unsafe/undefined
          racket/mutability
          racket/treelist
@@ -251,13 +252,15 @@
   (define-splicing-syntax-class (:ret-annotation [ctx empty-annot-context])
     #:attributes (static-infos ; can be `((#%values (static-infos ...)))` for multiple results
                   converter    ; a `converter` struct, or `#f`
-                  annot-str)   ; the raw text of annotation, or `#f`
+                  annot-str    ; the raw text of annotation, or `#f`
+                  origins)     ; a list of parsed annotations
     #:description "return annotation"
     #:datum-literals (group)
     (pattern (~seq ann-op::annotate-op (~optional op::values-id-annot) (~and p (_::parens g ...)))
              #:do [(define gs #'(g ...))]
              #:with ((~var c (:annotation ctx)) ...) gs
              #:with (arg ...) (generate-temporaries gs)
+             #:attr origins (syntax->list #'(c.parsed ...))
              #:do [(define cnt (length (syntax->list gs)))
                    (define-values (sis cvtr)
                      (syntax-parse #'(c.parsed ...)
@@ -313,6 +316,7 @@
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
              #:do [(define annot #`(#,group-tag ctc0 ctc ...))]
              #:with (~var c (:annotation ctx)) (no-srcloc annot)
+             #:attr origins (list #'c.parsed)
              #:do [(define-values (sis cvtr)
                      (syntax-parse #'c.parsed
                        [c-parsed::annotation-predicate-form
@@ -354,6 +358,7 @@
              #:attr annot-str (shrubbery-syntax->string annot))
     (pattern (~seq)
              #:with static-infos #'()
+             #:attr origins null
              #:attr converter #f
              #:attr annot-str #f))
 
@@ -526,7 +531,7 @@
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
                           kwrest-arg kwrest-parsed
-                          converter annot-str
+                          converter annot-str annot-origins
                           rhs
                           src-ctx)
     (syntax-parse arg-parseds
@@ -604,27 +609,32 @@
                  args))
        (define (reloc stx) (relocate+reraw (respan src-ctx) stx))
        (values
+        (transfer-origins
+         (append (syntax->list arg-parseds)
+                 (if rest-parsed (list rest-parsed) null)
+                 (if kwrest-parsed (list kwrest-parsed) null)
+                 annot-origins)
          ;; Racket `define` needs to recognize an immediate `lambda`
-        (if (syntax-e kwrest-arg)
-            (reloc
-             #`(lambda/kwrest
-                #:name #,function-name
-                #:arity #,shifted-arity
-                #:method #,(entry-point-adjustment-method? adjustments)
-                maybe-rest-tmp* ...
-                maybe-kwrest-tmp ...
-                #,(adjust-args #'(arg-form ... ...))
-                rest-def ...
-                #,body))
-            (let* ([proc (reloc
-                          #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
-                              rest-def ...
-                              #,body))]
-                   [proc (syntax-property proc 'inferred-name function-name)]
-                   [proc (if (entry-point-adjustment-method? adjustments)
-                             (syntax-property proc 'method-arity-error #t)
-                             proc)])
-              proc))
+         (if (syntax-e kwrest-arg)
+             (reloc
+              #`(lambda/kwrest
+                 #:name #,function-name
+                 #:arity #,shifted-arity
+                 #:method #,(entry-point-adjustment-method? adjustments)
+                 maybe-rest-tmp* ...
+                 maybe-kwrest-tmp ...
+                 #,(adjust-args #'(arg-form ... ...))
+                 rest-def ...
+                 #,body))
+             (let* ([proc (reloc
+                           #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
+                               rest-def ...
+                               #,body))]
+                    [proc (syntax-property proc 'inferred-name function-name)]
+                    [proc (if (entry-point-adjustment-method? adjustments)
+                              (syntax-property proc 'method-arity-error #t)
+                              proc)])
+               proc)))
         shifted-arity)]))
 
   (define (build-unsafe-function kws args arg-parseds
@@ -643,11 +653,11 @@
 
   (define (build-case-function adjustments argument-static-infoss
                                function-name outer-whos inner-whos
-                               main-converter main-annot-str
+                               main-converter main-annot-str main-annot-origins
                                kwss-stx argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
                                kwrest-args-stx kwrest-parseds-stx
-                               converters annot-strs
+                               converters annot-strs annot-originss
                                rhss-stx
                                src-ctx)
     (define kwss (map syntax->list (syntax->list kwss-stx)))
@@ -677,138 +687,143 @@
       (shift-arity arity (treelist-length (entry-point-adjustment-prefix-arguments adjustments))))
     (define kws? (pair? shifted-arity))
     (values
-     (relocate+reraw
-      (respan src-ctx)
-      #`(case-lambda/kwrest
-         #:name #,function-name
-         #:arity #,shifted-arity
-         #:method #,(entry-point-adjustment-method? adjustments)
-         #,@(for/list ([n (in-list ns)]
-                       [fcs (in-list fcss)]
-                       [aritys (in-list arityss)]
-                       [inner-who (in-list inner-whos)]
-                       [outer-who (in-list outer-whos)])
-              (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
-                                                        (cons 'try-next
-                                                              (fcase-pos fcase-args (find-matching-case n fcs))))]
-                            [(maybe-rest-tmp ...) (if (negative? n)
-                                                      #'(#:rest rest-tmp-lst)
-                                                      #'())]
-                            [maybe-rest-tmp-use (if (negative? n)
-                                                    #'rest-tmp-lst
-                                                    #''())]
-                            [(rest-def ...) (if (negative? n)
-                                                #'((define rest-tmp (list->treelist rest-tmp-lst)))
-                                                #'())]
-                            [(maybe-kwrest-tmp ...) (if kws?
-                                                        #'(#:kwrest kwrest-tmp)
-                                                        #'())]
-                            [maybe-kwrest-tmp-use (if kws?
-                                                      #'kwrest-tmp
-                                                      #''#hashalw())])
-                #`[maybe-rest-tmp ...
-                   maybe-kwrest-tmp ...
-                   (#,@(treelist->list (entry-point-adjustment-prefix-arguments adjustments))
-                    pos-arg-id ...)
-                   ;; possible improvement: convert to treelist in individual try instead of for
-                   ;; all tries; whether that's better depends on the shapes of the cases
-                   rest-def ...
-                   #,(for/foldr ([next #`(cases-failure
-                                          '#,function-name
-                                          maybe-rest-tmp-use maybe-kwrest-tmp-use pos-arg-id ...)])
-                                ([fc (in-list fcs)]
-                                 [arity (in-list aritys)])
-                       (define-values (this-args wrap-adapted-arguments)
-                         ;; currently, `adapt-arguments-for-count` assumes tree-list `rest-tmp`
-                         (adapt-arguments-for-count fc n #'(pos-arg-id ...) #'rest-tmp
-                                                    (and kws? #'kwrest-tmp)
-                                                    #'try-next))
-                       (syntax-parse (fcase-arg-parseds fc)
-                         [(arg-parsed::binding-form ...)
-                          #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (fcase-arg-parseds fc)))
-                          #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
-                          #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
-                          #:with (arg ...) (fcase-args fc)
-                          #:with (this-arg-id ...) this-args
-                          #:with ((maybe-match-rest ...)
-                                  (maybe-commit-rest ...)
-                                  (maybe-bind-rest ...)
-                                  (maybe-static-info-rest ...))
-                          (cond
-                            [(syntax-e (fcase-rest-arg fc))
-                             (define rest-parsed (fcase-rest-arg-parsed fc))
-                             (syntax-parse rest-parsed
-                               [rest::binding-form
-                                #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
-                                #:with rest-info::binding-info #'rest-impl.info
-                                #`(((rest-tmp rest-info #,(fcase-rest-arg fc) #f))
-                                   ((rest-info.committer-id rest-tmp rest-info.evidence-ids rest-info.data))
-                                   ((rest-info.binder-id rest-tmp rest-info.evidence-ids rest-info.data))
-                                   ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
-                                    ...))])]
-                            [else #'(() () () ())])
-                          #:with ((maybe-match-kwrest ...)
-                                  (maybe-commit-kwrest ...)
-                                  (maybe-bind-kwrest ...)
-                                  (maybe-static-info-kwrest ...))
-                          (cond
-                            [(syntax-e (fcase-kwrest-arg fc))
-                             (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
-                             (syntax-parse kwrest-parsed
-                               [kwrest::binding-form
-                                #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
-                                #:with kwrest-info::binding-info #'kwrest-impl.info
-                                #`(((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f))
-                                   ((kwrest-info.committer-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
-                                   ((kwrest-info.binder-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
-                                   ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
-                                    ...))])]
-                            [else #'(() () () ())])
-                          ;; use `((lambda ....) ....)` to keep code in original order, in case
-                          ;; of expansion errors.
-                          #`((lambda (try-next)
-                               #,(wrap-adapted-arguments
-                                  (wrap-expression
-                                   ((entry-point-adjustment-wrap-body adjustments)
-                                    arity
-                                    #`(parsed
-                                       #:rhombus/expr
-                                       #,(add-who
-                                          outer-who function-name
-                                          #`(nested-bindings
-                                             #,function-name
-                                             try-next
-                                             #t ; eager-bind?
-                                             argument-binding-failure
-                                             (this-arg-id arg-info arg #f)
-                                             ...
-                                             maybe-match-rest ...
-                                             maybe-match-kwrest ...
-                                             (begin
-                                               ;; eager-bind? covers all of this
-                                               ;;
-                                               ;; (arg-info.committer-id this-arg-id arg-info.evidence-ids arg-info.data)
-                                               ;; ...
-                                               ;; maybe-commit-rest ...
-                                               ;; maybe-commit-kwrest ...
-                                               ;; (arg-info.binder-id this-arg-id arg-info.evidence-ids arg-info.data)
-                                               ;; ...
-                                               ;; maybe-bind-rest ...
-                                               ;; maybe-bind-kwrest ...
-                                               ;; (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                                               ;; ... ...
-                                               ;; maybe-static-info-rest
-                                               ;; ...
-                                               ;; maybe-static-info-kwrest
-                                               ;; ...
-                                               #,(add-annotation-check
-                                                  function-name main-converter main-annot-str
-                                                  (add-annotation-check
-                                                   function-name (fcase-converter fc) (fcase-annot-str fc)
-                                                   (add-who
-                                                    inner-who function-name
-                                                    #`(rhombus-body-expression #,(fcase-rhs fc)))))))))))))
-                             (lambda () #,next))]))]))))
+     (transfer-origins
+      (apply append
+             main-annot-origins
+             (append arg-parsedss
+                     annot-originss))
+      (relocate+reraw
+       (respan src-ctx)
+       #`(case-lambda/kwrest
+          #:name #,function-name
+          #:arity #,shifted-arity
+          #:method #,(entry-point-adjustment-method? adjustments)
+          #,@(for/list ([n (in-list ns)]
+                        [fcs (in-list fcss)]
+                        [aritys (in-list arityss)]
+                        [inner-who (in-list inner-whos)]
+                        [outer-who (in-list outer-whos)])
+               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
+                                                         (cons 'try-next
+                                                               (fcase-pos fcase-args (find-matching-case n fcs))))]
+                             [(maybe-rest-tmp ...) (if (negative? n)
+                                                       #'(#:rest rest-tmp-lst)
+                                                       #'())]
+                             [maybe-rest-tmp-use (if (negative? n)
+                                                     #'rest-tmp-lst
+                                                     #''())]
+                             [(rest-def ...) (if (negative? n)
+                                                 #'((define rest-tmp (list->treelist rest-tmp-lst)))
+                                                 #'())]
+                             [(maybe-kwrest-tmp ...) (if kws?
+                                                         #'(#:kwrest kwrest-tmp)
+                                                         #'())]
+                             [maybe-kwrest-tmp-use (if kws?
+                                                       #'kwrest-tmp
+                                                       #''#hashalw())])
+                 #`[maybe-rest-tmp ...
+                    maybe-kwrest-tmp ...
+                    (#,@(treelist->list (entry-point-adjustment-prefix-arguments adjustments))
+                     pos-arg-id ...)
+                    ;; possible improvement: convert to treelist in individual try instead of for
+                    ;; all tries; whether that's better depends on the shapes of the cases
+                    rest-def ...
+                    #,(for/foldr ([next #`(cases-failure
+                                           '#,function-name
+                                           maybe-rest-tmp-use maybe-kwrest-tmp-use pos-arg-id ...)])
+                                 ([fc (in-list fcs)]
+                                  [arity (in-list aritys)])
+                        (define-values (this-args wrap-adapted-arguments)
+                          ;; currently, `adapt-arguments-for-count` assumes tree-list `rest-tmp`
+                          (adapt-arguments-for-count fc n #'(pos-arg-id ...) #'rest-tmp
+                                                     (and kws? #'kwrest-tmp)
+                                                     #'try-next))
+                        (syntax-parse (fcase-arg-parseds fc)
+                          [(arg-parsed::binding-form ...)
+                           #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (fcase-arg-parseds fc)))
+                           #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
+                           #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
+                           #:with (arg ...) (fcase-args fc)
+                           #:with (this-arg-id ...) this-args
+                           #:with ((maybe-match-rest ...)
+                                   (maybe-commit-rest ...)
+                                   (maybe-bind-rest ...)
+                                   (maybe-static-info-rest ...))
+                           (cond
+                             [(syntax-e (fcase-rest-arg fc))
+                              (define rest-parsed (fcase-rest-arg-parsed fc))
+                              (syntax-parse rest-parsed
+                                [rest::binding-form
+                                 #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
+                                 #:with rest-info::binding-info #'rest-impl.info
+                                 #`(((rest-tmp rest-info #,(fcase-rest-arg fc) #f))
+                                    ((rest-info.committer-id rest-tmp rest-info.evidence-ids rest-info.data))
+                                    ((rest-info.binder-id rest-tmp rest-info.evidence-ids rest-info.data))
+                                    ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
+                                     ...))])]
+                             [else #'(() () () ())])
+                           #:with ((maybe-match-kwrest ...)
+                                   (maybe-commit-kwrest ...)
+                                   (maybe-bind-kwrest ...)
+                                   (maybe-static-info-kwrest ...))
+                           (cond
+                             [(syntax-e (fcase-kwrest-arg fc))
+                              (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
+                              (syntax-parse kwrest-parsed
+                                [kwrest::binding-form
+                                 #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
+                                 #:with kwrest-info::binding-info #'kwrest-impl.info
+                                 #`(((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f))
+                                    ((kwrest-info.committer-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
+                                    ((kwrest-info.binder-id kwrest-tmp kwrest-info.evidence-ids kwrest-info.data))
+                                    ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
+                                     ...))])]
+                             [else #'(() () () ())])
+                           ;; use `((lambda ....) ....)` to keep code in original order, in case
+                           ;; of expansion errors.
+                           #`((lambda (try-next)
+                                #,(wrap-adapted-arguments
+                                   (wrap-expression
+                                    ((entry-point-adjustment-wrap-body adjustments)
+                                     arity
+                                     #`(parsed
+                                        #:rhombus/expr
+                                        #,(add-who
+                                           outer-who function-name
+                                           #`(nested-bindings
+                                              #,function-name
+                                              try-next
+                                              #t ; eager-bind?
+                                              argument-binding-failure
+                                              (this-arg-id arg-info arg #f)
+                                              ...
+                                              maybe-match-rest ...
+                                              maybe-match-kwrest ...
+                                              (begin
+                                                ;; eager-bind? covers all of this
+                                                ;;
+                                                ;; (arg-info.committer-id this-arg-id arg-info.evidence-ids arg-info.data)
+                                                ;; ...
+                                                ;; maybe-commit-rest ...
+                                                ;; maybe-commit-kwrest ...
+                                                ;; (arg-info.binder-id this-arg-id arg-info.evidence-ids arg-info.data)
+                                                ;; ...
+                                                ;; maybe-bind-rest ...
+                                                ;; maybe-bind-kwrest ...
+                                                ;; (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                                ;; ... ...
+                                                ;; maybe-static-info-rest
+                                                ;; ...
+                                                ;; maybe-static-info-kwrest
+                                                ;; ...
+                                                #,(add-annotation-check
+                                                   function-name main-converter main-annot-str
+                                                   (add-annotation-check
+                                                    function-name (fcase-converter fc) (fcase-annot-str fc)
+                                                    (add-who
+                                                     inner-who function-name
+                                                     #`(rhombus-body-expression #,(fcase-rhs fc)))))))))))))
+                              (lambda () #,next))]))])))))
      shifted-arity))
 
   (define (build-unsafe-case-function kwss-stx argss-stx arg-parsedss-stx

@@ -1259,6 +1259,28 @@ class's name.
 }
 
 @doc(
+  method Syntax.track_origin(
+    stx :: Term,
+    orig_stx :: Term || (Listable.to_list && List.of(Term))
+  ) :: Term
+){
+
+ Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin)
+ syntax property values, if any, from @rhombus(orig_stx) added to
+ @rhombus(stx). If one or more @rhombus(#'origin) syntax property value
+ is available among @rhombus(stx) and @rhombus(orig_stx), the values are
+ combined using @rhombus(Pair).
+
+ The @rhombus(#'origin) property is attached using
+ @rhombus(Syntax.ephemeral_property), as opposed to
+ @rhombus(Syntax.property), because it is intended to record temporary
+ expansion information along the same lines as
+ @rhombus(Syntax.relocate_ephemeral_span).
+
+}
+
+
+@doc(
   method Syntax.property(stx :: Term,
                          key :: Any)
     :: Any
@@ -1276,7 +1298,6 @@ class's name.
 
 }
 
-
 @doc(
   method Syntax.group_property(stx :: Group,
                                key :: Any)
@@ -1289,6 +1310,24 @@ class's name.
 
  Like @rhombus(Syntax.property), but for properties on a group syntax
  object, instead of a term.
+
+}
+
+@doc(
+  method Syntax.ephemeral_property(stx :: Term,
+                                   key :: Any)
+    :: Any
+  method Syntax.ephemeral_property(stx :: Term,
+                                   key :: Any, val :: Any,
+                                   is_preserved :: Any = #false)
+    :: Term
+){
+
+ Like @rhombus(Syntax.property), but attaches metadata to the syntax
+ object in way that may get lost if the syntax object is deconstructed or
+ adjusted in any way. This mode is intended for communicating information
+ from a macro expansion, such as by @rhombus(Syntax.track_origin), along
+ the same lines as @rhombus(Syntax.relocate_ephemeral_span).
 
 }
 
@@ -1337,5 +1376,17 @@ class's name.
  Source is text is represented as a tree built of
  @rhombus(Pair, ~annot)s, @rhombus(PairList.empty), and strings, where
  the in-order concatenation of the string forms the source text.
+
+}
+
+
+@doc(
+  method Syntax.debug_info(syntax :: Term) :: Map
+){
+
+ Returns a @tech{map} with low-level information about a syntax object's
+ representation. This information can provide insight on scopes and other
+ information associated with a syntax object, but its format and content
+ are unspecified, for now.
 
 }

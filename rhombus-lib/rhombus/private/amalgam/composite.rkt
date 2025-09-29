@@ -4,7 +4,8 @@
                      "annotation-string.rkt"
                      "tag.rkt"
                      "keyword-sort.rkt"
-                     "maybe-as-original.rkt")
+                     "maybe-as-original.rkt"
+                     "origin.rkt")
          "parse.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -70,22 +71,24 @@
                                    (length as))
                            stx))
      (values
-      (binding-form
-       #'composite-infoer
-       #`(#,constructor-str
-          #,predicate #,composite-static-infos #,bounds-key
-          #,steppers #,accessors #,static-infoss
-          (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
-          #,(length post-args)
-          #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos?
-          #,(and rest-arg
-                 #`(#,rest-accessor
-                    #,rest-to-repetition
-                    #,rest-repetition?
-                    #,rest-repetition-min
-                    #,rest-repetition-max
-                    rest-a-parsed.infoer-id ...
-                    rest-a-parsed.data ...))))
+      (transfer-origins
+       (syntax->list #'(a.parsed ... rest-a.parsed ... post-a.parsed ...))
+       (binding-form
+        #'composite-infoer
+        #`(#,constructor-str
+           #,predicate #,composite-static-infos #,bounds-key
+           #,steppers #,accessors #,static-infoss
+           (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
+           #,(length post-args)
+           #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos?
+           #,(and rest-arg
+                  #`(#,rest-accessor
+                     #,rest-to-repetition
+                     #,rest-repetition?
+                     #,rest-repetition-min
+                     #,rest-repetition-max
+                     rest-a-parsed.infoer-id ...
+                     rest-a-parsed.data ...)))))
       #'new-tail)]
     [_ (raise-syntax-error #f
                            "bad syntax"
@@ -449,7 +452,7 @@
         (let loop ([sequencers (syntax->list #'(sequencer ...))]
                    [rep #'rep.parsed])
           (if (null? (cdr sequencers))
-              (repetition-as-list/unchecked rep 1)
+              (repetition-as-list/unchecked rep 1 #:origin? #f)
               (loop (cdr sequencers) (consume-repetition rep #'for/list #'()))))])]))
 
 ;; run-time support for "rest" matching

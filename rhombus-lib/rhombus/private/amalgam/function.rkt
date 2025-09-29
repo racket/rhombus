@@ -385,12 +385,12 @@
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (add-name-prefix name-prefix the-name) whos (map (lambda (x) #f) whos)
-                                #f #f
+                                #f #f null
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                                (attribute ret.converter) (attribute ret.annot-str)
+                                (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                                 (filter-whos+unsafes #'(rhs ...))
                                 stx))
          (define unsafe-proc (and any-unsafe?
@@ -448,12 +448,12 @@
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (or reflect-name (add-name-prefix name-prefix the-name)) whos inner-whos
-                                (attribute main-ret.converter) (attribute main-ret.annot-str)
+                                (attribute main-ret.converter) (attribute main-ret.annot-str) (attribute main-ret.origins)
                                 #'((arg.kw ...) ...)
                                 #'((arg ...) ...) #'((arg.parsed ...) ...)
                                 #'(rest.arg ...) #'(rest.parsed ...)
                                 #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                                (attribute ret.converter) (attribute ret.annot-str)
+                                (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                                 (filter-whos+unsafes #'(rhs ...))
                                 stx))
          (define unsafe-proc (and any-unsafe?
@@ -501,7 +501,7 @@
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
-                           (attribute ret.converter) (attribute ret.annot-str)
+                           (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                            (if (or (attribute doc) reflect-name (attribute who-clause) (attribute unsafe))
                                #'(rhs-tag body ...)
                                #'rhs)
@@ -595,12 +595,12 @@
      (define-values (proc arity)
        (build-case-function adjustments argument-static-infos
                             (or reflect-name (get-local-name #'form-id adjustments)) outer-whos whos
-                            (attribute main-ret.converter) (attribute main-ret.annot-str)
+                            (attribute main-ret.converter) (attribute main-ret.annot-str) (attribute main-ret.origins)
                             #'((arg.kw ...) ...)
                             #'((arg ...) ...) #'((arg.parsed ...) ...)
                             #'(rest.arg ...) #'(rest.parsed ...)
                             #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                            (attribute ret.converter) (attribute ret.annot-str)
+                            (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                             (filter-whos #'(rhs ...))
                             stx))
      (values (wrap-function-static-info
@@ -628,7 +628,7 @@
                        #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                        #'rest.arg #'rest.parsed
                        #'rest.kwarg #'rest.kwparsed
-                       (attribute ret.converter) (attribute ret.annot-str)
+                       (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                        (if (or reflect-name (attribute who-clause))
                            #'(rhs-tag body ...)
                            #'rhs)

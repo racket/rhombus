@@ -59,6 +59,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter (attribute ret.converter)
              #:attr ret-annot-str (attribute ret.annot-str)
+             #:attr ret-annot-origins (attribute ret.origins)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op-or-block
                    (tag::block
@@ -75,6 +76,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter #f
              #:attr ret-annot-str #f
+             #:attr ret-annot-origins null
              #:with ret-static-infos #'()
              #:with g #'(group op-name-seq arg)))
 
@@ -98,6 +100,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter (attribute ret.converter)
              #:attr ret-annot-str (attribute ret.annot-str)
+             #:attr ret-annot-origins (attribute ret.origins)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op-or-block
                    (tag::block
@@ -115,6 +118,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter #f
              #:attr ret-annot-str #f
+             #:attr ret-annot-origins null
              #:with ret-static-infos #'()
              #:with g #'(group left op-name-seq right)))
 
@@ -137,6 +141,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter (attribute ret.converter)
              #:attr ret-annot-str (attribute ret.annot-str)
+             #:attr ret-annot-origins (attribute ret.origins)
              #:with ret-static-infos #'ret.static-infos)
     (pattern (~seq arg::not-op op-name-seq::dotted-operator-or-identifier-sequence
                    (tag::block
@@ -153,6 +158,7 @@
              #:with rhs #'(tag body ...)
              #:attr ret-converter #f
              #:attr ret-annot-str #f
+             #:attr ret-annot-origins null
              #:with ret-static-infos #'()
              #:with g #'(group arg op-name-seq)))
 
@@ -224,9 +230,9 @@
       [(stx stx2) (if (syntax-e stx) stx stx2)]))
 
   (define (build-unary-function orig-stx name
-                                main-converter main-annot-str
+                                main-converter main-annot-str main-annot-origins
                                 args rhss
-                                ret-converters ret-annot-strs
+                                ret-converters ret-annot-strs ret-annot-origins
                                 reflect-names main-who whos
                                 has-unsafe? unsafes)
     (define arg-parseds (map parse-binding args))
@@ -246,7 +252,7 @@
                          (car falsess) (->stx args) (->stx arg-parseds) (car falsess)
                          #'#f #'#f
                          #'#f #'#f
-                         (car ret-converters) (car ret-annot-strs)
+                         (car ret-converters) (car ret-annot-strs) (car ret-annot-origins)
                          (car rhss)
                          orig-stx)]
         [else
@@ -254,11 +260,11 @@
          (define main-whos (for/list ([who (in-list whos)]) (stx-or main-who)))
          (build-case-function no-adjustments '()
                               use-name main-whos (map stx-or whos)
-                              main-converter main-annot-str
+                              main-converter main-annot-str main-annot-origins
                               (->stx falsess) (->stx (map list args)) (->stx (map list arg-parseds))
                               falses falses
                               falses falses
-                              ret-converters ret-annot-strs
+                              ret-converters ret-annot-strs ret-annot-origins
                               (->stx rhss)
                               orig-stx)]))
     (cond
@@ -279,9 +285,9 @@
        proc]))
 
   (define (build-binary-function orig-stx name
-                                 main-converter main-annot-str
+                                 main-converter main-annot-str main-annot-origins
                                  lefts rights rhss
-                                 ret-converters ret-annot-strs
+                                 ret-converters ret-annot-strs ret-annot-origins
                                  reflect-names main-who whos
                                  has-unsafe? unsafes)
     (define-values (left-parseds right-parseds)
@@ -306,7 +312,7 @@
                          (car falsess)
                          #'#f #'#f
                          #'#f #'#f
-                         (car ret-converters) (car ret-annot-strs)
+                         (car ret-converters) (car ret-annot-strs) (car ret-annot-origins)
                          (car rhss)
                          orig-stx)]
         [else
@@ -314,13 +320,13 @@
          (define main-whos (for/list ([who (in-list whos)]) (stx-or main-who)))
          (build-case-function no-adjustments '()
                               use-name main-whos (map stx-or whos)
-                              main-converter main-annot-str
+                              main-converter main-annot-str main-annot-origins
                               (->stx falsess)
                               (->stx (map list lefts rights))
                               (->stx (map list left-parseds right-parseds))
                               falses falses
                               falses falses
-                              ret-converters ret-annot-strs
+                              ret-converters ret-annot-strs ret-annot-origins
                               (->stx rhss)
                               orig-stx)]))
     (cond
@@ -346,19 +352,20 @@
        proc]))
 
   (define (generate-prefix stx main-who name extends args order prec rhss
-                           ret-converters ret-annot-strs ret-static-infos
+                           ret-converters ret-annot-strs ret-annot-origins ret-static-infos
                            reflect-names whos unsafes
                            #:main-converter [main-converter #f]
-                           #:main-annot-str [main-annot-str #f])
+                           #:main-annot-str [main-annot-str #f]
+                           #:main-annot-origins [main-annot-origins null])
     (define has-unsafe? (check-consistent-unsafes stx "infix" unsafes))
     (with-syntax ([(op-proc) (generate-temporaries (list name))]
                   [(unsafe-proc ...) (generate-temporaries (if has-unsafe? (list name) null))])
       (cons
        #`(define-values (op-proc unsafe-proc ...)
            #,(build-unary-function stx name
-                                   main-converter main-annot-str
+                                   main-converter main-annot-str main-annot-origins
                                    args rhss
-                                   ret-converters ret-annot-strs
+                                   ret-converters ret-annot-strs ret-annot-origins
                                    reflect-names main-who whos
                                    has-unsafe? unsafes))
        (build-syntax-definitions/maybe-extension
@@ -366,10 +373,11 @@
         (make-prefix name #'op-proc #'(unsafe-proc ...) order prec ret-static-infos)))))
 
   (define (generate-infix stx main-who name extends lefts rights order prec assc rhss
-                          ret-converters ret-annot-strs ret-static-infos
+                          ret-converters ret-annot-strs ret-annot-origins ret-static-infos
                           reflect-names whos unsafes
                           #:main-converter [main-converter #f]
-                          #:main-annot-str [main-annot-str #f])
+                          #:main-annot-str [main-annot-str #f]
+                          #:main-annot-origins [main-annot-origins null])
     (define has-unsafe? (check-consistent-unsafes stx "infix" unsafes))
     (with-syntax ([(op-proc) (generate-temporaries (list name))]
                   [(unsafe-proc ...) (generate-temporaries (if has-unsafe? (list name) null))])
@@ -382,17 +390,18 @@
         (list
          #`(define-values (op-proc unsafe-proc ...)
              #,(build-binary-function stx name
-                                      main-converter main-annot-str
+                                      main-converter main-annot-str main-annot-origins
                                       lefts rights rhss
-                                      ret-converters ret-annot-strs
+                                      ret-converters ret-annot-strs ret-annot-origins
                                       reflect-names main-who whos
                                       has-unsafe? unsafes)))))))
 
   (define (generate-postfix stx main-who name extends args order prec rhss
-                            ret-converters ret-annot-strs ret-static-infos
+                            ret-converters ret-annot-strs ret-annot-origins ret-static-infos
                             reflect-names whos unsafes
                             #:main-converter [main-converter #f]
-                            #:main-annot-str [main-annot-str #f])
+                            #:main-annot-str [main-annot-str #f]
+                            #:main-annot-origins [main-annot-origins null])
     (define has-unsafe? (check-consistent-unsafes stx "infix" unsafes))
     (with-syntax ([(op-proc) (generate-temporaries (list name))]
                   [(unsafe-proc ...) (generate-temporaries (if has-unsafe? (list name) null))])
@@ -405,22 +414,23 @@
         (list
          #`(define-values (op-proc unsafe-proc ...)
              #,(build-unary-function stx name
-                                     main-converter main-annot-str
+                                     main-converter main-annot-str main-annot-origins
                                      args rhss
-                                     ret-converters ret-annot-strs
+                                     ret-converters ret-annot-strs ret-annot-origins
                                      reflect-names main-who whos
                                      has-unsafe? unsafes)))))))
 
   (define (generate-prefix+infix stx
                                  main-who
                                  p-name p-extends p-args p-order p-prec p-rhss
-                                 p-ret-converters p-ret-annot-strs p-ret-static-infos
+                                 p-ret-converters p-ret-annot-strs p-ret-annot-origins p-ret-static-infos
                                  p-reflect-names p-whos p-unsafes
                                  i-name i-extends i-lefts i-rights i-order i-prec i-assc i-rhss
-                                 i-ret-converters i-ret-annot-strs i-ret-static-infos
+                                 i-ret-converters i-ret-annot-strs i-ret-annot-origins i-ret-static-infos
                                  i-reflect-names i-whos i-unsafes
                                  #:main-converter [main-converter #f]
-                                 #:main-annot-str [main-annot-str #f])
+                                 #:main-annot-str [main-annot-str #f]
+                                 #:main-annot-origins [main-annot-origins null])
     (define p-has-unsafe? (check-consistent-unsafes stx "prefix" p-unsafes))
     (define i-has-unsafe? (check-consistent-unsafes stx "infix" i-unsafes))
     (with-syntax ([(p-op-proc i-op-proc) (generate-temporaries (list p-name i-name))]
@@ -441,29 +451,30 @@
         (list
          #`(define-values (p-op-proc p-unsafe-proc ...)
              #,(build-unary-function stx p-name
-                                     main-converter main-annot-str
+                                     main-converter main-annot-str main-annot-origins
                                      p-args p-rhss
-                                     p-ret-converters p-ret-annot-strs
+                                     p-ret-converters p-ret-annot-strs p-ret-annot-origins
                                      p-reflect-names main-who p-whos
                                      p-has-unsafe? p-unsafes))
          #`(define-values (i-op-proc i-unsafe-proc ...)
              #,(build-binary-function stx i-name
-                                      main-converter main-annot-str
+                                      main-converter main-annot-str main-annot-origins
                                       i-lefts i-rights i-rhss
-                                      i-ret-converters i-ret-annot-strs
+                                      i-ret-converters i-ret-annot-strs i-ret-annot-origins
                                       i-reflect-names main-who i-whos
                                       i-has-unsafe? i-unsafes)))))))
 
   (define (generate-prefix+postfix stx
                                    main-who
                                    p-name p-extends p-args p-order p-prec p-rhss
-                                   p-ret-converters p-ret-annot-strs p-ret-static-infos
+                                   p-ret-converters p-ret-annot-strs p-ret-annot-origins p-ret-static-infos
                                    p-reflect-names p-whos p-unsafes
                                    a-name a-extends a-args a-order a-prec a-rhss
-                                   a-ret-converters a-ret-annot-strs a-ret-static-infos
+                                   a-ret-converters a-ret-annot-strs a-ret-annot-origins a-ret-static-infos
                                    a-reflect-names a-whos a-unsafes
                                    #:main-converter [main-converter #f]
-                                   #:main-annot-str [main-annot-str #f])
+                                   #:main-annot-str [main-annot-str #f]
+                                   #:main-annot-origins [main-annot-origins null])
     (define p-has-unsafe? (check-consistent-unsafes stx "prefix" p-unsafes))
     (define a-has-unsafe? (check-consistent-unsafes stx "postfix" a-unsafes))
     (with-syntax ([(p-op-proc a-op-proc) (generate-temporaries (list p-name a-name))]
@@ -484,16 +495,16 @@
         (list
          #`(define-values (p-op-proc p-unsafe-proc ...)
              #,(build-unary-function stx p-name
-                                     main-converter main-annot-str
+                                     main-converter main-annot-str main-annot-origins
                                      p-args p-rhss
-                                     p-ret-converters p-ret-annot-strs
+                                     p-ret-converters p-ret-annot-strs p-ret-annot-origins
                                      p-reflect-names main-who p-whos
                                      p-has-unsafe? p-unsafes))
          #`(define-values (a-op-proc a-unsafe-proc ...)
              #,(build-unary-function stx a-name
-                                     main-converter main-annot-str
+                                     main-converter main-annot-str main-annot-origins
                                      a-args a-rhss
-                                     a-ret-converters a-ret-annot-strs
+                                     a-ret-converters a-ret-annot-strs a-ret-annot-origins
                                      a-reflect-names main-who a-whos
                                      a-has-unsafe? a-unsafes)))))))
 
@@ -519,7 +530,7 @@
       [else #f])))
 
 (begin-for-syntax
-  (struct opcase (name extends order prec rhs ret-converter ret-annot-str ret-static-infos orig-reflect-name reflect-name who unsafe))
+  (struct opcase (name extends order prec rhs ret-converter ret-annot-str ret-annot-origins ret-static-infos orig-reflect-name reflect-name who unsafe))
   (struct unary-opcase opcase (arg))
   (struct binary-opcase opcase (left right assc)))
 
@@ -533,24 +544,27 @@
          (generate-prefix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.order #'p.prec (list #'p.rhs)
                           (list (attribute p.ret-converter))
                           (list (attribute p.ret-annot-str))
+                          (list (attribute p.ret-annot-origins))
                           #'p.ret-static-infos
                           (list #'p.reflect-name) (list #'p.who) (list #'p.unsafe))]
         [(_ p::postfix-case)
          (generate-postfix stx #'#f #'p.name #'p.extends (list #'p.arg) #'p.order #'p.prec (list #'p.rhs)
                            (list (attribute p.ret-converter))
                            (list (attribute p.ret-annot-str))
+                           (list (attribute p.ret-annot-origins))
                            #'p.ret-static-infos
                            (list #'p.reflect-name) (list #'p.who) (list #'p.unsafe))]
         [(_ i::infix-case)
          (generate-infix stx #'#f #'i.name #'i.extends (list #'i.left) (list #'i.right) #'i.order #'i.prec #'i.assc (list #'i.rhs)
                          (list (attribute i.ret-converter))
                          (list (attribute i.ret-annot-str))
+                         (list (attribute i.ret-annot-origins))
                          #'i.ret-static-infos
                          (list #'i.reflect-name) (list #'i.who) (list #'i.unsafe))]
         [(_ (_::alts . as))
          (parse-operator-alts stx #'as
                               #f
-                              #f #f #f
+                              #f #f null #f
                               #'() #'() #'()
                               #'#f #'#f)]
         [(_ main-op-name-seq::dotted-operator-or-identifier-sequence
@@ -562,6 +576,7 @@
                               #'main-op-name.name
                               (attribute main-ret.converter)
                               (attribute main-ret.annot-str)
+                              (attribute main-ret.origins)
                               #'main-ret.static-infos
                               #'(~? options.order-name ())
                               #'(~? options.prec ())
@@ -571,7 +586,7 @@
 
 (define-for-syntax (parse-operator-alts stx as-stx
                                         main-name
-                                        main-ret-converter main-ret-annot-str main-ret-static-infos
+                                        main-ret-converter main-ret-annot-str main-ret-annot-origins main-ret-static-infos
                                         main-order main-prec main-assc
                                         main-reflect-name main-who)
   (define (maybe-static-infos/main ops)
@@ -592,6 +607,7 @@
                                    #'p.order #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
                                    (attribute p.ret-annot-str)
+                                   (attribute p.ret-annot-origins)
                                    #'p.ret-static-infos
                                    #'p.reflect-name (stx-or #'p.reflect-name use-main-reflect-name) #'p.who #'p.unsafe
                                    #'p.arg))
@@ -601,6 +617,7 @@
                                    #'p.order #'p.prec #'p.rhs
                                    (attribute p.ret-converter)
                                    (attribute p.ret-annot-str)
+                                   (attribute p.ret-annot-origins)
                                    #'p.ret-static-infos
                                    #'p.reflect-name (stx-or #'p.reflect-name use-main-reflect-name) #'p.who #'p.unsafe
                                    #'p.arg))
@@ -610,6 +627,7 @@
                                     #'i.order #'i.prec #'i.rhs
                                     (attribute i.ret-converter)
                                     (attribute i.ret-annot-str)
+                                    (attribute i.ret-annot-origins)
                                     #'i.ret-static-infos
                                     #'i.reflect-name (stx-or #'i.reflect-name use-main-reflect-name) #'i.who #'i.unsafe
                                     #'i.left #'i.right #'i.assc))
@@ -664,58 +682,63 @@
      (generate-prefix stx
                       #:main-converter main-ret-converter
                       #:main-annot-str main-ret-annot-str
+                      #:main-annot-origins main-ret-annot-origins
                       main-who
                       (opcase-name (car pres)) (opcase-extends (car pres))
                       (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
-                      (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
+                      (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (map opcase-ret-annot-origins pres) (maybe-static-infos/main pres)
                       (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres))]
     [(and (null? pres) (null? posts))
      (generate-infix stx
                      #:main-converter main-ret-converter
                      #:main-annot-str main-ret-annot-str
+                     #:main-annot-origins main-ret-annot-origins
                      main-who
                      (opcase-name (car ins)) (opcase-extends (car ins))
                      (map binary-opcase-left ins) (map binary-opcase-right ins)
                      (opcase-order/main (car ins)) (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                      (map opcase-rhs ins)
-                     (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (maybe-static-infos/main ins)
+                     (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (map opcase-ret-annot-origins ins) (maybe-static-infos/main ins)
                      (map opcase-reflect-name ins) (map opcase-who ins) (map opcase-unsafe ins))]
     [(and (null? pres) (null? ins))
      (generate-postfix stx
                        #:main-converter main-ret-converter
                        #:main-annot-str main-ret-annot-str
+                       #:main-annot-origins main-ret-annot-origins
                        main-who
                        (opcase-name (car posts)) (opcase-extends (car posts))
                        (map unary-opcase-arg posts) (opcase-order/main (car posts)) (opcase-prec/main (car posts)) (map opcase-rhs posts)
-                       (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (maybe-static-infos/main posts)
+                       (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (map opcase-ret-annot-origins posts) (maybe-static-infos/main posts)
                        (map opcase-reflect-name posts) (map opcase-who posts) (map opcase-unsafe posts))]
     [(pair? ins)
      (generate-prefix+infix stx
                             #:main-converter main-ret-converter
                             #:main-annot-str main-ret-annot-str
+                            #:main-annot-origins main-ret-annot-origins
                             main-who
                             (opcase-name (car pres)) (opcase-extends (car pres))
                             (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
-                            (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
+                            (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (map opcase-ret-annot-origins pres) (maybe-static-infos/main pres)
                             (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres)
 
                             (opcase-name (car ins)) (opcase-extends (car ins))
                             (map binary-opcase-left ins) (map binary-opcase-right ins)
                             (opcase-order/main (car ins)) (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                             (map opcase-rhs ins)
-                            (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (maybe-static-infos/main ins)
+                            (map opcase-ret-converter ins) (map opcase-ret-annot-str ins) (map opcase-ret-annot-origins ins) (maybe-static-infos/main ins)
                             (map opcase-reflect-name ins) (map opcase-who ins) (map opcase-unsafe ins))]
     [else
      (generate-prefix+postfix stx
                               #:main-converter main-ret-converter
                               #:main-annot-str main-ret-annot-str
+                              #:main-annot-origins main-ret-annot-origins
                               main-who
                               (opcase-name (car pres)) (opcase-extends (car pres))
                               (map unary-opcase-arg pres) (opcase-order/main (car pres)) (opcase-prec/main (car pres)) (map opcase-rhs pres)
-                              (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (maybe-static-infos/main pres)
+                              (map opcase-ret-converter pres) (map opcase-ret-annot-str pres) (map opcase-ret-annot-origins pres) (maybe-static-infos/main pres)
                               (map opcase-reflect-name pres) (map opcase-who pres) (map opcase-unsafe pres)
 
                               (opcase-name (car posts)) (opcase-extends (car posts))
                               (map unary-opcase-arg posts) (opcase-order/main (car posts)) (opcase-prec/main (car posts)) (map opcase-rhs posts)
-                              (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (maybe-static-infos/main posts)
+                              (map opcase-ret-converter posts) (map opcase-ret-annot-str posts) (map opcase-ret-annot-origins posts) (maybe-static-infos/main posts)
                               (map opcase-reflect-name posts) (map opcase-who posts) (map opcase-unsafe posts))]))

@@ -50,6 +50,10 @@
     [nat3, ...]
 )
 
+ See @secref("stxobj-track") for information about expansion tracking,
+ which applies automatically for some pattern forms in
+ @rhombus(macro_patterns).
+
 }
 
 

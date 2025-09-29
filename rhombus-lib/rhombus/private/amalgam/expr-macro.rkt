@@ -93,12 +93,12 @@
       [_
        (define norm-form (normalize-result form proc))
        (define reloc-form (if relocate-to
-                              (relocate+reraw relocate-to norm-form)
+                              (relocate+reraw relocate-to norm-form #:prop-stx norm-form)
                               norm-form))
        (syntax-parse (unpack-group reloc-form 'expression #f)
          [e::expression #'e.parsed])]))
   (if (or relocate-to loc)
-      (relocate+reraw (or relocate-to loc) stx)
+      (relocate+reraw (or relocate-to loc) stx #:prop-stx stx)
       stx))
 
 (define-for-syntax (normalize-result form proc)

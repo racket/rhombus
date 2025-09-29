@@ -29,11 +29,14 @@
          "maybe-key.rkt"
          (submod "srcloc-object.rkt" for-static-info)
          (submod "string.rkt" static-infos)
+         (submod "map.rkt" for-info)
          (submod "list.rkt" for-compound-repetition)
          "parens.rkt"
          "syntax-wrap.rkt"
          "context-stx.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "origin.rkt"
+         "origin-check.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -101,11 +104,14 @@
    relocate_span
    relocate_group_span
    relocate_ephemeral_span
+   track_origin
    property
    group_property
+   ephemeral_property
    source_properties
    group_source_properties
-   to_source_string))
+   to_source_string
+   debug_info))
 
 (define-static-info-getter get-treelist-of-syntax-static-infos
   (#%index-result #,(get-syntax-static-infos))
@@ -739,6 +745,19 @@
     [(stx prop val preserved?)
      ((make-do-syntax-property who extract-group-ctx) stx prop val (and preserved? #t))]))
 
+(define/method Syntax.ephemeral_property
+  #:static-infos ((#%call-result
+                   (#:at_arities
+                    ((4 ())
+                     (24 #,(get-syntax-static-infos))))))
+  (case-lambda
+    [(stx prop)
+     ((make-do-syntax-property who extract-ephemeral-ctx) stx prop)]
+    [(stx prop val)
+     ((make-do-syntax-property who extract-ephemeral-ctx) stx prop val)]
+    [(stx prop val preserved?)
+     ((make-do-syntax-property who extract-ephemeral-ctx) stx prop val (and preserved? #t))]))
+
 (define/method Syntax.source_properties
   #:static-infos ((#%call-result
                    (#:at_arities
@@ -971,6 +990,16 @@
                                  "")
                        (loop (cdr stxes)))]))))]))
 
+(define/method (Syntax.track_origin stx-in ctx-stx-in)
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+  (define stx (unpack-term/maybe stx-in))
+  (unless stx (raise-annotation-failure who stx-in "Term"))
+  (define ctx-stxes (or (let ([t (unpack-term/maybe ctx-stx-in)])
+                          (and t (list t)))
+                        (check-origins #f ctx-stx-in)
+                        (raise-annotation-failure who ctx-stx-in "Term || (Listable.to_list && List.of(Term))")))
+  (transfer-origins ctx-stxes stx))
+
 (define/method (Syntax.to_source_string stx
                                         #:keep_prefix [keep-prefix? #f]
                                         #:keep_suffix [keep-suffix? #f]
@@ -985,6 +1014,10 @@
                                                       #:keep-prefix? keep-prefix?
                                                       #:keep-suffix? keep-suffix?
                                                       #:inner? inner?)))
+
+(define/method (Syntax.debug_info stx)
+  #:static-infos ((#%call-result #,(get-map-static-infos)))
+  (syntax-debug-info (extract-ctx who stx #:false-ok? #f)))
 
 (define/method (Syntax.srcloc stx)
   #:static-infos ((#%call-result ((#%maybe #,(get-srcloc-static-infos)))))

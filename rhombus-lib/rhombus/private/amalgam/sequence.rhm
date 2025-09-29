@@ -39,7 +39,8 @@ namespace Sequence:
       | '(($statinfo_meta.values_key, $(statinfo_meta.pack_group('$statinfos ...'))))'
     annot_meta.pack_predicate('is_sequence',
                               '(($statinfo_meta.sequence_constructor_key, #true),
-                                ($statinfo_meta.sequence_element_key, $(statinfo_meta.pack(all_statinfos))))')
+                                ($statinfo_meta.sequence_element_key, $(statinfo_meta.pack(all_statinfos))))',
+                              ~track: [a, ...])
 
 fun make(~initial_position: init_pos,
          ~continue_at_position: continue_at_pos = #false,

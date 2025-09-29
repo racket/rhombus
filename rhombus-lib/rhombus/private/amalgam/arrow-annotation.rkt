@@ -6,7 +6,8 @@
                      shrubbery/property
                      "srcloc.rkt"
                      "syntax-map.rkt"
-                     "annot-context.rkt")
+                     "annot-context.rkt"
+                     "origin.rkt")
          racket/unsafe/undefined
          racket/treelist
          shrubbery/print
@@ -284,44 +285,50 @@
                                            (car sis-l)
                                            #`((#%values #,sis)))))))
           #,@(indirect-get-function-static-infos)))
+     (define rest-as
+       (syntax-parse rest-name+ann
+         [(name a::annotation-binding-form) (list #'a)]
+         [_ null]))
      (values
-      (relocate+reraw
-       loc
-       (annotation-binding-form
-        (binding-form
-         #'arrow-infoer
-         #`[who #,arity
-                'who
-                ([lhs l.body l.static-infos lhs-str lhs-kw lhs-name lhs-opt] ...)
-                #,(and rest-name+ann
-                       (syntax-parse rest-name+ann
-                         [#:any rest-name+ann]
-                         [(name a::annotation-binding-form)
-                          #`(name a.binding a.body a.static-infos #,rest-ann-whole? #,(shrubbery-syntax->string #'a))]
-                         [_ #f]))
-                #,(and kw-rest-name+ann
-                       (syntax-parse kw-rest-name+ann
-                         [#:any kw-rest-name+ann]
-                         [(name a::annotation-binding-form)
-                          #`(name a.binding a.body a.static-infos #,(shrubbery-syntax->string #'a))]
-                         [_ #f]))
-                #,kw-rest-first?
-                ([r.binding r.body r.static-infos rhs-name rhs-str] ...)
-                #,(and res-rest-name+ann
-                       (syntax-parse res-rest-name+ann
-                         [#:any res-rest-name+ann]
-                         [(name a::annotation-binding-form)
-                          #`(name a.binding a.body a.static-infos #,res-rest-ann-whole? #,(shrubbery-syntax->string #'a))]))
-                #,static-infos])
-        (if (and (andmap not multi-kws)
-                 (andmap not multi-opts)
-                 (not rest-name+ann)
-                 (not kw-rest-name+ann))
-            ;; simple case, indirection through `lambda` to get name from context
-            #'(lambda (arg-id ...) (who arg-id ...))
-            ;; complex case:
-            #'who)
-        static-infos))
+      (transfer-origins
+       (append (syntax->list #'(l ... r ...)) rest-as)
+       (relocate+reraw
+        loc
+        (annotation-binding-form
+         (binding-form
+          #'arrow-infoer
+          #`[who #,arity
+                 'who
+                 ([lhs l.body l.static-infos lhs-str lhs-kw lhs-name lhs-opt] ...)
+                 #,(and rest-name+ann
+                        (syntax-parse rest-name+ann
+                          [#:any rest-name+ann]
+                          [(name a::annotation-binding-form)
+                           #`(name a.binding a.body a.static-infos #,rest-ann-whole? #,(shrubbery-syntax->string #'a))]
+                          [_ #f]))
+                 #,(and kw-rest-name+ann
+                        (syntax-parse kw-rest-name+ann
+                          [#:any kw-rest-name+ann]
+                          [(name a::annotation-binding-form)
+                           #`(name a.binding a.body a.static-infos #,(shrubbery-syntax->string #'a))]
+                          [_ #f]))
+                 #,kw-rest-first?
+                 ([r.binding r.body r.static-infos rhs-name rhs-str] ...)
+                 #,(and res-rest-name+ann
+                        (syntax-parse res-rest-name+ann
+                          [#:any res-rest-name+ann]
+                          [(name a::annotation-binding-form)
+                           #`(name a.binding a.body a.static-infos #,res-rest-ann-whole? #,(shrubbery-syntax->string #'a))]))
+                 #,static-infos])
+         (if (and (andmap not multi-kws)
+                  (andmap not multi-opts)
+                  (not rest-name+ann)
+                  (not kw-rest-name+ann))
+             ;; simple case, indirection through `lambda` to get name from context
+             #'(lambda (arg-id ...) (who arg-id ...))
+             ;; complex case:
+             #'who)
+         static-infos)))
       tail)]))
 
 (define-for-syntax (parse-arrow-all-of stx ctx)
@@ -379,13 +386,15 @@
                                        #,(static-info-lookup sis #'#%call-result)])))
                 #,@(indirect-get-function-static-infos)))
            (values
-            (relocate+reraw
-             loc
-             (annotation-binding-form
-              (binding-form #'all-of-infoer
-                            #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos))
-              #'who
-              static-infos))
+            (transfer-origins
+             (syntax->list #'(a.parsed ...))
+             (relocate+reraw
+              loc
+              (annotation-binding-form
+               (binding-form #'all-of-infoer
+                             #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos))
+               #'who
+               static-infos)))
             #'tail)])])]))
 
 (define-syntax (arrow-infoer stx)

@@ -4,7 +4,8 @@
                      shrubbery/print
                      shrubbery/property
                      "srcloc.rkt"
-                     "injected.rkt")
+                     "injected.rkt"
+                     "origin.rkt")
          "expression.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -183,7 +184,10 @@
                [(_ ... _::_-expr . _) (values (build-anonymous-function (car args) #'head) #'tail)]
                ;; eagerly parse content of parentheses; we could choose to
                ;; delay parsing by using `rhombus-expression`, instead
-               [e::expression (values (relocate+reraw (maybe-respan #'head) #'e.parsed) #'tail)])]))]))))
+               [e::expression (values (transfer-origin
+                                       #'head
+                                       (relocate+reraw (maybe-respan #'head) #'e.parsed))
+                                      #'tail)])]))]))))
 
 (define-entry-point-syntax #%parens
   (entry-point-transformer
@@ -266,7 +270,7 @@
              (raise-syntax-error #f "too many patterns" #'head)]
             [else
              (syntax-parse (car args)
-               [b::binding (values #'b.parsed #'tail)])]))]))))
+               [b::binding (values (transfer-origin #'head #'b.parsed) #'tail)])]))]))))
 
 (define-repetition-syntax #%parens
   (repetition-transformer
@@ -281,7 +285,7 @@
              (raise-syntax-error #f "too many repetitions" #'head)]
             [else
              (syntax-parse (car args)
-               [r::repetition (values #'r.parsed #'tail)])]))]))))
+               [r::repetition (values (transfer-origin #'head #'r.parsed) #'tail)])]))]))))
 
 (define-syntax #%call
   (expression-infix-operator

@@ -3,7 +3,8 @@
          racket/syntax-srcloc
          syntax/parse/pre
          shrubbery/property
-         shrubbery/print)
+         shrubbery/print
+         "origin.rkt")
 
 (provide syntax-srcloc
          no-srcloc
@@ -119,7 +120,10 @@
   (map no-srcloc (syntax->list stx)))
 
 (define (relocate srcloc stx [prop-stx stx])
-  (datum->syntax stx (syntax-e stx) srcloc prop-stx))
+  (define new-stx (datum->syntax stx (syntax-e stx) srcloc prop-stx))
+  (if (eq? prop-stx stx)
+      new-stx
+      (transfer-origin stx new-stx)))
 
 ;; unlike `relocate`, copies props and potentially updates 'raw
 (define (relocate-id head id)
@@ -174,12 +178,11 @@
   (syntax-parse stx
     #:datum-literals (parsed)
     [((~and tag parsed) kw e)
-     (let ([e (relocate+reraw src-stx #'e)])
+     (let ([e (relocate+reraw src-stx #'e #:prop-stx #'e)])
        (relocate e #`(tag kw #,e) e))]
-    [_ (relocate+reraw src-stx stx)]))
+    [_ (relocate+reraw src-stx stx #:prop-stx stx)]))
 
 (define (relocate-tail tail src-stx)
-  (log-error "?? ~s" src-stx)
   (if (syntax-parse src-stx
         #:datum-literals (group)
         [((~and g group) . _)

@@ -246,7 +246,7 @@
                (define-values (handler arity)
                  (build-case-function no-adjustments '()
                                       #'prompt_handler falses falses
-                                      #f #f
+                                      #f #f null
                                       (datum->syntax #f
                                                      (for/list ([args (in-list argss)])
                                                        (for/list ([arg (in-list (syntax->list args))])
@@ -254,7 +254,7 @@
                                       (datum->syntax #f argss) (datum->syntax #f arg-parsedss)
                                       falses-stx falses-stx
                                       falses-stx falses-stx
-                                      falses falses
+                                      falses falses null
                                       (datum->syntax #f rhss)
                                       g))
                (values rev-gs (hash-set state 'handler handler))]
@@ -266,7 +266,7 @@
                                  falses-stx #'(arg ...) #'(arg.parsed ...) falses-stx
                                  #'#f #'#f
                                  #'#f #'#f
-                                 #f #f
+                                 #f #f null
                                  #'rhs
                                  g))
                (values rev-gs (hash-set state 'handler handler))]
@@ -278,7 +278,7 @@
                                  #'(#f) #'(arg) #'(arg.parsed) #'(#f)
                                  #'#f #'#f
                                  #'#f #'#f
-                                 #f #f
+                                 #f #f null
                                  #'rhs
                                  g))
                (values rev-gs (hash-set state 'handler handler))]

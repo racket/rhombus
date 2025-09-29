@@ -1,0 +1,17 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+def [an_x, ...] = [1, 2, 3]
+
+[an_x, ...]
+[an_x + 1, ...]
+
+Set(an_x, ...)
+
+def [[a_y, ...], ...] = [["a"], ["b", "c"]]
+[[a_y, ...], ...]
+[a_y, ..., ...]
+
+def '$(a_t :: Term) ...' = '1 2 3'
+[a_t, ...]

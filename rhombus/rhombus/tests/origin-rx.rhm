@@ -1,0 +1,20 @@
+#lang rhombus/and_meta
+import:
+  rhombus/rx open
+
+// binding arrows in this file checked by "origin.rhm"
+
+rx'"2" *'
+rx'"2" ? ~greedy'
+
+rx'"2" ++ "3"'
+rx'"2" ++ "3" ++ "4"'
+rx'("2" ++ "3") ++ "4"'
+rx'"0" ("2" ++ "3")'
+
+rx'~~ ("2" ++ "3")'
+
+rx'case_sensitive: "2" ++ "3"'
+rx'case_insensitive: "2" ++ "3"'
+
+rx'if lookahead("1" ++ "2") | "3" ++ "4" | "5" ++ "6"'

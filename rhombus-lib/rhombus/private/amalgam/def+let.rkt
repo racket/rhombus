@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "tag.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "definition.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -106,8 +107,10 @@
          #:suspend
          #,@(top-level-decls #'(lhs-i.bind-id ...))
          (lhs-i.oncer-id lhs-i.data)
-         (define tmp-id (let ([lhs-i.name-id #,(discard-static-infos #'rhs)])
-                          lhs-i.name-id))
+         (define tmp-id #,(transfer-origin
+                           #'lhs.parsed
+                           #`(let ([lhs-i.name-id #,(discard-static-infos #'rhs)])
+                               lhs-i.name-id)))
          (lhs-i.matcher-id tmp-id
                            lhs-i.data
                            if/flattened
@@ -153,8 +156,10 @@
          #,@(top-level-decls #'(lhs-i.bind-id ... ...))
          (lhs-i.oncer-id lhs-i.data)
          ...
-         (define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
-                                       (values lhs-i.name-id ...)))
+         (define-values (tmp-id ...) #,(transfer-origins
+                                        (syntax->list #'(lhs.parsed ...))
+                                        #`(let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
+                                            (values lhs-i.name-id ...))))
          (lhs-i.matcher-id tmp-id
                            lhs-i.data
                            if/flattened

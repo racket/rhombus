@@ -1,0 +1,12 @@
+#lang rhombus/static
+import:
+  lib("setup/getinfo.rkt")
+  lib("racket/base.rkt")
+
+def pkg_dir = Path.parent(base.#{collection-file-path}("main.rkt", "rhombus")) +/ ".."
+
+def get_info = getinfo.#{get-info/full}(pkg_dir)
+
+check:
+  to_string(get_info(#'version))
+  ~is system.version()

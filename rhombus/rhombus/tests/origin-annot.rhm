@@ -1,0 +1,40 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+class Posn(x, y)
+
+when #false
+| 10 :: Sequence.expect_of(Posn)
+
+when #false
+| 10 :: maybe(Posn)
+
+enum Foo:
+  ok
+  ~is_a Posn
+
+annot.macro '$a OR $b':
+  '$a || $b'
+
+when #false
+| 10 :: False OR (List.of(Posn -> Foo) || Array)
+
+fun f() :: Posn:
+  0
+
+class Pt(x, y)
+
+fun g1 :: Pt
+| g1(): 0
+| g1(x): 0
+
+fun g2
+| g2() :~ Pt: 0
+| g2(x) :~ Pt: 0
+
+fun h(& a :: List.of(Pt), ~& kws :: Map.of(Pt, Pt)):
+  0
+
+def x :~ Pt = 0
+let x2 :~ Pt = 0

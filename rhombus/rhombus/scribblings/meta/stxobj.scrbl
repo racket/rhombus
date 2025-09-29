@@ -10,3 +10,4 @@ facilities are specifically intended for metaprogramming in that phase.
 @include_section("stxobj-meta.scrbl")
 @include_section("syntax-parameter.scrbl")
 @include_section("stxobj-map.scrbl")
+@include_section("stxobj-track.scrbl")

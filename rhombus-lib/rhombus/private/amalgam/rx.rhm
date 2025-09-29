@@ -148,18 +148,30 @@ meta:
         if rkt_rx is_a Syntax
         | let [vars_seq, ...]: describe_splice_vars([var, ...], vars)
           // generate run-time construction of a regexp
-          'splice_regexp(#' $self, $rkt_rx, [$vars_seq, ...], $has_backref, $stx_str)'
+          '(splice_regexp(#' $self, $rkt_rx, [$vars_seq, ...], $has_backref, $stx_str))'
+            .track_origin(pat)
         | let rkt_full_rx:
             if is_full
             | compile('sequence(bof, $ast, eof)', vars, num_captures, stx)
             | rkt_rx
           // generate static regexp
-          '_RX(#%literal $(Syntax.inject(rkt_rx)),
-               #%literal $(Syntax.inject(rkt_full_rx)),
-               $num_captures,
-               #%literal $(Syntax.inject(vars)),
-               $has_backref,
-               $stx_str)'
+          '(_RX(#%literal $(Syntax.inject(rkt_rx)),
+                #%literal $(Syntax.inject(rkt_full_rx)),
+                $num_captures,
+                #%literal $(Syntax.inject(vars)),
+                $has_backref,
+                $stx_str))'
+            .track_origin(pat)
+
+  fun unary(op, arg, ~track: origin = arg) :~ Syntax:
+    let '[$arg, $arg_vars]' = rx_meta.unpack(arg)
+    rx_meta.pack('[$op($arg), $arg_vars]').track_origin(origin)
+
+  fun binary(op, left, right, ~track: origin = []) :~ Syntax:
+    let '[$left, [$left_var, ...]]' = rx_meta.unpack(left)
+    let '[$right, [$right_var, ...]]' = rx_meta.unpack(right    )
+    rx_meta.pack('[$op($left, $right), [$left_var, ..., $right_var, ...]]')
+      .track_origin(origin)
 
 expr.macro
 | '«rx ''»':
@@ -183,14 +195,14 @@ expr.macro
 
 rx.macro'$left #%index $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
   ~order: rx_concatenation
-  values(binary('sequence', left, next),
+  values(binary('sequence', left, next, ~track: next),
          '$next.tail ...')
 
 rx.macro
 | '#%brackets [$(cs_g :: Group)]':
     ~order: rx_concatenation
     let '$(cs :: rx_charset_meta.Parsed)' = cs_g
-    rx_meta.pack('[charset($cs), []]')
+    rx_meta.pack('[charset($cs), []]').track_origin(cs)
 | '#%brackets []':
     // empty charset will never match, but this is not the only
     // way to produce an empty charset, so allow it
@@ -226,16 +238,16 @@ rx.macro
     rx_meta.pack('[backref($index), []]')
 
 // the `if` form supports only certain pattern forms
-rx.macro 'if $tst ... | $(thn :: rx_meta.Parsed) | $(els :: rx_meta.Parsed)':
+rx.macro 'if $tst ... | $(thn_pat :: rx_meta.Parsed) | $(els_pat :: rx_meta.Parsed)':
   fun lookahead(form, arg, tag):
     let '[$pat, [$arg_var, ...]]' = rx_meta.unpack(arg)
-    values('$form($tag)($pat)', [arg_var, ...])
-  let (tst, [var, ...]):
+    values('$form($tag)($pat)', [arg_var, ...], [arg])
+  let (tst, [var, ...], [tst_origin, ...]):
     match '$tst ...'
     | '$('$') $(name :: Identifier)':
-        values('backref($name)', [])
+        values('backref($name)', [], [])
     | '$('$') $(index :: Int)':
-        values('backref($index)', [])
+        values('backref($index)', [], [])
     | '$(tag && bound_as rx_meta.space: 'lookahead')($(arg :: rx_meta.Parsed))':
         lookahead('lookahead', arg, tag)
     | '$(bound_as rx_meta.space: '!') $(tag && bound_as rx_meta.space: 'lookahead')($(arg :: rx_meta.Parsed))':
@@ -244,9 +256,10 @@ rx.macro 'if $tst ... | $(thn :: rx_meta.Parsed) | $(els :: rx_meta.Parsed)':
         lookahead('lookbehind', arg, tag)
     | '$(bound_as rx_meta.space: '!') $(tag && bound_as rx_meta.space: 'lookbehind')($(arg :: rx_meta.Parsed))':
         lookahead('not_lookbehind', arg, tag)
-  let '[$thn, [$thn_var, ...]]' = rx_meta.unpack(thn)
-  let '[$els, [$els_var, ...]]' = rx_meta.unpack(els    )
+  let '[$thn, [$thn_var, ...]]' = rx_meta.unpack(thn_pat)
+  let '[$els, [$els_var, ...]]' = rx_meta.unpack(els_pat)
   rx_meta.pack('[if($tst)($thn, $els), [$var, ..., $thn_var, ..., $els_var, ...]]')
+    .track_origin([thn_pat, els_pat, tst_origin, ...])
 
 rx.macro 'lookahead($(arg :: rx_meta.Parsed))':
   ~op_stx: self
@@ -274,15 +287,6 @@ rx.macro '#%literal $(s :: Term)':
                       s)
   rx_meta.pack('[literal($s), []]')
 
-meta:
-  fun unary(op, arg):
-    let '[$arg, $arg_vars]' = rx_meta.unpack(arg)
-    rx_meta.pack('[$op($arg), $arg_vars]')
-  fun binary(op, left, right):
-    let '[$left, [$left_var, ...]]' = rx_meta.unpack(left)
-    let '[$right, [$right_var, ...]]' = rx_meta.unpack(right    )
-    rx_meta.pack('[$op($left, $right), [$left_var, ..., $right_var, ...]]')
-
 rx.macro '$left #%juxtapose $right':
   ~order: rx_concatenation
   binary('sequence', left, right)
@@ -293,7 +297,7 @@ rx.macro '$left ++ $right':
 
 rx.macro '$left #%call $(next :: rx_meta.AfterInfixParsed('#%juxtapose')) $()':
   ~order: rx_concatenation
-  values(binary('sequence', left, next),
+  values(binary('sequence', left, next, ~track: next),
          '$next.tail ...')
 
 rx.macro 'case_sensitive: $(pat :: rx_meta.Parsed)':
@@ -334,19 +338,19 @@ meta:
 rx.macro '$left * $(g :: Greed) $()':
   ~order: rx_repetition
   ~op_stx: self
-  values(unary('repeat(0, #inf, $g.mode, $self)', left),
+  values(unary('repeat(0, #inf, $g.mode, $self)', left, ~track: []),
          '$g.tail ...')
 
 rx.macro '$left + $(g :: Greed) $()':
   ~order: rx_repetition
   ~op_stx: self
-  values(unary('repeat(1, #inf, $g.mode, $self)', left),
+  values(unary('repeat(1, #inf, $g.mode, $self)', left, ~track: []),
          '$g.tail ...')
 
 rx.macro '$left ? $(g :: Greed) $()':
   ~order: rx_repetition
   ~op_stx: self
-  values(unary('repeat(0, 1, $g.mode, $self)', left),
+  values(unary('repeat(0, 1, $g.mode, $self)', left, ~track: []),
          '$g.tail ...')
 
 rx.macro '.* $(g :: Greed) $()':
@@ -364,13 +368,13 @@ rx.macro '.? $(g :: Greed) $()':
 rx.macro #%comp:
   ~order: rx_repetition
 | '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..')}') $(g :: Greed) $()':
-    values(unary('repeat($min, #inf, $g.mode, $self)', left),
+    values(unary('repeat($min, #inf, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
 | '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..=') $(max :: Int)}') $(g :: Greed) $()':
-    values(unary('repeat($min, $max, $g.mode, $self)', left),
+    values(unary('repeat($min, $max, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
 | '$left #%comp $(self && '{$(count :: Int)}') $(g :: Greed) $()':
-    values(unary('repeat($count, $count, $g.mode, $self)', left),
+    values(unary('repeat($count, $count, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
 
 rx.macro '..':
@@ -429,7 +433,7 @@ rx.macro 'word_continue':
   rx_meta.pack('[word_continue, []]')
 
 rx.macro '$left cut':
-  unary('cut', left)
+  unary('cut', left, ~track: [])
 
 defn.macro 'def_charset_alias:
               $name

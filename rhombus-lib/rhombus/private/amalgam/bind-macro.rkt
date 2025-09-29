@@ -23,6 +23,8 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "syntax-wrap.rkt"
+                     "origin.rkt"
+                     "origin-check.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
          (only-in "space.rkt" space-syntax)
@@ -167,9 +169,12 @@
                                  "ill-formed unpacked binding"
                                  "syntax object" stx)]))
 
-  (define/arity (bind_meta.pack_info stx)
+  (define/arity (bind_meta.pack_info stx #:track [components-in null])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (pack-term #`(parsed #:rhombus/bind/info #,(pack-info who stx))))
+    (define components (check-origins who components-in))
+    (pack-term #`(parsed #:rhombus/bind/info #,(transfer-origins
+                                                components-in
+                                                (pack-info who stx)))))
 
   (define/arity (bind_meta.get_info stx unpacked-static-infos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

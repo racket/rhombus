@@ -9,6 +9,7 @@
                      "introducer.rkt"
                      "macro-result.rkt"
                      "srcloc.rkt"
+                     "origin.rkt"
                      (for-syntax racket/base))
          racket/treelist
          "enforest.rkt"
@@ -37,7 +38,6 @@
 
             flatten-repetition
             consume-repetition
-            add-repetition-disappeared
 
             :repetition
             :repetition-info
@@ -158,10 +158,7 @@
                                [(id . tail)
                                 (values (make-repetition-info (list #'id)
                                                               for-clausess
-                                                              (syntax-property
-                                                               for-body
-                                                               'disappeared-use
-                                                               (syntax-local-introduce #'id))
+                                                              for-body
                                                               (element-get-static-infos)
                                                               0)
                                         #'tail)])))))))
@@ -201,14 +198,14 @@
     [else
      (render-repetition/direct rep-parsed depth 'checked for-form)]))
 
-(define-for-syntax (repetition-as-list/unchecked rep-parsed depth)
-  (render-repetition/direct rep-parsed depth 'unchecked #'for/list))
+(define-for-syntax (repetition-as-list/unchecked rep-parsed depth #:origin? [origin? #t])
+  (render-repetition/direct rep-parsed depth 'unchecked #'for/list #:origin? origin?))
 
 (define-for-syntax (render-repetition for-form rep-parsed
                                       #:depth [depth 1])
   (render-repetition/direct rep-parsed depth 'checked for-form))
 
-(define-for-syntax (render-repetition/direct rep-parsed depth mode for-form)
+(define-for-syntax (render-repetition/direct rep-parsed depth mode for-form #:origin? [origin? #t])
   (syntax-parse rep-parsed
     [rep-info::repetition-info
      (define want-depth (length (syntax->list #'rep-info.for-clausess)))
@@ -221,14 +218,16 @@
      (define infos (if (identifier? #'rep-info.element-static-infos)
                        (datum->syntax #f (extract-static-infos #'rep-info.element-static-infos))
                        #'rep-info.element-static-infos))
-     (define (add-disappeared stx)
-       (add-repetition-disappeared stx #'rep-info.rep-expr))
+     (define (add-origin stx)
+       (if origin?
+           (transfer-origin rep-parsed stx)
+           stx))
      (cond
        [(= depth 0)
-        (wrap-static-info* (add-disappeared #'rep-info.body) infos)]
+        (wrap-static-info* (add-origin #'rep-info.body) infos)]
        [else
         (define seq-expr
-          (add-disappeared
+          (add-origin
            (build-for for-form
                       (insert-clause-separators (syntax->list #'rep-info.for-clausess))
                       #'rep-info.body)))
@@ -252,18 +251,20 @@
                              (add1 count)
                              #:at-least? #t))
         (define keep-count (- (length for-clausess) (add1 count)))
-        (make-repetition-info #'rep-info.rep-expr
-                              (let loop ([keep-count keep-count] [for-clausess for-clausess])
-                                (cond
-                                  [(zero? keep-count)
-                                   #`(([(elem) (in-list (for/list #,(insert-clause-separators for-clausess)
-                                                          #,(pack-element (discard-static-infos #'rep-info.body))))]))]
-                                  [else
-                                   (cons (car for-clausess)
-                                         (loop (sub1 keep-count) (cdr for-clausess)))]))
-                              (unpack-element #'elem)
-                              #'rep-info.element-static-infos
-                              (+ (syntax-e #'rep-info.used-depth) count))])]))
+        (transfer-origin
+         rep-parsed
+         (make-repetition-info #'rep-info.rep-expr
+                               (let loop ([keep-count keep-count] [for-clausess for-clausess])
+                                 (cond
+                                   [(zero? keep-count)
+                                    #`(([(elem) (in-list (for/list #,(insert-clause-separators for-clausess)
+                                                           #,(pack-element (discard-static-infos #'rep-info.body))))]))]
+                                   [else
+                                    (cons (car for-clausess)
+                                          (loop (sub1 keep-count) (cdr for-clausess)))]))
+                               (unpack-element #'elem)
+                               #'rep-info.element-static-infos
+                               (+ (syntax-e #'rep-info.used-depth) count)))])]))
 
 (define-for-syntax (consume-repetition rep-parsed for-form static-infos)
   (syntax-parse rep-parsed
@@ -271,20 +272,22 @@
      (define for-clausess (syntax->list #'rep-info.for-clausess))
      (when (null? for-clausess) (error "bad repetition nesting (internal error)"))
      (define keep-count (- (length for-clausess) 1))
-     (make-repetition-info #'rep-info.rep-expr
-                           (let loop ([keep-count keep-count] [for-clausess for-clausess])
-                             (cond
-                               [(zero? keep-count)
-                                null]
-                               [else
-                                (cons (car for-clausess)
-                                      (loop (sub1 keep-count) (cdr for-clausess)))]))
-                           (build-for for-form
-                                      (insert-clause-separators (list-tail for-clausess keep-count))
-                                      #'rep-info.body)
-                           #`((#%index-result rep-info.element-static-infos)
-                              . #,static-infos)
-                           (+ (syntax-e #'rep-info.used-depth) 1))]))
+     (transfer-origin
+      rep-parsed
+      (make-repetition-info #'rep-info.rep-expr
+                            (let loop ([keep-count keep-count] [for-clausess for-clausess])
+                              (cond
+                                [(zero? keep-count)
+                                 null]
+                                [else
+                                 (cons (car for-clausess)
+                                       (loop (sub1 keep-count) (cdr for-clausess)))]))
+                            (build-for for-form
+                                       (insert-clause-separators (list-tail for-clausess keep-count))
+                                       #'rep-info.body)
+                            #`((#%index-result rep-info.element-static-infos)
+                               . #,static-infos)
+                            (+ (syntax-e #'rep-info.used-depth) 1)))]))
 
 ;; Optimize `for/list` over `in-list`, etc. We do this while
 ;; constructing the form, instead of using a `for/list` variant
@@ -334,10 +337,3 @@
       [else (append (syntax->list (car clauses-stxs))
                     (list '#:when #t)
                     (loop (cdr clauses-stxs)))])))
-
-(define-for-syntax (add-repetition-disappeared stx rep-expr)
-  (if (identifier? rep-expr)
-      (syntax-property stx
-                       'disappeared-use
-                       (syntax-local-introduce rep-expr))
-      stx))

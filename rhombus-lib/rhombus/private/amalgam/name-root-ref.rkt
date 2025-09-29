@@ -38,7 +38,7 @@
                                     (symbol->immutable-string (syntax-e field-id))))
                     field-id
                     field-id)
-     'disappeared-use
+     'origin
      (syntax-local-introduce (in-name-root-space prefix)))))
 
 ;; * `binding-ref` as non-#f means that we're parsing a binding, so we
@@ -282,7 +282,7 @@
                         (syntax-raw-suffix-property op-parens-head))
                        field-id))
     name)
-   'disappeared-use
+   'origin
    (let ([root (syntax-local-introduce (in-name-root-space root-id))])
      (if (syntax-original? (syntax-local-introduce field-id))
          ;; enable arrows, etc., from `new-field-id` based on its binding
