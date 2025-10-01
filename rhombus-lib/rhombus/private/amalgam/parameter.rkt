@@ -48,17 +48,17 @@
 
 (define-syntax Parameter.def
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
-         (build-parameter-definition #'(any ...) #'(rhombus-expression (group rhs ...)) stx #f name-prefix)]
+         (build-parameter-definition #'(any ...) #'(rhombus-expression (group rhs ...)) stx #f name-prefix effect-id)]
         [(_ any ...+ (b-tag::block
                       (~optional (~and name-option (group #:name . _)))
                       g ...))
-         (build-parameter-definition #'(any ...) #'(rhombus-body-at b-tag g ...) stx (attribute name-option) name-prefix)]))))
+         (build-parameter-definition #'(any ...) #'(rhombus-body-at b-tag g ...) stx (attribute name-option) name-prefix effect-id)]))))
 
-(define-for-syntax (build-parameter-definition lhs rhs stx name-option name-prefix)
+(define-for-syntax (build-parameter-definition lhs rhs stx name-option name-prefix effect-id)
   (with-syntax ([(name extends converter annotation-str static-infos)
                  (syntax-parse (respan lhs)
                    [(name::dotted-identifier-sequence annot::inline-annotation)

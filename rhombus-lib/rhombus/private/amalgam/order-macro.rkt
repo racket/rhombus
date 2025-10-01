@@ -38,7 +38,7 @@
 
 (define-defn-syntax def
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         [(_ name-seq::dotted-identifier-sequence)
          #:with name::dotted-identifier #'name-seq
@@ -61,7 +61,7 @@
 
 (define-defn-syntax def_set
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         [(_ name-seq::dotted-identifier-sequence
             (_::block

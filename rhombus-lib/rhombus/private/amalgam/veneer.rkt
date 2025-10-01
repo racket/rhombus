@@ -37,7 +37,7 @@
 
 (define-defn-syntax veneer
   (definition-transformer
-    (lambda (stxes name-prefix)
+    (lambda (stxes name-prefix effect-id)
       (syntax-parse stxes
         #:datum-literals (group block)
         [(_ name-seq::dotted-identifier-sequence (tag::parens (group (~literal this) ann-op::annotate-op ann-term ...+))
@@ -53,7 +53,7 @@
          ;; The shape of `finish-data` is recognized in `veneer-annotation+finish`
          ;; and "veneer-meta.rkt"
          (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                          reflect-name name name-extends tail-name
+                                          reflect-name #,effect-id name name-extends tail-name
                                           #,(attribute ann-op.check?) ann-op.name (ann-term ...)]
                                 ;; data accumulated from parsed clauses:
                                 ()))
@@ -78,7 +78,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     reflect-name name name-extends tail-name
+                     reflect-name effect-id name name-extends tail-name
                      check? ann-op-name ann-terms]
            . _)
           [#:ctx forward-base-ctx forward-ctx]

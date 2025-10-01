@@ -60,6 +60,8 @@
     ~all_stx $id
     ~name_prefix: $id
     ~name_prefix $id
+    ~effect_id: $id
+    ~effect_id $id
 ){
 
  Defines @rhombus(defined_name) as a macro
@@ -82,7 +84,10 @@
  option binds an identifier to a symbol or @rhombus(#false) for a name
  prefix created by an enclosing namespace; this prefix should not be used
  for the binding, but it should be used for run-time reports, such as as
- naming the origin of a run-time error.
+ naming the origin of a run-time error. The @rhombus(~effect_id)
+ option binds an identifier to an identifier or @rhombus(#false) for a
+ name to prefix non-definitions in the enclosing context, such as configured
+ through the @rhombus(~effect) option of @rhombus(module_block, ~decl).
 
  Using @vbar alternatives, a single definition can have any number of
  @rhombus(pattern)s, which are tried in order. The @rhombus(defined_name)

@@ -10,7 +10,7 @@
 
 (define-defn-syntax define_equal_name_and_scopes
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ id)

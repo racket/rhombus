@@ -53,13 +53,14 @@
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
         reflect-name
+        effect-id
         . _)
      #'reflect-name]))
 
 (define (class-expand-data-internal-info-fields data)
   (syntax-parse (class-expand-data-stx data)
     [(_ base-stx scope-stx
-        reflect-name name name-extends tail-name
+        reflect-name effect-id name name-extends tail-name
         constructor-field-names
         constructor-field-keywords
         constructor-field-defaults

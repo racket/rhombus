@@ -30,7 +30,7 @@
 
 (define-defn-syntax def
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (_::quotes (group name-seq::dotted-identifier-sequence))

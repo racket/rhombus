@@ -25,7 +25,7 @@
 
 (define-defn-syntax namespace
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        [(form-id #:open
                  (_::block form ...))
@@ -33,7 +33,7 @@
         #`((rhombus-nested-forwarding-sequence
             (open-exports plain #,(intro #'scoped))
             #,(intro
-               #`(rhombus-nested #,name-prefix form ...))))]
+               #`(rhombus-nested #,name-prefix #,effect-id form ...))))]
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
@@ -46,7 +46,7 @@
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
             #,(intro
-               #`(rhombus-nested #,prefix form ...))))]))))
+               #`(rhombus-nested #,prefix #,effect-id form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx

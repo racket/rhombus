@@ -242,7 +242,7 @@
 
 (define-defn-syntax import
   (definition-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        [(_ (_::block r ...))
         #`((rhombus-import #,stx () r ...))]

@@ -162,10 +162,10 @@
 
 (define-decl-syntax export
   (nestable-declaration-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        [(form #:scope_like id:identifier . tail)
-        #:with (~var e (:definition name-prefix)) #'(group . tail)
+        #:with (~var e (:definition name-prefix effect-id)) #'(group . tail)
         #`(#,(relocate+reraw
               stx
               #`(rhombus-forward
@@ -173,7 +173,7 @@
                  #,(relocate-id #'form #'id)
                  e.parsed)))]
        [(head . tail)
-        #:with (~var e (:definition name-prefix)) #'(group . tail)
+        #:with (~var e (:definition name-prefix effect-id)) #'(group . tail)
         #`(#,(relocate+reraw
               stx
               #`(rhombus-forward

@@ -24,7 +24,7 @@
   (property definition-transformer transformer)
   (property definition-sequence-transformer sequence-transformer)
 
-  (define (check-definition-result forms proc name-prefix)
+  (define (check-definition-result forms proc name-prefix effect-id)
     (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "definitions and expressions" forms))
     forms)
 

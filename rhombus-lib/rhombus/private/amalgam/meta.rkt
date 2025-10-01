@@ -37,7 +37,7 @@
 
 (define-for-syntax (make-bridge-definer space-sym)
   (definition-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        [(form-id name-seq::dotted-operator-or-identifier-sequence (tag::block form ...))
         #:with name::dotted-operator-or-identifier #'name-seq

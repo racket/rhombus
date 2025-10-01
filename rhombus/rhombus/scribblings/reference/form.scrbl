@@ -38,7 +38,7 @@ identifiers, expressions, or binding patterns.
   grammar expr
 ){
 
- In syntax descriptions, @rhombus(expr) stands for any expression form.
+ In syntax descriptions, @rhombus(expr) stands for any @deftech{expression} form.
  Function calls, arithmetic, @rhombus(block), and @rhombus(match) are
  some examples of expression forms, but @rhombuslangname(rhombus) provides
  many more.
@@ -101,9 +101,11 @@ identifiers, expressions, or binding patterns.
   grammar defn
 ){
 
- In syntax descriptions, @rhombus(defn) stands for any definition
+ In syntax descriptions, @rhombus(defn) stands for any @deftech{definition}
  form. The @rhombus(def), @rhombus(let), and @rhombus(class) forms are
- examples of definition forms.
+ examples of definition forms. Definitions can appear in a module, in
+ nested contexts such as a @rhombus(namespace), and in local contexts such
+ as the body of @rhombus(fun) or @rhombus(block).
 
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
@@ -135,10 +137,10 @@ identifiers, expressions, or binding patterns.
     $nestable_decl
 ){
 
- In syntax descriptions, @rhombus(decl) is a form that can appear
- immediately in a module, and a @rhombus(nestable_decl) is a form like
- @rhombus(export) that can appear in a @rhombus(namespace) or in a
- module.
+ In syntax descriptions, @rhombus(decl) is a @deftech{declaration} form that can appear
+ immediately in a module. A @rhombus(nestable_decl) is a @deftech{nestable declaration} form like
+ @rhombus(export) that can appear in a module or within a
+ form like @rhombus(namespace).
 
  Besides forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
@@ -156,7 +158,7 @@ identifiers, expressions, or binding patterns.
     ($bind, ...)
 ){
 
- In syntax descriptions, @rhombus(bind) refers to any binding form,
+ In syntax descriptions, @rhombus(bind) refers to any @deftech{binding} form,
  which might be simply an identifier, a binding form annotated with
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
  Some forms also handle multiple-value binding forms, as indicated by

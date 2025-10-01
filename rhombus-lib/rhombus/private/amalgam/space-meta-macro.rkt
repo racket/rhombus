@@ -76,6 +76,7 @@
            #'(enforest-meta-body-step/to-clause-or-decl . forms)
            #'(quote-syntax (rhombus-meta-enforest (#:post-forms ((rhombus-nested
                                                                   #f
+                                                                  #f
                                                                   . forms))))
                            #:local))])))
 
@@ -95,6 +96,7 @@
           #,(if (nestable-declaration? #'form)
                 #'enforest-meta-body-step
                 #'enforest-meta-body-step/to-clause-or-decl)
+          #f
           #f
           #f
           ()

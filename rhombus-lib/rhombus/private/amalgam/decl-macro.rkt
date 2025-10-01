@@ -34,6 +34,8 @@
 
 (define-identifier-syntax-definition-transformer nestable_macro
   rhombus/decl
+  #:extra ([#:name_prefix get-empty-static-infos value]
+           [#:effect_id get-empty-static-infos value])
   #'make-nestable-declaration-transformer)
 
 (define-for-syntax (make-declaration-transformer proc)
@@ -45,10 +47,10 @@
 
 (define-for-syntax (make-nestable-declaration-transformer proc)
   (nestable-declaration-transformer
-   (lambda (tail name-prefix)
+   (lambda (tail name-prefix effect-id)
      (syntax-parse tail
        [(head . tail)
-        (unpack-declarations (proc (pack-tail #'tail) #'head) proc)]))))
+        (unpack-declarations (proc (pack-tail #'tail) #'head name-prefix effect-id) proc)]))))
 
 (define-for-syntax (unpack-declarations form proc)
   (syntax-parse (and (syntax*? form) (unpack-multi form proc #f))

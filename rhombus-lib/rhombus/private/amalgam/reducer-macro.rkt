@@ -241,7 +241,7 @@
 
 (define-syntax chain-back-to-pre-clauser
   (definition-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        #:datum-literals (parsed group)
        [(_ (parsed #:rhombus/reducer/chain
@@ -250,7 +250,7 @@
 
 (define-syntax chain-back-to-body-wrapper
   (definition-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        #:datum-literals (parsed group)
        [(_ (parsed #:rhombus/reducer/chain

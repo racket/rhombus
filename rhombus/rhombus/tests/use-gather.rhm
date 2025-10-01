@@ -1,0 +1,37 @@
+#lang rhombus/tests/lang-gather
+~gather_id vals
+
+import:
+  rhombus/random
+
+export:
+  vals
+
+random.Random().random(1)
+
+fun f(x):
+  x + 1
+
+f(20)
+
+namespace ns:
+  def x = 5
+  "nested"
+
+class Posn(x, y):
+  "in class"
+  method flip(): Posn(y, x)
+  "also in class"
+
+"done"
+
+check:
+  vals
+  ~is [0,
+       21,
+       "nested",
+       "in class",
+       "also in class",
+       "done"]
+
+"happens too late to count"

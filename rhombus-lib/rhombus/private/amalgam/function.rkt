@@ -354,7 +354,7 @@
 
 (define-defn-syntax fun
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         ;; immediate alts case

@@ -141,8 +141,22 @@ different than the enclosing (sub)module.
  sequence in any module that uses the exporting module as its language.
 
  The @rhombus(#%module_block, ~decl) form from @rhombuslangname(rhombus)
- mostly expands as its @rhombus(body) sequence to serve as the body of the
- enclosing module, but it also adds submodule declarations depending on
+ mostly expands its @rhombus(body) sequence to serve as the body of the
+ enclosing module, but it also performs additional adjustments to the
+ module body:
+
+@itemlist(
+
+ @item{For each module-body form that is an expression (as opposed to a
+  @tech{definition} or @tech{declaration}), @rhombus(#%module_block, ~decl)
+  wraps the expression so that its result values are each printed using
+  @rhombus(Evaluator.current_print). Expressions in places where a
+  @tech{nestable declaration} is allowed, such
+  as the body of a @rhombus(namespace), as similarly wrapped for
+  printing---but not expressions in other definition contexts, such as in
+  a @rhombus(fun) or @rhombus(block) body.}
+
+ @item{The @rhombus(#%module_block, ~decl) form adds submodule declarations depending on
  ones that are already immediately declared in the @rhombus(body)
  sequence (see @secref(~doc: guide_doc, "configure") for more information):
 
@@ -180,9 +194,44 @@ different than the enclosing (sub)module.
   as @rhombus(#{enter-parameterization}, ~datum) and
   @rhombus(#{exit-parameterization}, ~datum).}
 
+)}
+
 )
 
+ The @rhombus(module_block) form is ilke @rhombus(#%module_block), but
+ it supports configuration of the extra behaviors by @rhombus(#%module_block).
+
 }
+
+@doc(
+  decl.macro 'module_block:
+                $option
+                ...
+                $body
+                ...'
+
+  grammar option:
+    ~effect $effect_id
+    ~effect: $effect_id
+    ~no_added_submodules
+){
+
+ Like @rhombus(#%module_block), but with options that affect how the
+ module body is treated.
+
+ If an @rhombus(~effect) option provides an @rhombus(effect_id), then
+ @rhombus(effect_id) is prefixed on every form where a @tech{nestable declaration}
+ is allowed by the form is not a @tech{definition} or @tech{declaration}. The binding of
+ @rhombus(effect_id) itself does not need to be an expression form. If no
+ @rhombus(effect_id) is provided, the default causes expression results
+ to be printed as by @rhombus(#%module_block).
+
+ If the @rhombus(~no_added_modules) is provided, then no submodules are
+ automatically declared. Otherwise, submodules are potentially added to
+ the module body in the same way as by @rhombus(#%module_block).
+
+}
+
 
 @doc(
   meta.bridge #{#%module-begin}

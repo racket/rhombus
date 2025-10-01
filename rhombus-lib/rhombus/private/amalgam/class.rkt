@@ -55,10 +55,10 @@
 
 (define-defn-syntax class
   (definition-transformer
-    (lambda (stxes name-prefix)
-      (parse-class stxes name-prefix))))
+    (lambda (stxes name-prefix effect-id)
+      (parse-class stxes name-prefix effect-id))))
 
-(define-for-syntax (parse-class stxes name-prefix)
+(define-for-syntax (parse-class stxes name-prefix effect-id)
   (syntax-parse stxes
     #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
@@ -74,7 +74,7 @@
      ;; The shape of `finish-data` is recognized in `class-annotation+finish`
      ;; and "class-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      reflect-name name name-extends tail-name
+                                      reflect-name #,effect-id name name-extends tail-name
                                       (field.name ...)
                                       (field.keyword ...)
                                       (field.default ...)
@@ -104,7 +104,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     reflect-name name name-extends tail-name
+                     reflect-name effect-id name name-extends tail-name
                      constructor-field-names
                      constructor-field-keywords
                      constructor-field-defaults

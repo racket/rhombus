@@ -28,9 +28,10 @@
                                           (class-clause? e)))
                           (syntax->list #'forms))
             #'(class-body-step/to-clause-or-decl data+accum . forms)]
-           [(_ ([orig-stx base-stx scope-stx reflect-name . _] . _) . forms)
+           [(_ ([orig-stx base-stx scope-stx reflect-name effect-id . _] . _) . forms)
             #'(quote-syntax (rhombus-class (#:post-forms ((rhombus-nested
                                                            reflect-name
+                                                           effect-id
                                                            . forms))))
                             #:local)])))
      (define-syntax class-body-step/to-clause-or-decl
@@ -47,13 +48,14 @@
                #`(begin p ... (class-body-step (data (new-accum ... . accum)) . rest))]
               [(form ...)
                #`(class-body-step (data accum) form ... (group sentinel_declaration) . rest)])]
-           [(_ (~and data+accum ([orig-stx base-stx scope-stx reflect-name . _] . _)) form . rest)
+           [(_ (~and data+accum ([orig-stx base-stx scope-stx reflect-name effect-id . _] . _)) form . rest)
             #`(rhombus-top-step
                #,(if (nestable-declaration? #'form)
                      #'class-body-step
                      #'class-body-step/to-clause-or-decl)
                #f
                reflect-name
+               effect-id
                (data+accum)
                form . rest)]
            [(_ data+accum) #'(begin)]))))))

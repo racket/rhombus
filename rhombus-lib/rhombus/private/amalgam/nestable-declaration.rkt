@@ -13,6 +13,6 @@
 
   (property nestable-declaration-transformer transformer)
 
-  (define (check-nestable-declaration-result forms proc name-prefix)
+  (define (check-nestable-declaration-result forms proc name-prefix effect-id)
     (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "declarations" forms))
     forms))

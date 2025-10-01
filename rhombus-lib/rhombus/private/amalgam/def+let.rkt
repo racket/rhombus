@@ -26,7 +26,7 @@
                              #:check-context [check-context void]
                              #:check-bind-uses [check-bind-uses void])
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (check-context stx)
       (define wrap-definition (make-wrap-definition stx))
       (syntax-parse stx

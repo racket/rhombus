@@ -22,7 +22,7 @@
 
 (define-defn-syntax alias
   (definition-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (_::quotes (group new-name-seq::dotted-operator-or-identifier-sequence))

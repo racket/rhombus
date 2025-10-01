@@ -42,10 +42,10 @@
 
 (define-defn-syntax interface
   (definition-transformer
-    (lambda (stxes name-prefix)
-      (parse-interface stxes name-prefix))))
+    (lambda (stxes name-prefix effect-id)
+      (parse-interface stxes name-prefix effect-id))))
 
-(define-for-syntax (parse-interface stxes name-prefix)
+(define-for-syntax (parse-interface stxes name-prefix effect-id)
   (syntax-parse stxes
     #:datum-literals (group)
     [(_ name-seq::dotted-identifier-sequence options::options-block)
@@ -60,7 +60,7 @@
      ;; The shape of `finish-data` is recognized in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
      (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
-                                      reflect-name name name-extends tail-name]
+                                      reflect-name #,effect-id name name-extends tail-name]
                             ;; data accumulated from parsed clauses:
                             ()))
      (annotation-to-be-defined! #'name)
@@ -82,7 +82,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ ([orig-stx base-stx init-scope-stx
-                     reflect-name name name-extends tail-name]
+                     reflect-name effect-id name name-extends tail-name]
            . _)
           [#:ctx forward-base-ctx forward-ctx]
           exports

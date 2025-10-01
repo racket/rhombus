@@ -18,7 +18,7 @@
 
 (define-defn-syntax sequence_macro
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         [(_ id (tag::block rhs-g))
          (list

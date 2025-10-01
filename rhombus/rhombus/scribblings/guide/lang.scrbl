@@ -54,10 +54,10 @@ to work:
  Using that @rhombus(#{#%module-begin}) obliges the module to also export
  @rhombus(#%module_body, ~datum).}
 
- @item{@rhombus(#%module_body, ~datum): A Rhombus declaration form that
+ @item{@rhombus(#%module_block, ~datum): A Rhombus declaration form that
  is implicitly wrapped around a module's body by
  @rhombus(#{#%module-begin}). The module body is received as a block.
- Exporting @rhombus(#%module_body, ~decl) from @rhombuslangname(rhombus)
+ Exporting @rhombus(#%module_block, ~decl) from @rhombuslangname(rhombus)
  causes the module body to be treated the same as a sequence of
  declarations, definitions, and expressions in a
  @rhombuslangname(rhombus) module.}
@@ -75,7 +75,7 @@ to work:
  is implicitly wrapped around interactive evaluation by
  @rhombus(#{#%top-interaction}). A form sequence o evaluate is received
  as a block. Exporting @rhombus(#%interaction, ~decl) from
- @rhombuslangname(rhombus) a REPL to work in the same way as for
+ @rhombuslangname(rhombus) allows a REPL to work in the same way as for
  @rhombuslangname(rhombus) module.}
 
  @item{Other bindings as needed by the language, especially common forms

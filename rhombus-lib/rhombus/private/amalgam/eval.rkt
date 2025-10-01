@@ -10,7 +10,9 @@
          (submod "annotation.rkt" for-class)
          "name-root.rkt"
          (submod "module-path-object.rkt" for-primitive)
-         (submod "parameter.rkt" for-info))
+         (submod "parameter.rkt" for-info)
+         "rhombus-primitive.rkt"
+         "rename-parameter.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -27,6 +29,7 @@
   (make_rhombus_empty
    make_rhombus
    [current current-namespace]
+   [current_print Evaluator.current_print]
    import
    instantiate
    module_is_declared))
@@ -105,3 +108,6 @@
                                   #:load [load? #f])
   (check-module-path who mod-path)
   (module-declared? (module-path-s-exp-or-index-or-resolved mod-path) load?))
+
+(define Evaluator.current_print (rename-parameter current-print 'Evaluator.current_print))
+(set-primitive-who! 'current-print 'Evaluator.current_print)

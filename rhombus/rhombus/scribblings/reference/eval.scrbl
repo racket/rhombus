@@ -118,6 +118,19 @@ by an evaluator, for example.
 }
 
 @doc(
+  Parameter.def Evaluator.current_print :: Any -> Any
+){
+
+ A @tech{context parameter} for a printing function is that is by
+ @rhombus(#%module_block) to print expression results in a module body or
+ used by a read-eval-print loop (REPL) to print results.
+
+ The default handler prints using @rhombus(show), except that
+ @rhombus(#void) is not printed.
+
+}
+
+@doc(
   decl.macro '#%interaction:
                 $body
                 ...'

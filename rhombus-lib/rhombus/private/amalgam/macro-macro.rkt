@@ -530,7 +530,7 @@
                                                                  extra-shapes)
   (define kind protocol)
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (alts-tag::alts (_::block (group q::operator-syntax-quote
@@ -669,7 +669,7 @@
                                                                           extra-kws
                                                                           extra-shapes)
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (parse-identifier-syntax-transformer
        stx
        compiletime-id extra-kws extra-shapes
@@ -756,7 +756,7 @@
                                                                                    extra-kws
                                                                                    extra-shapes)
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id q::identifier-sequence-syntax-quote

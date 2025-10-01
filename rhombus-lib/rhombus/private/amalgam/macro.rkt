@@ -32,7 +32,7 @@
 
 (define-defn-syntax macro
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (_::alts (_::block (group (_::quotes (group (_::parens) . pat)) (_::block . _)))

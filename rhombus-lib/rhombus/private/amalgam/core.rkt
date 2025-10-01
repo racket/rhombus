@@ -30,6 +30,7 @@
          "parse.rkt"
          "forwarding-sequence.rkt"
          "parens.rkt"
+         "effect.rkt"
          (submod "expression.rkt" for-top-expand)
          (only-in (submod "module.rkt" for-module-begin)
                   rhombus:module))
@@ -39,6 +40,7 @@
          #%top
          (for-space rhombus/decl
                     #%module_block
+                    module_block
                     #%interaction)
          (for-syntax
           ;; anything exported in the default space needs
@@ -208,7 +210,7 @@
      (with-syntax ([#%module_block (datum->syntax stx '#%module_block)])
        (unless (declaration-bound? #'#%module_block)
          (raise-no-module-block stx #'content))
-       #`(#%printing-module-begin
+       #`(#%plain-module-begin
           (#%declare #:realm rhombus
                      #:require=define)
           #,(if use-module-block?
@@ -219,20 +221,36 @@
 (define-decl-syntax #%module_block
   (declaration-transformer
    (lambda (stx)
-     (parse-module-block stx #t))))
+     (parse-module-block stx #t #'#%effect))))
+
+(define-decl-syntax module_block
+  (declaration-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id (b-tag::block
+                  (~alt (~optional (group #:effect ~! (~or (_::block (group effect-id:identifier))
+                                                           effect-id:identifier)))
+                        (~optional (group (~and #:no_additional_submodules no-submod) ~!)))
+                  ...
+                  . content))
+        (parse-module-block #'(form-id (b-tag . content))
+                            (not (attribute no-submod))
+                            (or (attribute effect-id)
+                                #'#%effect))]))))
 
 (define-decl-syntax module_block_no_submodules
   (declaration-transformer
    (lambda (stx)
-     (parse-module-block stx #f))))
+     (parse-module-block stx #f #f))))
 
-(define-for-syntax (parse-module-block stx submodules?)
+(define-for-syntax (parse-module-block stx submodules? effect-id)
   (syntax-parse stx
     #:datum-literals ()
-    [(_ (_::block . content))
+    [(form-id (_::block . content))
      (define contents (syntax->list #'content))
      #`((rhombus-module-forwarding-sequence
-         (rhombus-top . content))
+         (rhombus-module-top #,effect-id . content))
         #,@(cond
              [submodules?
               (cons

@@ -11,5 +11,5 @@
 ;; as a sequence of tail expressions and definitions
 (define-decl-syntax sentinel_declaration
   (nestable-declaration-transformer
-   (lambda (stx name-prefix)
+   (lambda (stx name-prefix effect-id)
      #'())))

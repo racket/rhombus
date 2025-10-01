@@ -204,7 +204,7 @@
 
 (define-defn-syntax infoer
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (_::quotes (group infoer-id:identifier . _))
@@ -249,7 +249,7 @@
 
 (define-defn-syntax oncer
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (_::quotes (group builder-id:identifier . _))
@@ -282,7 +282,7 @@
 
 (define-defn-syntax matcher
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (_::quotes (group builder-id:identifier . _))
@@ -344,7 +344,7 @@
 
 (define-defn-syntax if-bridge
   (definition-transformer
-    (lambda (stx name-prefix) (list (parse-if-bridge stx)))))
+    (lambda (stx name-prefix effect-id) (list (parse-if-bridge stx)))))
 
 (define-for-syntax (parse-chain-to-oncer rhombus stx)
   (syntax-parse stx
@@ -359,7 +359,7 @@
 
 (define-defn-syntax chain-to-oncer
   (definition-transformer
-    (lambda (stx name-prefix) (list (parse-chain-to-oncer #'rhombus-body-sequence stx)))))
+    (lambda (stx name-prefix effect-id) (list (parse-chain-to-oncer #'rhombus-body-sequence stx)))))
 
 (define-for-syntax (parse-chain-to-matcher rhombus stx)
   ;; depends on `IF` like `if-bridge` does
@@ -397,7 +397,7 @@
 
 (define-defn-syntax chain-to-matcher
   (definition-transformer
-    (lambda (stx name-prefix) (list (parse-chain-to-matcher #'rhombus-body-sequence stx)))))
+    (lambda (stx name-prefix effect-id) (list (parse-chain-to-matcher #'rhombus-body-sequence stx)))))
 
 (define-syntax (if-via-rhombus stx)
   (syntax-parse stx
@@ -429,7 +429,7 @@
 
 (define-defn-syntax chain-to-committer
   (definition-transformer
-    (lambda (stx name-prefix) (list (parse-chain-to-committer #'rhombus-body-sequence stx)))))
+    (lambda (stx name-prefix effect-id) (list (parse-chain-to-committer #'rhombus-body-sequence stx)))))
 
 (define-for-syntax (parse-chain-to-binder rhombus stx)
   ;; depends on `IF` like `if-bridge` does
@@ -448,11 +448,11 @@
 
 (define-defn-syntax chain-to-binder
   (definition-transformer
-    (lambda (stx name-prefix) (list (parse-chain-to-binder #'rhombus-body-sequence stx)))))
+    (lambda (stx name-prefix effect-id) (list (parse-chain-to-binder #'rhombus-body-sequence stx)))))
 
 (define-for-syntax binder-or-committer
   (definition-transformer
-    (lambda (stx name-prefix)
+    (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id (_::quotes (group builder-id:identifier
