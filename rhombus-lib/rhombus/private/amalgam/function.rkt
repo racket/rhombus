@@ -72,7 +72,8 @@
   #:namespace-fields
   (of_arity
    all_of
-   [pass Function.pass/optimize])
+   [pass Function.pass/optimize]
+   [black_box Function.black_box])
   #:properties
   ()
   #:methods
@@ -748,6 +749,9 @@
         (values
          (relocate-id #'form-id #'Function.pass)
          #'new-tail)]))))
+
+(define/arity (Function.black_box v)
+  (black-box v))
 
 (define-syntax (for/single-valued stx)
   (syntax-parse stx

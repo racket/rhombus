@@ -526,6 +526,26 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 
 }
 
+@doc(
+  fun Function.black_box(x :: Any) :: Any
+){
+
+ Returns its argument, and not only discards static information from the
+ argument like @rhombus(dynamic), but also suppresses lower-level
+ optimizations that would rely on @rhombus(Function.black_box) returning
+ its argument.
+
+ Optimization passes treat @rhombus(Function.black_box) as having an
+ unknown effect and returning an unknown (single) value. These
+ assumptions ensure that @rhombus(x) will be computed at run time, that
+ its value will be retained until the call to
+ @rhombus(Function.black_box), and the call cannot be reordered with
+ respect to other potential side effects. The compiler is free to
+ utimately discard the function call, however, so the added overhead is
+ minimal beyond making @rhombus(x) opaque to optimization.
+
+}
+
 
 @doc(
   method (f :: Function).arity()
