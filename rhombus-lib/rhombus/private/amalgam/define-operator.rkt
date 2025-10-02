@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/operator
                      "srcloc.rkt")
          "repetition.rkt"
          "compound-repetition.rkt"
@@ -13,38 +14,35 @@
 
 (provide define-prefix
          define-infix
+         define-prefixes
+         define-infixes)
 
-         (for-syntax prefix
-                     infix))
-
-(begin-for-syntax
-  (require (for-syntax racket/base
-                       syntax/parse/pre))
-
-  (define-syntax (prefix stx)
-    (syntax-parse stx
-      [(_ prim:identifier
-          (~optional (~seq #:order order-id:identifier))
-          (~optional (~seq #:precedences precedences-expr))
-          (~optional (~seq #:weaker-than (weaker-op ...))
-                     #:defaults ([(weaker-op 1) '()]))
-          (~optional (~seq #:same-as (same-op ...))
-                     #:defaults ([(same-op 1) '()]))
-          (~optional (~seq #:same-on-right-as (same-on-right-op ...))
-                     #:defaults ([(same-on-right-op 1) '()]))
-          (~optional (~seq #:same-on-left-as (same-on-left-op ...))
-                     #:defaults ([(same-on-left-op 1) '()]))
-          (~optional (~seq #:stronger-than (stronger-op ...))
-                     #:defaults ([(stronger-op 1) '()]))
-          (~optional (~seq #:static-infos statinfos)
-                     #:defaults ([statinfos #'()]))
-          (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
-                     #:defaults ([flprim #'#f]
-                                 [flonum-statinfos #'()]))
-          (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
-                     #:defaults ([fxprim #'#f]
-                                 [fixnum-statinfos #'()])))
-       #`(make-expression&repetition-prefix-operator
+(define-syntax (define-prefixes stx)
+  (syntax-parse stx
+    [(_ define-syntaxes (name1 name2)
+        prim:identifier
+        (~optional (~seq #:order order-id:identifier))
+        (~optional (~seq #:precedences precedences-expr))
+        (~optional (~seq #:weaker-than (weaker-op ...))
+                   #:defaults ([(weaker-op 1) '()]))
+        (~optional (~seq #:same-as (same-op ...))
+                   #:defaults ([(same-op 1) '()]))
+        (~optional (~seq #:same-on-right-as (same-on-right-op ...))
+                   #:defaults ([(same-on-right-op 1) '()]))
+        (~optional (~seq #:same-on-left-as (same-on-left-op ...))
+                   #:defaults ([(same-on-left-op 1) '()]))
+        (~optional (~seq #:stronger-than (stronger-op ...))
+                   #:defaults ([(stronger-op 1) '()]))
+        (~optional (~seq #:static-infos statinfos)
+                   #:defaults ([statinfos #'()]))
+        (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
+                   #:defaults ([flprim #'#f]
+                               [flonum-statinfos #'()]))
+        (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
+                   #:defaults ([fxprim #'#f]
+                               [fixnum-statinfos #'()])))
+     #`(define-syntaxes (name1 name2)
+         (make-expression&repetition-prefix-operator
           (~? (lambda () (order-quote order-id))
               #f)
           (~? precedences-expr
@@ -93,35 +91,36 @@
                    #`(if flonum?
                          #`flonum-statinfos
                          #`statinfos)
-                   #`#`statinfos))))]))
+                   #`#`statinfos)))))]))
 
-  (define-syntax (infix stx)
-    (syntax-parse stx
-      [(_ prim:identifier
-          (~optional (~seq #:order order-id:identifier))
-          (~optional (~seq #:precedences precedences-expr))
-          (~optional (~seq #:weaker-than (weaker-op ...))
-                     #:defaults ([(weaker-op 1) '()]))
-          (~optional (~seq #:same-as (same-op ...))
-                     #:defaults ([(same-op 1) '()]))
-          (~optional (~seq #:same-on-left-as (same-on-left-op ...))
-                     #:defaults ([(same-on-left-op 1) '()]))
-          (~optional (~seq #:stronger-than (stronger-op ...))
-                     #:defaults ([(stronger-op 1) '()]))
-          (~optional (~seq #:associate assoc)
-                     #:defaults ([assoc #''left]))
-          (~optional (~seq #:static-infos statinfos)
-                     #:defaults ([statinfos #'()]))
-          (~optional (~seq #:merge-static-infos merge-statinfos)
-                     #:defaults ([merge-statinfos #'(lambda (l r s) s)]))
-          (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
-                     #:defaults ([flprim #'#f]
-                                 [flonum-statinfos #'()]))
-          (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
-                     #:defaults ([fxprim #'#f]
-                                 [fixnum-statinfos #'()]))
-          (~optional (~seq (~and #:negatable negatable))))
-       #`(make-expression&repetition-infix-operator
+(define-syntax (define-infixes stx)
+  (syntax-parse stx
+    [(_ define-syntaxes (name1 name2)
+        prim:identifier
+        (~optional (~seq #:order order-id:identifier))
+        (~optional (~seq #:precedences precedences-expr))
+        (~optional (~seq #:weaker-than (weaker-op ...))
+                   #:defaults ([(weaker-op 1) '()]))
+        (~optional (~seq #:same-as (same-op ...))
+                   #:defaults ([(same-op 1) '()]))
+        (~optional (~seq #:same-on-left-as (same-on-left-op ...))
+                   #:defaults ([(same-on-left-op 1) '()]))
+        (~optional (~seq #:stronger-than (stronger-op ...))
+                   #:defaults ([(stronger-op 1) '()]))
+        (~optional (~seq #:associate assoc))
+        (~optional (~seq #:static-infos statinfos)
+                   #:defaults ([statinfos #'()]))
+        (~optional (~seq #:merge-static-infos merge-statinfos)
+                   #:defaults ([merge-statinfos #'(lambda (l r s) s)]))
+        (~optional (~seq #:flonum flprim:identifier flonum-statinfos)
+                   #:defaults ([flprim #'#f]
+                               [flonum-statinfos #'()]))
+        (~optional (~seq #:fixnum fxprim:identifier fixnum-statinfos)
+                   #:defaults ([fxprim #'#f]
+                               [fixnum-statinfos #'()]))
+        (~optional (~seq (~and #:negatable negatable))))
+     #`(define-syntaxes (name1 name2)
+         (make-expression&repetition-infix-operator
           (~? (lambda () (order-quote order-id))
               #f)
           (~? precedences-expr
@@ -182,7 +181,12 @@
                          #`flonum-statinfos
                          (merge-statinfos form1 form2 #`statinfos))
                    #`(merge-statinfos form1 form2 #`statinfos))))
-          assoc)])))
+          #,(cond
+              [(attribute assoc) #'assoc]
+              [(attribute order-id)
+               (define o (syntax-local-value (in-order-space #'order-id)))
+               #`'#,(order-assoc o)]
+              [else #''left])))]))
 
 (define-syntax (define-prefix stx)
   (syntax-parse stx
@@ -195,8 +199,8 @@
          #,@(if (attribute who?)
                 (list #`(void (set-primitive-who! 'prim '(~? ext-name name))))
                 '())
-         (define-syntaxes (name #,(in-repetition-space #'name))
-           (prefix prim spec ...)))]))
+         (define-prefixes define-syntaxes (name #,(in-repetition-space #'name))
+           prim spec ...))]))
 
 (define-syntax (define-infix stx)
   (syntax-parse stx
@@ -209,5 +213,5 @@
          #,@(if (attribute who?)
                 (list #`(void (set-primitive-who! 'prim '(~? ext-name name))))
                 '())
-         (define-syntaxes (name #,(in-repetition-space #'name))
-           (infix prim spec ...)))]))
+         (define-infixes define-syntaxes (name #,(in-repetition-space #'name))
+           prim spec ...))]))

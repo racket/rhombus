@@ -89,16 +89,16 @@
   #:static-infos #,(get-number-static-infos)
   #:flonum fl+ #,(get-flonum-static-infos))
 
-(define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
-  (prefix -
-          #:order addition
-          #:static-infos #,(get-number-static-infos)
-          #:flonum fl- #,(get-flonum-static-infos)))
-(define-values-for-syntax (minus-expr-infix minus-repet-infix)
-  (infix -
-         #:order addition
-         #:static-infos #,(get-number-static-infos)
-         #:flonum fl- #,(get-flonum-static-infos)))
+(define-prefixes define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
+  -
+  #:order addition
+  #:static-infos #,(get-number-static-infos)
+  #:flonum fl- #,(get-flonum-static-infos))
+(define-infixes define-values-for-syntax (minus-expr-infix minus-repet-infix)
+  -
+  #:order addition
+  #:static-infos #,(get-number-static-infos)
+  #:flonum fl- #,(get-flonum-static-infos))
 
 (define-syntax rhombus-
   (expression-prefix+infix-operator
@@ -140,9 +140,9 @@
   (define parse-not void)
   (define (set-parse-not! proc) (set! parse-not proc)))
 
-(define-values-for-syntax (not-expr-prefix not-repet-prefix)
-  (prefix not
-          #:order logical_negation))
+(define-prefixes define-values-for-syntax (not-expr-prefix not-repet-prefix)
+  not
+  #:order logical_negation)
 (define-values-for-syntax (not-expr-infix not-repet-infix)
   (values
    (expression-infix-operator

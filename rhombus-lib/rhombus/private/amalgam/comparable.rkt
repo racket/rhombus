@@ -270,14 +270,14 @@
        '()
        'automatic
        (make-comp-expression 'op)
-       'left))
+       'none))
     (define-repetition-syntax def-op
       (repetition-infix-operator
        (lambda () (order-quote order_comparison))
        '()
        'automatic
        (make-comp-repetition 'op)
-       'left))))
+       'none))))
 
 (define-compare-op rhombus< <)
 (define-compare-op rhombus<= <=)

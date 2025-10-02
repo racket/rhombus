@@ -35,3 +35,20 @@ check:
 check:
   2**2 <= 2**2 && 2**2 > 2**2 || 2**2 == 2**2
   ~is 4 <= 4 && 4 > 4 || 4 == 4
+
+macro 'check_non_assoc:
+         $op ...
+         ...':
+  'block:
+     check:
+       ~eval
+       1 $op 2 $op 3
+       ~throws "found operators at same precedence, but both are non-associative"
+     ...
+     ...'
+
+check_non_assoc:
+  == != ===
+  is_now is_same_number_or_object
+  < <= compares_equal compares_unequal >= >
+  .< .<= .= .!= .>= .>
