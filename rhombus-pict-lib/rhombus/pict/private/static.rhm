@@ -1969,7 +1969,8 @@ fun table(rows :: List.of(List.of(Pict)),
                     | ~else: vsep)
         let r = build(picts)
         if !hline && !vline && !line_c
-        | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...], build)
+        | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
+                                       fun (elems): retry(group_by(elems, row_length)))
           match ins
           | [h, v]: p._pad(h, v, h, v, #false)
           | [l, t, r, b]: p._pad(l, t, r, b, #false)
@@ -2052,7 +2053,7 @@ fun table(rows :: List.of(List.of(Pict)),
                         dy + sep)
           let r = add_lines(r)
           let p = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
-                              fun (handles): add_lines(build(handles)))
+                              fun (elems): retry(group_by(elems, row_length)))
           if line_c
           | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
           | p
