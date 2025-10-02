@@ -266,7 +266,10 @@
     ~hline: hline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
     ~hline_width: hline_width :: LineWidth || List.of(LineWidth) = line_width,
     ~vline: vline :: maybe(ColorMode) || List.of(maybe(ColorMode)) = line_c,
-    ~vline_width: vline_width :: LineWidth || List.of(LineWidth) = line_width
+    ~vline_width: vline_width :: LineWidth || List.of(LineWidth) = line_width,
+    ~order: order :: OverlayOrder = #'front,
+    ~duration: duration_align :: DurationAlignment = #'sustain,
+    ~epoch: epoch_align :: EpochAlignment = #'center
   ) :: Pict
 ){
 

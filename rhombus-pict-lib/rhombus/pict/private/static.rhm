@@ -1969,12 +1969,13 @@ fun table(rows :: List.of(List.of(Pict)),
                     | ~else: vsep)
         let r = build(picts)
         if !hline && !vline && !line_c
-        | let p :~ _Pict = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
-                                       fun (elems): retry(group_by(elems, row_length)))
-          match ins
-          | [h, v]: p._pad(h, v, h, v, #false)
-          | [l, t, r, b]: p._pad(l, t, r, b, #false)
-          | ~else: p._pad(ins, ins, ins, ins, #false)
+        | let r:
+            match ins
+            | [h, v]: rkt.inset(r, h, v, h, v)
+            | [l, t, r, b]: rkt.inset(r, l, t, r, b)
+            | ~else: rkt.inset(r, ins, ins, ins, ins)
+          static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
+                      fun (elems): retry(group_by(elems, row_length)))
         | let picts = [& picts]
           let col_length = rows.length()
           let ws:
@@ -2052,11 +2053,20 @@ fun table(rows :: List.of(List.of(Pict)),
                         i + 1,
                         dy + sep)
           let r = add_lines(r)
-          let p = static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
-                              fun (elems): retry(group_by(elems, row_length)))
-          if line_c
-          | rectangle(~around: p, ~line: line_c, ~line_width: line_width, ~order: order)
-          | p
+          let r:
+            if line_c
+            | let rect:
+                rectangle(~width: rkt.#{pict-width}(r),
+                          ~height: rkt.#{pict-height}(r),
+                          ~line: line_c,
+                          ~line_width: line_width)
+                  .snapshot(0).handle
+              if order == #'front
+              | rkt.#{cc-superimpose}(rect, r)
+              | rkt.#{cc-superimpose}(r, rect)
+            | r
+          static_pict(r, [elem, ..., ...], [elem._instances, ..., ...],
+                      fun (elems): retry(group_by(elems, row_length)))
     | [[elem, ...], ...]:
         let len = rows[0].length()
         convert([elem, ..., ...], epoch, duration,
