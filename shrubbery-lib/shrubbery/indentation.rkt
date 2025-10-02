@@ -215,8 +215,8 @@
                                                           #:variant variant)))
   (define tabs (let ([tabs (leftmost (add-zero candidates))])
                  (if reverse?
-                     tabs
-                     (reverse tabs))))
+                     (reverse tabs)
+                     tabs)))
   ;; if the current state matches a candidate tab, we'll
   ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))

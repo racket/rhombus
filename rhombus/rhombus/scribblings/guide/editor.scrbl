@@ -17,7 +17,7 @@ program source starts
 
 then DrRacket will load an use an editor mode suitable for Rhombus. In
 particular, the Tab key will cycle though valid indentations of the
-current line.
+current line, and Shift-Tab cycles in the opposite order.
 
 Rhombus is supported in Emacs through
 @hyperlink("https://github.com/greghendershott/racket-mode"){Racket
