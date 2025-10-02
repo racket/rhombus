@@ -23,16 +23,24 @@ fun magic_move(all_pre :: Pict, post :: Pict,
         if all_pre.duration == 1
         | all_pre
         | all_pre.time_pad(~before: -(all_pre.duration - 1))
-      fun get_common(p :~ Pict, other_p :~ Pict) :~ values(Map, Set):
-        recur loop(p :~ Pict = p, accum = {}) :~ values(Map, Set):
+      fun get_common(start_p :~ Pict, other_p :~ Pict) :~ values(Map, Set):
+        recur loop(p :~ Pict = start_p, accum = {}) :~ values(Map, Set):
           for values(accum :~ Map = accum, tops :~ Set = Set{}) (child: p.children):
-            let (x, y) = Find(child).maybe_in(other_p)
-            if x
+            let (tx, ty) = Find.top_left(child).maybe_in(other_p)
+            let exists = tx
+            let moves:
+              exists && block:
+                let (fx, fy) = Find.top_left(child).in(start_p)
+                fx != tx || fy != ty || block:
+                  let (tx2, ty2) = Find.bottom_right(child).maybe_in(other_p)
+                  let (fx2, fy2) = Find.bottom_right(child).maybe_in(start_p)
+                  fx2 != tx2 || fy2 != ty2
+            if moves
             | values(accum ++ { child.identity: child },
                      tops)
             | let (new_accum, new_tops) = loop(child, accum)
               if new_accum.length() == accum.length()
-              | values(accum, tops ++ { child })
+              | values(accum, if exists | tops | tops ++ { child })
               | values(new_accum, tops ++ new_tops)
       let (common_via_pre, pre_tops) = get_common(pre, post)
       let (common_via_post, post_tops) = get_common(post, pre)
