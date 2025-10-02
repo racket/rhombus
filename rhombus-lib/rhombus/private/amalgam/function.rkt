@@ -10,6 +10,7 @@
                      "annot-context.rkt")
          racket/keyword
          racket/treelist
+         "../version-case.rkt"
          "provide.rkt"
          (submod "function-parse.rkt" for-build)
          (submod "list.rkt" for-compound-repetition)
@@ -751,7 +752,10 @@
          #'new-tail)]))))
 
 (define/arity (Function.black_box v)
-  (black-box v))
+  (meta-if-version-at-least
+   "8.18.0.17"
+   (black-box v)
+   v))
 
 (define-syntax (for/single-valued stx)
   (syntax-parse stx
