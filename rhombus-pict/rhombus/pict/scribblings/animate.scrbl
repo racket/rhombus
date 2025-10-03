@@ -468,6 +468,9 @@
   fun magic_move(
     from :: Pict,
     to :: Pict,
+    ~move: move :: maybe(Listable.to_list && List.of(Pict)) = #false,
+    ~remove: remove :: Listable.to_list && List.of(Pict) = [],
+    ~add: add :: Listable.to_list && List.of(Pict) = [],
     ~join: join :: SequentialJoin = #'step,
     ~other: other :: NoncommonMode = #'switch,
     ~extent: extent :: NonnegReal = 0.5,
@@ -482,11 +485,21 @@
  their positions and scales in @rhombus(from) to their positions and
  scales in @rhombus(to).
 
- If @rhombus(other) is @rhombus(#'switch) elements not common to
+ If @rhombus(move) is supplied, then it provides the common children to
+ be move in @rhombus(from) and @rhombus(to). Otherwise, the common
+ children are inferred by a search in @rhombus(from) and @rhombus(to)
+ that stops searching (in nested children) at a pict that can be found in
+ both @rhombus(from) and @rhombus(to) and whose position or size changes
+ relative to @rhombus(overlay(from, to)).
+
+ If @rhombus(other) is @rhombus(#'switch), elements not common to
  @rhombus(from) and @rhombus(to) appear in the first or second half of
  the animation, depending on whether they are only in @rhombus(from) or
  only in @rhombus(to). If @rhombus(other) is @rhombus(#'fade), then
- non-common element fade out and in.
+ non-common element fade out and in. Non-common elements to fade
+ are inferred if @rhombus(move) is @rhombus(#false), otherwise,
+ @rhombus(remove) specifies elements of @rhombus(from) to fade out,
+ and @rhombus(add) specifies elements of @rhombus(in) to fade in.
 
  The move takes @rhombus(extent) seconds, and the @rhombus(bender)
  argument maps time the same as with @rhombus(animate).

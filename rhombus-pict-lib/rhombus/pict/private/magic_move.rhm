@@ -15,7 +15,10 @@ fun magic_move(all_pre :: Pict, post :: Pict,
                ~join: join :: SequentialJoin = #'step,
                ~other: other :: NoncommonMode = #'switch,
                ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
-               ~extent: extent :: NonnegReal = 0.5) :~ Pict:
+               ~extent: extent :: NonnegReal = 0.5,
+               ~remove: depart :: List.of(Pict) = [],
+               ~move: common :: maybe(Listable.to_list && List.of(Pict)) = #false,
+               ~add: intro :: Listable.to_list && List.of(Pict) = []) :~ Pict:
   rebuildable(
     ~deps: [all_pre, post],
     fun (~deps: [all_pre :: Pict, post :: Pict]):
@@ -23,27 +26,37 @@ fun magic_move(all_pre :: Pict, post :: Pict,
         if all_pre.duration == 1
         | all_pre
         | all_pre.time_pad(~before: -(all_pre.duration - 1))
-      fun get_common(start_p :~ Pict, other_p :~ Pict) :~ values(Map, Set):
-        recur loop(p :~ Pict = start_p, accum = {}) :~ values(Map, Set):
-          for values(accum :~ Map = accum, tops :~ Set = Set{}) (child: p.children):
+      fun get_common(start_p :~ Pict, other_p :~ Pict, intro :~ List) :~ values(Map, Set):
+        if common
+        | values(for Map (p in common!!):
+                   values(p.identity, p),
+                 for Set (p in intro):
+                   p)
+        | let dx = (other_p.width - start_p.width) / 2
+          let dy = (other_p.height - start_p.height) / 2
+          fun search_children(p :~ Pict, accum :~ Map) :~ values(Map, Set):
+            for values(accum :~ Map = accum, tops :~ Set = Set{}) (child: p.children):
+              search_child(child, accum, tops)
+          fun search_child(child :~ Pict, accum :~ Map, tops :~ Set) :~ values(Map, Set):
             let (tx, ty) = Find.top_left(child).maybe_in(other_p)
             let exists = tx
             let moves:
               exists && block:
                 let (fx, fy) = Find.top_left(child).in(start_p)
-                fx != tx || fy != ty || block:
+                fx != (tx + dx) || fy != (ty + dy) || block:
                   let (tx2, ty2) = Find.bottom_right(child).maybe_in(other_p)
                   let (fx2, fy2) = Find.bottom_right(child).maybe_in(start_p)
-                  fx2 != tx2 || fy2 != ty2
+                  fx2 != (tx2 + dx) || fy2 != (ty2 + dy)
             if moves
             | values(accum ++ { child.identity: child },
                      tops)
-            | let (new_accum, new_tops) = loop(child, accum)
+            | let (new_accum, new_tops) = search_children(child, accum)
               if new_accum.length() == accum.length()
               | values(accum, if exists | tops | tops ++ { child })
               | values(new_accum, tops ++ new_tops)
-      let (common_via_pre, pre_tops) = get_common(pre, post)
-      let (common_via_post, post_tops) = get_common(post, pre)
+          search_child(start_p, {}, Set{})
+      let (common_via_pre, pre_tops) = get_common(pre, post, depart)
+      let (common_via_post, post_tops) = get_common(post, pre, intro)
       let pre_w = pre.width
       let post_w = post.width
       let pre_h = pre.height
