@@ -314,7 +314,7 @@
   (cond
     [(and (zero? expected-depth) (positive? adjusted-actual-depth))
      (define details (format "\n  used repetition depth: ~a" adjusted-actual-depth))
-     (raise-syntax-error #f "not a repetition" expr #f null details)]
+     (raise-syntax-error #f "not a repetition" (maybe-respan expr) #f null details)]
     [else
      (define details
        (format "\n  expected: ~a\n  actual: ~a~a"
