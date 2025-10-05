@@ -43,10 +43,10 @@ fun magic_move(all_pre :: Pict, post :: Pict,
             let moves:
               exists && block:
                 let (fx, fy) = Find.top_left(child).in(start_p)
-                fx != (tx + dx) || fy != (ty + dy) || block:
+                fx .!= (tx + dx) || fy .!= (ty + dy) || block:
                   let (tx2, ty2) = Find.bottom_right(child).maybe_in(other_p)
                   let (fx2, fy2) = Find.bottom_right(child).maybe_in(start_p)
-                  fx2 != (tx2 + dx) || fy2 != (ty2 + dy)
+                  fx2 .!= (tx2 + dx) || fy2 .!= (ty2 + dy)
             if moves
             | values(accum ++ { child.identity: child },
                      tops)
