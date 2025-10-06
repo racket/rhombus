@@ -37,7 +37,8 @@
            #,shrubbery)]
       [else
        #`(module #,module-name racket/base
-           '#,shrubbery)]))))
+           (require racket/pretty)
+           (pretty-write '#,shrubbery))]))))
 
 (define (shrubbery-get-info-proc/mode key default make-default
                                       #:mode [mode 'top]

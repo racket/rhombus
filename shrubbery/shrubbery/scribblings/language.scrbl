@@ -3,6 +3,7 @@
           (for-label racket/base
                      racket/contract/base
                      syntax/parse
+                     racket/pretty
                      shrubbery/parse
                      shrubbery/write
                      shrubbery/print
@@ -20,7 +21,7 @@ after the @hash-lang[] line is parsed as shrubbery notation.
 
 Unlike @racketmodname[s-exp], @racketmodname[shrubbery] also works
 without another language listed on the @hash-lang[] line. In that case,
-running the module prints the S-expression form of the parsed shrubbery
+running the module writes (using @racket[pretty-write]) the S-expression form of the parsed shrubbery
 (see @secref["parsed-rep"]). For example,
 
 @codeblock{
@@ -28,7 +29,7 @@ running the module prints the S-expression form of the parsed shrubbery
  1+2
 }
 
-prints @racketresult['(multi (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
+prints @racketresult[(multi (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
 
 @racketmod[#:file "demo.rkt"
  racket/base
@@ -68,4 +69,4 @@ mode. For example,
  @(1+2)
 }|
 
-prints @racketresult['(brackets (group (parens (group 1 (op +) 2))))].
+prints @racketresult[(brackets (group (parens (group 1 (op +) 2))))].

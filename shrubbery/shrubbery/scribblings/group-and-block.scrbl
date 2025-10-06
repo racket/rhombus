@@ -47,13 +47,20 @@ self-delimiting terms can appear before a single optional @litchar{:}
 block or sequence of @litchar{|} alternatives, as long as the group is
 nonempty.
 
+@margin_note_block{The @nonterm{group}, @nonterm{term} (above),
+ @nonterm{block}, and @nonterm{alts} nonterminals correspond to the
+ technical terms @tech{group}, @tech{term}, @tech{block}, and
+ @tech{alternatives} for shrubbery notation. The @nonterm{item}
+ nonterminal helps organize the grammar here, but ``item'' is not a
+ technical term.}
+
 @nested(~style: #'inset,
         BNF([@nonterm{group},
-             annote(bseq(kleenestar(@nonterm{delit}),
+             annote(bseq(kleenestar(@nonterm{item}),
                          boptional(@nonterm{block}),
                          boptional(@nonterm{alts})),
                     "must be nonempty")],
-            [@nonterm{delit},
+            [@nonterm{item},
              @nonterm{atom},
              balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
                   bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
