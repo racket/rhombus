@@ -1,30 +1,38 @@
 #lang racket/base
+(require "../version-case.rkt")
 
 (provide prop:field-name->accessor field-name->accessor? field-name->accessor-ref
          prop:field-name->mutator field-name->mutator? field-name->mutator-ref
          curry-method)
 
+(meta-if-version-at-least
+ "8.18.0.18"
+ (require racket/unsafe/struct-type-property)
+ (define unsafe-make-struct-type-property/guard-calls-no-arguments make-struct-type-property))
+
 (define-values (prop:field-name->accessor field-name->accessor? field-name->accessor-ref)
-  (make-struct-type-property 'field-name->accessor
-                             (lambda (field-names+ht+method-ht info)
-                               (define field-names (car field-names+ht+method-ht))
-                               (define gen-acc (list-ref info 3))
-                               (define field-ht
-                                 (for/fold ([ht (cadr field-names+ht+method-ht)]) ([name (in-list field-names)]
-                                                                                   [i (in-naturals)])
-                                   (hash-set ht name (make-struct-field-accessor gen-acc i name))))
-                               (for/fold ([ht field-ht]) ([(name proc) (in-hash (cddr field-names+ht+method-ht))])
-                                 (hash-set ht name (lambda (obj) (curry-method proc obj)))))))
+  (unsafe-make-struct-type-property/guard-calls-no-arguments
+   'field-name->accessor
+   (lambda (field-names+ht+method-ht info)
+     (define field-names (car field-names+ht+method-ht))
+     (define gen-acc (list-ref info 3))
+     (define field-ht
+       (for/fold ([ht (cadr field-names+ht+method-ht)]) ([name (in-list field-names)]
+                                                         [i (in-naturals)])
+         (hash-set ht name (make-struct-field-accessor gen-acc i name))))
+     (for/fold ([ht field-ht]) ([(name proc) (in-hash (cddr field-names+ht+method-ht))])
+       (hash-set ht name (lambda (obj) (curry-method proc obj)))))))
 
 (define-values (prop:field-name->mutator field-name->mutator? field-name->mutator-ref)
-  (make-struct-type-property 'field-name->mutator
-                             (lambda (field-names+ht info)
-                               (define field-names (car field-names+ht))
-                               (define gen-mut (list-ref info 4))
-                               (for/fold ([ht (cdr field-names+ht)]) ([name (in-list field-names)]
-                                                                      [i (in-naturals)]
-                                                                      #:when name)
-                                 (hash-set ht name (make-struct-field-mutator gen-mut i name))))))
+  (unsafe-make-struct-type-property/guard-calls-no-arguments
+   'field-name->mutator
+   (lambda (field-names+ht info)
+     (define field-names (car field-names+ht))
+     (define gen-mut (list-ref info 4))
+     (for/fold ([ht (cdr field-names+ht)]) ([name (in-list field-names)]
+                                            [i (in-naturals)]
+                                            #:when name)
+       (hash-set ht name (make-struct-field-mutator gen-mut i name))))))
 
 (define (curry-method proc obj)
   (define-values (req-kws allowed-kws) (procedure-keywords proc))
