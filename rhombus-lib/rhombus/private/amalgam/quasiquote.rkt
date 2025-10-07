@@ -917,7 +917,7 @@
   (define unpack (unwrap-static-infos
                   (syntax-parse #`(group #,tail-id)
                     [rep::repetition
-                     (repetition-as-list/unchecked #'rep.parsed 1)])))
+                     (render-repetition #'for/list #'rep.parsed)])))
   (wrap-static-info*
    (syntax-parse unpack
      #:datum-literals (unpack-tail-list*)

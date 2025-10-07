@@ -863,7 +863,7 @@ spacer.bridge #%call(~left: left, self, tail, context, esc):
   ~in: ~expr
   match left
   | '':
-      '$(self || '') $(spacer.adjust_sequence('$tail ...', context, esc))'
+      '$(self || '') $(spacer.adjust_sequence(tail, context, esc))'
   | ~else:
       match tail
       | '$parens $tail ...':
