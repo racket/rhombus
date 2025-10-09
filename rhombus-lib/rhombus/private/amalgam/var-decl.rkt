@@ -11,6 +11,7 @@
 (begin-for-syntax
   (define-splicing-syntax-class :var-decl
     #:datum-literals (group)
+    #:description "field identifier with optional default-value expression"
     #:attributes ([bind 1] default)
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::equal rhs ...+))

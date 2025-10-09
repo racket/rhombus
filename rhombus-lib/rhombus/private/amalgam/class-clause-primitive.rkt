@@ -210,6 +210,7 @@
          #`(() #,ret ()))]))
 
   (define-splicing-syntax-class :maybe-ret
+    #:description "optional result annotation"
     #:attributes (seq)
     (pattern (~seq op::annotate-op ret::not-block ...)
              #:with seq #'(op ret ...))

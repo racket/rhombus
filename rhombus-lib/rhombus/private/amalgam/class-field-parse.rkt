@@ -37,6 +37,7 @@
 
 (define-syntax-class :id-field
   #:attributes (name exposure mutable ann-seq default)
+  #:description "public or private field"
   #:datum-literals (group op)
   (pattern (group (~optional ::protected-or-private
                              #:defaults ([exposure #'public]))
@@ -62,6 +63,7 @@
 
 (define-syntax-class :constructor-field
   #:attributes (ann-seq name keyword default mutable exposure)
+  #:description "class field"
   #:datum-literals (group)
   (pattern ::id-field
            #:with keyword #'#f)
