@@ -4,18 +4,19 @@
 (provide transfer-origin
          transfer-origins)
 
-(define (transfer-origin src-stx-in stx)
+(define (transfer-origin src-stx-in stx
+                         #:property-key [property-key 'origin])
   (define src-stx
     (syntax-parse src-stx-in
       #:datum-literals (parsed)
       [(parsed kw:keyword e) #'e]
       [_ src-stx-in]))
-  (define d (syntax-property src-stx 'origin))
+  (define d (syntax-property src-stx property-key))
   (cond
     [d
      (define (add stx)
-       (define d2 (syntax-property stx 'origin))
-       (syntax-property stx 'origin (if d2 (cons d d2) d)))
+       (define d2 (syntax-property stx property-key))
+       (syntax-property stx property-key (if d2 (cons d d2) d)))
      (syntax-parse stx
        #:datum-literals (parsed)
        [((~and tag parsed) kw:keyword e)

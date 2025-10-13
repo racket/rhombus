@@ -5,7 +5,8 @@
                      "use-site.rkt"
                      "id-binding.rkt"
                      "import-check.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt"
          "../version-case.rkt"
@@ -444,20 +445,33 @@
        [(_ state . bodys)
         (expand-forwarding-sequence-continue #`[state bodys expand-context] local-introduce expr-k done-k)])]))
 
-(define-for-syntax (expand-bridge-definition-sequence defs def-ctx expand-context params-box)
+(define-for-syntax (expand-bridge-definition-sequence defs def-ctx expand-context params-box track-box)
   (define seq #`(sequence [(#:bridge) base-ctx add-ctx remove-ctx all-ctx #,(unbox params-box) #f #f] #,defs))
   (define (eval forms stx-params)
     (set-box! params-box stx-params)
     (syntax-parse forms
       #:literals (define-syntaxes)
-      [((define-syntaxes ids rhs) ...)
+      [((~and def ((~and def-id define-syntaxes) ids rhs)) ...)
        (for ([ids (in-list (syntax->list #'(ids ...)))]
-             [rhs (in-list (syntax->list #'(rhs ...)))])
+             [rhs (in-list (syntax->list #'(rhs ...)))]
+             [def (in-list (syntax->list #'(def ...)))]
+             [def-id (in-list (syntax->list #'(def-id ...)))])
          (with-continuation-mark
              syntax-parameters-key stx-params
              (syntax-local-bind-syntaxes (syntax->list ids)
                                          rhs
-                                         def-ctx)))]))
+                                         def-ctx))
+         (let* ([track (unbox track-box)]
+                [track (syntax-track-origin track def def-id)]
+                [track (let ([new-ids (map (lambda (id)
+                                             (syntax-local-introduce
+                                              (internal-definition-context-introduce def-ctx id 'add)))
+                                           (syntax->list ids))])
+                         (syntax-property track
+                                          'disappeared-binding
+                                          (cons new-ids
+                                                (or (syntax-property track 'disappeared-binding) '()))))])
+           (set-box! track-box track)))]))
   (let loop ([seq seq])
     (define s (forwarding-sequence-step seq def-ctx (lambda () expand-context) (lambda (stx) stx)))
     (syntax-parse s

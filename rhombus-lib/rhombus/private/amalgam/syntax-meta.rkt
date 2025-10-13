@@ -20,7 +20,9 @@
                      "syntax-wrap.rkt"
                      "definition-context.rkt"
                      "class-primitive.rkt"
-                     "name-equal.rkt")
+                     "name-equal.rkt"
+                     "origin.rkt"
+                     "binding-failure.rkt")
          "space.rkt"
          "is-static.rkt"
          "operator-compare.rkt"
@@ -68,7 +70,9 @@
     #:methods
     ([add_definitions DefinitionContext.add_definitions]
      [add_scopes DefinitionContext.add_scopes]
-     [call_using DefinitionContext.call_using]))
+     [call_using DefinitionContext.call_using]
+     [call_to_expand_using DefinitionContext.call_to_expand_using]
+     [track_origin DefinitionContext.track_origin]))
 
   (define expr-space-path (space-syntax #f))
 
@@ -230,29 +234,31 @@
             (if parent
                 (definition-context-expand-context parent)
                 null))
-      (box #hasheq())))
+      (box #hasheq())
+      (box (datum->syntax #f 'track))))
 
   (define/method (DefinitionContext.add_definitions ctx stx)
     (unless (definition-context? ctx)
       (raise-annotation-failure who ctx "DefinitionContext"))
-    (unless (syntax? stx)
+    (unless (syntax*? stx)
       (raise-annotation-failure who stx "Syntax"))
-    (define gs (unpack-multi stx who #f))
+    (define gs (unpack-multi (syntax-unwrap stx) who #f))
     (expand-bridge-definition-sequence #`(rhombus-body-sequence #,@gs)
                                        (definition-context-def-ctx ctx)
                                        (definition-context-expand-context ctx)
-                                       (definition-context-params-box ctx))
+                                       (definition-context-params-box ctx)
+                                       (definition-context-track-box ctx))
     (void))
 
   (define/method (DefinitionContext.add_scopes ctx stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (unless (definition-context? ctx)
       (raise-annotation-failure who ctx "DefinitionContext"))
-    (unless (syntax? stx)
+    (unless (syntax*? stx)
       (raise-annotation-failure who stx "Syntax"))
     (internal-definition-context-add-scopes
      (definition-context-def-ctx ctx)
-     stx))
+     (syntax-unwrap stx)))
 
   (define/method (DefinitionContext.call_using ctx f)
     (unless (definition-context? ctx)
@@ -267,6 +273,40 @@
       #'cons
       (definition-context-expand-context ctx)
       (definition-context-def-ctx ctx))))
+
+  (define/method (DefinitionContext.track_origin ctx stx-in)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (definition-context? ctx)
+      (raise-annotation-failure who ctx "DefinitionContext"))
+    (define stx (unpack-term/maybe stx-in))
+    (unless stx (raise-annotation-failure who stx-in "Term"))
+    (define track-stx (unbox (definition-context-track-box ctx)))
+    (transfer-origin track-stx
+                     (transfer-origin track-stx stx)
+                     #:property-key 'disappeared-binding))
+
+  (define/method (DefinitionContext.call_to_expand_using ctx stx f)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (definition-context? ctx)
+      (raise-annotation-failure who ctx "DefinitionContext"))
+    (unless (and (procedure? f)
+                 (procedure-arity-includes? f 1))
+      (raise-annotation-failure who f "Syntax -> Syntax"))
+    (unless (syntax*? stx)
+      (raise-annotation-failure who stx "Syntax"))
+    (define in-stx (syntax-local-introduce (syntax-unwrap stx)))
+    (define out-stx
+      (DefinitionContext.call_using
+        ctx
+        (lambda ()
+          (define out-stx
+            (f (DefinitionContext.add_scopes
+                 ctx
+                 (syntax-local-introduce in-stx))))
+          (unless (syntax*? out-stx)
+            (raise-binding-failure who "result" out-stx "Syntax"))
+          (syntax-local-introduce out-stx))))
+    (DefinitionContext.track_origin ctx (syntax-local-introduce out-stx)))
 
   (define-annotation-syntax SyntaxPhase
     (identifier-annotation phase? ())))

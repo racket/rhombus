@@ -33,6 +33,37 @@ check:
     hi any_id
   ~is "also ok"
 
+// like `sub`, but uses `call_to_expand_using`, which
+// is more precisely right
+expr.macro 'sub2:
+              $form
+              ...
+              $end':
+  let ctx = syntax_meta.make_definition_context()
+  ctx.add_definitions('$form; ...')
+  ctx.call_to_expand_using(
+    end,
+    fun (end):
+      match end
+      | '$(e :: example_meta.Parsed)':
+          e
+  )
+
+check:
+  sub2:
+    example.macro 'hi':
+      '"ok"'
+    hi
+  ~is "ok"
+
+check:
+  sub2:
+    example.macro 'hi $post':
+      '"also ok"'
+    hi any_id
+  ~is "also ok"
+
+
 // interaction with syntax parameters
 syntax_parameter.bridge current_favorite_color:
   '"blue"'

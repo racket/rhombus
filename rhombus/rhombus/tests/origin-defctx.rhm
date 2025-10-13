@@ -1,0 +1,29 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+space.enforest example:
+  space_path #{rhombus/def_ctx_example}
+  macro_definer macro
+  meta_namespace example_meta:
+    parse_syntax_class Parsed
+
+expr.macro 'sub:
+              $form
+              ...
+              $end':
+  let ctx = syntax_meta.make_definition_context()
+  ctx.add_definitions('$form; ...')
+  ctx.call_to_expand_using(
+    end,
+    fun (end):
+        match end
+        | '$(e :: example_meta.Parsed)':
+            e
+  )
+
+block:
+  sub:
+    example.macro 'my_example_macro':
+      '"ok"'
+    my_example_macro

@@ -178,6 +178,7 @@
 
 @doc(
   ~meta
+  annot.macro 'syntax_meta.DefinitionContext'
   fun syntax_meta.make_definition_context(
     parent :: maybe(syntax_meta.DefinitionContext) = #false
   ) :: syntax_meta.DefinitionContext
@@ -187,10 +188,17 @@
   method (def_ctx :: syntax_meta.DefinitionContext).add_scopes(
     defns :: Syntax
   ) :: Syntax
+  method (def_ctx :: syntax_meta.DefinitionContext).track_origin(
+    stx :: Term
+  ) :: Syntax
   method (def_ctx :: syntax_meta.DefinitionContext).call_using(
     thunk :: Function.of_arity(0)
   )
-  annot.macro 'syntax_meta.DefinitionContext'
+  method (def_ctx :: syntax_meta.DefinitionContext)
+    .call_to_expand_using(
+      stx :: Syntax,
+      proc :: Syntax -> Syntax
+  ) :: S7yntax
 ){
 
  The @rhombus(syntax_meta.make_definition_context) function creates a
@@ -211,9 +219,32 @@
   accepts a syntax object and adds the definition context's scopes to the
   object, returning the new syntax object with those scopes added.}
 
+ @item{The @rhombus(syntax_meta.DefinitionContext.track_origin) method
+  transfers gathered @rhombus(Syntax.track_origin)-like expansion
+  information to the given syntax object, where information is gathered
+  during each @rhombus(syntax_meta.DefinitionContext.add_definitions)
+  call.}
+
  @item{The @rhombus(syntax_meta.DefinitionContext.call_using) method
   makes the definition context active for expansion while calling
-  @rhombus(thunk).}
+  @rhombus(thunk). Making the definition context active includes changing
+  the effect of @rhombus(syntax_meta.flip_introduce) to reflect a fresh
+  expansion context. Consider using
+  @rhombus(syntax_meta.DefinitionContext.call_to_expand_using), instead.}
+
+ @item{The @rhombus(syntax_meta.DefinitionContext.call_to_expand_using)
+  method is like @rhombus(syntax_meta.DefinitionContext.call_using), but
+  it takes a syntax object to flip out of the current expansion context
+  and into the fresh expansion context (in the sense of
+  @rhombus(syntax_meta.flip_introduce)), and it also adds the internal
+  definition's scopes like
+  @rhombus(syntax_meta.DefinitionContext.add_scopes). The resulting syntax
+  object is passed to @rhombus(proc), which must return a new syntax
+  object; that result is flipped out of the fresh scope and back into the
+  enclosing scope, and
+  @rhombus(syntax_meta.DefinitionContext.track_origin) is also applied to
+  it. The final result syntax object is the result of
+  @rhombus(syntax_meta.DefinitionContext.call_to_expand_using).}
 
 )
 

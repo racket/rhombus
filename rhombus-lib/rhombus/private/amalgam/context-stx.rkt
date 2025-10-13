@@ -73,15 +73,20 @@
            [_ (error "not a group")]))))
 
 (define (extract-ephemeral-ctx who stx
-                               #:update update
+                               #:false-ok? [false-ok? #t]
+                               #:update [update #f]
                                #:update-outer [update-outer (lambda (outer-stx innner-stx) outer-stx)])
   (let ([t (and (syntax*? stx)
                 (unpack-term stx #f #f))])
     (syntax-parse t
       #:datum-literals (parsed)
       [((~and tag parsed) space o)
-       (let ([inner-stx (update #'o 's-exp)])
-         (update (datum->syntax t (list #'tag #'space inner-stx) t t)
-                 's-exp))]
+       (if update
+           (let ([inner-stx (update #'o 's-exp)])
+             (update (datum->syntax t (list #'tag #'space inner-stx) t t)
+                     's-exp))
+           #'o)]
       [else
-       (update stx 's-exp)])))
+       (if update
+           (update stx 's-exp)
+           stx)])))
