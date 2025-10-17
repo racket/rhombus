@@ -35,7 +35,7 @@ encoding and decoding.
     params :: List.of(String)
   )
   class KeyValue(
-    key :: Symbol,
+    key :: String,
     value :: maybe(String)
   )
 ){
