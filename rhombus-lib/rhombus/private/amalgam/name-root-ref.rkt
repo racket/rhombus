@@ -182,7 +182,7 @@
      (define pre-ctx #'pre-ctx-s)
      (define ctx #'ctx-s)
      (make #f
-           (lambda (who-stx what name in-space [fallback-to-expr? #f])
+           (lambda (who-stx what name in-space [fallback-to-expr? #f] [field-phase 0])
              (cond
                [(syntax-e name)
                 (define id (datum->syntax ctx
@@ -190,13 +190,14 @@
                                           name
                                           name))
                 (define pre-id (datum->syntax pre-ctx (syntax-e name)))
+                (define (shift id) (if (eqv? field-phase 0) id (syntax-shift-phase-level (- field-phase))))
                 (cond
-                  [(identifier-distinct-binding* (in-space id) (in-space pre-id)
+                  [(identifier-distinct-binding* (shift (in-space id)) (shift (in-space pre-id))
                                                  (if (eq? phase 'default)
                                                      (syntax-local-phase-level)
                                                      phase))
                    id]
-                  [(identifier-distinct-binding* (in-name-root-space id) (in-name-root-space pre-id)
+                  [(identifier-distinct-binding* (shift (in-name-root-space id)) (shift (in-name-root-space pre-id))
                                                  (if (eq? phase 'default)
                                                      (syntax-local-phase-level)
                                                      phase))
@@ -212,7 +213,7 @@
      (define vals (syntax->list #'(val ...)))
      (define rules (syntax->list #'(rule ...)))
      (make #'self-id
-           (lambda (who-stx what name in-space [fallback-to-expr? #f])
+           (lambda (who-stx what name in-space [fallback-to-expr? #f] [field-phase 0])
              (or (for/or ([key (in-list keys)]
                           [val (in-list vals)]
                           [rule (in-list rules)])

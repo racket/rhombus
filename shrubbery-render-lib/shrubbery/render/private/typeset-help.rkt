@@ -39,17 +39,29 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (define (loop root ns-root fields root-raw ns-raw-prefix raw-prefix-len)
+  (define (loop root root-phase ns-root fields root-raw ns-raw-prefix raw-prefix-len)
     (cond
       [(null? fields) #f]
       [else
        (define field (car fields))
-       (define p (identifier-binding-portal-syntax (in-name-root-space root) #f))
+       (define p (identifier-binding-portal-syntax (syntax-shift-phase-level
+                                                    (in-name-root-space root)
+                                                    (- root-phase))
+                                                   #f))
        (define is-import? (and p (syntax-parse p
                                    #:datum-literals (import)
                                    [([import . _] _ ctx) #t]
                                    [_ #f])))
-       (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
+       (define field-phase (if p
+                               (let ([b (identifier-binding (syntax-shift-phase-level
+                                                             (in-name-root-space root)
+                                                             (- root-phase))
+                                                            #f)])
+                                 (or (list-ref b 4) 0))
+                               root-phase))
+       (define lookup (and p (portal-syntax->lookup (syntax-shift-phase-level p (- root-phase))
+                                                    (lambda (self-id lookup) lookup)
+                                                    #f)))
        (define (make-intro space-name)
          (if space-name
              (make-interned-syntax-introducer space-name)
@@ -60,22 +72,22 @@
             (define space-name (car space-names))
             (define intro (make-intro space-name))
             (define dest (and lookup
-                              (or (lookup #f "identifier" field intro)
+                              (or (lookup #f "identifier" field intro #f field-phase)
                                   (and (pair? (cdr fields))
-                                       (lookup #f "identifier" field in-name-root-space)))))
+                                       (lookup #f "identifier" field in-name-root-space #f field-phase)))))
             (and dest (cons dest space-name))]
            [else
             (or
              (for/or ([space-name (in-list space-names)])
                (define intro (make-intro space-name))
-               (define dest (and lookup (lookup #f "identifier" field intro)))
+               (define dest (and lookup (lookup #f "identifier" field intro #f field-phase)))
                (and dest
                     (or (not space-name)
-                        (identifier-distinct-binding (intro dest) dest #f))
+                        (identifier-distinct-binding (intro dest) dest field-phase))
                     (cons dest space-name)))
              (and lookup
                   (pair? (cdr fields))
-                  (let ([dest (lookup #f "identifier" field in-name-root-space)])
+                  (let ([dest (lookup #f "identifier" field in-name-root-space #f field-phase)])
                     (and dest (cons dest 'rhombus/namespace)))))]))
        (define dest (and dest+space-name (car dest+space-name)))
        (define space-name (and dest+space-name (cdr dest+space-name)))
@@ -110,7 +122,7 @@
                                            (and is-import? raw-prefix)))
                       'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len))))
        (define (next named-dest)
-         (loop/squashed named-dest (or ns-root (and (not is-import?) root)) (cdr fields)
+         (loop/squashed named-dest field-phase (or ns-root (and (not is-import?) root)) (cdr fields)
                         raw (or (and is-import? raw-prefix) ns-raw-prefix)
                         (if is-import? (add1 raw-prefix-len) raw-prefix-len)))
        (cond
@@ -141,8 +153,8 @@
                                  (or given-raw raw)))])
                  (or (next named-id)
                      (add-rest named-id))))])]))
-  (define (loop/squashed root ns-root fields root-raw ns-raw-prefix raw-prefix-len)
-    (define r (loop root ns-root fields root-raw ns-raw-prefix raw-prefix-len))
+  (define (loop/squashed root root-phase ns-root fields root-raw ns-raw-prefix raw-prefix-len)
+    (define r (loop root root-phase ns-root fields root-raw ns-raw-prefix raw-prefix-len))
     (cond
       [(and (pair? fields)
             (pair? (cdr fields))
@@ -159,11 +171,11 @@
                                                                      "."
                                                                      (syntax-raw-property b))))
                                      (cddr fields)))
-       (define r2 (loop root ns-root squashed-fields root-raw ns-raw-prefix raw-prefix-len))
+       (define r2 (loop root root-phase ns-root squashed-fields root-raw ns-raw-prefix raw-prefix-len))
        (if (and r2 (or (not r)
                        (< (length (hash-ref r2 'remains null))
                           (length (hash-ref r 'remains null)))))
            r2
            r)]
       [else r]))
-  (loop/squashed root #f fields #f #f 0))
+  (loop/squashed root 0 #f fields #f #f 0))
