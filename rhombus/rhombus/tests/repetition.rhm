@@ -90,6 +90,32 @@ block:
     [f(~& x), ...]
     ~is [["a", #false], [#false, "b"]]
 
+// if-conditionals as repetitions
+block:
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [if x mod 2 == 1 | "odd" | "even", ..., ...]
+    ~is ["odd", "even", "odd", "even", "odd"]
+  check:
+    [if x mod 2 == 1
+     | println("odd")
+       0
+     | println("even")
+       1,
+     ..., ...]
+    ~prints "odd\neven\nodd\neven\nodd\n"
+  def mutable accum = 0
+  fun inc(v): accum := accum + v
+  check:
+    [if x mod 2 == 1
+     | inc(x)
+       0
+     | inc(x)
+       1,
+     ..., ...]
+    ~is [0, 1, 0, 1, 0]
+  check accum ~is 15
+
 // static information through a constructor call as repetition
 check:
   use_static
@@ -97,6 +123,15 @@ check:
   def [x, ...] = [1, 2, 3]
   [Posn(x, x), ...][1].x
   ~is 2
+
+
+// static information through an if-conditional as repetition
+block:
+  use_static
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [if x mod 2 == 1 | "odd" | "even", ..., ...][1].length()
+    ~is 4
 
 // static information through nested repetitions
 block:

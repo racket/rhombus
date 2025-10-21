@@ -482,3 +482,43 @@ check:
   cond
   | ~else "else"
   ~is "else"
+
+check:
+  ~eval
+  if 1 | 2
+  ~throws "expected two alternatives"
+
+check:
+  ~eval
+  if | 1 | 2
+  ~throws "missing test expression"
+
+check:
+  ~eval
+  if 1 |«» | 2
+  ~throws "block has no expressions"
+
+check:
+  ~eval
+  if 1 | 2 |«»
+  ~throws "block has no expressions"
+
+check:
+  ~eval
+  [if 1 | 2, ...]
+  ~throws "expected two alternatives"
+
+check:
+  ~eval
+  [if | 1 | 2, ...]
+  ~throws "missing test repetition"
+
+check:
+  ~eval
+  [if 1 |«» | 2, ...]
+  ~throws "block has no repetitions"
+
+check:
+  ~eval
+  [if 1 | 2 |«», ...]
+  ~throws "block has no repetitions"

@@ -10,11 +10,19 @@
     test_expr: block expr
     then_body: block body
     else_body: block body
+    test_repet: block repet
+    then_repet: block repet
+    else_repet: block repet
   expr.macro 'if $test_expr
               | $then_body
                 ...
               | $else_body
                 ...'
+  repet.macro 'if $test_repet
+               | $then_repet
+                 ...
+               | $else_repet
+                 ...'
 ){
 
  If @rhombus(test_expr) produces a true value (which is value other than
