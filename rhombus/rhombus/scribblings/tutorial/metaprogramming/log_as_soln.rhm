@@ -1,0 +1,8 @@
+#lang rhombus/and_meta
+
+expr.macro '$a log_as $b':
+  ~weaker_than: ~other
+  'print($(b.to_source_string()), "=>", $a)'
+
+check: 1 + 5 log_as 2 * 3
+       ~prints "2 * 3 => 6"

@@ -1,0 +1,23 @@
+#lang rhombus/and_meta
+
+defn.macro 'storage $id :: $ann ... = $init':
+  println("expand expr")
+  'def mutable tmp = ($init :: $ann ...)
+   fun
+   | $id() :: $ann ...: tmp
+   | $id(v :: $ann ...): tmp := v'
+
+annot.macro 'NoisyInt':
+  println("expand annot")
+  'Int'
+
+storage x :: NoisyInt = 0
+
+check: x()
+       ~is 0
+check: x(10)
+       ~is #void
+check: x()
+       ~is 10
+check: x("apple")
+       ~throws "no matching case"

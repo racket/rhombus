@@ -1,0 +1,6 @@
+#lang shrubbery
+
+fun f(x):
+  x + 1
+
+f(2)

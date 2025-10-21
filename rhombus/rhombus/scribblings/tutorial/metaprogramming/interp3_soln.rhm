@@ -1,0 +1,56 @@
+#lang rhombus/static
+
+// Exercises:
+//  * Add a subtraction operation
+//  * Change `let` to rewrite to immediately called `fun`
+//  * Add an `if` (conditional) form
+
+fun interp(e :: Syntax, env :: Map):
+  match e
+  | '($inside ...)':
+      interp('$inside ...', env)
+  | '$(name :: Identifier)':
+      if name.unwrap() in env
+      | env[name.unwrap()]
+      | error("free variable " +& name)
+  | 'if $tst ...
+     | $thn ...
+     | $els ...':
+      if interp('$tst ...', env)
+      | interp('$thn ...', env)
+      | interp('$els ...', env)
+  | '$left ... + $right ...':
+      interp('$left ...', env) + interp('$right ...', env)
+  | '$left ... - $right ...':
+      interp('$left ...', env) - interp('$right ...', env)
+  | '$left ... == $right ...':
+      interp('$left ...', env) == interp('$right ...', env)
+  | 'let $(name :: Identifier) = $rhs ...: $body ...':
+      interp('(fun ($name): $body ...)($rhs ...)', env)
+  | 'fun ($(arg :: Identifier), ...): $body ...':
+      fun (arg_val, ...): interp('$body ...',
+                                 env ++ { arg.unwrap(): arg_val, ... })
+  | '$fun ... ($arg ..., ...)':
+      interp('$fun ...', env)(interp('$arg ...', env), ...)
+  | '$(e :: Term)':
+      e.unwrap()
+
+check: interp('let f = (fun (x): x + x):
+                 f(7)', {})
+       ~is 14
+
+check: interp('(fun (x, y): x == y)(7, 8)', {})
+       ~is #false
+
+check: interp('x', {})
+       ~throws "free variable x"
+
+check: interp('1 + 2 - 3', {})
+       ~is 0
+
+check: interp('let f = (fun (x):
+                          if x == 1
+                          | 2
+                          | 3):
+                 f(1) + f(0)', {})
+       ~is 5

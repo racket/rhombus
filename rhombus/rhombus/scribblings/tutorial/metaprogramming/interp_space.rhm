@@ -1,0 +1,133 @@
+#lang rhombus/and_meta
+
+// ========================================
+// expression datatype
+ 
+defn.macro 'datatype $(name :: Identifier)
+            | $(variant :: Identifier)($(field :: Identifier) :: $(type :: Identifier), ...)
+            | ...':
+  'class $name():
+     nonfinal
+   class $variant($field :: $type, ...):
+     extends $name
+   ...'
+
+datatype Expr
+| Id(name :: Symbol)
+| Plus(left :: Expr,
+       right :: Expr)
+| Equals(left :: Expr,
+         right :: Expr)
+| Let(name :: Symbol,
+      rhs :: Expr,
+      body :: Expr)
+| Fun(arg :: Symbol,
+      body :: Expr)
+| Call(fun :: Expr,
+       arg :: Expr)
+| Literal(val :: Any)
+
+// ========================================
+// interpreter
+
+// convenience for recurive `interp` calls
+expr.macro '$env => $rest ...':
+  ~weaker_than: ~other
+  fun get_ids(stx):
+    match stx
+    | '$(id :: Identifier)': [ id ]
+    | '($g)': get_ids(g)
+    | '$(other :: Term)': []
+    | '$t ...': List.append(get_ids(t), ...)
+  let [ id, ... ] = get_ids('$rest ...')
+  'block:
+     let env = $env
+     let $id = interp($id, env)
+     ...
+     $rest ...'
+
+fun interp(e :: Expr, env :: Map):
+  match e
+  | Id(name):
+      lookup(env, name)
+  | Plus(left, right):      
+      env => left + right
+  | Equals(left, right):      
+      env => left == right
+  | Let(name, rhs, body):
+      env ++ { name: interp(rhs, env) } => body
+  | Fun(arg, body):
+      fun (arg_val): env ++ { arg: arg_val } => body
+  | Call(fun, arg):
+      env => fun(arg)
+  | Literal(val):
+      val
+
+fun lookup(env :: Map, name):
+  if name in env
+  | env[name]
+  | error("free variable " +& name)
+
+// ========================================
+// parser for interpreted language
+
+space.enforest lc:
+  space_path example/lc
+  macro_definer macro
+  meta_namespace lc_meta:
+    parse_syntax_class Parsed
+    identifier_parser:
+      fun (id):
+        'Id(#' $id)'
+
+lc.macro '$left + $right':
+  ~order: addition
+  'Plus($left, $right)'
+
+lc.macro '$left == $right':
+  ~order: equivalence
+  'Equals($left, $right)'
+
+lc.macro 'let $(id :: Identifier) = $(rhs :: lc_meta.Parsed):
+            $(body :: lc_meta.Parsed)':
+  'Let(#' $id, $rhs, $body)'
+
+lc.macro 'fun ($(id :: Identifier)):
+            $(body :: lc_meta.Parsed)':
+  'Fun(#' $id, $body)'
+
+lc.macro '$fun #%call ($(arg :: lc_meta.Parsed))':
+  'Call($fun, $arg)'
+
+lc.macro '#%parens ($(e :: lc_meta.Parsed))':
+  e
+
+lc.macro '#%literal $(t :: Term)':
+  'Literal(#%literal $t)'
+
+// ========================================
+// bridge to interpreted-language parser
+
+expr.macro 'prog: $(lc :: lc_meta.Parsed)':
+  lc
+
+// ========================================
+// tests
+
+check: interp(prog: x,
+              { #'x: 5 })
+       ~is 5
+
+check: interp(prog:
+                let f = (fun (x): x + x):
+                  f(7),
+              {})
+       ~is 14
+
+check: interp(prog:
+                (fun (x): fun (y): x == y)(7)(8),
+              {})
+       ~is #false
+
+check: interp(prog: x, {})
+       ~throws "free variable x"

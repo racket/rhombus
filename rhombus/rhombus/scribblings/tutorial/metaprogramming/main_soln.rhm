@@ -1,0 +1,7 @@
+#lang shrubbery "interp_space_lang_soln.rhm"
+
+let x = 1:
+  let f = (fun (y): y + 2):
+    f(x) + 3
+
+5 == 2 + 3

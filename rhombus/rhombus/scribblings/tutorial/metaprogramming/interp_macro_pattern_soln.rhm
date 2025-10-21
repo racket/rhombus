@@ -1,0 +1,95 @@
+#lang rhombus/and_meta
+ 
+defn.macro 'datatype $(name :: Identifier)
+            | $(variant :: Identifier)($(field :: Identifier) :: $(type :: Identifier), ...)
+            | ...':
+  'class $name():
+     nonfinal
+   class $variant($field :: $type, ...):
+     extends $name
+   ...'
+
+datatype Expr
+| Id(name :: Symbol)
+| Plus(left :: Expr,
+       right :: Expr)
+| Equals(left :: Expr,
+         right :: Expr)
+| Let(name :: Symbol,
+      rhs :: Expr,
+      body :: Expr)
+| Fun(arg :: Symbol,
+      body :: Expr)
+| Call(fun :: Expr,
+       arg :: Expr)
+| Literal(val :: Any)
+
+// convenience for recurive `interp` calls
+expr.macro '$env => $rest ...':
+  ~weaker_than: ~other
+  fun get_ids(stx):
+    match stx
+    | '$(id :: Identifier)': [ id ]
+    | '($g)': get_ids(g)
+    | '$(other :: Term)': []
+    | '$t ...': List.append(get_ids(t), ...)
+  match '$rest ...'
+  | '$(id :: Identifier)':
+      'interp($id, $env)'
+  | ~else:
+      let [ id, ... ] = get_ids('$rest ...')
+      'block:
+         let env = $env
+         let $id = interp($id, env)
+         ...
+         $rest ...'
+
+fun interp(e :: Expr, env :: Map):
+  match e
+  | Id(name):
+      lookup(env, name)
+  | Plus(left, right):      
+      env => left + right
+  | Equals(left, right):      
+      env => left == right
+  | Let(name, rhs, body):
+      env ++ { name: interp(rhs, env) } => body
+  | Fun(arg, body):
+      fun (arg_val): env ++ { arg: arg_val } => body
+  | Call(fun, arg):
+      env => fun(arg)
+  | Literal(val):
+      val
+
+fun lookup(env :: Map, name):
+  if name in env
+  | env[name]
+  | error("free variable " +& name)
+
+check: interp(Id(#'x), { #'x: 5})
+       ~is 5
+
+check: interp(Let(#'f,
+                  Fun(#'x, Plus(Id(#'x), Id(#'x))),
+                  Call(Id(#'f), Literal(7))),
+              {})
+       ~is 14
+
+check: interp(Call(Call(Fun(#'x,
+                            Fun(#'y,
+                                Equals(Id(#'x), Id(#'y)))),
+                        Literal(7)),
+                   Literal(8)),
+              {})
+       ~is #false
+
+check: interp(Id(#'x), {})
+       ~throws "free variable x"
+
+// Ω
+#//
+interp(Call(Fun(#'x,
+                Call(Id(#'x), Id(#'x))),
+            Fun(#'x,
+                Call(Id(#'x), Id(#'x)))),
+       {})

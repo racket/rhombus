@@ -1,0 +1,29 @@
+#lang rhombus/and_meta
+
+defn.macro 'my_operator $(a :: Identifier) $(op :: Name) $(b :: Identifier):
+              $body':
+  '«
+
+     // fill in template here to generate two definitions:
+     //  * a function
+     //  * a macro that expands to a call of the function
+
+    »'
+
+my_operator x from y:
+  y - x
+
+#//
+check: 1 from 3
+       ~is 2
+
+// Another example --- currently commented out,
+// because `#//` comments out the next group
+
+#//
+my_operator a <~> b:
+  [b, a]
+
+#//
+check: "apple" <~> "banana"
+       ~is ["banana", "apple"]

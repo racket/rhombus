@@ -1,0 +1,6 @@
+#lang shrubbery
+
+// A comment like this one will not change the result
+
+'math.max($x, ...)
+ ...'

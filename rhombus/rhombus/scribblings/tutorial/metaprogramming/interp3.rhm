@@ -1,0 +1,39 @@
+#lang rhombus/static
+
+// Exercises (start the first and last by writing an initially-failing test case):
+//  * Add a subtraction operation
+//  * Change `let` to rewrite to an immediately called `fun`
+//  * Add an `if` (conditional) form
+
+fun interp(e :: Syntax, env :: Map):
+  match e
+  | '($inside ...)':
+      interp('$inside ...', env)
+  | '$(name :: Identifier)':
+      if name.unwrap() in env
+      | env[name.unwrap()]
+      | error("free variable " +& name)
+  | '$left ... + $right ...':
+      interp('$left ...', env) + interp('$right ...', env)
+  | '$left ... == $right ...':
+      interp('$left ...', env) == interp('$right ...', env)
+  | 'let $(name :: Identifier) = $rhs ...: $body ...':
+      interp('$body ...',
+             env ++ { name.unwrap(): interp('($rhs ...)', env) })
+  | 'fun ($(arg :: Identifier), ...): $body ...':
+      fun (arg_val, ...): interp('$body ...',
+                                 env ++ { arg.unwrap(): arg_val, ... })
+  | '$fun ... ($arg ..., ...)':
+      interp('$fun ...', env)(interp('$arg ...', env), ...)
+  | '$(e :: Term)':
+      e.unwrap()
+
+check: interp('let f = (fun (x): x + x):
+                 f(7)', {})
+       ~is 14
+
+check: interp('(fun (x, y): x == y)(7, 8)', {})
+       ~is #false
+
+check: interp('x', {})
+       ~throws "free variable x"

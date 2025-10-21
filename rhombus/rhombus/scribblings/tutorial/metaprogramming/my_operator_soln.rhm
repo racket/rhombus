@@ -1,0 +1,25 @@
+#lang rhombus/and_meta
+
+export:
+  my_operator
+
+defn.macro 'my_operator $(a :: Identifier) $(op :: Name) $(b :: Identifier):
+              $body':
+  '«
+     fun go($a, $b):
+       $body
+     expr.macro '$('$')a $op $('$')b':
+       'go($('$')a, $('$')b)'
+    »'
+
+my_operator x from y:
+  y - x
+
+check: 1 from 3
+       ~is 2
+
+my_operator a <~> b:
+  [b, a]
+
+check: "apple" <~> "banana"
+       ~is ["banana", "apple"]

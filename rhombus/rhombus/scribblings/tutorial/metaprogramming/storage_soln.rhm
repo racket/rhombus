@@ -1,0 +1,24 @@
+#lang rhombus/and_meta
+
+defn.macro 'storage $id :: $ann ... = $init':
+  let '$(ann_parsed :: annot_meta.Parsed)' = '$ann ...'
+  println("expand expr")
+  'def mutable tmp = ($init :: $ann_parsed)
+   fun
+   | $id() :: $ann_parsed: tmp
+   | $id(v :: $ann_parsed): tmp := v'
+
+annot.macro 'NoisyInt':
+  println("expand annot")
+  'Int'
+
+storage x :: NoisyInt = 0
+
+check: x()
+       ~is 0
+check: x(10)
+       ~is #void
+check: x()
+       ~is 10
+check: x("apple")
+       ~throws "no matching case"

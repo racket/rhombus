@@ -1,0 +1,50 @@
+#lang rhombus
+import:
+  meta_label:
+    rhombus open
+    rhombus/meta open
+  rhombus/scribble/manual as scribble
+  lib("scribble/core.rkt")
+  lib("scribble/html-properties.rkt") as html_props
+
+export:
+  meta_label:
+    all_from(rhombus)
+    all_from(rhombus/meta)
+  local_file
+  quotes
+  parens
+  brackets
+  braces
+  guillemets
+  guillemet_quotes
+  core.style
+  omit
+  shrubbery_doc
+  rhombus_doc
+  rename:
+    core.#{color-property} as color_property
+
+fun local_file(path):
+  scribble.elem(~style: core.style(#false,
+                                   PairList[html_props.#{link-resource}(path)]),
+                [path])
+
+def quotes:
+  @scribble.elem{@scribble.litchar{'}…@scribble.litchar{'}}
+def parens:
+  @scribble.elem{@scribble.litchar{(}…@scribble.litchar{)}}
+def brackets:
+  @scribble.elem{@scribble.litchar{[}…@scribble.litchar{]}}
+def braces:
+  @scribble.elem{@scribble.litchar("{")…@scribble.litchar("}")}
+def guillemets:
+  @scribble.elem{@scribble.litchar("«")…@scribble.litchar("»")}
+def guillemet_quotes:
+  @scribble.elem{@scribble.litchar{'«}…@scribble.litchar{»'}}
+
+fun omit(arg):
+  []
+
+def shrubbery_doc = ModulePath'lib("shrubbery/scribblings/shrubbery.scrbl")'
+def rhombus_doc = ModulePath'lib("rhombus/scribblings/rhombus.scrbl")'

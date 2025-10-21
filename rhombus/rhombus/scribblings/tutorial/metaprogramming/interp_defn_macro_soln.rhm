@@ -1,0 +1,64 @@
+#lang rhombus/and_meta
+ 
+defn.macro 'datatype $(name :: Identifier)
+            | $(variant :: Identifier)($(field_name :: Identifier) :: $(what :: Identifier), ...)
+            | ...':
+  'class $name():
+     nonfinal
+   class $variant($field_name :: $what, ...):
+     extends $name
+   ...'
+ 
+datatype Expr
+| Id(name :: Symbol)
+| Plus(left :: Expr,
+       right :: Expr)
+| Equals(left :: Expr,
+         right :: Expr)
+| Let(name :: Symbol,
+      rhs :: Expr,
+      body :: Expr)
+| Fun(arg :: Symbol,
+      body :: Expr)
+| Call(fun :: Expr,
+       arg :: Expr)
+| Literal(val :: Any)
+
+fun interp(e :: Expr, env :: Map):
+  match e
+  | Id(name):
+      if name in env
+      | env[name]
+      | error("free variable " +& name)
+  | Plus(left, right):      
+      interp(left, env) + interp(right, env)
+  | Equals(left, right):      
+      interp(left, env) == interp(right, env)
+  | Let(name, rhs, body):
+      interp(body, env ++ { name: interp(rhs, env) })
+  | Fun(arg, body):
+      fun (arg_val): interp(body, env ++ { arg: arg_val })
+  | Call(fun, arg):
+      interp(fun, env)(interp(arg, env))
+  | Literal(val):
+      val
+
+check: interp(Id(#'x), { #'x: 5})
+       ~is 5
+
+check: interp(Let(#'f,
+                  Fun(#'x, Plus(Id(#'x), Id(#'x))),
+                  Call(Id(#'f), Literal(7))),
+              {})
+       ~is 14
+
+check: interp(Call(Call(Fun(#'x,
+                            Fun(#'y,
+                                Equals(Id(#'x), Id(#'y)))),
+                        Literal(7)),
+                   Literal(8)),
+              {})
+       ~is #false
+
+check: interp(Id(#'x), {})
+       ~throws "free variable x"

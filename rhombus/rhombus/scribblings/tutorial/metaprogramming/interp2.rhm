@@ -1,0 +1,78 @@
+#lang rhombus/static
+
+// Exercises:
+//  * Add a `Tuple` expression form whose result
+//    is represented as a list; see the
+//    commented-out test at the end
+
+class Expr():
+  nonfinal
+
+class Id(name :: Symbol):
+  extends Expr
+
+class Plus(left :: Expr,
+           right :: Expr):
+  extends Expr
+
+class Equals(left :: Expr,
+             right :: Expr):
+  extends Expr
+
+class Let(name :: Symbol,
+          rhs :: Expr,
+          body :: Expr):
+  extends Expr
+
+class Fun(arg :: List.of(Symbol),
+          body :: Expr):
+  extends Expr
+
+class Call(fun :: Expr,
+           arg :: List.of(Expr)):
+  extends Expr
+
+class Literal(val :: Any):
+  extends Expr
+
+fun interp(e :: Expr, env :: Map):
+  match e
+  | Id(name):
+      if name in env
+      | env[name]
+      | error("free variable " +& name)
+  | Plus(left, right):      
+      interp(left, env) + interp(right, env)
+  | Equals(left, right):      
+      interp(left, env) == interp(right, env)
+  | Let(name, rhs, body):
+      interp(body, env ++ { name: interp(rhs, env) })
+  | Fun([arg, ...], body):
+      fun (arg_val, ...): interp(body, env ++ { arg: arg_val, ... })
+  | Call(fun, [arg, ...]):
+      interp(fun, env)(interp(arg, env), ...)
+  | Literal(val):
+      val
+
+check: interp(Let(#'f,
+                  Fun([#'x], Plus(Id(#'x), Id(#'x))),
+                  Call(Id(#'f), [Literal(7)])),
+              {})
+       ~is 14
+
+check: interp(Call(Fun([#'x, #'y],
+                       Equals(Id(#'x), Id(#'y))),
+                   [Literal(7), Literal(8)]),
+              {})
+       ~is #false
+
+check: interp(Id(#'x), {})
+       ~throws "free variable x"
+
+/*
+check: interp(Tuple([Literal(0),
+                     Plus(Id(#'x), Id(#'x)),
+                     Plus(Literal(10), Literal(1))]),
+              { #'x: 5 })
+       ~is [0, 10, 11]
+*/

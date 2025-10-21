@@ -1,0 +1,93 @@
+#lang rhombus/static
+
+// Note: this kind of interpreter is not what we have in mind
+// by "metaprogramming in Rhombus". It's just an example in
+// a domain that we expect to be familiar to participants.
+
+// Exercises:
+//  * Add a `Minus` expression form; see the
+//    commented-out test at the end
+//  * Add an `If` expression form; see the
+//    commented-out test at the end
+
+class Expr():
+  nonfinal
+
+class Id(name :: Symbol):
+  extends Expr
+
+class Plus(left :: Expr,
+           right :: Expr):
+  extends Expr
+
+class Equals(left :: Expr,
+             right :: Expr):
+  extends Expr
+
+class Let(name :: Symbol,
+          rhs :: Expr,
+          body :: Expr):
+  extends Expr
+
+class Fun(arg :: Symbol,
+          body :: Expr):
+  extends Expr
+
+class Call(fun :: Expr,
+           arg :: Expr):
+  extends Expr
+
+class Literal(val :: Any):
+  extends Expr
+
+fun interp(e :: Expr, env :: Map):
+  match e
+  | Id(name):
+      if name in env
+      | env[name]
+      | error("free variable " +& name)
+  | Plus(left, right):      
+      interp(left, env) + interp(right, env)
+  | Equals(left, right):      
+      interp(left, env) == interp(right, env)
+  | Let(name, rhs, body):
+      interp(body, env ++ { name: interp(rhs, env) })
+  | Fun(arg, body):
+      fun (arg_val): interp(body, env ++ { arg: arg_val })
+  | Call(fun, arg):
+      interp(fun, env)(interp(arg, env))
+  | Literal(val):
+      val
+
+check: interp(Id(#'x), { #'x: 5})
+       ~is 5
+
+check: interp(Let(#'f,
+                  Fun(#'x, Plus(Id(#'x), Id(#'x))),
+                  Call(Id(#'f), Literal(7))),
+              {})
+       ~is 14
+
+check: interp(Call(Call(Fun(#'x,
+                            Fun(#'y,
+                                Equals(Id(#'x), Id(#'y)))),
+                        Literal(7)),
+                   Literal(8)),
+              {})
+       ~is #false
+
+check: interp(Id(#'x), {})
+       ~throws "free variable x"
+
+/*
+check: interp(Minus(Literal(10), Literal(1)), {})
+       ~is 9
+*/
+
+/*
+check: interp(If(Equals(Literal(0), Id(#'x)),
+                 Literal(2),
+                 Literal(3)),
+              { #'x: 5 })
+       ~is 3
+*/
