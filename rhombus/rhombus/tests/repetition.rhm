@@ -446,3 +446,24 @@ block:
   check [A1.add1(num), ...] ~is [2, 3, 4]  
   check [A2.add2(num), ...] ~is [3, 4, 5]
   check [A3.add3(num), ...] ~is [4, 5, 6]
+
+// Check `Function.count` optimization
+block:
+  let [x, ...] = [1, 2, 3, 4]
+  let [[y, ...], ...] = [[1, 2, 3, 4], [5]]
+  check: Function.count(x, ...)
+         ~is 4
+  check: Function.count(y, ..., ...)
+         ~is 5
+  check: Function.count("hi", y, ..., ...)
+         ~is 6
+  check: Function.count(x, ..., ~b_flat: 10)
+         ~throws "function does not accept keyword arguments"
+  check: Function.count(&[x, ...])
+         ~is 4
+  check: Function.count is_a Function
+         ~is #true
+  block:
+    use_static
+    check: Function.count(1, 2) < Function.count(3, 4, 5)
+           ~is #true

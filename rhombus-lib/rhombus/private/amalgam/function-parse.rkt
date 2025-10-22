@@ -51,7 +51,8 @@
          "if-blocked.rkt"
          "realm.rkt"
          (submod "values.rkt" for-parse)
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "function-count.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -71,7 +72,8 @@
                        maybe-add-unsafe-definition
                        parse-anonymous-function-shape
                        find-call-result-at
-                       parse-arg-context))
+                       parse-arg-context)
+           Function.count)
   (begin-for-syntax
     (provide (struct-out converter))))
 
@@ -1382,6 +1384,17 @@
                                                                ,@arg-forms
                                                                ,(discard-static-infos rest-args)))
                                       ,(discard-static-infos kwrest-args))]
+                            [(and rsts
+                                  (identifier? w-rator)
+                                  (free-identifier=? w-rator #'Function.count)
+                                  (not (for/or ([kw (in-list kws)])
+                                         (syntax-e kw))))
+                             ;; backup shortcut when the call is too complex for `handle-repetition`,
+                             ;; but we can at least avoid `apply`
+                             (define all-args (append w-extra-rands arg-forms))
+                             #`(begin
+                                 #,@(map (lambda (arg) #`(values #,arg)) all-args)
+                                 (+ #,(length all-args) (length #,rest-args)))]
                             [rsts `(,#'apply ,w-rator
                                              ,@w-extra-rands
                                              ,@arg-forms
@@ -1508,23 +1521,38 @@
      (define args
        (for/list ([arg (in-list rands)])
          (syntax-parse arg [e::expression #'e.parsed])))
-     (define rest-args
-       (cond
-         [dots (repetition-as-list dots rsts 1)]
-         [rsts (syntax-parse rsts
-                 [rst::expression
-                  (if amp
-                      #`(to-list '#,amp #,(discard-static-infos #'rst.parsed))
-                      #'rst.parsed)])]
-         [else #''()]))
-     (define kwrest-args
-       (and kwrsts
-            (syntax-parse kwrsts [kwrst::expression #'kwrst.parsed])))
-     (define-values (e result-static-infos)
-       (k rator extra-rands args rest-args kwrest-args
-          (lambda (key) (syntax-local-static-info rator key))
-          (lambda (arg index) (extract-static-infos arg))))
-     (wrap-static-info* e result-static-infos)]
+     (define plain-rator (and dots (discard-static-infos rator)))
+     (cond
+       [(and (identifier? plain-rator)
+             (free-identifier=? plain-rator #'Function.count)
+             (not kwrsts))
+        ;; optimize use of `Function.count` to just get the size of a repetition
+        (define n (repetition-as-length dots rsts))
+        (cond
+          [(null? args) n]
+          [else
+           #`(begin
+               #,@(for/list ([arg (in-list args)])
+                    #`(void #,(discard-static-infos arg)))
+               (+ #,(length args) #,n))])]
+       [else
+        (define rest-args
+          (cond
+            [dots (repetition-as-list dots rsts 1)]
+            [rsts (syntax-parse rsts
+                    [rst::expression
+                     (if amp
+                         #`(to-list '#,amp #,(discard-static-infos #'rst.parsed))
+                         #'rst.parsed)])]
+            [else #''()]))
+        (define kwrest-args
+          (and kwrsts
+               (syntax-parse kwrsts [kwrst::expression #'kwrst.parsed])))
+        (define-values (e result-static-infos)
+          (k rator extra-rands args rest-args kwrest-args
+             (lambda (key) (syntax-local-static-info rator key))
+             (lambda (arg index) (extract-static-infos arg))))
+        (wrap-static-info* e result-static-infos)])]
     [else
      ;; parse arguments as repetitions
      (define args

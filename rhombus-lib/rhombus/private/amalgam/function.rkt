@@ -25,9 +25,9 @@
          "entry-point.rkt"
          "immediate-callee.rkt"
          "parse.rkt"
+         "function-count.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
-         "call-result-key.rkt"
          "index-result-key.rkt"
          (submod "list.rkt" for-compound-repetition)
          (submod "arithmetic.rkt" static-infos)
@@ -74,7 +74,8 @@
   (of_arity
    all_of
    [pass Function.pass/optimize]
-   [black_box Function.black_box])
+   [black_box Function.black_box]
+   [count Function.count])
   #:properties
   ()
   #:methods

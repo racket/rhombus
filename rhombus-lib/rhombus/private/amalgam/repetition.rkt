@@ -34,6 +34,7 @@
             repetition-as-list
             repetition-as-nested-lists
             repetition-as-list/unchecked
+            repetition-as-length
             render-repetition
 
             flatten-repetition
@@ -200,6 +201,24 @@
 
 (define-for-syntax (repetition-as-list/unchecked rep-parsed depth #:origin? [origin? #t])
   (render-repetition/direct rep-parsed depth 'unchecked #'for/list #:origin? origin?))
+
+(define-for-syntax (repetition-as-length ellipses stx)
+  (syntax-parse stx
+    [rep::repetition
+     #:with rep-info::repetition-info #'rep.parsed
+     (syntax-parse #'rep-info.for-clausess
+       [(([(id) (in-form e)]))
+        (cond
+          [(free-identifier=? #'in-form #'in-list)
+           #`(length e)]
+          [(free-identifier=? #'in-form #'in-treelist)
+           #`(treelist-length e)]
+          [(free-identifier=? #'in-form #'in-vector)
+           #`(vector-length e)]
+          [else
+           #`(length #,(repetition-as-list ellipses #'rep.parsed 1))])]
+       [else
+        #`(length #,(repetition-as-list ellipses #'rep.parsed 1))])]))
 
 (define-for-syntax (render-repetition for-form rep-parsed
                                       #:depth [depth 1])

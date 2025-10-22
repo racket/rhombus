@@ -527,6 +527,27 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 }
 
 @doc(
+  fun Function.count(x :: Any, ...) :: NonnegInt
+){
+
+ Returns the number of supplied @rhombus(x) arguments.
+
+ This function is particularly useful for getting the length of a
+ @tech{repetition}, where the implementation of a
+ @rhombus(Function.count) call will get the length of the repetition more
+ directly than performing a variable-argument function call at run time.
+
+@examples(
+  Function.count("a", 2, #'three)
+  block:
+    let [x, ...] = ["a", 2, #'three, #'~four]
+    Function.count(x, ...)
+)
+
+}
+
+
+@doc(
   fun Function.black_box(x :: Any) :: Any
 ){
 
