@@ -9,10 +9,14 @@
   expr.macro 'block:
                 $body
                 ...'
+  repet.macro 'block:
+                 $repet
+                 ...'
 ){
 
  Returns the result of the @rhombus(body) block, which may include local
- definitions.
+ definitions in the case of an expression use of @rhombus(block) (but not
+ a repetition use of @rhombus(block)).
 
 @examples(
   block:

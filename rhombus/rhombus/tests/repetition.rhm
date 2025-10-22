@@ -116,6 +116,19 @@ block:
     ~is [0, 1, 0, 1, 0]
   check accum ~is 15
 
+// blocks as repetitions
+block:
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5]]
+  def mutable accum = 0
+  fun inc(v): accum := accum + v
+  check: [block:
+            inc(x)
+            {x},
+          ...,
+          ...]
+         ~is [{1}, {2}, {3}, {4}, {5}]
+  check accum ~is 15
+
 // static information through a constructor call as repetition
 check:
   use_static
@@ -132,6 +145,18 @@ block:
   check:
     [if x mod 2 == 1 | "odd" | "even", ..., ...][1].length()
     ~is 4
+
+// static information through a block as repetition
+block:
+  use_static
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [block: x; "any", ..., ...][1].length()
+    ~is 3
+  def [[s, ...], ...] = [["1", "2", "3"], ["4", "5"]]
+  check:
+    [block: print(""); s, ..., ...][1].length()
+    ~is 1
 
 // static information through nested repetitions
 block:
