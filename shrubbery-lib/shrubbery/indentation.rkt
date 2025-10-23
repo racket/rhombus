@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/class
          racket/list
+         racket/file
          "variant.rkt"
          "private/edit-help.rkt"
          "private/paren.rkt"
@@ -27,10 +28,15 @@
 (define NORMAL-INDENT 2)
 (define BAR-INDENT 0)
 
+(define tab-right-to-left?
+  (get-preference 'shrubbery:tab-right-to-left
+                  (lambda () #f)
+                  #:timeout-lock-there (lambda (fn) #f)))
+
 (define (shrubbery-indentation t pos
                                #:multi? [multi? #f]
                                #:always? [always? multi?]
-                               #:reverse? [reverse? (not always?)]
+                               #:reverse? [reverse? (if tab-right-to-left? #f (not always?))]
                                #:stop-pos [stop-pos 0]
                                #:variant [variant default-variant])
   (parameterize ([current-classify-range (or (for/or ([r (in-list (send t get-regions))])
@@ -214,7 +220,9 @@
                                                           #:stop-pos stop-pos
                                                           #:variant variant)))
   (define tabs (let ([tabs (leftmost (add-zero candidates))])
-                 (if reverse?
+                 (if (if tab-right-to-left?
+                         reverse?
+                         (not reverse?))
                      (reverse tabs)
                      tabs)))
   ;; if the current state matches a candidate tab, we'll

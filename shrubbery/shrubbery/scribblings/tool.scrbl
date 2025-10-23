@@ -1,5 +1,6 @@
 #lang scribble/manual
 @(require (for-label racket/base
+                     racket/file
                      racket/contract/base
                      racket/gui/base
                      (only-in racket/class
@@ -128,7 +129,7 @@ the @racketmodname[(submod shrubbery reader)] module also provides
                                 [pos exact-nonnegative-integer?]
                                 [#:multi? multi? any/c #f]
                                 [#:always? always? any/c multi?]
-                                [#:reverse? reverse? any/c (not always?)]
+                                [#:reverse? reverse? any/c #f]
                                 [#:stop-pos stop-pos exact-nonnegative-integer? 0]
                                 [#:variant variant variant? default-variant])
          (or/c #f
@@ -154,14 +155,14 @@ the @racketmodname[(submod shrubbery reader)] module also provides
    just the first one.}
 
  @item{@racket[always?]: When @racket[#f], returns the line's current
-   indentation if that indentation is valid instead of cycling to the next
+   indentation if that indentation is valid, instead of cycling to the next
    valid indentation. This argument is provided as @racket[#f] when
    indenting for a newly created line, for example.}
 
  @item{@racket[reverse?]: When true, causes the a sequence of valid
-   indentations to be used or returned in reverse order. This argument's
-   default is @racket[#t] when @racket[always?] is @racket[#f] so that a
-   new line starts at the most-indented possibility.}
+   indentations to be used or returned in reverse order. See
+   @racket[shrubbery-range-indentation/reverse-choices] for more information
+   about the default order.}
 
  @item{@racket[stop-pos]: Indicates a position in @racket[text] where
    indentation should stop inspecting, instead of considering the effect of
@@ -196,6 +197,11 @@ the @racketmodname[(submod shrubbery reader)] module also provides
                (listof (list/c exact-nonnegative-integer? string?)))]{
 
  Like @racket[shrubbery-range-indentation] with @racket[#:reverse? #t].
+
+ By default, non-reversed indentation choices cycle left-to-right. If
+ the @racket['shrubbery:tab-right-to-left] preference (in the sense of
+ @racket[get-preference]) is set to a true value, then non-reversed
+ indentation choices cycle right-to-left.
 
 }
 
