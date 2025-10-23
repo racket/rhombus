@@ -103,6 +103,7 @@
 
 (define-primitive-class List treelist
   #:lift-declaration
+  #:constructor-static-info ((#%call-result ((#%dependent-result (merge-args treelist)))))
   #:constructor-arity -1
   #:instance-static-info ((#%index-get List.get)
                           (#%contains List.contains)
@@ -367,6 +368,25 @@
                  ([arg (in-list (cdr args))])
          (static-infos-or si (extract-index-uniform-result
                               (or (static-info-lookup arg #'#%index-result) #'())))))
+     (if (not (static-infos-empty? si))
+         #`((#%index-result #,si)
+            #,@res-statinfos)
+         res-statinfos)]))
+
+(define-syntax (merge-args data deps)
+  (define res-statinfos (if (eq? (syntax-e data) 'treelist)
+                            (get-treelist-static-infos)
+                            (get-list-static-infos)))
+  (define args (annotation-dependencies-args deps))
+  (cond
+    [(or (null? args)
+         (annotation-dependencies-rest? deps))
+     res-statinfos]
+    [else
+     (define si
+       (for/fold ([si (car args)])
+                 ([arg (in-list (cdr args))])
+         (static-infos-or si arg)))
      (if (not (static-infos-empty? si))
          #`((#%index-result #,si)
             #,@res-statinfos)

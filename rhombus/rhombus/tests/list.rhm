@@ -978,6 +978,16 @@ block:
   check ["a1", "b", & ["ccccc"]][2].length() ~is 5
   check (["a"] ++ ["b"])[0].length() ~is 1
 
+block:
+  use_static
+  def los = List["a", "b", "c"]
+  check los.get(0).length() ~is 1
+
+block:
+  use_static
+  def los = List("a", "b", "c")
+  check los.get(0).length() ~is 1
+
 check:
   ~eval
   use_static
