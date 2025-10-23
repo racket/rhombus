@@ -298,7 +298,7 @@ check:
   ~is 61
 
 check:
-  add(1, List.repet([10, 20, 30]), ...)
+  add(1, each [10, 20, 30], ...)
   ~is 61
 
 check:
@@ -312,7 +312,7 @@ check:
   ~matches '(hi "a") (hi "b") (hi "c")'
 
 check:
-  '(hi $(List.repet(["a", "b", "c"]))) ...'
+  '(hi $(each ["a", "b", "c"])) ...'
   ~matches '(hi "a") (hi "b") (hi "c")'
 
 class Posn(x, y)
@@ -403,7 +403,7 @@ check:
   [anyargs(& (block: s := [1, s]; [9, 10, 11]),
            ~& (block: s := [2, s]; { #'~height: 10 }),
            ~base: (block: s := [3, s]; 1),
-           List.repet(block: s := [4, s]; [8, 88]), ...),
+           each (block: s := [4, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
@@ -413,7 +413,7 @@ check:
            ~& (block: s := [2, s]; { #'~height: 10 }),
            ~base: (block: s := [3, s]; 1),
            ~& (block: s := [4, s]; { #'~width: 20 }),
-           List.repet(block: s := [5, s]; [8, 88]), ...),
+           each (block: s := [5, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10, #'~width: 20}],
        [5, [4, [3, [2, [1, 0]]]]]]

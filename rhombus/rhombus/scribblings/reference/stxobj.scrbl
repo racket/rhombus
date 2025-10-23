@@ -767,7 +767,7 @@ class's name.
       'fun $(Syntax.make(
                [#'alts,
                 & for List (i in min.unwrap() ..= (max || min).unwrap()):
-                  let [var, ...] = for List (j in i): Syntax.make_temp_id()
+                  let [var, ...] = for List (j in 0..i): Syntax.make_temp_id()
                   ': ($var, ...): [$var, ...]']
              ))'
   ~repl:

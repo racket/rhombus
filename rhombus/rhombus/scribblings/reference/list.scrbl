@@ -770,23 +770,3 @@ it supplies its elements in order.
  @tech{sequence} of @rhombus(lst)'s elements in order.
 
 }
-
-
-@doc(
-  ~nonterminal:
-    list_expr: block expr
-  repet.macro 'List.repet($list_expr)'
-){
-
- Creates a repetition from a list. This is a shorthand for using
- @rhombus(..., ~bind) with a @rhombus(List, ~bind) binding.
-
-@examples(
-  def lst = [1, 2, 3]
-  block:
-    let [x, ...] = lst
-    [x+1, ...]
-  [List.repet(lst) + 1, ...]
-)
-
-}

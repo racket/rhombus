@@ -744,14 +744,9 @@ check:
   ~throws "matching(List(1, & _, ..., 3))"
 
 check:
-  [List.repet([1, 2, 3]), ...] ~is [1, 2, 3]
-  [List.repet("oops"), ...] ~throws values(
-    "List.repet: " ++ error.annot_msg(),
-    error.annot("List").msg,
-    error.val("oops").msg,
-  )
+  [each [1, 2, 3], ...] ~is [1, 2, 3]
 
-// check element static info in `List.repet`
+// check element static info in `each`
 block:
   use_static
   class Doggo(name):
@@ -759,7 +754,7 @@ block:
       println("woof! " +& name)
   check:
     let lst :: List.of(Doggo) = [Doggo("Spot"), Doggo("Rover")]
-    Function.pass(List.repet(lst).bork(), ...)
+    Function.pass((each lst).bork(), ...)
     ~prints "woof! Spot\nwoof! Rover\n"
 
 check:

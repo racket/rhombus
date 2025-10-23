@@ -563,14 +563,9 @@ check:
   ~is [[[1], [2, 3, 4]], 5]
 
 check:
-  PairList[PairList.repet(PairList[1, 2, 3]), ...] ~is PairList[1, 2, 3]
-  PairList[PairList.repet("oops"), ...] ~throws values(
-    "PairList.repet: " ++ error.annot_msg(),
-    error.annot("PairList").msg,
-    error.val("oops").msg,
-  )
+  PairList[each PairList[1, 2, 3], ...] ~is PairList[1, 2, 3]
 
-// check element static info in `PairList.repet`
+// check element static info in `each`
 block:
   use_static
   class Doggo(name):
@@ -578,7 +573,7 @@ block:
       println("woof! " +& name)
   check:
     let lst :: PairList.of(Doggo) = PairList[Doggo("Spot"), Doggo("Rover")]
-    Function.pass(PairList.repet(lst).bork(), ...)
+    Function.pass((each lst).bork(), ...)
     ~prints "woof! Spot\nwoof! Rover\n"
 
 check:

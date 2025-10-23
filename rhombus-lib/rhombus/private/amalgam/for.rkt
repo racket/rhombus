@@ -23,7 +23,8 @@
          "if-blocked.rkt"
          (only-in "for-clause-primitive.rkt"
                   each)
-         (submod "membership-testable.rkt" in-operator))
+         (submod "membership-testable.rkt" in-operator)
+         (submod "repet-primitive.rkt" for-sequence-check))
 
 (provide (rename-out [rhombus-for for]))
 
@@ -285,7 +286,9 @@
                                       #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs))))))))
                                   #`(#,seq-ctr rhs))]
                              [else
-                              (unwrap-static-infos #'rhs)])))]
+                              (syntax-parse orig-stx
+                                [(head . _)
+                                 #`(check-sequence-for-each 'head #,(unwrap-static-infos #'rhs))])])))]
          . rev-clauses)
         ()
         (begin

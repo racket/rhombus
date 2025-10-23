@@ -628,23 +628,3 @@ which case it supplies its elements in order.
  @tech{sequence} of @rhombus(lst)'s elements in order.
 
 }
-
-
-@doc(
-  ~nonterminal:
-    pair_list_expr: block expr
-  repet.macro 'PairList.repet($list_expr)'
-){
-
- Creates a repetition from a @tech{pair list}. This is a shorthand for using
- @rhombus(..., ~bind) with a @rhombus(PairList, ~bind) binding.
-
-@examples(
-  def lst = PairList[1, 2, 3]
-  block:
-    let PairList[x, ...] = lst
-    PairList[x+1, ...]
-  [PairList.repet(lst) + 1, ...]
-)
-
-}

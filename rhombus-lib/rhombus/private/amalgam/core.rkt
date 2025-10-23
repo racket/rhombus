@@ -122,6 +122,7 @@
         "not-infix.rkt"
         "assign.rkt"
         "equal.rkt"
+        "repet-primitive.rkt"
         "function.rkt"
         "class.rkt"
         "class-clause-primitive.rkt"

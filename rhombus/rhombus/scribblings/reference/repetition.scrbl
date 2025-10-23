@@ -185,3 +185,63 @@ positions.
 )
 
 }
+
+
+@doc(
+  repet.macro 'index($repet)'
+  repet.macro 'index($repet, $depth_int)'
+){
+
+ Creates a repetition with the same depth and count (at each nesting
+ depth) as @rhombus(repet), but where the repetition elements are
+ integers counting up from @rhombus(0).
+
+@examples(
+  def [x, ...] = ["a", "b", "c"]
+  [index(x), ...]
+  {x: index(x), ...}
+)
+
+ If @rhombus(depth_int) is provided, it must be a literal positive
+ integer, and the depth of @rhombus(repet) must be at least
+ @rhombus(depth_int). The elements of the generated repetition correspond
+ to the repetition at level nested depth @rhombus(depth_int) counting
+ from the innermost nesting. Omitting @rhombus(depth_int) is the same as
+ supplying @rhombus(1).
+
+@examples(
+  def [[y, ...], ...] = [["a", "b", "c"], ["d", "e"]]
+  [[index(y), ...], ...]
+  [[index(y, 2), ...], ...]
+  [index([y, ...]), ...]
+)
+
+}
+
+
+@doc(
+  ~nonterminal:
+    seq_expr: block expr
+  repet.macro 'each $seq_expr'
+){
+
+ Creates a repetition from an expression that produces a @tech{sequence}.
+
+ In the case of something like a list, @rhombus(each, ~repet) could be
+ considered a shorthand for using @dots with a @rhombus(List, ~bind)
+ binding.
+
+@examples(
+  def lst = [1, 2, 3]
+  block:
+    let List[x, ...] = lst
+    [x+1, ...]
+  [(each lst) + 1, ...]
+)
+
+ The @rhombus(each, ~repet) form is different from the
+ @rhombus(each, ~for_clause) form for @rhombus(for). They use the same
+ name, because they are both related to extracting elements from a
+ sequence.
+
+}
