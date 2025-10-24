@@ -41,7 +41,7 @@ check:
   [enumed(10, nat3), ...][0].length()
   ~is 2
 
-repet.macro 'new_enumed($from, $(sub :: repet_meta.Parsed))':
+repet.macro 'new_enumed($from, $to, $(sub :: repet_meta.Parsed))':
   ~all_stx stx
   let '($_, ($binds, ..., ($inner_bind, ...)), $body, $use_depth, $_)':
     repet_meta.unpack_generator(sub)
@@ -50,16 +50,16 @@ repet.macro 'new_enumed($from, $(sub :: repet_meta.Parsed))':
     annot_meta.unpack_predicate(p)
   repet_meta.pack_generator(
     '($stx,
-      ($binds, ..., ($inner_bind, ..., ((i), $from ..))),
+      ($binds, ..., ($inner_bind, ..., ((i), $from .. $to))),
       [i, $body],
       $use_depth,
       $si)'
   )
 
 check:
-  [new_enumed(10, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
+  [new_enumed(10, 13, nat3), ...] ~is [[10, 0], [11, 1], [12, 2]]
 
 check:
   use_static
-  [new_enumed(10, nat3), ...][0].length()
+  [new_enumed(10, 13, nat3), ...][0].length()
   ~is 2

@@ -190,6 +190,7 @@ positions.
 @doc(
   repet.macro 'index($repet)'
   repet.macro 'index($repet, $depth_int)'
+  expr.macro 'index'
 ){
 
  Creates a repetition with the same depth and count (at each nesting
@@ -216,6 +217,12 @@ positions.
   [index([y, ...]), ...]
 )
 
+ The @rhombus(index) expression form is always an error. It is intended
+ to provide a clearer message when @rhombus(index) was meant to be used
+ in a repetition context.
+
+
+
 }
 
 
@@ -223,6 +230,7 @@ positions.
   ~nonterminal:
     seq_expr: block expr
   repet.macro 'each $seq_expr'
+  expr.macro 'each'
 ){
 
  Creates a repetition from an expression that produces a @tech{sequence}.
@@ -239,7 +247,11 @@ positions.
   [(each lst) + 1, ...]
 )
 
- The @rhombus(each, ~repet) form is different from the
+ The @rhombus(each) expression form is always an error. It is intended
+ to provide a clearer message when @rhombus(each) was meant to be used in
+ a repetition context.
+
+ The @rhombus(each, ~repet) repetion form is different from the
  @rhombus(each, ~for_clause) form for @rhombus(for). They use the same
  name, because they are both related to extracting elements from a
  sequence.

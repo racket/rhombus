@@ -2,6 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
+         "provide.rkt"
+         "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
          "static-info.rkt"
@@ -11,12 +13,24 @@
          "parens.rkt"
          "number.rkt")
 
-(provide (for-space rhombus/repet
-                    index
-                    each))
+(provide (for-spaces (#f
+                      rhombus/repet)
+                     index
+                     each))
 
 (module+ for-sequence-check
   (provide check-sequence-for-each))
+
+(define-for-syntax (not-an-expression stx)
+  (syntax-parse stx
+    [(head . _)
+     (raise-syntax-error #f
+                         "cannot use repetition form as an expression"
+                         #'head)]))
+
+(define-syntax index
+  (expression-transformer
+   not-an-expression))
 
 (define-repetition-syntax index
   (repetition-transformer
@@ -100,6 +114,10 @@
                                                                       1
                                                                       (in-naturals 0))]])
            (cdr clauses))]))
+
+(define-syntax each
+  (expression-transformer
+   not-an-expression))
 
 (define-repetition-syntax each
   (repetition-transformer
