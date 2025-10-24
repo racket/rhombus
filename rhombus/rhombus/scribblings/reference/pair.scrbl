@@ -167,8 +167,6 @@ which case it supplies its elements in order.
  repetitions, where @rhombus(repet_or_splice) is like
  @rhombus(expr_or_splice), but with repetitions in place of expressions.
 
- @see_implicit(@rhombus(#%brackets), @brackets, "expression")
-
 @examples(
   def lst = PairList(1, 2, 3)
   lst

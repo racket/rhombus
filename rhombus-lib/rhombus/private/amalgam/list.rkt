@@ -156,6 +156,7 @@
 
 (define-primitive-class PairList list
   #:lift-declaration
+  #:constructor-static-info ((#%call-result ((#%dependent-result (merge-args list)))))
   #:constructor-arity -1
   #:instance-static-info ((#%index-get PairList.get)
                           (#%contains PairList.contains)
@@ -1565,6 +1566,7 @@
                                   (for/list ([arg (in-list args)])
                                     #'())
                                   #:index-result-info? #t
+                                  #:list-index-static-infos? #t
                                   #:rest-accessor (and make-rest-selector (make-rest-selector len 0))
                                   #:rest-repetition? (and rest-repetition/min #t)
                                   #:rest-repetition-min (or rest-repetition/min 0)

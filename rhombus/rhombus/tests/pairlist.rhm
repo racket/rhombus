@@ -679,3 +679,82 @@ block:
   check los.to_list()[0].length() ~is 1
   check (for List (e in los.to_sequence()): e.length()) ~is [1, 1, 1]
   check (PairList["a"] ++ PairList["b"])[0].length() ~is 1
+
+block:
+  use_static
+  def los = PairList["a", "b", "c"]
+  check los.get(0).length() ~is 1
+
+block:
+  use_static
+  def los = PairList("a", "b", "c")
+  check los.get(0).length() ~is 1
+
+check:
+  ~eval
+  use_static
+  PairList["a1", "b", #"no"][0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  PairList["a1", "b", & PairList["c", #"no"]][0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  def PairList[x, ...] = PairList[1]
+  PairList["a1", "b", x, ...][0].length()
+  ~throws values("length",
+                 "no such field or method",
+                 "based on static information")
+
+block:
+  use_static
+  let PairList[x, y] :: PairList.tuple_of[String, String]:
+    dynamic(PairList["a", "b"])
+  check x.length() ~is 1
+  check y.length() ~is 1
+
+block:
+  use_static
+  let xs :: PairList.tuple_of[String, ...]:
+    dynamic(PairList["a", "bb"])
+  check xs[0].length() ~is 1
+  check xs[1].length() ~is 2
+
+block:
+  use_static
+  let ps :: PairList.tuple_of[PairList.tuple_of[Bytes, String], ...]:
+    dynamic(PairList[PairList[#"a", "a"], PairList[#"bb", "bb"]])
+  check ps[0].length() ~is 2
+  let PairList[PairList[pa, pa2], PairList[pb, pb2]] = ps
+  check pa.length() ~is 1
+  check pa2.length() ~is 1
+  check pb.length() ~is 2
+  check pb2.length() ~is 2
+
+block:
+  use_static
+  let ps = PairList[PairList[#"a", "a"], PairList[#"bb", "bb"]]
+  check ps[0].length() ~is 2
+  let PairList[PairList[pa, pa2], PairList[pb, pb2]] = ps
+  check pa.length() ~is 1
+  check pa2.length() ~is 1
+  check pb.length() ~is 2
+  check pb2.length() ~is 2
+
+block:
+  use_static
+  class Posn(x, y): nonfinal
+  class Posn3D(z): extends Posn
+  let PairList[x, y, ...] :: PairList.tuple_of[Posn3D, Posn, ...]:
+    dynamic(PairList[Posn3D(1, 2, 3), Posn(4, 5), Posn(6, 7)])
+  check x.z ~is 3
+  check [y.y, ...] ~is [5, 7]

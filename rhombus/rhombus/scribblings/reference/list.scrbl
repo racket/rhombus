@@ -52,7 +52,7 @@ it supplies its elements in order.
  @rhombus(List.tuple_of, ~annot) annotation is also a converter
  annotation where a converted list has converted elements. When all
  @rhombus(annot)s are @tech(~doc: guide_doc){predicate annotations}, then
- @rhombus(List.tuple_of(annot, ...), ~annot) is equivalent to
+ @rhombus(List.tuple_of[annot, ...], ~annot) is equivalent to
  @rhombus(matching(List[_ :: annot, ...]), ~annot).
 
  @see_implicit(@rhombus(#%brackets, ~annot), @brackets, "annotation")
