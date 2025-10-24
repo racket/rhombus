@@ -7,9 +7,9 @@ import:
   "maybe_drop_extras.rhm" open
 
 export:
-  index
-  as_index
-  section_index
+  indexed
+  as_indexed
+  section_indexed
   index_section
   ExtrasMap
 
@@ -24,10 +24,10 @@ annot.macro 'ExtrasMap':
   annot_meta.pack_predicate('is_extras_map',
                             map_statinfo)
 
-fun index(words :: (String ||  List.of(String)),
-          ~content: content :: (String ||  List.of(String)) = words,
-          ~extras: extras :: ExtrasMap = {},
-          pre_content :: PreContent)
+fun indexed(words :: (String ||  List.of(String)),
+            ~content: content :: (String ||  List.of(String)) = words,
+            ~extras: extras :: ExtrasMap = {},
+            pre_content :: PreContent)
   :: Element:
     ~doc
     let norm_words = (if words is_a String | [words] | words)
@@ -42,15 +42,15 @@ fun index(words :: (String ||  List.of(String)),
       base.#{index*}(convert_list(words), convert_list(content), pre_content,
                      ~extras: convert_extras(extras))
 
-fun as_index(pre_content :: PreContent,
-             ~extras: extras :: ExtrasMap = {}) :: Element:
+fun as_indexed(pre_content :: PreContent,
+               ~extras: extras :: ExtrasMap = {}) :: Element:
   ~doc
   maybe_drop_extras:
     base.#{as-index}(pre_content,
                      ~extras: convert_extras(extras))
 
-fun section_index(~extras: extras :: ExtrasMap = {},
-                  word :: String, ...):
+fun section_indexed(~extras: extras :: ExtrasMap = {},
+                    word :: String, ...):
   ~doc
   maybe_drop_extras:
     base.#{section-index}(word, ...,

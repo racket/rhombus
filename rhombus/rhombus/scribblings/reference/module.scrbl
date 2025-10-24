@@ -118,10 +118,10 @@ different than the enclosing (sub)module.
 
 @itemlist(
 
- @item{@as_index{@rhombus(~unsafe)} compiles the module in unsafe mode,
+ @item{@as_indexed{@rhombus(~unsafe)} compiles the module in unsafe mode,
   where annotation failures trigger unspecified behavior.}
 
- @item{@as_index{@rhombus(~empty_evaluator)} disables the use of the
+ @item{@as_indexed{@rhombus(~empty_evaluator)} disables the use of the
   module's content for interactive evaluation, which can avoid overhead
   for the module.}
 

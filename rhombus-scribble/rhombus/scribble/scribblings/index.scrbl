@@ -5,16 +5,15 @@
 @title(~tag: "index"){Indexing}
 
 @doc(~include rhombus/scribble/private/index:
-       index
-       as_index){
+       indexed
+       as_indexed){
 }
 
 @doc(~include rhombus/scribble/private/index:
-       section_index){
+       section_indexed){
 }
 
 @doc(~include rhombus/scribble/private/index:
        index_section){
 
 }
-
