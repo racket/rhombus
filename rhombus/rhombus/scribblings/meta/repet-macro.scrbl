@@ -125,7 +125,7 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    repet.macro 'enumed($from, $(sub :: repet_meta.Parsed))':
+    repet.macro 'enumed($from, $to, $(sub :: repet_meta.Parsed))':
       ~all_stx stx
       let '($_, ($binds, ..., ($inner_bind, ...)), $body, $use_depth, $_)':
         repet_meta.unpack_generator(sub)
@@ -134,14 +134,14 @@
         annot_meta.unpack_predicate(p)
       repet_meta.pack_generator(
         '($stx,
-          ($binds, ..., ($inner_bind, ..., ((i), $from ..))),
+          ($binds, ..., ($inner_bind, ..., ((i), $from .. $to))),
           [i, $body],
           $use_depth,
           $si)'
       )
   ~repl:
     def [x, ...] = ["a", "b", "c"]
-    [enumed(1, x), ...]
+    [enumed(1, 4, x), ...]
 )
 
 

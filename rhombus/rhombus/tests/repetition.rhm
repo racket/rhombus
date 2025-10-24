@@ -1,4 +1,6 @@
 #lang rhombus
+import:
+  "version_guard.rhm"
 
 // syntax-object templates with repetitions
 block:
@@ -508,3 +510,17 @@ check:
   ~eval
   [index(0, a b c), ...]
   ~throws "expected a literal positive integer"
+
+version_guard.at_least "9.0.0.2":
+  // requires `in-parallel-values` at the Racket level
+  check:
+    def [x, ...] = [1, 2, 3]
+    [[index(index(index(x))), x], ...]
+    ~is [[0, 1], [1, 2], [2, 3]]
+
+version_guard.at_least "9.0.0.2":
+  check:
+    let [x, ...] = [1, 2, 3]
+    let [y, ...] = [1, 2]
+    [[x, y], ...]
+    ~throws "incompatible repetition lengths for ellipsis"

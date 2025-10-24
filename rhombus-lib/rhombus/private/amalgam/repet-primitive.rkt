@@ -63,8 +63,7 @@
                               (cond
                                 [(= depth 1)
                                  (cons
-                                  (append (syntax->list (car rev-clausess))
-                                          (list #'[(pos) (in-naturals 0)]))
+                                  (add-indexing-to-clause #'pos (syntax->list (car rev-clausess)))
                                   (cdr rev-clausess))]
                                 [else
                                  (cons (car rev-clausess)
@@ -72,6 +71,35 @@
                            #'pos
                            (get-int-static-infos)
                            #'r.used-depth)]))
+
+(define-for-syntax (add-indexing-to-clause pos-id clauses)
+  ;; use `in-indexed` instead of adding a parallel `in-naturals` so that
+  ;; rendering the repeition with `#:on-length-mismatch` will be ok;
+  ;; in the common case, that will be optimized to a parallel `in-naturals`
+  (define (index-clause clause)
+    (syntax-parse clause
+      [[(id) rhs] #`[(id #,pos-id) (in-indexed rhs)]]
+      [_ #f]))
+  (cond
+    [(ormap index-clause clauses)
+     ;; some clause can support an index, so add it to the first one available:
+     (let loop ([clauses clauses])
+       (cond
+         [(index-clause (car clauses))
+          => (lambda (new-clause)
+               (cons new-clause (cdr clauses)))]
+         [else (cons (car clauses) (loop (cdr clauses)))]))]
+    [(null? clauses)
+     (error "index: repetition has no clauses")]
+    [else
+     ;; unusual that there's no single-values clause, but we can handle
+     ;; it by using the more expensive `in-parallel-values` form
+     (cons (syntax-parse (car clauses)
+             [[(id ...) rhs] #`[(id ... #,pos-id) (in-parallel-values #,(length (syntax->list #'(id ...)))
+                                                                      rhs
+                                                                      1
+                                                                      (in-naturals 0))]])
+           (cdr clauses))]))
 
 (define-repetition-syntax each
   (repetition-transformer

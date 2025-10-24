@@ -10,6 +10,7 @@
                      "macro-result.rkt"
                      "srcloc.rkt"
                      "origin.rkt"
+                     "../version-case.rkt"
                      (for-syntax racket/base))
          racket/treelist
          "enforest.rkt"
@@ -349,10 +350,24 @@
          rhs)]))
 
 (define-for-syntax (insert-clause-separators clauses-stxs)
+  (define (maybe-add-check clauses)
+    (meta-if-version-at-least
+     "9.0.0.1"
+     (if ((length clauses) . > . 1)
+         (append clauses
+                 (list #'#:on-length-mismatch
+                       #'(raise-ellipsis-mismatch)))
+         clauses)
+     clauses))
   (let loop ([clauses-stxs clauses-stxs])
     (cond
       [(null? clauses-stxs) null]
-      [(null? (cdr clauses-stxs)) (syntax->list (car clauses-stxs))]
-      [else (append (syntax->list (car clauses-stxs))
+      [(null? (cdr clauses-stxs)) (maybe-add-check (syntax->list (car clauses-stxs)))]
+      [else (append (maybe-add-check (syntax->list (car clauses-stxs)))
                     (list '#:when #t)
                     (loop (cdr clauses-stxs)))])))
+
+(define (raise-ellipsis-mismatch)
+  (raise
+   (exn:fail:contract "incompatible repetition lengths for ellipsis"
+                      (current-continuation-marks))))
