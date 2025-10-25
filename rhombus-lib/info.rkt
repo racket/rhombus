@@ -16,4 +16,4 @@
 (define license '(Apache-2.0 OR MIT))
 
 ;; keep in sync with runtime version at "rhombus/private/amalgam/version.rkt"
-(define version "0.41")
+(define version "0.42")

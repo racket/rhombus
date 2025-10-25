@@ -16,7 +16,8 @@
 (provide (for-spaces (#f
                       rhombus/repet)
                      index
-                     each))
+                     each
+                     deepen))
 
 (module+ for-sequence-check
   (provide check-sequence-for-each))
@@ -116,16 +117,18 @@
            (cdr clauses))]))
 
 (define-syntax each
-  (expression-transformer
+  (expression-prefix-operator
+   #f '((default . weaker)) 'macro
    not-an-expression))
 
 (define-repetition-syntax each
-  (repetition-transformer
+  (repetition-prefix-operator
+   #f '((default . weaker)) 'macro
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id . tail)
-        #:with e::expression #'(group . tail)
+        #:with (~var e (:prefix-op+expression+tail (quote-syntax each))) #'(group . tail)
         (define seq-ctr-id (syntax-local-static-info #'e.parsed #'#%sequence-constructor))
         (define e-plain (discard-static-infos #'e.parsed))
         (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
@@ -137,9 +140,57 @@
                                            (syntax-local-static-info #'e.parsed #'#%index-result))
                                           #'())
                                       0)
-                #'())]))))
+                #'e.tail)]))))
 
 (define (check-sequence-for-each who v)
   (if (and (sequence? v) (not (exact-integer? v)))
       v
       (raise-annotation-failure who v "Sequence")))
+
+(define-syntax deepen
+  (expression-prefix-operator
+   #f '((default . weaker)) 'macro
+   not-an-expression))
+
+(define-repetition-syntax deepen
+  (repetition-prefix-operator
+   #f '((default . weaker)) 'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(form-id left ...+ (~and kw (~or #:like #:like_inner)) right ...+)
+        #:with left-r::repetition #'(group left ...)
+        #:with (~var right-r (:prefix-op+repetition-use+tail (quote-syntax deepen))) #'(group right ...)
+        #:with left-i::repetition-info #'left-r.parsed
+        #:with right-i::repetition-info #'right-r.parsed
+        (define left-clausess (syntax->list #'left-i.for-clausess))
+        (define right-clausess (syntax->list #'right-i.for-clausess))
+        (define left-depth (length left-clausess))
+        (define right-depth (length right-clausess))
+        (define src (respan (datum->syntax #f (append (list #'form-id)
+                                                      (or (syntax->list #'left-i.rep-expr)
+                                                          (syntax->list #'(left ... )))
+                                                      (list #'kw)
+                                                      (or (syntax->list #'right-i.rep-expr)
+                                                          (syntax->list #'(right ... )))))))
+        (unless (left-depth . < . right-depth)
+          (raise-syntax-error #f
+                              (format "repetition after `~~~a` is not deeper than repetition before"
+                                      (keyword->string (syntax-e #'kw)))
+                              src))
+        (define inner? (eq? (syntax-e #'kw) '#:like_inner))
+        (define like-clausess (if inner?
+                                  (list-tail right-clausess left-depth)
+                                  (reverse (list-tail (reverse right-clausess) left-depth))))
+        (values (make-repetition-info src
+                                      (if inner?
+                                          (append (for/list ([left-clauses (in-list left-clausess)]
+                                                             [right-clauses (in-list right-clausess)])
+                                                    (append (syntax->list left-clauses)
+                                                            (syntax->list right-clauses)))
+                                                  like-clausess)
+                                          (append like-clausess left-clausess))
+                                      #'left-i.body
+                                      #'left-i.element-static-infos
+                                      #'left-i.used-depth)
+                #'right-r.tail)]))))

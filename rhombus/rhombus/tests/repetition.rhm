@@ -524,3 +524,18 @@ version_guard.at_least "9.0.0.2":
     let [y, ...] = [1, 2]
     [[x, y], ...]
     ~throws "incompatible repetition lengths for ellipsis"
+
+block:
+  let [x, ...] = ["a", "b"]
+  check [{0, x}, ...] ~is [{0, "a"}, {0, "b"}]
+  check [deepen 0 ~like x, ...] ~is [0, 0]
+  let [[y, ...], ...] = [[1, 2, 3], [4, 5]]
+  check [[{0, y}, ...], ...] ~is [[{0, 1}, {0, 2}, {0, 3}], [{0, 4}, {0, 5}]]
+  check [[{deepen 0 ~like y, y}, ...], ...] ~is [[{0, 1}, {0, 2}, {0, 3}], [{0, 4}, {0, 5}]]
+  check [[deepen 0 ~like y, ...], ...] ~is [[0, 0, 0], [0, 0]]
+  check [[deepen x ~like y, ...], ...] ~is  [["a", "b"], ["a", "b"]]
+  check [[deepen x ~like_inner y, ...], ...] ~is [["a", "a", "a"], ["b", "b"]]
+  check [[{deepen x ~like_inner y, y}, ...], ...] ~is [[{"a", 1}, {"a", 2}, {"a", 3}], [{"b", 4}, {"b", 5}]]
+  version_guard.at_least "9.0.0.2":
+    check [[{x, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"
+    check [[{deepen x ~like y, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"

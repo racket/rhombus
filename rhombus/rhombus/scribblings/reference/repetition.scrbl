@@ -87,6 +87,8 @@ to match a repetition of depth 2:
 In other words, unless otherwise documented, the depth of a repetition
 formed by combining repetitions is the maximum of the depths of the
 combined repetitions, so @rhombus(z+y) is a repetition of depth 2.
+See also @rhombus(deepen, ~repet) for more explicit control over
+repetition deepening.
 
 Expressions with side effects or short-circuiting operators can appear
 within a repetition. Each effect and control-flow choice is applied on
@@ -221,7 +223,55 @@ positions.
  to provide a clearer message when @rhombus(index) was meant to be used
  in a repetition context.
 
+}
 
+
+@doc(
+  ~nonterminal:
+    shallow_repet: block repet
+    deep_repet: block repet
+  repet.macro 'deepen $shallow_repet ~like $deep_repet'
+  repet.macro 'deepen $shallow_repet ~like_inner $deep_repet'
+  expr.macro 'deepen'
+){
+
+ Creates a repetition that has the elements of @rhombus(shallow_repet),
+ but the depth of @rhombus(deep_repet). The @rhombus(shallow_repet) is
+ deepened by repeating elements in a way that depends on whether
+ @rhombus(~like) or @rhombus(~like_inner) is used:
+
+ @itemlist(
+  
+  @item{With @rhombus(~like), the overall repetition
+  @rhombus(shallow_repet) is repeated as many times as needed to match the
+  outermost layers of @rhombus(deep_repet). This is the same kind of
+  deepening that is performed automatically when repetitions of different
+  depths are under a shared @dots_expr.}
+
+  @item{With @rhombus(~like_inner), the repetition
+  @rhombus(shallow_repet) is expected to match the outermost repetitions
+  of @rhombus(deep_repet) in lengths, and the innermost element of
+  @rhombus(shallow_repet) is repeated for each further inner repetition
+  layer of @rhombus(deep_repet). If the outermost repetition counts of
+  @rhombus(shallow_repet) and @rhombus(deep_repet) do not match, a
+  mismatch exception is thrown when the repetition is used.}
+)
+
+@examples(
+  ~repl:
+    def [x, ...] = ["a", "b"]
+    [deepen 0 ~like x, ...]
+  ~repl:
+    def [[y, ...], ...] = [[1, 2, 3], [4, 5]]
+    [[deepen 0 ~like y, ...], ...]
+    [[deepen x ~like y, ...], ...]
+    [[deepen x ~like_inner y, ...], ...]
+    [[{deepen x ~like_inner y, y}, ...], ...]
+)
+
+ The @rhombus(deepen) expression form is always an error. It is intended
+ to provide a clearer message when @rhombus(deepen) was meant to be used
+ in a repetition context.
 
 }
 
