@@ -12,9 +12,8 @@ it is extensible in the same way as Racket, but Rhombus uses a more
 conventional expression syntax. No familiarity with Racket is required
 to use Rhombus.}
 
-This document is a general guide to Rhombus. For more information, see
-@docref(ref_doc). For a complete specification of Rhombus, see also
-@docref(model_doc) and @docref(meta_doc).
+This document is a general guide to the language. For more
+documentation, see @docref(getting_started_doc).
 
 @table_of_contents()
 

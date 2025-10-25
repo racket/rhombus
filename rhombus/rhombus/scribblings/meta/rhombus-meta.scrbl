@@ -4,10 +4,19 @@
 
 @title{Rhombus Metaprogramming Reference}
 
-See @docref(ref_doc) for information on the base Rhombus language,
-including basic metaprogramming support in the form of
-@tech(~doc: ref_doc){syntax objects} and the @rhombus(macro) form. This
-document defines the rest of Rhombus's metaprogramming facilities.
+This document defines Rhombus's advanced metaprogramming facilities.
+
+@itemlist(
+
+ @item{For a general overview of the language, see @docref(guide_doc).}
+
+ @item{For bindings in the main language, including basic
+ metaprogramming support in the form of @tech(~doc: ref_doc){syntax
+  objects} and the @rhombus(macro) form, see @docref(ref_doc).}
+
+ @item{For more documentation, see @docref(getting_started_doc).}
+
+)
 
 @docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!#{core-meta},
            rhombus/meta)
@@ -20,7 +29,7 @@ Simple pattern-based expression macros can be written using
 using the @rhombusmodname(rhombus/meta) module (usually with no prefix).
 
 The @rhombusmodname(rhombus/meta) module provides bindings like
-@rhombus(defn.macro), @rhombus(expr.macro), and @rhombus(bind.macro). It
+@rhombus(defn.macro, ~defn), @rhombus(expr.macro, ~defn), and @rhombus(bind.macro, ~defn). It
 it also re-exports most of @rhombuslangname(rhombus) as @rhombus(meta, ~impo)
 for use in compile-time expressions, but it omits bindings from
 @rhombuslangname(rhombus) that bridge to meta contexts: @rhombus(meta),

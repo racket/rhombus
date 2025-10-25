@@ -39,6 +39,7 @@ export:
   model_doc
   ref_doc
   meta_doc
+  getting_started_doc
   raco_doc
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
@@ -101,6 +102,7 @@ def guide_doc = ModulePath'lib("rhombus/scribblings/rhombus.scrbl")'
 def model_doc = ModulePath'lib("rhombus/scribblings/model/rhombus-model.scrbl")'
 def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'
 def meta_doc = ModulePath'lib("rhombus/scribblings/meta/rhombus-meta.scrbl")'
+def getting_started_doc = ModulePath'lib("rhombus/scribblings/getting-started/rhombus-getting-started.scrbl")'
 
 // Link to this one only indirectly:
 def raco_doc = ModulePath'lib("scribblings/raco/raco.scrbl")'
