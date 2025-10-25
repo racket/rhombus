@@ -83,7 +83,7 @@
                (define dest (and lookup (lookup #f "identifier" field intro #f field-phase)))
                (and dest
                     (or (not space-name)
-                        (identifier-distinct-binding (intro dest) dest field-phase))
+                        (identifier-distinct-binding (intro dest) dest #f))
                     (cons dest space-name)))
              (and lookup
                   (pair? (cdr fields))

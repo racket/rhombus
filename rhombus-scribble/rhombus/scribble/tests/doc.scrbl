@@ -11,6 +11,10 @@
           println
           String
           ReadableString
+      rhombus/meta:
+        expose:
+          expr
+          syntax_meta
       rhombus/scribble/tests/string_ext open
       rhombus/draw
       rhombus/cmdline)
@@ -132,5 +136,19 @@ Starting example:
 ){
 
  Defined by extension.
+
+}
+
+@section{Meta}
+
+@docmodule(rhombus/meta)
+
+@doc(
+  defn.macro 'expr.macro'
+  fun syntax_meta.DefinitionContext.add_scopes()
+){
+
+ The @rhombus(expr.macro) form and
+ @rhombus(syntax_meta.DefinitionContext.add_scopes) method.
 
 }

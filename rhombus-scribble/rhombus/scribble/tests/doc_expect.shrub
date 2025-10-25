@@ -1048,4 +1048,79 @@ html:
                               span {class: "stt"}:
                                 a {class: "RktValLink"}: "String"
               div {class: "SIntrapara"}: "Defined by extension."
+          section:
+            h2:
+              "4"
+              span {class: "stt"}: nbsp
+              a:«»
+              a:«»
+              "Meta"
+              span {class: "button-group"}:
+                a {class: "heading-anchor"}: "🔗"
+                span: " "
+            p:
+              table:
+                tr:
+                  td:
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: span {class: "RktSym"}: "import"
+                    span {class: "stt"}: ": "
+                    a {class: "RktModLink"}:
+                      span {class: "stt"}: "rhombus"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}: "meta"
+                  td:
+                    span {class: "RpackageSpec"}:
+                      span {class: "Smaller"}:
+                        nbsp
+                        "package:"
+                      " "
+                      a: span {class: "stt"}: "rhombus-lib"
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "definition"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}:
+                                    "expr.macro"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "function"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}:
+                                a {class: "RktValLink"}: "fun"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink"}:
+                                    "syntax_meta.DefinitionContext.add_scopes"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+              div {class: "SIntrapara"}:
+                "The "
+                span {class: "stt"}: a {class: "RktValLink"}: "expr.macro"
+                " form and\n"
+                span {class: "stt"}:
+                  a {class: "RktValLink"}:
+                    "syntax_meta.DefinitionContext.add_scopes"
+                " method."
     div: nbsp
