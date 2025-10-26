@@ -4,6 +4,7 @@
                      "interface-parse.rkt"
                      (submod "interface-meta.rkt" for-class)
                      "expose.rkt"
+                     "origin.rkt"
                      (only-in "class-parse.rkt"
                               :options-block
                               class-reflect-name
@@ -323,9 +324,11 @@
                                      #'compare-statinfo-indirect comparable?
                                      #'contains-statinfo-indirect container?
                                      #'super-call-statinfo-indirect))))
-           #`(begin
-               #,@defns
-               #,@post-forms)))])))
+           (transfer-origins
+            (syntax->list #'(option ...))
+            #`(begin
+                #,@defns
+                #,@post-forms))))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
   (with-syntax ([(name prop:name name? name-ref name-ref-or-error

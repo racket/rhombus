@@ -9,14 +9,16 @@
    (for/list ([stx (in-list (syntax->list stxes))])
      (syntax-parse stx
        #:datum-literals (group parsed)
-       [((~and g-tag group) (~and inner ((~and tag parsed) kw e)))
+       [((~and g-tag group) (~and inner ((~and tag parsed) kw (qs e local-kw))))
         (datum->syntax stx
                        (list #'g-tag
                              (datum->syntax
                               #'inner
-                              (list #'tag #'kw (syntax-track-origin #'e
-                                                                    from-stx
-                                                                    id))
+                              (list #'tag #'kw (list #'qs
+                                                     (syntax-track-origin #'e
+                                                                          from-stx
+                                                                          id)
+                                                     #'local-kw))
                               #'inner
                               #'inner))
                        stx

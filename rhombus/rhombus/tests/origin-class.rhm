@@ -1,0 +1,15 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+interface Pointy:
+  method dist(): 0
+
+class Posn(x, y):
+  field z = 10
+  method dist(): x + y
+
+Posn(1, 2).dist()
+
+veneer Pt(this :~ Posn):
+  method dist(): 1

@@ -4,11 +4,13 @@ import:
   lib("racket/base.rkt")
   lib("syntax/modread.rkt")
 
+runtime_path.def def_rhm: "origin-def.rhm"
 runtime_path.def annot_rhm: "origin-annot.rhm"
 runtime_path.def bind_rhm: "origin-bind.rhm"
 runtime_path.def repet_rhm: "origin-repet.rhm"
 runtime_path.def rx_rhm: "origin-rx.rhm"
 runtime_path.def defctx_rhm: "origin-defctx.rhm"
+runtime_path.def class_rhm: "origin-class.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let in = Port.Input.open_file(o_rhm)
@@ -23,7 +25,9 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
                    base.#{current-namespace}:
                      base.#{make-base-namespace}() }:
       base.#{expand}(stx)
-  let intro = base.#{make-interned-syntax-introducer}(space_sym)
+  let intro: if space_sym
+             | base.#{make-interned-syntax-introducer}(space_sym)
+             | fun (x, mode): x
   let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
   let origins: MutableMap()
   fun search_props(v):
@@ -54,6 +58,11 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
     check:
       [sym, origins.maybe[sym]?.length()]
       ~is [sym, n]
+
+check_origins(def_rhm,
+              #false,
+              { #'let: 2,
+                #'def: 2 })
 
 check_origins(annot_rhm,
               #'#{rhombus/annot},
@@ -86,9 +95,14 @@ check_origins(rx_rhm,
                 #'#{*}: 1,
                 #'#{?}: 1,
                 #'#{~~}: 1,
-                #'#{case_sensitive}: 1,
-                #'#{case_insensitive}: 1 })
+                #'case_sensitive: 1,
+                #'case_insensitive: 1 })
 
 check_origins(defctx_rhm,
               #'#{rhombus/def_ctx_example},
-              { #'#{my_example_macro}: 1 })
+              { #'my_example_macro: 1 })
+
+check_origins(class_rhm,
+              #false,
+              { #'method: 3,
+                #'field: 1})

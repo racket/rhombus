@@ -41,7 +41,7 @@
   except that it can stop and produce an empty term sequence if a newline
   is found without having read anything.}
 
-  @item{@rhombus(#'tex) mode reads until an end-of-file, but starting as
+  @item{@rhombus(#'text) mode reads until an end-of-file, but starting as
   if inside @litchar|{@{}}|, and the result is a @brackets form.}
 
 )

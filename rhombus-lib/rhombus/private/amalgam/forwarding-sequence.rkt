@@ -141,21 +141,21 @@
                           [(module* . _) #'form]
                           [_
                            (with-continuation-mark
-                            syntax-parameters-key #'stx-params
-                            (local-expand #'form
-                                          (get-expand-context)
-                                          (list #'rhombus-forward
-                                                #'rhombus-forward-export-all
-                                                #'define-values
-                                                #'define-syntaxes
-                                                #'define-syntax-parameter
-                                                ;; etc.
-                                                #'begin
-                                                #'provide
-                                                #'#%require
-                                                #'#%declare
-                                                #'begin-for-syntax)
-                                          def-ctx))]))
+                               syntax-parameters-key #'stx-params
+                               (local-expand #'form
+                                             (get-expand-context)
+                                             (list #'rhombus-forward
+                                                   #'rhombus-forward-export-all
+                                                   #'define-values
+                                                   #'define-syntaxes
+                                                   #'define-syntax-parameter
+                                                   ;; etc.
+                                                   #'begin
+                                                   #'provide
+                                                   #'#%require
+                                                   #'#%declare
+                                                   #'begin-for-syntax)
+                                             def-ctx))]))
        (define (need-end-expr state) (syntax-parse state
                                        [(#:block #t orig) #'(#:block #f orig)]
                                        [_ state]))
@@ -180,15 +180,19 @@
                                   (intro stx 'add))))
                 #`(begin
                     #,@(reverse accum)
-                    (sequence [state base-ctx #,(intro #'add-ctx) base-ctx #,(intro #'all-ctx) stx-params
-                                     ;; new `saved`:
-                                     (add-ctx #,(intro #'remove-ctx))
-                                     ex-id]
-                              sub-form ...
-                              (rhombus-forward #:pop . #,(intro #'forms))))]
+                    #,(transfer-origin
+                       exp-form
+                       #`(sequence [state base-ctx #,(intro #'add-ctx) base-ctx #,(intro #'all-ctx) stx-params
+                                          ;; new `saved`:
+                                          (add-ctx #,(intro #'remove-ctx))
+                                          ex-id]
+                                   sub-form ...
+                                   (rhombus-forward #:pop . #,(intro #'forms)))))]
                [_
                 ;; already in `let` mode; this shouldnt' happen, but a binder might expand to `let`
-                #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] sub-form ... . forms)])]
+                (transfer-origin
+                 exp-form
+                 #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] sub-form ... . forms))])]
             [(_ #:pop . forms)
              (syntax-parse #'saved
                [(add-ctx remove-ctx)

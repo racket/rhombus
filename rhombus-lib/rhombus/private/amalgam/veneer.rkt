@@ -9,7 +9,8 @@
                      "interface-parse.rkt"
                      "srcloc.rkt"
                      "tag.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "origin.rkt")
          "provide.rkt"
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -356,9 +357,11 @@
                                      #'super-call-statinfo-indirect
                                      #:checked-append? #f
                                      #:checked-compare? #f))))
-           #`(begin
-               #,@defns
-               #,@post-forms)))])))
+           (transfer-origins
+            (syntax->list #'(option ...))
+            #`(begin
+                #,@defns
+                #,@post-forms))))])))
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert

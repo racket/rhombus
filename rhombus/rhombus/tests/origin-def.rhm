@@ -1,0 +1,11 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+def x1 = 1
+let x2 = 2
+
+block:
+  def x3 = 3
+  let x4 = 4
+  #void

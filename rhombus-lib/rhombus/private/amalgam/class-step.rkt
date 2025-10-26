@@ -40,8 +40,8 @@
          ;; an expression or definition
          (syntax-parse stx
            [(_ (data accum) form . rest)
-            #:with (~var clause (:class-clause (class-expand-data #'data #'accum))) (syntax-local-introduce #'form)
-            (syntax-parse (syntax-local-introduce #'clause.parsed)
+            #:with (~var clause (:class-clause (class-expand-data #'data #'accum))) #'form
+            (syntax-parse #'clause.parsed
               #:datum-literals (group parsed)
               [((group (parsed #:rhombus/class_clause p)) ...)
                #:with (new-accum ...) (class-clause-accum #'(p ...))

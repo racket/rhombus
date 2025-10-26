@@ -6,7 +6,8 @@
                      "class-parse.rkt"
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "origin.rkt")
          racket/private/serialize-structs
          "provide.rkt"
          "forwarding-sequence.rkt"
@@ -852,9 +853,11 @@
                                                serializable
                                                deserializer-name
                                                constructor-name)))))
-           #`(begin
-               #,@defns
-               #,@post-forms)))])))
+           (transfer-origins
+            (syntax->list #'(option ...))
+            #`(begin
+                #,@defns
+                #,@post-forms))))])))
 
 (define-for-syntax (build-class-struct super
                                        fields mutables constructor-keywords exposures final? authentic? prefab? opaque?
