@@ -29,7 +29,7 @@
      (syntax-parse stx
        [(form-id #:open
                  (_::block form ...))
-        (define intro (make-syntax-introducer))
+        (define intro (make-syntax-introducer #t))
         #`((rhombus-nested-forwarding-sequence
             (open-exports plain #,(intro #'scoped))
             #,(intro
@@ -41,7 +41,7 @@
        [(form-id name-seq::dotted-identifier-sequence
                  (_::block form ...))
         #:with name::dotted-identifier #'name-seq
-        (define intro syntax-local-introduce)
+        (define intro (make-syntax-introducer #t))
         (define prefix (add-name-prefix name-prefix #'name.name))
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
@@ -56,8 +56,8 @@
      #:with fields (parse-exports #'(combine-out ex ...)
                                   (make-expose ((make-syntax-delta-introducer #'forward-ctx
                                                                               #'forward-base-ctx)
-                                                #'scoped-ctx)
-                                               #'base-ctx))
+                                                #'base-ctx)
+                                               #'scoped-ctx))
      (register-field-check #'(forward-base-ctx forward-ctx . fields))
      #'(define-name-root name
          #:extends extends
