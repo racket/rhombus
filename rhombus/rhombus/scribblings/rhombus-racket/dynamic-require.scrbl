@@ -1,6 +1,7 @@
 #lang scribble/manual
 @(require (for-label rhombus/dynamic-require
                      rhombus/parse
+                     (only-in rhombus is_a)
                      racket/base
                      racket/contract/base)
           "rhombus-names.rhm")
@@ -30,5 +31,18 @@ module exports, potentially through dotted names.
 
  Static access is normally better than dynamic access, so consider using
  @racket[rhombus-expression] instead of @racket[rhombus-dynamic-require].
+
+}
+
+@defproc[(rhombus-dynamic-require-predicate [mod module-path?]
+                                            [name (or/c symbol? (listof symbol?))])
+         (any/c . -> . boolean?)]{
+
+ Rhombus modules typical export annotations intended to be used with
+ @racket[is_a] instead of predicate functions. The
+ @racket[rhombus-dynamic-require-predicate] function is like
+ @racket[rhombus-dynamic-require], but assuming that @racket[name] refers
+ to an annotation, it produces a function that recognizes values that
+ satisfy the annotation.
 
 }

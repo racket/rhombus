@@ -5,31 +5,49 @@ import:
 // For use from Racket, arguments checked in Racket wrapper
 export:
   dynamic_require
+  dynamic_require_predicate
 
 fun dynamic_require(mp, name_or_names):
   ~who: who
-  let mp:
-    match mp
-    | PairList(#'lib, s :: String):
-        ModulePath('lib($s)')
-    | PairList(#'file, s :: PathString):
-        ModulePath('file($s)')
-    | s :: Symbol:
-        let s = to_string(s)
-        let s:
-          cond
-          | rx'"."'.match_in(s):
-              s
-          | rx'"/"'.match_in(s):
-              s ++ ".rkt"
-          | ~else:
-              s ++ "/main.rkt"
-        ModulePath('lib($s)')
-    | s :: String:
-        ModulePath('$s')
-    | ~else:
-        error(~who: who,
-              "oops, unrecognized: " +& mp)
+  let mp: ModulePath(convert_module_path(who, mp))
   Evaluator.instantiate(mp, match name_or_names
                             | names :: PairList: names.to_list()
                             | name: name)
+
+fun dynamic_require_predicate(mp, name_or_names):
+  ~who: who
+  let mp: convert_module_path(who, mp)
+  let dotted: match name_or_names
+              | PairList[name, ...]:
+                  let [elem, ...] = List.append(['.', name], ...).rest
+                  '$elem ...'
+              | name:
+                  name
+  let head: match dotted | '$head $_ ...': head
+  eval('fun (v):
+          ~name: $dotted
+          import $mp as m: expose $head
+          v is_a $dotted')
+
+fun convert_module_path(who, mp):
+  match mp
+  | PairList(#'lib, s :: String):
+      'lib($s)'
+  | PairList(#'file, s :: PathString):
+      'file($s)'
+  | s :: Symbol:
+      let s = to_string(s)
+      let s:
+        cond
+        | rx'"."'.match_in(s):
+            s
+        | rx'"/"'.match_in(s):
+            s ++ ".rkt"
+        | ~else:
+            s ++ "/main.rkt"
+      'lib($s)'
+  | s :: String:
+      '$s'
+  | ~else:
+      error(~who: who,
+            "oops, unrecognized: " +& mp)
