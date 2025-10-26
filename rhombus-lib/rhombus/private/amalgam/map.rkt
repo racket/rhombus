@@ -201,7 +201,6 @@
   #:methods
   (append
    set
-   [add Map.set #:deprecate "15-Apr-2025"]
    remove))
 
 (void (set-primitive-contract! '(and/c hash? (not/c immutable?)) "MutableMap"))

@@ -31,15 +31,12 @@
   #:fields
   (Marks
    PromptTag
-   [current_marks Continuation.Marks.current #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    capture
    in
    prompt
    barrier
    [escape Continuation.escape]
-   [default_prompt_tag Continuation.PromptTag.default #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    [make_prompt_tag Continuation.PromptTag.make]
-   [call_in call-in-continuation  #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    with_mark
    [call_with_immediate_mark Continuation.call_with_immediate_mark]))
 

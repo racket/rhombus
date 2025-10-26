@@ -49,10 +49,7 @@
                      ..
                      ..=
                      <..
-                     <..<
                      <..=))
-
-(define-deprecated <..< <..< (#f rhombus/repet rhombus/bind) "15-Apr-2025" <..)
 
 (module+ for-container
   (provide range?
@@ -83,7 +80,6 @@
    [to Range.to]
    [to_inclusive Range.to_inclusive]
    [full Range.full]
-   [to_sequence SequenceRange.to_sequence #:deprecate (#f rhombus/statinfo) "15-Apr-2025"]
    [step_by SequenceRange.step_by]
    [to_list ListRange.to_list])
   #:properties
