@@ -281,9 +281,7 @@
     (define stx (unpack-term/maybe stx-in))
     (unless stx (raise-annotation-failure who stx-in "Term"))
     (define track-stx (unbox (definition-context-track-box ctx)))
-    (transfer-origin track-stx
-                     (transfer-origin track-stx stx)
-                     #:property-key 'disappeared-binding))
+    (transfer-origin track-stx stx))
 
   (define/method (DefinitionContext.call_to_expand_using ctx stx f)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

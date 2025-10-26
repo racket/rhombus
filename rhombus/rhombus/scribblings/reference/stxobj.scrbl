@@ -1265,15 +1265,16 @@ class's name.
   ) :: Term
 ){
 
- Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin)
+ Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin),
+ @rhombus(#'#{disappeared-use}), and @rhombus(#'#{disappeared-binding})
  syntax property values, if any, from @rhombus(orig_stx) added to
- @rhombus(stx). If one or more @rhombus(#'origin) syntax property value
- is available among @rhombus(stx) and @rhombus(orig_stx), the values are
+ @rhombus(stx). If multiple syntax property values
+ are available among @rhombus(stx) and @rhombus(orig_stx), the values are
  combined using @rhombus(Pair).
 
- The @rhombus(#'origin) property is attached using
+ The transferred properties are attached using
  @rhombus(Syntax.ephemeral_property), as opposed to
- @rhombus(Syntax.property), because it is intended to record temporary
+ @rhombus(Syntax.property), because they are intended to record temporary
  expansion information along the same lines as
  @rhombus(Syntax.relocate_ephemeral_span).
 
