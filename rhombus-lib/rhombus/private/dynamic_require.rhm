@@ -22,10 +22,11 @@ fun dynamic_require_predicate(mp, name_or_names):
                   let [elem, ...] = List.append(['.', name], ...).rest
                   '$elem ...'
               | name:
-                  name
+                  '$name'
   let head: match dotted | '$head $_ ...': head
+  let name_str = "is_a " +& String.append(& Syntax.unwrap_group(dotted).map(to_string))
   eval('fun (v):
-          ~name: $dotted
+          ~name: $(Symbol.from_string(name_str))
           import $mp as m: expose $head
           v is_a $dotted')
 
