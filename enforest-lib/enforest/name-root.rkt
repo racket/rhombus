@@ -20,7 +20,7 @@
   (define-values (target tail)
     (call-as-transformer
      op-stx
-     (list (syntax-local-introduce stxes))
+     (list (transform-out stxes))
      syntax-track-origin #f
      (lambda (stxes)
        (define-values (target tail) (proc in-space stxes))
@@ -30,8 +30,8 @@
                         (eq? 'op (syntax-e (car (syntax-e target))))))
          (raise-result-error (proc-name proc) "identifier-or-operator?" target))
        (values target tail))))
-  (check-transformer-result (syntax-local-introduce target)
-                            (syntax-local-introduce tail)
+  (check-transformer-result (transform-in target)
+                            (transform-in tail)
                             proc))
 
 (define (name-root-ref-root v ref)

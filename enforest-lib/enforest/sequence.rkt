@@ -65,7 +65,7 @@
            (define-values (parsed remaining-tail)
              (apply-sequence-transformer env t head (transform-out head-id)
                                          (transform-out (datum->syntax #f (cons head-name head-tail)))
-                                         tail-tail
+                                         (transform-out tail-tail)
                                          track-origin use-site-scopes?
                                          check-result))
            (values (transform-in parsed) (transform-in remaining-tail)))
