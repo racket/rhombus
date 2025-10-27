@@ -104,5 +104,11 @@ check_origins(defctx_rhm,
 
 check_origins(class_rhm,
               #false,
-              { #'method: 3,
-                #'field: 1})
+              { #'method: 4,
+                #'field: 2,
+                #'property: 1 })
+
+check_origins(class_rhm,
+              #'#{rhombus/annot},
+              { #'String: 3,
+                #'Bytes: 1})

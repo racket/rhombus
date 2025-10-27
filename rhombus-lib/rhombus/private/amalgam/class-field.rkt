@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "class-parse.rkt")
+                     "class-parse.rkt"
+                     "origin.rkt")
          (only-in "binding.rkt" raise-binding-failure)
          "syntax-parameter.rkt"
          "static-info.rkt")
@@ -30,14 +31,16 @@
                       [converter (added-field-converter added)]
                       [annotation-str (added-field-annotation-str added)]
                       [form-id (added-field-form-id added)])
-          #`(define tmp-id (lambda #,args
-                             (let ([id rhs])
-                               #,(if (syntax-e #'converter)
-                                     #`(converter id
-                                                  'form-id
-                                                  (lambda (who val)
-                                                    (raise-binding-failure who "value" val 'annotation-str)))
-                                     #'id)))))
+          (transfer-origins
+           (added-field-annot-origins added)
+           #`(define tmp-id (lambda #,args
+                              (let ([id rhs])
+                                #,(if (syntax-e #'converter)
+                                      #`(converter id
+                                                   'form-id
+                                                   (lambda (who val)
+                                                     (raise-binding-failure who "value" val 'annotation-str)))
+                                      #'id))))))
         (loop (cdr added-fields)
               (cons (added-field-id added) args)
               (cons (added-field-static-infos added) static-infoss)))])))

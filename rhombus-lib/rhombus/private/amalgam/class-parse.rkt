@@ -165,6 +165,7 @@
                      static-infos
                      converter
                      annotation-str
+                     annot-origins
                      exposure ; 'public, 'private, or 'protected
                      mutability))
 (struct added-method (id rhs-id

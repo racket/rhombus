@@ -13,3 +13,13 @@ Posn(1, 2).dist()
 
 veneer Pt(this :~ Posn):
   method dist(): 1
+
+class Ghost():
+  field x :: String = "a"
+  method m() :: Bytes:
+    #"x"
+  property
+  | z :: String:
+      10
+  | z := w :: String:
+      #void

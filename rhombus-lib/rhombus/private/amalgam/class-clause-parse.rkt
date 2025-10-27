@@ -180,18 +180,19 @@
                ;; covered in annotation pass
                options]
               [(#:field mutability id rhs-id ann-seq default form-id mode)
-               (with-syntax ([(converter annotation-str static-infos)
+               (with-syntax ([(converter annotation-str static-infos annot-origins)
                               (with-continuation-mark
                                syntax-parameters-key (car stx-paramss)
                                (syntax-parse #'ann-seq
-                                 [#f (list #'#f #'#f #'())]
+                                 [#f (list #'#f #'#f #'() #'())]
                                  [(c::inline-annotation)
-                                  (list #'c.converter #'c.annotation-str #'c.static-infos)]))])
+                                  (list #'c.converter #'c.annotation-str #'c.static-infos (attribute c.origins))]))])
                  (hash-set options 'fields (cons (added-field #'id
                                                               #'rhs-id #'default (car stx-paramss) #'form-id
                                                               #'static-infos
                                                               #'converter
                                                               #'annotation-str
+                                                              (syntax->list #'annot-origins)
                                                               (syntax-e #'mode)
                                                               (syntax-e #'mutability))
                                                  (hash-ref options 'fields null))))]

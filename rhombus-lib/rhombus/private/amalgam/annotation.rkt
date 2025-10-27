@@ -185,7 +185,7 @@
              #:with (~var || (:annotation-infix-op+form+tail prec-op)) #`(#,group-tag . stxes)))
 
   (define-splicing-syntax-class :inline-annotation
-    #:attributes (converter annotation-str static-infos)
+    #:attributes (converter annotation-str static-infos origins)
     (pattern (~seq op::annotate-op ctc ...)
              #:with c::annotation (no-srcloc #`(#,group-tag ctc ...))
              #:with (~var ca (:annotation-converted (attribute op.check?))) #'c.parsed
@@ -194,7 +194,8 @@
                      (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
              #:with converter #'ca.converter
              #:with annotation-str (datum->syntax #f (shrubbery-tail->string #'(ctc ...)))
-             #:with static-infos #'ca.static-infos))
+             #:with static-infos #'ca.static-infos
+             #:attr origins (list #'c.parsed)))
 
   (define-syntax-class (:annotation-converted check?)
     #:attributes (converter static-infos)

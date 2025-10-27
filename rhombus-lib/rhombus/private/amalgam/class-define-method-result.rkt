@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "annotation-string.rkt"
-                     "class-method-result.rkt")
+                     "class-method-result.rkt"
+                     "origin.rkt")
          "static-info.rkt"
          "annotation.rkt"
          (submod "define-arity.rkt" for-info)
@@ -176,34 +177,36 @@
                                (list #`(#,result-key #,all-static-infos))
                                '())))])
            '()))
-     #`(begin
-         ;; Each `forward-id` annotation is used in an expression that
-         ;; implements a method, needed to apply potential checks/conversions
-         #,@(build-forward-annotations #'(forward-id ...)
-                                       #'(forward-c-parsed ...))
-         (~? (define handler-id handler))
-         #,@(if (syntax-e #'id)
-                (list
-                 #`(define-syntax id
-                     (method-result-maker
-                      (lambda ()
-                        (method-result (~? (quote-syntax handler-id) (~? (quote-syntax handler) #f))
-                                       (quote #,predicate?)
-                                       (quote #,all-count)
-                                       (quote #,all-annot-str)
-                                       (quote-syntax #,all-static-infos)
-                                       (quote arity))))))
-                null)
-         #,@(gen #'maybe-id)
-         #,@(gen #'maybe-call-statinfo-id #t)
-         #,@(gen-bounce #'maybe-ref-statinfo-id+id #'#%index-get #'#%index-result)
-         #,@(gen-bounce #'maybe-set-statinfo-id+id #'#%index-set #f)
-         #,@(gen-bounce #'maybe-append-statinfo-id+id #'#%append #f
-                        ;; boxed identifier means "checked" for `#%append`
-                        #:box-id? (syntax-e #'checked-append?))
-         #,@(gen-bounce #'maybe-compare-statinfo-id+id #'#%compare #f
-                        #:box-id? (syntax-e #'checked-compare?))
-         #,@(gen-bounce #'maybe-contains-statinfo-id+id #'#%contains #f))]))
+     (transfer-origins
+      (attribute ret.origins)
+      #`(begin
+          ;; Each `forward-id` annotation is used in an expression that
+          ;; implements a method, needed to apply potential checks/conversions
+          #,@(build-forward-annotations #'(forward-id ...)
+                                        #'(forward-c-parsed ...))
+          (~? (define handler-id handler))
+          #,@(if (syntax-e #'id)
+                 (list
+                  #`(define-syntax id
+                      (method-result-maker
+                       (lambda ()
+                         (method-result (~? (quote-syntax handler-id) (~? (quote-syntax handler) #f))
+                                        (quote #,predicate?)
+                                        (quote #,all-count)
+                                        (quote #,all-annot-str)
+                                        (quote-syntax #,all-static-infos)
+                                        (quote arity))))))
+                 null)
+          #,@(gen #'maybe-id)
+          #,@(gen #'maybe-call-statinfo-id #t)
+          #,@(gen-bounce #'maybe-ref-statinfo-id+id #'#%index-get #'#%index-result)
+          #,@(gen-bounce #'maybe-set-statinfo-id+id #'#%index-set #f)
+          #,@(gen-bounce #'maybe-append-statinfo-id+id #'#%append #f
+                         ;; boxed identifier means "checked" for `#%append`
+                         #:box-id? (syntax-e #'checked-append?))
+          #,@(gen-bounce #'maybe-compare-statinfo-id+id #'#%compare #f
+                         #:box-id? (syntax-e #'checked-compare?))
+          #,@(gen-bounce #'maybe-contains-statinfo-id+id #'#%contains #f)))]))
 
 (define-for-syntax (de-method-arity arity)
   (datum->syntax #f
