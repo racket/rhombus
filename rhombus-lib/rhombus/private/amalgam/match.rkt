@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "origin.rkt")
          (only-in racket/case
                   case/equal-always)
          "expression.rkt"
@@ -180,20 +181,22 @@
              (define-static-info-syntax/maybe b-info.bind-id b-info.bind-static-info ...)
              ... ...
              (rhombus-body-expression #,rhs)))
-       ;; use `((lambda ....) ....)` to keep textual order
-       #`((lambda (try-next)
-            (b-info.oncer-id b-info.data)
-            ...
-            #,(for/foldr ([success rhs-body])
-                         ([b-info-matcher-id (in-list (syntax->list #'(b-info.matcher-id ...)))]
-                          [val-id (in-list val-ids)]
-                          [b-info-data (in-list (syntax->list #'(b-info.data ...)))])
-                #`(#,b-info-matcher-id #,val-id
-                                       #,b-info-data
-                                       if/blocked
-                                       #,success
-                                       (try-next))))
-          (lambda () #,next))])))
+       (transfer-origins
+        b-parseds
+        ;; use `((lambda ....) ....)` to keep textual order
+        #`((lambda (try-next)
+             (b-info.oncer-id b-info.data)
+             ...
+             #,(for/foldr ([success rhs-body])
+                          ([b-info-matcher-id (in-list (syntax->list #'(b-info.matcher-id ...)))]
+                           [val-id (in-list val-ids)]
+                           [b-info-data (in-list (syntax->list #'(b-info.data ...)))])
+                 #`(#,b-info-matcher-id #,val-id
+                    #,b-info-data
+                    if/blocked
+                    #,success
+                    (try-next))))
+           (lambda () #,next)))])))
 
 (define-for-syntax (handle-literal-case-dispatch val-ids
                                                  b-parsedss rhss

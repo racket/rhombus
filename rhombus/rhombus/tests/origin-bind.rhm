@@ -33,3 +33,6 @@ operator &&?? :~ Posn
     y
 | (&&?? (x :~ Posn)) :~ Posn:
     x
+
+match 1
+| y && x :: Int: #void

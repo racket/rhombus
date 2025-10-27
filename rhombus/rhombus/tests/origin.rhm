@@ -82,7 +82,13 @@ check_origins(annot_rhm,
 
 check_origins(bind_rhm,
               #'#{rhombus/annot},
-              { #'Posn: 23 })
+              { #'Posn: 23,
+                #'Int: 1 })
+
+check_origins(bind_rhm,
+              #'#{rhombus/bind},
+              { #'#{&&}: 1,
+                #'#{::}: 6 })
 
 check_origins(repet_rhm,
               #'#{rhombus/repet},

@@ -629,8 +629,8 @@
        [(op::name . (~var t (:annotation-seq #'::)))
         #:with left::binding-form form
         (values
-         (transfer-origin
-          #'t.parsed
+         (transfer-origins
+          (list #'t.parsed form)
           (syntax-parse #'t.parsed
             [c-parsed::annotation-predicate-form
              (binding-form
