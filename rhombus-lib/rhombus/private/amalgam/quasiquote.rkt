@@ -6,7 +6,8 @@
                      enforest/hier-name-parse
                      "srcloc.rkt"
                      "tag.rkt"
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     "origin.rkt")
          syntax/parse/pre
          "provide.rkt"
          "parse.rkt"
@@ -1037,11 +1038,13 @@
        [(and (identifier? unpack*-id)
              (free-identifier=? unpack*-id #'unpack-tail*))
         (get-tail-repetition #'$-name base-e (sub1 (syntax-e #'depth))
-                             #'unpack-tail-list* #'unpack-tail* #'unpack-list-tail*)]
+                             #'unpack-tail-list* #'unpack-tail* #'unpack-list-tail*
+                             #'rep-info)]
        [(and (identifier? unpack*-id)
              (free-identifier=? unpack*-id #'unpack-multi-tail*))
         (get-tail-repetition #'$-name base-e (sub1 (syntax-e #'depth))
-                             #'unpack-multi-tail-list* #'unpack-multi-tail* #'unpack-multi-list-tail*)]
+                             #'unpack-multi-tail-list* #'unpack-multi-tail* #'unpack-multi-list-tail*                             
+                             #'rep-info)]
        [else
         ;; strip away redundant unpack as an optimization
         (define opt-e
@@ -1059,16 +1062,19 @@
      #'u]))
 
 (define-for-syntax (get-tail-repetition $-name base-e depth-stx
-                                        replaceable-unpack*-id replacement-unpack*-id generic-unpack*-id)
-  ;; replace redundant unpack with alternative; this is not just an
-  ;; optimization, but a change to the time complexity of using the
-  ;; tail in a template by avoiding conversion to a list and back
-  (syntax-parse (unwrap-static-infos base-e)
-    [(unpack*:id $-name e _)
-     #:when (free-identifier=? #'unpack* replaceable-unpack*-id)
-     #`(#,replacement-unpack*-id $-name e #,depth-stx)]
-    [e
-     #`(#,generic-unpack*-id #,$-name e #,depth-stx)]))
+                                        replaceable-unpack*-id replacement-unpack*-id generic-unpack*-id
+                                        orig-rep)
+  (transfer-origin
+   orig-rep
+   ;; replace redundant unpack with alternative; this is not just an
+   ;; optimization, but a change to the time complexity of using the
+   ;; tail in a template by avoiding conversion to a list and back
+   (syntax-parse (unwrap-static-infos base-e)
+     [(unpack*:id $-name e _)
+      #:when (free-identifier=? #'unpack* replaceable-unpack*-id)
+      #`(#,replacement-unpack*-id $-name e #,depth-stx)]
+     [e
+      #`(#,generic-unpack*-id #,$-name e #,depth-stx)])))
 
 (define-for-syntax (quoted-shape-dispatch stx in-space single-k group-k multi-k literal-k)
   (syntax-parse stx

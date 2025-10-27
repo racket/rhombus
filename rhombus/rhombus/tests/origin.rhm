@@ -94,7 +94,8 @@ check_origins(repet_rhm,
               #'#{rhombus/repet},
               { #'an_x: 3,
                 #'a_y: 2,
-                #'a_t: 1 })
+                #'a_t: 1,
+                #'m_arg: 1 })
 
 check_origins(rx_rhm,
               #'#{rhombus/rx},
