@@ -38,3 +38,5 @@ fun h(& a :: List.of(Pt), ~& kws :: Map.of(Pt, Pt)):
 
 def x :~ Pt = 0
 let x2 :~ Pt = 0
+
+let x3 :~ Function.of_arity(1) = 0
