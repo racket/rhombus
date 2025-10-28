@@ -80,8 +80,8 @@
    [to Range.to]
    [to_inclusive Range.to_inclusive]
    [full Range.full]
-   [step_by SequenceRange.step_by]
-   [to_list ListRange.to_list])
+   [step_by SequenceRange.step_by #:deprecate (#f rhombus/statinfo) "15-Nov-2025"]
+   [to_list ListRange.to_list #:deprecate (#f rhombus/statinfo) "15-Nov-2025"])
   #:properties
   ()
   #:methods
