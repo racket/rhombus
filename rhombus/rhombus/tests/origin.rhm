@@ -11,6 +11,7 @@ runtime_path.def repet_rhm: "origin-repet.rhm"
 runtime_path.def rx_rhm: "origin-rx.rhm"
 runtime_path.def defctx_rhm: "origin-defctx.rhm"
 runtime_path.def class_rhm: "origin-class.rhm"
+runtime_path.def for_rhm: "origin-for.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let in = Port.Input.open_file(o_rhm)
@@ -46,6 +47,7 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
     cond
     | stx is_a Syntax:
         search_props(base.#{syntax-property}(stx, #'origin))
+        search_props(base.#{syntax-property}(stx, #'#{disappeared-use}))
         search(base.#{syntax-e}(stx))
     | stx is_a Pair:
         search(Pair.first(stx))
@@ -120,3 +122,11 @@ check_origins(class_rhm,
               #'#{rhombus/annot},
               { #'String: 3,
                 #'Bytes: 1})
+
+check_origins(for_rhm,
+              #'#{rhombus/reducer},
+              { #'List: 1 })
+
+check_origins(for_rhm,
+              #false,
+              { #'#{..}: 2 })

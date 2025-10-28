@@ -5,7 +5,8 @@
                      enforest/syntax-local
                      "tag.rkt"
                      "srcloc.rkt"
-                     "statically-str.rkt")
+                     "statically-str.rkt"
+                     "origin.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -88,25 +89,27 @@
          (syntax-parse red-parsed
            [f::reducer-form
             (wrap-static-info*
-             (relocate+reraw
-              (respan stx)
-              #`(f.wrapper
-                 f.data
-                 (for/fold f.binds
-                           (#:splice (for-clause-step #,stx
-                                                      #,static?
-                                                      [(f.body-wrapper f.data)
-                                                       #,@(if (syntax-e #'f.pre-clause-former)
-                                                              (list #'(f.pre-clause-former f.data))
-                                                              '())]
-                                                      . #,body))
-                   #,@(if (syntax-e #'f.break-whener)
-                          #`(#:break (f.break-whener f.data))
-                          null)
-                   #,@(if (syntax-e #'f.final-whener)
-                          #`(#:final (f.final-whener f.data))
-                          null)
-                   (f.finisher f.data))))
+             (transfer-origin
+              red-parsed
+              (relocate+reraw
+               (respan stx)
+               #`(f.wrapper
+                  f.data
+                  (for/fold f.binds
+                            (#:splice (for-clause-step #,stx
+                                                       #,static?
+                                                       [(f.body-wrapper f.data)
+                                                        #,@(if (syntax-e #'f.pre-clause-former)
+                                                               (list #'(f.pre-clause-former f.data))
+                                                               '())]
+                                                       . #,body))
+                    #,@(if (syntax-e #'f.break-whener)
+                           #`(#:break (f.break-whener f.data))
+                           null)
+                    #,@(if (syntax-e #'f.final-whener)
+                           #`(#:final (f.final-whener f.data))
+                           null)
+                    (f.finisher f.data)))))
              #'f.static-infos)])])
       #'()))))
 
@@ -279,12 +282,15 @@
                            #'stx-params
                            (cond
                              [(identifier? seq-ctr)
+                              ;; when `for` optimizes, it only attaches `seq-ctr` to
+                              ;; the expansion, instead of using origin on the call
+                              (define seq-ctr/t (transfer-origin #'rhs seq-ctr))
                               (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
                                   (unwrap-static-infos
                                    (with-continuation-mark syntax-parameters-key #'stx-params
-                                     (rhombus-local-expand
-                                      #`(rhombus-expression (group #,seq-ctr (parens (group (parsed #:rhombus/expr rhs))))))))
-                                  #`(#,seq-ctr rhs))]
+                                      (rhombus-local-expand
+                                       #`(rhombus-expression (group #,seq-ctr/t (parens (group (parsed #:rhombus/expr rhs))))))))
+                                  #`(#,seq-ctr/t rhs))]
                              [else
                               (syntax-parse orig-stx
                                 [(head . _)

@@ -302,16 +302,11 @@
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
-  ;; The `enforest-rhombus-expression` function expects to be called
-  ;; during the dynamic extent of a Rhombus transformer, so we
-  ;; add calls to `syntax-local-introduce` to cancel the ones in
-  ;; `enforest-rhombus-expression`. Also, if we get here, then
-  ;; we're expanding a Rhombus expression in a Racket context, and
-  ;; the Racket context isn't going to look at static info, so we
-  ;; can prune it.
+  ;; If we get here, then we're expanding a Rhombus expression in a
+  ;; Racket context, and the Racket context isn't going to look at
+  ;; static info, so we can prune it.
   (define new-stx (discard-static-infos
-                   (syntax-local-introduce
-                    (enforest-rhombus-expression (syntax-local-introduce stx)))))
+                   (enforest-rhombus-expression stx)))
   ;; We don't want an 'opaque-raw property to be duplicated. So,
   ;; if it exists on the input, discard any such property on the
   ;; output.
@@ -324,8 +319,8 @@
 
 (define-for-syntax (enforest-rhombus-expression stx)
   (with-syntax-error-respan
-    (syntax-parse (syntax-local-introduce stx)
-      [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
+    (syntax-parse stx
+      [(_ e::expression) #'e.parsed])))
 
 ;; If `e` is a block with a single group, and if the group is not a
 ;; definition, then parse the expression
