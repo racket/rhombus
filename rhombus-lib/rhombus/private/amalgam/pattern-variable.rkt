@@ -6,7 +6,8 @@
                      "name-path-op.rkt"
                      "srcloc.rkt"
                      "dotted-sequence.rkt"
-                     "pack.rkt")
+                     "pack.rkt"
+                     "origin.rkt")
          "expression.rkt"
          (submod "annotation.rkt" for-class)
          (submod "syntax-class-primitive.rkt" for-quasiquote)
@@ -222,23 +223,27 @@
                             (car (hash-ref (syntax-wrap-attribs form-rep-info.body)
                                            (quote #,(pattern-variable-sym attr))))
                             #,var-depth))
-               (make-repetition-info (respan (datum->syntax #f (list form1 dot field-id)))
-                                     (cond
-                                       [(= var-depth 0)
-                                        #'form-rep-info.for-clausess]
-                                       [else
-                                        #`(#,@#'form-rep-info.for-clausess
-                                           ([(elem) (in-list #,e)])
-                                           #,@(for/list ([i (in-range (sub1 var-depth))])
-                                                #`([(elem) (in-list elem)])))])
-                                     (cond
-                                       [(= var-depth 0) e]
-                                       [else #'elem])
-                                     (normalize-pvar-statinfos (pattern-variable-statinfos attr))
-                                     0)])]
+               (transfer-origin
+                form1
+                (make-repetition-info (respan (datum->syntax #f (list form1 dot field-id)))
+                                      (cond
+                                        [(= var-depth 0)
+                                         #'form-rep-info.for-clausess]
+                                        [else
+                                         #`(#,@#'form-rep-info.for-clausess
+                                            ([(elem) (in-list #,e)])
+                                            #,@(for/list ([i (in-range (sub1 var-depth))])
+                                                 #`([(elem) (in-list elem)])))])
+                                      (cond
+                                        [(= var-depth 0) e]
+                                        [else #'elem])
+                                      (normalize-pvar-statinfos (pattern-variable-statinfos attr))
+                                      0))])]
            [else
-            (wrap-static-info* #`(car (hash-ref (syntax-wrap-attribs #,(discard-static-infos form1))
-                                                (quote #,(pattern-variable-sym attr))))
+            (wrap-static-info* (transfer-origin
+                                form1
+                                #`(car (hash-ref (syntax-wrap-attribs #,(discard-static-infos form1))
+                                                 (quote #,(pattern-variable-sym attr)))))
                                (normalize-pvar-statinfos (pattern-variable-statinfos attr)))])
          tail)]
        [else

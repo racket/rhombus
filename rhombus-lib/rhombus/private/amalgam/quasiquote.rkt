@@ -436,21 +436,33 @@
       [(brackets) #'(~var _ :brackets)]
       [(quotes) #'(~var _ :quotes)]
       [else #`(~datum #,d)]))
+  (define (add-escape-origin $-id stx)
+    (syntax-property stx 'origin (cons (in-binding-space
+                                        (syntax-local-introduce $-id))
+                                       (or (syntax-property stx 'origin) null))))
   (define (handle-escape $-id e in-e ctx-kind)
     (define parsed
       (parameterize ([current-unquote-binding-kind ctx-kind])
         (syntax-parse #`(#,group-tag #,e)
           [esc::unquote-binding #'esc.parsed])))
+    (define (track stx)
+      (syntax-parse stx
+        #:datum-literals (~var ~seq)
+        [((~and var-tag ~var) id . rest)
+         #`(var-tag #,(track #'id) . rest)]
+        [((~and seq-tag ~seq) pat . rest)
+         #`(seq-tag #,(track #'pat) . rest)]
+        [_ (add-escape-origin $-id (transfer-origin parsed stx))]))
     (syntax-parse parsed
       [#f (values #f #f #f #f)]
       [id:identifier
        (if (eq? ctx-kind 'grouplet)
            (values #f #f #f #f)
-           (identifier-as-unquote-binding #'id ctx-kind
+           (identifier-as-unquote-binding (track #'id) ctx-kind
                                           #:result values
                                           #:pattern-variable pattern-variable))]
       [(pat idrs sidrs vars)
-       (values #'pat
+       (values (track #'pat)
                (syntax->list #'idrs)
                (syntax->list #'sidrs)
                (for/list ([var (in-list (syntax->list #'vars))])

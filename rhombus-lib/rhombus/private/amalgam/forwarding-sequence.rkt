@@ -223,10 +223,12 @@
                [_ (raise-syntax-error #f
                                       "allowed only in modules and namespaces"
                                       #'new-ex-id)])
-             #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved new-ex-id]
-                         defn ...
-                         (rhombus-forward #:end-export ex-id)
-                         . forms)]
+             (transfer-origin
+              exp-form
+              #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved new-ex-id]
+                          defn ...
+                          (rhombus-forward #:end-export ex-id)
+                          . forms))]
             [(_ #:end-export old-ex-id)
              #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved old-ex-id]
                          . forms)]

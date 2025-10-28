@@ -12,6 +12,7 @@ runtime_path.def rx_rhm: "origin-rx.rhm"
 runtime_path.def defctx_rhm: "origin-defctx.rhm"
 runtime_path.def class_rhm: "origin-class.rhm"
 runtime_path.def for_rhm: "origin-for.rhm"
+runtime_path.def stxclass_rhm: "origin-stxclass.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let in = Port.Input.open_file(o_rhm)
@@ -31,16 +32,18 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
              | fun (x, mode): x
   let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
   let origins: MutableMap()
-  fun search_props(v):
+  fun search_props(v, ~immed = #true):
     cond
     | v is_a Identifier:
-        when base.#{syntax-original?}(v) && (base.#{bound-identifier=?}(v, intro(v, #'add))
-                                               || base.#{bound-identifier=?}(v, ns_intro(v, #'add)))
+        when immed
+          && base.#{syntax-original?}(v)
+          && (base.#{bound-identifier=?}(v, intro(v, #'add))
+                || base.#{bound-identifier=?}(v, ns_intro(v, #'add)))
         | origins[v.unwrap()] := (origins.maybe[v.unwrap()] || Set{}) ++ { v.srcloc() }
         search(v)
     | v is_a Pair:
-        search_props(Pair.first(v))
-        search_props(Pair.rest(v))
+        search_props(Pair.first(v), ~immed: immed)
+        search_props(Pair.rest(v), ~immed: immed)
     | ~else:
         #void
   fun search(stx):
@@ -48,6 +51,8 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
     | stx is_a Syntax:
         search_props(base.#{syntax-property}(stx, #'origin))
         search_props(base.#{syntax-property}(stx, #'#{disappeared-use}))
+        // need to search bindings for uses, but don't add bindings
+        search_props(base.#{syntax-property}(stx, #'#{disappeared-binding}), ~immed: #false)
         search(base.#{syntax-e}(stx))
     | stx is_a Pair:
         search(Pair.first(stx))
@@ -130,3 +135,11 @@ check_origins(for_rhm,
 check_origins(for_rhm,
               #false,
               { #'#{..}: 2 })
+
+check_origins(stxclass_rhm,
+              #'#{rhombus/stxclass},
+              { #'Int: 3 })
+
+check_origins(stxclass_rhm,
+              #false,
+              { #'ns: 4 })

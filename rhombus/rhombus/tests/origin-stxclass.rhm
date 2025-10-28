@@ -1,0 +1,24 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+match '1':
+| '$(_ :: Int)':
+    0
+
+syntax_class NumStr:
+  kind: ~sequence
+| '$(x :: Int) $(y :: String)'
+
+match '1 "two" !'
+| '$(ns :: NumStr) !':
+    ns.x +& ns.y
+
+
+syntax_class NumStrGroup:
+  kind: ~group
+| '$(x :: Int) $(y :: String)'
+
+match '1 "two"'
+| '$(ns :: NumStrGroup)':
+    ns.x +& ns.y

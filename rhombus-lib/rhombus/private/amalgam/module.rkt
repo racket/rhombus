@@ -154,7 +154,7 @@
                (let ([maybe-strip-context
                       (lambda (v)
                         (if (syntax-e #'the-lang)
-                            (strip-context (datum->syntax #f v))
+                            (syntax-local-introduce (strip-context (datum->syntax #f v)))
                             v))])
                  (datum->syntax
                   stx

@@ -6,7 +6,8 @@
                      enforest/syntax-local
                      shrubbery/print
                      "name-path-op.rkt"
-                     "attribute-name.rkt")
+                     "attribute-name.rkt"
+                     "origin.rkt")
          racket/treelist
          syntax/parse/pre
          "pack.rkt"
@@ -175,6 +176,12 @@
            #'())]
          [_ (values #f tail)]))
      (define match-id (car (generate-temporaries (list form1))))
+     (define (track stx-class-id stx)
+       (define new-stx-class-id
+         (syntax-property stx-class-id 'origin (cons (in-syntax-class-space
+                                                      (syntax-local-introduce stx-class-id))
+                                                     (or (syntax-property stx-class-id 'origin) null))))
+       (transfer-origins (list form1 new-stx-class-id) stx))
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and sc (_::parens (group . rest))) . tail)
@@ -190,7 +197,8 @@
                                                        match-id
                                                        #'sc-hier.tail))
         (if rsc
-            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id #f)
+            (values (track #'sc-hier.name
+                           (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id #f))
                     end-tail)
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
@@ -199,13 +207,15 @@
         (syntax-parse #'stx-class-hier.tail
           [(args::syntax-class-args . args-tail)
            (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
-           (values (build-syntax-class-pattern #'stx-class-hier.name
-                                               (lookup-syntax-class #'stx-class-hier.name)
-                                               #'args.args
-                                               open-attributes
-                                               form1
-                                               match-id
-                                               #f)
+           (values (track
+                    #'stx-class-hier.name
+                    (build-syntax-class-pattern #'stx-class-hier.name
+                                                (lookup-syntax-class #'stx-class-hier.name)
+                                                #'args.args
+                                                open-attributes
+                                                form1
+                                                match-id
+                                                #f))
                    tail)])]))
    'none))
 
