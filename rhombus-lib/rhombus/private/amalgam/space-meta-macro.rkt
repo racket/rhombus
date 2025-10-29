@@ -138,7 +138,8 @@
                                                            (quote #,parsed-tag)
                                                            #,(and pack-and-unpack?
                                                                   #`(lambda (e env)
-                                                                      (apply parse-group e env))))))
+                                                                      (syntax-local-introduce
+                                                                       (apply parse-group (syntax-local-introduce e) env)))))))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define private-kws (hash-ref options '#:private #hasheq()))
        (define post-forms (hash-ref options '#:post-forms null))

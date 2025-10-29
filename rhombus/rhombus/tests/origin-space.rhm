@@ -1,0 +1,30 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+// make sure that going through a custom space's expander
+// doesn't add extra scopes that interefere with the originalness
+// of an identifier
+
+space.enforest origin:
+  space_path rhombus/example/origin
+  macro_definer macro
+  meta_namespace origin_meta:
+    parse_syntax_class Parsed
+    parsed_packer pack
+    parsed_unpacker unpack
+
+origin.macro 'root ($expr)':
+  origin_meta.pack('($expr)')
+
+origin.macro 'step ($expr)':
+  'root ($expr)'
+
+expr.macro 'go ($expr) $()':
+  let '$(o ::  origin_meta.Parsed)' = 'step ($expr)'
+  let '($inner)' = origin_meta.unpack(o)
+  values(inner, '')
+
+block:
+  let local_x = 10
+  go (local_x)

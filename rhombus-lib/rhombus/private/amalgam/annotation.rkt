@@ -166,7 +166,6 @@
   (define (shrubbery-tail->string tail) (shrubbery-syntax->string #`(group . #,tail)))
 
   (define-rhombus-enforest
-    #:enforest enforest-annotation
     #:syntax-class (:annotation [ctx empty-annot-context])
     #:infix-more-syntax-class :annotation-infix-op+form+tail
     #:desc "annotation"

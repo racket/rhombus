@@ -13,6 +13,7 @@ runtime_path.def defctx_rhm: "origin-defctx.rhm"
 runtime_path.def class_rhm: "origin-class.rhm"
 runtime_path.def for_rhm: "origin-for.rhm"
 runtime_path.def stxclass_rhm: "origin-stxclass.rhm"
+runtime_path.def space_rhm: "origin-space.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let in = Port.Input.open_file(o_rhm)
@@ -32,27 +33,27 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
              | fun (x, mode): x
   let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
   let origins: MutableMap()
-  fun search_props(v, ~immed = #true):
+  fun search_props(v):
     cond
     | v is_a Identifier:
-        when immed
-          && base.#{syntax-original?}(v)
-          && (base.#{bound-identifier=?}(v, intro(v, #'add))
-                || base.#{bound-identifier=?}(v, ns_intro(v, #'add)))
-        | origins[v.unwrap()] := (origins.maybe[v.unwrap()] || Set{}) ++ { v.srcloc() }
         search(v)
     | v is_a Pair:
-        search_props(Pair.first(v), ~immed: immed)
-        search_props(Pair.rest(v), ~immed: immed)
+        search_props(Pair.first(v))
+        search_props(Pair.rest(v))
     | ~else:
         #void
   fun search(stx):
     cond
     | stx is_a Syntax:
+        when stx is_a Identifier
+          && base.#{syntax-original?}(stx)
+          && (base.#{bound-identifier=?}(stx, intro(stx, #'add))
+                || base.#{bound-identifier=?}(stx, ns_intro(stx, #'add)))
+        | origins[stx.unwrap()] := (origins.maybe[stx.unwrap()] || Set{}) ++ { stx.srcloc() }
         search_props(base.#{syntax-property}(stx, #'origin))
         search_props(base.#{syntax-property}(stx, #'#{disappeared-use}))
         // need to search bindings for uses, but don't add bindings
-        search_props(base.#{syntax-property}(stx, #'#{disappeared-binding}), ~immed: #false)
+        search_props(base.#{syntax-property}(stx, #'#{disappeared-binding}))
         search(base.#{syntax-e}(stx))
     | stx is_a Pair:
         search(Pair.first(stx))
@@ -73,15 +74,15 @@ check_origins(def_rhm,
 
 check_origins(annot_rhm,
               #'#{rhombus/annot},
-              { #'Posn: 5,
-                #'Pt: 8,
-                #'Foo: 1,
+              { #'Posn: 6,
+                #'Pt: 9,
+                #'Foo: 2,
                 #'Sequence: 1,
                 #'maybe: 1,
                 #'List: 2,
                 #'Map: 1,
                 #'False: 1,
-                #'OR: 1,
+                #'OR: 2,
                 #'Array: 1,
                 #'#{->}: 1,
                 #'#{\|\|}: 1,
@@ -89,7 +90,7 @@ check_origins(annot_rhm,
 
 check_origins(bind_rhm,
               #'#{rhombus/annot},
-              { #'Posn: 23,
+              { #'Posn: 24,
                 #'Int: 1 })
 
 check_origins(bind_rhm,
@@ -99,10 +100,10 @@ check_origins(bind_rhm,
 
 check_origins(repet_rhm,
               #'#{rhombus/repet},
-              { #'an_x: 3,
-                #'a_y: 2,
-                #'a_t: 1,
-                #'m_arg: 1 })
+              { #'an_x: 4,
+                #'a_y: 3,
+                #'a_t: 2,
+                #'m_arg: 2 })
 
 check_origins(rx_rhm,
               #'#{rhombus/rx},
@@ -115,7 +116,7 @@ check_origins(rx_rhm,
 
 check_origins(defctx_rhm,
               #'#{rhombus/def_ctx_example},
-              { #'my_example_macro: 1 })
+              { #'my_example_macro: 2 })
 
 check_origins(class_rhm,
               #false,
@@ -142,4 +143,8 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #false,
-              { #'ns: 4 })
+              { #'ns: 6 })
+
+check_origins(space_rhm,
+              #false,
+              { #'local_x: 2 })
