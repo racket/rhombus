@@ -121,9 +121,22 @@
 
 (define (relocate srcloc stx [prop-stx stx])
   (define new-stx (datum->syntax stx (syntax-e stx) srcloc prop-stx))
-  (if (eq? prop-stx stx)
-      new-stx
-      (transfer-origin stx new-stx)))
+  (define new-stx/origin
+    (if (eq? prop-stx stx)
+        new-stx
+        (transfer-origin stx new-stx)))
+  (cond
+    [(and (identifier? stx)
+          (not (syntax-property stx 'identifier-as-keyword)))
+     ;; treat the relocated identifier as a kind of macro expansion
+     ;; from the original identifier at its original location; that
+     ;; can be important for binding arrows, for example
+     (define id (if (syntax-transforming?)
+                    (syntax-local-introduce stx)
+                    stx))
+     (syntax-property (add-origin id new-stx/origin) 'identifier-as-keyword #t)]
+    [else
+     new-stx/origin]))
 
 ;; unlike `relocate`, copies props and potentially updates 'raw
 (define (relocate-id head id)

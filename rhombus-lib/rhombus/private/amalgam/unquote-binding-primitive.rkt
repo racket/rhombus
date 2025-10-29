@@ -178,9 +178,8 @@
      (define match-id (car (generate-temporaries (list form1))))
      (define (track stx-class-id stx)
        (define new-stx-class-id
-         (syntax-property stx-class-id 'origin (cons (in-syntax-class-space
-                                                      (syntax-local-introduce stx-class-id))
-                                                     (or (syntax-property stx-class-id 'origin) null))))
+         (add-origin (in-syntax-class-space (syntax-local-introduce stx-class-id))
+                     stx-class-id))
        (transfer-origins (list form1 new-stx-class-id) stx))
      (syntax-parse stx
        #:datum-literals (group)

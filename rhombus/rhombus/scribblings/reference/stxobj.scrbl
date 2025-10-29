@@ -1241,6 +1241,13 @@ class's name.
  intended for communicating source information from a macro expansion in
  the case that it cannot be inferred automatically.
 
+ Unlike @rhombus(Syntax.relocate), if @rhombus(stx) is an identifier,
+ then @rhombus(Syntax.relocate_span) adds an @rhombus(#'origin) property
+ to the result syntax object in addition to adjusting its source
+ metadata. The @rhombus(#'origin) property makes the relocation somewhat
+ like a macro expansion for the purposes of connecting an expansion
+ result to source-program terms.
+
 }
 
 @doc(

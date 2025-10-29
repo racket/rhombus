@@ -15,16 +15,39 @@ space.enforest origin:
     parsed_unpacker unpack
 
 origin.macro 'root ($expr)':
-  origin_meta.pack('($expr)')
+  origin_meta.pack(expr)
 
 origin.macro 'step ($expr)':
   'root ($expr)'
 
 expr.macro 'go ($expr) $()':
   let '$(o ::  origin_meta.Parsed)' = 'step ($expr)'
-  let '($inner)' = origin_meta.unpack(o)
-  values(inner, '')
+  origin_meta.unpack(o)
 
 block:
   let local_x = 10
   go (local_x)
+
+
+space.enforest paren_origin:
+  space_path rhombus/example/paren_origin
+  macro_definer macro
+  meta_namespace paren_origin_meta:
+    parse_syntax_class Parsed
+    parsed_packer pack
+    parsed_unpacker unpack
+
+paren_origin.macro 'root ($expr)':
+  paren_origin_meta.pack('($expr)')
+
+paren_origin.macro 'step ($expr)':
+  'root ($expr)'
+
+expr.macro 'paren_go ($expr) $()':
+  let '$(o ::  paren_origin_meta.Parsed)' = 'step ($expr)'
+  let '($inner)' = paren_origin_meta.unpack(o)
+  '($inner)'
+
+block:
+  let paren_local_x = 10
+  paren_go (paren_local_x)

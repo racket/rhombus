@@ -2,7 +2,8 @@
 (require syntax/parse/pre)
 
 (provide transfer-origin
-         transfer-origins)
+         transfer-origins
+         add-origin)
 
 (define (transfer-origin src-stx-in stx)
   (define src-stx
@@ -28,3 +29,7 @@
 (define (transfer-origins src-stxes stx)
   (for/fold ([stx stx]) ([src-stx (in-list src-stxes)])
     (transfer-origin src-stx stx)))
+
+(define (add-origin id stx)
+  (define p  (syntax-property stx 'origin))
+  (syntax-property stx 'origin (if p (cons id p) id)))

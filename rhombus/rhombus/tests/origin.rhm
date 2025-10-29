@@ -47,6 +47,7 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
     | stx is_a Syntax:
         when stx is_a Identifier
           && base.#{syntax-original?}(stx)
+          && !stx.property(#'#{identifier-as-keyword})
           && (base.#{bound-identifier=?}(stx, intro(stx, #'add))
                 || base.#{bound-identifier=?}(stx, ns_intro(stx, #'add)))
         | origins[stx.unwrap()] := (origins.maybe[stx.unwrap()] || Set{}) ++ { stx.srcloc() }
@@ -70,7 +71,11 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
 check_origins(def_rhm,
               #false,
               { #'let: 2,
-                #'def: 2 })
+                #'def: 2,
+                #'x1: 2,
+                #'x2: 2,
+                #'x3: 2,
+                #'x4: 3 })
 
 check_origins(annot_rhm,
               #'#{rhombus/annot},
@@ -147,4 +152,4 @@ check_origins(stxclass_rhm,
 
 check_origins(space_rhm,
               #false,
-              { #'local_x: 2 })
+              { #'paren_local_x: 2 })
