@@ -28,7 +28,6 @@ block:
   let local_x = 10
   go (local_x)
 
-
 space.enforest paren_origin:
   space_path rhombus/example/paren_origin
   macro_definer macro

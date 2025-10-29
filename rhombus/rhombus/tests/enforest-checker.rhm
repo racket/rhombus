@@ -1,0 +1,84 @@
+#lang rhombus/static/and_meta
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest ident:
+    space_path demo/ident
+    macro_definer macro  
+    meta_namespace ident_meta:
+      parse_syntax_class Parsed
+      parse_checker "no good"
+  ~throws values(error.annot_msg(),
+                 error.val("no good").msg)
+
+space.enforest ident:
+  space_path demo/ident
+  macro_definer macro  
+  meta_namespace ident_meta:
+    parse_syntax_class Parsed
+    parse_checker (fun (form, ~recur: recur):
+                     cond
+                     | form == #'hack:
+                         '0'
+                     | form == #'try_again:
+                         recur('f')
+                     | form is_a Syntax:
+                         form
+                     | ~else:
+                         error("not syntax!"))
+
+ident.macro 'f':
+  #'hack
+
+ident.macro 'bad_f':
+  #'not_hack
+
+ident.macro 'retry_f':
+  #'try_again
+
+expr.macro 'go ($i)':
+  try:
+    let '$(i :: ident_meta.Parsed)' = i
+    '$(to_string(i))'
+    ~catch e :: Exn:
+      '$(e.message)'
+
+check: go (f)
+       ~is "0"
+
+check: go (bad_f)
+       ~is "not syntax!"
+
+check: go (retry_f)
+       ~is "0"
+
+space.transform tident:
+  space_path demo/tident
+  macro_definer macro  
+  meta_namespace tident_meta:
+    parse_syntax_class Parsed
+    parse_checker (fun (form, ~recur: recur, ~syntax_class_arguments: args):
+                     check args ~is PairList[]
+                     cond
+                     | form == #'hack:
+                         '0'
+                     | form == #'try_again:
+                         recur('f')
+                     | form is_a Syntax:
+                         form
+                     | ~else:
+                         error("not syntax!"))
+
+tident.macro 'f':
+  #'hack
+
+expr.macro 'tgo ($i)':
+  try:
+    let '$(i :: tident_meta.Parsed)' = i
+    '$(to_string(i))'
+    ~catch e :: Exn:
+      '$(e.message)'
+
+check: tgo (f)
+       ~is "0"

@@ -35,6 +35,7 @@
          (submod "annotation.rkt" for-class)
          "syntax-wrap.rkt"
          "sentinel-declaration.rkt"
+         "annotation-failure.rkt"
          "origin.rkt")
 
 (provide enforest-meta
@@ -133,13 +134,24 @@
        (define pack-id (hash-ref options '#:parsed_packer #'#f))
        (define unpack-id (hash-ref options '#:parsed_unpacker #'#f))
        (define pack-and-unpack? (or (syntax-e pack-id) (syntax-e unpack-id)))
-       (define macro-result (hash-ref options '#:parsed_checker
-                                      #`(make-check-syntax (quote name)
-                                                           (quote #,parsed-tag)
-                                                           #,(and pack-and-unpack?
-                                                                  #`(lambda (e env)
-                                                                      (syntax-local-introduce
-                                                                       (apply parse-group (syntax-local-introduce e) env)))))))
+       (define make-macro-result (or (let ([e (hash-ref options '#:parsed_checker #f)])
+                                       (and e
+                                            (syntax-parse #'orig-stx
+                                              [(form-name . _)
+                                               #`(let ([parse_checker (fill-out-parse-checker-keywords 'form-name #,e)])
+                                                   (lambda (name tag recur)
+                                                     (lambda (form-in proc reloc origins env)
+                                                       (parse_checker form-in
+                                                                      #:transform proc
+                                                                      #:recur recur
+                                                                      #:relocate (lambda (stx)
+                                                                                   (transfer-origins
+                                                                                    origins
+                                                                                    (relocate+reraw-shrubbery reloc stx)))
+                                                                      #:syntax_class_arguments env))))])))
+                                     (if pack-and-unpack?
+                                         #'make-macro-result/recur
+                                         #'make-macro-result)))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define private-kws (hash-ref options '#:private #hasheq()))
        (define post-forms (hash-ref options '#:post-forms null))
@@ -216,7 +228,6 @@
                   #:in-space in-new-space
                   #:prefix-operator-ref new-prefix-operator-ref
                   #:infix-operator-ref new-infix-operator-ref
-                  #:check-result #,macro-result
                   #:make-identifier-form #,identifier-transformer)
                 (maybe-skip
                  #,class-name
@@ -242,10 +253,18 @@
                                                                                         #:root-swap '(parsed . group)
                                                                                         #:arity-mask more-arity-mask)))
                 #,@(build-name-start-syntax-class)
+                (define macro-result (#,make-macro-result
+                                      (quote name)
+                                      (quote #,parsed-tag)
+                                      (lambda (e env)
+                                        (syntax-local-introduce
+                                         (apply parse-group (syntax-local-introduce e) env)))))
                 (define make-prefix-operator (make-make-prefix-operator new-prefix-operator
-                                                                        (quote #,(and pack-and-unpack? parsed-tag))))
+                                                                        (quote #,(and pack-and-unpack? parsed-tag))
+                                                                        macro-result))
                 (define make-infix-operator (make-make-infix-operator new-infix-operator
-                                                                      (quote #,(and pack-and-unpack? parsed-tag))))
+                                                                      (quote #,(and pack-and-unpack? parsed-tag))
+                                                                      macro-result))
                 (define make-prefix+infix-operator new-prefix+infix-operator)
                 #,@(build-pack-and-unpack)
                 (maybe-skip
@@ -274,8 +293,7 @@
                    #:desc #,desc
                    #:parsed-tag #,parsed-tag
                    #:in-space in-new-space
-                   #:transformer-ref new-transformer-ref
-                   #:check-result #,macro-result))
+                   #:transformer-ref new-transformer-ref))
                 (maybe-skip
                  #,class-name
                  (define-syntax-class-syntax #,class-name (make-syntax-class #':base
@@ -286,7 +304,15 @@
                 #,@(build-name-start-syntax-class)
                 (maybe-skip
                  #,class-name
-                 (define make-prefix-operator (make-make-transformer 'name new-transformer)))
+                 (define macro-result (#,make-macro-result
+                                       (quote name)
+                                       (quote #,parsed-tag)
+                                       (lambda (e env)
+                                         (syntax-local-introduce
+                                          (apply parse-group (syntax-local-introduce e) env))))))
+                (maybe-skip
+                 #,class-name
+                 (define make-prefix-operator (make-make-transformer 'name new-transformer macro-result)))
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
@@ -317,17 +343,7 @@
          (datum->syntax #f (list 'parsed parsed-tag form))])
       form))
 
-(define (relocate-result parsed-tag srcloc-stx result)
-  (syntax-parse result
-    #:datum-literals (parsed)
-    [(parsed tag in)
-     #:when (eq? (syntax-e #'tag) parsed-tag)
-     (define new-in (relocate+reraw srcloc-stx #'in))
-     (relocate new-in #`(parsed tag #,new-in) new-in)]
-    [_
-     (relocate+reraw srcloc-stx result)]))
-
-(define ((make-make-prefix-operator new-prefix-operator parsed-tag) order prec protocol proc)
+(define ((make-make-prefix-operator new-prefix-operator parsed-tag macro-result) order prec protocol proc)
   (new-prefix-operator
    order
    prec
@@ -337,9 +353,11 @@
       (procedure-rename
        (lambda (form stx . more)
          (define result (apply proc (tag form parsed-tag) stx more))
-         (transfer-origins
-          (list form)
-          (relocate+reraw-shrubbery (datum->syntax #f (list stx form)) result)))
+         (macro-result result
+                       proc
+                       (datum->syntax #f (list stx form))
+                       (list form)
+                       more))
        (object-name proc))]
      [else
       (procedure-rename
@@ -348,11 +366,13 @@
                               [(head . tail)
                                (apply proc (pack-tail #'tail #:after #'head) #'head more)]))
                  proc
+                 macro-result
                  tail
-                 null))
+                 null
+                 more))
        (object-name proc))])))
 
-(define ((make-make-infix-operator new-infix-operator parsed-tag) order prec protocol proc assc)
+(define ((make-make-infix-operator new-infix-operator parsed-tag macro-result) order prec protocol proc assc)
   (new-infix-operator
    order
    prec
@@ -362,9 +382,11 @@
       (procedure-rename
        (lambda (form1 form2 stx . more)
          (define result (apply proc (tag form1 parsed-tag) (tag form2 parsed-tag) stx more))
-         (transfer-origins
-          (list form1 form2)
-          (relocate+reraw-shrubbery (datum->syntax #f (list form1 stx form2)) result)))
+         (macro-result result
+                       proc
+                       (datum->syntax #f (list form1 stx form2))
+                       (list form1 form2)
+                       more))
        (object-name proc))]
      [else
       (procedure-rename
@@ -373,44 +395,91 @@
           (lambda () (syntax-parse tail
                        [(head . tail) (apply proc (tag form1 parsed-tag) (pack-tail #'tail #:after #'head) #'head more)]))
           proc
+          macro-result
           (cons form1 tail)
-          (list form1)))
+          (list form1)
+          more))
        (object-name proc))])
    assc))
 
-(define ((make-make-transformer name new-transformer) proc)
+(define ((make-make-transformer name new-transformer macro-result) proc)
   (new-transformer
    (lambda (stx . more)
      (syntax-parse stx
-       [(head . tail) (apply proc (pack-tail #'tail) #'head more)]))))
+       [(head . tail)
+        (macro-result (apply proc (pack-tail #'tail) #'head more)
+                      proc
+                      #f
+                      null
+                      more)]))))
 
-(define (finish thunk proc orig-stx origins)
-  (define-values (form new-tail)
+(define (finish thunk proc macro-result reloc-stx origins more)
+  (define-values (form new-tail reloc)
     (call-with-values
      thunk
      (case-lambda
-       [(form new-tail) (values form new-tail)]
-       [(form) (values (relocate+reraw-shrubbery (datum->syntax #f orig-stx) form) #'(group))])))
-  (values (transfer-origins origins form)
+       [(form new-tail) (values form new-tail #f)]
+       [(form) (values form #'(group) (datum->syntax #f reloc-stx))])))
+  (values (macro-result form
+                        proc
+                        reloc
+                        origins
+                        more)
           (unpack-tail new-tail proc #f)))
 
-(define ((make-check-syntax name parsed-tag recur) form-in proc . env)
+(define (make-macro-result name parsed-tag recur)
+  (make-macro-result/recur name parsed-tag #f))
+
+(define ((make-macro-result/recur name parsed-tag recur) form-in proc reloc origins env)
   (define form (syntax-unwrap form-in))
   (unless (syntax? form)
     (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form-in))
-  (if recur
-      (syntax-parse form
-        #:datum-literals (parsed)
-        [(parsed tag e)
-         #:when (eq? (syntax-e #'tag) parsed-tag)
-         #'e]
-        [_
-         (cond
-           [(unpack-tail form #f #f)
-            => (lambda (g) (relocate+reraw form (recur g env)))]
-           [else
-            (raise-bad-macro-result (proc-name proc) "single-group syntax object" #:syntax-for? #f form)])])
-      form))
+  (define result
+    (if recur
+        (syntax-parse form
+          #:datum-literals (parsed)
+          [(parsed tag e)
+           #:when (eq? (syntax-e #'tag) parsed-tag)
+           #'e]
+          [_
+           (cond
+             [(unpack-tail form #f #f)
+              => (lambda (g) (recur g env))]
+             [else
+              (raise-bad-macro-result (proc-name proc) "single-group syntax object" #:syntax-for? #f form)])])
+        form))
+  (transfer-origins
+   origins
+   (relocate+reraw-shrubbery (or reloc form) result)))
+
+(define (fill-out-parse-checker-keywords who proc)
+  (define-values (reqds allowed) (if (procedure? proc)
+                                     (procedure-keywords proc)
+                                     (values null null)))
+  (define avail '(#:transform #:recur #:relocate #:syntax_class_arguments))
+  (unless (and (procedure? proc)
+               (procedure-arity-includes? proc 1 #t)
+               (for/and ([req (in-list reqds)])
+                 (memq req avail)))
+    (raise-annotation-failure who
+                              proc
+                              (string-append "satisfying(fun (f :: Function):\n"
+                                             "             let (_, [req, ...], _) = Function.arity(f)\n"
+                                             "             let avail = { #'~transform, #'~recur, #'~relocate, #'~syntax_class_arguments }\n"
+                                             "             {req, ...}.subtract(avail) == {})")))
+  (lambda (form #:transform transform
+                #:recur recur-in
+                #:relocate relocate
+                #:syntax_class_arguments syntax_class_arguments)
+    (define recur (lambda (e [env '()])
+                    (let ([e (unpack-tail (unpack-group e who e) #f #f)])
+                      (recur-in e env))))
+    (define-values (kws kw-args)
+      (for/lists (kws kw-args) ([kw (in-list avail)]
+                                [arg (in-list (list transform recur relocate syntax_class_arguments))]
+                                #:when (or (not allowed) (memq kw allowed)))
+        (values kw arg)))
+    (keyword-apply proc kws kw-args form null)))
 
 (define-for-syntax (check-distinct-exports ex-ht
                                            class-name prefix-more-class-name infix-more-class-name name-start-class-name

@@ -292,13 +292,42 @@ driver and macro-definitions forms.
   This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
  @item{@rhombus(parse_checker, ~space_meta_clause): Supplies a
-  compile-time function that is applied to two arguments: the result of
-  any macro defined for the space, and a function implementing the macro
-  transformer (which is useful for reporting errors or recursively
-  expanding); the result is a syntax object, typically the one that was
-  given, but possibly adjusted. The default checker recursively expands
-  when either @rhombus(parsed_packer, ~space_meta_clause) or
-  @rhombus(parsed_unpacker, ~space_meta_clause) is supplied.}
+  compile-time function that is applied to one by-position arguments and
+  potentially some keyword arguments. The by-position argument is the
+  result of a macro defined for the space. The result must a syntax
+  object, possibly the one that was given, but possibly adjusted. Keyword
+  arguments are supplied when they are accepted by the function:
+
+  @itemlist(
+
+  @item{@rhombus(~synatx_class_arguments: #,(@rhombus(pair_list, ~var))):
+   A @rhombus(PairList, ~annot) containing arguments supplied to the syntax
+   class defined via @rhombus(parse_syntax_class, ~space_meta_clause),
+   etc., when the definition spcifies arguments. If the syntax class does
+   not accept arguments, the pair list is empty.}
+
+  @item{@rhombus(~transform: #,(@rhombus(transform_function, ~var))): A
+   function for the transformer that produced the result. This argument is
+   intended for use with @rhombus(Function.name) for error reporting.}
+
+  @item{@rhombus(~recur: #,(@rhombus(recur_function, ~var))): A function
+   for recursively parsing, the same as using a syntax class defined via
+   @rhombus(parse_syntax_class, ~space_meta_clause). The function accepts
+   an optional second argument for a @tech(~doc: ref_doc){pair list} of arguments, like
+   arguments to the syntax class.}
+
+  @item{@rhombus(~relocate: #,(@rhombus(relocate_function, ~var))): A
+   function that takes a syntax object and potentially adjusts its
+   metadata, such as its source location, based on the form that was
+   expanded.}
+
+  )
+
+  The default checker recursively expands when either
+  @rhombus(parsed_packer, ~space_meta_clause) or
+  @rhombus(parsed_unpacker, ~space_meta_clause) is supplied and the
+  argument is not already parsed, and it uses the given relocation
+  function on the result (after recursive expansion, if any).}
 
  @item{@rhombus(parsed_packer, ~space_meta_clause): Declares an
   identifier to be bound to a function that takes a syntax term and
