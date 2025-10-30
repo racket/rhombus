@@ -127,7 +127,8 @@
   group. Unless the pattern ends with @rhombus(#,(@rhombus($, ~bind))()),
   a block pattern, or an alternatives pattern,
   the use of the macro can be followed by additional terms in the same
-  group. If the pattern does end with @rhombus(#,(@rhombus($, ~bind))()),
+  group, and the immediate macro result is relocated (as explained more below).
+  If the pattern does end with @rhombus(#,(@rhombus($, ~bind))()),
   a block pattern, or an alternatives pattern, then
   all terms after the macro operator must match the right-hand pattern.
   The position before @rhombus(#,(@rhombus($, ~bind))()) is itself treated
@@ -135,9 +136,11 @@
 
 )
 
- An expanded result from the macro is relocated via
+ An expanded result from the macro is ultimately relocated via
  @rhombus(Syntax.relocate_ephemeral_span) using the input terms that were
- expanded by the macro.
+ expanded by the macro. The relocation is always applied after the result
+ is fully expanded, and based on the pattern (as indicated above), it may
+ also applied to the immediate macro result.
 
  Using @vbar alternatives, a single definition can have any number of
  @rhombus(macro_pattern)s. The patterns describe any number of prefix and

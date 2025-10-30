@@ -448,6 +448,8 @@
              [else
               (raise-bad-macro-result (proc-name proc) "single-group syntax object" #:syntax-for? #f form)])])
         form))
+  ;; unlike expressions, we need to keep lifting origin information out, so that's
+  ;; why `transfer-origins` is here while it's not in "expr-macro.rkt"
   (transfer-origins
    origins
    (relocate+reraw-shrubbery (or reloc form) result)))

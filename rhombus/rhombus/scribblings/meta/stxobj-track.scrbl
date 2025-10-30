@@ -1,18 +1,19 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    meta:
+    "nonterminal.rhm" open
+    meta_label:
       rhombus/rx.rx)
 
 @title(~tag: "stxobj-track"){Syntax Tracking}
 
 As macros in a space are expanded, the resulting syntax object acquires
-an @rhombus(#'origin) property to track the history of expansion.
+an @rhombus(#'origin) syntax property to track the history of expansion.
 Specifically, when the expander dispatches to a macro bound to
-@rhombus(name), then the result of the macro gets an @rhombus(#'origin)
-property with the use-site @rhombus(name) identifier. If a result
+@nontermref(op_or_id_name), then the result of the macro gets an @rhombus(#'origin)
+property with the use-site @nontermref(op_or_id_name) identifier. If a result
 already has an @rhombus(#'origin) property, then the existing value is
-combined with @rhombus(name) using @rhombus(Pair), and an
+combined with @nontermref(op_or_id_name) using @rhombus(Pair), and an
 @rhombus(#'origin) property value is in general a tree of identifiers.
 This information is used by DrRacket, for example, to draw binding
 arrows from uses or names to definitions of names.
@@ -87,7 +88,7 @@ as a reminder to consider the need for tracking.
 
 The annotation examples above show macros working within one
 @tech{space}. Tracking is practically always needed when bridging
-spaces. For example, the @rhombus(rx) impleemntation parses a subsequent
+spaces. For example, the @rhombus(rx) implementation parses a subsequent
 regexp form, and it uses @rhombus(Syntax.track_origin) to connect a
 returned expression to parsed regexp. Ultimately, all @rhombus(#'origin)
 information must be attached to an expansion or definition form, since
@@ -95,3 +96,13 @@ those are the only primitive forms. Tracking in expressions is somewhat
 special, meanwhile, because subexpressions appear intact within an
 enclosing expression, so origin information does not need to be
 explicitly lifted to the enclosing expression.
+
+Syntax-tracking properties are added and used as
+@tech(~doc: ref_doc){ephemeral properties}. For example,
+@rhombus(Syntax.track_origin) uses @rhombus(Syntax.ephemeral_property)
+internally. Like all kinds properties, ephemeral properties must be
+attached specifically to a term, group, or multi-group sequence, and
+each @tech{space} will have its own convention about which syntactic
+category is used for tracking properties. Most spaces attach properties
+to terms. The definition and declaration spaces attach properties to
+groups.

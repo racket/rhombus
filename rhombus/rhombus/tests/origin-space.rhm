@@ -50,3 +50,20 @@ expr.macro 'paren_go ($expr) $()':
 block:
   let paren_local_x = 10
   paren_go (paren_local_x)
+
+
+space.enforest demo:
+  space_path rhombus/example/demo
+  macro_definer macro
+  meta_namespace demo_meta:
+    parse_syntax_class Parsed
+
+demo.macro 'ddef $t ...':
+  '$t ...'
+
+defn.macro 'as_demo $t ...':
+  let '$(d :: demo_meta.Parsed)' = '$t ...'
+  let PairList[id :: Identifier] = d.ephemeral_property(#'origin)
+  d
+
+as_demo ddef def x = 1

@@ -4,7 +4,8 @@
                      enforest/transformer
                      enforest/implicit
                      shrubbery/property
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "enforest.rkt"
          "name-root-ref.rkt"
          "forwarding-sequence.rkt"
@@ -188,10 +189,10 @@
        (define (nestable-parsed)
          (syntax-parse #'form
            [(~var e (:nestable-declaration d-prefix d-effect))
-            (values #'(begin . e.parsed)
+            (values (transfer-origin #'e #'(begin . e.parsed))
                     #t)]
            [(~var e (:definition d-prefix d-effect))
-            (values #'(begin . e.parsed)
+            (values (transfer-origin #'e #'(begin . e.parsed))
                     #t)]
            [_
             (define-values (new-form expr?)
@@ -218,7 +219,7 @@
        (define-values (maybe-parsed is-parsed?)
          (if (syntax-e #'decl-ok?)
              (syntax-parse #'form
-               [e::declaration (values #'(begin . e.parsed) #t)]
+               [e::declaration (values (transfer-origin #'e #'(begin . e.parsed)) #t)]
                [_ (nestable-parsed)])
              (nestable-parsed)))
        (if is-parsed?
@@ -234,7 +235,10 @@
       #:datum-literals (group parsed)
       [(_) #'(begin)]
       [(_ (group (parsed #:rhombus/defn defn))) #'defn]
-      [(_ (~var e (:definition #f #f))) #'(begin . e.parsed)]
+      [(_ (~var e (:definition #f #f)))
+       ;; transferring origin information here is analogous to
+       ;; transferring only fully parsed expression forms
+       (transfer-origin #'e #'(begin . e.parsed))]
       [(_ form) (relocate (maybe-respan #'form)
                           #'(#%expression (rhombus-expression form)))])))
 
@@ -288,7 +292,7 @@
            (rhombus-body-sequence . #,new-tail))]
       [(_ (~var e (:definition #f #f)) . tail)
        #`(begin
-           (begin . e.parsed)
+           #,(transfer-origin #'e #`(begin . e.parsed))
            (rhombus-body-sequence . tail))]
       [(_ g . tail)
        #`(begin

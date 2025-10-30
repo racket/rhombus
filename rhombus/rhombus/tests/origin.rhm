@@ -152,4 +152,9 @@ check_origins(stxclass_rhm,
 
 check_origins(space_rhm,
               #false,
-              { #'paren_local_x: 2 })
+              { #'paren_local_x: 2,
+                #'as_demo: 2 })
+
+check_origins(space_rhm,
+              #'#{rhombus/example/demo},
+              { #'ddef: 2 })

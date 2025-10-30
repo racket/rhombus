@@ -73,14 +73,15 @@
  covers all subsequent terms in the enclosing group of a use of the
  macro. In that case, the @rhombus(body) after the pattern can return two
  values: an expansion for the consumed part of the input match, and a
- tail for the unconsumed part. Returning a single value is the same as
- return an empty tail.
+ tail for the unconsumed part. Returning a single value corresponds to
+ returning an empty tail.
 
- The result of @rhombus(body) is relocated using
+ The result of @rhombus(body) is ultimately relocated using
  @rhombus(Syntax.relocate_ephemeral_span) when a single value is returned
- from the macro @rhombus(body). Returning a tail (i.e., a second result)
- for unconsumed terms enables a macro to perform its own relocation for
- its expansion (i.e., the first result).
+ from the macro @rhombus(body); the relocation is applied after the result
+ is fully expanded. Returning a tail (i.e., a second result)
+ for unconsumed terms obliges and enables a macro to perform its own relocation for
+ its expansion (i.e., the first result). See also @secref("stxobj-track").
 
  The @rhombus(expr.macro) form does not define an @tech{assignment operator}
  that works with mutable targets. To define an assignment operator, use

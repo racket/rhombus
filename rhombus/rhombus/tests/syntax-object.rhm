@@ -28,7 +28,11 @@ block:
     Syntax.relocate_group_span(stx, like_stxes) ~method
     Syntax.property(stx, key, [val], [is_preserved]) ~method
     Syntax.group_property(stx, key, [val], [is_preserved]) ~method
+    Syntax.ephemeral_property(stx, key, [val], [is_preserved]) ~method
     Syntax.to_source_string(stx) ~method
+    Syntax.ephemeral_term(stx) ~method
+    Syntax.ephemeral_group(stx) ~method
+    Syntax.ephemeral_sequence(stx) ~method
   static_arity.check ~meta:
     syntax_meta.error([msg], in_stx, [at_stx])
     syntax_meta.value(name, [in_space], [fail])
@@ -162,6 +166,18 @@ block:
   check xy.srcloc().column ~is x.srcloc().column + 2
   check xyz.srcloc().line ~is x.srcloc().line + 2
   check xyz.srcloc().column ~is x.srcloc().column + 3
+
+check:
+  'x'.ephemeral_term() ~matches 'x'
+  'x'.ephemeral_group() ~matches 'x'
+  'x y'.ephemeral_group() ~matches 'x y'
+  'x y'.ephemeral_sequence() ~matches 'x y'
+  'x y; z'.ephemeral_sequence() ~matches 'x y; z'
+  'x'.ephemeral_term().ephemeral_property(#'a, 1).ephemeral_term().ephemeral_property(#'a) ~is 1
+  'x'.ephemeral_group().ephemeral_property(#'a, 1).ephemeral_group().ephemeral_property(#'a) ~is 1
+  'x'.ephemeral_group().ephemeral_property(#'a, 1).ephemeral_term().ephemeral_property(#'a) ~is #false
+  'x y'.ephemeral_sequence().ephemeral_property(#'a, 1).ephemeral_sequence().ephemeral_property(#'a) ~is 1
+  'x y'.ephemeral_sequence().ephemeral_property(#'a, 1).ephemeral_group().ephemeral_property(#'a) ~is #false
 
 check:
   match 'a: *'

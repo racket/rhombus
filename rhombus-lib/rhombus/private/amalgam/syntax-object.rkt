@@ -104,7 +104,12 @@
    relocate_span
    relocate_group_span
    relocate_ephemeral_span
+   ephemeral_term
+   ephemeral_group
+   ephemeral_sequence
    track_origin
+   track_group_origin
+   track_ephemeral_origin
    property
    group_property
    ephemeral_property
@@ -858,6 +863,15 @@
   (unless (syntax*? stx-in) (raise-annotation-failure who stx-in "Syntax"))
   (relocate-span who stx-in ctx-stxes-in extract-ephemeral-ctx))
 
+(define/method (Syntax.ephemeral_term stx-in)
+  (unpack-term stx-in who #f))
+
+(define/method (Syntax.ephemeral_group stx-in)
+  (unpack-group stx-in who #f))
+
+(define/method (Syntax.ephemeral_sequence stx-in)
+  (unpack-multi/tagged stx-in who #f))
+
 (define (to-list-of-stx who v-in)
   (define stxs (to-list #f v-in))
   (unless (and stxs (andmap syntax*? stxs))
@@ -998,6 +1012,27 @@
                           (and t (list t)))
                         (check-origins #f ctx-stx-in)
                         (raise-annotation-failure who ctx-stx-in "Term || (Listable.to_list && List.of(Term))")))
+  (transfer-origins ctx-stxes stx))
+
+(define/method (Syntax.track_group_origin stx-in ctx-stx-in)
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+  (define stx (unpack-group stx-in who #f))
+  (define ctx-stxes (or (let ([g (unpack-group ctx-stx-in #f #f)])
+                          (and g (list g)))
+                        (check-group-origins #f ctx-stx-in)
+                        (raise-annotation-failure who ctx-stx-in "Group || (Listable.to_list && List.of(Group))")))
+  (transfer-origins ctx-stxes stx))
+
+(define/method (Syntax.track_ephemeral_origin stx ctx-stx-in)
+  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+  (unless (syntax? stx) (raise-annotation-failure who stx "Syntax"))
+  (define ctx-stxes (cond
+                      [(syntax? stx) ctx-stx-in]
+                      [else
+                       (define lst (to-list #f ctx-stx-in))
+                       (if (and lst (andmap syntax? lst))
+                           lst
+                           (raise-annotation-failure who ctx-stx-in "Syntax || (Listable.to_list && List.of(Syntax))"))]))
   (transfer-origins ctx-stxes stx))
 
 (define/method (Syntax.to_source_string stx

@@ -41,7 +41,7 @@
                          ;; implementation is function stx if `parsed-right?`,
                          ;; or a clause over #'self and maybe #'left otherwise
                          impl))
-  (define (maybe-cons id ids) (if (syntax-e id) (cons id ids) ids)))
+  (define (maybe-cons id ids) (if (and id (syntax-e id)) (cons id ids) ids)))
 (define (make-all l) (pack-tail l))
 (define (make-all-sequence l) (pack-multi-tail l))
 
@@ -98,6 +98,9 @@
                         all-id
                         (and implicit-tail? (not parsed-right?) #'all-for-relocate)))
     (define (add-maybe-relocate-span e)
+      ;; in certain cases, we return a tail, and so the expander loop that called
+      ;; the transformer cannot automatically relocate; we know the pieces that
+      ;; were used at this point, so perform the relocation
       (if (and implicit-tail? (not parsed-right?))
           #`(maybe-relocate-span #,all*-id #,e)
           e))
@@ -263,6 +266,10 @@
                                        (or (and (null? (syntax-e #'tail-pattern))
                                                 #'all-for-relocate)
                                            #'#f)))
+                   (define tail-id (syntax-parse #'tail-pattern
+                                     #:datum-literals (op)
+                                     [((op _) e (op _)) #'e]
+                                     [_ #f]))
                    #`[#t
                       (let ([self-id self])
                         (define-static-info-syntax self-id #:getter get-syntax-static-infos)
@@ -271,7 +278,7 @@
                         #,(maybe-return-tail
                            (let ([body (if (eq? kind 'rule)
                                            (convert-rule-template #'(tag rhs ...)
-                                                                  (maybe-cons #'all-id (list #'self-id)))
+                                                                  (maybe-cons tail-id (maybe-cons #'all-id (list #'self-id))))
                                            #`(rhombus-body-expression (tag rhs ...)))])
                              (if (and (syntax-e all*-id)
                                       (null? (syntax-e #'tail-pattern)))

@@ -81,9 +81,7 @@
   (relocate+reraw form #`(parsed #:rhombus/expr #,expr) #:prop-stx form))
 
 (define-for-syntax (extract-expression form proc
-                                       #:relocate [relocate-to/in #f]
                                        #:srcloc [loc #f])
-  (define relocate-to (and relocate-to/in (maybe-respan relocate-to/in)))
   (define stx
     (syntax-parse form
       #:datum-literals (parsed group multi)
@@ -92,14 +90,17 @@
       [(parsed #:rhombus/expr e) #'e]
       [_
        (define norm-form (normalize-result form proc))
-       (define reloc-form (if relocate-to
-                              (relocate+reraw relocate-to norm-form #:prop-stx norm-form)
-                              norm-form))
-       (syntax-parse (unpack-group reloc-form 'expression #f)
+       ;; we don't try to relocate *before* expanding, but it's
+       ;; possible that `form` was relocated by the transformer that
+       ;; produced it so that the relocation on the result below uses
+       ;; it (i.e., when `loc` is #f, because there's no
+       ;; auto-relocate); a consequence of that early relocation is
+       ;; that further parsing may report an error in terms of the
+       ;; relocated syntax instead of its internals --- which is not
+       ;; ideal but also not terrible
+       (syntax-parse (unpack-group norm-form 'expression #f)
          [e::expression #'e.parsed])]))
-  (if (or relocate-to loc)
-      (relocate+reraw (or relocate-to loc) stx #:prop-stx stx)
-      stx))
+  (relocate+reraw (or loc form) stx #:prop-stx stx))
 
 (define-for-syntax (normalize-result form proc)
   ;; make sure the result is a single group, and also strip away `multi`
@@ -114,7 +115,7 @@
                                          #:syntax-for? #f)]
     [_ form]))
 
-(define-for-syntax empty-tail #'(multi)) ; recognize by `eq?`
+(define-for-syntax empty-tail #'(multi)) ; to be recognized via `eq?`
 
 (define-for-syntax (make-expression-infix-operator order prec protocol proc assc)
   (expression-infix-operator
@@ -137,9 +138,8 @@
               [(head . tail) (proc (parsed-argument form1) (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (extract-expression (check-expression-result form proc)
                                                        proc
-                                                       #:relocate (and (eq? new-tail empty-tail)
-                                                                       (datum->syntax #f (cons form1 tail)))
-                                                       #:srcloc form)
+                                                       #:srcloc (and (eq? new-tail empty-tail)
+                                                                     (datum->syntax #f (cons form1 tail))))
                                    (unpack-tail new-tail proc #f)
                                    proc)))
    assc))
@@ -165,9 +165,8 @@
               [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (extract-expression (check-expression-result form proc)
                                                        proc
-                                                       #:relocate (and (eq? new-tail empty-tail)
-                                                                       tail)
-                                                       #:srcloc form)
+                                                       #:srcloc (and (eq? new-tail empty-tail)
+                                                                     tail))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
 

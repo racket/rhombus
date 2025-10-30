@@ -47,12 +47,28 @@ object that represents a pair of parentheses, brackets, braces or
 quotes, where the tail string corresponds to the closer, and the tail
 suffix corresponds to text after the closer.
 
+An individual term or group can be represented in multiple ways. In the
+case of a term, it can be represented as the term by itself, as the sole
+term in a group, or even as the sole term in the sole group of a
+multi-group sequence. In most cases, conversion between these internal
+representations happens automatically; for example, attaching a property
+to a term will remove any group or multi-group representation layers and
+attach to the individual term. @deftech{Ephemeral properties} are
+attached to a specific representation, and they are more fragile; they
+may be lost if the syntax object is deconstructed or adjusted in any
+way. Ephemeral properties are intended for tracking source information
+during a macro expansion, where attaching to the representation provides
+efficiency and interoperability.
+
 A syntax object that results from a match using a @tech{syntax class}
 annotation has have fields in addition to the methods of all syntax
 objects. If a field from a syntax class has the same name as a
 @rhombus(Syntax) method, the field takes precedence for dynamic access
-and for static access using @rhombus(Syntax.matched_of, ~annot) with the syntax
-class's name.
+and for static access using @rhombus(Syntax.matched_of, ~annot) with the
+syntax class's name. Fields associated with a syntax object are similar
+to @tech{ephemeral properties} in that they are discarded when the
+syntax object is deconstructed, integrated into another syntax object.
+or adjusted in any way
 
 @doc(
   ~also_meta
@@ -1176,6 +1192,19 @@ class's name.
 
 }
 
+@doc(
+  method Syntax.ephemeral_term(stx :: Term) :: Term
+  method Syntax.ephemeral_group(stx :: Group) :: Group
+  method Syntax.ephemeral_sequence(stx :: Syntax) :: Syntax
+){
+
+ Coerces a @tech{syntax object} to a specific internal representation,
+ either as a term, group, or multi-group sequence. Selecting a specific
+ representation is relevant only for working with @tech{ephemeral
+  properties}.
+
+}
+
 
 @doc(
   method Syntax.relocate(stx :: Term,
@@ -1236,10 +1265,7 @@ class's name.
 
  The @rhombus(Syntax.relocate_ephemeral_span) function accepts any
  syntax object, which can be a term, group, or multi-group sequence. It
- attaches metadata to the syntax object in way that may get lost if the
- syntax object is deconstructed or adjusted in any way. This mode is
- intended for communicating source information from a macro expansion in
- the case that it cannot be inferred automatically.
+ attaches metadata to the syntax object as @tech{ephemeral properties}.
 
  Unlike @rhombus(Syntax.relocate), if @rhombus(stx) is an identifier,
  then @rhombus(Syntax.relocate_span) adds an @rhombus(#'origin) property
@@ -1270,6 +1296,14 @@ class's name.
     stx :: Term,
     orig_stx :: Term || (Listable.to_list && List.of(Term))
   ) :: Term
+  method Syntax.track_group_origin(
+    stx :: Group,
+    orig_stx :: Group || (Listable.to_list && List.of(Group))
+  ) :: Group
+  method Syntax.track_ephemeral_origin(
+    stx :: Syntax,
+    orig_stx :: Syntax || (Listable.to_list && List.of(Syntax))
+  ) :: Syntax
 ){
 
  Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin),
@@ -1279,11 +1313,14 @@ class's name.
  are available among @rhombus(stx) and @rhombus(orig_stx), the values are
  combined using @rhombus(Pair).
 
- The transferred properties are attached using
- @rhombus(Syntax.ephemeral_property), as opposed to
- @rhombus(Syntax.property), because they are intended to record temporary
- expansion information along the same lines as
- @rhombus(Syntax.relocate_ephemeral_span).
+ The transferred properties are attached as @tech{ephemeral properties},
+ because they are intended to record temporary expansion information. A
+ context that uses ephemeral information typically will expect it to be
+ attached to a certain kind of syntax, such as term or group. The
+ @rhombus(Syntax.track_origin) and @rhombus(Syntax.track_group_origin)
+ methods are implemented by composing @rhombus(Syntax.ephemeral_term) or
+ @rhombus(Syntax.ephemeral_group) with
+ @rhombus(Syntax.track_ephemeral_origin).
 
 }
 
@@ -1322,20 +1359,20 @@ class's name.
 }
 
 @doc(
-  method Syntax.ephemeral_property(stx :: Term,
+  method Syntax.ephemeral_property(stx :: Syntax,
                                    key :: Any)
     :: Any
-  method Syntax.ephemeral_property(stx :: Term,
+  method Syntax.ephemeral_property(stx :: Syntax,
                                    key :: Any, val :: Any,
                                    is_preserved :: Any = #false)
-    :: Term
+    :: Syntax
 ){
 
- Like @rhombus(Syntax.property), but attaches metadata to the syntax
- object in way that may get lost if the syntax object is deconstructed or
- adjusted in any way. This mode is intended for communicating information
- from a macro expansion, such as by @rhombus(Syntax.track_origin), along
- the same lines as @rhombus(Syntax.relocate_ephemeral_span).
+ Like @rhombus(Syntax.property), but attaches metadata as an
+ @tech{ephemeral properties}. This mode is intended for communicating
+ information from a macro expansion, such as by
+ @rhombus(Syntax.track_origin) and along the same lines as
+ @rhombus(Syntax.relocate_ephemeral_span).
 
 }
 

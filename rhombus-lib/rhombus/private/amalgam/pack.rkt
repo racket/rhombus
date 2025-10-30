@@ -41,6 +41,7 @@
          pack-multi
          pack-tagged-multi
          unpack-multi
+         unpack-multi/tagged
 
          pack-tail
          unpack-tail
@@ -346,6 +347,14 @@
      (define elem (syntaxable->syntax who at-stx r))
      (and elem
           (list (datum->syntax #f (list group-blank elem))))]))
+
+;; like `unpack-multi`, but includes a `multi` header and
+;; preserves one that is already present
+(define (unpack-multi/tagged r who at-stx)
+  (cond
+    [(syntax-wrap? r) (unpack-multi/tagged (syntax-unwrap r) who at-stx)]
+    [(multi-syntax? r) r]
+    [else (datum->syntax #f (list 'multi (unpack-multi r who at-stx)))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
 ;; an empty list turns into `multi` with no groups

@@ -15,7 +15,7 @@
 ;;
 ;;   * as a gensym-keyed property
 ;;
-;; A wrapped syntax object is meant to be unwrapped auotamically
+;; A wrapped syntax object is meant to be unwrapped automatically
 ;; before it is put into any larger syntax object or before any syntax
 ;; object on the object, because we don't want extra data for fields
 ;; kept indefinitely. So, a struct wrapper is ok, and it's safer
