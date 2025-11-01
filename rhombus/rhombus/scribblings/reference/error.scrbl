@@ -208,7 +208,7 @@
     ~space: space :: String = " ",
     ~tab: tab :: String = "   ",
     ~label: label :: String = "",
-    ~max_len: max_len :: NonnegInt
+    ~max_len: max_len :: Nat
                 = 72 - (2 + label.length() + 1 + space.length())
   ) :: String
 ){

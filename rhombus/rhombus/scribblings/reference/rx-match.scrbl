@@ -78,9 +78,9 @@
 ){
 
  Implements @rhombus(get, ~datum) operation of @rhombus(Indexable). The
- @rhombus(index) argument normally satisfies @rhombus(NonnegInt, ~annot)
+ @rhombus(index) argument normally satisfies @rhombus(Nat, ~annot)
  or @rhombus(Symbol, ~annot), but in general it can be a
- @rhombus(NonnegInt, ~annot) or any value that exists as a key in
+ @rhombus(Nat, ~annot) or any value that exists as a key in
  @rhombus(RX.capture_names(rx)).
 
 }

@@ -15,7 +15,7 @@ is just the semaphore itself.
 
 @doc(
   class Semaphore():
-    constructor (init :: NonnegInt = 0)
+    constructor (init :: Nat = 0)
 ){
 
  Constructs a semaphore that initially has @rhombus(init)

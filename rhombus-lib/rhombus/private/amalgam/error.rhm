@@ -150,7 +150,7 @@ fun reindent(s :~ String,
              ~label: label :: String = "",
              // determines when a single-line `s` is moved
              // to its own line to fit better
-             ~max_len: max_len :: NonnegInt
+             ~max_len: max_len :: Nat
                          = 72 - (2 + label.length() + 1 + space.length())) :~ String:
   if (s.length() > max_len
         || (for any (c in s):

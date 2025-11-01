@@ -533,14 +533,14 @@ version_guard.at_least "8.14.0.2":
     (MutableList[1, 2, 3] :~ MutableList)["oops"]
     ~throws values(
       "MutableList.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     (MutableList[1, 2, 3] :~ MutableList)[-1]
     ~throws values(
       "MutableList.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 
@@ -557,14 +557,14 @@ version_guard.at_least "8.14.0.2":
     (MutableList[1, 2, 3] :~ MutableList)["oops"] := 0
     ~throws values(
       "MutableList.set: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     (MutableList[1, 2, 3] :~ MutableList)[-1] := 0
     ~throws values(
       "MutableList.set: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 

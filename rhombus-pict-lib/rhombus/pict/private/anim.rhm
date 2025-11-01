@@ -799,7 +799,7 @@ class AnimPict(_identity_f :~ PictIdentity,
   override method freeze(~scale: scale :: Real = 2.0):
     snapshot(~rebuild_prompt: #false).freeze(~scale: scale)
 
-  override time_insert(at_epoch :: Int, n_epochs :: NonnegInt = 1):
+  override time_insert(at_epoch :: Int, n_epochs :: Nat = 1):
     if at_epoch < 0 || at_epoch >= duration || n_epochs == 0
     | this
     | let pre = time_pad(~after: at_epoch - duration)

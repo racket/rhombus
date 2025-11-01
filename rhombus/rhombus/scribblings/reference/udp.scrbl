@@ -73,10 +73,10 @@
 @doc(
   method (udp :: UDP).receive(
     bytes :: MutableBytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length(),
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length(),
     ~wait: wait :: Port.WaitMode && !matching(#'all) = #'some
-  ) :: values(maybe(NonnegInt), maybe(String), maybe(PortNumber))
+  ) :: values(maybe(Nat), maybe(String), maybe(PortNumber))
 ){
 
  Receives data send to a UDP socket in a single packet. The data is
@@ -99,8 +99,8 @@
 @doc(
   method (udp :: UDP).receive_evt(
     bytes :: MutableBytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length()
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length()
   ) :: Evt
   method (udp :: UDP).receive_ready_evt() :: Evt
 ){
@@ -124,8 +124,8 @@
     ~host: host :: String,
     ~port: port :: PortNumber,
     bytes :: Bytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length(),
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length(),
     ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all
   ) :: Void || Boolean
 ){
@@ -152,8 +152,8 @@
 @doc(
   method (udp :: UDP).send(
     bytes :: Bytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length(),
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length(),
     ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all
   )  :: Void || Boolean
 ){
@@ -169,13 +169,13 @@
     ~host: host :: String,
     ~port: port :: PortNumber,
     bytes :: Bytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length()
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length()
   ) :: Evt
   method (udp :: UDP).send_evt(
     bytes :: Bytes,
-    start_pos :: NonnegInt = 0,
-    end_pos :: NonnegInt = bytes.length()
+    start_pos :: Nat = 0,
+    end_pos :: Nat = bytes.length()
   ) :: Evt
   method (udp :: UDP).send_ready_evt() :: Evt
 

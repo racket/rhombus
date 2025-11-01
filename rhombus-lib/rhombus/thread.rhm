@@ -111,7 +111,7 @@ namespace ~open:
     internal _Semaphore
     implements evt.Evt
     private implements evt._Evt
-    constructor (init :: NonnegInt = 0):
+    constructor (init :: Nat = 0):
       super(rkt.#{make-semaphore}(init))
     override property handle: hand
     private override property sync_handle: rkt.#{wrap-evt}(hand, fun (v): this)

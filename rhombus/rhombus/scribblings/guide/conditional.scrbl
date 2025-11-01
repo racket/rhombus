@@ -114,7 +114,7 @@ multiple cases, use the function name after @rhombus(fun), then
     fun fib :: PosInt:
     | fib(0): 1
     | fib(1): 1
-    | fib(n :: NonnegInt): fib(n-1) + fib(n-2)
+    | fib(n :: Nat): fib(n-1) + fib(n-2)
 )
 
 The @rhombus(if), @rhombus(cond), and @rhombus(match) forms are best for

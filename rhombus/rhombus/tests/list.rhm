@@ -770,14 +770,14 @@ version_guard.at_least "8.14.0.2":
     ([1, 2, 3] :~ List)["oops"]
     ~throws values(
       "List.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     ([1, 2, 3] :~ List)[-1]
     ~throws values(
       "List.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 

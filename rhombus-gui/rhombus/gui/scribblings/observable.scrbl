@@ -169,7 +169,7 @@ An observable corresponds to @rhombus(#{obs?}) from
 
 @doc(
   method (obs :: gui.Obs).debounce(
-    ~duration: msec :: NonnegInt = 200
+    ~duration: msec :: Nat = 200
   ) :: Obs
 ){
 
@@ -181,7 +181,7 @@ An observable corresponds to @rhombus(#{obs?}) from
 
 @doc(
   method (obs :: gui.Obs).throttle(
-    ~duration: msec :: NonnegInt = 200
+    ~duration: msec :: Nat = 200
   ) :: Obs
 ){
 

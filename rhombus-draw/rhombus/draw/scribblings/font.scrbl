@@ -19,7 +19,7 @@
       ~smoothing: smoothing :: Font.Smoothing = #'default,
       ~hinting: hinting :: Font.Hinting = #'aligned,
       ~features:
-        features :: Map.of(Font.FeatureString, NonnegInt) = {},
+        features :: Map.of(Font.FeatureString, Nat) = {},
     )
 ){
 
@@ -44,7 +44,7 @@
   property (font :: draw.Font).smoothing :: Font.Smoothing
   property (font :: draw.Font).hinting :: Font.Hinting
   property (font :: draw.Font).features
-    :: Map.of(Font.FeatureString, NonnegInt)
+    :: Map.of(Font.FeatureString, Nat)
 ){
 
  Properties to access font components.

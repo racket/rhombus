@@ -38,7 +38,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  fun Bytes.make(length :: NonnegInt, byte :: Byte = 0)
+  fun Bytes.make(length :: Nat, byte :: Byte = 0)
     :: MutableBytes
 ){
 
@@ -53,7 +53,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  method (bstr :: Bytes).length() :: NonnegInt
+  method (bstr :: Bytes).length() :: Nat
 ){
 
  Returns the number of bytes in @rhombus(bstr).
@@ -67,7 +67,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  method (bstr :: Bytes).get(n :: NonnegInt) :: Byte
+  method (bstr :: Bytes).get(n :: Nat) :: Byte
 ){
 
  Equivalent to @rhombus(bstr[n]) (with the default implicit
@@ -83,7 +83,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  method (bstr :: Bytes).set(n :: NonnegInt, byte :: Byte)
+  method (bstr :: Bytes).set(n :: Nat, byte :: Byte)
     :: Void
 ){
 
@@ -120,8 +120,8 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 @doc(
   method (bstr :: Bytes).subbytes(rge :: Range)
     :: MutableBytes
-  method (bstr :: Bytes).subbytes(start :: NonnegInt,
-                                  end :: NonnegInt)
+  method (bstr :: Bytes).subbytes(start :: Nat,
+                                  end :: Nat)
     :: MutableBytes
 ){
 
@@ -159,10 +159,10 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 @doc(
   fun Bytes.copy_from(dest_bstr :: MutableBytes,
-                      dest_start :: NonnegInt,
+                      dest_start :: Nat,
                       src_bstr :: Bytes,
-                      src_start :: NonnegInt = 0,
-                      src_end :: NonnegInt = Bytes.length(src_bstr))
+                      src_start :: Nat = 0,
+                      src_end :: Nat = Bytes.length(src_bstr))
     :: Void
 ){
 
@@ -212,18 +212,18 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 @doc(
   method (bstr :: Bytes).utf8_string(
     err_char :: maybe(Char) = #false,
-    start :: NonnegInt = 0,
-    end :: NonnegInt = Bytes.length(bstr)
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
   ) :: String
   method (bstr :: Bytes).latin1_string(
     err_char :: maybe(Char) = #false,
-    start :: NonnegInt = 0,
-    end :: NonnegInt = Bytes.length(bstr)
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
   ) :: String
   method (bstr :: Bytes).locale_string(
     err_char :: maybe(Char) = #false,
-    start :: NonnegInt = 0,
-    end :: NonnegInt = Bytes.length(bstr)
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
   ) :: String
 ){
 

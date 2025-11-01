@@ -295,7 +295,7 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).get(n :: NonnegInt)
+  method (lst :: PairList).get(n :: Nat)
     :: Any.like_element(lst)
 ){
 
@@ -360,7 +360,7 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).length() :: NonnegInt
+  method (lst :: PairList).length() :: Nat
 ){
 
  Returns the number of items in @rhombus(lst).
@@ -412,9 +412,9 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).take(n :: NonnegInt)
+  method (lst :: PairList).take(n :: Nat)
     :: PairList.of(Any.like_element(lst))
-  method (lst :: PairList).take_last(n :: NonnegInt)
+  method (lst :: PairList).take_last(n :: Nat)
     :: PairList.of(Any.like_element(lst))
 ){
 
@@ -434,9 +434,9 @@ which case it supplies its elements in order.
 
 
 @doc(
-  method (lst :: PairList).drop(n :: NonnegInt)
+  method (lst :: PairList).drop(n :: Nat)
     :: PairList.of(Any.like_element(lst))
-  method (lst :: PairList).drop_last(n :: NonnegInt)
+  method (lst :: PairList).drop_last(n :: Nat)
     :: PairList.of(Any.like_element(lst))
 ){
 
@@ -499,7 +499,7 @@ which case it supplies its elements in order.
   method (lst :: PairList).find(pred :: Function.of_arity(1))
     :: Any.like_element(lst)
   method (lst :: PairList).find_index(pred :: Function.of_arity(1))
-    :: maybe(NonnegInt)
+    :: maybe(Nat)
 ){
 
  Like @rhombus(List.find) and @rhombus(List.index), but for @tech{pair
@@ -591,7 +591,7 @@ which case it supplies its elements in order.
 
 
 @doc(
-  fun PairList.iota(n :: NonnegInt) :: PairList.of(NonnegInt)
+  fun PairList.iota(n :: Nat) :: PairList.of(Nat)
 ){
 
  Returns a @tech{pair list} containing the integers 0 to @rhombus(n) (exclusive) in

@@ -1856,7 +1856,7 @@ block:
   check:
     [sequence_to_list((x..y).to_sequence()), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_to_list((x..=y).to_sequence()), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
-  fun sequence_take(xs :: Sequence, num :: NonnegInt):
+  fun sequence_take(xs :: Sequence, num :: Nat):
     for List (x in xs,
               _ in 0..num):
       x

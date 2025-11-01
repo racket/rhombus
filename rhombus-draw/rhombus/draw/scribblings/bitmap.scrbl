@@ -23,7 +23,7 @@
   property (bm :: draw.Bitmap).height :: PosInt
   property (bm :: draw.Bitmap).size :: Size
   property (bm :: draw.Bitmap).backing_scale :: Real.above(0.0)
-  property (bm :: draw.Bitmap).depth :: NonnegInt
+  property (bm :: draw.Bitmap).depth :: Nat
   property (bm :: draw.Bitmap).has_color :: Boolean
   property (bm :: draw.Bitmap).has_alpha :: Boolean
   property (bm :: draw.Bitmap).is_ok :: Boolean
@@ -45,10 +45,10 @@
 
 @doc(
   method (bm :: draw.Bitmap).argb_pixels(
-    ~x: x :: NonnegInt = 0,
-    ~y: y :: NonnegInt = 0,
-    ~width: width :: NonnegInt = width,
-    ~height: height :: NonnegInt = height,
+    ~x: x :: Nat = 0,
+    ~y: y :: Nat = 0,
+    ~width: width :: Nat = width,
+    ~height: height :: Nat = height,
     ~dest: dest :: Bytes = Bytes.make(width * height * 4),
   ) :: Bytes
 ){
@@ -60,10 +60,10 @@
 @doc(
   method (bm :: draw.Bitmap).set_argb_pixels(
     src :: Bytes,
-    ~x: x :: NonnegInt = 0,
-    ~y: y :: NonnegInt = 0,
-    ~width: width :: NonnegInt = width,
-    ~height: height :: NonnegInt = height,
+    ~x: x :: Nat = 0,
+    ~y: y :: Nat = 0,
+    ~width: width :: Nat = width,
+    ~height: height :: Nat = height,
   ) :: Void
 ){
 

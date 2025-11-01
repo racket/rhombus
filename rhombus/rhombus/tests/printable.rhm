@@ -224,6 +224,6 @@ check:
   Printable.current_page_width("oops")
   ~throws values(
     "Printable.current_page_width: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )

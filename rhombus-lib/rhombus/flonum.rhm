@@ -124,7 +124,7 @@ unsafeable.fun exp(x :~ Flonum) :~ Flonum:
 unsafeable.fun to_single(x :~ Flonum) :~ Flonum:
   rkt.flsingle(x)
 
-unsafeable.fun bit_field(x :~ Flonum, start :~ NonnegInt, end :~ NonnegInt) :~ Int:
+unsafeable.fun bit_field(x :~ Flonum, start :~ Nat, end :~ Nat) :~ Int:
   bit.#{flbit-field}(x, start, end)
 
 unsafeable.fun from_int(x :~ Int) :~ Flonum:

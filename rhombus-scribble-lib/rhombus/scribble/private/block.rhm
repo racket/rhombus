@@ -89,7 +89,7 @@ fun tabular(cells :: List.of(List.of(Cell)),
                  ~#{cell-properties}: convert_list_of_lists(cell_props),
                  ~#{sep-properties}: convert_list(sep_props))
 
-fun verbatim(~indent: indent :: NonnegInt = 0,
+fun verbatim(~indent: indent :: Nat = 0,
              [content :: Content, ...])
   :: FlowBlock:
     ~doc

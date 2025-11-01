@@ -122,8 +122,8 @@ macro 'leaf($arg, ...)':
   'Node(Array($arg, ...))'
 
 class TreeList(root :~ Node,
-               size :~ NonnegInt,
-               height :~ NonnegInt):
+               size :~ Nat,
+               height :~ Nat):
   implements Indexable
   private implements Equatable
   private implements Appendable
@@ -193,7 +193,7 @@ class TreeList(root :~ Node,
     let (node :~ Node, pos :~ Int) = node_for(index)
     node[pos]
 
-  private method node_for(index :~ NonnegInt) :~ (Node, Int):
+  private method node_for(index :~ Nat) :~ (Node, Int):
     cond
     | size == 0 || index < 0 || index >= size:
         error(#'#{TreeList.get}, "index out of range")
@@ -262,7 +262,7 @@ class TreeList(root :~ Node,
   // trees that are a result of this method may not meet invariants, but rebalancing is costly
   // and future concatenations would restore the invariants due to rebalancing being done on concats.
   // TODO write some tests showing this
-  method take(pos :~ NonnegInt) :~ TreeList:
+  method take(pos :~ Nat) :~ TreeList:
     cond
     | pos < 0 || pos > size:
         error(#'TreeList_take, "index out of range")
@@ -292,7 +292,7 @@ class TreeList(root :~ Node,
 
         squash(new_root, pos, height)
 
-  method drop(pos :~ NonnegInt) :~ TreeList:
+  method drop(pos :~ Nat) :~ TreeList:
     cond
     | pos < 0 || pos > size:
         error(#'TreeList_drop, "index out of range")
@@ -341,14 +341,14 @@ class TreeList(root :~ Node,
 
         squash(new_root, size - pos, height)
 
-  method split(at :~ NonnegInt) :~ (TreeList, TreeList):
+  method split(at :~ Nat) :~ (TreeList, TreeList):
     cond
     | at == 0: values(TreeList[], this)
     | at == size: values(this, TreeList[])
     | at > 0 && at < size: values(take(at), drop(at))
     | ~else: error(#'split, "invalid index")
 
-  method insert(at :~ NonnegInt, el) :~ TreeList:
+  method insert(at :~ Nat, el) :~ TreeList:
     cond
     | at <= 0:
         this.cons(el)
@@ -611,7 +611,7 @@ fun scan_sizes(sizes :~ Array.now_of(Int), target_index, i = 0) :~ Int:
   | i
 
 // calculate next branch to take and subindex of `index` along that path
-fun step(node :~ Node, index, depth) :~ (NonnegInt, NonnegInt):
+fun step(node :~ Node, index, depth) :~ (Nat, Nat):
   let sizes :~ Array = node.sizes
   def branch = scan_sizes(sizes, index, radix(index, depth))
   values(branch,

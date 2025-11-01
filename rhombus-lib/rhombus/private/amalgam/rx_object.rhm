@@ -158,8 +158,8 @@ class RX(private _rkt_partial_rx,
 
 fun from_handles(rx,
                  partial_rx,
-                 num_captures :: NonnegInt,
-                 vars :: Map.of(Symbol, NonnegInt),
+                 num_captures :: Nat,
+                 vars :: Map.of(Symbol, Nat),
                  ~has_backref: has_backref :: Any.to_boolean = #false,
                  ~source: source :: String = "rx'....'") :~ RX:
   fun bad(rx, mode):

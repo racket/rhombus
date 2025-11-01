@@ -66,14 +66,14 @@
       ~host: host :: maybe(String) = #false,
       ~port: port :: ListenPortNumber = 0,
       ~reuse: reuse = #false,
-      ~max_allow_wait: max_allow_wait :: NonnegInt = 4
+      ~max_allow_wait: max_allow_wait :: Nat = 4
     )
 
   fun TCP.listen(
       ~host: host :: maybe(String) = #false,
       ~port: port :: ListenPortNumber = 0,
       ~reuse: reuse = #false,
-      ~max_allow_wait: max_allow_wait :: NonnegInt = 4
+      ~max_allow_wait: max_allow_wait :: Nat = 4
   ) :: TCPListener
 ){
 

@@ -287,7 +287,7 @@
 }
 
 @doc(
-  fun filesystem.size(path :: PathString) :: NonnegInt
+  fun filesystem.size(path :: PathString) :: Nat
 ){
 
  Returns the size of the file referenced by @rhombus(path). An exception

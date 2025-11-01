@@ -130,7 +130,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).insert(n :: NonnegInt, elem :: Any)
+  method (mlst :: MutableList).insert(n :: Nat, elem :: Any)
     :: Void
 ){
 
@@ -184,7 +184,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).get(n :: NonnegInt)
+  method (mlst :: MutableList).get(n :: Nat)
     :: Any.like_element(mlst)
 ){
 
@@ -201,7 +201,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).set(n :: NonnegInt, v :: Any)
+  method (mlst :: MutableList).set(n :: Nat, v :: Any)
     :: Void
 ){
 
@@ -223,7 +223,7 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).delete(n :: NonnegInt)
+  method (mlst :: MutableList).delete(n :: Nat)
     :: Void
 ){
 
@@ -240,7 +240,7 @@ and it is not managed by a lock.
 }
 
 @doc(
-  method (mlst :: MutableList).length() :: NonnegInt
+  method (mlst :: MutableList).length() :: Nat
 ){
 
  Returns the number of items in @rhombus(mlst).
@@ -291,9 +291,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).take(n :: NonnegInt)
+  method (mlst :: MutableList).take(n :: Nat)
     :: Void
-  method (mlst :: MutableList).take_last(n :: NonnegInt)
+  method (mlst :: MutableList).take_last(n :: Nat)
     :: Void
 ){
 
@@ -320,9 +320,9 @@ and it is not managed by a lock.
 
 
 @doc(
-  method (mlst :: MutableList).drop(n :: NonnegInt)
+  method (mlst :: MutableList).drop(n :: Nat)
     :: Void
-  method (mlst :: MutableList).drop_last(n :: NonnegInt)
+  method (mlst :: MutableList).drop_last(n :: Nat)
     :: Void
 ){
 
@@ -350,8 +350,8 @@ and it is not managed by a lock.
 @doc(
   method (mlst :: MutableList).sublist(rge :: Range)
     :: Void
-  method (mlst :: MutableList).sublist(start :: NonnegInt,
-                                       end :: NonnegInt)
+  method (mlst :: MutableList).sublist(start :: Nat,
+                                       end :: Nat)
     :: Void
 ){
 
@@ -440,7 +440,7 @@ and it is not managed by a lock.
   method (lst :: MutableList).find(pred :: Function.of_arity(1))
     :: Any.like_element(mlst)
   method (lst :: MutableList).find_index(pred :: Function.of_arity(1))
-    :: maybe(NonnegInt)
+    :: maybe(Nat)
 ){
 
  Like @rhombus(List.find) and @rhombus(List.index), but for

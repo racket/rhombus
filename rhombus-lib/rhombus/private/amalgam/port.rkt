@@ -453,7 +453,7 @@
      (file-position p)]
     [(p pos)
      (check-port who p)
-     (unless (exact-nonnegative-integer? pos) (raise-annotation-failure who pos "NonnegInt"))
+     (unless (exact-nonnegative-integer? pos) (raise-annotation-failure who pos "Nat"))
      (file-position p pos)]))
 
 (define/method Port.locations_enabled

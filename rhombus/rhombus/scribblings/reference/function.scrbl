@@ -527,7 +527,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
 }
 
 @doc(
-  fun Function.count(x :: Any, ...) :: NonnegInt
+  fun Function.count(x :: Any, ...) :: Nat
 ){
 
  Returns the number of supplied @rhombus(x) arguments.

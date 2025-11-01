@@ -109,7 +109,7 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  fun String.make(len :: NonnegInt, c :: Char) :: String
+  fun String.make(len :: Nat, c :: Char) :: String
 ){
 
  Creates a string of length @rhombus(n) where every position in the
@@ -123,7 +123,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.length(str :: ReadableString) :: NonnegInt
+  method String.length(str :: ReadableString) :: Nat
 ){
 
  Returns the number of characters in @rhombus(str).
@@ -137,7 +137,7 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
-  method String.get(str :: ReadableString, n :: NonnegInt) :: Char
+  method String.get(str :: ReadableString, n :: Nat) :: Char
 ){
 
  Equivalent to @rhombus(str[n]) (with the default implicit
@@ -156,8 +156,8 @@ Strings are @tech{comparable}, which means that generic operations like
                           rge :: Range)
     :: String
   method String.substring(str :: ReadableString,
-                          start :: NonnegInt,
-                          end :: NonnegInt)
+                          start :: Nat,
+                          end :: Nat)
     :: String
 ){
 
@@ -187,7 +187,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.find(str :: ReadableString,
                      substr :: ReadableString)
-    :: maybe(NonnegInt)
+    :: maybe(Nat)
   method String.contains(str :: ReadableString,
                          substr :: ReadableString)
     :: Boolean
@@ -332,18 +332,18 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.utf8_bytes(str :: ReadableString,
                            err_byte :: maybe(Byte) = #false,
-                           start :: NonnegInt = 0,
-                           end :: NonnegInt = String.length(str))
+                           start :: Nat = 0,
+                           end :: Nat = String.length(str))
     :: Bytes
   method String.latin1_bytes(str :: ReadableString,
                              err_byte :: maybe(Byte) = #false,
-                             start :: NonnegInt = 0,
-                             end :: NonnegInt = String.length(str))
+                             start :: Nat = 0,
+                             end :: Nat = String.length(str))
     :: Bytes
   method String.locale_bytes(str :: ReadableString,
                              err_byte :: maybe(Byte) = #false,
-                             start :: NonnegInt = 0,
-                             end :: NonnegInt = String.length(str))
+                             start :: Nat = 0,
+                             end :: Nat = String.length(str))
     :: Bytes
 ){
 
@@ -514,9 +514,9 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   method String.grapheme_span(str :: ReadableString,
-                              start :: NonnegInt = 0,
-                              end :: NonnegInt = String.length(str))
-    :: NonnegInt
+                              start :: Nat = 0,
+                              end :: Nat = String.length(str))
+    :: Nat
 ){
 
  Returns the number of @tech{characters} (i.e., code points) in the
@@ -532,9 +532,9 @@ Strings are @tech{comparable}, which means that generic operations like
 
 @doc(
   method String.grapheme_count(str :: ReadableString,
-                               start :: NonnegInt = 0,
-                               end :: NonnegInt = String.length(str))
-    :: NonnegInt
+                               start :: Nat = 0,
+                               end :: Nat = String.length(str))
+    :: Nat
 ){
 
  Returns the number of grapheme clusters in

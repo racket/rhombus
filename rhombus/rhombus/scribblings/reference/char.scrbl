@@ -43,7 +43,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  method (ch :: Char).to_int() :: NonnegInt
+  method (ch :: Char).to_int() :: Nat
 ){
 
  Returns the Unicode value of a character.

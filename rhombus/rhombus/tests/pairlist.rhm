@@ -589,14 +589,14 @@ version_guard.at_least "8.14.0.4":
     (PairList[1, 2, 3] :~ PairList)["oops"]
     ~throws values(
       "PairList.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     (PairList[1, 2, 3] :~ PairList)[-1]
     ~throws values(
       "PairList.get: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 

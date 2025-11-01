@@ -197,7 +197,7 @@ check:
   (#"hello" :~ Bytes)["oops"]
   ~throws values(
     "Bytes.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
 
@@ -205,7 +205,7 @@ check:
   (#"hello" :~ Bytes)[-1]
   ~throws values(
     "Bytes.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
 
@@ -229,7 +229,7 @@ check:
   (#"hello".copy() :~ MutableBytes)["oops"] := 0
   ~throws values(
     "Bytes.set: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
 
@@ -237,7 +237,7 @@ check:
   (#"hello".copy() :~ MutableBytes)[-1] := 0
   ~throws values(
     "Bytes.set: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
 
@@ -274,28 +274,28 @@ version_guard.at_least "8.14.0.7":
     Bytes.make("oops")
     ~throws values(
       "Bytes.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     Bytes.make(-1)
     ~throws values(
       "Bytes.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
   check:
     Bytes.make("oops", 0)
     ~throws values(
       "Bytes.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     Bytes.make(-1, 0)
     ~throws values(
       "Bytes.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
   check:

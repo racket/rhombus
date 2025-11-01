@@ -46,7 +46,7 @@ related to OS-level pipes for communicating between different processes.
 
 @doc(
   method (port :: Port.Pipe).content_length()
-    :: NonnegInt
+    :: Nat
 ){
 
  Returns the number of bytes contained in a pipe, where @rhombus(port) is

@@ -80,7 +80,7 @@ check:
   (fun (x): #void) is_a Function.of_arity(#false, 1)
   ~throws values(
     "Function.of_arity: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(#false).msg,
   )
 

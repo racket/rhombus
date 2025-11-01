@@ -44,7 +44,7 @@
   (make-parameter 80
                   (lambda (v)
                     (unless (exact-nonnegative-integer? v)
-                      (raise-annotation-failure 'Printable.current_page_width v "NonnegInt"))
+                      (raise-annotation-failure 'Printable.current_page_width v "Nat"))
                     v)
                   'Printable.current_page_width
                   rhombus-realm))

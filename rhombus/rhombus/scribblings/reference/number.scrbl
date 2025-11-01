@@ -78,7 +78,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
  Matches exact integers: all of them, positive integers, negative
  integers, nonnegative integers, or integers in a given range. The
- @rhombus(Nat, ~annot) annotation is an alias for
+ @rhombus(Nat, ~annot) annotation is the preferred alias for
  @rhombus(NonnegInt, ~annot).
 
  The @rhombus(Int.in, ~annot) annotation constraints a integers to be
@@ -576,16 +576,16 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
     ~order: bitwise_disjunction
   operator (bits.not (n :: Int)) :: Int:
     ~order: bitwise_negation
-  operator ((n :: Int) bits.(<<) (m :: NonnegInt)) :: Int:
+  operator ((n :: Int) bits.(<<) (m :: Nat)) :: Int:
     ~order: bitwise_shift
-  operator ((n :: Int) bits.(>>) (m :: NonnegInt)) :: Int:
+  operator ((n :: Int) bits.(>>) (m :: Nat)) :: Int:
     ~order: bitwise_shift
-  operator ((n :: Int) bits.(?) (m :: NonnegInt)) :: Boolean:
+  operator ((n :: Int) bits.(?) (m :: Nat)) :: Boolean:
     ~order: bitwise_test
   fun bits.length(n :: Int) :: Int
   fun bits.field(n :: Int,
-                 start :: NonnegInt,
-                 end :: NonnegInt)
+                 start :: Nat,
+                 end :: Nat)
     :: Int
 ){
 

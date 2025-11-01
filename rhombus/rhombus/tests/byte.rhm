@@ -3,7 +3,7 @@
 check:
   Byte#"h" ~is 104
   Byte#"h" ~is_a Byte
-  Byte#"h" ~is_a NonnegInt
+  Byte#"h" ~is_a Nat
 
 block:
   fun matcher(byte):

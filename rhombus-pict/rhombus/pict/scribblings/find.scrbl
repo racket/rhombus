@@ -103,7 +103,7 @@
   method (finder :: Find).in(
     pict :: Pict,
     epoch :: Int = 0, n :: RealIn(0, 1) = 0,
-    ~nth: nth :: NonnegInt || matching(#'unique) = #'unique
+    ~nth: nth :: Nat || matching(#'unique) = #'unique
   ) :: values(Real, Real)
 ){
 
@@ -125,7 +125,7 @@
   method (finder :: Find).maybe_in(
     pict :: Pict,
     epoch :: Int = 0, n :: RealIn(0, 1) = 0,
-    ~nth: nth :: NonnegInt || matching(#'unique) = #'unique
+    ~nth: nth :: Nat || matching(#'unique) = #'unique
   ) :: values(Real, Real)
 ){
 

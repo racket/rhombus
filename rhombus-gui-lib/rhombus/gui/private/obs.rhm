@@ -154,10 +154,10 @@ class Obs(private _handle):
   method map(f :: Function.of_arity(1)) :: Obs:
     _Obs(easy.#{obs-map}(handle, f))
 
-  method debounce(~duration: duration :: NonnegInt = 200) :: Obs:
+  method debounce(~duration: duration :: Nat = 200) :: Obs:
     _Obs(easy.#{obs-debounce}(~duration: duration))
 
-  method throttle(~duration: duration :: NonnegInt = 200) :: Obs:
+  method throttle(~duration: duration :: Nat = 200) :: Obs:
     _Obs(easy.#{obs-throttle}(~duration: duration))
 
   export:

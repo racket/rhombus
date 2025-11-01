@@ -71,7 +71,7 @@ interface customizes the way that instances of a class print.
   fun Printable.render(
     pd :: PrintDesc,
     out :: Port.Output = stdout,
-    ~column: column :: NonnegInt = 0
+    ~column: column :: Nat = 0
   ) :: Void
 ){
 
@@ -103,7 +103,7 @@ interface customizes the way that instances of a class print.
     :: PrintDesc
   fun PrintDesc.newline()
     :: PrintDesc
-  fun PrintDesc.nest(n :: NonnegInt, pd :: PrintDesc)
+  fun PrintDesc.nest(n :: Nat, pd :: PrintDesc)
     :: PrintDesc
   fun PrintDesc.align(pd :: PrintDesc)
     :: PrintDesc
@@ -283,7 +283,7 @@ interface customizes the way that instances of a class print.
 @doc(
   fun PrintDesc.special(v :: Any,
                         alt_pd :: PrintDesc,
-                        ~length: length :: NonnegInt = 1,
+                        ~length: length :: Nat = 1,
                         ~mode: mode :: PrintDesc.SpecialMode
                                  = #'write_special)
     :: PrintDesc
@@ -325,7 +325,7 @@ interface customizes the way that instances of a class print.
 
 
 @doc(
-  Parameter.def Printable.current_page_width :: NonnegInt
+  Parameter.def Printable.current_page_width :: Nat
     = 80
 ){
 

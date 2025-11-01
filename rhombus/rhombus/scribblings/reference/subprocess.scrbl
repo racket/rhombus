@@ -131,7 +131,7 @@
 
 
 @doc(
-  property (subp :: subprocess.Subprocess).pid :: NonnegInt
+  property (subp :: subprocess.Subprocess).pid :: Nat
 ){
 
  Returns the operating system's process ID for a subprocess.

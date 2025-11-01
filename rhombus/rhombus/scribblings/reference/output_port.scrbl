@@ -188,10 +188,10 @@ an @deftech{output string port} writes to a @tech{byte string}.
 @doc(
   method (out :: Port.Output).write_bytes(
     bytes :: Bytes,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = bytes.length(),
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = bytes.length(),
     ~wait: wait :: Port.WaitMode = #'all
-  ) :: NonnegInt
+  ) :: Nat
 ){
 
  Writes bytes from the @rhombus(start) to @rhombus(end) substring of
@@ -217,9 +217,9 @@ an @deftech{output string port} writes to a @tech{byte string}.
 @doc(
   method (out :: Port.Output).write_string(
     str :: ReadableString,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = bytes.length()
-  ) :: NonnegInt
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = bytes.length()
+  ) :: Nat
 ){
 
  Like @rhombus(Port.Output.write_bytes) with @rhombus(#'all) waiting,

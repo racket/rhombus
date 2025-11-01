@@ -249,7 +249,7 @@ class Pict():
   abstract protected method _time_pad(before :: Int, after :: Int) :~ Pict
   abstract method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict
-  method delay(n :: NonnegInt) :~ Pict: time_clip(~keep: #'after).time_pad(~before: 1)
+  method delay(n :: Nat) :~ Pict: time_clip(~keep: #'after).time_pad(~before: 1)
   abstract method sustain(n :: Int = 1) :~ Pict
   abstract method nonsustaining() :~ Pict
   abstract method epoch_set_extent(i :: Int, extent :: NonnegReal) :~ Pict
@@ -557,7 +557,7 @@ class StaticPict(private _handle,
     | this
     | convert([this], #'center, #'pad, fun ([p], dt, n): p).epoch_set_metadata(i, metadata)
 
-  override time_insert(at_epoch :: Int, n_epochs :: NonnegInt = 1):
+  override time_insert(at_epoch :: Int, n_epochs :: Nat = 1):
     if at_epoch == 0
     | sustain(n_epochs)
     | this
@@ -1467,7 +1467,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
           #false)
 
   method in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
-            ~nth: nth :: NonnegInt || matching(#'unique) = #'unique):
+            ~nth: nth :: Nat || matching(#'unique) = #'unique):
     let (x, y) = find(p, q, epoch, n, nth)
     if x
     | values(x, y)
@@ -1479,7 +1479,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
             error.val(~label: "in pict", p))
 
   method maybe_in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
-                  ~nth: nth :: NonnegInt || matching(#'unique) = #'unique):
+                  ~nth: nth :: Nat || matching(#'unique) = #'unique):
     let (x, y) = find(p, q, epoch, n, nth)
     if x
     | values(x, y)

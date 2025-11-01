@@ -31,7 +31,7 @@ class TCPListener(_handle):
   constructor (~host: host :: maybe(String) = #false,
                ~port: port :: ListenPortNumber = 0,
                ~reuse: reuse = #false,
-               ~max_allow_wait: max_allow_wait :: NonnegInt = 4):
+               ~max_allow_wait: max_allow_wait :: Nat = 4):
     ~who: who
     local_error_adjust { #'#{tcp-listen}: who }:
       super(tcp.#{tcp-listen}(port, max_allow_wait, reuse, host))
@@ -86,7 +86,7 @@ namespace TCP:
   fun listen(~host: host :: maybe(String) = #false,
              ~port: port :: ListenPortNumber = 0,
              ~reuse: reuse = #false,
-             ~max_allow_wait: max_allow_wait :: NonnegInt = 4) :~ TCPListener:
+             ~max_allow_wait: max_allow_wait :: Nat = 4) :~ TCPListener:
     TCPListener(~host: host, ~port: port, ~max_allow_wait: max_allow_wait, ~reuse: reuse)
 
   annot.macro 'Port':
@@ -127,10 +127,10 @@ class UDP(_handle):
       rkt.#{udp-bind!}(_handle, host, port, reuse)
 
   method receive(bytes :: MutableBytes,
-                 start_pos :: NonnegInt = 0,
-                 end_pos :: NonnegInt = bytes.length(),
+                 start_pos :: Nat = 0,
+                 end_pos :: Nat = bytes.length(),
                  ~wait: wait :: Port.WaitMode && !matching(#'all) = #'some)
-    :~ values(maybe(NonnegInt), maybe(String), maybe(PortNumber)):
+    :~ values(maybe(Nat), maybe(String), maybe(PortNumber)):
       ~who: who
       match wait
       | #'some:
@@ -146,8 +146,8 @@ class UDP(_handle):
   method send_to(~host: host :: String,
                  ~port: port :: PortNumber,
                  bytes :: Bytes,
-                 start_pos :: NonnegInt = 0,
-                 end_pos :: NonnegInt = bytes.length(),
+                 start_pos :: Nat = 0,
+                 end_pos :: Nat = bytes.length(),
                  ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
     ~who: who
     match wait
@@ -162,8 +162,8 @@ class UDP(_handle):
           rkt.#{udp-send-to/enable-break}(_handle, host, port, bytes, start_pos, end_pos)
 
   method receive_evt(bytes :: MutableBytes,
-                     start_pos :: NonnegInt = 0,
-                     end_pos :: NonnegInt = bytes.length()) :~ Evt:
+                     start_pos :: Nat = 0,
+                     end_pos :: Nat = bytes.length()) :~ Evt:
     ~who: who
     local_error_adjust { #'#{udp-receive!-evt}: who }:
       ReceiveEvt(rkt.#{udp-receive!-evt}(_handle, bytes, start_pos, end_pos))
@@ -171,8 +171,8 @@ class UDP(_handle):
   method send_to_evt(~host: host :: String,
                      ~port: port :: PortNumber,
                      bytes :: Bytes,
-                     start_pos :: NonnegInt = 0,
-                     end_pos :: NonnegInt = bytes.length()) :~ Evt:
+                     start_pos :: Nat = 0,
+                     end_pos :: Nat = bytes.length()) :~ Evt:
     ~who: who
     local_error_adjust { #'#{udp-send-to-evt}: who }:
       SendEvt(rkt.#{udp-send-to-evt}(_handle, host, port, bytes, start_pos, end_pos))
@@ -184,8 +184,8 @@ class UDP(_handle):
       rkt.#{udp-connect!}(_handle, host, port)
 
   method send(bytes :: Bytes,
-              start_pos :: NonnegInt = 0,
-              end_pos :: NonnegInt = bytes.length(),
+              start_pos :: Nat = 0,
+              end_pos :: Nat = bytes.length(),
               ~wait: wait :: Port.WaitMode && !matching(#'some) = #'all):
     ~who: who
     match wait
@@ -200,8 +200,8 @@ class UDP(_handle):
           rkt.#{udp-send/enable-break}(_handle, bytes, start_pos, end_pos)
 
   method send_evt(bytes :: Bytes,
-                  start_pos :: NonnegInt = 0,
-                  end_pos :: NonnegInt = bytes.length()) :~ Evt:
+                  start_pos :: Nat = 0,
+                  end_pos :: Nat = bytes.length()) :~ Evt:
     ~who: who
     local_error_adjust { #'#{udp-send-evt}: who }:
       SendEvt(rkt.#{udp-send-evt}(_handle, bytes, start_pos, end_pos))

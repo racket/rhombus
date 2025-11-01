@@ -109,7 +109,7 @@
 
 (define (check-nonneg-int who n)
   (unless (exact-nonnegative-integer? n)
-    (raise-annotation-failure who n "NonnegInt")))
+    (raise-annotation-failure who n "Nat")))
 
 (define/arity (PrintDesc.concat . pds)
   (PrintDesc

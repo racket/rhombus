@@ -1038,7 +1038,7 @@
 (define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
 
 (void (set-primitive-contract! 'exact-integer? "Int"))
-(void (set-primitive-contract! 'exact-nonnegative-integer? "NonnegInt"))
+(void (set-primitive-contract! 'exact-nonnegative-integer? "Nat"))
 (void (set-primitive-contract! 'number? "Number"))
 (void (set-primitive-contract! 'integer? "Integral"))
 (void (set-primitive-contract! 'real? "Real"))

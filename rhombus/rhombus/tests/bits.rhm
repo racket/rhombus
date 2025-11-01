@@ -54,12 +54,12 @@ check:
   )
   1 bits.(<<) "oops" ~throws values(
     "bits.(<<): " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
   1 bits.(<<) -1 ~throws values(
     "bits.(<<): " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
   "oops" bits.(>>) 2 ~throws values(
@@ -69,12 +69,12 @@ check:
   )
   1 bits.(>>) "oops" ~throws values(
     "bits.(>>): " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
   1 bits.(>>) -1 ~throws values(
     "bits.(>>): " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
   "oops" bits.(?) 2 ~throws values(
@@ -87,12 +87,12 @@ version_guard.at_least "8.14.0.2":
   check:
     1 bits.(?) "oops" ~throws values(
       "bits.(?): " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
     1 bits.(?) -1 ~throws values(
       "bits.(?): " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 
@@ -112,22 +112,22 @@ version_guard.at_least "8.14.0.2":
   check:
     bits.field(1, "oops", 3) ~throws values(
       "bits.field: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
     bits.field(1, -1, 3) ~throws values(
       "bits.field: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
     bits.field(1, 2, "oops") ~throws values(
       "bits.field: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
     bits.field(1, 2, -1) ~throws values(
       "bits.field: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
     // NOTE different messages on CS vs. BC

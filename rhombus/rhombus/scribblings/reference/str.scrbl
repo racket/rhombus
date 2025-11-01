@@ -36,9 +36,9 @@
 @doc(
   fun str.s(v :: Any,
             ~mode: mode :: PrintMode = #'text,
-            ~width: width :: maybe(NonnegInt) = #false,
-            ~min_width: min_width :: maybe(NonnegInt) = width,
-            ~max_width: max_width :: maybe(NonnegInt) = width,
+            ~width: width :: maybe(Nat) = #false,
+            ~min_width: min_width :: maybe(Nat) = width,
+            ~max_width: max_width :: maybe(Nat) = width,
             ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align)
@@ -82,9 +82,9 @@
 
 @doc(
   fun str.d(n :: Int,
-            ~width: width :: maybe(NonnegInt) = #false,
-            ~min_width: min_width :: maybe(NonnegInt) = width,
-            ~max_width: max_width :: maybe(NonnegInt) = width,
+            ~width: width :: maybe(Nat) = #false,
+            ~min_width: min_width :: maybe(Nat) = width,
+            ~max_width: max_width :: maybe(Nat) = width,
             ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align,
@@ -137,11 +137,11 @@
 
 @doc(
   fun str.f(n :: Real,
-            ~precision: precision :: NonnegInt = 6,
+            ~precision: precision :: Nat = 6,
             ~keep_decimal: keep_decimal :: Any = #false,
-            ~width: width :: maybe(NonnegInt) = #false,
-            ~min_width: min_width :: maybe(NonnegInt) = width,
-            ~max_width: max_width :: maybe(NonnegInt) = width,
+            ~width: width :: maybe(Nat) = #false,
+            ~min_width: min_width :: maybe(Nat) = width,
+            ~max_width: max_width :: maybe(Nat) = width,
             ~pad: pad :: Char = Char" ",
             ~align: align :: str.Align = #'left,
             ~clip_align: clip_align :: str.Align = align,

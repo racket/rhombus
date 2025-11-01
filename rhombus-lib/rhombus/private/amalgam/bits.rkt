@@ -42,7 +42,7 @@
 
 (define (check-nonneg-int who n)
   (unless (exact-nonnegative-integer? n)
-    (raise-annotation-failure who n "NonnegInt")))
+    (raise-annotation-failure who n "Nat")))
 
 (define (arithmetic-shift-left a b)
   (define who '|bits.(<<)|)

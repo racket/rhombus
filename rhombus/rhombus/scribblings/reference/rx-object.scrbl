@@ -255,8 +255,8 @@
 @doc(
   fun RX.from_handles(handle,
                       in_handle,
-                      num_captures :: NonnegInt,
-                      vars :: Map.of(Symbol, NonnegInt),
+                      num_captures :: Nat,
+                      vars :: Map.of(Symbol, Nat),
                       ~has_backref: has_backref = #false,
                       ~source: source :: String = "rx '....'")
     :: RX

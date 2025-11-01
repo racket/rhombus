@@ -24,7 +24,7 @@ encoding and decoding.
     ~scheme: scheme :: maybe(String) = #false,
     ~user: user :: maybe(String) = #false,
     ~host: host :: maybe(String) = #false,
-    ~port: port :: maybe(NonnegInt) = #false,
+    ~port: port :: maybe(Nat) = #false,
     ~is_path_absolute: is_path_absolute :: Boolean = #false,
     ~path: path :: List.of(PathWithParams) = [],
     ~query: query :: List.of(KeyValue) = [],

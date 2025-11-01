@@ -507,7 +507,7 @@ check:
   ("oops" :~ ReadableString)["oops"]
   ~throws values(
     "String.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
 
@@ -515,7 +515,7 @@ check:
   ("oops" :~ ReadableString)[-1]
   ~throws values(
     "String.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
 
@@ -536,14 +536,14 @@ version_guard.at_least "8.14.0.7":
     String.make("oops", Char"a")
     ~throws values(
       "String.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     String.make(-1, Char"a")
     ~throws values(
       "String.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
   check:

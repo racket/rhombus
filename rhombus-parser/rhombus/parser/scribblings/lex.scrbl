@@ -156,7 +156,7 @@ match. Still, the same syntax is used as much as possible, and the
   input for the start of @rhombus(lexeme), assuming that the input port
   has location counting enabled.}
 
-  @item{@rhombus(column :: maybe(NonnegInt)): the column within the
+  @item{@rhombus(column :: maybe(Nat)): the column within the
   input for the start of @rhombus(lexeme), assuming that the input port
   has location counting enabled.}
 
@@ -165,15 +165,15 @@ match. Still, the same syntax is used as much as possible, and the
   even without location counting enabled (in which case it's a byte count,
   instead of a character count).}
 
-  @item{@rhombus(span :: maybe(NonnegInt)): the length of
+  @item{@rhombus(span :: maybe(Nat)): the length of
   @rhombus(lexeme) in characters or bytes, depending on whether location
   counting is enabled.}
 
-  @item{@rhombus(line_span :: maybe(NonnegInt)): difference between the
+  @item{@rhombus(line_span :: maybe(Nat)): difference between the
   ending and starting lines for @rhombus(lexeme) if location counting is
   enabled.}
 
-  @item{@rhombus(end_column :: maybe(NonnegInt)): the column for the end
+  @item{@rhombus(end_column :: maybe(Nat)): the column for the end
   of @rhombus(lexeme) if location counting is enabled.}
 
   @item{@rhombus(input_port :: Port.Input): the input port provided to

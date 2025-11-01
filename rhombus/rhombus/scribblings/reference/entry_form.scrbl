@@ -29,7 +29,7 @@ Functions are typically documented using a @rhombus(fun) form:
 @nested(~style: #'inset){
 @doc(
   non_target:
-    fun fib(n :: NonnegInt) :: NonnegInt
+    fun fib(n :: Nat) :: Nat
 ){}
 }
 
@@ -41,7 +41,7 @@ may shown as separate @rhombus(fun) forms, instead of using multi-case
 @nested(~style: #'inset){
 @doc(
   non_target:
-    fun fib(n :: NonnegInt) :: NonnegInt
+    fun fib(n :: Nat) :: Nat
   non_target:
     fun fib(n :: Flonum) :: Flonum
 ){}

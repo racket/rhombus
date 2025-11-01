@@ -141,7 +141,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 
 @doc(
-  method (in :: Port.Input).read_bytes(amount :: NonnegInt)
+  method (in :: Port.Input).read_bytes(amount :: Nat)
     :: Bytes || Port.EOF
 ){
 
@@ -159,10 +159,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (in :: Port.Input).read_bytes_to(
     bytes :: MutableBytes,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = bytes.length(),
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = bytes.length(),
     ~wait: wait :: Port.WaitMode = #'all
-  ) :: NonnegInt || Port.EOF
+  ) :: Nat || Port.EOF
 ){
 
  Like @rhombus(Port.Input.read_bytes), but delivering the read bytes to
@@ -209,7 +209,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 
 @doc(
-  method (in :: Port.Input).read_string(amount :: NonnegInt)
+  method (in :: Port.Input).read_string(amount :: Nat)
     :: String || Port.EOF
 ){
 
@@ -232,9 +232,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (in :: Port.Input).read_string_to(
     str :: String,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = str.length()
-  ) :: NonnegInt || Port.EOF
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = str.length()
+  ) :: Nat || Port.EOF
 ){
 
 
@@ -321,7 +321,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 @doc(
   method (in :: Port.Input).peek_byte(
-    ~skip_bytes: skip :: NonnegInt = 0,
+    ~skip_bytes: skip :: Nat = 0,
     ~special_wrap: special_wrap :: maybe(Any -> Any) = #false,
     ~source_name: source_name :: Any = #false
   ):: Byte || Port.EOF
@@ -334,8 +334,8 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 @doc(
   method (in :: Port.Input).peek_bytes(
-    amount :: NonnegInt,
-    ~skip_bytes: skip :: NonnegInt = 0
+    amount :: Nat,
+    ~skip_bytes: skip :: Nat = 0
   ) :: Bytes || Port.EOF
 ){
 
@@ -348,12 +348,12 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (in :: Port.Input).peek_bytes_to(
     bytes :: MutableBytes,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = bytes.length(),
-    ~skip_bytes: skip :: NonnegInt = 0,
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = bytes.length(),
+    ~skip_bytes: skip :: Nat = 0,
     ~wait: wait :: Port.WaitMode = #'all,
     ~progress: progress :: maybe(ProgressEvt) = #false
-  ) :: NonnegInt || Port.EOF
+  ) :: Nat || Port.EOF
 ){
 
  Like @rhombus(Port.Input.peek_bytes), but delivering the read bytes to
@@ -371,7 +371,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 @doc(
   method (in :: Port.Input).peek_char(
-    ~skip_bytes: skip :: NonnegInt = 0,
+    ~skip_bytes: skip :: Nat = 0,
     ~special_wrap: special_wrap :: maybe(Any -> Any) = #false,
     ~source_name: source_name :: Any = #false
   ) :: Char || Port.EOF
@@ -385,8 +385,8 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 @doc(
   method (in :: Port.Input).peek_string(
-    amount :: NonnegInt,
-    ~skip_bytes: skip :: NonnegInt = 0
+    amount :: Nat,
+    ~skip_bytes: skip :: Nat = 0
   ) :: String || Port.EOF
 ){
 
@@ -399,10 +399,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (in :: Port.Input).peek_string_to(
     str :: MutableString,
-    ~start: start :: NonnegInt = 0,
-    ~end: end :: NonnegInt = str.length(),
-    ~skip_bytes: skip :: NonnegInt = 0
-  ) :: NonnegInt || Port.EOF
+    ~start: start :: Nat = 0,
+    ~end: end :: Nat = str.length(),
+    ~skip_bytes: skip :: Nat = 0
+  ) :: Nat || Port.EOF
 ){
 
  Like @rhombus(Port.Input.peek_string), but delivering decoded
@@ -438,7 +438,7 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 @doc(
   method (port :: Port.Input.Progress).commit(
-    amt :: NonnegInt,
+    amt :: Nat,
     progress :: ProgressEvt,
     evt :: CommitEvt
   ) :: Boolean

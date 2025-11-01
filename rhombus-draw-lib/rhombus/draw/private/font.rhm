@@ -27,7 +27,7 @@ class Font(private _handle):
                ~has_underline: has_underline :: Any.to_boolean = #false,
                ~smoothing: smoothing :: Font.Smoothing = #'default,
                ~hinting: hinting :: Font.Hinting = #'aligned,
-               ~features: features :: Map.of(Font.FeatureString, NonnegInt) = {}):
+               ~features: features :: Map.of(Font.FeatureString, Nat) = {}):
     let hand:
       if name
       | rkt.make_object(rkt.#{font%}, size, name, kind, style, weight, has_underline,

@@ -66,8 +66,8 @@ output; it is possible for an object to be both an input and output port.
 
 
 @doc(
-  method (port :: Port).position() :: NonnegInt
-  method (port :: Port).position(pos :: NonnegInt || Port.EOF) :: Void
+  method (port :: Port).position() :: Nat
+  method (port :: Port).position(pos :: Nat || Port.EOF) :: Void
 ){
 
  Gets or sets (if supported) a port's position, which represents an
@@ -117,10 +117,10 @@ output; it is possible for an object to be both an input and output port.
   Parameter.def Port.current_enable_locations
     :: Any.to_boolean
   method (port :: Port).next_location()
-    :: values(maybe(PosInt), maybe(NonnegInt), maybe(PosInt))
+    :: values(maybe(PosInt), maybe(Nat), maybe(PosInt))
   method (port :: Port).next_location(
     line :: maybe(PosInt),
-    column :: maybe(NonnegInt),
+    column :: maybe(Nat),
     offset :: maybe(PosInt)
   ) :: Void
 ){

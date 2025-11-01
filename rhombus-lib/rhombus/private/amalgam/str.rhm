@@ -109,9 +109,9 @@ namespace str:
                          $str':
     let '($kw: $arg :: $res ...,
           ...)':
-      '(~width: width :: maybe(NonnegInt) = #false,
-        ~min_width: min_width :: maybe(NonnegInt) = width,
-        ~max_width: max_width :: maybe(NonnegInt) = width,
+      '(~width: width :: maybe(Nat) = #false,
+        ~min_width: min_width :: maybe(Nat) = width,
+        ~max_width: max_width :: maybe(Nat) = width,
         ~pad: pad :: Char = Char" ",
         ~align: align :: Align = #'left,
         ~clip_align: clip_align :: Align = align,
@@ -145,7 +145,7 @@ namespace str:
   def_int b (fun (n): base.format("~b", n))
 
   def_num f(n :: Real,
-            ~precision: precision :: NonnegInt = 6,
+            ~precision: precision :: Nat = 6,
             ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = "."):
     real_to_string(n,
@@ -155,7 +155,7 @@ namespace str:
                    ~decimal: decimal)
 
   def_num e(n :: Real,
-            ~precision: precision :: NonnegInt = 6,
+            ~precision: precision :: Nat = 6,
             ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = ".",
             ~exponent: exponent :: String = "e"):
@@ -167,7 +167,7 @@ namespace str:
                    ~exponent: exponent)
 
   def_num g(n :: Real,
-            ~precision: precision :: NonnegInt = 6,
+            ~precision: precision :: Nat = 6,
             ~keep_decimal: keep_decimal :: Any.to_boolean = #false,
             ~decimal: decimal :: String = ".",
             ~exponent: exponent :: String = "e"):
@@ -297,9 +297,9 @@ namespace str:
     s
   fun s(v :: Any,
         ~mode: mode :: PrintMode = #'text,
-        ~width: width :: maybe(NonnegInt) = #false,
-        ~min_width: min_width :: maybe(NonnegInt) = width,
-        ~max_width: max_width :: maybe(NonnegInt) = width,
+        ~width: width :: maybe(Nat) = #false,
+        ~min_width: min_width :: maybe(Nat) = width,
+        ~max_width: max_width :: maybe(Nat) = width,
         ~pad: pad :: Char = Char" ",
         ~align: align :: Align = #'left,
         ~clip_align: clip_align :: Align = #'left) :~ String:

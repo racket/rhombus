@@ -145,7 +145,7 @@
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)
-    (raise-annotation-failure who v "NonnegInt")))
+    (raise-annotation-failure who v "Nat")))
 
 (define-syntax (array-build-convert arg-id build-convert-stxs kws data)
   (with-syntax ([[(annot-str . _) _] data])

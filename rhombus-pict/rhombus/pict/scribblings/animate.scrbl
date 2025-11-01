@@ -330,7 +330,7 @@
 
 @doc(
   method (pict :: Pict).time_insert(epoch :: Int,
-                                    n_epochs :: NonnegInt) :: Pict
+                                    n_epochs :: Nat) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but potentially with
@@ -547,11 +547,11 @@
     ~start: start :: Int = 0,
     ~end: end :: Int = math.max(p.duration, start),
     ~steps: steps :: PosInt = 4,
-    ~steps_before: steps_before :: NonnegInt = 0,
-    ~steps_after: steps_after :: NonnegInt = 0,
+    ~steps_before: steps_before :: Nat = 0,
+    ~steps_after: steps_after :: Nat = 0,
     ~show_timebox: show_timebox = #true,
-    ~pad_before: pad_before :: NonnegInt = 0,
-    ~pad_after: pad_after :: NonnegInt = 0
+    ~pad_before: pad_before :: Nat = 0,
+    ~pad_after: pad_after :: Nat = 0
   ) :: Pict
 ){
 

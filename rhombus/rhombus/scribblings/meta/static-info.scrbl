@@ -108,7 +108,7 @@
 @doc(
   ~meta
   fun statinfo_meta.check_function_arity(arity :: Syntax,
-                                         num_args :: NonnegInt,
+                                         num_args :: Nat,
                                          arg_kws :: List.of(Keyword))
     :: Boolean
 ){

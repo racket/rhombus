@@ -262,7 +262,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  method (lst :: List).insert(n :: NonnegInt, elem :: Any)
+  method (lst :: List).insert(n :: Nat, elem :: Any)
     :: List.of(Any.like_element(lst) || Any.like(elem))
 ){
 
@@ -344,7 +344,7 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).get(n :: NonnegInt)
+  method (lst :: List).get(n :: Nat)
     :: Any.like_element(lst)
 ){
 
@@ -410,7 +410,7 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).delete(n :: NonnegInt)
+  method (lst :: List).delete(n :: Nat)
     :: List.of(Any.like_element(lst))
 ){
 
@@ -425,7 +425,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  method (lst :: List).set(n :: NonnegInt, v :: Any)
+  method (lst :: List).set(n :: Nat, v :: Any)
     :: List.of(Any.like_element(lst) || Any.like(elemv))
 ){
 
@@ -443,7 +443,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  method (lst :: List).length() :: NonnegInt
+  method (lst :: List).length() :: Nat
 ){
 
  Returns the number of items in @rhombus(lst).
@@ -495,9 +495,9 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).take(n :: NonnegInt)
+  method (lst :: List).take(n :: Nat)
     :: List.of(Any.like_element(lst))
-  method (lst :: List).take_last(n :: NonnegInt)
+  method (lst :: List).take_last(n :: Nat)
     :: List.of(Any.like_element(lst))
 ){
 
@@ -521,9 +521,9 @@ it supplies its elements in order.
 
 
 @doc(
-  method (lst :: List).drop(n :: NonnegInt)
+  method (lst :: List).drop(n :: Nat)
     :: List.of(Any.like_element(lst))
-  method (lst :: List).drop_last(n :: NonnegInt)
+  method (lst :: List).drop_last(n :: Nat)
     :: List.of(Any.like_element(lst))
 ){
 
@@ -548,8 +548,8 @@ it supplies its elements in order.
 @doc(
   method (lst :: List).sublist(rge :: Range)
     :: List.of(Any.like_element(lst))
-  method (lst :: List).sublist(start :: NonnegInt,
-                               end :: NonnegInt)
+  method (lst :: List).sublist(start :: Nat,
+                               end :: Nat)
     :: List.of(Any.like_element(lst))
 ){
 
@@ -618,7 +618,7 @@ it supplies its elements in order.
   method (lst :: List).find(pred :: Function.of_arity(1))
     :: Any.like_element(lst)
   method (lst :: List).find_index(pred :: Function.of_arity(1))
-    :: maybe(NonnegInt)
+    :: maybe(Nat)
 ){
 
  The @rhombus(List.find) function finds the first element of
@@ -723,7 +723,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.iota(n :: NonnegInt) :: List.of(NonnegInt)
+  fun List.iota(n :: Nat) :: List.of(Nat)
 ){
 
  Returns a list containing the integers 0 to @rhombus(n) (exclusive) in

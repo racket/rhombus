@@ -133,7 +133,7 @@
 
 @examples(
   ~defn:
-    fun get_fruit(n :: NonnegInt):
+    fun get_fruit(n :: Nat):
       match n
       | 0: values()
       | 1: "apple"

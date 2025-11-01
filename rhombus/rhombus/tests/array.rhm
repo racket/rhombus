@@ -452,7 +452,7 @@ check:
   (Array(1, 2, 3) :~ Array)["oops"]
   ~throws values(
     "Array.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
 
@@ -460,7 +460,7 @@ check:
   (Array(1, 2, 3) :~ Array)[-1]
   ~throws values(
     "Array.get: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
 
@@ -484,7 +484,7 @@ check:
   (Array(1, 2, 3) :~ MutableArray)["oops"] := 0
   ~throws values(
     "Array.set: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val("oops").msg,
   )
 
@@ -492,7 +492,7 @@ check:
   (Array(1, 2, 3) :~ MutableArray)[-1] := 0
   ~throws values(
     "Array.set: " ++ error.annot_msg(),
-    error.annot("NonnegInt").msg,
+    error.annot("Nat").msg,
     error.val(-1).msg,
   )
 
@@ -535,28 +535,28 @@ version_guard.at_least "8.14.0.7":
     Array.make("oops")
     ~throws values(
       "Array.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     Array.make(-1)
     ~throws values(
       "Array.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
   check:
     Array.make("oops", 0)
     ~throws values(
       "Array.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val("oops").msg,
     )
   check:
     Array.make(-1, 0)
     ~throws values(
       "Array.make: " ++ error.annot_msg(),
-      error.annot("NonnegInt").msg,
+      error.annot("Nat").msg,
       error.val(-1).msg,
     )
 

@@ -333,7 +333,7 @@ namespace filesystem:
               not_a_path_error(who, src_path)
         recur(src_path, dest_path)
 
-  fun size(path :: PathString) :: NonnegInt:
+  fun size(path :: PathString) :: Nat:
     ~who: who
     rkt_error.local_error_adjust { #'#{file-size}: who }:
       rkt.#{file-size}(path)

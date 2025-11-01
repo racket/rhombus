@@ -22,7 +22,7 @@ fun nonbreaking(pre_content :: PreContent) :: Element:
   ~doc
   base.nonbreaking(pre_content)
 
-fun hspace(n :: NonnegInt) :: Element:
+fun hspace(n :: Nat) :: Element:
   ~doc
   base.hspace(n)
 

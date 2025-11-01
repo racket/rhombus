@@ -170,7 +170,7 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.make(length :: NonnegInt, val :: Any = 0)
+  fun Array.make(length :: Nat, val :: Any = 0)
     :: MutableArray
 ){
 
@@ -197,7 +197,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).get(n :: NonnegInt)
+  method (arr :: Array).get(n :: Nat)
     :: Any.like_element(arr)
 ){
 
@@ -215,7 +215,7 @@ contents, even if one is mutable and the other is immutable.
 
 @doc(
   method Array.set(arr :: MutableArray,
-                   n :: NonnegInt,
+                   n :: Nat,
                    val :: Any)
     :: Void
 ){
@@ -268,8 +268,8 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).copy(start :: NonnegInt = 0,
-                             end :: NonnegInt = Array.length(arr))
+  method (arr :: Array).copy(start :: Nat = 0,
+                             end :: Nat = Array.length(arr))
     :: MutableArray
 ){
 
@@ -293,10 +293,10 @@ contents, even if one is mutable and the other is immutable.
 
 @doc(
   fun Array.copy_from(dest_arr :: MutableArray,
-                      dest_start :: NonnegInt,
+                      dest_start :: Nat,
                       src_arr :: Array,
-                      src_start :: NonnegInt = 0,
-                      src_end :: NonnegInt = Array.length(src_arr))
+                      src_start :: Nat = 0,
+                      src_end :: Nat = Array.length(src_arr))
     :: Void
 ){
 
@@ -329,13 +329,13 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  method (arr :: Array).take(n :: NonnegInt)
+  method (arr :: Array).take(n :: Nat)
     :: MutableArray
-  method (arr :: Array).take_last(n :: NonnegInt)
+  method (arr :: Array).take_last(n :: Nat)
     :: MutableArray
-  method (arr :: Array).drop(n :: NonnegInt)
+  method (arr :: Array).drop(n :: Nat)
     :: MutableArray
-  method (arr :: Array).drop_last(n :: NonnegInt)
+  method (arr :: Array).drop_last(n :: Nat)
     :: MutableArray
 ){
 
@@ -353,7 +353,7 @@ contents, even if one is mutable and the other is immutable.
 
 
 @doc(
-  method (arr :: Array).set_in_copy(n :: NonnegInt, val :: Any)
+  method (arr :: Array).set_in_copy(n :: Nat, val :: Any)
     :: MutableArray
 ){
 

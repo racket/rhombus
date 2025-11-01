@@ -277,7 +277,7 @@
 
   (define/arity (statinfo_meta.check_function_arity stx n kws)
     (check-syntax who stx)
-    (unless (exact-nonnegative-integer? n) (raise-annotation-failure who n "NonnegInt"))
+    (unless (exact-nonnegative-integer? n) (raise-annotation-failure who n "Nat"))
     (unless (and (treelist? kws)
                  (for/and ([e (in-treelist kws)])
                    (keyword? e)))
