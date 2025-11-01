@@ -25,6 +25,7 @@
                     Keyword
                     String
                     Int
+                    Nat
                     Number
                     Boolean
                     Literal))
@@ -111,6 +112,12 @@
                     (and (not (symbol? v))
                          (not (pair? v))))))
 
+(define-syntax-class :exact-nonnegative-integer
+  #:description "literal nonnegative integer"
+  (pattern t
+           #:when (let ([v (syntax-e #'t)])
+                    (exact-nonnegative-integer? v))))
+
 (define-syntax (define-syntax-class-syntax stx)
   (syntax-parse stx
     [(_ name:id rhs)
@@ -129,6 +136,7 @@
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
 (define-syntax-class-syntax Int (make-syntax-class #'exact-integer))
+(define-syntax-class-syntax Nat (make-syntax-class #':exact-nonnegative-integer))
 (define-syntax-class-syntax Number (make-syntax-class #'number))
 (define-syntax-class-syntax Boolean (make-syntax-class #'boolean))
 (define-syntax-class-syntax Literal (make-syntax-class #':literal))

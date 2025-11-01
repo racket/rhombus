@@ -66,6 +66,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'PosInt'
   annot.macro 'NegInt'
   annot.macro 'NonnegInt'
+  annot.macro 'Nat'
 
   annot.macro 'Int.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 
@@ -76,7 +77,9 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 ){
 
  Matches exact integers: all of them, positive integers, negative
- integers, nonnegative integers, or integers in a given range.
+ integers, nonnegative integers, or integers in a given range. The
+ @rhombus(Nat, ~annot) annotation is an alias for
+ @rhombus(NonnegInt, ~annot).
 
  The @rhombus(Int.in, ~annot) annotation constraints a integers to be
  within the given range, where each end of the range is inclusive by
@@ -87,7 +90,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   5 is_a Int
   5 is_a PosInt
   -5 is_a NegInt
-  0 is_a NonnegInt
+  0 is_a Nat
   0 is_a Int.in(0, 1 ~exclusive)
   1 is_a Int.in(0, 1 ~exclusive)
 )

@@ -63,6 +63,7 @@
                     PosInt
                     NegInt
                     NonnegInt
+                    Nat
                     PosReal
                     NegReal
                     NonnegReal
@@ -1050,6 +1051,7 @@
 (define-annotation-syntax PosInt (identifier-annotation exact-positive-integer? #,(get-int-static-infos)))
 (define-annotation-syntax NegInt (identifier-annotation exact-negative-integer? #,(get-int-static-infos)))
 (define-annotation-syntax NonnegInt (identifier-annotation exact-nonnegative-integer? #,(get-int-static-infos)))
+(define-annotation-syntax Nat (identifier-annotation exact-nonnegative-integer? #,(get-int-static-infos)))
 (define-annotation-syntax Flonum (identifier-annotation flonum? #,(get-flonum-static-infos)))
 (define-annotation-syntax Number (identifier-annotation number? #,(get-number-static-infos)))
 (define-annotation-syntax Fixnum (identifier-annotation fixnum? #,(get-fixnum-static-infos)))

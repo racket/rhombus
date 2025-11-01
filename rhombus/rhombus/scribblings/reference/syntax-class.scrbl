@@ -487,6 +487,7 @@
   syntax_class Keyword: kind: ~term
   syntax_class String: kind: ~term
   syntax_class Int: kind: ~term
+  syntax_class Nat: kind: ~term
   syntax_class Number: kind: ~term
   syntax_class Boolean: kind: ~term
   syntax_class Literal: kind: ~term
@@ -529,6 +530,14 @@
 
  The @rhombus(Literal, ~stxclass) syntax class matches a term that is
  not an identifier, operator, block, or alternatives.
+
+ The @rhombus(Keyword, ~stxclass), @rhombus(String, ~stxclass),
+ @rhombus(Int, ~stxclass), @rhombus(Nat, ~stxclass),
+ @rhombus(Number, ~stxclass), and @rhombus(Boolean, ~stxclass) syntax classes
+ match a term whose unwrapped form satisfies the corresponding
+ annotation, @rhombus(Keyword, ~annot), @rhombus(String, ~annot),
+ @rhombus(Int, ~annot), @rhombus(Nat, ~annot),
+ @rhombus(Number, ~annot), or @rhombus(Boolean, ~annot).
 
 }
 
