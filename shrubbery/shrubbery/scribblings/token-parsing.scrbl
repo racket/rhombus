@@ -265,7 +265,7 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, @nonterm{boolean}, ""],
     ["", "", bor, @nonterm{string}, ""],
     ["", "", bor, @nonterm{bytestring}, ""],
-    ["", "", bor, @nonterm{racket}, ""],
+    ["", "", bor, bseq(@litchar("#{"), @nonterm{racket}, @litchar("}")), ""],
     ["", "", bor, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}), @italic{usual @litchar{,}-separated}],
     ["", "", bor, bseq(@litchar{[}, @kleenestar(@nonterm{group}), @litchar{]}), @italic{usual @litchar{,}-separated}],
     ["", "", bor, bseq(@litchar{«}, @nonterm{group}, @litchar{»}), ""],

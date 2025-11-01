@@ -1903,6 +1903,10 @@ then @{8}
 @«bracketed»("apple")
 @«{bracketed}»("apple")
 
+@#{s-exp}{apple}
+@#{s-exp}|<{apple}>|
+@#{s-exp} next
+
 @«1 2 3»: 5
 @«1 2 3»{data}: 5
 
@@ -2032,6 +2036,9 @@ INPUT
         (group "0")))))
     (group bracketed (parens (group "apple")))
     (group (braces (group bracketed)) (parens (group "apple")))
+    (group s-exp (parens (group (brackets (group "apple")))))
+    (group s-exp (parens (group (brackets (group "apple")))))
+    (group s-exp next)
     (group 1 2 3 (block (group 5)))
     (group 1 2 3 (parens (group (brackets (group "data")))) (block (group 5)))
     (group x (parens (group (brackets (group "hello}there")))))

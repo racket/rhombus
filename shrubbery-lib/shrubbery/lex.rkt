@@ -370,13 +370,14 @@
 (define (make-in-text-status)
   (in-at 'inside #f #f "" 'initial 0))
 
-(define (out-of-s-exp-mode status will-see-closer?)
+(define (out-of-s-exp-mode status in will-see-closer?)
   (cond
     [(counter? status) (struct-copy counter status
-                                    [status (out-of-s-exp-mode (counter-status status) will-see-closer?)])]
+                                    [status (out-of-s-exp-mode (counter-status status) in will-see-closer?)])]
     [(pending-backup-mode? status) (struct-copy pending-backup-mode status
                                                 [status (out-of-s-exp-mode
                                                          (pending-backup-mode-status status)
+                                                         in
                                                          will-see-closer?)])]
     [(s-exp-mode? status) (or (let ([q (s-exp-mode-in-quotes status)])
                                 (if will-see-closer?
@@ -386,14 +387,20 @@
                                                       [openers (cons 'opener (in-quotes-openers q))]))
                                     q))
                               'continuing)]
-    [(in-at? status) (struct-copy in-at status
-                                  [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status) will-see-closer?)]
-                                  [openers (let ([openers (in-at-openers status)])
-                                             (unless (and (pair? openers) (equal? "{" (car openers)))
-                                               (error 'out-of-s-exp-mode "expected opener not found"))
-                                             (cdr openers))])]
+    [(in-at? status)
+     ;; need to peek for an opener in the same way as non-S-exp result
+     (define-values (opener pending-backup) (peek-at-opener* in))
+     (struct-copy in-at status
+                  [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status) in will-see-closer?)]
+                  [mode (if opener 'open (in-at-mode status))]
+                  [opener opener]
+                  [openers (let ([openers (in-at-openers status)])
+                             (unless (and (pair? openers) (equal? "{" (car openers)))
+                               (error 'out-of-s-exp-mode "expected opener not found"))
+                             (cdr openers))])]
     [(in-escaped? status) (struct-copy in-escaped status
                                        [shrubbery-status (out-of-s-exp-mode (in-escaped-shrubbery-status status)
+                                                                            in
                                                                             will-see-closer?)])]
     [else (error 'out-of-s-exp-mode "not in S-expression mode!")]))
 
@@ -476,7 +483,7 @@
                        [(and (zero? depth)
                              (eqv? #\} (peek-char in)))
                         ;; go out of S-expression mode by using shrubbery lexer again
-                        (adjust-for-quotes shrubbery-lexer/status variant in (out-of-s-exp-mode status #t))]
+                        (adjust-for-quotes shrubbery-lexer/status variant in (out-of-s-exp-mode status in #t))]
                        [else
                         (define in* (peeking-input-port/count in))
                         (define start-pos (file-position in*))
@@ -772,7 +779,7 @@
 ;; after reading `@`, we enter an at-exp state machine for whether
 ;; we're in the initial part, within `[]`, or within `{}`; we have to
 ;; perform some parsing here to balance openers and closers; we leave
-;; wehite trimming to the parser layer
+;; whitespace trimming to the parser layer
 (define (at-lexer in status recur)
   (define in-mode (in-at-mode status))
   ;; anything that uses `get-expected` should trigger a non-zero backup
@@ -807,14 +814,16 @@
     ;; 'op-continue is after 'initial of identifier where next is an operator
     ;;    then identifier, and the next step will be back to 'initial
     [(initial args no-args op-continue)
+     (define old-sub-status (in-at-shrubbery-status status))
      ;; recur to parse in shrubbery mode:
      (define-values (t type paren start end backup sub-status t-pending-backup)
-       (recur (in-at-shrubbery-status status)))
+       (recur old-sub-status))
      ;; to keep the term and possibly exit 'initial or 'args mode:
      (define (ok status)
        (define-values (next-status pending-backup)
          (cond
            [(and (not (s-exp-mode? sub-status))
+                 (not (in-at? sub-status)) ; immediate in-at will turn out to be an error
                  (null? (in-at-openers status)))
             ;; either `{`, `(`, `[`, or back to shrubbery mode
             (define-values (opener pending-backup) (if (eq? in-mode 'no-args)
@@ -862,12 +871,14 @@
        (case (and (token? t) (token-name t))
          [(opener s-exp)
           (ok (struct-copy in-at status
-                           [mode (if (and (eq? in-mode 'initial)
-                                          (equal? (in-at-openers status) '("("))
-                                          (eq? 'opener (token-name t))
-                                          (equal? (token-e t) "«"))
-                                     'no-args
-                                     in-mode)]
+                           [mode (cond
+                                   [(and (eq? in-mode 'initial)
+                                         (equal? (in-at-openers status) '("("))
+                                         (eq? 'opener (token-name t))
+                                         (equal? (token-e t) "«"))
+                                    'no-args]
+                                   [else
+                                    in-mode])]
                            [openers (cons (if (eq? 's-exp (token-name t))
                                               "{"
                                               (token-e t))
@@ -1318,7 +1329,7 @@
                 [(s-exp)
                  (define s-exp-tok (finish-s-exp tok in fail (lex-s-exp-keyword? new-status)))
                  (values (wrap s-exp-tok)
-                         (advance-location (out-of-s-exp-mode new-status #f)
+                         (advance-location (out-of-s-exp-mode new-status in #f)
                                            s-exp-tok))]
                 [else (values (wrap tok) new-status)]))
             (define d (loop next-status

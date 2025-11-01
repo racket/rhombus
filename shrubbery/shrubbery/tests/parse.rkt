@@ -283,3 +283,6 @@
 (check-fail "1 \\ \n 2 \\ 3" #rx"line-continuing '\\\\' is followed by a another token")
 
 (check-fail "a(1,\n   " #rx"did not find matching .[)].")
+
+(check-fail "@@{}" #rx"invalid after `@`")
+(check-fail "@@//{}" #rx"invalid after `@`")
