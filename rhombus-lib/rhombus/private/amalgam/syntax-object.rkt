@@ -1027,7 +1027,7 @@
   #:static-infos ((#%call-result #,(get-syntax-static-infos)))
   (unless (syntax? stx) (raise-annotation-failure who stx "Syntax"))
   (define ctx-stxes (cond
-                      [(syntax? stx) ctx-stx-in]
+                      [(syntax? ctx-stx-in) (list ctx-stx-in)]
                       [else
                        (define lst (to-list #f ctx-stx-in))
                        (if (and lst (andmap syntax? lst))
