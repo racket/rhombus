@@ -46,7 +46,8 @@
                      [else
                       (datum->syntax #f 'none)])]
                   [_ #f]))])
-        (raise-annotation-failure who stx "Name")))
+        (and who
+             (raise-annotation-failure who stx "Name"))))
 
   (define (check-mode who mode)
     (unless (or (eq? mode 'prefix) (eq? mode 'infix))

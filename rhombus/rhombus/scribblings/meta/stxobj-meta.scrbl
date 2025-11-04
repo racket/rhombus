@@ -134,6 +134,55 @@
 
 }
 
+
+@doc(
+  fun syntax_meta.track_origin(
+    stx :: Term,
+    orig_stx :: Term || (Listable.to_list && List.of(Term)) = [],
+    ~add: add_name :: Name || (Listable.to_list && List.of(Name)) = [],
+    ~space: space :: SpaceMeta = expr_meta.space
+  ) :: Term
+  fun syntax_meta.track_group_origin(
+    stx :: Group,
+    orig_stx :: Group || (Listable.to_list && List.of(Group)) = [],
+    ~add: add_name :: Name || (Listable.to_list && List.of(Name)) = [],
+    ~space: space :: SpaceMeta = expr_meta.space
+  ) :: Group
+  fun syntax_meta.track_ephemeral_origin(
+    stx :: Syntax,
+    orig_stx :: Syntax || (Listable.to_list && List.of(Syntax)),
+    ~add: add_name :: Name || (Listable.to_list && List.of(Name)) = [],
+    ~space: space :: SpaceMeta = expr_meta.space
+  ) :: Syntax
+){
+
+ Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin),
+ @rhombus(#'#{disappeared-use}), and @rhombus(#'#{disappeared-binding})
+ syntax property values, if any, from @rhombus(orig_stx) added to
+ @rhombus(stx). If multiple syntax property values
+ are available among @rhombus(stx) and @rhombus(orig_stx), the values are
+ combined using @rhombus(Pair).
+
+ Each name in @rhombus(add_name) is added as an @rhombus(#'origin)
+ syntax-property value, similarly combining with other values using
+ @rhombus(Pair). A name is added in identifier form, which may involve
+ resolving a dotted name within a particular @tech{space} designated by
+ the @rhombus(space) argument; each identifier (whether originally dotted
+ or not) is added to @rhombus(#'origin) as bound in that space.
+
+ The transferred properties are attached as @tech(~doc: ref_doc){ephemeral properties},
+ because they are intended to record temporary expansion information. A
+ context that uses ephemeral information typically will expect it to be
+ attached to a certain kind of syntax, such as term or group. The
+ @rhombus(syntax_meta.track_origin) and @rhombus(syntax_meta.track_group_origin)
+ methods are implemented by composing @rhombus(Syntax.ephemeral_term) or
+ @rhombus(Syntax.ephemeral_group) with
+ @rhombus(syntax_meta.track_ephemeral_origin).
+
+ See also @secref("stxobj-track").
+
+}
+
 @doc(
   ~meta
   fun syntax_meta.lift_expr_to_before(expr_stx :: Group)

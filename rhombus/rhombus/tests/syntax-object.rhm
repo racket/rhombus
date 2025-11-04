@@ -33,15 +33,15 @@ block:
     Syntax.ephemeral_term(stx) ~method
     Syntax.ephemeral_group(stx) ~method
     Syntax.ephemeral_sequence(stx) ~method
-    Syntax.track_origin(stx, from_stxs) ~method
-    Syntax.track_group_origin(stx, from_stxs) ~method
-    Syntax.track_ephemeral_origin(stx, from_stxs) ~method
   static_arity.check ~meta:
     syntax_meta.error([msg], in_stx, [at_stx])
     syntax_meta.value(name, [in_space], [fail])
     syntax_meta.equal_binding(stx1, stx2, [in_space], [phase1], [phase2])
     syntax_meta.equal_name_and_scopes(stx1, stx2, [phase])
     syntax_meta.flip_introduce(stx)
+    syntax_meta.track_origin(stx, [from_stxs])
+    syntax_meta.track_group_origin(stx, [from_stxs])
+    syntax_meta.track_ephemeral_origin(stx, [from_stxs])
     syntax_meta.is_static(stx)
     syntax_meta.expanding_phase()
 
@@ -349,32 +349,33 @@ check:
        7,
        7]
 
-check:
-  Syntax.track_origin('a', 'b') ~matches 'a'
-  Syntax.track_origin('a', 'b'.property(#'origin, 'c')).property(#'origin) ~matches 'c'
-  Syntax.track_origin('a', ['b', 'c']) ~matches 'a'
-  Syntax.track_origin('a', PairList['b', 'c']) ~matches 'a'
-  Syntax.track_group_origin('a',
-                            'b'.ephemeral_group().ephemeral_property(#'origin, 'c'))
-    .ephemeral_group()
-    .ephemeral_property(#'origin) ~matches 'c'
-  Syntax.track_group_origin('a',
-                            ['b'.ephemeral_group().ephemeral_property(#'origin, 'c'),
-                             'b2'.ephemeral_group().ephemeral_property(#'origin, 'c')])
-    .ephemeral_group() ~matches 'a'
-  Syntax.track_group_origin('a a',
-                            'b b'.ephemeral_group().ephemeral_property(#'origin, 'c'))
-    .ephemeral_group()
-    .ephemeral_property(#'origin) ~matches 'c'
-  Syntax.track_ephemeral_origin('a a'.ephemeral_sequence(),
-                                'b b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'))
-    .ephemeral_sequence()
-    .ephemeral_property(#'origin) ~matches 'c'
-  Syntax.track_ephemeral_origin('a a; a'.ephemeral_sequence(),
-                                'b b; b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'))
-    .ephemeral_sequence()
-    .ephemeral_property(#'origin) ~matches 'c'
-  Syntax.track_ephemeral_origin('a a; a'.ephemeral_sequence(),
-                                ['b b; b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'),
-                                 'b2 b2; b2'.ephemeral_sequence().ephemeral_property(#'origin, 'c2')])
-    .ephemeral_sequence() ~matches 'a a; a'
+meta:
+  check:
+    syntax_meta.track_origin('a', 'b') ~matches 'a'
+    syntax_meta.track_origin('a', 'b'.property(#'origin, 'c')).property(#'origin) ~matches 'c'
+    syntax_meta.track_origin('a', ['b', 'c']) ~matches 'a'
+    syntax_meta.track_origin('a', PairList['b', 'c']) ~matches 'a'
+    syntax_meta.track_group_origin('a',
+                                   'b'.ephemeral_group().ephemeral_property(#'origin, 'c'))
+      .ephemeral_group()
+      .ephemeral_property(#'origin) ~matches 'c'
+    syntax_meta.track_group_origin('a',
+                                   ['b'.ephemeral_group().ephemeral_property(#'origin, 'c'),
+                                    'b2'.ephemeral_group().ephemeral_property(#'origin, 'c')])
+      .ephemeral_group() ~matches 'a'
+    syntax_meta.track_group_origin('a a',
+                                   'b b'.ephemeral_group().ephemeral_property(#'origin, 'c'))
+      .ephemeral_group()
+      .ephemeral_property(#'origin) ~matches 'c'
+    syntax_meta.track_ephemeral_origin('a a'.ephemeral_sequence(),
+                                       'b b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'))
+      .ephemeral_sequence()
+      .ephemeral_property(#'origin) ~matches 'c'
+    syntax_meta.track_ephemeral_origin('a a; a'.ephemeral_sequence(),
+                                       'b b; b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'))
+      .ephemeral_sequence()
+      .ephemeral_property(#'origin) ~matches 'c'
+    syntax_meta.track_ephemeral_origin('a a; a'.ephemeral_sequence(),
+                                       ['b b; b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'),
+                                        'b2 b2; b2'.ephemeral_sequence().ephemeral_property(#'origin, 'c2')])
+      .ephemeral_sequence() ~matches 'a a; a'

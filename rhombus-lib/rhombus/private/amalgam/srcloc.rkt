@@ -126,7 +126,8 @@
         new-stx
         (transfer-origin stx new-stx)))
   (cond
-    [(and (identifier? stx)
+    [(and (not (eq? stx prop-stx))
+          (identifier? stx)
           (not (syntax-property stx 'identifier-as-keyword)))
      ;; treat the relocated identifier as a kind of macro expansion
      ;; from the original identifier at its original location; that

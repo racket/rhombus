@@ -1292,40 +1292,6 @@ or adjusted in any way
 }
 
 @doc(
-  method Syntax.track_origin(
-    stx :: Term,
-    orig_stx :: Term || (Listable.to_list && List.of(Term))
-  ) :: Term
-  method Syntax.track_group_origin(
-    stx :: Group,
-    orig_stx :: Group || (Listable.to_list && List.of(Group))
-  ) :: Group
-  method Syntax.track_ephemeral_origin(
-    stx :: Syntax,
-    orig_stx :: Syntax || (Listable.to_list && List.of(Syntax))
-  ) :: Syntax
-){
-
- Returns a syntax object like @rhombus(stx), but with @rhombus(#'origin),
- @rhombus(#'#{disappeared-use}), and @rhombus(#'#{disappeared-binding})
- syntax property values, if any, from @rhombus(orig_stx) added to
- @rhombus(stx). If multiple syntax property values
- are available among @rhombus(stx) and @rhombus(orig_stx), the values are
- combined using @rhombus(Pair).
-
- The transferred properties are attached as @tech{ephemeral properties},
- because they are intended to record temporary expansion information. A
- context that uses ephemeral information typically will expect it to be
- attached to a certain kind of syntax, such as term or group. The
- @rhombus(Syntax.track_origin) and @rhombus(Syntax.track_group_origin)
- methods are implemented by composing @rhombus(Syntax.ephemeral_term) or
- @rhombus(Syntax.ephemeral_group) with
- @rhombus(Syntax.track_ephemeral_origin).
-
-}
-
-
-@doc(
   method Syntax.property(stx :: Term,
                          key :: Any)
     :: Any
@@ -1371,7 +1337,7 @@ or adjusted in any way
  Like @rhombus(Syntax.property), but attaches metadata as an
  @tech{ephemeral properties}. This mode is intended for communicating
  information from a macro expansion, such as by
- @rhombus(Syntax.track_origin) and along the same lines as
+ @rhombus(syntax_meta.track_origin) and along the same lines as
  @rhombus(Syntax.relocate_ephemeral_span).
 
 }

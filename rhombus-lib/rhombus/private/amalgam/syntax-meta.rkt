@@ -22,7 +22,9 @@
                      "class-primitive.rkt"
                      "name-equal.rkt"
                      "origin.rkt"
-                     "binding-failure.rkt")
+                     "origin-check.rkt"
+                     "binding-failure.rkt"
+                     "to-list.rkt")
          "space.rkt"
          "is-static.rkt"
          "operator-compare.rkt"
@@ -48,6 +50,9 @@
      [error syntax_meta.error]
      [value syntax_meta.value]
      [flip_introduce syntax_meta.flip_introduce]
+     [track_origin syntax_meta.track_origin]
+     [track_group_origin syntax_meta.track_group_origin]
+     [track_ephemeral_origin syntax_meta.track_ephemeral_origin]
      [is_static syntax_meta.is_static]
      [dynamic_name syntax_meta.dynamic_name]
      [can_lift_expr_to_before syntax_meta.can_lift_expr_to_before]
@@ -184,6 +189,64 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
     (syntax-local-introduce (syntax-unwrap stx)))
+
+  (define (unpack-ids who id-stx-in sp)
+    (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
+    (define names (or (let ([t (unpack-term/maybe id-stx-in)])
+                        (and t
+                             (list t)))
+                      (to-list #f id-stx-in)))
+    (define ids (for/fold ([ids (and names null)]) ([name (in-list names)])
+                  (define id (extract-name #f name (space-name-symbol sp)
+                                           #:build-dotted? #t))
+                  (and id
+                       (cons id ids))))
+    (if ids        
+        (reverse ids)
+        (raise-annotation-failure who id-stx-in "Name || (Listable.to_list && List.of(Name))")))
+
+  (define/arity (syntax_meta.track_origin stx-in
+                                          [ctx-stx-in null]
+                                          #:add [name-stx-in null]
+                                          #:space [space expr-space-path])
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (define stx (unpack-term/maybe stx-in))
+    (unless stx (raise-annotation-failure who stx-in "Term"))
+    (define ctx-stxes (or (let ([t (unpack-term/maybe ctx-stx-in)])
+                            (and t (list t)))
+                          (check-origins #f ctx-stx-in)
+                          (raise-annotation-failure who ctx-stx-in "Term || (Listable.to_list && List.of(Term))")))
+    (define ids (unpack-ids who name-stx-in space))
+    (add-origins ids (transfer-origins ctx-stxes stx)))
+
+  (define/arity (syntax_meta.track_group_origin stx-in
+                                                [ctx-stx-in null]
+                                                #:add [name-stx-in null]
+                                                #:space [space expr-space-path])
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (define stx (unpack-group stx-in who #f))
+    (define ctx-stxes (or (let ([g (unpack-group ctx-stx-in #f #f)])
+                            (and g (list g)))
+                          (check-group-origins #f ctx-stx-in)
+                          (raise-annotation-failure who ctx-stx-in "Group || (Listable.to_list && List.of(Group))")))
+    (define ids (unpack-ids who name-stx-in space))
+    (add-origins ids (transfer-origins ctx-stxes stx)))
+
+  (define/arity (syntax_meta.track_ephemeral_origin stx
+                                                    [ctx-stx-in null]
+                                                    #:add [name-stx-in null]
+                                                    #:space [space expr-space-path])
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (syntax? stx) (raise-annotation-failure who stx "Syntax"))
+    (define ctx-stxes (cond
+                        [(syntax? ctx-stx-in) (list ctx-stx-in)]
+                        [else
+                         (define lst (to-list #f ctx-stx-in))
+                         (if (and lst (andmap syntax? lst))
+                             lst
+                             (raise-annotation-failure who ctx-stx-in "Syntax || (Listable.to_list && List.of(Syntax))"))]))
+    (define ids (unpack-ids who name-stx-in space))
+    (add-origins ids (transfer-origins ctx-stxes stx)))
 
   (define/arity (syntax_meta.is_static ctx-stx)
     (define ctx (extract-ctx who ctx-stx))

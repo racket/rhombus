@@ -28,7 +28,7 @@ parsed if its pattern is @rhombus($, ~bind) followed by an identifier. A
 macro automatically propagates an @rhombus(#'origin) property value from
 each automatically parsed argument to the macro's result. The macro can
 propagate other @rhombus(#'origin) properties explicitly using
-@rhombus(Syntax.track_origin). That kind of propagation is not needed,
+@rhombus(syntax_meta.track_origin). That kind of propagation is not needed,
 however, if a macro expands to a use of other forms that already handle
 expansion tracking.
 
@@ -64,7 +64,7 @@ connection to the @rhombus(a) and @rhombus(b) expansions:
   "a" :: Int => PosInt
 )
 
-The following macro needs to use @rhombus(Syntax.track_origin),
+The following macro needs to use @rhombus(syntax_meta.track_origin),
 otherwise no biding arrows will be shown for @rhombus(Int, ~annot)
 and @rhombus(PosInt, ~annot) in the use of @rhombus(implies):
 
@@ -73,10 +73,13 @@ and @rhombus(PosInt, ~annot) in the use of @rhombus(implies):
                        $(b :: annot_meta.Parsed))':
     let (a_pred, a_statinfo) = annot_meta.unpack_predicate(a)
     let (b_pred, b_statinfo) = annot_meta.unpack_predicate(b)
-    annot_meta.pack_predicate(
-      'fun (v): if $a_pred(v) | $b_pred(v) | #true',
-      '()'
-    ).track_origin([a, b])
+    syntax_meta.track_origin(
+      annot_meta.pack_predicate(
+        'fun (v): if $a_pred(v) | $b_pred(v) | #true',
+        '()'
+      ),
+      [a, b]
+    )
 
   1 :: implies(Int, PosInt)
 )
@@ -84,12 +87,23 @@ and @rhombus(PosInt, ~annot) in the use of @rhombus(implies):
 Since tracking is often needed when using a packing function like
 @rhombus(annot_meta.pack_predicate), @rhombus(annot_meta.pack_predicate)
 accepts a @rhombus(~track) argument that provides a slight shorthand and
-as a reminder to consider the need for tracking.
+as a reminder to consider the need for tracking. The above combination
+of @rhombus(syntax_meta.track_origin) and
+@rhombus(annot_meta.pack_predicate) could be written with just
+@rhombus(annot_meta.pack_predicate):
+
+@rhombusblock(
+  annot_meta.pack_predicate(
+    'fun (v): if $a_pred(v) | $b_pred(v) | #true',
+    '()',
+    ~track: [a, b]
+  )
+)
 
 The annotation examples above show macros working within one
 @tech{space}. Tracking is practically always needed when bridging
 spaces. For example, the @rhombus(rx) implementation parses a subsequent
-regexp form, and it uses @rhombus(Syntax.track_origin) to connect a
+regexp form, and it uses @rhombus(syntax_meta.track_origin) to connect a
 returned expression to parsed regexp. Ultimately, all @rhombus(#'origin)
 information must be attached to an expansion or definition form, since
 those are the only primitive forms. Tracking in expressions is somewhat
@@ -99,7 +113,7 @@ explicitly lifted to the enclosing expression.
 
 Syntax-tracking properties are added and used as
 @tech(~doc: ref_doc){ephemeral properties}. For example,
-@rhombus(Syntax.track_origin) uses @rhombus(Syntax.ephemeral_property)
+@rhombus(syntax_meta.track_origin) uses @rhombus(Syntax.ephemeral_property)
 internally. Like all kinds properties, ephemeral properties must be
 attached specifically to a term, group, or multi-group sequence, and
 each @tech{space} will have its own convention about which syntactic

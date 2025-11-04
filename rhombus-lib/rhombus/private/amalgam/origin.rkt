@@ -3,7 +3,8 @@
 
 (provide transfer-origin
          transfer-origins
-         add-origin)
+         add-origin
+         add-origins)
 
 (define (transfer-origin src-stx-in stx)
   (define src-stx
@@ -31,5 +32,12 @@
     (transfer-origin src-stx stx)))
 
 (define (add-origin id stx)
-  (define p  (syntax-property stx 'origin))
+  (define p (syntax-property stx 'origin))
   (syntax-property stx 'origin (if p (cons id p) id)))
+
+(define (add-origins ids stx)
+  (cond
+    [(null? ids) stx]
+    [else
+     (define p (syntax-property stx 'origin))
+     (syntax-property stx 'origin (if p (cons ids p) ids))]))
