@@ -24,6 +24,10 @@ block:
     Path.normal_case(p) ~method
     Path.simplify(p) ~method
     Path.as_relative_to(p, wrt) ~method
+    CrossPath(p, [conv])
+    CrossPath.Unix(p)
+    CrossPath.Windows(p)
+    CrossPath.Convention.current()
 
 module path_help ~lang rhombus/and_meta:
   export:
@@ -75,6 +79,55 @@ block:
 block:
   def p = Path("/")
   def q = Path("/etc")
+  check (p compare_to q) < 0 ~is #true
+  check (q compare_to p) > 0 ~is #true
+  check (p compare_to p) == 0 ~is #true
+  check (q compare_to q) == 0 ~is #true
+  check p < q ~is #true
+  check q > p ~is #true
+  check p compares_equal p ~is #true
+  check p compares_equal q ~is #false
+  check p compares_unequal p ~is #false
+  check p compares_unequal q ~is #true
+  check p <= p ~is #true
+  check p <= q ~is #true
+  check p >= p ~is #true
+  check p >= q ~is #false
+  check p == Path("/") ~is #true
+  check p == q ~is #false
+  check p != Path("/") ~is #false
+  check p != q ~is #true
+
+block:
+  def p = CrossPath.Unix(#"x")
+  def q = CrossPath.Unix(#"y")
+  def r = CrossPath.Windows(#"y")
+  def s = CrossPath.Windows(#"z")
+  check (p compare_to q) < 0 ~is #true
+  check (q compare_to r) < 0 ~is #true
+  check (r compare_to s) < 0 ~is #true
+  check (p compare_to p) == 0 ~is #true
+  check (r compare_to r) == 0 ~is #true
+  check (s compare_to r) > 0 ~is #true
+  check (r compare_to q) > 0 ~is #true
+  check (q compare_to p) > 0 ~is #true
+  check p < q ~is #true
+  check q < r ~is #true
+  check r < s ~is #true
+  check p compares_equal p ~is #true
+  check r compares_equal r ~is #true
+  check s > r ~is #true
+  check r > q ~is #true
+  check q > p ~is #true
+
+block:
+  use_dynamic
+  def p = dynamic(Path("/"))
+  def q = dynamic(Path("/etc"))
+  check (p compare_to q) < 0 ~is #true
+  check (q compare_to p) > 0 ~is #true
+  check (p compare_to p) == 0 ~is #true
+  check (q compare_to q) == 0 ~is #true
   check p < q ~is #true
   check q > p ~is #true
   check p compares_equal p ~is #true
@@ -92,22 +145,26 @@ block:
 
 block:
   use_dynamic
-  def p = dynamic(Path("/"))
-  def q = dynamic(Path("/etc"))
+  def p = dynamic(CrossPath.Unix(#"x"))
+  def q = dynamic(CrossPath.Unix(#"y"))
+  def r = dynamic(CrossPath.Windows(#"y"))
+  def s = dynamic(CrossPath.Windows(#"z"))
+  check (p compare_to q) < 0 ~is #true
+  check (q compare_to r) < 0 ~is #true
+  check (r compare_to s) < 0 ~is #true
+  check (p compare_to p) == 0 ~is #true
+  check (r compare_to r) == 0 ~is #true
+  check (s compare_to r) > 0 ~is #true
+  check (r compare_to q) > 0 ~is #true
+  check (q compare_to p) > 0 ~is #true
   check p < q ~is #true
-  check q > p ~is #true
+  check q < r ~is #true
+  check r < s ~is #true
   check p compares_equal p ~is #true
-  check p compares_equal q ~is #false
-  check p compares_unequal p ~is #false
-  check p compares_unequal q ~is #true
-  check p <= p ~is #true
-  check p <= q ~is #true
-  check p >= p ~is #true
-  check p >= q ~is #false
-  check p == Path("/") ~is #true
-  check p == q ~is #false
-  check p != Path("/") ~is #false
-  check p != q ~is #true
+  check r compares_equal r ~is #true
+  check s > r ~is #true
+  check r > q ~is #true
+  check q > p ~is #true
 
 block:
   def s = "/etc"

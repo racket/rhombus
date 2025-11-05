@@ -68,7 +68,8 @@
   (#%index-result #,(get-char-static-infos))
   (#%append String.append)
   (#%sequence-constructor String.to_sequence/optimize)
-  (#%compare ((< string<?)
+  (#%compare ((compare_to string-compare-to)
+              (< string<?)
               (<= string<=?)
               (= string=?)
               (!= string!=?)
@@ -181,7 +182,8 @@
 (define-for-syntax (convert-string-ci-compare-static-info static-info)
   (syntax-parse static-info
     #:datum-literals (#%compare)
-    [(#%compare . _) #'(#%compare ((< string-ci<?)
+    [(#%compare . _) #'(#%compare ((compare_to string-ci-compare-to)
+                                   (< string-ci<?)
                                    (<= string-ci<=?)
                                    (= string-ci=?)
                                    (!= string-ci!=?)
@@ -208,7 +210,8 @@
 (define-for-syntax (convert-string-locale-compare-static-info static-info)
   (syntax-parse static-info
     #:datum-literals (#%compare)
-    [(#%compare . _) #'(#%compare ((< string-locale<?)
+    [(#%compare . _) #'(#%compare ((compare_to string-locale-compare-to)
+                                   (< string-locale<?)
                                    (<= string-locale<=?)
                                    (= string-locale=?)
                                    (!= string-locale!=?)
@@ -227,7 +230,8 @@
 (define-for-syntax (convert-string-locale-ci-compare-static-info static-info)
   (syntax-parse static-info
     #:datum-literals (#%compare)
-    [(#%compare . _) #'(#%compare ((< string-locale-ci<?)
+    [(#%compare . _) #'(#%compare ((compare_to string-locale-ci-compare-to)
+                                   (< string-locale-ci<?)
                                    (<= string-locale-ci<=?)
                                    (= string-locale-ci=?)
                                    (!= string-locale-ci!=?)
@@ -613,17 +617,33 @@
   (in-string str))
 
 (define (raise-string-comp-failure who a b)
-  (raise-annotation-failure '!= (if (string? a) b a) "ReadableString"))
+  (raise-annotation-failure who (if (string? a) b a) "ReadableString"))
 
 (define (string!=? a b)
   (if (and (string? a) (string? b))
       (not (string=? a b))
       (raise-string-comp-failure '!= a b)))
 
+(define (string-compare-to a b)
+  (unless (and (string? a) (string? b))
+    (raise-string-comp-failure 'compare_to a b))
+  (cond
+    [(string=? a b) 0]
+    [(a . string<? . b) -1]
+    [else 1]))
+
 (define (string-ci!=? a b)
   (if (and (string? a) (string? b))
       (not (string-ci=? a b))
       (raise-string-comp-failure '!= a b)))
+
+(define (string-ci-compare-to a b)
+  (unless (and (string? a) (string? b))
+    (raise-string-comp-failure 'compare_to a b))
+  (cond
+    [(string-ci=? a b) 0]
+    [(a . string-ci<? . b) -1]
+    [else 1]))
 
 (define (string-locale!=? a b)
   (if (and (string? a) (string? b))
@@ -633,12 +653,20 @@
 (define (string-locale<=? a b)
   (if (and (string? a) (string? b))
       (not (string-locale>? a b))
-      (raise-string-comp-failure '!= a b)))
+      (raise-string-comp-failure '<= a b)))
 
 (define (string-locale>=? a b)
   (if (and (string? a) (string? b))
       (not (string-locale<? a b))
-      (raise-string-comp-failure '!= a b)))
+      (raise-string-comp-failure '>= a b)))
+
+(define (string-locale-compare-to a b)
+  (unless (and (string? a) (string? b))
+    (raise-string-comp-failure 'compare_to a b))
+  (cond
+    [(string-locale=? a b) 0]
+    [(a . string-locale<? . b) -1]
+    [else 1]))
 
 (define (string-locale-ci!=? a b)
   (if (and (string? a) (string? b))
@@ -648,12 +676,20 @@
 (define (string-locale-ci<=? a b)
   (if (and (string? a) (string? b))
       (not (string-locale-ci>? a b))
-      (raise-string-comp-failure '!= a b)))
+      (raise-string-comp-failure '<= a b)))
 
 (define (string-locale-ci>=? a b)
   (if (and (string? a) (string? b))
       (not (string-locale-ci<? a b))
-      (raise-string-comp-failure '!= a b)))
+      (raise-string-comp-failure '>= a b)))
+
+(define (string-locale-ci-compare-to a b)
+  (unless (and (string? a) (string? b))
+    (raise-string-comp-failure 'compare_to a b))
+  (cond
+    [(string-locale-ci=? a b) 0]
+    [(a . string-locale-ci<? . b) -1]
+    [else 1]))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'string get-string-static-infos)

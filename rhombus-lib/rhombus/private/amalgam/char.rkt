@@ -38,7 +38,8 @@
 (define-primitive-class Char char
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%compare ((< char<?)
+  #:instance-static-info ((#%compare ((compare_to char-compare-to)
+                                      (< char<?)
                                       (<= char<=?)
                                       (= char=?)
                                       (!= char!=?)
@@ -76,7 +77,8 @@
 (define-for-syntax (convert-char-ci-compare-static-info static-info)
   (syntax-parse static-info
     #:datum-literals (#%compare)
-    [(#%compare . _) #'(#%compare ((< char-ci<?)
+    [(#%compare . _) #'(#%compare ((compare_to char-ci-compare-to)
+                                   (< char-ci<?)
                                    (<= char-ci<=?)
                                    (= char-ci=?)
                                    (!= char-ci!=?)
@@ -224,15 +226,34 @@
   #:primitive (char-grapheme-step)
   (char-grapheme-step c state))
 
+(define (raise-char-comp-failure who a b)
+  (raise-annotation-failure who (if (char? a) b a) "Char"))
+
 (define (char!=? a b)
   (if (and (char? a) (char? b))
       (not (char=? a b))
-      (raise-annotation-failure '!= (if (char? a) b a) "Char")))
+      (raise-char-comp-failure '!= a b)))
+
+(define (char-compare-to a b)
+  (unless (and (char? a) (char? b))
+    (raise-char-comp-failure 'compare_to a b))
+  (cond
+    [(char=? a b) 0]
+    [(a . char<? . b) -1]
+    [else 1]))
 
 (define (char-ci!=? a b)
   (if (and (char? a) (char? b))
       (not (char-ci=? a b))
-      (raise-annotation-failure '!= (if (char? a) b a) "Char")))
+      (raise-char-comp-failure '!= a b)))
+
+(define (char-ci-compare-to a b)
+  (unless (and (char? a) (char? b))
+    (raise-char-comp-failure 'compare_to a b))
+  (cond
+    [(char-ci=? a b) 0]
+    [(a . char-ci<? . b) -1]
+    [else 1]))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'char get-char-static-infos))

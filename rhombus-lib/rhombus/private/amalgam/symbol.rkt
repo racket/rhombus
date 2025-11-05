@@ -16,7 +16,8 @@
   (provide (for-syntax get-symbol-static-infos)))
 
 (define-static-info-getter get-symbol-static-infos
-  (#%compare ((< symbol<?)
+  (#%compare ((compare_to symbol-compare-to)
+              (< symbol<?)
               (<= symbol<=?)
               (= symbol=?)
               (!= symbol!=?)
@@ -73,3 +74,10 @@
 (define (symbol>? a b)
   (check-symbols '> a b)
   (symbol<? b a))
+
+(define (symbol-compare-to a b)
+  (check-symbols 'compare_to a b)
+  (cond
+    [(eq? a b) 0]
+    [(a . symbol<? . b) -1]
+    [else 1]))

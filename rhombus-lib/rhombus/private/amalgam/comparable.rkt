@@ -18,13 +18,15 @@
          "is-static.rkt"
          "number.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         "path-order.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
                      Comparable)
          (for-spaces (#f
                       rhombus/repet)
+                     compare_to
                      (rename-out
                       [rhombus< <]
                       [rhombus<= <=]
@@ -34,7 +36,8 @@
                      compares_unequal))
 
 (module+ for-builtin
-  (provide general<
+  (provide general-compare-to
+           general<
            general<=
            general=
            general!=
@@ -45,7 +48,8 @@
   (make-struct-type-property 'Comparable))
 
 (define-annotation-syntax Comparable
-  (identifier-annotation comparable? ((#%compare ((< general<)
+  (identifier-annotation comparable? ((#%compare ((compare_to general-compare-to)
+                                                  (< general<)
                                                   (<= general<=)
                                                   (= general=)
                                                   (!= general!=)
@@ -59,7 +63,7 @@
       (bytes? v)
       (symbol? v)
       (keyword? v)
-      (path? v)
+      (path-for-some-system? v)
       (Comparable? v)))
 
 (define-class-desc-syntax Comparable
@@ -117,6 +121,7 @@
                                   static?
                                   comparable-static-info
                                   k)
+  (define compare-to? (eq? op 'compare_to))
   (define-values (direct-compare1/maybe-boxed direct-compare2/maybe-boxed)
     (comparable-static-info #'#%compare))
   (define checked1? (and direct-compare1/maybe-boxed
@@ -135,6 +140,7 @@
       [(and (syntax? direct-compare)
             (eq? '#:method (syntax-e direct-compare)))
        (values (case op
+                 [(compare_to) #'method-compare-to]
                  [(<) #'method<]
                  [(<=) #'method<=]
                  [(=) #'method=]
@@ -144,7 +150,7 @@
                  [else (error "unrecognized op" op)])
                #t)]
       [(identifier? direct-compare)
-       (values direct-compare #f)]
+       (values direct-compare compare-to?)]
       [else
        (define id
          (for/or ([pr (in-list (or (and direct-compare (syntax->list direct-compare)) null))])
@@ -159,8 +165,9 @@
          [(and (syntax? id)
                (box? (syntax-e id))
                (identifier? (unbox (syntax-e id))))
-          (values (unbox (syntax-e id)) #f)]
+          (values (unbox (syntax-e id)) compare-to?)]
          [else (values (case op
+                         [(compare_to) #'general-compare-to]
                          [(<) #'general<]
                          [(<=) #'general<=]
                          [(=) #'general=]
@@ -169,10 +176,10 @@
                          [(>) #'general>]
                          [else (error "unrecognized op" op)])
                        #t)])]))
-  (define-values (compare1-id bool1?) (get-compare-id direct-compare1))
-  (define-values (compare2-id bool2?) (get-compare-id direct-compare2))
-  (define-values (generic-id generic-bool2) (get-compare-id #f))
-  (define-values (compare-id bool?)
+  (define-values (compare1-id immediate1?) (get-compare-id direct-compare1))
+  (define-values (compare2-id immediate2?) (get-compare-id direct-compare2))
+  (define-values (generic-id generic-immediate?) (get-compare-id #f))
+  (define-values (compare-id immediate?)
     (cond
       [(and static? (not direct-compare1) (not direct-compare2))
        (raise-syntax-error #f
@@ -181,11 +188,11 @@
                            #f
                            (list form1-in
                                  form2))]
-      [(not direct-compare1) (values compare2-id bool2?)]
-      [(not direct-compare2) (values compare1-id bool1?)]
-      [(free-identifier=? compare1-id compare2-id) (values compare2-id bool2?)]
-      [(free-identifier=? compare1-id generic-id) (values compare2-id bool2?)]
-      [(free-identifier=? compare2-id generic-id) (values compare1-id bool1?)]
+      [(not direct-compare1) (values compare2-id immediate2?)]
+      [(not direct-compare2) (values compare1-id immediate1?)]
+      [(free-identifier=? compare1-id compare2-id) (values compare2-id immediate2?)]
+      [(free-identifier=? compare1-id generic-id) (values compare2-id immediate2?)]
+      [(free-identifier=? compare2-id generic-id) (values compare1-id immediate1?)]
       [(not static?) (get-compare-id #f)]
       [else
        (raise-syntax-error #f
@@ -194,13 +201,13 @@
                            #f
                            (list form1-in
                                  form2))]))
-  (k compare-id bool?
+  (k compare-id immediate?
      (not checked?)
      form1 form2))
 
 (define (!= a b) (not (= a b)))
 
-(define-for-syntax (build-compare compare-id op bool? direct? form1 form2 orig-stxes)
+(define-for-syntax (build-compare compare-id op immediate? direct? form1 form2 orig-stxes)
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    (datum->syntax (quote-syntax here)
@@ -213,6 +220,7 @@
                                                                  [(!=) 'compares_unequal]
                                                                  [else op])
                                                              ,(case op
+                                                                [(compare_to) 0]
                                                                 [(<) 1]
                                                                 [(<=) 2]
                                                                 [(=) 3]
@@ -222,11 +230,11 @@
                                                              a1
                                                              a2)
                                         (,compare-id a1 a2)))])
-                    (if bool?
+                    (if immediate?
                         e
                         `(,op ,e 0))))))
 
-(define-for-syntax (make-comp-expression op)
+(define-for-syntax (make-comp-expression op get-static-infos)
   (lambda (form1-in form2 self-stx)
     (define static? (is-static-context? self-stx))
     (define form1 (rhombus-local-expand form1-in))
@@ -235,11 +243,13 @@
      static?
      (lambda (key) (values (syntax-local-static-info form1 key)
                            (syntax-local-static-info form2 key)))
-     (lambda (compare-id bool? direct? form1 form2)
-       (build-compare compare-id op bool? direct? form1 form2
-                      (list form1-in self-stx form2))))))
+     (lambda (compare-id immediate? direct? form1 form2)
+       (wrap-static-info*
+        (build-compare compare-id op immediate? direct? form1 form2
+                       (list form1-in self-stx form2))
+        (get-static-infos))))))
 
-(define-for-syntax (make-comp-repetition op)
+(define-for-syntax (make-comp-repetition op get-static-infos)
   (lambda (form1 form2 self-stx)
     (define static? (is-static-context? self-stx))
     (syntax-parse form1
@@ -256,35 +266,36 @@
               (lambda (key)
                 (values (repetition-static-info-lookup #'form1-info.element-static-infos key)
                         (repetition-static-info-lookup #'form2-info.element-static-infos key)))
-              (lambda (compare-id bool? direct? form1 form2)
+              (lambda (compare-id immediate? direct? form1 form2)
                 (values
-                 (build-compare compare-id op bool? direct? form1 form2
+                 (build-compare compare-id op immediate? direct? form1 form2
                                 (list form1 self-stx form2))
-                 #'())))))])])))
+                 (get-static-infos))))))])])))
 
-(define-syntax-rule (define-compare-op def-op op)
+(define-syntax-rule (define-compare-op def-op op get-static-infos)
   (begin
     (define-syntax def-op
       (expression-infix-operator
        (lambda () (order-quote order_comparison))
        '()
        'automatic
-       (make-comp-expression 'op)
+       (make-comp-expression 'op get-static-infos)
        'none))
     (define-repetition-syntax def-op
       (repetition-infix-operator
        (lambda () (order-quote order_comparison))
        '()
        'automatic
-       (make-comp-repetition 'op)
+       (make-comp-repetition 'op get-static-infos)
        'none))))
 
-(define-compare-op rhombus< <)
-(define-compare-op rhombus<= <=)
-(define-compare-op compares_equal =)
-(define-compare-op compares_unequal !=)
-(define-compare-op rhombus>= >=)
-(define-compare-op rhombus> >)
+(define-compare-op compare_to compare_to get-int-static-infos)
+(define-compare-op rhombus< < get-empty-static-infos)
+(define-compare-op rhombus<= <= get-empty-static-infos)
+(define-compare-op compares_equal = get-empty-static-infos)
+(define-compare-op compares_unequal != get-empty-static-infos)
+(define-compare-op rhombus>= >= get-empty-static-infos)
+(define-compare-op rhombus> > get-empty-static-infos)
 
 ;; checking for the same `compare` method relies on the fact that `class`
 ;; will generate a new procedure each time that `compare` is overridden
@@ -321,7 +332,7 @@
                       bytes-op
                       symbol-op
                       keyword-op
-                      path-op)
+                      cross-path-op)
   (begin
     (define (general-op v1 v2)
       (cond
@@ -349,10 +360,10 @@
          (unless (keyword? v2)
            (raise-mismatch "keyword" 'op v1 v2))
          (wrap (keyword-op v1 v2))]
-        [(path? v1)
-         (unless (path? v2)
-           (raise-mismatch "path" 'op v1 v2))
-         (wrap (path-op v1 v2))]
+        [(path-for-some-system? v1)
+         (unless (path-for-some-system? v2)
+           (raise-mismatch "cross-platform path" 'op v1 v2))
+         (wrap (cross-path-op v1 v2))]
         [else (method-op v1 v2)]))
     (define (method-op v1 v2)
       (define vt1 (Comparable-ref v1 #f))
@@ -370,6 +381,41 @@
                         #:both-compare? (and vt2 #t)))
       (app1 v1 v2))))
 
+(define-general general-compare-to method-compare-to
+  compare_to values 0
+  (lambda (a b)
+    (cond
+      [(= a b) 0]
+      [(a . < . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cond
+      [(char=? a b) 0]
+      [(a . char<? . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cond
+      [(string=? a b) 0]
+      [(a . string<? . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cond
+      [(bytes=? a b) 0]
+      [(a . bytes<? . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cond
+      [(eq? a b) 0]
+      [(a . symbol<? . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cond
+      [(eq? a b) 0]
+      [(a . keyword<? . b) -1]
+      [else 1]))
+  (lambda (a b)
+    (cross-path-order #f a b)))
+
 (define-general general< method<
   < values 1
   <
@@ -378,7 +424,7 @@
   bytes<?
   symbol<?
   keyword<?
-  path<?)
+  (lambda (a b) ((cross-path-order #f a b) . < . 0)))
 
 (define-general general<= method<=
   <= values 2
@@ -388,7 +434,7 @@
   (lambda (a b) (not (bytes>? a b)))
   (lambda (a b) (or (eq? a b) (symbol<? a b)))
   (lambda (a b) (or (eq? a b) (keyword<? a b)))
-  (lambda (a b) (or (equal? a b) (path<? a b))))
+  (lambda (a b) ((cross-path-order #f a b) . <= . 0)))
 
 (define-general general= method=
   compares_equal values 3
@@ -398,7 +444,7 @@
   bytes=?
   eq?
   eq?
-  equal?)
+  (lambda (a b) (= (cross-path-order #f a b) 0)))
 
 (define-general general!= method!=
   compares_unequal not 4
@@ -408,7 +454,7 @@
   bytes=?
   eq?
   eq?
-  equal?)
+  (lambda (a b) (= (cross-path-order #f a b) 0)))
 
 (define-general general>= method>=
   >= values 5
@@ -418,17 +464,17 @@
   (lambda (a b) (not (bytes<? a b)))
   (lambda (a b) (or (eq? a b) (symbol<? b a)))
   (lambda (a b) (or (eq? a b) (keyword<? b a)))
-  (lambda (a b) (or (equal? a b) (path<? b a))))
+  (lambda (a b) ((cross-path-order #f a b) . >= . 0)))
 
 (define-general general> method>
-  >= values 6
+  > values 6
   >
   char>?
   string>?
   bytes>?
   (lambda (a b) (symbol<? b a))
   (lambda (a b) (keyword<? b a))
-  (lambda (a b) (path<? b a)))
+  (lambda (a b) ((cross-path-order #f a b) . > . 0)))
 
 (define (Comparable.less a b)
   (< ((vector-ref (Comparable-ref a #f) 0) a b) 0))

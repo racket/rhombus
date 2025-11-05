@@ -22,7 +22,8 @@
          (submod "parameter.rkt" for-info)
          (submod "list.rkt" for-listable)
          (submod "string.rkt" static-infos)
-         (submod "symbol.rkt" for-static-info))
+         (submod "symbol.rkt" for-static-info)
+         "path-order.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -39,48 +40,22 @@
 (module+ for-static-info
   (provide (for-syntax get-path-static-infos)))
 
-(define (path-order who p q)
-  (cond
-    [(path? p)
-     (cond
-       [(path? q) (cond
-                    [(path<? p q) -1]
-                    [(path<? q p) 1]
-                    [else 0])]
-       [(path-for-some-system? q) (if (eq? (path-convention-type p) 'unix)
-                                      1
-                                      -1)]
-       [else (raise-annotation-failure who q "CrossPath")])]
-    [(path-for-some-system? p)
-     (cond
-       [(path? q) 1]
-       [(path-for-some-system? q)
-        (cond
-          [(eq? (path-convention-type p)
-                (path-convention-type q))
-           (cond
-             [(bytes<? (path->bytes p) (path->bytes q)) -1]
-             [(bytes>? (path->bytes p) (path->bytes q)) 1]
-             [else 0])]
-          [(eq? (path-convention-type p) 'unix) -1]
-          [else 1])]
-       [else (raise-annotation-failure who q "CrossPath")])]
-    [else (raise-annotation-failure who p "CrossPath")]))
-
-(define (cross-path<? p q) ((path-order '|Path.(<)| p q) . < . 0))
-(define (path<=? p q) ((path-order '|Path.(<=)| p q) . <= . 0))
-(define (path=? p q) ((path-order '|Path.(=)| p q) . = . 0))
-(define (path>=? p q) ((path-order '|Path.(>=)| p q) . >= . 0))
-(define (path>? p q) ((path-order '|Path.(>)| p q) . > . 0))
-(define (path!=? p q) (not ((path-order '|Path.(=)| p q) . = . 0)))
+(define (cross-path<? a b) ((cross-path-order '< a b) . < . 0))
+(define (cross-path<=? a b) ((cross-path-order '<= a b) . <= . 0))
+(define (cross-path=? a b) (= (cross-path-order '= a b) 0))
+(define (cross-path>=? a b) ((cross-path-order '>= a b) . >= . 0))
+(define (cross-path>? a b) ((cross-path-order '> a b) . > . 0))
+(define (cross-path!=? a b) (not (= (cross-path-order '!= a b) 0)))
+(define (cross-path-compare-to a b) (cross-path-order 'compare_to a b))
 
 (define-static-info-getter get-any-path-static-infos
-  (#%compare ((< cross-path<?)
-              (<= path<=?)
-              (> path>?)
-              (>= path>=?)
-              (= path=?)
-              (!= path!=?))))
+  (#%compare ((compare_to cross-path-compare-to)
+              (< cross-path<?)
+              (<= cross-path<=?)
+              (> cross-path>?)
+              (>= cross-path>=?)
+              (= cross-path=?)
+              (!= cross-path!=?))))
 
 (define-primitive-class Path path
   #:lift-declaration

@@ -470,10 +470,10 @@
                         [else
                          ;; veneer case: need to name methods explicitly, since
                          ;; there's no vtable associated with an instance
-                         (let ([methods '(less less_or_equal
-                                               compares_equal compares_unequal
-                                               greater_or_equal greater)]
-                               [ops '(< <= = != >= >)]
+                         (let ([methods '(compare_to less less_or_equal
+                                                     compares_equal compares_unequal
+                                                     greater_or_equal greater)]
+                               [ops '(compare_to < <= = != >= >)]
                                [addeds (for/hasheq ([a (in-list added-methods)])
                                          (values (syntax-e (added-method-id a)) a))])
                            (for/list ([name (in-list methods)]

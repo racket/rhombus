@@ -18,7 +18,8 @@
   (provide (for-syntax get-keyword-static-infos)))
 
 (define-static-info-getter get-keyword-static-infos
-  (#%compare ((< keyword<?)
+  (#%compare ((compare_to keyword-compare-to)
+              (< keyword<?)
               (<= keyword<=?)
               (= keyword=?)
               (!= keyword!=?)
@@ -64,6 +65,13 @@
 (define (keyword>? a b)
   (check-keywords '> a b)
   (keyword<? b a))
+
+(define (keyword-compare-to a b)
+  (check-keywords 'compare_to a b)
+  (cond
+    [(eq? a b) 0]
+    [(a . keyword<? . b) -1]
+    [else 1]))
 
 (begin-for-syntax
   (install-get-keyword-static-infos! get-keyword-static-infos))

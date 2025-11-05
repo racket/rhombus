@@ -40,7 +40,8 @@
                           (#%index-set Bytes.set)
                           (#%append Bytes.append)
                           (#%sequence-constructor Bytes.to_sequence/optimize)
-                          (#%compare ((< bytes<?)
+                          (#%compare ((compare_to bytes-compare-to)
+                                      (< bytes<?)
                                       (<= bytes<=?)
                                       (= bytes=?)
                                       (!= bytes!=?)
@@ -173,20 +174,31 @@
   #:static-infos ((#%call-result #,(get-bytes-static-infos)))
   (bytes->immutable-bytes bstr))
 
+(define (raise-bytes-comp-failure who a b)
+  (raise-annotation-failure who (if (bytes? a) b a) "Bytes"))
+
 (define (bytes!=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes=? a b))
-      (raise-annotation-failure '!= (if (bytes? a) b a) "Bytes")))
+      (raise-bytes-comp-failure '!= a b)))
 
 (define (bytes<=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes>? a b))
-      (raise-annotation-failure '<= (if (bytes? a) b a) "Bytes")))
+      (raise-bytes-comp-failure '<= a b)))
 
 (define (bytes>=? a b)
   (if (and (bytes? a) (bytes? b))
       (not (bytes<? a b))
-      (raise-annotation-failure '>= (if (bytes? a) b a) "Bytes")))
+      (raise-bytes-comp-failure '>= a b)))
+
+(define (bytes-compare-to a b)
+  (unless (and (bytes? a) (bytes? b))
+    (raise-bytes-comp-failure 'compare_to a b))
+  (cond
+    [(bytes=? a b) 0]
+    [(a . bytes<? . b) -1]
+    [else 1]))
 
 (begin-for-syntax
   (install-get-literal-static-infos! 'bytes get-bytes-static-infos))

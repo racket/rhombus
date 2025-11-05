@@ -12,10 +12,12 @@ A @deftech{comparable} value is one that supports @rhombus(<),
 @rhombus(<=), @rhombus(>=),@rhombus(>=), @rhombus(compares_equal), and
 @rhombus(compares_unequal). Real numbers, @tech{characters},
 @tech{strings}, @tech{byte strings}, @tech{symbols}, @tech{keywords},
-and @tech{paths} are all comparable, as are instances of classes that
+and @tech{cross-platform paths} are all comparable, as are instances of classes that
 implement @rhombus(Comparable, ~class).
 
 @doc(
+  operator ((v1 :: Comparable) compare_to (v2 :: Comparable)) :: Int:
+    ~order: order_comparison
   operator ((v1 :: Comparable) < (v2 :: Comparable)) :: Boolean:
     ~order: order_comparison
   operator ((v1 :: Comparable) > (v2 :: Comparable)) :: Boolean:
@@ -34,7 +36,7 @@ implement @rhombus(Comparable, ~class).
 
  Compares @rhombus(v1) and @rhombus(v2), which uses a primitive
  comparison operation for real numbers, characters, strings, byte strings,
- symbols, keywords, and paths, or it calls the @rhombus(compare_to, ~datum)
+ symbols, keywords, and cross-platform paths, or it calls the relevant
  method for a @rhombus(Comparable, ~class) instance.
 
  See also @rhombus(.<), @rhombus(.>), @rhombus(.<=), @rhombus(.>=),
@@ -56,7 +58,7 @@ implement @rhombus(Comparable, ~class).
  @rhombus(Comparable, ~class) operation.
 
  The comparison implementations for @rhombus(Number, ~annot) arguments
- is is specialized like @rhombus(+) for arguments with
+ are specialized like @rhombus(+) for arguments with
  @rhombus(Flonum, ~annot) static information. That specialization does
  not mean that a @rhombus(Number, ~annot) argument combined with a
  @rhombus(Flonum, ~annot) argument will trigger an ambiguous-comparison

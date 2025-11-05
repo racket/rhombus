@@ -12,7 +12,6 @@
          "static-info.rkt"
          "flonum-key.rkt"
          "fixnum-key.rkt"
-         "maybe-key.rkt"
          "static-info.rkt"
          "rhombus-primitive.rkt"
          "order.rkt"
@@ -64,7 +63,8 @@
   ;; propagate a comparison operation from things like `+`, and
   ;; so it's simplest (and good enough in practice) to overapproximate
   ;; by pointing all numbers to `>`, etc.
-  (#%compare ((< </flfx)
+  (#%compare ((compare_to compare-to/flfx)
+              (< </flfx)
               (<= <=/flfx)
               (= =/flfx)
               (!= !=/flfx)
@@ -197,11 +197,8 @@
          #:fixnum fxname ())]))
 
 (define (number!=? a b)
-  (define (check n)
-    (unless (number? n)
-      (raise-annotation-failure '.!= n "Number")))
-  (check a)
-  (check b)
+  (unless (and (number? a) (number? b))
+    (raise-annotation-failure '.!= (if (number? a) b a) "Number"))
   (not (= a b)))
 
 (define-syntax-rule (fl!= a b)
@@ -244,6 +241,31 @@
 (define-syntax !=/flfx (make-comparable-op #'number!=? #'fl!= #'fx!=))
 (define-syntax >=/flfx (make-comparable-op #'>= #'fl>= #'fx>=))
 (define-syntax >/flfx (make-comparable-op #'> #'fl> #'fx>))
+
+(define-syntax (define-compare-to stx)
+  (syntax-parse stx
+    [(_ name < =)
+     #'(define-syntax-rule (name a-expr b-expr)
+         (let ([a a-expr]
+               [b b-expr])
+           (cond
+             [(= a b) 0]
+             [(a . < . b) -1]
+             [else 1])))]
+    [(_ name pred annot-str < =)
+     #'(define (name a b)
+         (unless (and (pred a) (pred b))
+           (raise-annotation-failure 'compare_to (if (pred a) b a) annot-str))
+         (cond
+           [(= a b) 0]
+           [(a . < . b) -1]
+           [else 1]))]))
+
+(define-compare-to real-compare-to real? "Real" < =)
+(define-compare-to flonum-compare-to fl< fl=)
+(define-compare-to fixnum-compare-to fx< fx=)
+(define-syntax compare-to/flfx
+  (make-comparable-op #'real-compare-to #'flonum-compare-to #'fixnum-compare-to))
 
 (define-syntax (define-eql-infix stx)
   (syntax-parse stx
