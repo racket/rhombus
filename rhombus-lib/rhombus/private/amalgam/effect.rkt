@@ -1,8 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "tag.rkt")
          "parse.rkt"
-         "expression.rkt")
+         "expression.rkt"
+         "static-info.rkt")
 
 (provide #%effect)
 
@@ -15,6 +17,8 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ . tail)
-        #:with e::expression #`(group . tail)
-        (values #'(call-with-values (lambda () e.parsed) print-values)
+        #:with e::expression #`(#,group-tag . tail)
+        (values #`(call-with-values
+                   (lambda () #,(discard-static-infos #'e.parsed))
+                   print-values)
                 #'())]))))
