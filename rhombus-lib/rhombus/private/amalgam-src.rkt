@@ -128,3 +128,6 @@
 
 (module+ syntax-map
   (bounce "amalgam/syntax-map-macro.rkt"))
+
+(module+ unwrap
+  (bounce (submod "amalgam/syntax-object.rkt" for-unwrap)))

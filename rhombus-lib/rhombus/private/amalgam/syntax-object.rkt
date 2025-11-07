@@ -61,6 +61,10 @@
                        get-syntax-instances
                        set-parse-syntax-of-annotation!)))
 
+(module+ for-unwrap
+  (provide injected?
+           injected-e))
+
 ;; Shadow normal `syntax?`
 (define syntax? syntax*?)
 

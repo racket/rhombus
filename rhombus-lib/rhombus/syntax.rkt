@@ -1,5 +1,6 @@
 #lang racket/base
-(require "private/pack.rkt")
+(require "private/pack.rkt"
+         "private/unwrap.rkt")
 
 (provide extract-group
          extract-term
@@ -7,7 +8,10 @@
 
          s-exp->expr-group
          s-exp->defn-group
-         s-exp->decl-group)
+         s-exp->decl-group
+
+         injected?
+         injected-e)
 
 ;; result is #f or a syntax object
 (define (extract-group stx)

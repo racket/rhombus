@@ -25,6 +25,7 @@
          (for-template
           (only-in rhombus/private/name-root
                    portal-syntax->lookup))
+         rhombus/syntax
          "typeset-key-help.rkt"
          "hspace.rkt"
          "defining-element.rkt"
@@ -34,10 +35,13 @@
          typeset-rhombusblock)
 
 (define (element*? v)
-  (and (not (null? v))
-       (not (string? v))
-       (not (symbol? v))
-       (content? v)))
+  (let ([v (if (injected? v)
+               (injected-e v)
+               v)])
+    (and (not (null? v))
+         (not (string? v))
+         (not (symbol? v))
+         (content? v))))
 
 (define tt-style (style 'tt null))
 

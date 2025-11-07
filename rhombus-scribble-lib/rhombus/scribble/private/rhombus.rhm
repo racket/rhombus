@@ -4,6 +4,7 @@ import:
   "typeset-rhombus.rkt" open
   lib("scribble/base.rkt")
   "element.rhm".elem
+  "annot.rhm" open
 
 export:
   rhombus
@@ -12,7 +13,13 @@ export:
   rhombuslink
 
 fun escape(who, v):
-  base.elem(v)
+  match v
+  | v :: PreContent.to_s_exp:
+      base.elem(v)
+  | ~else: error(~who: who,
+                 error.annot_msg("escape result"),
+                 error.annot("PreContent"),
+                 error.val(~label: "escape result", v))
 
 define.macros (rhombus,
                rhombusblock,

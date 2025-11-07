@@ -112,7 +112,8 @@ meta:
         let mv = syntax_meta.value(id, typeset_meta.space, #false)
         match mv
         | typeset_meta.Transformer(proc):
-            'relocate_expansion($(proc(id)),
+            let Pair(escaped_id, self) = current_escape_id()
+            'relocate_expansion($escaped_id(#' $self, $(proc(id))),
                                 Syntax.literal_term($(head_context(stxs))))'
         | typeset_meta.Replacer(proc):
             literal_term(proc(id))
