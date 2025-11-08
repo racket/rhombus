@@ -1,0 +1,340 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt")
+  lib("openssl/main.rkt") as rkt
+  rhombus/network
+
+export:
+  is_available
+  unavailable_reason
+  Context:
+    only_space annot namespace
+  connect
+  Listener
+  listen
+  rename:
+      SSLPort as Port
+
+// This namespace is for use in argument annotations
+// here so that the names print with an `ssl.` prefix
+namespace ssl:
+  export:
+    rename:
+      SSLPort as Port
+    Listener
+    Context
+
+def is_available = rkt.#{ssl-available?}
+def unavailable_reason :~ String = rkt.#{ssl-load-fail-reason}
+
+class SSLPort(private _handle):
+  nonfinal
+  constructor(hand):
+    super(hand)
+  static_info:
+    let '$(ann :: annot_meta.Parsed)' = 'Port'
+    let (_, si) = annot_meta.unpack_predicate(ann)
+    si
+
+  implements Printable
+  override describe(mode, recur):
+    recur(_handle, ~mode: mode)
+
+  method addresses() :~ values(String, network.PortNumber, String, network.ListenPortNumber):
+    let (h, p, rh, rp) = rkt.#{ssl-addresses}(_handle, #true)
+    values(to_string(h), p, to_string(rh), rp)
+
+  method abandon():
+    rkt.#{ssl-abandon-port}(_handle)
+
+  method set_verify(mode :: maybe(ssl.Context.VerifyMode) = #'always):
+    if mode == #'try
+    | rkt.#{ssl-try-verify!}(_handle, #true)
+    | rkt.#{ssl-set-verify!}(_handle, mode == #'always)
+
+  method peer_certificate_hostnames() :~ List.of(String):
+    let PairList[str, ...] = rkt.#{ssl-peer-certificate-hostnames}(_handle)
+    [to_string(str), ...]
+
+  method peer_check_hostname(host :: String):
+    rkt.#{ssl-peer-check-hostname}(_handle, host)
+
+  method peer_subject_name() :~ maybe(Bytes):
+    rkt.#{ssl-peer-subject-name}(_handle)
+  method peer_issuer_name() :~ maybe(Bytes):
+    rkt.#{ssl-peer-issuer-name}(_handle)
+
+  method selected_alpn() :~ maybe(Bytes):
+    rkt.#{ssl-get-alpn-selected}(_handle)
+
+  method is_peer_verified():
+    rkt.#{ssl-peer-verified?}(_handle)
+
+  export:
+    Input:
+      only_space annot namespace
+    Output:
+      only_space annot namespace
+    from_ports
+    Mode
+
+  enum Mode:
+    connect
+    accept
+
+class Input(private _handle):
+  ~name: ssl.Port
+  extends SSLPort
+  primitive_property base.#{prop:input-port}: 0
+  static_info:
+    let '$(ann :: annot_meta.Parsed)' = 'Port.Input'
+    let (_, si) = annot_meta.unpack_predicate(ann)
+    si
+  constructor(hand):
+    super(hand)(hand)
+class Output(private _handle):
+  ~name: ssl.Port
+  extends SSLPort
+  primitive_property base.#{prop:output-port}: 0
+  static_info:
+    let '$(ann :: annot_meta.Parsed)' = 'Port.Output'
+    let (_, si) = annot_meta.unpack_predicate(ann)
+    si
+  constructor(hand):
+    super(hand)(hand)
+
+#//
+annot.macro 'SSLPort':
+  let '$(ann :: annot_meta.Parsed)' = 'Port'
+  let (_, si) = annot_meta.unpack_predicate(ann)
+  annot_meta.pack_predicate('rkt.#{ssl-port?}', si)
+
+class Context(private _handle):
+  ~name: ssl.Context
+  nonfinal
+  internal _Context
+  property handle: _handle
+  constructor Context(hand):
+    super(hand)
+
+  enum VerifyMode:
+    never
+    try
+    always
+
+  enum KeyKind:
+    rsa
+    any
+
+  method load_verify_source(src :: PathString || ssl.Context.VerifySource):
+    match src
+    | vs :: ssl.Context.VerifySource when vs.handle == #'default:
+        rkt.#{ssl-load-default-verify-sources!}(_handle)
+    | ~else:
+        rkt.#{ssl-load-verify-source!}(_handle,
+                                       match src
+                                       | vs :: ssl.Context.VerifySource: vs.handle
+                                       | ~else: src)
+
+  method load_certificate_chain(path :: PathString):
+    rkt.#{ssl-load-certificate-chain!}(_handle, path)
+
+  method load_suggested_certificate_authorities(path :: PathString):
+    rkt.#{ssl-load-suggested-certificate-authorities!}(_handle, path)
+
+  method load_private_key(key :: PathString || ssl.Context.PrivateKey,
+                          ~kind: kind :: ssl.Context.KeyKind = #'rsa):
+    do_load_private_key(_handle, key, kind)
+
+  method set_verify(mode :: ssl.Context.VerifyMode = #'always):
+    if mode == #'try
+    | rkt.#{ssl-try-verify!}(_handle, #true)
+    | rkt.#{ssl-set-verify!}(_handle, mode == #'always)
+
+  method set_verify_hostname(mode :: ssl.Context.VerifyMode = #'always):
+    rkt.#{ssl-set-verify-hostname!}(_handle, mode != #'never)
+
+  method set_ciphers(cipher_spec :: String):
+    rkt.#{ssl-set-ciphers!}(_handle, cipher_spec)
+
+  method seal():
+    rkt.#{ssl-seal-context!}(_handle)
+
+  export:
+    PrivateKey
+    VerifySource
+
+  class PrivateKey(private rep):
+    constructor(rep): super(rep)
+    property handle: rep
+    export:
+      pem
+      pem_bytes
+      der
+    fun pem(path :: PathString) :~ PrivateKey:
+      PrivateKey(PairList[#'pem, path])
+    fun pem_bytes(bstr :: Bytes) :~ PrivateKey:
+      PrivateKey(PairList[#'#{pem-data}, bstr])
+    fun der(path :: PathString) :~ PrivateKey:
+      PrivateKey(PairList[#'der, path])
+
+  class VerifySource(private rep):
+    constructor(rep): super(rep)
+    property handle: rep
+    export:
+      default
+      file
+      directory
+      win_store
+      mac_keychain
+    fun default() :~ VerifySource:
+      VerifySource(#'default)
+    fun file(path :: PathString) :~ VerifySource:
+      VerifySource(path)
+    fun directory(path :: PathString) :~ VerifySource:
+      VerifySource(PairList[#'directory, path])
+    fun win_store(bstr :: Bytes) :~ VerifySource:
+      VerifySource(PairList[#'#{win32-store}, bstr])
+    fun mac_keychain(path :: maybe(PathString)) :~ VerifySource:
+      VerifySource(PairList[#'#{macosx-keychain}, path])
+
+  export:
+    Client:
+      only_space annot expr namespace
+    Server:
+      only_space annot expr namespace
+    PrivateKey:
+      only_space annot namespace
+    VerifyMode
+    VerifySource:
+      only_space annot namespace
+    KeyKind
+
+class Client():
+  ~name: ssl.Context.Client
+  extends Context
+  constructor(~secure = #true):
+    super(if secure
+          | rkt.#{ssl-secure-client-context}()
+          | rkt.#{ssl-make-client-context}())()
+
+class Server():
+  ~name: ssl.Context.Server
+  extends Context
+  constructor(~private_key: private_key :: maybe(PathString || ssl.Context.PrivateKey) = #false,
+              ~certificate_chain: certificate_chain :: maybe(Path) = #false):
+    super(rkt.#{ssl-make-server-context}(~#{private-key}: match private_key
+                                                          | #false: #false
+                                                          | private_key :: ssl.Context.PrivateKey:
+                                                              private_key?.handle
+                                                          | ~else:
+                                                              ssl.Context.PrivateKey.pem(private_key).handle,
+                                         ~#{certificate-chain}: certificate_chain))()
+
+  method set_server_alpn(alpn :: List.of(Bytes),
+                         ~allow_no_match = #true):
+    rkt.#{ssl-set-server-alpn!}(handle, alpn, allow_no_match)
+
+fun connect(
+  ~host: host :: String,
+  ~port: port :: network.PortNumber,
+  ~context: ctx :: ssl.Context.Client = Context.Client(),
+  ~alpn_protocols: alpn :: List.of(Bytes) = []
+) :~ values(ssl.Port.Input, ssl.Port.Output):
+  ~name: ssl.connect
+  let (i, o) = rkt.#{ssl-connect}(host, port, ctx.handle, ~alpn: PairList(& alpn))
+  values(Input(i), Output(o))
+
+class Listener(private _handle):
+  ~name: ssl.Listener
+  internal _Listener
+  property handle: _handle
+  primitive_property base.#{prop:evt}: 0
+
+  constructor (
+    ~host: host :: maybe(String) = #false,
+    ~port: port :: network.ListenPortNumber,
+    ~reuse = #false,
+    ~max_allow_wait: max_allow_wait :: Nat = 5,
+    ~context: ctx :: ssl.Context.Server = Context.Server()
+  ):
+    super(rkt.#{ssl-listen}(port, max_allow_wait, reuse, host, ctx.handle))
+
+  implements Closeable
+  override close():
+    rkt.#{ssl-close}(handle)
+
+  method accept(
+    ~wait: wait :: network.NetworkWait = #'all
+  ) :~ values(ssl.Port.Input, ssl.Port.Output):
+    let (i, o):
+      if wait == #'all
+      | rkt.#{ssl-accept}(_handle)
+      | rkt.#{ssl-accept/enable-break}(_handle)
+    values(Input(i), Output(o))
+
+  method addresses() :~ values(String, network.PortNumber):
+    let (s, p, _, _) = rkt.#{ssl-addresses}(_handle, #true)
+    values(to_string(s), p)
+
+  method load_certificate_chain(path :: PathString):
+    rkt.#{ssl-load-certificate-chain!}(_handle, path)
+
+  method load_suggested_certificate_authorities(path :: PathString):
+    rkt.#{ssl-load-suggested-certificate-authorities!}(_handle, path)
+
+  method load_private_key(key :: PathString || ssl.Context.PrivateKey,
+                          ~kind: kind :: ssl.Context.KeyKind = #'rsa):
+    do_load_private_key(_handle, key, kind)
+
+fun do_load_private_key(_handle, key, kind):
+  let key :: Context.PrivateKey:
+    match key
+    | p :: PathString: Context.PrivateKey.pem(key)
+    | ~else: key
+  rkt.#{ssl-load-private-key!}(_handle,                               
+                               match key.handle
+                               | PairList[#'pem, path]: path
+                               | PairList[#'#{pem-data}, bstr]: PairList[#'data, key]
+                               | PairList[#'der, path]: path,
+                               kind == #'rsa,
+                               match key.handle
+                               | PairList[#'der, path]: #true
+                               | ~else: #false)
+
+fun listen(
+  ~host: host :: maybe(String) = #false,
+  ~port: port :: network.ListenPortNumber,
+  ~reuse = #false,
+  ~max_allow_wait: max_allow_wait :: Nat = 5,
+  ~context: ctx :: ssl.Context.Server = Context.Server()
+) :~ Listener:
+  ~name: ssl.listen
+  Listener(~host: host,
+           ~port: port,
+           ~reuse: reuse,
+           ~max_allow_wait: max_allow_wait,
+           ~context: ctx)
+
+fun from_ports(
+  in :: Port.Input,
+  out :: Port.Output,
+  ~mode: mode :: ssl.Port.Mode = #'connect,
+  ~context: context :: ssl.Context = (if mode == #'connect
+                                      | ssl.Context.Client()
+                                      | ssl.Context.Server()),
+  ~close_original = #false,
+  ~shutdown_on_close = #false,
+  ~exn: exn :: (String, Continuation.Marks) -> Any = Exn.Fail,
+  ~host: host :: maybe(String) = #false,
+  ~alpn_protocols: alpn :: List.of(Bytes) = []
+) :~ values(ssl.Port.Input, ssl.Port.Output):
+  ~name: ssl.Port.from_ports
+  let (i, o):
+    rkt.#{ports->ssl-ports}(in, out, ~mode: mode,
+                            ~context: context.handle,
+                            ~#{close-original?}: close_original,
+                            ~#{shutdown-on-close?}: shutdown_on_close,
+                            ~hostname: host,
+                            ~alpn: PairList(& alpn))
+  values(Input(i), Output(o))

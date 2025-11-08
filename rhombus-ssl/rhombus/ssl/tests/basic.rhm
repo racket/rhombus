@@ -1,0 +1,78 @@
+#lang rhombus
+import:
+  ssl
+  rhombus/thread open
+  rhombus/collect
+
+def server_key = collect.file_path(~collect: "tests/openssl", ~file: "server_key.pem")
+def server_cert = collect.file_path(~collect: "tests/openssl", ~file: "server_crt.pem")
+def client_key = collect.file_path(~collect: "tests/openssl", ~file: "client_key.pem")
+def client_cert = collect.file_path(~collect: "tests/openssl", ~file: "client_crt.pem")
+def ca_cert = collect.file_path(~collect: "tests/openssl", ~file: "cacert.pem")
+
+def (r_ci, r_so) = Port.Pipe.make()
+def (r_si, r_co) = Port.Pipe.make()
+
+def ct:
+  thread:
+    ~keep: #'results
+    let ctx = ssl.Context.Client(~secure: #false)
+    ctx.load_verify_source(ca_cert)
+    ctx.set_verify_hostname()
+    ctx.set_verify()
+    ctx.set_ciphers("DEFAULT:!aNULL:!eNULL:!LOW:!EXPORT:!SSLv2")
+    ssl.Port.from_ports(r_ci, r_co,
+                        ~host: "server.example.com",
+                        ~context: ctx)
+
+def st:
+  thread:
+    ~keep: #'results
+    ssl.Port.from_ports(r_si, r_so,
+                        ~mode: #'accept,
+                        ~host: "server.example.com",
+                        ~context: ssl.Context.Server(~private_key: server_key,
+                                                     ~certificate_chain: server_cert))
+
+def (ci, co) = ct.wait()
+def (si, so) = st.wait()
+
+check:
+  ci.is_peer_verified() ~is #true
+  co.is_peer_verified() ~is #true
+  si.is_peer_verified() ~is #false
+  so.is_peer_verified() ~is #false
+  ci.peer_certificate_hostnames() ~is ["server.example.com"]
+  ci.peer_check_hostname("server.example.com") ~is #true
+  ci.peer_check_hostname("other.example.com") ~is #false
+  ci.peer_subject_name() ~is_a Bytes
+  ci.peer_issuer_name() ~is_a Bytes
+  ci.selected_alpn() ~is #false
+
+check:
+  ci ~is_a Port
+  ci ~is_a Port.Input
+  ci ~is_a ssl.Port
+  ci ~is_a ssl.Port.Input
+  co ~is_a Port
+  co ~is_a Port.Output
+  co ~is_a ssl.Port
+  co ~is_a ssl.Port.Output
+
+check so.write_bytes(#"\1\2\3") ~is 3
+check co.write_bytes(#"\4\5\6") ~is 3
+
+block:
+  use_dynamic
+  check dynamic(ci).peek_byte() ~is 1
+  check dynamic(co).close() ~is #void
+
+block:
+  use_static
+  check (ci :: ssl.Port.Input).peek_byte() ~is 1
+  check (co :: ssl.Port.Output).close() ~is #void
+
+check:
+  ci.abandon() ~is #void
+  co.abandon() ~is #void
+

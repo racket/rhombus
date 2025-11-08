@@ -1,0 +1,46 @@
+#lang rhombus
+import:
+  rhombus/collect
+  rhombus/thread open
+  ssl
+
+def pem = collect.file_path(~collect: "openssl", ~file: "test.pem")
+
+def l1 = ssl.Listener(~port: 0,
+                      ~context: ssl.Context.Server(~private_key: pem,
+                                                   ~certificate_chain: pem))
+def l2 = ssl.listen(~port: 0)
+l2.load_certificate_chain(pem)
+l2.load_private_key(pem)
+l2.load_suggested_certificate_authorities(pem)
+
+def (host1, portno1) = l1.addresses()
+def (host2, portno2) = l2.addresses()
+
+def s1t:
+  thread:
+    ~keep: #'results
+    l1.accept()
+
+def s2t:
+  thread:
+    ~keep: #'results
+    l2.accept()
+
+def (c1i, c1o) = ssl.connect(~host: host1,
+                             ~port: portno1,
+                             ~context: ssl.Context.Client(~secure: #false))
+def (c2i, c2o) = ssl.connect(~host: host2,
+                             ~port: portno2,
+                             ~context: ssl.Context.Client(~secure: #false))
+
+check c1i.addresses() ~matches values(String, Int, String, Int)
+check c2o.addresses() ~matches values(String, Int, String, Int)
+
+def (s1i, s1o) = s1t.wait()
+def (s2i, s2o) = s2t.wait()
+
+Port.close.for_each([c1i, c1o, c2i, c2o, s1i, s1o, s2i, s2o])
+
+l1.close()
+l2.close()
