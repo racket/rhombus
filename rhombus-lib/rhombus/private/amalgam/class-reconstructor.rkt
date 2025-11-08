@@ -62,8 +62,9 @@
 (define-for-syntax (build-class-reconstructor super final?
                                               reconstructor-rhs method-private
                                               names)
-  (with-syntax ([(name name? constructor-name name-instance
-                       indirect-static-infos dot-providers reconstructor-name
+  (with-syntax ([(name name? constructor-name
+                       all-static-infos
+                       name-instance reconstructor-name
                        [(con-field-name con-field-arg con-acc) ...]
                        [private-field-name ...]
                        [private-field-desc ...]
@@ -85,7 +86,7 @@
          (list
           #`(define-update-syntax name-instance
               (make-update-syntax (quote-syntax (name #,(and direct? #'constructor-name)
-                                                      dot-providers indirect-static-infos))))))
+                                                      all-static-infos))))))
         null)))
 
 (define-for-syntax (make-reconstructor super constructor-name names args accs)
@@ -113,12 +114,12 @@
        (raise-syntax-error #f "no default `with` for class with a custom constructor" with-id))
      (define-values (desc constructor-id static-infos direct?)
        (syntax-parse constructor-info
-         [(name constructor-id dot-providers indirect-static-infos)
+         [(name constructor-id all-static-infos)
           (define desc (syntax-local-value* (in-class-desc-space #'name) class-desc-ref))
           (unless desc (error "cannot find annotation binding for update provider"))
           (values desc
                   #'constructor-id
-                  #'((#%dot-provider dot-providers) . indirect-static-infos)
+                  #'all-static-infos
                   (syntax-e #'constructor-id))]))
      (define (recon-field-name f) (car f))
      (define (recon-field-arg f) (cadr f))

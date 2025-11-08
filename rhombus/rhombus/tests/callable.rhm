@@ -145,3 +145,61 @@ block:
   check:
     Proc("ok")() ~is #void
     to_string(Proc("ok")) ~is "#<function:ok>"
+
+check:
+  A0() ~is_a Function
+  B1() ~is_a Function
+  C6() ~is_a Function
+
+// check that `Function` methods are available statically
+check:
+  A0().arity() ~is values(1, [], [])
+  A1().arity() ~is values(1, [], [])
+  A3().arity() ~is values(1, [], [])
+  A7().arity() ~is values(1, [], [])
+  A8().arity() ~is values(1, [], [])
+  B1().arity() ~is values(1, [], [])
+  B2().arity() ~is values(1, [], [])
+  B4().arity() ~is values(1, [], [])
+  B5().arity() ~is values(1, [], [])
+  B7().arity() ~is values(1, [], [])
+  C1().arity() ~is values(1, [], [])
+  C5().arity() ~is values(1, [], [])
+  C6().arity() ~is values(1, [], [])
+
+// check that `Function` methods are available dynamically
+block:
+  use_dynamic
+  check:
+    dynamic(A0()).arity() ~is values(1, [], [])
+    dynamic(A1()).arity() ~is values(1, [], [])
+    dynamic(A3()).arity() ~is values(1, [], [])
+    dynamic(A7()).arity() ~is values(1, [], [])
+    dynamic(A8()).arity() ~is values(1, [], [])
+    dynamic(B1()).arity() ~is values(1, [], [])
+    dynamic(B2()).arity() ~is values(1, [], [])
+    dynamic(B4()).arity() ~is values(1, [], [])
+    dynamic(B5()).arity() ~is values(1, [], [])
+    dynamic(B7()).arity() ~is values(1, [], [])
+    dynamic(C1()).arity() ~is values(1, [], [])
+    dynamic(C5()).arity() ~is values(1, [], [])
+    dynamic(C6()).arity() ~is values(1, [], [])
+
+class OwnArity():
+  implements Callable
+  override method call(x):
+    x+1
+  // takes precedence over `Function` methods
+  method arity():
+    "yes"
+
+check:
+  OwnArity()(3) ~is 4
+  OwnArity().arity() ~is "yes"
+  OwnArity().map([1, 2]) ~is [2, 3]
+block:
+  use_dynamic
+  check:
+    dynamic(OwnArity())(3) ~is 4
+    dynamic(OwnArity()).arity() ~is "yes"
+    dynamic(OwnArity()).map([1, 2]) ~is [2, 3]

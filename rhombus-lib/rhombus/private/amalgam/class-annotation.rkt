@@ -5,9 +5,8 @@
          (submod "annotation.rkt" for-class)
          (submod "annot-macro.rkt" for-class)
          "class-transformer.rkt"
-         (submod "dot.rkt" for-dot-provider)
-         "dot-provider-key.rkt"
-         "dotted-sequence-parse.rkt")
+         "dotted-sequence-parse.rkt"
+         "static-info.rkt")
 
 (provide (for-syntax build-class-annotation-form
                      build-guard-expr
@@ -20,9 +19,8 @@
                                                 exposed-internal-id internal-of-id intro
                                                 names)
   (with-syntax ([(name name-extends tail-name
-                       name-instance name? name-of
-                       internal-name-instance indirect-static-infos internal-indirect-static-infos
-                       dot-providers internal-dot-providers
+                       name? name-of
+                       all-static-infos internal-all-static-infos
                        make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields
                        constructor-name-field-mutable?s constructor-public-name-field-mutable?s
@@ -33,9 +31,8 @@
     (define (make-ann-defs id of-id no-super?
                            name-fields keywords field-mutable?s
                            super-name-fields super-field-keywords super-field-mutable?s
-                           name-instance-stx
-                           make-converted-id indirect-static-infos-stx
-                           dot-providers-stx)
+                           make-converted-id
+                           all-static-infos-stx)
       (define len (length (syntax->list name-fields)))
       (with-syntax ([(constructor-name-field ...) name-fields]
                     [(field-keyword ...) keywords]
@@ -66,10 +63,7 @@
                                          #`(quote-syntax #,accessor))))])
                       '()))
               (quote-syntax name?)
-              #,(with-syntax ([dot-providers dot-providers-stx]
-                              [indirect-static-infos indirect-static-infos-stx])
-                  #`((#%dot-provider dot-providers)
-                     . indirect-static-infos))
+              #,all-static-infos-stx
               (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
               (super-field-keyword ... field-keyword ...)
               (make-class-instance-predicate accessors)
@@ -92,10 +86,8 @@
          (make-ann-defs exposed-internal-id internal-of-id #t
                         #'constructor-name-fields #'field-keywords #'constructor-name-field-mutable?s
                         #'super-name-fields #'super-field-keywords #'super-name-field-mutable?s
-                        #'internal-name-instance
                         #'make-converted-internal
-                        #'internal-indirect-static-infos
-                        #'internal-dot-providers)
+                        #'internal-all-static-infos)
          null)
      (cond
        [annotation-rhs
@@ -118,10 +110,8 @@
         (make-ann-defs #'name #'name-of #f
                        #'constructor-public-name-fields #'public-field-keywords #'constructor-public-name-field-mutable?s
                        #'super-public-name-fields #'super-public-field-keywords #'super-public-name-field-mutable?s
-                       #'name-instance
                        #'make-converted-name
-                       #'indirect-static-infos
-                       #'dot-providers)]))))
+                       #'all-static-infos)]))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (predicate-stxs)

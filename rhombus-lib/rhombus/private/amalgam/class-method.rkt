@@ -571,16 +571,16 @@
    (lambda (stxs)
      (syntax-parse stxs
        [(head . tail)
-        (define c-or-id+dp+isi+supers (syntax-parameter-value #'this-id))
-        (unless c-or-id+dp+isi+supers
+        (define c-or-id+isi+supers (syntax-parameter-value #'this-id))
+        (unless c-or-id+isi+supers
           (raise-syntax-error #f
                               "allowed only within methods and constructors"
                               #'head))
-        (syntax-parse c-or-id+dp+isi+supers
+        (syntax-parse c-or-id+isi+supers
           [(_:keyword make-name)
            ;; in a constructor
            (values (relocate+reraw #'head #'make-name) #'tail)]
-          [(id dp isi . super-ids)
+          [(id isi . super-ids)
            ;; in a method
            (when (null? (syntax-e #'super-ids))
              (raise-syntax-error #f "class has no superclass" #'head))
@@ -884,9 +884,9 @@
                                   private-interfaces protected-interfaces
                                   names
                                   #:veneer-vtable [veneer-vtable #f])
-  (with-syntax ([(name reflect-name name-instance name? name-convert reconstructor-name serializer-name
+  (with-syntax ([(name reflect-name name? name-convert reconstructor-name serializer-name
                        methods-ref
-                       indirect-static-infos
+                       all-static-infos
                        [field-name ...]
                        [field-static-infos ...]
                        [name-field ...]
@@ -1021,10 +1021,10 @@
                                          ;; disable check-syntax presence:
                                          (datum->syntax id (syntax-e id) #f)))
                    #`(let ([#,method-name (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
-                                                        reflect-name name name-instance name? name-convert
+                                                        reflect-name name name? name-convert
                                                         #,(and r (car r)) #,(added-method-id added)
                                                         new-private-tables
-                                                        indirect-static-infos
+                                                        all-static-infos
                                                         [super-name ...]
                                                         #,(added-method-kind added))])
                        #,method-name))
@@ -1032,10 +1032,10 @@
                           (not (eq? reconstructor-rhs 'default)))
                      (list
                       #`(method-block (block #,reconstructor-rhs) #,reconstructor-stx-params
-                                      reflect-name name name-instance #f #f
+                                      reflect-name name #f #f
                                       #f reconstructor
                                       new-private-tables
-                                      indirect-static-infos
+                                      all-static-infos
                                       ()
                                       reconstructor))
                      null)
@@ -1044,10 +1044,10 @@
                       (syntax-parse #'serializable
                         [(_ _ serializer-rhs . _)
                          #`(method-block (block serializer-rhs) #,serializer-stx-params
-                                         reflect-name name name-instance #f #f
+                                         reflect-name name #f #f
                                          #f serializer
                                          new-private-tables
-                                         indirect-static-infos
+                                         all-static-infos
                                          ()
                                          serializer)]))
                      null)
@@ -1055,20 +1055,20 @@
                             [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
                             #:when (syntax-e rhs))
                    #`(method-block (block #,rhs) #f ;; FIXME
-                                   reflect-name name name-instance #f #f
+                                   reflect-name name #f #f
                                    #f acc
                                    new-private-tables
-                                   indirect-static-infos
+                                   all-static-infos
                                    ()
                                    reconstructor_field)))))))))
 
 (define-syntax (method-block stx)
   (syntax-parse stx
     [(_ (_::block expr) stx-params
-        reflect-name name name-instance name? name-convert
+        reflect-name name name? name-convert
         result-id method-name
         private-tables-id
-        indirect-static-infos
+        all-static-infos
         super-names
         kind)
      #:with prefixed-method-name (add-name-prefix #'reflect-name #'method-name)
@@ -1101,10 +1101,9 @@
                                              [else
                                               body]))
                                          (wrap
-                                          #`(syntax-parameterize ([this-id (quasisyntax (this-obj name-instance
-                                                                                                  ;; can include `unsyntax`:
-                                                                                                  indirect-static-infos
-                                                                                                  . super-names))]
+                                          #`(syntax-parameterize ([this-id (quasisyntax (this-obj
+                                                                                         all-static-infos
+                                                                                         . super-names))]
                                                                   [private-tables (quote-syntax private-tables-id)])
                                               #,(let ([body #`(with-syntax-parameters
                                                                 stx-params

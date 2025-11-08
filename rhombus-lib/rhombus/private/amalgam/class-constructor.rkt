@@ -7,7 +7,6 @@
          racket/stxparam
          "parens.rkt"
          "call-result-key.rkt"
-         "dot-provider-key.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
          "class-this.rkt"
@@ -115,8 +114,7 @@
                        name?
                        name-defaults
                        make-internal-name
-                       name-instance
-                       indirect-static-infos dot-providers
+                       all-static-infos
                        [private-field-name ...]
                        [private-field-desc ...])
                  names])
@@ -281,8 +279,7 @@
                          (quote-syntax (#:c #,(wrap-static-info*
                                                #'make-name
                                                #`((#%call-result
-                                                   #,(let ([si #`((#%dot-provider dot-providers)
-                                                                  . indirect-static-infos)])
+                                                   #,(let ([si #'all-static-infos])
                                                        (if super
                                                            #`((#%call-result #,si)
                                                               (#%function-arity #,(encode-arity keywords defaults)))

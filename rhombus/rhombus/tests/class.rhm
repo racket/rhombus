@@ -14,6 +14,10 @@ block:
   def mutable c = 10
   check p with (y = c, x = block: c := c + 1; c) ~is Posn(11, 10)
   check p with (x = block: c := c + 1; c, y = block: c := c + 2; c) ~is Posn(12, 14)
+  check (Posn).arity() ~is values(4, [], [])
+  block:
+    use_dynamic
+    check dynamic(Posn).arity() ~is values(4, [], [])
 
 check:
   ~eval

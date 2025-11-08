@@ -24,7 +24,6 @@
          "class-step.rkt"
          "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
-         "dot-provider-key.rkt"
          "class-transformer.rkt"
          (only-meta-in 1
                        "class-method.rkt")
@@ -114,6 +113,15 @@
                                           (and (hash-ref options 'has-non-final-method? #f)
                                                (temporary "internal-internal-~a"))))
 
+       (define name-instance-id (temporary "~a-instance"))
+
+       (define internal-name-instance-id (if internal-name
+                                             (temporary "~a-instance" #:name internal-internal-name)
+                                             name-instance-id))
+
+       (define dot-providers (add-super-dot-providers name-instance-id #f supers))
+       (define internal-dot-providers (add-super-dot-providers internal-name-instance-id #f supers))
+
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
@@ -125,21 +133,34 @@
 
                        static-infos-id
                        static-infos-exprs
+
+                       instance-static-infos-id
+                       instance-static-infos-expr
                        instance-static-infos
 
-                       indirect-static-infos
-                       internal-indirect-static-infos)
+                       internal-instance-static-infos-id
+                       internal-instance-static-infos-expr
+
+                       dot-static-infos-id
+                       dot-static-infos-expr
+
+                       internal-dot-static-infos-id
+                       internal-dot-static-infos-expr
+
+                       all-static-infos
+                       internal-all-static-infos)
          (extract-instance-static-infoss #'name options #f supers
                                          #hasheq() #hasheq()
+                                         internal-name
+                                         dot-providers internal-dot-providers
                                          intro))
 
        (with-syntax ([name? (temporary "~a?")]
-                     [name-instance (temporary "~a-instance")]
+                     [name-instance name-instance-id]
                      [internal-name? (temporary "~a?" #:name internal-internal-name)]
-                     [internal-name-instance (if internal-name
-                                                 (temporary "~a-instance" #:name internal-internal-name)
-                                                 #'name-instance)]
-                     [indirect-static-infos indirect-static-infos]
+                     [internal-name-instance internal-name-instance-id]
+                     [all-static-infos all-static-infos]
+                     [internal-all-static-infos internal-all-static-infos]
                      [instance-static-infos instance-static-infos]
                      [call-statinfo-indirect call-statinfo-indirect-id]
                      [index-statinfo-indirect index-statinfo-indirect-id]
@@ -147,24 +168,30 @@
                      [append-statinfo-indirect append-statinfo-indirect-id]
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [contains-statinfo-indirect contains-statinfo-indirect-id]
-                     [super-call-statinfo-indirect super-call-statinfo-indirect-id])
+                     [super-call-statinfo-indirect super-call-statinfo-indirect-id]
+                     [dot-providers dot-providers])
          (values
           #`(begin
-              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
+              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs
+                                                   instance-static-infos-id instance-static-infos-expr
+                                                   internal-instance-static-infos-id internal-instance-static-infos-expr
+                                                   dot-static-infos-id dot-static-infos-expr
+                                                   internal-dot-static-infos-id internal-dot-static-infos-expr)
               #,@(build-interface-annotation internal-name
                                              annotation-rhs
                                              supers
                                              #'(name name-extends tail-name
                                                      name? name-instance
                                                      internal-name? internal-name-instance
-                                                     indirect-static-infos))
+                                                     all-static-infos internal-all-static-infos))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
               (interface-finish [orig-stx base-stx scope-stx
                                           reflect-name name name-extends tail-name
                                           name? name-instance
                                           #,internal-name internal-name? internal-name-instance
                                           #,internal-internal-name
-                                          instance-static-infos
+                                          all-static-infos internal-all-static-infos
+                                          instance-static-infos dot-providers
                                           call-statinfo-indirect index-statinfo-indirect
                                           index-set-statinfo-indirect append-statinfo-indirect
                                           compare-statinfo-indirect contains-statinfo-indirect
@@ -180,7 +207,8 @@
                     name? name-instance
                     maybe-internal-name internal-name? internal-name-instance
                     internal-internal-name-id
-                    instance-static-infos
+                    all-static-infos internal-all-static-infos
+                    instance-static-infos dot-providers
                     call-statinfo-indirect index-statinfo-indirect
                     index-set-statinfo-indirect append-statinfo-indirect
                     compare-statinfo-indirect contains-statinfo-indirect
@@ -259,8 +287,7 @@
                                                           (pair? (cdr parent-dot-providers))))
                                                  (temporary "dot-provider-~a"))
                                             (and (pair? parent-dot-providers)
-                                                 (car parent-dot-providers)))]
-                     [dot-providers (add-super-dot-providers #'internal-name-instance #f supers)])
+                                                 (car parent-dot-providers)))])
          (with-syntax ([internal-name-ref (if internal-internal-name
                                               (temporary "~a-ref" #:name internal-internal-name)
                                               #'name-ref)])
@@ -275,7 +302,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f #f
                               #hasheq() #hasheq()
-                              #'(name reflect-name name-instance internal-name? #f #f #f
+                              #'(name reflect-name internal-name? #f #f #f
                                       internal-name-ref
                                       ()
                                       []
@@ -356,16 +383,15 @@
   (with-syntax ([(name name-extends tail-name
                        name? name-instance
                        internal-name? internal-name-instance
-                       indirect-static-infos)
+                       all-static-infos internal-all-static-infos)
                  names])
     (append
      (if internal-name
-         (with-syntax ([internal-name internal-name]
-                       [dot-providers (add-super-dot-providers #'internal-name-instance #f supers)])
+         (with-syntax ([internal-name internal-name])
            (list
             #`(define-annotation-syntax internal-name
                 (identifier-annotation internal-name?
-                                       ((#%dot-provider dot-providers))))))
+                                       internal-all-static-infos))))
          null)
      (cond
        [(and annotation-rhs
@@ -385,10 +411,7 @@
                                          #:extra-args (list #'ctx)
                                          "interface"))]
             [else
-             (with-syntax ([dot-providers (add-super-dot-providers #'name-instance #f supers)])
-               #`(identifier-annotation name?
-                                        ((#%dot-provider dot-providers)
-                                         . indirect-static-infos)))])))]))))
+             #`(identifier-annotation name? all-static-infos)])))]))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private

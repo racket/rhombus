@@ -21,26 +21,26 @@
                                              exposed-internal-id intro
                                              names)
   (with-syntax ([(name name-extends tail-name
-                       name-instance name?
-                       indirect-static-infos dot-providers
+                       name?
+                       all-static-infos internal-all-static-infos
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        constructor-field-static-infoss constructor-public-field-static-infoss super-field-static-infoss
                        field-keywords public-field-keywords super-field-keywords)
                  names])
-    (define (make-binding-transformer no-super? name-fields static-infoss keywords)
+    (define (make-binding-transformer no-super? name-fields static-infoss keywords all-static-infos)
       (with-syntax ([(constructor-name-field ...) name-fields]
                     [(constructor-field-static-infos ...) static-infoss]
                     [(field-keyword ...) keywords]
                     [(super-name-field ...) (if no-super? '() #'super-name-fields)]
                     [(super-field-static-infos ...) (if no-super? '() #'super-field-static-infoss)]
-                    [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)])
+                    [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)]
+                    [all-static-infos all-static-infos])
         #`(binding-transformer
            (lambda (stx)
              (composite-binding-transformer stx
                                             '#,(symbol->immutable-string (syntax-e #'name))
                                             (quote-syntax name?)
-                                            #:static-infos (quote-syntax ((#%dot-provider dot-providers)
-                                                                          . indirect-static-infos))
+                                            #:static-infos (quote-syntax all-static-infos)
                                             (list (quote-syntax super-name-field) ...
                                                   (quote-syntax constructor-name-field) ...)
                                             #:keywords '(super-field-keyword ... field-keyword ...)
@@ -54,7 +54,8 @@
               #,(make-binding-transformer #t
                                           #'constructor-name-fields
                                           #'constructor-field-static-infoss
-                                          #'field-keywords)))
+                                          #'field-keywords
+                                          #'internal-all-static-infos)))
          null)
      (cond
        [binding-rhs
@@ -75,7 +76,8 @@
           (make-binding-transformer #f
                                     #'constructor-public-name-fields
                                     #'constructor-public-field-static-infoss
-                                    #'public-field-keywords)))]))))
+                                    #'public-field-keywords
+                                    #'all-static-infos)))]))))
 
 (define-for-syntax no-binding-transformer
   (binding-transformer

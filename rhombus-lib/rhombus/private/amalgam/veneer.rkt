@@ -106,6 +106,10 @@
                               (and super
                                    (veneer-desc-convert-id super))))
 
+       (define name-instance-id (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)))
+
+       (define dot-providers (add-super-dot-providers name-instance-id super interfaces))
+
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
@@ -117,15 +121,29 @@
 
                        static-infos-id
                        static-infos-exprs
+
+                       instance-static-infos-id
+                       instance-static-infos-expr
                        instance-static-infos
 
-                       indirect-static-infos
-                       internal-indirect-static-infos)
+                       internal-instance-static-infos-id
+                       internal-instance-static-infos-expr
+
+                       dot-static-infos-id
+                       dot-static-infos-expr
+
+                       internal-dot-static-infos-id
+                       internal-dot-static-infos-expr
+
+                       all-static-infos
+                       internal-all-static-infos)
          (extract-instance-static-infoss #'name options super interfaces
                                          private-interfaces protected-interfaces
+                                         #f
+                                         dot-providers #f
                                          intro))
 
-       (with-syntax ([name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
+       (with-syntax ([name-instance name-instance-id]
                      [internal-name-instance #f]
                      [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [name-convert (and converter?
@@ -138,24 +156,29 @@
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
-                     [indirect-static-infos indirect-static-infos]
-                     [instance-static-infos instance-static-infos])
+                     [all-static-infos all-static-infos]
+                     [instance-static-infos instance-static-infos]
+                     [dot-providers dot-providers])
          (values
           #`(begin
               #,@(top-level-declare #'(name?))
-              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
+              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs
+                                                   instance-static-infos-id instance-static-infos-expr
+                                                   internal-instance-static-infos-id internal-instance-static-infos-expr
+                                                   dot-static-infos-id dot-static-infos-expr
+                                                   internal-dot-static-infos-id internal-dot-static-infos-expr)
               #,@(build-veneer-annotation converter? super interfaces
                                           #'(name name-extends name? name-convert
-                                                  name-instance indirect-static-infos))
+                                                  all-static-infos))
               (veneer-finish
                [orig-stx base-stx scope-stx
                          reflect-name name name-extends tail-name
                          name? name-convert check?
-                         name-instance
+                         name-instance dot-providers
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
                          append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                          super-call-statinfo-indirect
-                         indirect-static-infos
+                         all-static-infos
                          instance-static-infos
                          ann-terms ann-op-name]
                exports
@@ -167,11 +190,11 @@
       [(_ [orig-stx base-stx scope-stx
                     reflect-name name name-extends tail-name
                     name? name-convert check?
-                    name-instance
+                    name-instance dot-providers
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
                     append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                     super-call-statinfo-indirect
-                    indirect-static-infos
+                    all-static-infos
                     instance-static-infos
                     ann-terms ann-op-name]
           exports
@@ -259,23 +282,21 @@
                                               (and (pair? parent-dot-providers)
                                                    (car parent-dot-providers)))]
                        [representation-static-infos (extract-representation-static-infos #'ann.parsed)]
-                       [name?/checked (if (syntax-e #'check?) #'name? #f)]
-                       [dot-providers (add-super-dot-providers #'name-instance super interfaces)])
+                       [name?/checked (if (syntax-e #'check?) #'name? #f)])
            (define defns
              (reorder-for-top-level
               (append
                (build-veneer-predicate-or-converter super converter?
                                                     #'(name name? name-convert check?
-                                                            ann.parsed ann-terms ann-op-name
-                                                            name-instance indirect-static-infos))
+                                                            ann.parsed ann-terms ann-op-name))
                (build-methods #:veneer-vtable method-vtable
                               method-results
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f #f
                               private-interfaces protected-interfaces
-                              #'(name reflect-name #f #|<- not `name-instance`|# name?/checked name-convert #f #f
+                              #'(name reflect-name name?/checked name-convert #f #f
                                       prop-methods-ref
-                                      representation-static-infos ;; instead of `indirect-static-infos`
+                                      representation-static-infos ;; instead of `all-static-infos`
                                       []
                                       []
                                       []
@@ -299,7 +320,7 @@
                                                  name?/checked name-convert
                                                  constructor-name name-instance name-ref name-of
                                                  #f #f dot-provider-name
-                                                 indirect-static-infos dot-providers
+                                                 dot-providers
                                                  [] [] []
                                                  [] []
                                                  []
@@ -322,8 +343,7 @@
                                          #f #f
                                          #'(name constructor-name name-instance
                                                  #f #f
-                                                 indirect-static-infos
-                                                 dot-providers #f
+                                                 all-static-infos ()
                                                  []
                                                  []
                                                  []
@@ -365,28 +385,25 @@
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert
-                       name-instance indirect-static-infos)
+                       all-static-infos)
                  names])
-    (with-syntax ([dot-providers (add-super-dot-providers #'name-instance super interfaces)])
-      (cond
-        [(not converter?)
-         (list
-          (build-syntax-definition/maybe-extension
-           'rhombus/annot #'name #'name-extends
-           #`(identifier-annotation name?
-                                    ((#%dot-provider dot-providers)
-                                     . indirect-static-infos)
-                                    #:static-only)))]
-        [else
-         (list
-          (build-syntax-definition/maybe-extension
-           'rhombus/annot #'name #'name-extends
-           #`(identifier-binding-annotation #,(binding-form #'converter-binding-infoer
-                                                            #'(name name-convert val))
-                                            val
-                                            ((#%dot-provider dot-providers)
-                                             . indirect-static-infos)
-                                            #:static-only)))]))))
+    (cond
+      [(not converter?)
+       (list
+        (build-syntax-definition/maybe-extension
+         'rhombus/annot #'name #'name-extends
+         #`(identifier-annotation name?
+                                  all-static-infos
+                                  #:static-only)))]
+      [else
+       (list
+        (build-syntax-definition/maybe-extension
+         'rhombus/annot #'name #'name-extends
+         #`(identifier-binding-annotation #,(binding-form #'converter-binding-infoer
+                                                          #'(name name-convert val))
+                                          val
+                                          all-static-infos
+                                          #:static-only)))])))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx
@@ -421,8 +438,7 @@
 
 (define-for-syntax (build-veneer-predicate-or-converter super converter? names)
   (with-syntax ([(name name? name-convert check?
-                       ann ann-terms ann-op-name
-                       name-instance indirect-static-infos)
+                       ann ann-terms ann-op-name)
                  names])
     (define ann-str (shrubbery-syntax->string #`(#,group-tag . ann-terms)))
     (define all-ann-str

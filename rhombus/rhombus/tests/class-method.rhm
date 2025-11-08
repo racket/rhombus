@@ -713,3 +713,16 @@ block:
   check test.test_counter([0, 0, 0]) ~is [3, 3, 3]
   check test.test_count_via_this([0, 0, 0]) ~is [4, 5, 6]
   check test.square_all_with_workaround([1, 2, 3]) ~is [1, 4, 9]
+
+// make sure `this` can have the static info of a superclass
+check:
+  use_static
+  class Top():
+    nonfinal
+    method top():
+      "ok"
+  class Bottom():
+    extends Top
+    method bottom(v):
+      (if v | this | Top()).top()
+  ~completes

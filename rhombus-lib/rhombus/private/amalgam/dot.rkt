@@ -236,16 +236,33 @@
                             rhombus-realm
                             "no such field or method"
                             "in value" v))
+  (define (hash/s-ref ht)
+    (let loop ([ht ht])
+      (cond
+        [(pair? ht) (or (loop (car ht)) (loop (cdr ht)))]
+        [(hash-ref ht field #f) => (lambda (acc) acc)]
+        [else #f])))
   (cond
     [(not ht) (fail)]
-    [(pair? ht) (or
-                 (let loop ([ht ht])
-                   (cond
-                     [(pair? ht) (or (loop (car ht)) (loop (cdr ht)))]
-                     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
-                     [else #f]))
-                 (fail))]
+    [(pair? ht) (cond
+                  [(hash/s-ref ht)  => (lambda (acc) (acc v))]
+                  [else (fail)])]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
+    [(and (procedure? v)
+          (field-name->accessor-ref v #f)
+          ;; functionness can be mixed in, so fall back to function methods
+          (hash-ref (builtin->accessor-ref void) field #f))
+      => (lambda (acc) (acc v))]
+    [(and (input-port? v)
+          (field-name->accessor-ref v #f)
+          ;; portness can be mixed in, so fall back to port methods
+          (hash/s-ref (builtin->accessor-ref (current-input-port))))
+     => (lambda (acc) (acc v))]
+    [(and (output-port? v)
+          (field-name->accessor-ref v #f)
+          ;; portness can be mixed in, so fall back to port methods
+          (hash/s-ref (builtin->accessor-ref (current-output-port))))
+     => (lambda (acc) (acc v))]
     [else (fail)]))
 
 (define (dot-assign-by-name v field new-val)

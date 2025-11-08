@@ -57,7 +57,7 @@
   (with-syntax ([(name reflect-name name-extends tail-name
                        name? name-convert constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
-                       indirect-static-infos dot-providers
+                       dot-providers
                        [all-public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
                        [all-public-name-field/mutate ...]

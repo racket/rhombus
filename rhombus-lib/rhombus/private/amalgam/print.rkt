@@ -465,7 +465,7 @@
                        "Port.Output("))
       (let ([n (object-name v)])
         (if n
-            (list (print n))
+            (list (print (if (string? n) (string->immutable-string n) n)))
             null))
       (pretty-text ")"))]
     [(map-maybe? v)

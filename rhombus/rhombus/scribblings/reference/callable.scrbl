@@ -24,6 +24,11 @@
 
 )
 
+ When a class implements @rhombus(Callable, ~class), then methods of
+ @rhombus(Function, ~annot) also for work instances of the class, such as
+ @rhombus(Function.map). Any same-named methods or fields in the class
+ take precedence over @rhombus(Function, ~annot) methods.
+
 @examples(
   ~defn:
     class Posn(x, y):
@@ -34,6 +39,7 @@
     def p = Posn(1, 2)
     p
     p(3, 4)
+    p.map([0, 0], [1, 2])
 )
 
 }

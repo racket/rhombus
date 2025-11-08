@@ -20,26 +20,21 @@
      (cond
        [(let ([v (syntax-parameter-value #'this-id)])
           (and (not (identifier? v)) v))
-        => (lambda (id+dp+isi+supers)
-             (syntax-parse id+dp+isi+supers
-               [(id dp indirect-static-infos . _)
+        => (lambda (id+isi+supers)
+             (syntax-parse id+isi+supers
+               [(id all-static-infos . _)
                 (define new-id
-                  (let ([id (datum->syntax #'id (syntax-e #'id) #'head #'head)])
-                    (if (syntax-e #'dp)
-                        (wrap-static-info id
-                                          #'#%dot-provider
-                                          #'dp)
-                        id)))
+                  (datum->syntax #'id (syntax-e #'id) #'head #'head))
                 (values (if repet?
                             (make-repetition-info (list new-id)
                                                   null
                                                   new-id
                                                   #`((#%indirect-static-info #,new-id)
-                                                     . indirect-static-infos)
+                                                     . all-static-infos)
                                                   0)
                             (wrap-static-info*
                              new-id
-                             #'indirect-static-infos))
+                             #'all-static-infos))
                         #'tail)]))]
        [else
         (raise-syntax-error #f
