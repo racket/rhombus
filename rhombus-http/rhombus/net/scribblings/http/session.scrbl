@@ -3,7 +3,8 @@
     meta_label:
       rhombus open
       net/http open
-      net/url)
+      net/url
+      net/ssl)
 
 @title(~tag: "session"){Sessions}
 
@@ -11,8 +12,8 @@
   class Session():
     constructor (
       ~pool_config: pool_config :: PoolConfig = PoolConfig(),
-      ~ssl_context: maybe(SSLContext) = #false,
-      ~cookie_jar: maybe(CookieJar) = #false,
+      ~ssl_context: context :: maybe(ssl.Context.Client) = ssl.Context.Client(),
+      ~cookie_jar: cookie_jar :: maybe(CookieJar) = #false,
       ~proxies: proxies :: List.of(Proxy) = []
     )
   method (session :: Session).close() :: Void
@@ -24,6 +25,10 @@
  A session has a pool of connections, and the pool is configured through
  the @rhombus(pool_config) structor argument, which is a
  @rhombus(PoolConfig, ~class).
+
+ The @rhombus(context) argument configures security properties for HTTP
+ requests. By default, connections are secure using the operating
+ system's default certificate store.
 
  A session is @rhombus(Closeable, ~class), where closing a session via
  the @rhombus(Session.close) method closes all of its associated connections and
