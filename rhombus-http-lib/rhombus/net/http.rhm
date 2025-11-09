@@ -11,11 +11,11 @@ import:
     expose:
       quote
   net/url
+  net/ssl
   json as json_lib
 
 // todo:
 annot.macro 'HTTPConn': 'Any'
-annot.macro 'SSLContext': 'Any'
 annot.macro 'CookieJar': 'Any'
 
 export:
@@ -325,7 +325,7 @@ class Proxy(_handle):
     https
 
   constructor (~matches: matches :: url.URL -> Boolean,
-               ~connect: connect :: (HTTPConn, url.URL, maybe(SSLContext)) -> Void) :~ Proxy:
+               ~connect: connect :: (HTTPConn, url.URL, maybe(ssl.Context.Client)) -> Void) :~ Proxy:
     super(easy.#{make-proxy}(fun (url_handle):
                                matches(url.URL.from_handle(url_handle)),
                              fun (conn_handle, url_handle, ssl_context_handle):
@@ -353,12 +353,12 @@ class Session(_handle):
   internal _Session
   property handle: _handle
   constructor (~pool_config: pool_config :: PoolConfig = PoolConfig(),
-               ~ssl_context: ssl_context :: maybe(SSLContext) = #false, // FIXME: don't default to `#false`
+               ~ssl_context: ssl_context :: maybe(ssl.Context.Client) = ssl.Context.Client(),
                ~cookie_jar: cookie_jar :: maybe(CookieJar) = #false,
                ~proxies: proxies :: List.of(Proxy) = []):
     let [p, ...] = proxies
     super(easy.#{make-session}(~#{pool-config}: pool_config.handle,
-                               ~#{ssl-context}: ssl_context,
+                               ~#{ssl-context}: ssl_context?.handle,
                                ~#{cookie-jar}: cookie_jar,
                                ~proxies: PairList(p.handle, ...)))
   override method close():
