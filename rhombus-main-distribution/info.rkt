@@ -10,6 +10,7 @@
     "rhombus-pict"
     "rhombus-scribble"
 
+    "rhombus-ssl"
     "rhombus-http"
     "rhombus-url"
     "rhombus-xml"
