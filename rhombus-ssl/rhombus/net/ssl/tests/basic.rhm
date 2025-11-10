@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  ssl
+  net/ssl
   rhombus/thread open
   rhombus/collect
 

@@ -4,7 +4,7 @@
       rhombus open
       rhombus/network
       rhombus/collect
-      ssl)
+      net/ssl)
 
 @(def ref_doc: ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")')
 
@@ -17,9 +17,9 @@
 
 @title{Rhombus SSL: Secure Communication}
 
-@docmodule(ssl)
+@docmodule(net/ssl)
 
-The @rhombusmodname(ssl) library supports secure network communication
+The @rhombusmodname(net/ssl) library supports secure network communication
 via the OpenSSL API and libraries that are included with Racket or
 provided by the operating system.
 

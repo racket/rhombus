@@ -2,7 +2,7 @@
 import:
   rhombus/collect
   rhombus/thread open
-  ssl
+  net/ssl
 
 def pem = collect.file_path(~collect: "openssl", ~file: "test.pem")
 
