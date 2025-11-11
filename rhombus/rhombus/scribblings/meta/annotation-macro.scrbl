@@ -101,7 +101,7 @@
  the value. The given @rhombus(statinfo_stx) is in unpacked form
  (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
  The optional @rhombus(track_stxes) argument is passed along to
- @rhombus(Syntax.track_origin) on the resulting syntax object to connect
+ @rhombus(syntax_meta.track_origin) on the resulting syntax object to connect
  expansion tracking from the @rhombus(track_stxes) members to the packed
  binding expansion; see also @secref("stxobj-track").
 

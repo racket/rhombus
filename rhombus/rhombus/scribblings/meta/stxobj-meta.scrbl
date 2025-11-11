@@ -247,7 +247,7 @@
     .call_to_expand_using(
       stx :: Syntax,
       proc :: Syntax -> Syntax
-  ) :: S7yntax
+  ) :: Syntax
 ){
 
  The @rhombus(syntax_meta.make_definition_context) function creates a
@@ -269,7 +269,7 @@
   object, returning the new syntax object with those scopes added.}
 
  @item{The @rhombus(syntax_meta.DefinitionContext.track_origin) method
-  transfers gathered @rhombus(Syntax.track_origin)-like expansion
+  transfers gathered @rhombus(syntax_meta.track_origin)-like expansion
   information to the given syntax object, where information is gathered
   during each @rhombus(syntax_meta.DefinitionContext.add_definitions)
   call.}
