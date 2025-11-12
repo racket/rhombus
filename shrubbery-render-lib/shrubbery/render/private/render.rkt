@@ -385,7 +385,7 @@
                                             [max-n (+ (sub1 len) number-from)])
                                         (define s (number->string n))
                                         (define max-s (number->string max-n))
-                                        (string-append
+                                        (string-append-immutable
                                          (make-string (- (string-length max-s) (string-length s)) #\space)
                                          s
                                          " "))))

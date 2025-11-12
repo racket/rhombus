@@ -11,7 +11,7 @@
 @(namespace ~open:
     import:
       meta_label:
-        scribble/rhombus
+        scribble/rhombus/manual open
     export scribble_rhombusblock_etc
     def scribble_rhombusblock_etc:
       @rhombus(rhombusblock_etc))

@@ -49,6 +49,7 @@ def (render_line,
                    | #'identifier || #'plain: p.colorize(current_identifier_color())
                    | #'paren: p.colorize(current_paren_color())
                    | #'comment: p.colorize(current_comment_color())
+                   | #'lineno: beside.baseline(p.colorize("blue").scale(0.8), rtt(" "))
                    | ~else: p
                ~render_in_space:
                  fun (space, str, od,

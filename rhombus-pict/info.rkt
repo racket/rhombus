@@ -12,6 +12,7 @@
                      "rhombus-draw"
                      "rhombus-lib"
                      "rhombus-scribble-lib"
+                     "rhombus-scribble" ; for `rhombusblock_etc` reference
                      "rhombus-slideshow"))
 
 (define pkg-desc "Rhombus functional-picture library")
