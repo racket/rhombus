@@ -49,7 +49,7 @@ def (render_line,
                            match rx'" "+'.match_range_in(str)
                            | RXMatch(s..e, _, _):
                                beside.baseline(loop(str.substring(0..s)),
-                                               tt(str.substring(s..e)),
+                                               rtt(str.substring(s..e)),
                                                loop(str.substring(e..str.length())))
                            | ~else: t(str)
                      | ~else:
