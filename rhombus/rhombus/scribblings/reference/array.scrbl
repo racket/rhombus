@@ -292,11 +292,11 @@ contents, even if one is mutable and the other is immutable.
 }
 
 @doc(
-  fun Array.copy_from(dest_arr :: MutableArray,
-                      dest_start :: Nat,
-                      src_arr :: Array,
-                      src_start :: Nat = 0,
-                      src_end :: Nat = Array.length(src_arr))
+  method Array.copy_from(dest_arr :: MutableArray,
+                         dest_start :: Nat,
+                         src_arr :: Array,
+                         src_start :: Nat = 0,
+                         src_end :: Nat = Array.length(src_arr))
     :: Void
 ){
 

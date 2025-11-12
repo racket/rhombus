@@ -142,7 +142,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
-  method (bstr :: Bytes).copy(bstr :: Bytes) :: MutableBytes
+  method (bstr :: Bytes).copy() :: MutableBytes
 ){
 
  Returns a fresh mutable byte string with the same initial content as
@@ -158,11 +158,11 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 
 @doc(
-  fun Bytes.copy_from(dest_bstr :: MutableBytes,
-                      dest_start :: Nat,
-                      src_bstr :: Bytes,
-                      src_start :: Nat = 0,
-                      src_end :: Nat = Bytes.length(src_bstr))
+  method Bytes.copy_from(dest_bstr :: MutableBytes,
+                         dest_start :: Nat,
+                         src_bstr :: Bytes,
+                         src_start :: Nat = 0,
+                         src_end :: Nat = Bytes.length(src_bstr))
     :: Void
 ){
 
