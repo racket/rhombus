@@ -19,7 +19,7 @@
     ~epoch: epoch_align :: EpochAlignment = #'center,
     pict :: Pict, ...
   ) :: Pict
-){77
+){
 
  Creates a pict that combines the given @rhombus(pict)s horizontally
  with the first @rhombus(pict) as leftmost. The @rhombus(vert_align)
