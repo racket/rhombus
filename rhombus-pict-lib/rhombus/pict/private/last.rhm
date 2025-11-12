@@ -60,8 +60,17 @@ fun
     let last_handle = rkt.#{pict-last}(h1)
     if last_handle
     | let (x, y) = rkt.#{lt-find}(h1, last_handle)
+      let (x2, y2) = rkt.#{rb-find}(h1, last_handle)
       let last_p = path_end(last_handle)
-      let last_p_distinct = rkt.inset(last_p, 0, 0, 0, 0)
+      let lw = rkt.#{pict-width}(last_p)
+      let lh = rkt.#{pict-height}(last_p)
+      let last_p_distinct = rkt.scale(rkt.inset(last_p, 0, 0, 0, 0),
+                                      if lw .= 0
+                                      | 1
+                                      | (x2 - x) / lw,
+                                      if lh .= 0
+                                      | 1
+                                      | (y2 - y) / lh)
       let h2_distinct = rkt.inset(h2, 0, 0, 0, 0)
       let p = rkt_append(sep, last_p_distinct, h2_distinct)
       let (ldx, ldy) = rkt.#{lt-find}(p, last_p_distinct)

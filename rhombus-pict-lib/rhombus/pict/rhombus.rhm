@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/rx open
   pict open
   pict/text open
   shrubbery/render
@@ -38,18 +39,28 @@ fun rtt(str_s) :~ Pict:
 def (render_line,
      render_block):
   @render.make(~render:
-                 fun (kind, str):
+                 fun (kind, str :~ String):
                    let p :~ Pict:
-                     if kind == #'variable
-                     | italicly: rtt(str)
-                     | rtt(str)
+                     match kind
+                     | #'variable:
+                         italicly: rtt(str)
+                     | #'lineno:
+                         recur loop (str :~ String = str ++ " "):
+                           match rx'" "+'.match_range_in(str)
+                           | RXMatch(s..e, _, _):
+                               beside.baseline(loop(str.substring(0..s)),
+                                               tt(str.substring(s..e)),
+                                               loop(str.substring(e..str.length())))
+                           | ~else: t(str)
+                     | ~else:
+                         rtt(str)
                    match current_rhombus_colorize() && kind
                    | #'value: p.colorize(current_literal_color())
                    | #'result: p.colorize(current_result_color())
                    | #'identifier || #'plain: p.colorize(current_identifier_color())
                    | #'paren: p.colorize(current_paren_color())
                    | #'comment: p.colorize(current_comment_color())
-                   | #'lineno: beside.baseline(p.colorize("blue").scale(0.8), rtt(" "))
+                   | #'lineno: p.colorize("blue").scale(0.8)
                    | ~else: p
                ~render_in_space:
                  fun (space, str, od,
