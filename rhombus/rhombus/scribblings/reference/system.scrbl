@@ -106,7 +106,7 @@
 ){
 
  The @rhombus(system.seconds) reports the current time in seconds since
- the epoch---which is consistent with the
+ @deftech{the epoch}, January 1, 1970 UTC, which is consistent with the
  @rhombus(filesystem.modify_seconds) function's result, for example. The
  @rhombus(system.milliseconds) function reports the same time with more
  precision, expressed in milliseconds (including fractional milliseconds)
