@@ -23,9 +23,9 @@ class RXMatch(whole, captures :: List, capture_names :: Map):
         | captures[index - 1]
         | error(~who: #'#{RX.get},
                 "no capture group by given name",
-                error.val("name", index))
+                error.val(~label: "name", sym))
     | ~else:
        error(~who: #'#{RX.get},
              ~exn: Exn.Fail.Annot,
              "invalid match index",
-             error.val("index", index))
+             error.val(~label: "index", index))
