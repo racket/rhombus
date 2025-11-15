@@ -12,4 +12,5 @@
 @include_section("subprocess.scrbl")
 @include_section("network.scrbl")
 @include_section("system.scrbl")
+@include_section("date.scrbl")
 @include_section("cmdline.scrbl")

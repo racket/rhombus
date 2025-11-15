@@ -1,0 +1,338 @@
+#lang rhombus/static
+import:
+  lib("racket/base.rkt") as rkt
+  lib("racket/date.rkt") as rkt_date
+
+export:
+  Time
+  Date
+  DateTime
+  ZonedDateTime
+  Format
+
+// for referencing in annotatons with a `date.` prefix:
+namespace date:
+  export:
+    Time
+    Date
+    DateTime
+    ZonedDateTime
+    Format
+
+fun rhm_to_string(s): to_string(s)
+alias 'rhombus_compare_to': 'compare_to'
+
+fun str_2d(n) :~ String:
+  str.d(n, ~width: 2, ~pad: Char"0", ~align: #'right)
+
+fun date_string(year, month, day, ~iso = #false) :~ String:
+  (if iso
+   | str.d(year, ~min_width: 4, ~pad: Char"0", ~align: #'right, ~sign_align: #'left)
+   | str.d(year))
+    ++ "-" ++ str_2d(month) ++ "-" ++ str_2d(day)
+
+fun time_string(hour, minute, second, nanosecond):
+  str_2d(hour) ++ ":" ++ str_2d(minute) ++ ":" ++ str_2d(second)
+    ++ (if nanosecond .= 0
+        | ""
+        | let s = str.d(nanosecond, ~width: 9, ~pad: Char"0", ~align: #'right)
+          "." ++ (recur loop (i = s.length()):
+                    if s[i-1] == Char"0" && s[i-2] == Char"0" && s[i-3] == Char"0"
+                    | loop(i - 3)
+                    | s.substring(0, i)))
+
+fun time_zone_string(time_zone_offset, sep :~ String):
+  let offset = math.abs(time_zone_offset)
+  let h = offset div 3600
+  let m = (offset mod 3600) div 60
+  (if time_zone_offset < 0 | "-" | "+")
+    ++ str_2d(h)
+    ++ sep ++ str_2d(m)
+
+enum Format:
+  rfc2822
+  rfc3339
+  iso8601
+  american
+  european
+  julian
+
+def default_format = #'rfc3339
+
+class ZonedDateTime(~year: year :: Int,
+                    ~month: month :: Int.in(1, 12),
+                    ~day: day :: Int.in(1, 31),
+                    ~hour: hour :: Int.in(0, 23) = 0,
+                    ~minute: minute :: Int.in(0, 59) = 0,
+                    ~second: second :: Int.in(0, 60) = 0,
+                    ~nanosecond: nanosecond :: Int.in(0, 999_999_999) = 0,
+                    ~week_day: week_day :: Int.in(0, 6) = 0,
+                    ~year_day: year_day :: Int.in(0, 365) = 0,
+                    ~is_dst: is_dst :: Boolean = #false,
+                    ~time_zone_offset: time_zone_offset :: Int = 0,
+                    ~time_zone_name: time_zone_name :: String = "UTC",
+                    private mutable _seconds = #false,
+                    private _handle = rkt.#{date*}(second, minute, hour, day, month, year,
+                                                   week_day, year_day, is_dst, time_zone_offset,
+                                                   nanosecond, time_zone_name)):
+  internal _ZonedDateTime
+
+  property handle: _handle
+
+  private implements Printable
+  private override method describe(mode, recur):
+    if mode == #'text
+    | to_string(~show_time: #true)
+    | recur(this, ~as: #'super)
+
+  private implements Comparable
+  private override method compare_to(other :~ ZonedDateTime):
+    to_seconds() rhombus_compare_to other.to_seconds()
+
+  method to_string(~format: format :: date.Format = default_format,
+                   ~show_time = #true,
+                   ~show_nanosecond = #false,
+                   ~show_time_zone = #true) :~ String:
+    match format
+    | #'iso8601 || #'rfc3339:
+        if show_time
+        | date_string(year, month, day, ~iso: format == #'iso8601)
+            ++ (if format == #'rfc3339 | " " | "T")
+            ++ time_string(hour, minute, second, if show_nanosecond | nanosecond | 0)
+            ++ (if show_time_zone
+                | (if time_zone_offset == 0
+                   | "Z"
+                   | time_zone_string(time_zone_offset, ":"))
+                | "")
+        | date_string(year, month, day, ~iso: #true)
+    | ~else:
+        parameterize { rkt_date.#{date-display-format}: match format
+                                                        |  #'european:
+                                                             #'irish
+                                                        | ~else:
+                                                            format }:
+          rhm_to_string(rkt_date.#{date->string}(_handle, show_time))
+
+  method to_seconds() :~ Real:
+    if _seconds
+    | _seconds
+    | let s = find_seconds(~second: second,
+                           ~minute: minute,
+                           ~hour: hour,
+                           ~day: day,
+                           ~month: month,
+                           ~year: year,
+                           ~local: #false)
+      let s = s + time_zone_offset
+      let s: if nanosecond .= 0
+             | s
+             | s + nanosecond / 1e9
+      _seconds := s
+      s
+
+  export:
+    now
+    from_seconds
+    find_seconds
+
+  fun now(~local = #true) :~ ZonedDateTime:
+    from_seconds(system.milliseconds() / 1000.0,
+                 ~local: local)
+
+  fun from_seconds(secs :: Real,
+                   ~local: local = #true) :~ ZonedDateTime:
+    let d = rkt.#{seconds->date}(secs, local)
+    _ZonedDateTime(~nanosecond: rkt.#{date*-nanosecond}(d),
+                   ~second: rkt.#{date-second}(d),
+                   ~minute: rkt.#{date-minute}(d),
+                   ~hour: rkt.#{date-hour}(d),
+                   ~day: rkt.#{date-day}(d),
+                   ~month: rkt.#{date-month}(d),
+                   ~year: rkt.#{date-year}(d),
+                   ~week_day: rkt.#{date-week-day}(d),
+                   ~year_day: rkt.#{date-year-day}(d),
+                   ~is_dst: rkt.#{date-dst?}(d),
+                   ~time_zone_offset: rkt.#{date-time-zone-offset}(d),
+                   ~time_zone_name: rkt.#{date*-time-zone-name}(d),
+                   secs,
+                   d)
+
+  fun find_seconds(~second: second :: Int.in(0, 60) = 0,
+                   ~minute: minute :: Int.in(0, 59) = 0,
+                   ~hour: hour :: Int.in(0, 23) = 0,
+                   ~day: day :: Int.in(1, 31),
+                   ~month: month :: Int.in(1, 12),
+                   ~year: year :: Int,
+                   ~local: local = #true) :~ Int:
+    rkt_date.#{find-seconds}(second, minute, hour, day, month, year, local)
+
+class DateTime(~year: year :: Int,
+               ~month: month :: Int.in(1, 12),
+               ~day: day :: Int.in(1, 31),
+               ~hour: hour :: Int.in(0, 23) = 0,
+               ~minute: minute :: Int.in(0, 59) = 0,
+               ~second: second :: Int.in(0, 60) = 0,
+               ~nanosecond: nanosecond :: Int.in(0, 999_999_999) = 0):
+
+  private implements Printable
+  private override method describe(mode, recur):
+    if mode == #'text
+    | to_zoned().to_string()
+    | recur(this, ~as: #'super)
+
+  private implements Comparable
+  private override method compare_to(other :~ DateTime):
+    if year == other.year
+    | if month == other.month
+      | if day == other.day
+        | if hour == other.hour
+          | if minute == other.minute
+            | if second == other.second
+              | nanosecond rhombus_compare_to other.nanosecond
+              | second - other.second
+            | minute - other.minute
+          | hour - other.hour
+        | hour - other.hour
+      | month - other.month
+    | year - other.year
+
+  method to_seconds() :~ Real:
+    let s = ZonedDateTime.find_seconds(~second: second,
+                                       ~minute: minute,
+                                       ~hour: hour,
+                                       ~day: day,
+                                       ~month: month,
+                                       ~year: year,
+                                       ~local: #false)
+    if nanosecond .= 0
+    | s
+    | s + nanosecond / 1e9
+
+  method to_zoned() :~ ZonedDateTime:
+    ZonedDateTime.from_seconds(to_seconds(), ~local: #false)
+
+  method to_string(~format: format :: date.Format = default_format,
+                   ~show_time = #true,
+                   ~show_nanosecond = #false) :~ String:
+    match format
+    | #'rfc3339 || #'iso8601:
+        if show_time
+        | date_string(year, month, day)
+            ++ (if format == #'iso8601 | "T" | " ")
+            ++ time_string(hour, minute, second, if show_nanosecond | nanosecond | 0)
+        | date_string(year, month, day)
+    | ~else:
+        to_zoned().to_string(~format: format,
+                             ~show_time: show_time,
+                             ~show_nanosecond: show_nanosecond,
+                             ~show_time_zone: #false)
+
+  export:
+    now
+    from_seconds
+
+  fun now(~local = #true) :~ DateTime:
+    from_seconds(system.milliseconds() / 1000.0,
+                 ~local: local)
+
+  fun from_seconds(secs :: Real,
+                   ~local = #true) :~ DateTime:
+    let d = rkt.#{seconds->date}(secs, local)
+    DateTime(~nanosecond: rkt.#{date*-nanosecond}(d),
+             ~second: rkt.#{date-second}(d),
+             ~minute: rkt.#{date-minute}(d),
+             ~hour: rkt.#{date-hour}(d),
+             ~day: rkt.#{date-day}(d),
+             ~month: rkt.#{date-month}(d),
+             ~year: rkt.#{date-year}(d))
+
+
+class Date(~year: year :: Int,
+           ~month: month :: Int.in(1, 12),
+           ~day: day :: Int.in(1, 31)):
+
+  private implements Printable
+  private override method describe(mode, recur):
+    if mode == #'text
+    | to_string()
+    | recur(this, ~as: #'super)
+
+  private implements Comparable
+  private override method compare_to(other :~ Date):
+    if year == other.year
+    | if month == other.month
+      | day - other.day
+      | month - other.month
+    | year - other.year
+
+  method to_datetime(~time: time :: date.Time = Time()) :~ DateTime:
+    DateTime(~day: day, ~month: month, ~year: year,
+             ~nanosecond: time.nanosecond,
+             ~second: time.second,
+             ~minute: time.minute,
+             ~hour: time.hour)
+
+  method to_seconds() :~ Real:
+    to_datetime().to_seconds()
+
+  method to_string(~format: format :: date.Format = default_format) :~ String:
+    match format
+    | #'rfc3339 || #'iso8601:
+        date_string(year, month, day)
+    | ~else:
+        to_datetime().to_string(~format: format, ~show_time: #false)
+
+  export:
+    now
+    from_seconds
+
+  fun now(~local = #true) :~ Date:
+    from_seconds(system.seconds(),
+                 ~local: local)
+
+  fun from_seconds(secs :: Real,
+                   ~local = #true) :~ Date:
+    let d = rkt.#{seconds->date}(secs, local)
+    Date(~day: rkt.#{date-day}(d),
+         ~month: rkt.#{date-month}(d),
+         ~year: rkt.#{date-year}(d))
+
+class Time(~hour: hour :: Int.in(0, 23) = 0,
+           ~minute: minute :: Int.in(0, 59) = 0,
+           ~second: second :: Int.in(0, 60) = 0,
+           ~nanosecond: nanosecond :: Int.in(0, 999_999_999) = 0):
+
+  private implements Printable
+  private override method describe(mode, recur):
+    if mode == #'text
+    | to_string()
+    | recur(this, ~as: #'super)
+
+  private implements Comparable
+  private override method compare_to(other :~ Time):
+    if hour == other.hour
+    | if minute == other.minute
+      | if second == other.second
+        | nanosecond rhombus_compare_to other.nanosecond
+        | second - other.second
+      | minute - other.minute
+    | hour - other.hour
+
+  method to_string(~show_nanosecond = #false) :~ String:
+    time_string(hour, minute, second, if show_nanosecond | nanosecond | 0)
+
+  export:
+    now
+    from_seconds
+
+  fun now(~local = #true) :~ Time:
+    from_seconds(system.milliseconds() / 1000.0,
+                 ~local: local)
+
+  fun from_seconds(secs :: Real,
+                   ~local = #true) :~ Time:
+    let d = rkt.#{seconds->date}(secs, local)
+    Time(~nanosecond: rkt.#{date*-nanosecond}(d),
+         ~second: rkt.#{date-second}(d),
+         ~minute: rkt.#{date-minute}(d),
+         ~hour: rkt.#{date-hour}(d))
