@@ -193,12 +193,12 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
         | error(~who: who,
                 ~exn: Exn.Fail.Annot,
                 "cannot splice regexp that has capture groups into a pattern with backreferences",
-                error.val(~label: "rexgexp", regexp))
+                error.val(~label: "regexp", regexp))
         when regexp._has_backref
         | error(~who: who,
                 ~exn: Exn.Fail.Annot,
                 "cannot splice regexp with backreferences into a larger pattern",
-                error.val(~label: "rexgexp", regexp))
+                error.val(~label: "regexp", regexp))
         "(?:" ++ base.#{object-name}(regexp.in_handle) ++ ")"
     | Pair(src_str, val):
         error(~who: who,
