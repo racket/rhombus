@@ -1,0 +1,198 @@
+#lang rhombus/static
+import:
+  rhombus/date open
+  rhombus/rx open
+  rhombus/serialize open
+
+def now = system.milliseconds() / 1000.0
+
+def time_rx = rx'digit{2} ":" digit{2} ":" digit{2}'
+def time_ns_rx = rx'$time_rx "."? digit*'
+
+check:
+  Time().nanosecond ~is 0
+  Time().second ~is 0
+  Time().minute ~is 0
+  Time().hour ~is 0
+  Time(~nanosecond: 0.5) ~throws error.annot_msg()
+  Time(~nanosecond: "x") ~throws error.annot_msg()
+  Time(~nanosecond: 1_000_000_000) ~throws error.annot_msg()
+  Time(~second: 0.5) ~throws error.annot_msg()
+  Time(~second: 60) ~throws error.annot_msg()
+  Time(~minute: 0.5) ~throws error.annot_msg()
+  Time(~hour: 0.5) ~throws error.annot_msg()
+  Time.from_seconds(now) ~is Time.from_seconds(now)
+  Time.now() >= Time.from_seconds(now) ~is #true
+  Time.now() < Time.from_seconds(now) ~is #false
+  Time.now().to_string() ~matches time_rx
+  Time.now().to_string(~time_format: #'nanoseconds) ~matches time_ns_rx
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string() ~is "01:02:03"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'seconds) ~is "01:02:03"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'minutes) ~is "01:02"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 0).to_string(~time_format: #'auto_subminutes) ~is "01:02:03"
+  Time(~hour: 1, ~minute: 2, ~second: 0, ~nanosecond: 0).to_string(~time_format: #'auto_subminutes) ~is "01:02"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'auto_subminutes) ~is "01:02:03.000000004"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'nanoseconds) ~is "01:02:03.000000004"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.000000004"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400).to_string(~time_format: #'nanoseconds) ~is "01:02:03.000000400"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.000000400"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4_000).to_string(~time_format: #'nanoseconds) ~is "01:02:03.000004000"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4_000).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.000004"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400_000).to_string(~time_format: #'nanoseconds) ~is "01:02:03.000400000"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400_000).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.000400"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4_000_000).to_string(~time_format: #'nanoseconds) ~is "01:02:03.004000000"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4_000_000).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.004"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400_000_000).to_string(~time_format: #'nanoseconds) ~is "01:02:03.400000000"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400_000_000).to_string(~time_format: #'auto_subseconds) ~is "01:02:03.400"
+  Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 400_000_000).to_string(~time_format: #'auto_subminutes) ~is "01:02:03.400"
+  deserialize(serialize(Time.from_seconds(now))) ~is Time.from_seconds(now)
+
+def d = Date(~year: 2000, ~month: 5, ~day: 23)
+
+check:
+  d.year ~is 2000
+  d.month ~is 5
+  d.day ~is 23
+  Date(~year: 2025).year ~is 2025
+  Date(~year: 2025).month ~is 1
+  Date(~year: 2025).day ~is 1
+  Date(~year: 0, ~month: 1, ~day: 1).year ~is 0
+  Date(~year: -100, ~month: 1, ~day: 1).year ~is -100
+  Date(~year: 0.5, ~month: 1, ~day: 1) ~throws error.annot_msg()
+  Date(~year: 0, ~month: 1, ~day: 0.5) ~throws error.annot_msg()
+  Date(~year: 0, ~month: 0.5, ~day: 1) ~throws error.annot_msg()
+  Date(~year: 2024, ~month: 2, ~day: 29) ~is_a Date
+  Date(~year: 2024, ~month: 2, ~day: 30) ~throws error.annot_msg()
+  Date(~year: 2025, ~month: 2, ~day: 29) ~throws error.annot_msg()
+  d.week_day ~is 2
+  d.year_day ~is 143
+  d < Date(~year: 2003, ~month: 5, ~day: 22) ~is #true
+  Date.now() >= Date.from_seconds(now) ~is #true
+  Date.now() < Date.from_seconds(now) ~is #false
+  Date.from_seconds(now).to_seconds() < now ~is #true
+  (Date.now() with (year = Date.now().year + 1)).to_seconds() > now ~is #true
+  d.to_datetime().year ~is 2000
+  d.to_datetime().month ~is 5
+  d.to_datetime().day ~is 23
+  d.to_datetime().second ~is 0
+  d.to_datetime(~time: Time(~second: 8)).second ~is 8
+  d.to_string() ~is "2000-05-23"
+  d.to_string(~format: #'rfc3339) ~is "2000-05-23"
+  d.to_string(~format: #'iso8601) ~is "2000-05-23"
+  d.to_string(~format: #'american) ~is "Tuesday, May 23rd, 2000"
+  d.to_string(~format: #'european) ~is "Tuesday, 23rd May 2000"
+  d.to_string(~format: #'rfc2822) ~is "Tue, 23 May 2000"
+  d.to_string(~format: #'julian) ~is "JD 2 451 688"
+  d.to_string(~format: #'incorrect) ~throws error.annot_msg("argument")
+  deserialize(serialize(d)) ~is d
+  d with (day = 100) ~throws error.annot_msg()
+
+def dt = DateTime(~year: 2003, ~month: 5, ~day: 22,
+                  ~hour: 9, ~minute: 20)
+
+check:
+  DateTime(~year: 2025).year ~is 2025
+  DateTime(~year: 2025).month ~is 1
+  DateTime(~year: 2025).day ~is 1
+  DateTime(~year: 0.5, ~month: 1, ~day: 1) ~throws error.annot_msg()
+  DateTime(~year: 0, ~month: 1, ~day: 0.5) ~throws error.annot_msg()
+  DateTime(~year: 0, ~month: 0.5, ~day: 1) ~throws error.annot_msg()
+  DateTime(~year: 2024, ~month: 2, ~day: 29) ~is_a DateTime
+  DateTime(~year: 2024, ~month: 2, ~day: 30) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 29) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 28, ~hour: 0.5) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 28, ~minute: 0.5) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 28, ~second: 0.5) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 28, ~second: 60) ~throws error.annot_msg()
+  DateTime(~year: 2025, ~month: 2, ~day: 28, ~nanosecond: -5) ~throws error.annot_msg()
+  dt with (day = 100) ~throws error.annot_msg()
+  dt.year ~is 2003
+  dt.month ~is 5
+  dt.day ~is 22
+  dt.hour ~is 9
+  dt.minute ~is 20
+  dt.second ~is 0
+  dt.nanosecond ~is 0
+  dt.week_day ~is 4
+  dt.year_day ~is 141
+  DateTime.now() > dt ~is #true
+  DateTime.now() >= DateTime.from_seconds(now) ~is #true
+  DateTime.from_seconds(now, ~local: #false).to_seconds() ~is now
+  dt.to_zoned().time_zone_offset ~is 0
+  dt.to_zoned().year ~is 2003
+  dt.to_zoned().minute ~is 20
+  dt.to_string() ~is "2003-05-22 09:20:00"
+  dt.to_string(~time_format: #'auto_subseconds) ~is "2003-05-22 09:20:00"
+  dt.to_string(~time_format: #'seconds) ~is "2003-05-22 09:20:00"
+  dt.to_string(~time_format: #'auto_subminutes) ~is "2003-05-22 09:20"
+  dt.to_string(~time_format: #'minutes) ~is "2003-05-22 09:20"
+  (dt with (nanosecond = 1_000_000)).to_string(~time_format: #'auto_subseconds) ~is "2003-05-22 09:20:00.001"
+  dt.to_string(~format: #'iso8601) ~is "2003-05-22T09:20:00"
+  dt.to_string(~format: #'iso8601, ~time_format: #'minutes) ~is "2003-05-22T09:20"
+  dt.to_string(~format: #'american) ~is "Thursday, May 22nd, 2003 9:20:00am"
+  dt.to_string(~format: #'european) ~is "Thursday, 22nd May 2003, 9:20am"
+  dt.to_string(~format: #'rfc2822) ~is "Thu, 22 May 2003 09:20:00 +0000"
+  dt.to_string(~format: #'julian) ~is "JD 2 452 782, 09:20:00"
+  deserialize(serialize(dt)) ~is dt
+
+def zdt = ZonedDateTime(~year: 1995, ~month: 8, ~day: 18,
+                        ~hour: 1, ~minute: 2, ~second: 3,
+                        ~time_zone_offset: 6*60*60,
+                        ~time_zone_name: "CDT")
+
+check:
+  ZonedDateTime(~year: 2025).year ~is 2025
+  ZonedDateTime(~year: 2025).month ~is 1
+  ZonedDateTime(~year: 2025).day ~is 1
+  ZonedDateTime(~year: 0.5, ~month: 1, ~day: 1) ~throws error.annot_msg()
+  ZonedDateTime(~year: 0, ~month: 1, ~day: 0.5) ~throws error.annot_msg()
+  ZonedDateTime(~year: 0, ~month: 0.5, ~day: 1) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2024, ~month: 2, ~day: 29) ~is_a ZonedDateTime
+  ZonedDateTime(~year: 2024, ~month: 2, ~day: 30) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 29) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 28, ~hour: 0.5) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 28, ~minute: 0.5) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 28, ~second: 0.5) ~throws error.annot_msg()
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 28, ~second: 60) ~is_a ZonedDateTime
+  ZonedDateTime(~year: 2025, ~month: 2, ~day: 28, ~nanosecond: -5) ~throws error.annot_msg()
+  zdt with (day = 100) ~throws error.annot_msg()
+  zdt.year ~is 1995
+  zdt.month ~is 8
+  zdt.day ~is 18
+  zdt.hour ~is 1
+  zdt.minute ~is 2
+  zdt.second ~is 3
+  zdt.nanosecond ~is 0
+  zdt.year_day ~is 229
+  zdt.week_day ~is 5
+  zdt.time_zone_offset ~is 6*60*60
+  zdt.time_zone_name ~is "CDT"
+  zdt.to_string() ~is "1995-08-18 01:02:03+06:00"
+  zdt.to_string(~format: #'iso8601) ~is "1995-08-18T01:02:03+06:00"
+  zdt.to_string(~format: #'iso8601, ~time_zone_format: #false) ~is "1995-08-18T01:02:03"
+  zdt.to_string(~format: #'iso8601, ~time_format: #'minutes) ~is "1995-08-18T01:02+06:00"
+  zdt.to_string(~time_zone_format: #false) ~is "1995-08-18 01:02:03"
+  zdt.to_string(~time_format: #'minutes, ~time_zone_format: #false) ~is "1995-08-18 01:02"
+  (zdt with (time_zone_offset = 0)).to_string() ~is "1995-08-18 01:02:03Z"
+  (zdt with (time_zone_offset = -3660)).to_string() ~is "1995-08-18 01:02:03-01:01"
+  ZonedDateTime.now() > zdt ~is #true
+  ZonedDateTime.from_seconds(now) > zdt ~is #true
+  ZonedDateTime.from_seconds(now, ~local: #false).to_seconds() ~is now
+  ZonedDateTime.from_seconds(now) ~is ZonedDateTime.from_seconds(now)
+  deserialize(serialize(zdt)) ~is zdt
+
+check:
+  is_leap_year(2000) ~is #true
+  is_leap_year(2001) ~is #false
+  is_leap_year(2100) ~is #false
+  days_in_year(2000) ~is 366
+  days_in_year(2001) ~is 365
+  days_in_year(2100) ~is 365
+  days_in_month(2000, 1) ~is 31
+  days_in_month(2000, 2) ~is 29
+  days_in_month(2001, 2) ~is 28
+  days_in_month(2000, 12) ~is 31
+  week_day(2025, 11, 16) ~is 0
+  year_day(2025, 1, 1) ~is 0
+  year_day(2025, 11, 16) ~is 319
+  year_day(2025, 12, 31) ~is 364

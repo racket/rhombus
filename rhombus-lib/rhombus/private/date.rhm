@@ -1,0 +1,47 @@
+#lang rhombus/static
+
+export:
+  is_leap_year
+  days_in_year
+  days_in_month
+  year_day
+  week_day
+
+// Based `gregor` and `datetime-lib` by Jon Zeppieri
+
+def days_per_month = Array(0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+def cumulative_month_days = Array(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334)
+def cumulative_month_days_leap = Array(0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335)
+
+fun is_leap_year(y :: Int):
+  y rem 4 == 0
+    && (!(y rem 100 == 0)
+          || y rem 400 == 0)
+
+fun days_in_year(y :: Int) :~ Int:
+  if is_leap_year(y) | 366 | 365
+
+fun days_in_month(y :: Int, m :: Int.in(1 ..= 12)) :~ Int:
+  days_per_month[m] + (if m == 2 && is_leap_year(y) | 1 | 0)
+
+fun year_day(year :: Int,
+             month :: Int.in(1 ..= 12),
+             day :: Int.in(1 ..= days_in_month(year, month))) :~ Int:
+  day - 1 + (if is_leap_year(year)
+             | cumulative_month_days_leap[month-1]
+             | cumulative_month_days[month-1])
+
+def month_dow_map = Array(0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4)
+
+fun week_day(year :: Int,
+             month :: Int.in(1 ..= 12),
+             day :: Int.in(1 ..= days_in_month(year, month))) :~ Int:
+  // https://en.wikipedia.org/wiki/Determination_of_the_day_of_the_week#Implementation-dependent_methods
+  let y1 = if month < 3 | year-1 | year
+  let d1: y1
+            + y1 div 4
+            - y1 div 100
+            + y1 div 400
+            + month_dow_map[month-1]
+            + day
+  d1 mod 7
