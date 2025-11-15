@@ -252,7 +252,7 @@ The key clause in a @rhombuslangname(rhombus/reader) module is
 module to use for the parsed module. The module can can be relative to
 the enclosing @rhombus(reader, ~datum) submodule, so
 @rhombus(parent, ~impo) serves as a reference to the enclosing module.
-The following example is the same as @filepath("moisy_rhombus.rhm") in
+The following example is the same as @filepath("noisy_rhombus.rhm") in
 @rhombus("tilde-lang"), but with a @rhombus(reader, ~datum) submodule
 added, and saved as @filepath{main.rkt} in a @filepath{noisy_rhombus}
 directory (note the @filepath{.rkt} extension instead of
