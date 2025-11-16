@@ -1364,3 +1364,21 @@ block:
       error.annot("None").msg,
       error.val("oops", ~label: "result").msg,
     )
+
+// make sure static information is associated with the
+// right earlier argument
+check:
+  class Posn(x, y)
+  class C(x,
+          p :: Posn,
+          q = p.x)
+  C(1, Posn(2, 3)).q
+  ~is 2
+check:
+  ~eval
+  use_static
+  class Posn(x, y)
+  class C(x :: Posn,
+          p,
+          q = p.x)
+  ~throws values("no such field", "based on static")

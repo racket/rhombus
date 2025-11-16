@@ -131,7 +131,7 @@
                  (loop (cdr fields)
                        (cdr static-infoss)
                        (cons #`(define-static-info-syntax/maybe #,(car fields)
-                                 #,@(car constructor-field-static-infoss))
+                                 #,@(car static-infoss))
                              accum)))])))
     (define non-constructor-fields
       ;; recycling the names of the functions to call as binding for the result of the call
