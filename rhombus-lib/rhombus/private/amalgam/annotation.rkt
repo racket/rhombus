@@ -134,6 +134,9 @@
 (module+ for-function-parse
   (provide (for-syntax set-find-call-result-at!)))
 
+(module+ for-range
+  (provide (for-syntax install-range)))
+
 (begin-for-syntax
   ;; see also "annotation-operator.rkt"
 
@@ -1221,39 +1224,89 @@
              #:with comp #'<=
              #:with g #`(#,group-tag t ...))
     (pattern g
-             #:with comp #'<=)))
+             #:with comp #'<=))
 
-(define-for-syntax (make-in-annotation pred-stx annot-str get-static-infos)
+  (define is-range?-id #f)
+  (define range-contains?-id #f)
+  (define parse-range (lambda (e) (values #f #f #f #f)))
+  (define (install-range is-range? range-contains? parse)
+    (set! is-range?-id is-range?)
+    (set! range-contains?-id range-contains?)
+    (set! parse-range parse)))
+
+(define-for-syntax (build-in-predicate form-id pred-stx annot-str lo-e lo-comp hi-e hi-comp)
+  #`(let ([lo-v #,lo-e]
+          [hi-v #,hi-e])
+      (unless (#,pred-stx lo-v)
+        (raise-annotation-failure '#,form-id lo-v '#,annot-str))
+      (unless (#,pred-stx hi-v)
+        (raise-annotation-failure '#,form-id hi-v '#,annot-str))
+      (lambda (v)
+        (and (#,pred-stx v)
+             (#,lo-comp lo-v v)
+             (#,hi-comp v hi-v)))))
+
+(define-for-syntax (make-in-annotation pred-stx annot-str get-static-infos allow-range?)
+  (define (gen-in form-id args-stx lo-e lo-comp hi-e hi-comp)
+    (relocate+reraw
+     (datum->syntax #f (list form-id args-stx))
+     (annotation-predicate-form
+      (build-in-predicate form-id pred-stx annot-str lo-e lo-comp hi-e hi-comp)
+      (get-static-infos))))
   (annotation-prefix-operator
    #f
    '((default . stronger))
    'macro
    (lambda (stxes ctx)
-     (syntax-parse stxes
-       #:datum-literals (group)
-       [(form-id (~and args (_::parens lo::incl-group hi::incl-group))
-                 . tail)
-        (values (relocate+reraw
-                 (datum->syntax #f (list #'form-id #'args))
-                 (annotation-predicate-form
-                  #`(let ([lo-v (rhombus-expression lo.g)]
-                          [hi-v (rhombus-expression hi.g)])
-                      (unless (#,pred-stx lo-v)
-                        (raise-annotation-failure 'form-id lo-v '#,annot-str))
-                      (unless (#,pred-stx hi-v)
-                        (raise-annotation-failure 'form-id hi-v '#,annot-str))
-                      (lambda (v)
-                        (and (#,pred-stx v)
-                             (lo.comp lo-v v)
-                             (hi.comp v hi-v))))
-                  (get-static-infos)))
-                #'tail)]))))
+     (cond
+       [(not allow-range?)
+        (syntax-parse stxes
+          #:datum-literals (group)
+          [(form-id (~and args (_::parens lo::incl-group hi::incl-group))
+                    . tail)
+           (values (gen-in #'form-id #'args
+                           #'(rhombus-expression lo.g) #'lo.comp
+                           #'(rhombus-expression hi.g) #'hi.comp)
+                   #'tail)])]
+       [else
+        (syntax-parse stxes
+          #:datum-literals (group)
+          [(form-id (~and args (_::parens lo::incl-group hi::incl-group))
+                    . tail)
+           (values (gen-in #'form-id #'args
+                           #'(rhombus-expression lo.g) #'lo.comp
+                           #'(rhombus-expression hi.g) #'hi.comp)
+                   #'tail)]
+          [(form-id (~and args (_::parens g))
+                    . tail)
+           (values (relocate+reraw
+                    (datum->syntax #f (list #'form-id #'args))
+                    (annotation-predicate-form
+                     #`(optimize-range-predicate form-id #,pred-stx #,annot-str g)
+                     (get-static-infos)))
+                   #'tail)])]))))
+
+(define-syntax (optimize-range-predicate stx)
+  (syntax-parse stx
+    [(_ form-id pred annot-str e::expression)
+     (define-values (lo lo-comp hi hi-comp) (parse-range #'e.parsed))
+     (cond
+       [lo
+        (build-in-predicate #'form-id #'pred #'annot-str lo lo-comp hi hi-comp)]
+       [else
+        #`(let ([rng e.parsed])
+            (unless (#,is-range?-id rng)
+              (raise-annotation-failure 'form-id rng "Range"))
+            (lambda (v)
+              (and (pred v)
+                   (#,range-contains?-id rng v))))])]))     
 
 (define-annotation-syntax Real.in
   (make-in-annotation
    #'real?
    "Real"
-   get-real-static-infos))
+   get-real-static-infos
+   #f))
 
 (define (handle-integer-in form)
   (and (pair? (cdr form))
@@ -1270,7 +1323,8 @@
   (make-in-annotation
    #'exact-integer?
    "Int"
-   get-real-static-infos))
+   get-real-static-infos
+   #t))
 
 (define-annotation-syntax Any.of
   (annotation-prefix-operator

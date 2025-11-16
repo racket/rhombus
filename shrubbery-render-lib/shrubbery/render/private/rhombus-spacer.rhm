@@ -86,6 +86,7 @@ export:
   only_space namespace:
     // export namespace extensions
     Any
+    Int
     Map
     MutableMap
     WeakMutableMap
@@ -1048,6 +1049,14 @@ spacer.bridge export(self, tail, context, esc):
   '$self $(spacer.adjust_sequence(tail, #'~expo, esc))'
 
 spacer.bridge Any.of(self, tail, context, esc):
+  ~in: ~annot
+  fun adjust(t):
+    match t
+    | '($(_ :: Multi))': spacer.adjust_term(t, #'~expr, esc)
+    | ~else: t
+  '$self $(adjust_one(tail, context, esc, adjust))'
+
+spacer.bridge Int.in(self, tail, context, esc):
   ~in: ~annot
   fun adjust(t):
     match t

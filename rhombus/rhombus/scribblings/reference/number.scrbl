@@ -68,6 +68,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'NonnegInt'
   annot.macro 'Nat'
 
+  annot.macro 'Int.in($range)'
   annot.macro 'Int.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 
   grammar inclusivity:
@@ -82,15 +83,21 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
  @rhombus(NonnegInt, ~annot).
 
  The @rhombus(Int.in, ~annot) annotation constraints a integers to be
- within the given range, where each end of the range is inclusive by
- default, but @rhombus(~inclusive) or @rhombus(~exclusive) can be
- specified.
+ within the given range, which is specified either by constructing a
+ @rhombus(Range, ~annot) or by providing separate start and end numbers.
+ When a range is specific by separate numbers, then each end of the range
+ is inclusive by default, but @rhombus(~inclusive) or
+ @rhombus(~exclusive) can be specified. Using @rhombus(..), @rhombus(..=),
+ @rhombus(<..), or @rhombus(<..=) directly to construct a range
+ is treated the same as specifying separate numbers, instead of constructing
+ an intermediate @rhombus(Range, ~annot) value.
 
 @examples(
   5 is_a Int
   5 is_a PosInt
   -5 is_a NegInt
   0 is_a Nat
+  0 is_a Int.in(0 .. 1)
   0 is_a Int.in(0, 1 ~exclusive)
   1 is_a Int.in(0, 1 ~exclusive)
 )

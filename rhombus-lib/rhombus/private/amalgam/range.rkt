@@ -16,6 +16,7 @@
          "repetition.rkt"
          "compound-repetition.rkt"
          "static-info.rkt"
+         (submod "annotation.rkt" for-range)
          "parse.rkt"
          "sequence-constructor-key.rkt"
          "sequence-element-key.rkt"
@@ -1115,3 +1116,17 @@
   (list-range->treelist r))
 
 (void (set-range->list! list-range->list list-range->treelist))
+
+(begin-for-syntax
+  (void (install-range #'range? #'range-contains?
+                       (lambda (e)
+                         (syntax-parse (unwrap-static-infos e)
+                           #:literals (range-from-to/who
+                                       range-from-to-inclusive/who
+                                       range-from-exclusive-to/who
+                                       range-from-exclusive-to-inclusive/who)
+                           [(range-from-to/who _ l r) (values #'l #'<= #'r #'<)]
+                           [(range-from-to-inclusive/who _ l r) (values #'l #'<= #'r #'<=)]
+                           [(range-from-exclusive-to/who _ l r) (values #'l #'< #'r #'<)]
+                           [(range-from-exclusive-to-inclusive/who _ l r) (values #'l #'< #'r #'<=)]
+                           [_ (values #f #f #f #f)])))))

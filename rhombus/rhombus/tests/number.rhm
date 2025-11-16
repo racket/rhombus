@@ -31,6 +31,10 @@ check:
   0 is_a NegInt ~is #false
   -1 is_a NegInt ~is #true
 
+  1 is_a NonnegInt ~is #true
+  0 is_a NonnegInt ~is #true
+  -1 is_a NonnegInt ~is #false
+
   1 is_a Nat ~is #true
   0 is_a Nat ~is #true
   -1 is_a Nat ~is #false
@@ -47,8 +51,39 @@ check:
   2 is_a Int.in(1, 2 ~inclusive) ~is #true
   2 is_a Int.in(1, 2 ~exclusive) ~is #false
 
+  1 is_a Int.in(1 ..= 2) ~is #true
+  1 is_a Int.in(1 <..= 2) ~is #false
+  1 is_a Int.in(1 <.. 2) ~is #false
+  1 is_a Int.in(1 .. 2) ~is #true
+
+  2 is_a Int.in(1 ..= 2) ~is #true
+  2 is_a Int.in(1 <..= 2) ~is #true
+  2 is_a Int.in(1 <.. 2) ~is #false
+  2 is_a Int.in(1 .. 2) ~is #false
+
+  2 is_a Int.in(1 * 1 .. 2 + 0) ~is #false
+
+  1 is_a Int.in(Function.black_box(1 ..= 2)) ~is #true
+  1 is_a Int.in(Function.black_box(1 <..= 2)) ~is #false
+  1 is_a Int.in(Function.black_box(1 <.. 2)) ~is #false
+  1 is_a Int.in(Function.black_box(1 .. 2)) ~is #true
+
+  2 is_a Int.in(Function.black_box(1 ..= 2)) ~is #true
+  2 is_a Int.in(Function.black_box(1 <..= 2)) ~is #true
+  2 is_a Int.in(Function.black_box(1 <.. 2)) ~is #false
+  2 is_a Int.in(Function.black_box(1 .. 2)) ~is #false
+
   1 is_a Int.in("oops", 2) ~throws values(error.annot_msg(), "Int", "\"oops\"")
   1 is_a Int.in(1, "oops") ~throws values(error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in("oops" .. 2) ~throws values(error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(1 .. "oops") ~throws values(error.annot_msg(), "Int", "\"oops\"")
+  2 is_a Int.in("oops") ~throws values(error.annot_msg(), "Range", "\"oops\"")
+
+block:
+  fun f(x :: Int, y :: Int.in(x ..= x + 1)):
+    [x, y]
+  check f(1, 2) ~is [1, 2]
+  check f(1, 3) ~throws error.annot_msg("argument")
 
 check:
   1 is_a NonnegReal ~is #true
@@ -101,6 +136,11 @@ check:
   to_string(1/2, ~mode: #'expr) ~is "1/2"
   to_string(#{1+2i}) ~is "1+2i"
   to_string(#{1+2i}, ~mode: #'expr) ~is "#{1+2i}"
+
+check:
+  ~eval
+  1 is_a Real.in(0 .. 1)
+  ~throws ""
 
 // error reporting
 check:
