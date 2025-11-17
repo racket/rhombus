@@ -40,11 +40,17 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
     export_clause: export ~decl
   defn.macro 'namespace $id_name'
   defn.macro 'namespace $id_name:
+                $option; ...                
                 $nestable_body
                 ...'
   defn.macro 'namespace ~open:
+                $option; ...
                 $nestable_body
                 ...'
+
+  grammar option:
+    ~name $id_name
+    ~name: $id_name
 ){
 
  Similar to the same @rhombus(nestable_body) sequence spliced into the
@@ -64,6 +70,10 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
  identifiers as listed in the namespace's @rhombus(export), but without
  scopes created by @rhombus(namespace) to isolate other bindings within
  the namespace.
+
+ The @rhombus(~name) option is analogous to @rhombus(~name) within a
+ @rhombus(fun, ~defn) definition. It specifies a prefix used for run-time
+ reporting for definitions within the namespace.
 
 @examples(
   ~defn:
@@ -91,6 +101,14 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
     bump()
     ~error:
       x // not exported
+  ~defn:
+    namespace ~open:
+      ~name example.longer.name
+      export fun f(x :: Int):
+        x
+  ~repl:
+    ~error:
+      f("oops")
 )
 
 }

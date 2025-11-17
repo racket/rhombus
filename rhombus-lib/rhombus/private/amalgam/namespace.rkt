@@ -5,7 +5,8 @@
                      syntax/datum
                      "introducer.rkt"
                      "id-binding.rkt"
-                     "expose.rkt")
+                     "expose.rkt"
+                     "namespace-options-block.rkt")
          "definition.rkt"
          "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt"
@@ -27,26 +28,28 @@
   (definition-transformer
     (lambda (stx name-prefix effect-id)
      (syntax-parse stx
-       [(form-id #:open
-                 (_::block form ...))
+       [(form-id #:open body::options-block)
         (define intro (make-syntax-introducer #t))
         #`((rhombus-nested-forwarding-sequence
             (open-exports plain #,(intro #'scoped))
             #,(intro
-               #`(rhombus-nested #,name-prefix #,effect-id form ...))))]
+               #`(rhombus-nested #,(or (and (syntax-e #'body.name) #'body.name) name-prefix) #,effect-id
+                                 body.form ...))))]
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends plain scoped])))]
        [(form-id name-seq::dotted-identifier-sequence
-                 (_::block form ...))
+                 body::options-block)
         #:with name::dotted-identifier #'name-seq
         (define intro (make-syntax-introducer #t))
-        (define prefix (add-name-prefix name-prefix #'name.name))
+        (define prefix (or (and (syntax-e #'body.name)
+                                #'body.name)
+                           (add-name-prefix name-prefix #'name.name)))
         #`((rhombus-nested-forwarding-sequence
             (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
             #,(intro
-               #`(rhombus-nested #,prefix #,effect-id form ...))))]))))
+               #`(rhombus-nested #,prefix #,effect-id body.form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx

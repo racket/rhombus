@@ -283,3 +283,21 @@ block:
      n2.bstr.length(),
      n2.Posn(1, 2).m()]
     ~is [2, 0, 0, 0, 1]
+
+block:
+  namespace ns:
+    ~name example.longer.name
+    export fun f(x :: Int):
+      x
+  check ns.f("apple") ~throws values("example.longer.name.f",
+                                     error.annot_msg("argument"))
+
+
+block:
+  namespace ns:
+    ~name: another.example.longer.name
+    export fun f(x :: Int):
+      x
+  check ns.f("apple") ~throws values("another.example.longer.name.f",
+                                     error.annot_msg("argument"))
+
