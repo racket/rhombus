@@ -6,6 +6,7 @@ import:
       #{doc-typeset-rhombusblock}
       #{add-metavariable}
   "rhombus-doc.rkt"!for_doc_transformer open
+  shrubbery/render/spacer.SpaceName
 
 meta:
   import:
@@ -49,7 +50,16 @@ meta:
                   ~extract_spacer_infos: extract_spacer_infos :: Function.of_arity(2):
                                            fun (_, [spc, ...]): [{} || spc, ...]):
     rkt.#{make-doc-transformer}(~#{extract-desc}: extract_desc,
-                                ~#{extract-space-sym}: extract_space,
+                                ~#{extract-space-sym}: fun (stx):
+                                                         match extract_space(stx)
+                                                         | s :: SpaceName.normalized: s
+                                                         | [s :: SpaceName.normalized, ...]: PairList[s, ...]
+                                                         | [[s :: SpaceName.normalized, ...], ...]: PairList[PairList[s, ...], ...]
+                                                         | v:
+                                                             error(~who: Function.name(extract_space),
+                                                                   error.annot_msg("result"),
+                                                                   error.annot("SpaceName || List.of(SpaceName) || List.of(List.of(SpaceName))"),
+                                                                   error.val(v)),
                                 ~#{extract-sort-order}: fun (stx, PairList[PairList[spc, ...], ...]):
                                                            let [order, ...] = extract_sort_order(stx, [[spc, ...], ...])
                                                            PairList[order, ...],

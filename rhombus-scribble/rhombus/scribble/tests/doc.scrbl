@@ -141,6 +141,9 @@ Starting example:
 
 @doc(
   def String.more :: String
+  grammar string_more_rhs:
+    1
+    2
 ){
 
  Defined by extension.
@@ -152,11 +155,20 @@ Starting example:
 @docmodule(rhombus/meta)
 
 @doc(
+  ~nonterminal:
+    rhs: String.more string_more_rhs
+    rhs2: String.more string_more_rhs ~expr
+    rhs3: String.more string_more_rhs ~at rhombus/expr
+    rhs4: String.more string_more_rhs ~at: rhombus/expr
+
   defn.macro 'expr.macro'
   fun syntax_meta.DefinitionContext.add_scopes()
 ){
 
  The @rhombus(expr.macro) form and
  @rhombus(syntax_meta.DefinitionContext.add_scopes) method.
+
+ Nonterminal links: @rhombus(rhs), @rhombus(rhs2), @rhombus(rhs3),
+ @rhombus(rhs4).
 
 }

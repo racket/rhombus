@@ -41,7 +41,7 @@ fun filter(html):
     let [[key, val], ...]:
       for List (key in [key, ...],
                 val in [val, ...]):
-        keep_when: key in { #'class, #'style }
+        keep_when: key in { #'class, #'style, #'href }
         [key, val]
     if [key, ...] == []
     | []

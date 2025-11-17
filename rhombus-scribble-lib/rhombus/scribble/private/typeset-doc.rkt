@@ -724,12 +724,16 @@
 (define-for-syntax (nt-key-expand nt-key-g)
   (define-values (root fields space-names)
     (syntax-parse nt-key-g
-      #:datum-literals (op |.| parens group)
+      #:datum-literals (op |.| parens group block)
       [(_ root:identifier (~seq (op |.|) field:identifier) ... space:keyword)
        (values #'root
                (syntax->list #'(field ...))
                (full-space-names (string->symbol (keyword->immutable-string (syntax-e #'space)))))]
       [(_ root:identifier (~seq (op |.|) field:identifier) ... #:at space::name ...)
+       (values #'root
+               (syntax->list #'(field ...))
+               (list (string->symbol (apply string-append (map symbol->string (map syntax-e (syntax->list #'(space.name ...))))))))]
+      [(_ root:identifier (~seq (op |.|) field:identifier) ... #:at (block (group space::name ...)))
        (values #'root
                (syntax->list #'(field ...))
                (list (string->symbol (apply string-append (map symbol->string (map syntax-e (syntax->list #'(space.name ...))))))))]
@@ -787,9 +791,14 @@
 (define-for-syntax (nt-key-ref-expand nt-key-g)
   (define-values (sym g)
     (syntax-parse nt-key-g
-      #:datum-literals (op |.|)
+      #:datum-literals (op |.|block group)
       [(_ root (~seq (~and dot (op |.|)) field) ... name:identifier space:keyword)
        (values #'name #'(group root (~@ dot field) ... space))]
+      [(_ root (~seq (~and dot (op |.|)) field) ... name:identifier (~and at #:at) space::name ...)
+       (values #'name #'(group root (~@ dot field) ... at space ...))]
+      [(_ root (~seq (~and dot (op |.|)) field) ... name:identifier (~and at #:at)
+          (~and at-blk (block (group space::name ...))))
+       (values #'name #'(group root (~@ dot field) ... at at-blk))]
       [(_ root (~seq (~and dot (op |.|)) field) ...  name:identifier)
        (values #'name #'(group root (~@ dot field) ...))]
       [_ (values #f nt-key-g)]))

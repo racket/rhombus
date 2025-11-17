@@ -36,7 +36,7 @@
   fun doc_meta.transformer(
     ~extract_desc: extract_desc :: Function.of_arity(1),
     ~extract_space: extract_space :: Function.of_arity(1),
-    ~extract_defined: extract_defined :: Function.of_arity(2),
+    ~extract_name: extract_name :: Function.of_arity(2),
     ~extract_metavariables: extract_metavariables :: Function.of_arity(3),
     ~extract_typeset: extract_typeset :: Function.of_arity(3),
     ~extract_sort_order: extract_sort_order :: Function.of_arity(2):
@@ -57,7 +57,7 @@
   @rhombus("function") for function documentation.
 
   If a list of strings is returned, the @rhombus(extract_space) and
-  @rhombus(extract_defined) functions should produce a list with the same
+  @rhombus(extract_name) functions should produce a list with the same
   number of values for the given syntax object. The
   @rhombus(extract_metavariables) will receive a list of space lists, and
   it will also receive a list of converter functions.}
@@ -71,11 +71,11 @@
   @rhombus(~class) and @rhombus(~annot) spaces).
 
   As a convenience, the result is is passed back to the
-  @rhombus(extract_defined) and @rhombus(extract_metavariables) functions,
+  @rhombus(extract_name) and @rhombus(extract_metavariables) functions,
   except that only the first list of spaces is passed back when
   @rhombus(extract_space) returns a list of lists.}
 
- @item{@rhombus(extract_defined): Takes a syntax object and a space or
+ @item{@rhombus(extract_name): Takes a syntax object and a space or
   space list (produced by @rhombus(extract_space)) and returns a defined
   name or list of defined names. A defined name is either
 

@@ -14,14 +14,17 @@ html:
                   span {class: "hspace"}: nbsp
                   span {class: "stt"}: span {class: "RktSym"}: "import"
                   span {class: "stt"}: ": "
-                  a {class: "RktModLink"}: span {class: "stt"}: "rhombus"
+                  a {class: "RktModLink", href: ""}:
+                    span {class: "stt"}: "rhombus"
                 td:
                   span {class: "RpackageSpec"}:
                     span {class: "Smaller"}:
                       nbsp
                       "package:"
                     " "
-                    a: span {class: "stt"}: "rhombus-lib"
+                    a {href:
+                         "https://pkgs.racket-lang.org/package/rhombus-lib"}:
+                      span {class: "stt"}: "rhombus-lib"
           p: "Starting example:"
           blockquote:
             table:
@@ -29,114 +32,197 @@ html:
               tr:
                 td:
                   p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "get"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "RktVal"}: "\"Hello\""
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "println"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "RktVal"}: "\"Hello\""
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "RktVal"}: "\"Hello\""
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktPn"}: ")"
-              tr:
-                td:
-                  p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
-                    span {class: "RktPn"}: "("
-                    span {class: "RktVal"}: "\"Hello\""
-                    span {class: "RktPn"}: ")"
-                    span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
                 td:
                   p:
                     span {class: "stt"}:
-                      a {class: "RktValLink"}: "String.snapshot"
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..get._~23false%29%29%29"}:
+                        "get"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                        "println"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
+                        "snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
+                        "snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "copy"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "String.copy"
                     span {class: "RktPn"}: "("
                     span {class: "RktVal"}: "\"Hello\""
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktPn"}: ")"
+              tr:
+                td:
+                  p:
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
+                        "String.snapshot"
+                    span {class: "RktPn"}: "("
+                    span {class: "RktVal"}: "\"Hello\""
+                    span {class: "RktPn"}: ")"
+                    span {class: "stt"}: "."
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -144,27 +230,46 @@ html:
                   p:
                     span {class: "stt"}:
                       "rhombus."
-                      a {class: "RktValLink"}: "String.copy"
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "String.copy"
                     span {class: "RktPn"}: "("
                     span {class: "RktVal"}: "\"Hello\""
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
                 td:
                   p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "String.copy"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "String.copy"
                     span {class: "RktPn"}: "("
                     span {class: "RktVal"}: "\"Hello\""
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "snapshot"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
+                        "snapshot"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -172,17 +277,29 @@ html:
                   p:
                     span {class: "RktVal"}: "\"Hello\""
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "upcase"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..upcase._~23false%29%29%29"}:
+                        "upcase"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
                 td:
                   p:
-                    span {class: "stt"}: a {class: "RktValLink"}: "String.more"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false%29%29%29"}:
+                        "String.more"
           blockquote:
             table:
               tr: td: p: span {class: "RktCmt"}: "// also linked"
@@ -201,7 +318,11 @@ html:
                   p:
                     span {class: "stt"}: "s1"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -213,7 +334,11 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: "="
                     span {class: "hspace"}: nbsp
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -221,7 +346,11 @@ html:
                   p:
                     span {class: "stt"}: "s2"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -233,7 +362,11 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: "="
                     span {class: "hspace"}: nbsp
-                    span {class: "stt"}: a {class: "RktValLink"}: "println"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                        "println"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -241,7 +374,11 @@ html:
                   p:
                     span {class: "stt"}: "s2"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -249,11 +386,19 @@ html:
                   p:
                     span {class: "stt"}: "s1"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "copy"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -265,7 +410,11 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: "="
                     span {class: "hspace"}: nbsp
-                    span {class: "stt"}: a {class: "RktValLink"}: "println"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                        "println"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -273,7 +422,11 @@ html:
                   p:
                     span {class: "stt"}: "s4"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -285,11 +438,19 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: "="
                     span {class: "hspace"}: nbsp
-                    span {class: "stt"}: a {class: "RktValLink"}: "repr"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                        "repr"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "copy"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
+                        "copy"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -297,7 +458,11 @@ html:
                   p:
                     span {class: "stt"}: "s5"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr:
@@ -310,7 +475,10 @@ html:
                     span {class: "stt"}: "="
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}:
-                      a {class: "RktValLink"}: "String.snapshot"
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
+                        "String.snapshot"
                     span {class: "RktPn"}: "("
                     span {class: "RktVal"}: "\"Hello\""
                     span {class: "RktPn"}: ")"
@@ -319,7 +487,11 @@ html:
                   p:
                     span {class: "stt"}: "s6"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
               tr: td: p: span {class: "hspace"}: nbsp
@@ -338,7 +510,11 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: "::"
                     span {class: "hspace"}: nbsp
-                    span {class: "stt"}: a {class: "RktValLink"}: "String"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                        "String"
                     span {class: "RktPn"}: ")"
                     span {class: "stt"}: ":"
               tr:
@@ -349,7 +525,11 @@ html:
                       nbsp
                     span {class: "stt"}: "s"
                     span {class: "stt"}: "."
-                    span {class: "stt"}: a {class: "RktValLink"}: "length"
+                    span {class: "stt"}:
+                      a {class: "RktValLink",
+                         href:
+                           "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                        "length"
                     span {class: "RktPn"}: "("
                     span {class: "RktPn"}: ")"
           blockquote:
@@ -365,7 +545,10 @@ html:
                             ">"
                             span {class: "hspace"}: nbsp
                           span {class: "stt"}:
-                            a {class: "RktValLink"}: "println"
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                              "println"
                           span {class: "RktPn"}: "("
                           span {class: "RktVal"}: "\"1\\n\\n2\""
                           span {class: "RktPn"}: ")"
@@ -393,7 +576,10 @@ html:
                             span:
                               span {class: "RktSym"}: "rhombus."
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "fun"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                  "fun"
                             span {class: "stt"}: ":"
                       tr:
                         td:
@@ -425,7 +611,10 @@ html:
                         td:
                           p:
                             span {class: "RktSym"}:
-                              a {class: "RktValDef RktValLink"}: "fun"
+                              a {class: "RktValDef RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                "fun"
                             span {class: "stt"}: ":"
                       tr:
                         td:
@@ -454,13 +643,20 @@ html:
                       tr:
                         td:
                           p:
-                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "stt"}:
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                "fun"
                             span {class: "hspace"}: nbsp
                             a:«»
                             span:
                               span {class: "RktSym"}: "rhombus."
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "to_string"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._to_string%29%29"}:
+                                  "to_string"
                             span {class: "RktPn"}: "("
                             span {class: "RktVar"}: "a"
                             span {class: "stt"}: ","
@@ -527,7 +723,11 @@ html:
                             span {class: "RktVar"}: "c"
                             span {class: "stt"}: ":"
                             span {class: "hspace"}: nbsp
-                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "stt"}:
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                "fun"
                             span {class: "hspace"}: nbsp
                             span {class: "RktPn"}: "("
                             span {class: "stt"}: "x"
@@ -581,19 +781,29 @@ html:
                       tr:
                         td:
                           p:
-                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "stt"}:
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                "fun"
                             span {class: "hspace"}: nbsp
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "repr"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._repr%29%29"}:
+                                  "repr"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "String"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
                   td:
@@ -613,13 +823,19 @@ html:
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValDef RktValLink"}: "String"
+                              a {class: "RktValDef RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
                             span {class: "RktPn"}: ")"
                             span {class: "stt"}: "."
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "length"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                                  "length"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
                 tr: td: p: span {class: "hspace"}: nbsp
@@ -638,7 +854,10 @@ html:
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "String.get"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..get._~23false%29%29%29"}:
+                                  "String.get"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
                 tr: td: p: span {class: "hspace"}: nbsp
@@ -652,19 +871,29 @@ html:
                       tr:
                         td:
                           p:
-                            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+                            span {class: "stt"}:
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                "fun"
                             span {class: "hspace"}: nbsp
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "println"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                                  "println"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "ReadableString"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Readable.String._rhombus%2Fannot%29%29"}:
+                                "ReadableString"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
                   td:
@@ -679,7 +908,10 @@ html:
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "String"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                  "String"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
                   td:
@@ -694,7 +926,9 @@ html:
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Readable.String._rhombus%2Fannot%29%29"}:
                                   "ReadableString"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
@@ -712,7 +946,9 @@ html:
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..copy._~23false%29%29%29"}:
                                   "String.copy"
                             span {class: "RktPn"}: "("
                             span {class: "RktVar"}: "some_s"
@@ -720,13 +956,19 @@ html:
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "String"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
                             span {class: "RktPn"}: ")"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "ReadableString"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Readable.String._rhombus%2Fannot%29%29"}:
+                                "ReadableString"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
                   td:
@@ -743,7 +985,9 @@ html:
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..snapshot._~23false%29%29%29"}:
                                   "String.snapshot"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
@@ -751,7 +995,10 @@ html:
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "String"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
                 tr: td: p: span {class: "hspace"}: nbsp
                 tr:
                   td:
@@ -771,31 +1018,48 @@ html:
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValDef RktValLink"}: "String"
+                              a {class: "RktValDef RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
                             span {class: "RktPn"}: ")"
                             span {class: "stt"}: "."
                             a:«»
                             span:
                               span {class: "RktSym"}:
-                                a {class: "RktValDef RktValLink"}: "upcase"
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..upcase._~23false%29%29%29"}:
+                                  "upcase"
                             span {class: "RktPn"}: "("
                             span {class: "RktPn"}: ")"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}: "::"
                             span {class: "hspace"}: nbsp
                             span {class: "stt"}:
-                              a {class: "RktValLink"}: "String"
+                              a {class: "RktValLink",
+                                 href:
+                                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                "String"
             div {class: "SIntrapara"}:
               "Description, where "
               span {class: "RktVar"}: "some_s"
               span {class: "stt"}: "."
-              span {class: "stt"}: a {class: "RktValLink"}: "length"
+              span {class: "stt"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                  "length"
               span {class: "RktPn"}: "("
               span {class: "RktPn"}: ")"
               " and\n"
               span {class: "RktVar"}: "some_other_s"
               span {class: "stt"}: "."
-              span {class: "stt"}: a {class: "RktValLink"}: "length"
+              span {class: "stt"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                  "length"
               span {class: "RktPn"}: "("
               span {class: "RktPn"}: ")"
               " are linked."
@@ -803,21 +1067,41 @@ html:
             "See "
             span {class: "stt"}: span {class: "RktSym"}: "fun"
             " versus "
-            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            span {class: "stt"}:
+              a {class: "RktValLink",
+                 href:
+                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                "fun"
             ",\n"
-            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            span {class: "stt"}:
+              a {class: "RktValLink",
+                 href:
+                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                "fun"
             ", and "
-            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            span {class: "stt"}:
+              a {class: "RktValLink",
+                 href:
+                   "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                "fun"
             ",\nwhich is the same as "
-            a: "this link"
+            a {href:
+                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+              "this link"
             ",\n"
-            a: "this link"
+            a {href:
+                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+              "this link"
             ",\nand "
-            a: "this link"
+            a {href:
+                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+              "this link"
             "."
           p:
             "Check "
-            a: "dotted replacement"
+            a {href:
+                 "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
+              "dotted replacement"
             ", too."
           p:
             "Check "
@@ -831,7 +1115,7 @@ html:
               a:«»
               "Draw"
               span {class: "button-group"}:
-                a {class: "heading-anchor"}: "🔗"
+                a {class: "heading-anchor", href: "#(part._.Draw)"}: "🔗"
                 span {style: "visibility: hidden"}: " "
             p:
               table:
@@ -840,17 +1124,24 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: span {class: "RktSym"}: "import"
                     span {class: "stt"}: ": "
-                    a {class: "RktModLink"}:
-                      span {class: "stt"}: "rhombus"
+                    a {class: "RktModLink",
+                       href:
+                         "#%28mod-path._%28lib._.%27rhombus%2Fdraw..rhm.%27%29%29"}:
+                      span {class: "stt"}:
+                        "rhombus"
                       span {class: "stt"}: "/"
-                      span {class: "stt"}: "draw"
+                      span {class: "stt"}:
+                        "draw"
                   td:
                     span {class: "RpackageSpec"}:
                       span {class: "Smaller"}:
                         nbsp
                         "package:"
                       " "
-                      a: span {class: "stt"}: "rhombus-draw-lib"
+                      a {href:
+                           "https://pkgs.racket-lang.org/package/rhombus-draw-lib"}:
+                        span {class: "stt"}:
+                          "rhombus-draw-lib"
             p:
               div {class: "SIntrapara"}:
                 table:
@@ -879,7 +1170,10 @@ html:
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}: "handle"
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C..handle._~23false%29%29%29"}:
+                                    "handle"
                               span {class: "hspace"}: nbsp
                               span {class: "stt"}: "::"
                               span {class: "hspace"}: nbsp
@@ -896,13 +1190,18 @@ html:
                           td:
                             p:
                               span {class: "stt"}:
-                                a {class: "RktValLink"}: "fun"
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                  "fun"
                               span {class: "hspace"}: nbsp
                               a:«»
                               span:
                                 span {class: "RktSym"}: "draw."
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C..from_handle._~23false%29%29%29"}:
                                     "DC.from_handle"
                               span {class: "RktPn"}: "("
                               span {class: "RktVar"}: "hand"
@@ -934,7 +1233,10 @@ html:
                               span:
                                 span {class: "RktSym"}: "draw."
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}: "DC.Fill"
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C...Fill._rhombus%2Fannot%29%29%29"}:
+                                    "DC.Fill"
                               span {class: "stt"}: ":"
                         tr:
                           td:
@@ -946,7 +1248,10 @@ html:
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}: "even_odd"
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C...Fill._~23false%29%29%29"}:
+                                    "even_odd"
                         tr:
                           td:
                             p:
@@ -957,7 +1262,10 @@ html:
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}: "winding"
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C...Fill..winding._~23false%29%29%29"}:
+                                    "winding"
               div {class: "SIntrapara"}: "Draw description."
           section:
             h2:
@@ -967,7 +1275,8 @@ html:
               a:«»
               "Command Line"
               span {class: "button-group"}:
-                a {class: "heading-anchor"}: "🔗"
+                a {class: "heading-anchor", href: "#(part._.Command_.Line)"}:
+                  "🔗"
                 span {style: "visibility: hidden"}: " "
             p:
               table:
@@ -976,17 +1285,23 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: span {class: "RktSym"}: "import"
                     span {class: "stt"}: ": "
-                    a {class: "RktModLink"}:
-                      span {class: "stt"}: "rhombus"
+                    a {class: "RktModLink",
+                       href:
+                         "#%28mod-path._%28lib._.%27rhombus%2Fcmdline..rhm.%27%29%29"}:
+                      span {class: "stt"}:
+                        "rhombus"
                       span {class: "stt"}: "/"
-                      span {class: "stt"}: "cmdline"
+                      span {class: "stt"}:
+                        "cmdline"
                   td:
                     span {class: "RpackageSpec"}:
                       span {class: "Smaller"}:
                         nbsp
                         "package:"
                       " "
-                      a: span {class: "stt"}: "rhombus-lib"
+                      a {href:
+                           "https://pkgs.racket-lang.org/package/rhombus-lib"}:
+                        span {class: "stt"}: "rhombus-lib"
             p:
               div {class: "SIntrapara"}:
                 table:
@@ -1004,7 +1319,9 @@ html:
                               span:
                                 span {class: "RktSym"}: "cmdline."
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fcmdline..rhm%29._.String._%28.String..to_lib_module_path._rhombus%2Fannot%29%29%29"}:
                                     "String.to_lib_module_path"
               div {class: "SIntrapara"}: "Annotation via namespace extension."
           section:
@@ -1015,7 +1332,7 @@ html:
               a:«»
               "Extension"
               span {class: "button-group"}:
-                a {class: "heading-anchor"}: "🔗"
+                a {class: "heading-anchor", href: "#(part._.Extension)"}: "🔗"
                 span {style: "visibility: hidden"}: " "
             p:
               table:
@@ -1024,14 +1341,18 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: span {class: "RktSym"}: "import"
                     span {class: "stt"}: ": "
-                    a {class: "RktModLink"}:
-                      span {class: "stt"}: "rhombus"
+                    a {class: "RktModLink",
+                       href:
+                         "#%28mod-path._%28lib._.%27rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm.%27%29%29"}:
+                      span {class: "stt"}:
+                        "rhombus"
                       span {class: "stt"}: "/"
                       span {class: "stt"}: "scribble"
                       span {class: "stt"}: "/"
                       span {class: "stt"}: "tests"
                       span {class: "stt"}: "/"
-                      span {class: "stt"}: "string_ext"
+                      span {class: "stt"}:
+                        "string_ext"
                 tr:
                   td: nbsp
                   td:
@@ -1040,7 +1361,10 @@ html:
                         nbsp
                         "package:"
                       " "
-                      a: span {class: "stt"}: "rhombus-scribble"
+                      a {href:
+                           "https://pkgs.racket-lang.org/package/rhombus-scribble"}:
+                        span {class: "stt"}:
+                          "rhombus-scribble"
             p:
               div {class: "SIntrapara"}:
                 table:
@@ -1059,12 +1383,45 @@ html:
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false%29%29%29"}:
                                     "String.more"
                               span {class: "stt"}: "::"
                               span {class: "hspace"}: nbsp
                               span {class: "stt"}:
-                                a {class: "RktValLink"}: "String"
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                  "String"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktVar"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                                    "string_more_rhs"
+                          td:
+                            p:
+                              span {class: "hspace"}: nbsp
+                              "="
+                              span {class: "hspace"}: nbsp
+                          td: table: tr: td: p: span {class: "RktVal"}: "1"
+                        tr:
+                          td: p:«»
+                          td:
+                            p:
+                              span {class: "hspace"}: nbsp
+                              "|"
+                              span {class: "hspace"}: nbsp
+                          td: table: tr: td: p: span {class: "RktVal"}: "2"
               div {class: "SIntrapara"}: "Defined by extension."
           section:
             h2:
@@ -1074,7 +1431,7 @@ html:
               a:«»
               "Meta"
               span {class: "button-group"}:
-                a {class: "heading-anchor"}: "🔗"
+                a {class: "heading-anchor", href: "#(part._.Meta)"}: "🔗"
                 span {style: "visibility: hidden"}: " "
             p:
               table:
@@ -1083,17 +1440,23 @@ html:
                     span {class: "hspace"}: nbsp
                     span {class: "stt"}: span {class: "RktSym"}: "import"
                     span {class: "stt"}: ": "
-                    a {class: "RktModLink"}:
-                      span {class: "stt"}: "rhombus"
+                    a {class: "RktModLink",
+                       href:
+                         "#%28mod-path._%28lib._.%27rhombus%2Fmeta..rhm.%27%29%29"}:
+                      span {class: "stt"}:
+                        "rhombus"
                       span {class: "stt"}: "/"
-                      span {class: "stt"}: "meta"
+                      span {class: "stt"}:
+                        "meta"
                   td:
                     span {class: "RpackageSpec"}:
                       span {class: "Smaller"}:
                         nbsp
                         "package:"
                       " "
-                      a: span {class: "stt"}: "rhombus-lib"
+                      a {href:
+                           "https://pkgs.racket-lang.org/package/rhombus-lib"}:
+                        span {class: "stt"}: "rhombus-lib"
             p:
               div {class: "SIntrapara"}:
                 table:
@@ -1110,7 +1473,9 @@ html:
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._expr._%28expr..macro._rhombus%2Fdefn%29%29%29"}:
                                     "expr.macro"
                   tr: td: p: span {class: "hspace"}: nbsp
                   tr:
@@ -1124,21 +1489,58 @@ html:
                           td:
                             p:
                               span {class: "stt"}:
-                                a {class: "RktValLink"}: "fun"
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                  "fun"
                               span {class: "hspace"}: nbsp
                               a:«»
                               span:
                                 span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
                                     "syntax_meta.DefinitionContext.add_scopes"
                               span {class: "RktPn"}: "("
                               span {class: "RktPn"}: ")"
               div {class: "SIntrapara"}:
                 "The "
-                span {class: "stt"}: a {class: "RktValLink"}: "expr.macro"
+                span {class: "stt"}:
+                  a {class: "RktValLink",
+                     href:
+                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._expr._%28expr..macro._rhombus%2Fdefn%29%29%29"}:
+                    "expr.macro"
                 " form and\n"
                 span {class: "stt"}:
-                  a {class: "RktValLink"}:
+                  a {class: "RktValLink",
+                     href:
+                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
                     "syntax_meta.DefinitionContext.add_scopes"
                 " method."
+            p:
+              "Nonterminal links: "
+              span {class: "RktVar"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                  "rhs"
+              ", "
+              span {class: "RktVar"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                  "rhs2"
+              ", "
+              span {class: "RktVar"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                  "rhs3"
+              ",\n"
+              span {class: "RktVar"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                  "rhs4"
+              "."
     div: nbsp

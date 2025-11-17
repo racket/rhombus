@@ -48,7 +48,8 @@
 @doc(
   ~nonterminal:
     op_or_id_name: namespace ~defn
-    nonterm_op_or_id_name: namespace op_or_id_name ~defn
+    nonterm_id: block id
+    id_or_op: block
     builtin_space: rhombus
 
   expr.macro 'doc ($prep,
@@ -88,15 +89,19 @@
     ~also_meta
   grammar nt_key_ref:
     $op_or_id_name
-    $op_or_id_name $nonterm_op_or_id_name
+    $op_or_id_name $nonterm_id
     $op_or_id_name $space
-    $op_or_id_name $nonterm_op_or_id_name $space
+    $op_or_id_name $nonterm_id $space
   grammar nt_key:
     $op_or_id_name
     $op_or_id_name $space
   grammar space:
     $builtin_space
     ~at $space_name
+    ~at: $space_name
+  grammar space_name:
+    $id_or_op
+    $id_or_op $space_name
 ){
 
  Documents a set of bindings. A documented binding needs to be imported
@@ -172,7 +177,7 @@
   @rhombus(id) as a nonterminal to refer to a nonterminal declared with
   @rhombus(grammar) in another binding's documentation. The
   @rhombus(op_or_id_name) is the other binding, and
-  @rhombus(nonterm_op_or_id_name) is the name defined there, which
+  @rhombus(nonterm_id) is the name defined there, which
   defaults to @rhombus(id) if not supplied. A @rhombus(builtin_space)
   specification indicates the binding's space, and it's needed if the
   binding space of @rhombus(op_or_id_name) is distinct from the expression
