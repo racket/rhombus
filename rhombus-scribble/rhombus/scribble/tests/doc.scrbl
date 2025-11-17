@@ -95,7 +95,11 @@ Starting example:
  Description, where @rhombus(some_s.length()) and
  @rhombus(some_other_s.length()) are linked.
 
- See @rhombus(fun) versus @rhombus(fun, ~defn).
+ See @rhombus(fun) versus @rhombus(fun, ~defn),
+ @rhombus(fun, ~at: rhombus/defn), and @rhombus(fun, ~at rhombus/defn),
+ which is the same as @rhombuslink(fun, ~defn){this link},
+ @rhombuslink(fun, ~at: rhombus/defn){this link},
+ and @rhombuslink(fun, ~at rhombus/defn){this link}.
 
 }
 

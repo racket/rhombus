@@ -136,7 +136,7 @@
                 [else
                  (define space-name (id-space-name* #'id))
                  (if (identifier-binding (add-space #'id space-name) #f)
-                     (render-in-space space-name str (add-space #'id space-name))
+                     (render-in-space space-name str (add-space #'id space-name) #:raw (and content #t))
                      (render 'plain str))])]
              [id:identifier
               (define str (or content (string->immutable-string (shrubbery-syntax->string stx))))
@@ -151,7 +151,8 @@
                 [(eq? space-name 'result)
                  (render 'result str)]
                 [(identifier-binding (add-space stx space-name) #f)
-                 (render-in-space space-name str (add-space stx space-name))]
+                 (render-in-space space-name str (add-space stx space-name) #:raw (and content #t))]
+                [content content]
                 [else
                  (render 'identifier str)])]
              [_

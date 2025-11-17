@@ -5,6 +5,7 @@
                      "introducer.rkt"
                      "name-start-syntax-class.rkt")
          syntax/parse/pre
+         enforest/name-parse
          "provide.rkt"
          "operator-parse.rkt"
          "dotted-sequence.rkt"
@@ -16,6 +17,7 @@
                     Term
                     Identifier
                     Operator
+                    IdentifierOrOperator
                     Name
                     IdentifierName
                     Sequence
@@ -127,6 +129,7 @@
 (define-syntax-class-syntax Term (make-syntax-class #f))
 (define-syntax-class-syntax Identifier (make-syntax-class #'identifier))
 (define-syntax-class-syntax Operator (make-syntax-class #':operator))
+(define-syntax-class-syntax IdentifierOrOperator (make-syntax-class #':name))
 (define-syntax-class-syntax Name (make-syntax-class #':dotted-operator-or-identifier-sequence
                                                     #:splicing? #t
                                                     #:kind 'term))

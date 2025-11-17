@@ -9,6 +9,7 @@
          syntax/strip-context
          shrubbery/property
          shrubbery/print
+         enforest/name-parse
          "to-list.rkt"
          "injected.rkt"
          "provide.rkt"
@@ -48,6 +49,7 @@
                      Block
                      Identifier
                      Operator
+                     IdentifierOrOperator
                      Name
                      IdentifierName))
 
@@ -140,6 +142,15 @@
          (syntax-parse t
            #:datum-literals (op)
            [(op _) #t]
+           [_ #f]))))
+
+(define-annotation-syntax IdentifierOrOperator
+  (identifier-annotation is-identifier-or-operator? #,(get-syntax-static-infos)))
+(define (is-identifier-or-operator? s)
+  (and (syntax*? s)
+       (let ([t (unpack-term s #f #f)])
+         (syntax-parse t
+           [_::name #t]
            [_ #f]))))
 
 (define-annotation-syntax Name

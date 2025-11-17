@@ -10,6 +10,7 @@
   expr.macro 'rhombus($group)'
   expr.macro 'rhombus($group, $builtin_space)'
   expr.macro 'rhombus($group, ~at $space_name)'
+  expr.macro 'rhombus($group, ~at: $space_name)'
   grammar builtin_space:
     ~var
     ~datum
@@ -42,6 +43,8 @@
     ~immediate_callee
     ~operator_order
     ~doc
+  grammar space_name:
+    $id_or_op ...
 ){
 
  Typesets @rhombus(group) literally, except as adjusted by spacers and

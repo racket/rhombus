@@ -82,10 +82,11 @@
                               str
                               id
                               #:suffix [suffix-target #f]
-                              #:suffix-space [suffix-space-name #f])
+                              #:suffix-space [suffix-space-name #f]
+                              #:raw [raw? #f])
                        (define as-define? (syntax-property id 'typeset-define))
                        (define r
-                         (element tt-style
+                         (element (and (not raw?) tt-style)
                            (let ()
                              (define main
                                (make-id-element id str as-define?

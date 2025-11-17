@@ -248,6 +248,7 @@ or adjusted in any way
   annot.macro 'TermSequence'
   annot.macro 'Identifier'
   annot.macro 'Operator'
+  annot.macro 'IdentifierOrOperator'
   annot.macro 'Name'
   annot.macro 'IdentifierName'
 ){
@@ -272,6 +273,9 @@ or adjusted in any way
 
  @item{@rhombus(Operator, ~annot) matches only an operator (which is
   a single-term syntax object).}
+
+ @item{@rhombus(IdentifierOrOperator, ~annot) is a shorthand for
+  @rhombus(Identifier || Operator, ~annot).}
 
  @item{@rhombus(Name, ~annot) matches a syntax object that is an
   identifier, operator, or dotted multi-term group that fits the shape of

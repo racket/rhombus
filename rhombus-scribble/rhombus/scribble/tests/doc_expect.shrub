@@ -804,6 +804,16 @@ html:
             span {class: "stt"}: span {class: "RktSym"}: "fun"
             " versus "
             span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            ",\n"
+            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            ", and "
+            span {class: "stt"}: a {class: "RktValLink"}: "fun"
+            ",\nwhich is the same as "
+            a {class: "RktValLink"}: "this link"
+            ",\n"
+            a {class: "RktValLink"}: "this link"
+            ",\nand "
+            a {class: "RktValLink"}: "this link"
             "."
           section:
             h2:

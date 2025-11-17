@@ -482,6 +482,7 @@
   syntax_class Term: kind: ~term
   syntax_class Identifier: kind: ~term
   syntax_class Operator: kind: ~term
+  syntax_class IdentifierOrOperator: kind: ~term
   syntax_class Name: kind: ~sequence
   syntax_class IdentifierName: kind: ~sequence
   syntax_class Keyword: kind: ~term
@@ -499,7 +500,7 @@
 
  Syntax classes, all of which imply a single-term match except for
  @rhombus(Sequence, ~stxclass), @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass),
- @rhombus(Block, ~stxclass), and @rhombus(IdentifierName, ~stxclass).
+ @rhombus(Block, ~stxclass), @rhombus(Name, ~stxclass), and @rhombus(IdentifierName, ~stxclass).
 
  The @rhombus(Sequence, ~stxclass) syntax class matches any number of
  terms, including zero terms. That is, it matches a group or a
@@ -519,6 +520,12 @@
  bound to a match for the entire block as a single term (i.e., as a
  single-term syntax object that has a block term, and not as a
  multi-group syntax object).
+
+ The @rhombus(Identifier, ~stxclass) syntax class matches identifiers in
+ the sense of @nontermref(id), the @rhombus(Operator, ~stxclass) syntax
+ class matches operators in the sense of @nontermref(op), and the
+ @rhombus(IdentifierOrOperator, ~stxclass) syntax class is the union of
+ @rhombus(Identifier, ~stxclass) and @rhombus(Operator, ~stxclass).
 
  The @rhombus(Name, ~stxclass) syntax class is an extension of the union
  of @rhombus(Identifier, ~stxclass) and @rhombus(Operator, ~stxclass)

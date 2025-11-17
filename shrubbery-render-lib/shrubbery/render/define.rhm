@@ -188,7 +188,13 @@ defn.macro 'macros ($rhombus,
      | '$rhombus ($('$')(forms :: Group))':
          ~op_stx: self
          '$typeset_rhombus($('$')(escape_top(self, spacer.adjust_group(forms, #false, '#,'), '#,', '$escape'))) :~ $Result'
-     | '$rhombus ($('$')forms, ~at $('$')(name0 :: Name) $('$')(name :: Name) $('...'))':
+     | '$rhombus ($('$')forms, ~at $('$')(name0 :: IdentifierOrOperator) $('$')(name :: IdentifierOrOperator) $('...'))':
+         ~op_stx: self
+         let sp = [Symbol.from_string(String.append(to_string(name0),
+                                                    to_string(name), $('...')))]
+         '$typeset_rhombus(~space: #'$('$')sp,
+                           $('$')(escape_top(self, spacer.adjust_group(forms, sp, '#,'), '#,', '$escape'))) :~ $Result'
+     | '$rhombus ($('$')forms, ~at: $('$')(name0 :: IdentifierOrOperator) $('$')(name :: IdentifierOrOperator) $('...'))':
          ~op_stx: self
          let sp = [Symbol.from_string(String.append(to_string(name0),
                                                     to_string(name), $('...')))]

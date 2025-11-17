@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
-  shrubbery/render/define  
+  shrubbery/render/define
+  shrubbery/render/spacer
   "typeset-rhombus.rkt" open
   lib("scribble/base.rkt")
   "element.rhm".elem
@@ -31,11 +32,16 @@ define.macros (rhombus,
 
 expr.macro
 | 'rhombuslink($(name :: Name), $(kw :: Keyword), $content, ... ~nonempty)':
-    '#{typeset-rhombus}(Syntax.literal '$name', ~space: #'$kw, ~content: elem([$content, ...]))'
+    '#{typeset-rhombus}(Syntax.literal '$(spacer.adjust_group(name, kw.unwrap(), '#,'))', ~space: #'$kw, ~content: elem([$content, ...]))'
 | 'rhombuslink($(name :: Name),
-               ~at: $(sp && ('$(sp :: Identifier)' || '$(sp :: Identifier)')) ...,
+               ~at: $(sp && ('$(sp :: IdentifierOrOperator)' || '$(sp :: IdentifierOrOperator)')) ...,
                $content, ... ~nonempty)':
     let space = Symbol.from_string(String.append(to_string(sp), ...))
-    '#{typeset-rhombus}(Syntax.literal '$name', ~space: #'$space, ~content: elem([$content, ...]))'
+    '#{typeset-rhombus}(Syntax.literal '$(spacer.adjust_group(name, space, '#,'))', ~space: #'$space, ~content: elem([$content, ...]))'
+| 'rhombuslink($(name :: Name),
+               ~at $(sp && ('$(sp :: IdentifierOrOperator)' || '$(sp :: IdentifierOrOperator)')) ...,
+               $content, ... ~nonempty)':
+    let space = Symbol.from_string(String.append(to_string(sp), ...))
+    '#{typeset-rhombus}(Syntax.literal '$(spacer.adjust_group(name, space, '#,'))', ~space: #'$space, ~content: elem([$content, ...]))'
 | 'rhombuslink($(name :: Name), $content, ... ~nonempty)':
-    '#{typeset-rhombus}(Syntax.literal '$name', ~content: elem([$content, ...]))'
+    '#{typeset-rhombus}(Syntax.literal '$(spacer.adjust_group(name, #false, '#,'))', ~content: elem([$content, ...]))'
