@@ -1,0 +1,32 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/class.rkt"):
+    expose:
+      send as rkt_send
+      new as rkt_new
+      #{is-a?} as rkt_is_a
+
+export:
+  rename:
+    class.#{make-object} as make_object
+  new
+  send
+  is_a
+
+expr.macro 'new $target ... ($(kw :: Keyword): $kw_arg, ...)':
+  expr_meta.pack_s_exp(['rkt_new',
+                        expr_meta.pack_expr('$target ...'),
+                        [Syntax.make(Symbol.from_string(to_string(kw.unwrap()))),
+                         expr_meta.pack_expr('block: $kw_arg')],
+                        ...])
+
+expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
+  expr_meta.pack_s_exp(['rkt_send',
+                        expr_meta.pack_expr('$target ...'),
+                        method,
+                        & List.append([kw, expr_meta.pack_expr(kw_arg)],
+                                      ...),
+                        expr_meta.pack_expr(arg), ...])
+
+expr.macro '$obj is_a $class':
+  expr_meta.pack_s_exp(['rkt_is_a', obj, class])

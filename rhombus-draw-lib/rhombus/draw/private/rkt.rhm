@@ -1,14 +1,12 @@
 #lang rhombus/static/and_meta
 import:
-  lib("racket/class.rkt"):
-    expose:
-      send as rkt_send
-      #{is-a?} as rkt_is_a
+  rhombus/rkt_obj
   lib("racket/draw.rkt")
 
 export:
-  rename:
-    class.#{make-object} as make_object
+  rkt_obj.make_object
+  rkt_obj.send
+  rkt_obj.is_a
   draw.#{bitmap%}
   draw.#{color%} draw.#{the-color-database} draw.#{make-color}
   draw.#{pen%} draw.#{the-pen-list}
@@ -22,19 +20,4 @@ export:
   draw.#{svg-dc%}
   draw.#{pdf-dc%}
   draw.#{post-script-dc%}
-  send
-  is_a
   draw.#{read-bitmap}
-
-expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
-  expr_meta.pack_s_exp(['rkt_send',
-                        expr_meta.pack_expr('$target ...'),
-                        method,
-                        & (for List:
-                             each p in [[kw, expr_meta.pack_expr(kw_arg)], ...]
-                             each i in p
-                             i),
-                        expr_meta.pack_expr(arg), ...])
-
-expr.macro '$obj is_a $class':
-  expr_meta.pack_s_exp(['rkt_is_a', obj, class])

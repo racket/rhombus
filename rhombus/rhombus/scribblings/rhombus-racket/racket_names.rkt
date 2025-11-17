@@ -2,7 +2,8 @@
 (require scribble/manual
          (for-label racket/base
                     rhombus/parse
-                    racket/shared))
+                    racket/shared
+                    racket/class))
 
 (provide racket_require
          racket_lib
@@ -14,7 +15,11 @@
          racketmod_racket_mutable_treelist
          racket_rhombus_expression
          racket_shared
-         racket_cons)
+         racket_cons
+         racket_new
+         racket_make_object
+         racket_is_a
+         racket_send)
 
 (define racket_require @racket[require])
 (define racket_lib @racket[lib])
@@ -29,3 +34,8 @@
 (define racket_rhombus_expression @racket[rhombus-expression])
 (define racket_shared @racket[shared])
 (define racket_cons @racket[cons])
+
+(define racket_new @racket[new])
+(define racket_make_object @racket[make-object])
+(define racket_is_a @racket[is-a?])
+(define racket_send @racket[send])

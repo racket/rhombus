@@ -22,7 +22,5 @@ interoperating between the two languages.
 
 @include_section("module.scrbl")
 @include_section("data.scrbl")
-@include_section("racket-expr.scrbl")
-@include_section("parse.scrbl")
-@include_section("dot.scrbl")
-@include_section("dynamic-require.scrbl")
+@include_section("rhombus_to_racket.scrbl")
+@include_section("racket_to_rhombus.scrbl")

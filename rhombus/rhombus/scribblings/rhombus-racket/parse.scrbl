@@ -2,7 +2,7 @@
 @(require (for-label rhombus/parse
                      racket/base))
 
-@title{Rhombus Expressions in Racket}
+@title[#:tag "rhombus-expr"]{Rhombus Expressions from Racket}
 
 @defmodule[rhombus/parse]
 

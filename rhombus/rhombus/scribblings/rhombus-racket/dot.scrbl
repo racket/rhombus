@@ -4,7 +4,7 @@
                      racket/contract/base
                      rhombus/parse))
 
-@title{Dynamic Dot from Racket}
+@title[#:tag "dot"]{Rhombus Dynamic Dot from Racket}
 
 @defmodule[rhombus/dot]
 
