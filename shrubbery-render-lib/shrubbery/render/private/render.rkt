@@ -27,6 +27,7 @@
   (define (render_line stx-in
                        #:space [space-name-in #f]
                        #:spacer_info_box [info-box #f]
+                       ;; `stx-in` should contain a name (possibly dotted) if `content` is not `#f`
                        #:content [content #f])
     (define tt-space (whitespace 1))
     (define tt-comma (render 'meta ", "))
@@ -34,14 +35,34 @@
     (define res-comma (render 'result ", "))
     (define res-semicolon (render 'result "; "))
 
+    (define render-in-space/content
+      (if content
+          (lambda (space-name
+                   #:prefix [prefix-str #f]
+                   str
+                   id
+                   #:suffix [suffix-target #f]
+                   #:suffix-space [suffix-space-name #f]
+                   #:raw [raw? #f])
+            (render-in-space space-name
+                             #:prefix #f
+                             content
+                             id
+                             #:suffix suffix-target
+                             #:suffix-space suffix-space-name
+                             #:raw #t))
+          render-in-space))
+
     (define stx (replace-name-refs (syntax-parse stx-in
                                      #:datum-literals (multi)
                                      [(multi g) #'g]
                                      [(group . _) stx-in]
                                      [_ #`(group #,stx)])
                                    'group info-box
-                                   render-in-space
-                                   render-via-result-annotation))
+                                   render-in-space/content
+                                   (if content
+                                       (lambda (root rators field field-str) #f)
+                                       render-via-result-annotation)))
     (define space-names (full-space-names space-name-in))
     (define one-space-name (and (pair? space-names) (car space-names)))
     (define (res a [b 'result]) (if (eq? one-space-name 'result) b a))
@@ -59,7 +80,7 @@
           (let g-loop ([elems (syntax->list elems-stx)] [pre-space? #f] [check-prefix? #f])
             (cond
               [(null? elems) null]
-              [(initial-name-ref elems space-names render-in-space) ; detect `root.field` paths
+              [(initial-name-ref elems space-names render-in-space/content) ; detect `root.field` paths
                => (lambda (new-elems)
                     (g-loop new-elems pre-space? check-prefix?))]
               [else
@@ -97,9 +118,11 @@
                (cons (cond
                        [add-space? (list tt-space e)]
                        [else e])
-                     (g-loop (cdr elems)
-                             (or (suffixed? elem) (and alt-elem (suffixed? alt-elem)))
-                             #t))])))
+                     (if content
+                         null
+                         (g-loop (cdr elems)
+                                 (or (suffixed? elem) (and alt-elem (suffixed? alt-elem)))
+                                 #t)))])))
         (cond
           [(element*? (syntax-e stx)) (syntax-e stx)]
           [else

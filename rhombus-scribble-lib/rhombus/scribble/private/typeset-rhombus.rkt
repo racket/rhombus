@@ -58,6 +58,27 @@
                   [(delayed-element? e) (loop ((delayed-element-plain e)))]
                   [else #f])))))
 
+;; backward compatibility before v9.0.0.4
+(define link-style-supported?
+  (let-values ([(reqd allowed) (procedure-keywords make-id-element)])
+    (and allowed (memq '#:link-style allowed))))
+
+(define (make-id-element* id content as-define?
+                          #:space space-name
+                          #:link-style link-style
+                          #:unlinked-ok? unlinked-ok?
+                          #:suffix suffix)
+  (if link-style-supported?
+      (make-id-element id content as-define?
+                       #:space space-name
+                       #:link-style link-style
+                       #:unlinked-ok? unlinked-ok?
+                       #:suffix suffix)
+      (make-id-element id (content->string content) as-define?
+                       #:space space-name
+                       #:unlinked-ok? unlinked-ok?
+                       #:suffix suffix)))
+
 (define-values (render_code
                 render_code_block)
   (render:make
@@ -79,7 +100,7 @@
                                      str)))))
    #:render_in_space (lambda (space-name
                               #:prefix [prefix-str #f]
-                              str
+                              content
                               id
                               #:suffix [suffix-target #f]
                               #:suffix-space [suffix-space-name #f]
@@ -89,13 +110,14 @@
                          (element (and (not raw?) tt-style)
                            (let ()
                              (define main
-                               (make-id-element id str as-define?
-                                                #:space space-name
-                                                #:unlinked-ok? #t
-                                                #:suffix (if suffix-target
-                                                             (list (target-id-key-symbol suffix-target)
-                                                                   suffix-space-name)
-                                                             space-name)))
+                               (make-id-element* id content as-define?
+                                                 #:space space-name
+                                                 #:link-style (and raw? (style #f null))
+                                                 #:unlinked-ok? #t
+                                                 #:suffix (if suffix-target
+                                                              (list (target-id-key-symbol suffix-target)
+                                                                    suffix-space-name)
+                                                              space-name)))
                              (if prefix-str
                                  (list prefix-str main)
                                  main))))
@@ -231,8 +253,7 @@
 (define (typeset-rhombus stx
                          #:space [space-name-in #f]
                          #:content [content #f])
-  (render_code stx #:space space-name-in #:content (and content
-                                                        (content->string content))))
+  (render_code stx #:space space-name-in #:content content))
 
 (define (typeset-rhombusblock stx
                               #:inset [inset? #t]

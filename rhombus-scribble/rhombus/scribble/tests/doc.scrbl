@@ -101,6 +101,10 @@ Starting example:
  @rhombuslink(fun, ~at: rhombus/defn){this link},
  and @rhombuslink(fun, ~at rhombus/defn){this link}.
 
+ Check @rhombuslink(syntax_meta.DefinitionContext.add_scopes){dotted replacement}, too.
+
+ Check @rhombuslink(some_s.length){@bold{unlinked replacement}}, too.
+
 }
 
 @section{Draw}

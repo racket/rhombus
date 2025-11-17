@@ -809,12 +809,20 @@ html:
             ", and "
             span {class: "stt"}: a {class: "RktValLink"}: "fun"
             ",\nwhich is the same as "
-            a {class: "RktValLink"}: "this link"
+            a: "this link"
             ",\n"
-            a {class: "RktValLink"}: "this link"
+            a: "this link"
             ",\nand "
-            a {class: "RktValLink"}: "this link"
+            a: "this link"
             "."
+          p:
+            "Check "
+            a: "dotted replacement"
+            ", too."
+          p:
+            "Check "
+            span {style: "font-weight: bold"}: "unlinked replacement"
+            ", too."
           section:
             h2:
               "1"
@@ -824,7 +832,7 @@ html:
               "Draw"
               span {class: "button-group"}:
                 a {class: "heading-anchor"}: "🔗"
-                span: " "
+                span {style: "visibility: hidden"}: " "
             p:
               table:
                 tr:
@@ -960,7 +968,7 @@ html:
               "Command Line"
               span {class: "button-group"}:
                 a {class: "heading-anchor"}: "🔗"
-                span: " "
+                span {style: "visibility: hidden"}: " "
             p:
               table:
                 tr:
@@ -1008,7 +1016,7 @@ html:
               "Extension"
               span {class: "button-group"}:
                 a {class: "heading-anchor"}: "🔗"
-                span: " "
+                span {style: "visibility: hidden"}: " "
             p:
               table:
                 tr:
@@ -1067,7 +1075,7 @@ html:
               "Meta"
               span {class: "button-group"}:
                 a {class: "heading-anchor"}: "🔗"
-                span: " "
+                span {style: "visibility: hidden"}: " "
             p:
               table:
                 tr:
