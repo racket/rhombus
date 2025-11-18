@@ -230,8 +230,8 @@
                 procedure-reduce-keyword-arity-mask
                 make-keyword-procedure)
     [(~and fe
-           (~parse (~or (#%app procedure-reduce-keyword-arity-mask inner _ _ _)
-                        inner)
+           (~parse (~or* (#%app procedure-reduce-keyword-arity-mask inner _ _ _)
+                         inner)
                    (let-body #'fe))
            (~parse (#%app make-keyword-procedure kw-proc proc)
                    #'inner))
@@ -295,44 +295,52 @@
    kw1+kw2
 }
 
-(define ((case-lambda-optimized? match-case) mod-stx)
+(define (case-lambda-match? formalss aritys)
+  (and (eqv? (length formalss)
+             (length aritys))
+       (for/and ([formals (in-list formalss)]
+                 [arity (in-list aritys)])
+         (define-values (rest? required-arity)
+           (if (negative? arity)
+               (values #t (- (add1 arity)))
+               (values #f arity)))
+         (let loop ([formals formals]
+                    [required-arity required-arity])
+           (syntax-parse formals
+             [(_ . more)
+              (loop #'more (sub1 required-arity))]
+             [rest
+              (and (eqv? required-arity 0)
+                   (or rest?
+                       (null? (syntax-e #'rest))))])))))
+
+(define ((case-lambda-optimized? . aritys) mod-stx)
   (define def (extract-def mod-stx 'f))
   (syntax-parse def
     #:literals (case-lambda)
     [(~and fe
-           (~parse (~and fn (case-lambda . _))
+           (~parse (case-lambda
+                     [formals _]
+                     ...)
                    (let-body (let-named #'fe))))
-     (match-case #'fn)]
+     (case-lambda-match? (syntax->list #'(formals ...)) aritys)]
     [_ #f]))
 
 @check-module[case-fun1
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1)]{
  fun
  | f(a): a
 }
 
 @check-module[case-fun2
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _] [(_ _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
 }
 
-;; FIXME these currently aren't as optimized as they can be
 @check-module[case-fun3
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -2)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
@@ -340,11 +348,7 @@
 }
 
 @check-module[case-fun4
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ #;[(_) . _] #;[(_ _) . _] [(_ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -2)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
@@ -352,11 +356,7 @@
 }
 
 @check-module[case-fun5
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -3)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
@@ -364,11 +364,7 @@
 }
 
 @check-module[case-fun6
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _] #;[(_ _) . _] [(_ _ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -3)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
@@ -376,11 +372,7 @@
 }
 
 @check-module[case-fun7
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -4)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
@@ -388,15 +380,70 @@
 }
 
 @check-module[case-fun8
-              #:is (case-lambda-optimized?
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(_ [(_) . _] [(_ _) . _] [(_ _ _ . _) . _]) #t]
-                          [_ #f])))]{
+              #:is (case-lambda-optimized? 1 2 -4)]{
  fun
  | f(a): a
  | f(a, b): values(a, b)
  | f(a, b, c, d, ...): values(a, b, c, d, ...)
+}
+
+@check-module[case-fun9
+              #:is (case-lambda-optimized? -3 1 -2 2 -1)]{
+ fun
+ | f(a, b, c, ...): values(a, b, c, ...)
+ | f(a): a
+ | f(a, & bs): values(a, & bs)
+ | f(a, b): values(a, b)
+ | f(a, ...): values(a, ...)
+}
+
+(define ((case-lambda/kw-not-optimized? . aritys) mod-stx)
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                let-values
+                [lambda #%plain-lambda]
+                case-lambda
+                procedure-reduce-keyword-arity-mask
+                make-keyword-procedure)
+    [(~and fe
+           (~parse (~or* (#%app procedure-reduce-keyword-arity-mask inner _ _ _)
+                         inner)
+                   (let-body #'fe))
+           (~parse (#%app make-keyword-procedure
+                          (case-lambda
+                            [(_ _ . kw-formals) _]
+                            ...)
+                          (case-lambda
+                            [formals _]
+                            ...))
+                   #'inner))
+     (case-lambda-match? (syntax->list #'(kw-formals ...)) aritys)
+     (case-lambda-match? (syntax->list #'(formals ...)) aritys)]
+    [_ #f]))
+
+@check-module[case-fun/kw-mixed1
+              #:is (case-lambda/kw-not-optimized? 0)]{
+ fun
+ | f(): "no key"
+ | f(~a: _): "got a"
+ | f(~& _): "got something else"
+}
+
+@check-module[case-fun/kw-mixed2
+              #:is (case-lambda/kw-not-optimized? 0)]{
+ fun
+ | f(): "no key"
+ | f(~& _): "got something else"
+ | f(~a: _): "got a"
+}
+
+@check-module[case-fun/kw-mixed3
+              #:is (case-lambda/kw-not-optimized? 0)]{
+ fun
+ | f(~& _): "got something else"
+ | f(): "no key"
+ | f(~a: _): "got a"
 }
 
 (define (case-lambda/kwrest-not-reduced? mod-stx)

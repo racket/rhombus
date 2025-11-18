@@ -25,6 +25,7 @@
   (provide maybe-repetition-as-list
            build-overall-rest-getter
            (for-syntax deepen-repetition
+                       make-rest-match
                        make-repetition-bind)))
 
 (define-for-syntax (composite-binding-transformer tail

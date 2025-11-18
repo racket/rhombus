@@ -471,3 +471,34 @@ check:
   ~eval
   fun | f (x: 10): x
   ~throws "default-value expression blocks are not supported in multi-case functions"
+
+// check keyword-based dispatch
+block:
+  fun
+  | f(): "no key"
+  | f(~a: _): "got a"
+  | f(~& _): "got something else"
+  check f() ~is "no key"
+  check f(~a: "anything") ~is "got a"
+  check f(~b: "anything") ~is "got something else"
+  check f(~a: "anything", ~b: "anything") ~is "got something else"
+
+block:
+  fun
+  | f(): "no key"
+  | f(~& _): "got something else"
+  | f(~a: _): "got a"
+  check f() ~is "no key"
+  check f(~a: "anything") ~is "got something else"
+  check f(~b: "anything") ~is "got something else"
+  check f(~a: "anything", ~b: "anything") ~is "got something else"
+
+block:
+  fun
+  | f(~& _): "got something else"
+  | f(): "no key"
+  | f(~a: _): "got a"
+  check f() ~is "got something else"
+  check f(~a: "anything") ~is "got something else"
+  check f(~b: "anything") ~is "got something else"
+  check f(~a: "anything", ~b: "anything") ~is "got something else"
