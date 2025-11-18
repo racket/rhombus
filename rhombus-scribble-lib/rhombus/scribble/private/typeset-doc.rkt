@@ -204,7 +204,7 @@
                                 [(not spacer-infos/s) '(#f)]
                                 [(hash? spacer-infos/s) (list spacer-infos/s)]
                                 [(list? spacer-infos/s) spacer-infos/s]
-                                [else (error "bad spacer infos")])))
+                                [else (error "bad spacer infos" spacer-infos/s)])))
      (define space-namess (for/list ([all-namess (in-list all-space-namesss)])
                             (for/list ([all-names (in-list all-namess)])
                               (car all-names))))
@@ -359,12 +359,20 @@
                      (quote #,immed-space-name)
                      (quote #,sort-order)
                      #,(and spacer-infos
-                            #`(hasheq #,@(apply append
-                                                (for/list ([(k v) (in-hash spacer-infos)])
-                                                  (list #`(quote #,k)
-                                                        (if (identifier? v)
-                                                            #`(quote-syntax #,v)
-                                                            #`(quote #,v))))))))))
+                            (let hashify ([ht spacer-infos])
+                              #`(hasheq #,@(apply append
+                                                  (for/list ([(k v) (in-hash ht)])
+                                                    (list #`(quote #,k)
+                                                          (let quotify ([v v])
+                                                            (cond
+                                                              [(identifier? v)
+                                                               #`(quote-syntax #,v)]
+                                                              [(list? v)
+                                                               #`(list #,@(map quotify v))]
+                                                              [(hash? v)
+                                                               (hashify v)]
+                                                              [else
+                                                               #`(quote #,v)])))))))))))
               (values
                (cons (if (eq? immed-space-name 'grammar)
                          make-typeset-id
@@ -568,17 +576,21 @@
            [else (annote-exporting-library (make-content #t))])))
      (define spacer-infos/resolved
        (and spacer-infos
-            (for/hash ([(k v) (in-hash spacer-infos)])
-              (values k
-                      (cond
-                        [(identifier? v)
-                         (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))
-                         (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
-                         (define ann-b (identifier-binding (in-annot-space v 'add) #f))
-                         (define ns-b (identifier-binding (in-name-root-space v 'add) #f))
-                         (and (or ann-b ns-b)
-                              (spacer-binding (syntax-e v) ann-b ns-b))]
-                        [else v])))))
+            (let resolve-hash ([ht spacer-infos])
+              (for/hash ([(k v) (in-hash ht)])
+                (values k
+                        (let resolve ([v v])
+                          (cond
+                            [(identifier? v)
+                             (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))
+                             (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
+                             (define ann-b (identifier-binding (in-annot-space v 'add) #f))
+                             (define ns-b (identifier-binding (in-name-root-space v 'add) #f))
+                             (and (or ann-b ns-b)
+                                  (spacer-binding (syntax-e v) ann-b ns-b))]
+                            [(list? v) (map resolve v)]
+                            [(hash? v) (resolve-hash v)]
+                            [else v])))))))
      (for/fold ([content content]) ([id (in-list (cons id (syntax->list extra-ids)))]
                                     [space (in-list (cons space extra-spaces))]
                                     [idx (in-naturals)])

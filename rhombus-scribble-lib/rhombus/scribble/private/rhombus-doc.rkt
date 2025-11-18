@@ -125,11 +125,19 @@
 
   (define (resolved->typeset resolved raw)
     (define root (hash-ref resolved 'root #f))
+    (define roots (hash-ref resolved 'roots #f))
+    (define root-syms (hash-ref resolved 'root-syms #f))
     (define target (hash-ref resolved 'target))
     (define def-ht
       (cond
         [root (let* ([ht (hash 'root root
                                'target target)]
+                     [ht (if roots
+                             (hash-set ht 'roots roots)
+                             ht)]
+                     [ht (if root-syms
+                             (hash-set ht 'root-syms root-syms)
+                             ht)]
                      [ht (if raw
                              (hash-set ht 'raw (hash-ref resolved 'raw))
                              ht)])
@@ -150,7 +158,7 @@
         def-ht])))
 
   (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
-    #:attributes (name)
+    #:attributes (name sym)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
              #:do [(define resolved (resolve-name-ref (list space-name)
@@ -158,10 +166,12 @@
                                                       (syntax->list #'(field ...))
                                                       #:raw raw))]
              #:when resolved
-             #:with name (resolved->typeset resolved raw))
-    (pattern (~seq name:identifier)))
+             #:with name (resolved->typeset resolved raw)
+             #:attr sym (car (reverse (syntax->datum #'(root field ...)))))
+    (pattern (~seq name:identifier)
+             #:attr sym (syntax-e #'name)))
   (define-splicing-syntax-class (target space-name)
-    #:attributes (name)
+    #:attributes (name sym)
     #:datum-literals (|.| op parens group)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ... (op |.|) ((~and ptag parens) (group (op opname))))
              #:do [(define resolved (resolve-name-ref (list space-name)
@@ -169,8 +179,10 @@
                                                       (syntax->list #'(field ... opname))
                                                       #:parens #'ptag))]
              #:when resolved
-             #:with name (resolved->typeset resolved #f))
-    (pattern (~seq (op name:identifier)))
+             #:with name (resolved->typeset resolved #f)
+             #:attr sym (syntax->datum #'opname))
+    (pattern (~seq (op name:identifier))
+             #:attr sym (syntax-e #'name))
     (pattern (~seq (~var || (identifier-target space-name))))))
 
 (define-for-syntax (none-extract-spacer-infos stx space-names)
@@ -243,6 +255,19 @@
      (ret-extract-spacer-infos #'ret)]
     [_ #f]))
 
+(define-for-syntax (target->dotted-identifier name sym)
+  (cond
+    [(identifier? name)
+     name]
+    [else
+     (define ht (syntax-e name))
+     (define t (hash-ref ht 'target #f))
+     (define root (hash-ref ht 'root #f))
+     (define root-syms (syntax->datum (hash-ref ht 'root-syms #'#f)))
+     (if root
+         (hash 'id t 'sym sym 'root_id root 'root_syms root-syms)
+         t)]))
+
 (define-for-syntax (ret-extract-spacer-infos ret)
   (syntax-parse ret
     #:datum-literals (block alts)
@@ -252,6 +277,8 @@
      (hash 'result_annotation #'id)]
     [(id:identifier (alts . _))
      (hash 'result_annotation #'id)]
+    [((~var id (identifier-target 'rhombus/annot)))
+     (hash 'result_annotation (target->dotted-identifier #'id.name (attribute id.sym)))]
     [_
      #f]))
 
@@ -463,7 +490,7 @@
     (apply proc
            (syntax-parse stx
              #:datum-literals (group block)
-             [((~and tag group) head ... (block (group #:method_fallback id)))
+             [((~and tag group) head ... (block (group #:method_fallback rhs ...)))
               #'(tag head ...)]
              [_ stx])
            args)))
@@ -471,11 +498,16 @@
 (define-for-syntax (annotation-extract-spacer-infos stx space-names)
   (syntax-parse stx
     #:datum-literals (group block)
-    [(group head ... (block (group #:method_fallback id:identifier)))
-     (hash 'method_fallback #'id)]
-    [(group head ... (block (group #:method_fallback (block (gorup id:identifier)))))
-     (hash 'method_fallback #'id)]
-    [_ (list #f)]))
+    [(group head ... (block (group #:method_fallback (~var id (identifier-target 'rhombus/annot)))))
+     (hash 'method_fallback (target->dotted-identifier #'id.name (attribute id.sym)))]
+    [(group head ... (block (group #:method_fallback (block (group (~var id (identifier-target 'rhombus/annot)))))))
+     (hash 'method_fallback (target->dotted-identifier #'id.name (attribute id.sym)))]
+    [(group head ... (block (~and fallback (group #:method_fallback . _))))
+     (raise-syntax-error #f
+                         "invalid method-fallback clause"
+                         stx
+                         #'fallback)]
+    [_ #f]))
 
 (define-doc annot.macro annot
   "annotation"

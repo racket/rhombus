@@ -31,7 +31,8 @@ Strings are @tech{comparable}, which means that generic operations like
   annot.macro 'ReadableString':
     ~method_fallback: String
   annot.macro 'ReadableString.to_string'
-  annot.macro 'MutableString'
+  annot.macro 'MutableString':
+    ~method_fallback: String
 ){
 
  Matches strings. The @rhombus(ReadableString, ~annot) annotation allows mutable

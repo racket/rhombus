@@ -1,5 +1,6 @@
 #lang racket/base
 (require (prefix-in render: shrubbery/render)
+         shrubbery/render/private/log
          scribble/racket
          (only-in scribble/core
                   element
@@ -127,98 +128,235 @@
                                                                 0))]
                          [else r]))
    #:render_via_result_annotation (let ([ns (make-base-namespace)])
-                                    (lambda (root-annot rators field field-str)
+                                    (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
+                                    (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))                                    
+                                    (lambda (root-id ns-id root-names rators field field-str)
+                                      ;; Try to get a result from calling `root . root . ... rator() . rator() ... . field`.
+                                      ;; Even though `root` is in principle a namespace, it may be documented only
+                                      ;; as an annotation, so try that as a fallback.
+                                      ;; A `root-id` can be #f, in which case `root-names` must be empty.
+                                      ;; Otherwise, `root-id` should have a corresponding initial element in
+                                      ;; `root-names`, and `ns-id` has a corresponding final element in `root-names`,
+                                      ;; but `root-id` and `ns-id` are composed with preceding roots and maybe an import
+                                      ;; namespace so that they have a binding, while `root-names` is used for
+                                      ;; the documented dotted name.
                                       (delayed-element
                                        (lambda (renderer sec ri)
                                          (define default (element tt-style field-str))
-                                         (define (start)
-                                           (cond
-                                             [root-annot
-                                              (define in-name-root-space (make-interned-syntax-introducer 'rhombus/namespace))
-                                              (define in-annot-space (make-interned-syntax-introducer 'rhombus/annot))
-                                              (define ns-id (in-name-root-space root-annot 'add))
-                                              (define annot-id (in-annot-space root-annot 'add))
-                                              (prep-namespace-for-binding ns-id)
-                                              (find-via-namespace-id ns-id annot-id rators #f)]
-                                             [else
-                                              (define rator (car rators))
-                                              (define tag (find-racket-tag sec ri rator #f
-                                                                           #:unlinked-ok? #t))
-                                              (parameterize ([current-namespace ns])
-                                                (find-via-rator-tag tag (cdr rators)))]))
-
-                                         (define (find-via-rator-tag rator-tag more-rators)
-                                           (define spacer-infos (and rator-tag
-                                                                     (resolve-get/tentative sec ri (list 'spacer-infos rator-tag))))
-                                           (define result-annot (and spacer-infos
-                                                                     (hash-ref spacer-infos 'result_annotation #f)))
-                                           (find-via-annot-spacer-binding result-annot more-rators))
-
-                                         (define (find-via-annot-spacer-binding result-annot more-rators)
-                                           (cond
-                                             [(and result-annot
-                                                   (spacer-binding? result-annot))
-                                              (define root-sym (spacer-binding-datum result-annot))
-                                              (define ns-id (binding->id root-sym (spacer-binding-ns-b result-annot)))
-                                              (define annot-id (binding->id root-sym (spacer-binding-annot-b result-annot)))
-                                              (find-via-namespace-id ns-id annot-id more-rators #t)]
-                                             [else default]))
-
-                                         (define (find-via-namespace-id ns-id annot-id more-rators shift?)
-                                           (define (try-fallback)
+                                         (define (find-racket-tag* id root-id root-names
+                                                                   #:space [space #f]
+                                                                   #:shift? shift?)
+                                           (define id* (if root-id
+                                                           (in-name-root-space root-id 'add)
+                                                           id))
+                                           (log-shrubbery-render-info "FIND-RACKET-TAG~a"
+                                                                      (format-log
+                                                                       'shift? shift?
+                                                                       'id id*
+                                                                       'id-scopes (hash-ref (syntax-debug-info id*) 'context #f)
+                                                                       'space (if root-id 'rhombus/namespace space)
+                                                                       'suffix (if root-id
+                                                                                   (list (format-suffix root-names id)
+                                                                                         space)
+                                                                                   space)
+                                                                       'binding (identifier-binding
+                                                                                 (if shift? (syntax-shift-phase-level id* #f) id*))))
+                                           (define tag
+                                             (find-racket-tag sec ri
+                                                              (if shift? (syntax-shift-phase-level id* #f) id*)
+                                                              #f
+                                                              #:space (if root-id 'rhombus/namespace space)
+                                                              #:suffix (if root-id
+                                                                           (list (format-suffix root-names id)
+                                                                                 space)
+                                                                           space)
+                                                              #:unlinked-ok? #t))
+                                           (log-shrubbery-render-info "FIND-RACKET-TAG~a"
+                                                                      (format-log
+                                                                       'result tag))
+                                           tag)
+                                         (define (format-suffix root-names id)
+                                           (string->symbol
+                                            (string-append
+                                             (apply string-append
+                                                    (for/list ([name (in-list root-names)])
+                                                      (format "~a." (syntax-e name))))
+                                             (symbol->string (syntax-e id)))))
+                                         (let root-loop ([rators rators] [root-id root-id] [ns-id ns-id] [root-names root-names]) 
+                                           (log-shrubbery-render-info "RESULT LOOP~a"
+                                                                      (format-log
+                                                                       'root-id root-id
+                                                                       'root-names root-names
+                                                                       'rators rators
+                                                                       'field field))
+                                           (define (start)
                                              (cond
-                                               [annot-id
-                                                (define tag (find-racket-tag sec ri (syntax-shift-phase-level annot-id #f) #f
-                                                                             #:space 'rhombus/annot
-                                                                             #:unlinked-ok? #t))
-                                                (define spacer-infos (and tag
-                                                                          (resolve-get/tentative sec ri (list 'spacer-infos tag))))
-                                                (define fallback-annot (and spacer-infos
-                                                                            (hash-ref spacer-infos 'method_fallback #f)))
-                                                (if fallback-annot
-                                                    (find-via-annot-spacer-binding fallback-annot more-rators)
-                                                    default)]
-                                               [else default]))
-                                           (define p (and ns-id (with-handlers ([exn:fail? (lambda (x) #f)])
-                                                                  (identifier-binding-portal-syntax ns-id (if shift? 0 #f)))))
-                                           (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
-                                           (define next-field (if (null? more-rators)
-                                                                  field
-                                                                  (car more-rators)))
-                                           (define next-id (and lookup (lookup #f "identifier"
-                                                                               next-field
-                                                                               values)))
-                                           (cond
-                                             [next-id
-                                              (cond
-                                                [(find-racket-tag sec ri (if shift? (syntax-shift-phase-level ns-id #f) ns-id) #f
-                                                                  #:space 'rhombus/namespace
-                                                                  #:suffix (list (string->symbol
-                                                                                  (format "~a.~a"
-                                                                                          (syntax-e ns-id)
-                                                                                          (syntax-e next-field)))
-                                                                                 #f)
-                                                                  #:unlinked-ok? #t)
-                                                 => (lambda (tag)
-                                                      (cond
-                                                        [(pair? more-rators)
-                                                         (find-via-rator-tag tag (cdr more-rators))]
-                                                        [else
-                                                         (define e
-                                                           (make-id-element (if shift? (syntax-shift-phase-level ns-id #f) ns-id) field-str #f
-                                                                            #:unlinked-ok? #t
-                                                                            #:space 'rhombus/namespace
-                                                                            #:suffix (list (string->symbol
-                                                                                            (format "~a.~a"
-                                                                                                    (syntax-e ns-id)
-                                                                                                    (syntax-e field)))
-                                                                                           #f)))
-                                                         (element tt-style e)]))]
-                                                [else (try-fallback)])]
-                                             [else
-                                              (try-fallback)]))
+                                               [root-id                                                
+                                                (define ns-id* (in-name-root-space ns-id 'add))
+                                                (define annot-id (in-annot-space ns-id 'add))
+                                                (prep-namespace-for-binding ns-id*)
+                                                (find-via-namespace-id ns-id* annot-id rators #f root-id root-names)]
+                                               [else
+                                                (define rator (car rators))
+                                                (define tag (find-racket-tag* rator #f null
+                                                                              #:shift? #f))
+                                                (parameterize ([current-namespace ns])
+                                                  (find-via-rator-tag tag rator (cdr rators)))]))
 
-                                         (start))
+                                           (define (find-via-rator-tag rator-tag rator more-rators)
+                                             (define spacer-infos (and rator-tag
+                                                                       (resolve-get/tentative sec ri (list 'spacer-infos rator-tag))))
+                                             (define result-annot (and spacer-infos
+                                                                       (hash-ref spacer-infos 'result_annotation #f)))
+                                             (log-shrubbery-render-info "RATOR~a"
+                                                                        (format-log
+                                                                         'rator rator
+                                                                         'rator-tag rator-tag))
+                                             (cond
+                                               [result-annot
+                                                (find-via-annot-spacer-binding result-annot more-rators)]
+                                               [else
+                                                ;; try a class binding => constructor
+                                                (define in-class-space (make-interned-syntax-introducer 'rhombus/class))
+                                                (define class-id (in-class-space rator 'add))
+                                                (log-shrubbery-render-info "CLASS~a"
+                                                                           (format-log
+                                                                            'class-id class-id
+                                                                            'binding (identifier-binding class-id #f)))
+                                                (cond
+                                                  [(find-racket-tag* class-id #f null
+                                                                     #:shift? #f
+                                                                     #:space 'rhombus/class)
+                                                   => (lambda (tag)
+                                                        (log-shrubbery-render-info "CLASS~a"
+                                                                                   (format-log
+                                                                                    'tag tag))
+                                                        (root-loop (cdr rators) rator rator (list rator)))]
+                                                  [else default])]))
+
+                                           (define (find-via-annot-spacer-binding result-annot more-rators)
+                                             (log-shrubbery-render-info "ANNOT-SPACER~a"
+                                                                        (format-log
+                                                                         'result-annot result-annot))
+                                             (cond
+                                               [(and result-annot
+                                                     (spacer-binding? result-annot))
+                                                (define sb result-annot)
+                                                (define sym (spacer-binding-datum sb))
+                                                (define ns-id (let ([id (binding->id sym (spacer-binding-ns-b sb))])
+                                                                (and id (syntax-shift-phase-level id #f))))
+                                                (define annot-id (let ([id (binding->id sym (spacer-binding-annot-b sb))])
+                                                                   (and id
+                                                                        (syntax-shift-phase-level id #f))))
+                                                (find-via-namespace-id ns-id annot-id more-rators #f ns-id (list (datum->syntax #f sym)))]
+                                               [(and (hash? result-annot)
+                                                     (spacer-binding? (hash-ref result-annot 'id #f))
+                                                     (symbol? (hash-ref result-annot 'sym #f))
+                                                     (spacer-binding? (hash-ref result-annot 'root_id #f))
+                                                     (let ([l (hash-ref result-annot 'root_syms #f)])
+                                                       (and (pair? l) (list? l) (andmap symbol? l))))
+                                                (define sb (hash-ref result-annot 'id))
+                                                (define root-sb (hash-ref result-annot 'root_id))
+                                                (define root-syms (hash-ref result-annot 'root_syms))
+                                                (define sym (hash-ref result-annot 'sym))
+                                                (define root-names (map
+                                                                    (lambda (sym) (datum->syntax #f sym))
+                                                                    (append root-syms (list sym))))
+                                                (define root-id (let ([id (binding->id (car root-syms) (spacer-binding-ns-b root-sb))])
+                                                                  (and id (syntax-shift-phase-level id #f))))
+                                                (define ns-id (let ([id (binding->id sym (spacer-binding-ns-b sb))])
+                                                                (and id (syntax-shift-phase-level (in-name-root-space id 'add) #f))))
+                                                (define annot-id (let ([id (binding->id sym (spacer-binding-annot-b sb))])
+                                                                   (and id (in-annot-space (syntax-shift-phase-level id #f) 'add))))
+                                                (find-via-namespace-id ns-id annot-id more-rators #f root-id root-names)]
+                                               [else default]))
+
+                                           (define (find-via-namespace-id ns-id annot-id more-rators shift? root-id root-names)
+                                             (define (try-fallback)
+                                               (cond
+                                                 [annot-id
+                                                  (log-shrubbery-render-info "FALLBACK~a"
+                                                                             (format-log
+                                                                              'annot-id annot-id
+                                                                              'root-id root-id
+                                                                              'root-name root-names
+                                                                              'shift? shift?))
+                                                  (define tag (find-racket-tag* (if (null? (cdr root-names))
+                                                                                    annot-id
+                                                                                    (car (reverse root-names)))
+                                                                                (and (pair? (cdr root-names))
+                                                                                     root-id)
+                                                                                (reverse (cdr (reverse root-names)))
+                                                                                #:shift? shift?
+                                                                                #:space 'rhombus/annot))
+                                                  (define spacer-infos (and tag
+                                                                            (resolve-get/tentative sec ri (list 'spacer-infos tag))))
+                                                  (define fallback-annot (and spacer-infos
+                                                                              (hash-ref spacer-infos 'method_fallback #f)))
+                                                  (log-shrubbery-render-info "FALLBACK-R~a"
+                                                                             (format-log
+                                                                              'tag tag
+                                                                              'spacer-infos spacer-infos))
+                                                  (if fallback-annot
+                                                      (find-via-annot-spacer-binding fallback-annot more-rators)
+                                                      default)]
+                                                 [else default]))
+                                             (define p (and ns-id (with-handlers ([exn:fail? (lambda (x) #f)])
+                                                                    (identifier-binding-portal-syntax ns-id (if shift? 0 #f)))))
+                                             (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup) #f)))
+                                             (define next-field (if (null? more-rators)
+                                                                    field
+                                                                    (car more-rators)))
+                                             (define next-id (and lookup (lookup #f "identifier"
+                                                                                 next-field
+                                                                                 values)))
+                                             (log-shrubbery-render-info "SEARCH~a"
+                                                                        (format-log
+                                                                         'ns-id ns-id
+                                                                         'ns-binding (and ns-id (identifier-binding
+                                                                                                 (in-name-root-space ns-id 'add)
+                                                                                                 #f))
+                                                                         'ns-context (and ns-id
+                                                                                          (hash-ref (syntax-debug-info ns-id) 'context))
+                                                                         'shift? shift?
+                                                                         'lookup lookup
+                                                                         'root-id root-id
+                                                                         'root-names root-names
+                                                                         'root-binding (and root-id (identifier-binding
+                                                                                                     (in-name-root-space root-id 'add)
+                                                                                                     #f))
+                                                                         'root-context (and root-id
+                                                                                            (hash-ref (syntax-debug-info
+                                                                                                       (in-name-root-space root-id 'add))
+                                                                                                      'context))
+                                                                         'next-field next-field
+                                                                         'next-id next-id))
+                                             (cond
+                                               [next-id
+                                                (cond
+                                                  [(find-racket-tag* next-field root-id root-names
+                                                                     #:shift? shift?)
+                                                   => (lambda (tag)
+                                                        (cond
+                                                          [(pair? more-rators)
+                                                           (find-via-rator-tag tag next-id (cdr more-rators))]
+                                                          [else
+                                                           (define e
+                                                             (make-id-element (in-name-root-space
+                                                                               (if shift? (syntax-shift-phase-level root-id #f) root-id)
+                                                                               'add)
+                                                                              field-str #f
+                                                                              #:unlinked-ok? #t
+                                                                              #:space 'rhombus/namespace
+                                                                              #:suffix (list (format-suffix root-names field)
+                                                                                             #f)))
+                                                           (element tt-style e)]))]
+                                                  [else
+                                                   (try-fallback)])]
+                                               [else
+                                                (try-fallback)]))
+
+                                           (start)))
                                        (lambda () field-str)
                                        (lambda () field-str))))
    #:render_whitespace (lambda (n)

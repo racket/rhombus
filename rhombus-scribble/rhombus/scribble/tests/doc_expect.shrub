@@ -1543,4 +1543,671 @@ html:
                      "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
                   "rhs4"
               "."
+          section:
+            h2:
+              "5"
+              span {class: "stt"}: nbsp
+              a:«»
+              a:«»
+              "Nested"
+              span {class: "button-group"}:
+                a {class: "heading-anchor", href: "#(part._.Nested)"}: "🔗"
+                span {style: "visibility: hidden"}: " "
+            p:
+              table:
+                tr:
+                  td:
+                    span {class: "hspace"}: nbsp
+                    span {class: "stt"}: span {class: "RktSym"}: "import"
+                    span {class: "stt"}: ": "
+                    a {class: "RktModLink",
+                       href:
+                         "#%28mod-path._%28lib._.%27rhombus%2Fdate..rhm.%27%29%29"}:
+                      span {class: "stt"}:
+                        "rhombus"
+                      span {class: "stt"}: "/"
+                      span {class: "stt"}:
+                        "date"
+                  td:
+                    span {class: "RpackageSpec"}:
+                      span {class: "Smaller"}:
+                        nbsp
+                        "package:"
+                      " "
+                      a {href:
+                           "https://pkgs.racket-lang.org/package/rhombus-lib"}:
+                        span {class: "stt"}: "rhombus-lib"
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "class"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "class"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              a:«»
+                              a:«»
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "date."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date%29%29"}:
+                                    "Date"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "d"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "date."
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date._rhombus%2Fannot%29%29"}:
+                                  "Date"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date._%28.Date..to_datetime._~23false%29%29%29"}:
+                                    "to_datetime"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "date."
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date.Time._rhombus%2Fannot%29%29"}:
+                                  "DateTime"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "class"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "class"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              a:«»
+                              a:«»
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "date."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date.Time%29%29"}:
+                                    "DateTime"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "d"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "date."
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date.Time._rhombus%2Fannot%29%29"}:
+                                  "DateTime"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date.Time._%28.Date.Time..to_string._~23false%29%29%29"}:
+                                    "to_string"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+              div {class: "SIntrapara"}:
+                "Prefixed and chained "
+                span {class: "stt"}:
+                  "date."
+                  a {class: "RktValLink",
+                     href:
+                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date%29%29"}:
+                    "Date"
+                span {class: "RktPn"}: "("
+                span {class: "RktPn"}: ")"
+                span {class: "stt"}: "."
+                span {class: "stt"}:
+                  a {class: "RktValLink",
+                     href:
+                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date._%28.Date..to_datetime._~23false%29%29%29"}:
+                    "to_datetime"
+                span {class: "RktPn"}: "("
+                span {class: "RktPn"}: ")"
+                span {class: "stt"}: "."
+                span {class: "stt"}:
+                  a {class: "RktValLink",
+                     href:
+                       "#%28def._%28%28lib._rhombus%2Fdate..rhm%29._.Date.Time._%28.Date.Time..to_string._~23false%29%29%29"}:
+                    "to_string"
+                span {class: "RktPn"}: "("
+                span {class: "RktPn"}: ")"
+                "."
+          section:
+            h2:
+              "6"
+              span {class: "stt"}: nbsp
+              a:«»
+              "Dotted Paths"
+              span {class: "button-group"}:
+                a {class: "heading-anchor", href: "#(part._.Dotted_.Paths)"}:
+                  "🔗"
+                span {style: "visibility: hidden"}: " "
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._rhombus%2Fannot%29%29"}:
+                                    "Port"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output._rhombus%2Fannot%29%29%29"}:
+                                    "Port.Output"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String._rhombus%2Fannot%29%29%29"}:
+                                    "Port.Output.String"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._rhombus%2Fannot%29%29"}:
+                                  "Port"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port..close._~23false%29%29%29"}:
+                                    "close"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Output"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output..write_bytes._~23false%29%29%29"}:
+                                    "write_bytes"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Output"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output..open_string._~23false%29%29%29"}:
+                                    "open_string"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Output.String"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Output.String"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String..get_string._~23false%29%29%29"}:
+                                    "get_string"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
+                                  "String"
+              div {class: "SIntrapara"}:
+                blockquote:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "def"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "outp"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "="
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output..open_string._~23false%29%29%29"}:
+                              "Port.Output.open_string"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "outp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output..write_bytes._~23false%29%29%29"}:
+                              "write_bytes"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktVal"}: "#\"x\""
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "outp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String..get_string._~23false%29%29%29"}:
+                              "get_string"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "outp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Output...String..get_string._~23false%29%29%29"}:
+                              "get_string"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._%28.String..length._~23false%29%29%29"}:
+                              "length"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "outp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port..close._~23false%29%29%29"}:
+                              "close"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+          section:
+            h2:
+              "7"
+              span {class: "stt"}: nbsp
+              a:«»
+              "Dotted Paths with Import Prefix"
+              span {class: "button-group"}:
+                a {class: "heading-anchor",
+                   href: "#(part._.Dotted_.Paths_with_.Import_.Prefix)"}:
+                  "🔗"
+                span {style: "visibility: hidden"}: " "
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "rhombus."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input._rhombus%2Fannot%29%29%29"}:
+                                    "Port.Input"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}: "rhombus."
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input...String._rhombus%2Fannot%29%29%29"}:
+                                    "Port.Input.String"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "rhombus."
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Input"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input..read_bytes._~23false%29%29%29"}:
+                                    "read_bytes"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "method"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "method"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVar"}: "p"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "rhombus."
+                                a {class: "RktValDef RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Input"
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: "."
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input..open_string._~23false%29%29%29"}:
+                                    "open_string"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "stt"}: "::"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                "rhombus."
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input...String._rhombus%2Fannot%29%29%29"}:
+                                  "Port.Input.String"
+              div {class: "SIntrapara"}:
+                blockquote:
+                  table:
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "def"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "inp"
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}: "="
+                          span {class: "hspace"}: nbsp
+                          span {class: "stt"}:
+                            "rhombus."
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input..open_string._~23false%29%29%29"}:
+                              "Port.Input.open_string"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "inp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port...Input..read_bytes._~23false%29%29%29"}:
+                              "read_bytes"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
+                    tr:
+                      td:
+                        p:
+                          span {class: "stt"}: "inp"
+                          span {class: "stt"}: "."
+                          span {class: "stt"}:
+                            a {class: "RktValLink",
+                               href:
+                                 "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.Port._%28.Port..close._~23false%29%29%29"}:
+                              "close"
+                          span {class: "RktPn"}: "("
+                          span {class: "RktPn"}: ")"
     div: nbsp

@@ -9,7 +9,8 @@
          shrubbery/property
          (for-template "typeset-help.rkt")
          "add-space.rkt"
-         "line-shape.rkt")
+         "line-shape.rkt"
+         "log.rkt")
 
 (provide make)
 
@@ -624,10 +625,19 @@
 (struct info-tables (keys       ; key -> stx
                      binds      ; sym -> 'bind value
                      closures)) ; key -> binds
-(struct via-result (root-annot
-                    rators))
+(struct via-result (comp        ; `root-sequence`
+                    rators)
+  #:transparent)
+(struct root-sequence (full        ; source identifiers, including ending name
+                       name        ; ending name
+                       start-id    ; dot-composited bound identifier that `(cdr root-names)` and `(last full)` is added to
+                       root-names) ; like `full`, but without ending name and without a leading import namespace (if any)
+  #:transparent)
 
-;; replace `root.field` with a typeset element
+;; replace `root.field` with a typeset element, including detection of
+;; things like `root.field().method()` to replace `method with a link;
+;; converting things like `root.field().method()` relies on spacer-installed
+;; properties that point from, say, `method` to `field` to `root`
 (define (replace-name-refs stx-pre-keys mode info-box
                            render-in-space
                            render-via-result-annotation)
@@ -661,24 +671,34 @@
        (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
       [((~and tag alts) b ...)
        (datum->syntax stx (cons #'tag (replace-in-terms #'(b ...))) stx stx)]
-      [_
-       (define head (find-namespace-root stx info
-                                         #hasheq()))
+      [_:identifier
+       ;; `find-dotted-composition` detects properties that expose calls, etc.,
+       ;; for linking, which may involves exploring syntax objects that are
+       ;; textually before `stx` (found via the `info` table); it could also
+       ;; find simple things that `initial-name-ref` would find, but we
+       ;; expect those to be convered already
+       (define comp (find-dotted-composition stx info #hasheq() (full-space-names #f)))
+       (when comp
+         (log-shrubbery-render-info "DOTTED~a"
+                                    (format-log
+                                     'result comp)))
        (cond
-         [(via-result? head)
-          (datum->syntax stx (element-via-result head stx render-via-result-annotation) stx stx)]
-         [head
+         [(via-result? comp)
+          (datum->syntax stx (element-via-result comp render-via-result-annotation) stx stx)]
+         [(root-sequence? comp)
           (define-values (new-elem/id leftover)
-            (dotted-name-ref head
+            ;; `dotted-name-ref` detects import namespaces as needed
+            (dotted-name-ref (car (root-sequence-full comp))
                              #:render-str (shrubbery-syntax->string stx)
-                             (list stx)
+                             (cdr (root-sequence-full comp))
                              '(#f)
                              render-in-space
                              #:must-all? #t))
           (cond
             [(and new-elem/id (zero? leftover)) (datum->syntax stx new-elem/id stx stx)]
             [else stx])]
-         [stx])]))
+         [else stx])]
+      [_ stx]))
   (if (eq? mode 'block)
       (replace-in-term stx-in)
       (replace-in-group stx-in)))
@@ -762,56 +782,82 @@
       (gather-in-term info stx-in)
       (gather-in-group info stx-in)))
 
-(define (find-namespace-root stx info
-                             seen
-                             #:must-indirect? [must-indirect? #t])
+;; returns identifier, `via-result`, or `root-sequence`
+(define (find-dotted-composition stx info seen space-names)
   (define keys (info-tables-keys info))
   (define field (syntax-property stx 'field))
+  (log-shrubbery-render-info "FIND-DOTTED~a"
+                             (format-log
+                              'stx stx
+                              'field field))
+  (define (bound-as-import-portal? of-stx)
+    (is-import-portal? (identifier-binding-portal-syntax
+                        ((make-interned-syntax-introducer 'rhombus/namespace) of-stx)
+                        #f)))
   (case (and field (car field))
     [(of)
+     ;; found a reference backwards (probably) before a `.` (probably)
      (let of-loop ([val-key (cdr field)] [seen seen])
        (define of-stx (and (not (hash-ref seen val-key #f))
                            (hash-ref keys val-key #f)))
        (define annot (and of-stx (syntax-property (term-ctx of-stx) 'annot)))
+       (log-shrubbery-render-info "OF~a"
+                                  (format-log
+                                   'val-key val-key
+                                   'of-stx of-stx
+                                   'annot annot))
        (case (and annot (car annot))
          [(as) ; field of an annotation-as-namespace in the source
           (define id (hash-ref keys (cdr annot) #f))
           ;; use `via-result` to get annotation fallbacks
-          (via-result id null)]
+          (via-result id (list stx))]
          [(as_export) ; field of a specific annotation-as-namespace
           ;; for example, a list construction could declare being an instance of `List`
           (define desc (cdr annot))
           (cond
-            [(syntax? desc) (via-result (term-identifier desc) null)]
+            [(syntax? desc) (via-result (term-identifier desc) (list stx))]
             [(and (list? desc) (= 4 (length desc)))
              (define-values (mpi sym nom-mpi nom-sym) (apply values desc))
-             (syntax-binding-set->syntax (syntax-binding-set-extend
-                                          (syntax-binding-set)
-                                          sym
-                                          #f
-                                          mpi
-                                          #:nominal-module nom-mpi
-                                          #:nominal-symbol nom-sym)
-                                         sym)]
+             (define id
+               (syntax-binding-set->syntax (syntax-binding-set-extend
+                                            (syntax-binding-set)
+                                            sym
+                                            #f
+                                            mpi
+                                            #:nominal-module nom-mpi
+                                            #:nominal-symbol nom-sym)
+                                           sym))
+             (root-sequence (list id stx) stx id (list id))]
             [else #f])]
          [(result) ; check result of some other identifier as function/method
           (define rator (and (not (hash-ref seen (cdr annot) #f))
                              (hash-ref keys (cdr annot) #f)))
-          (define ns (and rator
-                          (find-namespace-root rator info
-                                               (hash-set seen (cdr annot) #t)
-                                               #:must-indirect? #f)))
+          (define comp (and rator
+                            (find-dotted-composition rator info
+                                                     (hash-set seen (cdr annot) #t)
+                                                     space-names)))
+          (log-shrubbery-render-info "RESULT~a"
+                                     (format-log
+                                      'rator rator
+                                      'comp comp))
           (cond
-            [(via-result? ns)
+            [(via-result? comp)
              ;; chain result lookup
-             (via-result (via-result-root-annot ns)
-                         (append (via-result-rators ns) (list rator)))]
-            [ns
+             (via-result (via-result-comp comp)
+                         (append (via-result-rators comp) (list stx)))]
+            [(root-sequence? comp)
              ;; need to resolve a dotted name relative to an annotation
-             (via-result ns (list rator))]
+             (if (null? (cdr (root-sequence-root-names comp)))
+                 (via-result #f (list (root-sequence-start-id comp) stx))
+                 (let ([rev-full (cdr (reverse (root-sequence-full comp)))])
+                   (via-result (root-sequence (reverse rev-full)
+                                              (car rev-full)
+                                              (root-sequence-start-id comp)
+                                              (reverse (cdr (reverse (root-sequence-root-names comp)))))                               
+                               (list (root-sequence-name comp) stx))))]
             [(identifier? rator)
-             ;; look up result of `rator` via doc info
-             (via-result #f (list rator))]
+             ;; look up result of `rator` by itself via doc info
+             (via-result #f (list rator stx))]
             [else #f])]
          [else
           (cond
@@ -819,8 +865,13 @@
              (define key (syntax-property of-stx 'spacer_key))
              (define binds (and key (hash-ref (info-tables-closures info) key #f)))
              (define binder (and binds (hash-ref binds (syntax-e of-stx) #f)))
+             (log-shrubbery-render-info "OF-ID~a"
+                                        (format-log
+                                         'of-stx of-stx
+                                         'binder binder))
              (cond
                [binder
+                ;; `of-stx` is bound as a local variable in an example, say
                 (case (and (pair? binder) (car binder))
                   [(value)
                    (define next-val-key (cdr binder))
@@ -832,18 +883,90 @@
                    (cond
                      [id
                       ;; use `via-result` to get annotation fallbacks
-                      (via-result id null)]
+                      (via-result id (list stx))]
                      [else #f])]
                   [else #f])]
-               [(not must-indirect?)
-                of-stx]
-               [else #f])]
+               [else
+                (define field (syntax-property of-stx 'field))
+                (log-shrubbery-render-info "OF-OF~a"
+                                           (format-log
+                                            'of-stx of-stx
+                                            'field field))
+                (case (and field (car field))
+                  [(of)
+                   ;; need to keep working backwards
+                   (define comp (find-dotted-composition of-stx info seen space-names))
+                   (log-shrubbery-render-info "OF-OF~a"
+                                              (format-log
+                                               'comp comp))
+                   (cond
+                     [(via-result? comp)
+                      (via-result (via-result-comp comp)
+                                  (append (via-result-rators comp) (list stx)))]
+                     [(root-sequence? comp)
+                      (root-sequence (append (root-sequence-full comp) (list stx))
+                                     stx
+                                     (root-sequence-start-id comp)
+                                     (append (root-sequence-root-names comp)
+                                             (list stx)))]
+                     [else #f])]
+                  [else
+                   (define use-space-names (id-space-name of-stx space-names
+                                                          #:as-list? #t))
+                   (define resolved (resolve-name-ref use-space-names
+                                                      of-stx
+                                                      (list stx)))
+                   (log-shrubbery-render-info "ID~a"
+                                              (format-log
+                                               'of-stx of-stx
+                                               'stx stx
+                                               'resolved resolved))
+                   (cond
+                     [resolved
+                      (if (null? (hash-ref resolved 'roots null))
+                          ;; `of-stx` must be an import namespace
+                          (root-sequence (list of-stx stx)
+                                         stx
+                                         (hash-ref resolved 'target)
+                                         (list stx))
+                          ;; simple `of-stx . stx`  path
+                          (root-sequence (list of-stx stx)
+                                         stx
+                                         of-stx
+                                         (list of-stx stx)))]
+                     [else #f])])])]
             [else #f])]))]
     [else #f]))
 
-(define (element-via-result head id render-via-result-annotation)
-  (render-via-result-annotation (via-result-root-annot head)
-                                (via-result-rators head)
+(define (element-via-result head render-via-result-annotation)
+  (define root (via-result-comp head))
+  (define rev-rators (reverse (via-result-rators head)))
+  (define id (car rev-rators))
+  (define root-id
+    (if (root-sequence? root)
+        (root-sequence-start-id root)
+        root))
+  (define ns-id
+    (cond
+      [(not (root-sequence? root)) root-id]
+      [(null? (cdr (root-sequence-root-names root)))
+       root-id]
+      [else
+       (define t (resolve-name-ref '(rhombus/namespace)
+                                   (root-sequence-start-id root)
+                                   (cdr (root-sequence-root-names root))))
+       (log-shrubbery-render-info "VIA-RESULT-T~a"
+                                  (format-log
+                                   'start-id (root-sequence-start-id root)
+                                   'root-names (root-sequence-root-names root)
+                                   't t))
+       (and t (add-space (hash-ref t 'target) 'rhombus/namespace))]))
+  (render-via-result-annotation root-id
+                                (or ns-id root-id)
+                                (if (root-sequence? root)
+                                    (root-sequence-root-names root)
+                                    (if root (list root) null))
+                                (reverse (cdr rev-rators))
                                 id
                                 (shrubbery-syntax->string id)))
 

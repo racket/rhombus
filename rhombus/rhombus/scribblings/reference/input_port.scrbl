@@ -12,9 +12,12 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
  string}.
 
 @doc(
-  annot.macro 'Port.Input'
-  annot.macro 'Port.Input.String'
-  annot.macro 'Port.Input.Progress'
+  annot.macro 'Port.Input':
+    ~method_fallback: Port
+  annot.macro 'Port.Input.String':
+    ~method_fallback: Port.Input
+  annot.macro 'Port.Input.Progress':
+    ~method_fallback: Port.Input
 ){
 
  The @rhombus(Port.Input, ~annot) annotation

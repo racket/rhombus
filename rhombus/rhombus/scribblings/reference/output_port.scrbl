@@ -9,9 +9,12 @@ An @deftech{output port} is a @tech{port} specifically for output, and
 an @deftech{output string port} writes to a @tech{byte string}.
 
 @doc(
-  annot.macro 'Port.Output'
-  annot.macro 'Port.Output.String'
-  annot.macro 'Port.Output.Special'
+  annot.macro 'Port.Output':
+    ~method_fallback: Port
+  annot.macro 'Port.Output.String':
+    ~method_fallback: Port.Output
+  annot.macro 'Port.Output.Special':
+    ~method_fallback: Port.Output
 ){
 
  The @rhombus(Port.Output, ~annot) annotation recognizes @tech{output
