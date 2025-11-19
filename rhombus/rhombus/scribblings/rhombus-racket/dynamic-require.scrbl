@@ -6,7 +6,7 @@
                      racket/contract/base)
           "rhombus-names.rhm")
 
-@title[#:tag "dynamic-require"]{ Dynamic Require of Rhombus Exports from Racket}
+@title[#:tag "dynamic-require"]{Dynamic Require of Rhombus Exports from Racket}
 
 @defmodule[rhombus/dynamic-require]
 
