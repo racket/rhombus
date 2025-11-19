@@ -95,7 +95,7 @@ printing, the body forms are evaluated the same way as in
 @filebox(
   "noisy_rhombus.rhm",
   @rhombusblock(
-    #,(@hash_lang())  #,(@rhombuslangname(rhombus))
+    #,(@hash_lang()) #,(@rhombuslangname(rhombus))
     import:
       rhombus/meta open
 
@@ -253,7 +253,7 @@ module to use for the parsed module. The module can can be relative to
 the enclosing @rhombus(reader, ~datum) submodule, so
 @rhombus(parent, ~impo) serves as a reference to the enclosing module.
 The following example is the same as @filepath("noisy_rhombus.rhm") in
-@rhombus("tilde-lang"), but with a @rhombus(reader, ~datum) submodule
+@secref("tilde-lang"), but with a @rhombus(reader, ~datum) submodule
 added, and saved as @filepath{main.rkt} in a @filepath{noisy_rhombus}
 directory (note the @filepath{.rkt} extension instead of
 @filepath{.rhm}).
@@ -261,7 +261,7 @@ directory (note the @filepath{.rkt} extension instead of
 @filebox(
   "noisy_rhombus/main.rkt",
   @rhombusblock(
-    #,(@hash_lang())  #,(@rhombuslangname(rhombus))
+    #,(@hash_lang()) #,(@rhombuslangname(rhombus))
     import:
       rhombus/meta open
 
@@ -373,10 +373,10 @@ Rhombus is
  that directory.}
 
  @item{Use @rhombuslangname(rhombus/reader) to define a
- @rhombus(reader, ~datum) submodle in @filepath{main.rkt}.}
+ @rhombus(reader, ~datum) submodule in @filepath{main.rkt}.}
 
  @item{Supply @rhombus(~lang "main.rhm") in the
- @rhombus(reader, ~datum) submodle.}
+ @rhombus(reader, ~datum) submodule.}
 
  @item{Create @filepath{main.rhm} with
  @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/lang_bridge))) and

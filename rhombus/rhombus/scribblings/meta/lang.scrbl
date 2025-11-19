@@ -56,7 +56,7 @@ single @rhombus(~lang) clause using the same syntax as in
 
 @docmodule(rhombus/runtime_config)
 
-The @rhombus(rhombus/runtime_config) library exports nothing.
+The @rhombusmodname(rhombus/runtime_config) library exports nothing.
 Instantiating the module adjusts configuration parameters to make the
 system behave in Rhombus terms, such as printing values in Rhombus
 syntax. See @secref(~doc: guide_doc, "configure") for information about
@@ -67,7 +67,7 @@ how these functions are useful to define a
 
 @docmodule(rhombus/expand_config)
 
-The @rhombus(rhombus/expand_config) library is for configuring an
+The @rhombusmodname(rhombus/expand_config) library is for configuring an
 expand-time time to behave in Rhombus terms, which as when a syntax
 error is reported.
 
