@@ -130,7 +130,7 @@ regexp.macro
     regexp_meta.pack("^" ++ regexp_meta.unpack(right))
 
 regexp.macro
-| '$left $('$')':
+| '$left ($)':
     ~weaker_than: #%juxtapose #%call
     ~same_as: ^
     regexp_meta.pack(regexp_meta.unpack(left) +& "$")

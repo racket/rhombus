@@ -221,20 +221,20 @@ rx.macro
 
 // Escape operators + end of line operator
 rx.macro
-| '$('$')$(id :: Identifier): $body':
+| '($) $(id :: Identifier): $body':
     ~stronger_than: ~other
     let '$(p :: rx_meta.Parsed); ...' = body
     let ['[$pat, [$p_var, ...]]', ...] = [rx_meta.unpack(p), ...]
     rx_meta.pack('[capture(sequence($pat, ...)), [$id, $p_var, ..., ...]]')
-| '$('$') $(name :: IdentifierName)':
+| '($) $(name :: IdentifierName)':
     if name is_a Identifier
     | rx_meta.pack('[backref_or_splice($name), [[~maybe_splice, $name]]]')
     | rx_meta.pack('[splice($name), [[~maybe_splice, ~other]]]')
-| '$('$') $(index :: Int)':
+| '($) $(index :: Int)':
     rx_meta.pack('[backref($index), []]')
-| '$('$') $(term :: Term)':
+| '($) $(term :: Term)':
     rx_meta.pack('[splice($term), [[~maybe_splice, ~other]]]')
-| '$('$') $(index :: Int)':
+| '($) $(index :: Int)':
     ~all_stx: stx
     unless index.unwrap() is_a PosInt
     | syntax_meta.error("invalid match index", stx, index)

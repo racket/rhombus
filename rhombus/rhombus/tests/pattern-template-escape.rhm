@@ -51,14 +51,14 @@ check:
   ~is "dotss"
 
 check:
-  // special syntax to define `$` as a prefix operator
-  expr.macro '$('$') $x': '1 + $x'
+  // parentheses to define `$` as a prefix operator
+  expr.macro '($) $x': '1 + $x'
   $10
   ~is 11
 
 check:
-  // special syntax to `$` as an infix operator
-  expr.macro '$x $('$') $y': '[$x, $y]'
+  // parentheses to `$` as an infix operator
+  expr.macro '$x ($) $y': '[$x, $y]'
   1 $ 2
   ~is [1, 2]
 
@@ -97,7 +97,7 @@ check:
   // phase-1 bindings of `$` makes `macro` bind `$`
   meta:
     operator ($ b): b
-    bind.macro '$('$')': 'no'
+    bind.macro '($)': 'no'
   macro '$x + $y': '[$x, $y]'
   (1+2)
   ~is 3

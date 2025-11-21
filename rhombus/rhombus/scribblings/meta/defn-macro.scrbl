@@ -47,9 +47,8 @@
     '$defined_name $pattern ...'
 
   grammar defined_name:
-    $id
-    $op
-    #,(dollar)('#,(dollar)')
+    $id_name
+    $op_name
     ($id_name)
     ($op_name)
 
@@ -64,8 +63,10 @@
     ~effect_id $id
 ){
 
- Defines @rhombus(defined_name) as a macro
- in the @rhombus(expr, ~space) @tech{space}. The macro can be used
+ Defines the @rhombus(id_name) or @rhombus(op_name) within
+ @rhombus(defined_name) as a macro
+ in the @rhombus(expr, ~space) @tech{space}, where @rhombus(defined_name)
+ is constrained in the same way as for @rhombus(macro, ~defn). The macro can be used
  in a definition context, where the compile-time
  @rhombus(body) block returns the expansion result. The macro pattern is
  matched to an entire group in a definition context.

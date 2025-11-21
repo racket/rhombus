@@ -301,16 +301,13 @@
 
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:attributes (name extends)
-    #:description "macro identifier or operator"
+    #:description "macro identifier or operator, possibly parenthesized"
     #:datum-literals (op group)
-    (pattern (~seq ::name)
-             #:when (not (free-identifier=? (in-binding-space #'name) (bind-quote $)
-                                            (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
-             #:with extends #'#f)
-    (pattern (~seq (_::parens (group seq::dotted-operator-or-identifier-sequence)))
+    (pattern (~seq seq::dotted-operator-or-identifier-sequence)
+             #:with (~not (_::$+1)) #'seq
              #:with ::dotted-operator-or-identifier #'seq)
-    (pattern (~seq _::$+1 (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
-             #:with extends #'#f))
+    (pattern (~seq (_::parens (group seq::dotted-operator-or-identifier-sequence)))
+             #:with ::dotted-operator-or-identifier #'seq))
 
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)

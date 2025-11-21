@@ -42,9 +42,8 @@
     '$ $left_parsed_id $defined_name $ $right_parsed_id'
     '$ $left_parsed_id $defined_name $pattern ...'
   grammar defined_name:
-    $id
-    $op
-    #,(dollar)('#,(dollar)')
+    $id_name
+    $op_name
     ($id_name)
     ($op_name)
     ()
@@ -79,14 +78,20 @@
     ~none
 ){
 
- As a definition form, @rhombus(macro) defines the @rhombus(defined_name)
- (which is an operator or identifier) within @rhombus(macro_pattern) as a
+ As a definition form, @rhombus(macro) defines the @rhombus(id_name) or
+ @rhombus(op_name) within @rhombus(defined_name) (within @rhombus(macro_pattern)) as a
  pattern-based macro whose expansion is described by a
- @rhombus(template). When @rhombus(defined_name) is a plain
- @rhombus(op), it cannot be @rhombus($), but the form
- @rhombus($('$')) can be used to define @rhombus($). A
+ @rhombus(template). A @rhombus(defined_name) can have parentheses
+ around the identifier or operator to define to distinguish it from other
+ potential roles. Specifically, when @rhombus(defined_name) is a plain
+ @rhombus(op_name), it cannot be @rhombus($, ~bind), but the form
+ @rhombus(($), ~datum) can be used to define @rhombus($, ~datum). To avoid a @rhombus(.)
+ operator being treated as part of a @rhombus(defined_name), either
+ wrap the defined @rhombus(id_name) or @rhombus(op_name) within parentheses
+ use the pattern @rhombus($('.')). A
  @rhombus(defined_name) cannot be @rhombus(()) for a @rhombus(macro)
- definition. The @rhombus(defined_name) is bound in the
+ definition; the form is used for @rhombus(macro) expressions (as described
+ further below). The @rhombus(defined_name) is bound in the
  @rhombus(expr, ~space) @tech(~doc: meta_doc){space}.
 
  As an expression or @tech{entry point}, @rhombus(macro) is a shorthand

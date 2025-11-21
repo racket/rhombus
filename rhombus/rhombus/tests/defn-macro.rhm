@@ -168,3 +168,17 @@ check:
   guard_let_pos x = 7
   "done!"
   ~is "done!"
+
+block:
+  defn.macro '(f).g': '"ok"'
+  check f.g ~is "ok"
+
+check:
+  ~eval
+  import rhombus/meta open
+  defn.macro 'f.g': '"ok"'
+  ~throws "f: not defined as a namespace"
+
+block:
+  defn.macro '($)g': '"ok"'
+  check $g ~is "ok"

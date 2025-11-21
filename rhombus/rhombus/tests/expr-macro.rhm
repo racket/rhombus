@@ -474,3 +474,19 @@ check:
     values(rhs, '$rhs.tail ...')
   ns.id 42
   ~is 42
+
+block:
+  expr.macro '($)g': '"ok"'
+  check $g ++ "z" ~is "okz"
+
+block:
+  expr.macro '$a ($)g': '$a ++ "ok"'
+  check "a" $g ++ "z" ~is "aokz"
+
+block:
+  expr.macro '$a (.) g': '$a ++ "ok"'
+  check "a" . g ++ "z" ~is "aokz"
+
+block:
+  expr.macro '$a . g': '$a ++ "ok"'
+  check "a" . g ++ "z" ~is "aokz"
