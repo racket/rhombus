@@ -36,8 +36,7 @@
          "sequence-constructor-key.rkt"
          "order.rkt"
          "order-primitive.rkt"
-         "to-list.rkt"
-         "deprecated.rkt")
+         "to-list.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -80,9 +79,7 @@
    [from_exclusive Range.from_exclusive]
    [to Range.to]
    [to_inclusive Range.to_inclusive]
-   [full Range.full]
-   [step_by SequenceRange.step_by #:deprecate (#f rhombus/statinfo) "15-Nov-2025"]
-   [to_list ListRange.to_list #:deprecate (#f rhombus/statinfo) "15-Nov-2025"])
+   [full Range.full])
   #:properties
   ()
   #:methods
