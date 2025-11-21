@@ -85,6 +85,7 @@ like @rhombus(<) and @rhombus(>) work on characters.
   method (ch :: Char).is_graphic() :: Boolean
   method (ch :: Char).is_whitespace() :: Boolean
   method (ch :: Char).is_blank() :: Boolean
+  method (ch :: Char).is_iso_control() :: Boolean
   method (ch :: Char).is_extended_pictographic() :: Boolean
   method (ch :: Char).general_category() :: Symbol
   method (ch :: Char).grapheme_break_property() :: Symbol

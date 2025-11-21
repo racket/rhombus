@@ -234,9 +234,72 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 @examples(
   #"hello".utf8_string()
+  #"hi \316\273".utf8_string()
+  ~error:
+    #"hi \316 xxx \273".utf8_string()
+  #"hi \316 xxx \273".utf8_string(Char"?")
 )
 
 }
+
+
+@doc(
+  method (bstr :: Bytes).utf8_length(
+    err_char :: maybe(Char) = #false,
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
+  ) :: maybe(Nat)
+  method (bstr :: Bytes).utf8_ref(
+    skip :: Nat,
+    err_char :: maybe(Char) = #false,
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
+  ) :: maybe(Char)
+  method (bstr :: Bytes).utf8_index(
+    skip :: Nat,
+    err_char :: maybe(Char) = #false,
+    start :: Nat = 0,
+    end :: Nat = Bytes.length(bstr)
+  ) :: maybe(Nat)
+){
+
+ Returns information about the UTF-8 decoding of @rhombus(bstr)’s
+ substring from @rhombus(start) to @rhombus(end), but without actually
+ generating the decoded characters---except for the one character
+ returned by @rhombus(Bytes.utf8_ref). If @rhombus(err_char) is
+ @rhombus(#false) and the substring is not a UTF-8 encoding up to the
+ point of getting a result value, the result is @rhombus(#false).
+ Otherwise, @rhombus(err_char) is used to resolve decoding errors as in
+ @rhombus(Bytes.utf8_string) and the result is never @rhombus(#false).
+
+ The @rhombus(Bytes.utf8_length) method returns the length in characters
+ of the decoded substring from @rhombus(start) to @rhombus(end).
+
+ The @rhombus(Bytes.utf8_ref) method returns the character decoded in
+ substring from @rhombus(start) to @rhombus(end), skipping @rhombus(skip)
+ decoded characters.
+
+ The @rhombus(Bytes.utf8_index) method returns the byte index starting
+ the character that would be decoded in substring from @rhombus(start) to
+ @rhombus(end), skipping @rhombus(skip) decoded characters. Note that a
+ non-@rhombus(#false) result does not mean that bytes at the returned
+ index are well formed as UTF-8, only that the bytes up to the returned
+ index are available and well-formed. The returned index is relative to
+ the start of @rhombus(bstr), not to @rhombus(start), and it is always
+ less than @rhombus(end).
+
+@examples(
+  #"hi \316\273".utf8_length()
+  #"hi \316 xxx \273".utf8_length()
+  #"hi \316 xxx \273".utf8_length(Char"?")
+  #"hi \316\273".utf8_ref(0)
+  #"hi \316\273".utf8_ref(3)
+  #"hi \316\273".utf8_index(0)
+  #"hi \316\273!".utf8_index(4)
+)
+
+}
+
 
 @doc(
   method (bstr :: Bytes).to_sequence(bstr :: Bytes) :: Sequence

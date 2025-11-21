@@ -37,6 +37,7 @@ block:
     String.utf8_bytes(str, [err_b], [start], [end]) ~method ReadableString
     String.latin1_bytes(str, [err_b], [start], [end]) ~method ReadableString
     String.locale_bytes(str, [err_b], [start], [end]) ~method ReadableString
+    String.utf8_length(str, [start], [end]) ~method ReadableString
     String.grapheme_span(str, [start], [end]) ~method ReadableString
     String.grapheme_count(str, [start], [end]) ~method ReadableString
     String.to_sequence(str) ~method ReadableString
@@ -104,6 +105,9 @@ block:
     "hÉllo".latin1_bytes() ~is #"h\311llo"
     "hello".locale_bytes() ~is #"hello"
     "hÉllo".utf8_bytes().length() ~is 6
+    "hÉllo".utf8_length() ~is 6
+    "hÉllo".utf8_length(2) ~is 3
+    "hÉllo".utf8_length(1, 3) ~is 3
     "Hello".normalize_nfd() ~is "Hello"
     "Hello".normalize_nfkd() ~is "Hello"
     "Hello".normalize_nfc() ~is "Hello"
@@ -181,6 +185,7 @@ check:
   dynamic("hÉllo").utf8_bytes(#false, 2) ~is #"llo"
   dynamic("hÉllo").latin1_bytes() ~is #"h\311llo"
   dynamic("hello").locale_bytes() ~is #"hello"
+  dynamic("hÉllo").utf8_length() ~is 6
   dynamic("Hello").normalize_nfd() ~is "Hello"
   dynamic("Hello").normalize_nfkd() ~is "Hello"
   dynamic("Hello").normalize_nfc() ~is "Hello"

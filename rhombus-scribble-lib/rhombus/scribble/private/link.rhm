@@ -61,11 +61,11 @@ fun Secref(tag :: String,
                 ~#{link-render-style}: ref_style && core.#{link-render-style}(ref_style))
 
 fun seclink(tag :: String,
+            pre_content :: PreContent = [],
             ~doc: module_path :: maybe(ModulePath) = #false,
             ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
             ~underline: underline = #true,
-            ~indirect: indirect = #false,
-            pre_content :: Content = [])
+            ~indirect: indirect = #false)
   :: Element:
     ~doc
     base.seclink(tag,
@@ -77,7 +77,7 @@ fun seclink(tag :: String,
 
 fun docref(module_path :: ModulePath,
            ~underline: underline = #true,
-           ~indirect: indirect :: (False || Content) = #false)
+           ~indirect: indirect :: maybe(Content) = #false)
   :: Element:
     ~doc
     base.#{other-doc}(module_path.s_exp(),
@@ -85,13 +85,13 @@ fun docref(module_path :: ModulePath,
                       ~indirect: indirect)
 
 fun elemtag(t :: (Taglet || GeneratedTag),
-            pre_content :: Content)
+            pre_content :: PreContent)
   :: Element:
     ~doc
     base.elemtag(t, pre_content)
 
 fun elemref(t :: (Taglet || GeneratedTag),
-            pre_content :: Content,
+            pre_content :: PreContent,
             ~underline: underline = #true)
   :: Element:
     ~doc

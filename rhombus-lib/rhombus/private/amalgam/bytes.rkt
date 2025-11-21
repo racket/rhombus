@@ -15,9 +15,11 @@
          "define-arity.rkt"
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
+         "maybe-key.rkt"
          "number.rkt"
          "static-info.rkt"
-         (submod "range.rkt" for-substring))
+         (submod "range.rkt" for-substring)
+         (submod "char.rkt" for-static-info))
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -66,6 +68,9 @@
    utf8_string
    latin1_string
    locale_string
+   utf8_length
+   utf8_ref
+   utf8_index
    to_sequence
    snapshot))
 
@@ -138,6 +143,33 @@
 (define-string utf8 utf-8)
 (define-string latin1 latin-1)
 (define-string locale locale)
+
+(define/method Bytes.utf8_length
+  #:primitive (bytes-utf-8-length)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (case-lambda
+    [(bstr) (bytes-utf-8-length bstr)]
+    [(bstr err-char) (bytes-utf-8-length bstr err-char)]
+    [(bstr err-char start) (bytes-utf-8-length bstr err-char start)]
+    [(bstr err-char start end) (bytes-utf-8-length bstr err-char start end)]))
+
+(define/method Bytes.utf8_ref
+  #:primitive (bytes-utf-8-ref)
+  #:static-infos ((#%call-result ((#%maybe #,(get-char-static-infos)))))
+  (case-lambda
+    [(bstr skip) (bytes-utf-8-ref bstr skip)]
+    [(bstr skip err-char) (bytes-utf-8-ref bstr skip err-char)]
+    [(bstr skip err-char start) (bytes-utf-8-ref bstr skip err-char start)]
+    [(bstr skip err-char start end) (bytes-utf-8-ref bstr skip err-char start end)]))
+
+(define/method Bytes.utf8_index
+  #:primitive (bytes-utf-8-index)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (case-lambda
+    [(bstr skip) (bytes-utf-8-index bstr skip)]
+    [(bstr skip err-char) (bytes-utf-8-index bstr skip err-char)]
+    [(bstr skip err-char start) (bytes-utf-8-index bstr skip err-char start)]
+    [(bstr skip err-char start end) (bytes-utf-8-index bstr skip err-char start end)]))
 
 (define/method (Bytes.copy bstr)
   #:primitive (bytes-copy)

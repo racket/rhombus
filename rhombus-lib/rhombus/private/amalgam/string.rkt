@@ -20,6 +20,7 @@
          "index-result-key.rkt"
          "append-key.rkt"
          "compare-key.rkt"
+         "maybe-key.rkt"
          "sequence-constructor-key.rkt"
          "realm.rkt"
          "define-arity.rkt"
@@ -103,6 +104,7 @@
    [split String.split]
    [replace String.replace]
    [utf8_bytes String.utf8_bytes]
+   [utf8_length String.utf8_length]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
    [maybe_to_int String.maybe_to_int]
@@ -150,6 +152,7 @@
    [replace String.replace]
    [make String.make]
    [utf8_bytes String.utf8_bytes]
+   [utf8_length String.utf8_length]
    [latin1_bytes String.latin1_bytes]
    [locale_bytes String.locale_bytes]
    [maybe_to_int String.maybe_to_int]
@@ -585,6 +588,14 @@
 (define-bytes utf8 utf-8)
 (define-bytes latin1 latin-1)
 (define-bytes locale locale)
+
+(define/method String.utf8_length
+  #:primitive (string-utf-8-length)
+  #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))
+  (case-lambda
+    [(str) (string-utf-8-length str)]
+    [(str start) (string-utf-8-length str start)]
+    [(str start end) (string-utf-8-length str start end)]))
 
 (define-syntax (define-grapheme stx)
   (syntax-parse stx

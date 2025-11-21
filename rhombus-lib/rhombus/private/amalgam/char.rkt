@@ -65,6 +65,7 @@
    is_graphic
    is_whitespace
    is_blank
+   is_iso_control
    is_extended_pictographic
    general_category
    grapheme_break_property
@@ -185,6 +186,10 @@
   (char-whitespace? c))
 
 (define/method (Char.is_blank c)
+  #:primitive (char-blank?)
+  (char-blank? c))
+
+(define/method (Char.is_iso_control c)
   #:primitive (char-blank?)
   (char-blank? c))
 

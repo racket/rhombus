@@ -363,6 +363,25 @@ Strings are @tech{comparable}, which means that generic operations like
 
 
 @doc(
+  method String.utf8_length(str :: ReadableString,
+                            start :: Nat = 0,
+                            end :: Nat = String.length(str))
+    :: Nat
+){
+
+ Returns the length in bytes of the UTF-8 encoding of @rhombus(str)’s
+ substring from @rhombus(start) to @rhombus(end), but without actually
+ generating the encoded bytes.
+
+@examples(
+  "hello".utf8_length()
+  "heλλo".utf8_length()
+)
+
+}
+
+
+@doc(
   method String.to_int(
     str :: ReadableString,
     ~radix: radix :: Int.in(2, 16) = 10
