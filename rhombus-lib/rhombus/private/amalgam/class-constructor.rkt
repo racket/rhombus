@@ -492,7 +492,7 @@
                   (with-syntax ([super-name (super-as-ancestor-name #'ancestor-name)])
                     #`(let ([super-name
                              (lambda #,ancestor-formal-args
-                               (lambda #,args
+                               (lambda #,formal-args
                                  (#,next #,@ancestor-args)))])
                         super-name))]
                  [else

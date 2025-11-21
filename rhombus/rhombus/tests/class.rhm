@@ -1032,6 +1032,22 @@ block:
   check Ghost ~is "not defined later"
 
 block:
+  def Ghost = "not defined later"
+  class Ghost(private x):
+    internal _Ghost
+    expression ~none
+  check _Ghost(1) ~is_a Ghost
+  check Ghost ~is "not defined later"
+
+block:
+  def Ghost = "not defined later"
+  class Ghost():
+    internal _Ghost
+    constructor ~none
+  check _Ghost() ~is_a Ghost
+  check Ghost ~is "not defined later"
+
+block:
   import rhombus/meta open
   class Ghost(x):
     binding ~none
@@ -1323,6 +1339,101 @@ check:
     constructor():
       super(1, 1)(1)
   ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(1)(3) 
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(1, 2)() 
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(1, 2)(3) 
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(~z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(~x: 1, 2)(3) 
+  ~throws "wrong number of arguments in function call"
+
+check:
+  ~eval
+  use_static
+  class Posn(~x, y):
+    nonfinal
+    constructor ():
+      super(~x: 0, 1)
+  class Posn3D(z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(~x: 1, 2)(3) 
+  ~throws "keyword argument not recognized by called function"
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(~z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(~x: 1, 2)(~z: 3)
+  ~completes
+
+check:
+  class Posn(~x, y = 1):
+    nonfinal
+  class Posn3D(~z):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(~x: 1)(~z: 3)
+  ~completes
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(~z = 3):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(~x: 1, 2)()
+  ~completes
+
+check:
+  class Posn(~x, y):
+    nonfinal
+    constructor (v):
+      super(~x: v, v)
+  class Posn3D(~z = 3):
+    extends Posn
+    internal _Posn3D
+  _Posn3D(1)()
+  ~completes
 
 block:
   use_dynamic

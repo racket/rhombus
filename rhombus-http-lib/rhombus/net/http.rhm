@@ -158,7 +158,7 @@ namespace payload:
              ~filename: filename :: Bytes || String = to_string(Port.name(inp)),
              ~content_type: content_type :: Bytes || String = #"application/octet-stream") :: Part:
       ~name: multipart.Part.field
-      _Part(name, inp, filename, content_type)
+      _Part(easy.#{file-part}(name, inp, filename, content_type))
   fun multipart(~boundary: boundary :: maybe(Bytes || String),
                 f :: multipart.Part, ...) :: Function:
     if boundary

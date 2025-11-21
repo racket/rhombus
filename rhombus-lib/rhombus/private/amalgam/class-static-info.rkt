@@ -228,6 +228,7 @@
                                              super
                                              given-constructor-rhs
                                              constructor-keywords constructor-defaults
+                                             super-keywords super-defaults
                                              constructor-accessors constructor-mutables
                                              constructor-private-keywords constructor-private-defaults
                                              constructor-private-accessors constructor-private-mutables
@@ -293,16 +294,46 @@
      (if (and exposed-internal-id
               (syntax-e #'make-internal-name))
          (list
-          (with-syntax ([result-infos
-                         (let* ([infos #'internal-all-static-infos]
-                                [infos (if super
-                                           (with-syntax ([(info ...) infos])
-                                             #'((#%call-result (info ... . #,(get-function-static-infos)))))
-                                           infos)])
-                           infos)])
-            #'(define-static-info-syntax make-internal-name
-                (#%call-result result-infos)
-                . #,(get-function-static-infos))))
+          (with-syntax ([immediate-arity-mask
+                         (let ([n (length super-keywords)])
+                           (summarize-arity (append (list-tail constructor-keywords n)
+                                                    (list-tail constructor-private-keywords n))
+                                            (append (list-tail constructor-defaults n)
+                                                    (list-tail constructor-private-defaults n))
+                                            #f #f))])
+            (with-syntax ([result-infos
+                           (let* ([infos #'internal-all-static-infos]
+                                  [infos (if super
+                                             (with-syntax ([(info ...) infos])
+                                               #'((#%call-result (info
+                                                                  ...))
+                                                  (#%function-arity immediate-arity-mask)
+                                                  . #,(get-function-static-infos)))
+                                             infos)])
+                             infos)]
+                          [(function-arity ...)
+                           (cond
+                             [super
+                              (let ([a (class-desc-custom-constructor-maybe-arity super)])
+                                (cond
+                                  [(eq? a #t)
+                                   ;; unknown
+                                   '()]
+                                  [(eq? a #f)
+                                   ;; default
+                                   #`((#%function-arity
+                                       #,(summarize-arity super-keywords
+                                                          super-defaults
+                                                          #f #f)))]
+                                  [else
+                                   #`((#%function-arity #,a))]))]
+                             [else
+                              #`((#%function-arity  immediate-arity-mask))])])
+              #'(define-static-info-syntax make-internal-name
+                  (#%call-result result-infos)
+                  function-arity
+                  ...
+                  . #,(get-function-static-infos)))))
          '())
      ;; a `name-field` is not public, so not need for static info:
      #;

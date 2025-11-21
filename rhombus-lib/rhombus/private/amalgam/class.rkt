@@ -358,8 +358,8 @@
                                       #'#t
                                       #'#f))))
        (define constructor-exposures (map syntax-e (syntax->list #'(constructor-field-exposure ...))))
-       (define has-private-constructor-fields? (for/or ([priv (in-list constructor-exposures)])
-                                                 priv))
+       (define has-private-constructor-fields? (for/or ([exp (in-list constructor-exposures)])
+                                                 (not (eq? exp 'public))))
        (define exposures (append constructor-exposures
                                  (map added-field-exposure added-fields)))
        (define has-private-fields? (for/or ([exposure (in-list exposures)])
@@ -588,7 +588,8 @@
            (extract-reconstructor-fields stxes options super reconstructor-rhs
                                          public-field-names public-field-arguments public-name-fields))
          (with-syntax ([constructor-name (if (or constructor-rhs
-                                                 expression-macro-rhs)
+                                                 (and expression-macro-rhs
+                                                      (not (keyword? (syntax-e expression-macro-rhs)))))
                                              (or (and given-constructor-name
                                                       (not (bound-identifier=? #'name (expose given-constructor-name)))
                                                       given-constructor-name)
@@ -801,13 +802,15 @@
                                               given-constructor-rhs)
                                          (append super-keywords constructor-public-keywords)
                                          (append super-defaults constructor-public-defaults)
+                                         super-keywords
+                                         super-defaults
                                          (append super-accessors (syntax->list #'(constructor-public-name-field ...)))
                                          (append super-mutators constructor-public-mutables)
                                          (append super-keywords constructor-private-keywords)
                                          (append super-defaults constructor-private-defaults)
                                          (append super-accessors (syntax->list #'(constructor-name-field ...)))
                                          (append super-mutators constructor-private-mutables)
-                                         (eq? constructor-rhs 'synthesize) constructor-forward-rets
+                                         (or (not constructor-rhs) (eq? constructor-rhs 'synthesize)) constructor-forward-rets
                                          #'(name constructor-name name-instance
                                                  internal-name-instance make-internal-name
                                                  all-static-infos internal-all-static-infos
