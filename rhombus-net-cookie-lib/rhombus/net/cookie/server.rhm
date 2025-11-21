@@ -1,0 +1,55 @@
+#lang rhombus/static
+import:
+  lib("net/cookies/server.rkt") as rkt
+  "../cookie.rhm"
+  rhombus/date
+
+export:
+  Cookie
+
+class Cookie(name :: cookie.Name,
+             value :: cookie.Value,
+             ~exp_date: expires :: maybe(date.ZonedDateTime) = #false,
+             ~max_age: max_age :: maybe(PosInt) = #false,
+             ~domain: domain :: maybe(cookie.Domain) = #false,
+             ~path: path :: maybe(cookie.PathOrExtension) = #false,
+             ~extension: extension :: maybe(cookie.PathOrExtension) = #false,
+             ~is_secure: is_secure :: Boolean = #false,
+             ~is_http_only: is_http_only :: Boolean = #false,
+             private _handle = rkt.#{make-cookie}(name,
+                                                  value,
+                                                  ~expires: expires?.handle,
+                                                  ~#{max-age}: max_age,
+                                                  ~domain: domain,
+                                                  ~path: path,
+                                                  ~extension: extension,
+                                                  ~#{secure?}: is_secure,
+                                                  ~#{http-only?}: is_http_only)):
+  property handle: _handle
+
+  private implements Printable
+  private override method describe(mode, recur):
+    if mode == #'text
+    | rkt.#{cookie->string}(_handle)
+    | recur(this, ~as: #'super)
+
+  export fun clear_string(
+    name :: cookie.Name,
+    ~domain: domain :: maybe(cookie.Domain) = #false,
+    ~path: path :: maybe(cookie.PathOrExtension) = #false
+  ) :~ String:
+    Bytes.utf8_string(rkt.#{clear-cookie-header}(name, ~domain: domain, ~path: path))
+
+  fun to_map(PairList[Pair(k :~ Symbol, v), ...]):
+    { k: v, ...}
+
+  export fun
+  | header_to_map(
+      header :~ Bytes,
+    ) :~ Map.of(Bytes, Bytes):
+      to_map(rkt.#{cookie-header->alist}(header))
+  | header_to_map(
+      header :~ Bytes,
+      ~decode: decode :: (Bytes -> Any)
+    ) :~ Map:
+      to_map(rkt.#{cookie-header->alist}(header, decode))

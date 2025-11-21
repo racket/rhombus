@@ -1,0 +1,150 @@
+#lang rhombus/static
+import:
+  rhombus/date
+  rhombus/rkt_obj
+  rhombus/rx open
+  net/url open
+  lib("net/cookies/user-agent.rkt") as rkt
+  lib("racket/base.rkt")
+  "../cookie.rhm"
+
+export:
+  Cookie
+  CookieJar
+  parse
+
+namespace user_agent:
+  export:
+    Cookie
+    CookieJar
+
+class Cookie(name :: cookie.Name,
+             value :: cookie.Value,
+             ~domain: domain :: cookie.Domain,
+             ~path: path :: cookie.PathOrExtension,
+             ~expiration_time: expiration_time :: PosInt,
+             ~creation_time: creation_time :: PosInt,
+             ~access_time: access_time :: PosInt,
+             ~is_persistent: is_persistent :: Any.to_boolean,
+             ~is_host_only: is_host_only :: Any.to_boolean,
+             ~is_secure_only: is_secure_only :: Any.to_boolean,
+             ~is_http_only: is_http_only :: Any.to_boolean,
+             private _handle = #{rkt}.#{ua-cookie}(name,
+                                                   value,
+                                                   domain,
+                                                   path,
+                                                   expiration_time,
+                                                   creation_time,
+                                                   access_time,
+                                                   is_persistent,
+                                                   is_host_only,
+                                                   is_secure_only,
+                                                   is_http_only)):
+  ~name: user_agent.Cookie
+
+  internal _Cookie
+
+  property handle: _handle
+
+  method is_expired(current_time :: Int = system.seconds()):
+    rkt.#{cookie-expired?}(_handle, current_time)
+
+  export:
+    from_handle
+
+  fun from_handle(handle):
+    _Cookie(rkt.#{ua-cookie-name}(handle),
+            rkt.#{ua-cookie-value}(handle),
+            ~domain: rkt.#{ua-cookie-domain}(handle),
+            ~path: rkt.#{ua-cookie-path}(handle),
+            ~expiration_time: rkt.#{ua-cookie-expiration-time}(handle),
+            ~creation_time: rkt.#{ua-cookie-creation-time}(handle),
+            ~access_time: rkt.#{ua-cookie-access-time}(handle),
+            ~is_persistent: rkt.#{ua-cookie-persistent?}(handle),
+            ~is_host_only: rkt.#{ua-cookie-host-only?}(handle),
+            ~is_secure_only: rkt.#{ua-cookie-secure-only?}(handle),
+            ~is_http_only: rkt.#{ua-cookie-http-only?}(handle),
+            handle)
+
+class CookieJar(private _handle):
+  ~name: user_agent.CookieJar
+  constructor():
+    super(rkt_obj.new rkt.#{list-cookie-jar%}())
+
+  property handle: _handle
+
+  method save_cookie(c :: user_agent.Cookie,
+                     ~via_http = #true):
+    rkt_obj.send _handle.#{save-cookie!}(c.handle, via_http)
+
+  method save_cookies(cs :: Listable.to_list && List.of(user_agent.Cookie),
+                      ~via_http = #true):
+    let [c, ...] = cs
+    rkt_obj.send _handle.#{save-cookies!}(PairList[c.handle, ...], via_http)
+
+  method extract_and_save_cookies(
+    headers :: Map.of(String, Bytes) || (Listable.to_list && List.of(Bytes)),
+    ~url: url :: URL,
+    ~decode: decode :: Bytes -> String = Bytes.utf8_string
+  ):
+    save_cookies(parse.extract_cookies(headers, ~url: url, ~decode: decode),
+                 ~via_http: rx'case_insensitive: "HTTP" "S"?'.is_match(url.scheme))
+
+  method cookies_matching(
+    url :: URL,
+    ~is_secure = (URL.scheme(url) == "https")
+  ) :~ List.of(user_agent.Cookie):
+    (rkt_obj.send _handle.#{cookies-matching}(url.to_handle(), is_secure) :~ PairList).to_list()
+
+  method cookie_header(
+    url :: URL,
+    ~encode: encode :: String -> Bytes = String.utf8_bytes,
+    ~keep: keep :: user_agent.Cookie -> Any = fun (x): #true,
+    ~skip: skip :: user_agent.Cookie -> Any = fun (x): #false
+  ) :~ maybe(Bytes):
+    parameterize { rkt.#{current-cookie-jar}: _handle }:
+      rkt.#{cookie-header}(url.to_handle(),
+                           fun (s): encode(to_string(s)),
+                           ~#{filter-with}: fun (c): keep(Cookie.from_handle(c)) && !skip(Cookie.from_handle(c)))
+
+  export:
+    current
+
+  Parameter.def current :: user_agent.CookieJar = CookieJar()
+
+namespace parse:
+  ~name: user_agent.parse
+
+  export fun extract_cookies(
+    headers :: Map.of(String, Bytes) || (Listable.to_list && List.of(Bytes)),
+    ~url: url :: URL,
+    ~decode: decode :: Bytes -> String = Bytes.utf8_string
+  ) :~ List.of(user_agent.Cookie):
+    let headers:
+      match headers
+      | {key :~ String: val, ...}: PairList[Pair(key.utf8_bytes(), val), ...]
+      | [bstr, ...]: PairList[bstr, ...]
+    let PairList[c, ...] = rkt.#{extract-cookies}(headers,
+                                                  url.to_handle(),
+                                                  decode)
+    [Cookie.from_handle(c), ...]
+
+  export fun parse_cookie(
+    bstr :: Bytes,
+    ~url: url :: URL,
+    ~decode: decode :: Bytes -> String = Bytes.utf8_string
+  ) :~ maybe(user_agent.Cookie):
+    let c = rkt.#{parse-cookie}(bstr, url.to_handle(), decode)
+    c && Cookie.from_handle(c)
+
+  export fun default_path(url :: URL) :~ String:
+    to_string(rkt.#{default-path}(url.to_handle()))
+
+  export fun parse_date(str :: String) :~ maybe(date.ZonedDateTime):
+    let d = rkt.#{parse-date}(str)
+    d && date.ZonedDateTime.from_handle(d)
+
+  export def max_cookie_seconds :: Int:
+    rkt.#{max-cookie-seconds}
+  export def min_cookie_seconds :: Int:
+    rkt.#{min-cookie-seconds}

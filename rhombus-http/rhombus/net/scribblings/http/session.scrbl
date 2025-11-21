@@ -91,6 +91,6 @@
   annot.macro 'Headers'
 ){
 
- A shorthand for @rhombus(Map.of(String, Bytes || String)).
+ A shorthand for @rhombus(Map.of(String, Bytes || String), ~annot).
 
 }

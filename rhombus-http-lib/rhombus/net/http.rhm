@@ -12,11 +12,11 @@ import:
       quote
   net/url
   net/ssl
+  net/cookie/user_agent
   json as json_lib
 
 // todo:
 annot.macro 'HTTPConn': 'Any'
-annot.macro 'CookieJar': 'Any'
 
 export:
   get
@@ -354,12 +354,12 @@ class Session(_handle):
   property handle: _handle
   constructor (~pool_config: pool_config :: PoolConfig = PoolConfig(),
                ~ssl_context: ssl_context :: maybe(ssl.Context.Client) = ssl.Context.Client(),
-               ~cookie_jar: cookie_jar :: maybe(CookieJar) = #false,
+               ~cookie_jar: cookie_jar :: maybe(user_agent.CookieJar) = #false,
                ~proxies: proxies :: List.of(Proxy) = []):
     let [p, ...] = proxies
     super(easy.#{make-session}(~#{pool-config}: pool_config.handle,
                                ~#{ssl-context}: ssl_context?.handle,
-                               ~#{cookie-jar}: cookie_jar,
+                               ~#{cookie-jar}: cookie_jar?.handle,
                                ~proxies: PairList(p.handle, ...)))
   override method close():
     easy.#{session-close!}(_handle)

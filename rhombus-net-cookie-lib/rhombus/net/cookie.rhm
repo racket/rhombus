@@ -1,0 +1,40 @@
+#lang rhombus/and_meta
+import:
+  lib("net/cookies/common.rkt") as rkt
+
+export:
+  Name
+  Value
+  PathOrExtension
+  Domain
+
+meta:
+  def string_or_bytes_si:
+    let '$(ann :: annot_meta.Parsed)' = 'String || Bytes'
+    let (_, si) = annot_meta.unpack_predicate(ann)
+    si
+  def string_si:
+    let '$(ann :: annot_meta.Parsed)' = 'String'
+    let (_, si) = annot_meta.unpack_predicate(ann)
+    si
+
+fun is_cookie_name(v):
+  rkt.#{cookie-name?}(v) && (if v is_a Bytes
+                             | Bytes.utf8_length(v) && #true
+                             | #true)
+
+annot.macro 'Name':
+  annot_meta.pack_predicate('is_cookie_name',
+                            string_or_bytes_si)
+
+annot.macro 'Value':
+  annot_meta.pack_predicate('rkt.#{cookie-value?}',
+                            string_or_bytes_si)
+
+annot.macro 'PathOrExtension':
+  annot_meta.pack_predicate('rkt.#{path/extension-value?}',
+                            string_si)
+
+annot.macro 'Domain':
+  annot_meta.pack_predicate('rkt.#{domain-value?}',
+                            string_si)

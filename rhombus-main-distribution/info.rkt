@@ -15,6 +15,7 @@
     "rhombus-url"
     "rhombus-xml"
     "rhombus-json"
+    "rhombus-net-cookie"
 
     "rhombus-icons"
     "rhombus-logo"

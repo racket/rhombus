@@ -8,6 +8,7 @@
     ["rhombus-json-lib" #:version "0.2"]
     "rhombus-url-lib"
     "rhombus-ssl-lib"
+    "rhombus-net-cookie-lib"
     "http-easy-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-http\"")

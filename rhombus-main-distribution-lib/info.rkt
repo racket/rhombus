@@ -4,15 +4,19 @@
 
 (define deps
   '("rhombus-lib"
+
     "rhombus-draw-lib"
     "rhombus-gui-lib"
     "rhombus-pict-lib"
     "rhombus-scribble-lib"
+
     "rhombus-ssl-lib"
     "rhombus-http-lib"
     "rhombus-url-lib"
     "rhombus-xml-lib"
     "rhombus-json-lib"
+    "rhombus-net-cookie-lib"
+
     "rhombus-icons"
     "rhombus-logo-lib"))
 

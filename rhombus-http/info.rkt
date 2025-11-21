@@ -12,6 +12,7 @@
     "rhombus-scribble-lib"
     "rhombus-json"
     "rhombus-url"
+    "rhombus-net-cookie"
     "rhombus-ssl"))
 
 (define pkg-desc "Rhombus HTTP library")
