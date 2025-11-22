@@ -3,6 +3,8 @@ import:
   "when_unless.rhm" open
   "error.rhm" open
 
+use_static
+
 export:
   RXMatch
 
