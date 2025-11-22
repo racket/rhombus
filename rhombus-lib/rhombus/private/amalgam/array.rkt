@@ -5,6 +5,8 @@
                      "annot-context.rkt")
          racket/treelist
          racket/mutability
+         (only-in racket/unsafe/ops
+                  unsafe-vector-ref)
          (except-in racket/vector
                     vector-member)
          "vector-member.rkt"
@@ -373,7 +375,7 @@
                                       pred
                                       (for/list ([arg (in-list args)]
                                                  [i (in-naturals)])
-                                        #`(lambda (v) (vector-ref v #,i)))
+                                        #`(lambda (v) (unsafe-vector-ref v #,i)))
                                       (for/list ([arg (in-list args)])
                                         #'())
                                       #:static-infos (get-array-static-infos)

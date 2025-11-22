@@ -1497,6 +1497,13 @@
                                   #f #f)])]
             [_ (loop (cdr args) (cons arg accum))])]))]))
 
+(meta-if-version-at-least
+ "9.0.0.5"
+ (void)
+ (begin
+   (define unsafe-treelist-ref treelist-ref)
+   (define unsafe-treelist-length treelist-length)))
+
 (define-for-syntax (generate-treelist-binding form-id args after-args tail [rest-arg #f] [make-rest-selector #f]
                                               [rest-repetition/min 0] [rest-repetition/max #f])
   (define pre-len (length args))
@@ -1508,11 +1515,11 @@
                           ;; constant propagation and folding should pick one case:
                           (cond
                             [(not max-len)
-                             (>= (treelist-length v) min-len)]
+                             (>= (unsafe-treelist-length v) min-len)]
                             [(eqv? min-len max-len)
-                             (= (treelist-length v) min-len)]
+                             (= (unsafe-treelist-length v) min-len)]
                             [else
-                             (<= min-len (treelist-length v) max-len)])))))
+                             (<= min-len (unsafe-treelist-length v) max-len)])))))
   (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
                                  #:rest-arg rest-arg
                                  #:post-args after-args
@@ -1520,8 +1527,8 @@
                                  pred
                                  (for/list ([i (in-range len)])
                                    (if (i . < . pre-len)
-                                       #`(lambda (tl) (treelist-ref tl #,i))
-                                       #`(lambda (tl) (treelist-ref tl (+ (treelist-length tl) #,(- i len))))))
+                                       #`(lambda (tl) (unsafe-treelist-ref tl #,i))
+                                       #`(lambda (tl) (unsafe-treelist-ref tl (+ (treelist-length tl) #,(- i len))))))
                                  (for/list ([i (in-range len)])
                                    #'())
                                  #:index-result-info? #t
