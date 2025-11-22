@@ -395,9 +395,11 @@
   impo.modifier 'meta_label'
 ){
 
- Modifies an @rhombus(import) clause so that only the imports that would
- be at phase @rhombus(0) are imported, and they are imported instead to
- the label phase.
+ Modifies an @rhombus(import) clause so that all imports are shifted to
+ the the label phase. Note that if a name is exported at multiple phases,
+ attempting to import all of them will create a conflict that is reported
+ as a syntax error; in that case, using @rhombus(only, ~impo) or
+ @rhombus(only_meta, ~impo) can help.
 
  This modifier is valid only for module files that refer to modules,
  as opposed to @rhombus(namespace) bindings, and it is not currently
