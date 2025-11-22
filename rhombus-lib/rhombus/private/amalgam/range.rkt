@@ -1118,12 +1118,12 @@
   (void (install-range #'range? #'range-contains?
                        (lambda (e)
                          (syntax-parse (unwrap-static-infos e)
-                           #:literals (range-from-to/who
-                                       range-from-to-inclusive/who
-                                       range-from-exclusive-to/who
-                                       range-from-exclusive-to-inclusive/who)
-                           [(range-from-to/who _ l r) (values #'l #'<= #'r #'<)]
-                           [(range-from-to-inclusive/who _ l r) (values #'l #'<= #'r #'<=)]
-                           [(range-from-exclusive-to/who _ l r) (values #'l #'< #'r #'<)]
-                           [(range-from-exclusive-to-inclusive/who _ l r) (values #'l #'< #'r #'<=)]
+                           [((~literal range-from-to/who) _ l r) (values #'l #'<= #'r #'<)]
+                           [((~literal range-from/who) _ l) (values #'l #'<= #f #f)]
+                           [((~literal range-from-to-inclusive/who) _ l r) (values #'l #'<= #'r #'<=)]
+                           [((~literal range-to-inclusive/who) _ r) (values #f #f #'r #'<=)]
+                           [((~literal range-to/who) _ r) (values #f #f #'r #'<)]
+                           [((~literal range-from-exclusive/who) _ l) (values #'l #'< #f #f)]
+                           [((~literal range-from-exclusive-to/who) _ l r) (values #'l #'< #'r #'<)]
+                           [((~literal range-from-exclusive-to-inclusive/who) _ l r) (values #'l #'< #'r #'<=)]
                            [_ (values #f #f #f #f)])))))

@@ -1235,16 +1235,32 @@
     (set! parse-range parse)))
 
 (define-for-syntax (build-in-predicate form-id pred-stx annot-str lo-e lo-comp hi-e hi-comp)
-  #`(let ([lo-v #,lo-e]
-          [hi-v #,hi-e])
-      (unless (#,pred-stx lo-v)
-        (raise-annotation-failure '#,form-id lo-v '#,annot-str))
-      (unless (#,pred-stx hi-v)
-        (raise-annotation-failure '#,form-id hi-v '#,annot-str))
-      (lambda (v)
-        (and (#,pred-stx v)
-             (#,lo-comp lo-v v)
-             (#,hi-comp v hi-v)))))
+  (cond
+    [(and lo-e hi-e)
+     #`(let ([lo-v #,lo-e]
+             [hi-v #,hi-e])
+         (unless (#,pred-stx lo-v)
+           (raise-annotation-failure '#,form-id lo-v '#,annot-str))
+         (unless (#,pred-stx hi-v)
+           (raise-annotation-failure '#,form-id hi-v '#,annot-str))
+         (lambda (v)
+           (and (#,pred-stx v)
+                (#,lo-comp lo-v v)
+                (#,hi-comp v hi-v))))]
+    [lo-e
+     #`(let ([lo-v #,lo-e])
+         (unless (#,pred-stx lo-v)
+           (raise-annotation-failure '#,form-id lo-v '#,annot-str))
+         (lambda (v)
+           (and (#,pred-stx v)
+                (#,lo-comp lo-v v))))]
+    [else
+     #`(let ([hi-v #,hi-e])
+         (unless (#,pred-stx hi-v)
+           (raise-annotation-failure '#,form-id hi-v '#,annot-str))
+         (lambda (v)
+           (and (#,pred-stx v)
+                (#,hi-comp v hi-v))))]))
 
 (define-for-syntax (make-in-annotation pred-stx annot-str get-static-infos allow-range?)
   (define (gen-in form-id args-stx lo-e lo-comp hi-e hi-comp)
@@ -1291,7 +1307,7 @@
     [(_ form-id pred annot-str e::expression)
      (define-values (lo lo-comp hi hi-comp) (parse-range #'e.parsed))
      (cond
-       [lo
+       [(or lo hi)
         (build-in-predicate #'form-id #'pred #'annot-str lo lo-comp hi hi-comp)]
        [else
         #`(let ([rng e.parsed])

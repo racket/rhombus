@@ -78,7 +78,9 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 ){
 
  Matches exact integers: all of them, positive integers, negative
- integers, nonnegative integers, or integers in a given range. The
+ integers, nonnegative integers, or integers in a given range.
+ None that a range can omit a lower bound or upper bound, such as
+ when @rhombus(..) is used as a prefix or postfix operator. The
  @rhombus(Nat, ~annot) annotation is the preferred alias for
  @rhombus(NonnegInt, ~annot).
 
@@ -89,7 +91,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
  is inclusive by default, but @rhombus(~inclusive) or
  @rhombus(~exclusive) can be specified. Using @rhombus(..), @rhombus(..=),
  @rhombus(<..), or @rhombus(<..=) directly to construct a range
- is treated the same as specifying separate numbers, instead of constructing
+ is treated the same as specifying one or two separate numbers, instead of constructing
  an intermediate @rhombus(Range, ~annot) value.
 
 @examples(
@@ -100,6 +102,8 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   0 is_a Int.in(0 .. 1)
   0 is_a Int.in(0, 1 ~exclusive)
   1 is_a Int.in(0, 1 ~exclusive)
+  42 is_a Int.in(10 ..)
+  42 is_a Int.in(100 ..)
 )
 
 }
