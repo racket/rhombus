@@ -378,6 +378,95 @@ check:
   ~is [1, 0, 3]
 
 check:
+  for values([a, b] = [1, 2]) (i in 0..10):
+    [a + i, b + i]
+  ~is [46, 47]
+
+check:
+  for values(a :: Int.in(0, 9) = 0) (i in 0..10):
+    i
+  ~is 9
+
+check:
+  use_static
+  for values([a :: String, b] = ["1", 2]) (i in 0..10):
+    [to_string(a.length()), b + i]
+  ~is ["1", 47]
+
+check:
+  use_static
+  for values([a :~ String, b] = ["1", 2]) (i in 0..10):
+    [to_string(a.length()), b + i]
+  ~is ["1", 47]
+
+check:
+  use_static
+  (
+    for values([a, b] = [1, 2]) (i in 0..10):
+      [a + 1, b + i]
+  ).length()
+  ~is 2
+
+check:
+  use_static
+  def values(l, s):
+    for values([a, b] = [1, 2], s :~ String = "x") (i in 0..10):
+      values([a + 1, b + i], s)
+  [l.length(), s.length()]
+  ~is [2, 1]
+
+block:
+  check:
+    for values(a :: Int.in(0, 9) = 0) (i in 0..=11):
+      i
+    ~throws values("values:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+  check:
+    for values(a :: Int.in(0, 9) = 0) (i in 0..=10):
+      i
+    ~throws values("values:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+  check:
+    for values(a :: Int.in(0, 9) = -1) (i in 0..10):
+      i
+    ~throws values("values:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+  check:
+    for fold(a :: Int.in(0, 9) = 0) (i in 0..=11):
+      i
+    ~throws values("fold:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+  check:
+    for fold(a :: Int.in(0, 9) = 0) (i in 0..=10):
+      i
+    ~throws values("fold:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+  check:
+    for fold(a :: Int.in(0, 9) = -1) (i in 0..10):
+      i
+    ~throws values("fold:",
+                   error.annot_msg(),
+                   error.annot("Int.in(0, 9)").msg)
+
+check:
+  for values(lst :: Listable.to_list = PairList[0, 0, 0]) (i in 1..=10):
+    lst :: List // assert that conversion happened in match
+    PairList[i, i, i]
+  ~is PairList[10, 10, 10]
+
+check:
+  for values(lst :: List = [0, 0, 0]) (i in 1..=1):
+    PairList[i, i, i]
+  ~throws values("values:",
+                 error.annot_msg(),
+                 error.annot("List").msg)
+
+check:
   for Set:
     each values(key, val) in {1: "a", 2: "b"}
     key +& " -> " +& val

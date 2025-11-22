@@ -3,7 +3,7 @@
 block:
   import "static_arity.rhm"
   static_arity.check ~meta:
-    reducer_meta.pack(complete_id, binds,
+    reducer_meta.pack(defns, complete_id, binds,
                       pre_clause_id, step_id, break_id, final_id, step_result_id,
                       stat_info, data)
     reducer_meta.unpack(s)
@@ -19,7 +19,8 @@ block:
     let (_, si):
       let '$(a :: annot_meta.Parsed)' = 'List'
       annot_meta.unpack_predicate(a)
-    reducer_meta.pack('build_noop',
+    reducer_meta.pack('()',
+                      'build_noop',
                       '(l = List.empty)',
                       #false,
                       'build_add',
@@ -47,7 +48,7 @@ block:
 
 block:
   reducer.macro 'counted($(r :: reducer_meta.Parsed))':
-    let '($wrap, ($(bind && '$id $_'), ...),
+    let '($defns, $wrap, ($(bind && '$id $_'), ...),
           $pre, $step, $break, $final, $finish,
           $si, $data)':
       reducer_meta.unpack(r)
@@ -57,6 +58,7 @@ block:
       | statinfo_meta.unpack_group(sis)
       | [si]
     reducer_meta.pack(
+      defns,
       'build_return',
       '(count = 0, $bind, ...)',
       pre.unwrap() && 'build_pre',

@@ -18,7 +18,9 @@
          "var-decl.rkt"
          "simple-call.rkt"
          "parse.rkt"
-         "compound-repetition.rkt")
+         "compound-repetition.rkt"
+         "if-blocked.rkt"
+         "binding-failure.rkt")
 
 (provide (for-spaces (rhombus/bind
                       rhombus/annot
@@ -133,29 +135,40 @@
 (begin-for-syntax
   (define-splicing-syntax-class :accum
     #:description "accumulator with optional annotation"
-    #:attributes (id e check make-check static-infos)
+    #:attributes (id e static-infos pre-defn defns checks)
     (pattern d::var-decl
-      #:with ((~or* (~and _::_-bind
-                          (~parse id (car (generate-temporaries '(wildcard)))))
-                    id:identifier)
-              (~optional c::inline-annotation))
-      #'(d.bind ...)
+      #:with b::binding #'(group d.bind ...)
+      #:with b-parsed::binding-form #'b.parsed
+      #:with b-impl::binding-impl #`(b-parsed.infoer-id () b-parsed.data)
+      #:with b-info::binding-info #'b-impl.info
+      #:with ((bind-id bind-use . bind-static-infos) ...) #'b-info.bind-infos
       #:with e #'d.default
-      #:do [(define-values (check make-check)
-              (if (cond
-                    [(attribute c.converter) => syntax-e]
-                    [else #f])
-                  (values (car (generate-temporaries '(check)))
-                          #'(lambda (who)
-                              (lambda (val)
-                                (c.converter
-                                 val who
-                                 (lambda (val who)
-                                   (raise-annotation-failure who val 'c.annotation-str))))))
-                  (values #f #f)))]
-      #:attr check check
-      #:attr make-check make-check
-      #:with static-infos #'(~? c.static-infos ()))))
+      #:with id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'b-info.name-id)))
+      #:with static-infos #'b-info.static-infos
+      #:with (evidence-id ...) (let loop ([evidence #'b-info.evidence-ids]
+                                          [accum null])
+                                 (cond
+                                   [(identifier? evidence) (cons evidence accum)]
+                                   [(syntax? evidence)
+                                    (for/fold ([accum accum]) ([evidence (in-list (or (syntax->list evidence) null))])
+                                      (loop evidence accum))]
+                                   [else accum]))
+      #:with matcher-id ((make-syntax-introducer) #'matcher)
+      #:with pre-defn #'(define (matcher-id id)
+                          (b-info.oncer-id b-info.data)
+                          (b-info.matcher-id id
+                                             b-info.data
+                                             if/flattened
+                                             (begin)
+                                             (values-binding-failure who id 'b-info.annotation-str))
+                          (values evidence-id ...))
+      #:attr defns #`((define-values (evidence-id ...) (matcher-id id))
+                      (b-info.committer-id id b-info.evidence-ids b-info.data)
+                      (b-info.binder-id id b-info.evidence-ids b-info.data)
+                      (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                      ...)
+      #:attr checks #`((matcher-id id)
+                       (void)))))
 
 (define-reducer-syntax values
   (reducer-transformer
@@ -164,40 +177,43 @@
        #:datum-literals (group)
        [(form-id (_::parens (group accum::accum) ...) . tail)
         (values
-         (reducer/no-break #'build-values-check-bind
-                           #'([accum.id (~? (let ([accum.id accum.e])
-                                              (accum.check accum.id)
-                                              accum.id)
-                                            accum.e)]
+         (reducer/no-break #:pre-defns #'[(define who 'form-id) accum.pre-defn ...]
+                           #'build-values-check-result
+                           #'([accum.id accum.e]
                               ...)
-                           #:pre-clause #'build-values-static-info
-                           #'build-values-check
-                           #'((#%values (accum.static-infos
-                                         ...)))
-                           #'([accum.id accum.static-infos
-                                        (~? [accum.check (accum.make-check 'form-id)])]
+                           #:pre-clause #'build-values-defns
+                           #'build-values-next
+                           (let* ([siss #'(accum.static-infos
+                                          ...)]
+                                  [siss-l (syntax->list siss)])
+                             (if (= 1 (length siss-l))
+                                 (car siss-l)
+                                 #`((#%values #,siss))))
+                           #'([accum.id accum.defns accum.checks]
                               ...))
          #'tail)]))))
 
-(define-syntax (build-values-check-bind stx)
+(define-syntax (build-values-check-result stx)
   (syntax-parse stx
-    [(_ ([_ _ (~optional (~and check-bind [_ _]))] ...) e)
-     #'(let ((~? check-bind) ...)
-         e)]))
+    [(_ ([id defns (check ...)] ...) e)
+     #'(let-values ([(id ...) e])
+         check
+         ...
+         ...
+         (values id ...))]))
 
-(define-syntax (build-values-static-info stx)
+(define-syntax (build-values-defns stx)
   (syntax-parse stx
-    [(_ ([id si (~optional [_ _])] ...))
+    [(_ ([id (defn ...) check] ...))
      #'(begin
-         (define-static-info-syntax/maybe id . si)
+         defn
+         ...
          ...)]))
 
-(define-syntax (build-values-check stx)
+(define-syntax (build-values-next stx)
   (syntax-parse stx
-    [(_ ([id _ (~optional [check _])] ...) e)
+    [(_ ([id defns checks] ...) e)
      #'(let-values ([(id ...) e])
-         (~? (check id))
-         ...
          (values id ...))]))
 
 (define-static-info-syntax values
@@ -207,3 +223,6 @@
 (define-static-info-syntax call-with-values
   (#%function-arity 4)
   . #,(indirect-get-function-static-infos))
+
+(define (values-binding-failure who val annot)
+  (raise-binding-failure who "value" val annot))

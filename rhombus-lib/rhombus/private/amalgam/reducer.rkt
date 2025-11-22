@@ -33,7 +33,8 @@
 
   (define-syntax-class :reducer-form
     #:description "reducer"
-    (pattern [wrapper:id
+    (pattern [(pre-defn ...)
+              wrapper:id
               (~and binds ([id:identifier init-expr] ...))
               (~and pre-clause-former (~or* #f _:id))
               body-wrapper:id
@@ -43,11 +44,13 @@
               static-infos
               data]))
 
-  (define (reducer wrapper binds
+  (define (reducer #:pre-defns [pre-defns '()]
+                   wrapper binds
                    pre-clause-former
                    body-wrapper break-whener final-whener finisher
                    static-infos data)
-    #`(#,wrapper
+    #`(#,pre-defns
+       #,wrapper
        #,binds
        #,pre-clause-former
        #,body-wrapper
@@ -57,10 +60,12 @@
        #,static-infos
        #,data))
 
-  (define (reducer/no-break wrapper binds
+  (define (reducer/no-break #:pre-defns [pre-defns '()]
+                            wrapper binds
                             body-wrapper static-infos data
                             #:pre-clause [pre-clause-former #f])
-    #`(bounce-to-wrapper
+    #`(#,pre-defns
+       bounce-to-wrapper
        #,binds
        #,(and pre-clause-former #'bounce-to-pre-clause-former)
        bounce-to-body-wrapper

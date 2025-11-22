@@ -82,13 +82,8 @@
 }
 
 @doc(
-  reducer.macro 'values($id $maybe_annot $init, ...)'
-  reducer.macro 'fold($id $maybe_annot $init, ...)'
-
-  grammar maybe_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(epsilon)
+  reducer.macro 'values($bind $init, ...)'
+  reducer.macro 'fold($bind $init, ...)'
 
   grammar init:
     = $expr
@@ -96,14 +91,15 @@
 ){
 
  A @tech(~doc: guide_doc){reducer} used with @rhombus(for), expects as many results from a
- @rhombus(for) body as @rhombus(id)s. When @rhombus(id) is
- @rhombus(_, ~bind), a fresh identifier is used, otherwise
- @rhombus(id) is bound as follows. For the first iteration of
- the @rhombus(for) body, each @rhombus(id)'s value is the result
+ @rhombus(for) body as @rhombus(bind)s. For the first iteration of
+ the @rhombus(for) body, each @rhombus(bind) is matched to the result
  of the corresponding @rhombus(init). The results of a @rhombus(for) body
- for one iteration then serve as the values of the @rhombus(id)s
- for the next iteration. The values of the whole @rhombus(for) expression
- are the final values of the @rhombus(id)s.
+ for one iteration then serve as the values for the @rhombus(bind)s
+ of the next iteration. The values of the whole @rhombus(for) expression
+ are the final values that would be sent to @rhombus(bind)s for one more
+ interation, but @rhombus(bind)s are only partially applied to ensure that
+ values satisfy annotations (e.g., the results are not converted by converting
+ annotations).
 
  The @rhombus(fold, ~reducer) reducer form is an alias for
  @rhombus(values, ~reducer).
@@ -113,6 +109,11 @@
     sum + i
   for values(sum = 0, product = 1) (i in 1..=10):
     values(sum + i, product * i )
+  for values([sum, product] = [0, 1]) (i in 1..=10):
+    [sum + i, product * i]
+  for values(lst :: Listable.to_list = PairList[0, 0, 0]) (i in 1..=10):
+    lst :: List // assert that conversion happened in match
+    PairList[i, i, i]
 )
 
 }

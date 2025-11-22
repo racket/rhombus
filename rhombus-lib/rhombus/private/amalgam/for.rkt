@@ -93,23 +93,26 @@
               red-parsed
               (relocate+reraw
                (respan stx)
-               #`(f.wrapper
-                  f.data
-                  (for/fold f.binds
-                            (#:splice (for-clause-step #,stx
-                                                       #,static?
-                                                       [(f.body-wrapper f.data)
-                                                        #,@(if (syntax-e #'f.pre-clause-former)
-                                                               (list #'(f.pre-clause-former f.data))
-                                                               '())]
-                                                       . #,body))
-                    #,@(if (syntax-e #'f.break-whener)
-                           #`(#:break (f.break-whener f.data))
-                           null)
-                    #,@(if (syntax-e #'f.final-whener)
-                           #`(#:final (f.final-whener f.data))
-                           null)
-                    (f.finisher f.data)))))
+               #`(let ()
+                   f.pre-defn
+                   ...
+                   (f.wrapper
+                    f.data
+                    (for/fold f.binds
+                              (#:splice (for-clause-step #,stx
+                                                         #,static?
+                                                         [(f.body-wrapper f.data)
+                                                          #,@(if (syntax-e #'f.pre-clause-former)
+                                                                 (list #'(f.pre-clause-former f.data))
+                                                                 '())]
+                                                         . #,body))
+                      #,@(if (syntax-e #'f.break-whener)
+                             #`(#:break (f.break-whener f.data))
+                             null)
+                      #,@(if (syntax-e #'f.final-whener)
+                             #`(#:final (f.final-whener f.data))
+                             null)
+                      (f.finisher f.data))))))
              #'f.static-infos)])])
       #'()))))
 

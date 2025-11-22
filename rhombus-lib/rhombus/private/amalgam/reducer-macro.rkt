@@ -131,7 +131,8 @@
        (unpack-identifier who maybe-id-in "maybe(Identifier)")))
 
 (begin-for-syntax
-  (define/arity (reducer_meta.pack wrapper-id-in
+  (define/arity (reducer_meta.pack pre-defns-in
+                                   wrapper-id-in
                                    binds
                                    maybe-pre-clause-id-in
                                    step-id-in
@@ -141,6 +142,7 @@
                                    static-infos
                                    data)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who pre-defns-in)
     (define wrapper-id (unpack-identifier who wrapper-id-in))
     (check-syntax who binds)
     (define maybe-pre-clause-id (unpack-maybe-identifier who maybe-pre-clause-id-in))
@@ -150,8 +152,16 @@
     (define finish-id (unpack-identifier who finish-id-in))
     (check-syntax who static-infos)
     (check-syntax who data)
+    (define pre-defns
+      (syntax-parse (unpack-term pre-defns-in #f #f)
+        #:datum-literals (group)
+        [(_::parens defn ...)
+         #'(defn ...)]
+        [_ (raise-arguments-error* who rhombus-realm
+                                   "ill-formed parenthesized definition sequence"
+                                   "syntax object" pre-defns-in)]))
     (define packed-binds
-      (syntax-parse binds
+      (syntax-parse (unpack-term binds #f #f)
         #:datum-literals (group)
         [(_::parens (group id:identifier _::equal e ...) ...)
          #'([id (rhombus-expression (group e ...))] ...)]
@@ -161,6 +171,8 @@
     (define si (pack-static-infos who (unpack-term static-infos who #f)))
     (pack-term #`(parsed #:rhombus/reducer
                          #,(reducer
+                            #:pre-defns (with-syntax ([(pre-defn ...) pre-defns])
+                                          #'[(rhombus-definition pre-defn) ...])
                             #'chain-to-wrapper
                             packed-binds
                             (and maybe-pre-clause-id #'chain-to-pre-clause-former)
@@ -211,7 +223,8 @@
     (syntax-parse (unpack-term stx who #f)
       #:datum-literals (parsed)
       [(parsed #:rhombus/reducer r::reducer-form)
-       #`(parens (group chain-back-to-wrapper)
+       #`(parens (group (parens (group (parsed #:rhombus/defn r.pre-defn)) ...))
+                 (group chain-back-to-wrapper)
                  (group (parens (group r.id rhombus= (parsed #:rhombus/expr r.init-expr))
                                 ...))
                  (group #,(and (syntax-e #'r.pre-clause-former) #'chain-back-to-pre-clauser))

@@ -53,6 +53,7 @@
   ~defn:
     reducer.macro 'sum_pos_to_20':
       reducer_meta.pack(
+        '()',
         'sptt_return',
         '(accum = 0)',
         #false,
@@ -96,7 +97,7 @@
   ~eval: macro_eval
   ~defn:
     reducer.macro 'counted($(r :: reducer_meta.Parsed))':
-      let '($wrap, ($(bind && '$id $_'), ...),
+      let '($defns, $wrap, ($(bind && '$id $_'), ...),
             $pre, $step, $break, $final, $finish,
             $si, $data)':
         reducer_meta.unpack(r)
@@ -106,6 +107,7 @@
         | statinfo_meta.unpack_group(sis)
         | [si]
       reducer_meta.pack(
+        defns,
         'build_return',
         '(count = 0, $bind, ...)',
         pre.unwrap() && 'build_pre',
@@ -182,7 +184,8 @@
 
 @doc(
   ~meta
-  fun reducer_meta.pack(complete_id :: Identifier,
+  fun reducer_meta.pack(pre_defns :: Syntax,
+                        complete_id :: Identifier,
                         binds :: Syntax,
                         pre_clause_id :: maybe(Identifier),
                         step_id :: Identifier,
@@ -195,17 +198,18 @@
 ){
 
  Packs reducer information that is represented by a syntax object with
- eight parts. The parts are taken separately by
+ ten parts. The parts are taken separately by
  @rhombus(reducer_meta.pack), but they are combined in the form
 
  @rhombusblock(
-  '(#,(@rhombus(complete_id, ~var)),    // expression macro
+  '((#,(@rhombus(pre_defn, ~var)), ...), // definitions outside iteration
+    #,(@rhombus(complete_id, ~var)),     // expression macro
     (#,(@rhombus(accum_id, ~var)) = #,(@rhombus(accum_expr, ~var)), ...),
-    #,(@rhombus(pre_clause_id, ~var)),  // optional definition macro
-    #,(@rhombus(step_id, ~var)),        // definition macro
-    #,(@rhombus(break_id, ~var)),       // optional expression macro
-    #,(@rhombus(final_id, ~var)),       // optional expression macro
-    #,(@rhombus(step_result_id, ~var)), // expression macro
+    #,(@rhombus(pre_clause_id, ~var)),   // optional definition macro
+    #,(@rhombus(step_id, ~var)),         // definition macro
+    #,(@rhombus(break_id, ~var)),        // optional expression macro
+    #,(@rhombus(final_id, ~var)),        // optional expression macro
+    #,(@rhombus(step_result_id, ~var)),  // expression macro
     ((#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...),
     #,(@rhombus(data, ~var)))')
 
@@ -218,6 +222,7 @@
  accumulated value.
 
  As an example, for the @rhombus(List, ~reducer) reducer,
+ @rhombus(pre_defns, ~var) is empty,
  @rhombus(complete_id, ~var) reverses an accumulated list, one
  @rhombus(accum_id, ~var) is initialized to @rhombus([]) and represents
  an accumulated (in reverse) list, @rhombus(pre_clause_id, ~var) is
@@ -235,6 +240,12 @@
  In detail:
 
 @itemlist(
+
+ @item{Each @rhombus(pre_defn, ~var) in the parenthesized list
+  @rhombus(pre_defns) is a definition form to include in the expansion
+  before the interaction. These definitions can be referenced from all
+  other parts. These definitions should use names that are not directly
+  visible to clients of the reducer.}
 
  @item{The @rhombus(complete_id, ~var) should refer to a macro that
   expects @rhombus(data, ~var) followed by an expression that produces a
