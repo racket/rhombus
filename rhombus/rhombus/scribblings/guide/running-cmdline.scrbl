@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    "racket_fragment.rkt" open)
 
 @title(~tag: "running-cmdline"){Running Rhombus Programs}
 
@@ -13,6 +14,23 @@ line, you can use
 or
 
 @nested(~style: #'inset){@exec{racket prog.rhm}}
+
+You can get a REPL (read-eval-print loop) with just
+
+@nested(~style: #'inset){@exec{rhombus}}
+
+or
+
+@nested(~style: #'inset){@exec{racket -I rhombus}}
+
+If you installed the Rhombus package after installing Racket, then the
+@exec{rhombus} executable may be in a user-specific place, instead of
+the same place as the @exec{racket} executable. In case that place is
+not clear, DrRacket has a @onscreen{Configure Command Line for
+ Racket...} item in the @onscreen{Help} menu, which may help you set up
+your path configuration. Alternatively, start @exec{racket} and evaluate
+@racket_require_setup_dirs followed by @racket_find_bin_dir to see the
+user-specific path for executables that are installed by packages.
 
 Using the @exec{rhombus} executable is like using the @exec{racket}
 executable with @exec_flag{-y}, which caches compilation of a module to
