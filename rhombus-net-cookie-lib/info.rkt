@@ -5,7 +5,8 @@
 (define deps
   '("base"
     "rhombus-lib"
-    "net-cookies-lib"))
+    "net-cookies-lib"
+    "rhombus-url-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-net-cookie\"")
 
