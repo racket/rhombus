@@ -7,6 +7,9 @@
          syntax/parse/pre
          enforest/property
          enforest/operator
+         (only-in (submod enforest/operator
+                          for-parse)
+                  information-about-bindings)
          enforest/transformer
          enforest/proc-name
          "name-path-op.rkt"
@@ -36,7 +39,8 @@
          "syntax-wrap.rkt"
          "sentinel-declaration.rkt"
          "annotation-failure.rkt"
-         "origin.rkt")
+         "origin.rkt"
+         "lookup-space.rkt")
 
 (provide enforest-meta
          transform-meta
@@ -128,7 +132,7 @@
        (define infix-more-class-name (hash-ref options '#:syntax_class_infix_more #'#f))
        (define name-start-class-name (hash-ref options '#:syntax_class_name_start #'#f))
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
-       (define desc (hash-ref options '#:desc #'"form"))
+       (define desc (hash-ref options '#:desc #f))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
        (define parsed-tag (string->keyword (symbol->immutable-string (syntax-e #'space-path-name))))
        (define pack-id (hash-ref options '#:parsed_packer #'#f))
@@ -152,7 +156,9 @@
                                      (if pack-and-unpack?
                                          #'make-macro-result/recur
                                          #'make-macro-result)))
-       (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
+       (define identifier-transformer (hash-ref options '#:identifier_transformer #`(id-syntax-error #,(if desc
+                                                                                                           #'form-desc
+                                                                                                           #f))))
        (define private-kws (hash-ref options '#:private #hasheq()))
        (define post-forms (hash-ref options '#:post-forms null))
        (define expose (make-expose #'scope-stx #'base-stx))
@@ -212,6 +218,9 @@
                           [#,unpack-id #,unpack-id #:parsed_unpacker]))
                    . #,exs))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
+                #,@(if desc
+                       #`((define form-desc #,desc))
+                       null)
                 (property new-prefix-operator prefix-operator)
                 (property new-infix-operator infix-operator)
                 (struct new-prefix+infix-operator (prefix infix)
@@ -222,7 +231,7 @@
                   #:enforest parse-group
                   #:prefix-more-syntax-class :prefix-more
                   #:infix-more-syntax-class :infix-more
-                  #:desc #,desc
+                  #:desc #,(if desc #'form-desc "form")
                   #:operator-desc #,desc-operator
                   #:parsed-tag #,parsed-tag
                   #:in-space in-new-space
@@ -497,6 +506,17 @@
   (check prefix-more-class-name "prefix-more syntax class name")
   (check infix-more-class-name "infix-more syntax class name")
   (check name-start-class-name "name-start syntax class name"))
+
+(define (id-syntax-error desc)
+  (lambda (id)
+    (raise-syntax-error #f
+                        (if desc
+                            (string-append "unbound " desc " identifier")
+                            "unbound identifier")
+                        id
+                        #f
+                        null
+                        (information-about-bindings id lookup-space-description))))
 
 (define-syntax (maybe-skip stx)
   (syntax-parse stx

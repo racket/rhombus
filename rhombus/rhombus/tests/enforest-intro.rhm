@@ -178,6 +178,7 @@ check:
     meta_namespace widget_meta:
       parse_syntax_class Parsed
       parsed_packer pack
+      identifier_parser: fun (id): id
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
     syntax_meta.error("oops", b)
   widget.macro 'prefx $x':
@@ -195,6 +196,7 @@ check:
     meta_namespace widget_meta:
       parse_syntax_class Parsed
       parsed_packer pack
+      identifier_parser: fun (id): id
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
     syntax_meta.error("oops", b)
   widget.macro '$x infx $y':
@@ -212,6 +214,7 @@ check:
     meta_namespace widget_meta:
       parse_syntax_class Parsed
       parsed_packer pack
+      identifier_parser: fun (id): id
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
     syntax_meta.error("oops", b)
   widget.macro 'prefx $x':
@@ -229,6 +232,7 @@ check:
     meta_namespace widget_meta:
       parse_syntax_class Parsed
       parsed_packer pack
+      identifier_parser: fun (id): id
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()':
     syntax_meta.error("oops", b)
   widget.macro '$x infx $y':
@@ -244,6 +248,7 @@ space.enforest example:
   meta_namespace example_meta:
     parse_syntax_class Parsed
     parsed_packer pack
+    identifier_parser: fun (id): id
 example.macro 'ex $tail ...':
   let p = Syntax.relocate_ephemeral_span(example_meta.pack('ex2'), ['2', '3'])
   check p.to_source_string() ~is "23"
@@ -256,3 +261,31 @@ expr.macro 'ex_go':
   let '$(p2 :: example_meta.Parsed)' = p
   '[$(p.to_source_string()), $(p2.to_source_string())]'
 check ex_go ~is ["23", "23"]
+
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
+  wchk nonesuch
+  ~throws "nonesuch: unbound identifier"
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+      description: "fancy widget"
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
+  wchk nonesuch
+  ~throws "nonesuch: unbound fancy widget identifier"

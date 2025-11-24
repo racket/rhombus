@@ -5,6 +5,7 @@ space.enforest example:
   macro_definer macro
   meta_namespace example_meta:
     parse_syntax_class Parsed
+    identifier_parser: fun (id): id
 
 expr.macro 'sub:
               $form
