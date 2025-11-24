@@ -442,10 +442,11 @@
 (define ((make-macro-result/recur name parsed-tag recur) form-in proc reloc origins env)
   (define form (syntax-unwrap form-in))
   (unless (syntax? form)
-    (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form-in))
+    (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form-in
+                            #:single-group? (and recur #t)))
   (define result
     (if recur
-        (syntax-parse form
+        (syntax-parse (unpack-term form #f #f)
           #:datum-literals (parsed)
           [(parsed tag e)
            #:when (eq? (syntax-e #'tag) parsed-tag)
@@ -455,7 +456,7 @@
              [(unpack-tail form #f #f)
               => (lambda (g) (recur g env))]
              [else
-              (raise-bad-macro-result (proc-name proc) "single-group syntax object" #:syntax-for? #f form)])])
+              (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form)])])
         form))
   ;; unlike expressions, we need to keep lifting origin information out, so that's
   ;; why `transfer-origins` is here while it's not in "expr-macro.rkt"

@@ -104,3 +104,17 @@ check:
   def v :: BoxOf(List) = Array([1, 2, 3])
   v.content[0]
   ~is 1
+
+check:
+  ~eval
+  import: rhombus/meta open
+  annot.macro 'bad': '1; 2'
+  1 :: bad
+  ~throws "expected: single-group syntax object for annotation"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  annot.macro 'bad': 666
+  1 :: bad
+  ~throws "expected: single-group syntax object for annotation"

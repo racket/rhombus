@@ -47,7 +47,8 @@
     [(g ...)
      #`((rhombus-definition g)
         ...)]
-    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form
+                               #:single-group? #f)]))
 
 ;; ----------------------------------------
 
@@ -72,7 +73,8 @@
      #`((rhombus-body-sequence
          g
          ...))]
-    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "definitions and expressions" form
+                               #:single-group? #f)]))
 
 ;; ----------------------------------------
 

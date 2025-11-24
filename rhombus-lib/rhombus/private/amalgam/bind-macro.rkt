@@ -571,7 +571,7 @@
 
 (define-for-syntax (extract-binding form proc)
   (syntax-parse (if (syntax*? form)
-                    (unpack-group form proc #f)
+                    (unpack-group form #f #f)
                     #'#f)
     [b::binding #'b.parsed]
     [_ (raise-bad-macro-result (proc-name proc) "binding" form)]))

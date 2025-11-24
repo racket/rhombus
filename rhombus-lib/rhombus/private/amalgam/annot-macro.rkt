@@ -91,14 +91,15 @@
   (no-srcloc #`(parsed #:rhombus/annot #,stx)))
 
 (define-for-syntax (parse-annotation-macro-result form proc
-                                                  #:srcloc [loc (maybe-respan form)]
+                                                  #:srcloc [loc (and (syntax*? form)
+                                                                     (maybe-respan form))]
                                                   #:origins [origins null])
-  (unless (syntax*? form)
-    (raise-bad-macro-result (proc-name proc) "annotation" form))
   (transfer-origins
    origins
-   (syntax-parse (unpack-group form proc #f)
-     [c::annotation (relocate+reraw loc #'c.parsed)])))
+   (syntax-parse (and (syntax*? form)
+                      (unpack-group form #f #f))
+     [c::annotation (relocate+reraw loc #'c.parsed)]
+     [_ (raise-bad-macro-result (proc-name proc) "annotation" form)])))
 
 (define-for-syntax (make-annotation-infix-operator order prec protocol proc assc)
   (annotation-infix-operator

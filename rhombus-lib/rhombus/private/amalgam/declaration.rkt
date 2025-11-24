@@ -23,7 +23,8 @@
   (property declaration-transformer transformer)
 
   (define (check-declaration-result forms proc)
-    (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "declarations" forms))
+    (unless (stx-list? forms) (raise-bad-macro-result (proc-name proc) "declarations" forms
+                                                      #:single-group? #f))
     forms)
 
   (define in-decl-space (make-interned-syntax-introducer/add 'rhombus/decl))

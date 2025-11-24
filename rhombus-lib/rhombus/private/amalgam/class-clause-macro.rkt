@@ -51,7 +51,8 @@
     (define defns (syntax-parse stx
                     [(head . tail) (proc (pack-tail #'tail) #'head data)]))
     (unless (syntax*? defns)
-      (raise-bad-macro-result (proc-name proc) "`class` clause" defns))
+      (raise-bad-macro-result (proc-name proc) "`class` clause" defns
+                              #:single-group? #f))
     (datum->syntax #f (unpack-multi defns proc #f))))
 
 ;; Binding as a class clause ensures that use within a `class` takes

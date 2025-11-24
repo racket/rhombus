@@ -262,7 +262,6 @@ expr.macro 'ex_go':
   '[$(p.to_source_string()), $(p2.to_source_string())]'
 check ex_go ~is ["23", "23"]
 
-
 check:
   ~eval
   import rhombus/meta open
@@ -289,3 +288,32 @@ check:
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
   wchk nonesuch
   ~throws "nonesuch: unbound fancy widget identifier"
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      description: "fancy widget"
+  widget.macro 'bad': 666
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
+  wchk bad
+  ~throws "expected: syntax object for widget"
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.enforest widget:
+    space_path my/widget
+    macro_definer macro
+    meta_namespace widget_meta:
+      parse_syntax_class Parsed
+      parsed_packer pack
+      description: "fancy widget"
+  widget.macro 'bad': '1; 2'
+  expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
+  wchk bad
+  ~throws "expected: single-group syntax object for widget"

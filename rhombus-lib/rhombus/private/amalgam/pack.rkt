@@ -377,21 +377,20 @@
 ;; unpacks by removing `multi` and/or `group` wrapper to arrive at a
 ;; sequence of terms; the result is a list-shaped syntax object
 (define (unpack-tail r who at-stx)
-  (datum->syntax
-   #f
-   (let ([r (syntax-unwrap r)])
-     (cond
-       [(multi-syntax? r)
-        (define l (syntax->list r))
-        (cond
-          [(not l) (raise-error who "invalid syntax for group sequence" r)]
-          [(null? (cdr l)) '()]
-          [(null? (cddr l)) (cdr (syntax-e (cadr l)))]
-          [else (raise-error who "multi-group syntax not allowed in group context" r)])]
-       [(group-syntax? r) (cdr (syntax-e r))]
-       [else
-        (define elem (syntaxable->syntax who at-stx r))
-        (and elem (list elem))]))))
+  (define (wrap v) (datum->syntax #f v))
+  (let ([r (syntax-unwrap r)])
+    (cond
+      [(multi-syntax? r)
+       (define l (syntax->list r))
+       (cond
+         [(not l) (raise-error who "invalid syntax for group sequence" r)]
+         [(null? (cdr l)) (wrap '())]
+         [(null? (cddr l)) (wrap (cdr (syntax-e (cadr l))))]
+         [else (raise-error who "multi-group syntax not allowed in group context" r)])]
+      [(group-syntax? r) (wrap (cdr (syntax-e r)))]
+      [else
+       (define elem (syntaxable->syntax who at-stx r))
+       (and elem (wrap (list elem)))])))
 
 ;; similar to `pack-tail` but for a list of groups, so no
 ;; special case for empty is needed

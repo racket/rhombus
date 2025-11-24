@@ -236,3 +236,17 @@ check:
   def not_good(10) = 10
   ~throws values("not_good",
                  "not bound as a macro")
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'bad': '1; 2'
+  def bad = 1
+  ~throws "expected: single-group syntax object for binding"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'bad': 666
+  def bad = 1
+  ~throws "expected: single-group syntax object for binding"

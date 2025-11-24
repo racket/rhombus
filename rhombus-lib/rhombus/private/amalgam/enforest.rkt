@@ -6,7 +6,8 @@
                      "name-path-op.rkt"
                      "lookup-space.rkt")
          "name-root-ref.rkt"
-         "name-root-space.rkt")
+         "name-root-space.rkt"
+         "../version-case.rkt")
 
 (provide (for-syntax define-rhombus-transform
                      define-rhombus-sequence-transform
@@ -59,3 +60,10 @@
          #:in-name-root-space in-name-root-space
          #:name-root-ref name-root-ref
          #:lookup-space-description lookup-space-description)])))
+
+(meta-if-version-at-least
+ "9.0.0.6"
+ (void)
+ ;; works around a demod problem
+ (define-for-syntax hack-toworkaround-demo-bug
+   10))

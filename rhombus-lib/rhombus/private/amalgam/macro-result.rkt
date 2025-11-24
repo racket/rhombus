@@ -4,7 +4,8 @@
 (provide raise-bad-macro-result)
 
 (define (raise-bad-macro-result who what form
-                                #:syntax-for? [syntax-for? #t])
+                                #:syntax-for? [syntax-for? #t]
+                                #:single-group? [single-group? #t])
   (raise
    (exn:fail:contract
     (error-message->adjusted-string
@@ -13,7 +14,10 @@
      (string-append
       "invalid macro result"
       "\n  expected: " (if syntax-for?
-                           (string-append "syntax object for " what)
+                           (string-append (if single-group?
+                                              "single-group syntax object for "
+                                              "syntax object for ")
+                                          what)
                            what)
       "\n  received:" (let ([str ((error-value->string-handler)
                                   form

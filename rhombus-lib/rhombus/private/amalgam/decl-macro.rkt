@@ -58,7 +58,8 @@
     [((group d ...) ...)
      #`((rhombus-top (group d ...))
         ...)]
-    [_ (raise-bad-macro-result (proc-name proc) "declarations" form)]))
+    [_ (raise-bad-macro-result (proc-name proc) "declarations" form
+                               #:single-group? #f)]))
 
 ;; ----------------------------------------
 

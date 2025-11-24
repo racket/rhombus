@@ -27,7 +27,8 @@
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head data)]))
      (unless (syntax*? defns)
-       (raise-bad-macro-result (proc-name proc) "`interface` clause" defns))
+       (raise-bad-macro-result (proc-name proc) "`interface` clause" defns
+                               #:single-group? #f))
      (datum->syntax #f (unpack-multi defns proc #f)))))
 
 ;; See use of `bounce-to-definition` in "class-clause-macro.rkt"
