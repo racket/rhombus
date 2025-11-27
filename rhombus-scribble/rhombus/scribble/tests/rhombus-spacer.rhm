@@ -1,52 +1,195 @@
 #lang rhombus/static/and_meta
 import:
+  meta:
+    rhombus/shrubbery
   rhombus/scribble/spacer
   rhombus/scribble/manual open:
     only_space spacer.typeset
 
-// TODO make "pretty" checks more automatic
+meta fun transfer_raw(new_stx, old_stx) :~ Syntax:
+  fun do_multi('$new_g; ...', '$old_g; ...'):
+    '$(do_group(new_g, old_g)); ...'
+  fun do_group('$new_t ...' && new_g, '$old_t ...'):
+    '$(do_term(new_t, old_t)) ...'.relocate_group(new_g)
+  fun do_term(new_t, old_t :~ Term):
+    match old_t
+    | '($(old_m :: Multi))':
+        let '($(new_m :: Multi))' = new_t
+        '($(do_multi(new_m, old_m)))'.relocate(new_t)
+    | '[$(old_m :: Multi)]':
+        let '[$(new_m :: Multi)]' = new_t
+        '[$(do_multi(new_m, old_m))]'.relocate(new_t)
+    | '{$(old_m :: Multi)}':
+        let '{$(new_m :: Multi)}' = new_t
+        '{$(do_multi(new_m, old_m))}'.relocate(new_t)
+    | '«'$(old_m :: Multi)'»':
+        let '«'$(new_m :: Multi)'»' = new_t
+        '«'$(do_multi(new_m, old_m))'»'.relocate(new_t)
+    | ': $(old_m :: Multi)':
+        let ': $(new_m :: Multi)' = new_t
+        ': $(do_multi(new_m, old_m))'.relocate(new_t)
+    | '| $(old_m :: Multi) | ...':
+        let '| $(new_m :: Multi) | ...' && '| $(new_b :: Block) | ...' = new_t
+        Syntax.make([#'alts, ': $(do_multi(new_m, old_m))'.relocate(new_b), ...])
+          .relocate(new_t)
+    | ~else:
+        old_t.relocate(new_t)
+  do_multi(new_stx, old_stx)
+
+meta fun to_very_pretty_source(stx):
+  fun do_concat(descs, sep):
+    match descs
+    | []:
+        ""
+    | [desc0, descn, ...]:
+        PrintDesc.concat(desc0, PrintDesc.concat(sep, descn), ...)
+  fun do_multi('$g; ...', ~sep = #false):
+    do_concat(
+      [do_group(g), ...],
+      if sep
+      | PrintDesc.concat(sep, PrintDesc.newline())
+      | PrintDesc.newline(),
+    )
+  fun do_group('$t ...'):
+    let ts = [t, ...]
+    when ts == []
+    | error("shouldn't get empty group")
+    let desc_ts = [do_term(t), ...]
+    let [rge, ... ~nonempty]:
+      let len = ts.length()
+      recur loop(prev_idx = 0, idx = 1, rges :~ List = []):
+        cond
+        | idx == len:
+            rges.add(prev_idx..idx)
+        | ts[idx] is_a Operator:
+            loop(idx, idx+1, rges.add(prev_idx..idx))
+        | ~else:
+            loop(prev_idx, idx+1, rges)
+    let [desc_ts0, ..., desc_tsn] = [desc_ts.sublist(rge), ...]
+    let [desc0, ...] = [do_concat(desc_ts0, " "), ...]
+    let [descn, descm, ... ~once]:
+      if ts.last matches '| $_ | ...'
+      | let [desc_t0, ..., desc_tn] = desc_tsn
+        [do_concat([desc_t0, ...], " "), desc_tn]
+      | [do_concat(desc_tsn, " ")]
+    let [desc0, desc1, ...] = [desc0, ..., descn]
+    PrintDesc.concat(
+      desc0,
+      PrintDesc.nest(
+        2,
+        PrintDesc.concat(PrintDesc.newline(), desc1),
+      ),
+      ...,
+      PrintDesc.concat(PrintDesc.newline(), descm), ...,
+    )
+  fun do_term(t):
+    fun do_open_close(open, m, close, ~sep = #false):
+      match do_multi(m, ~sep)
+      | "":
+          if close
+          | PrintDesc.concat(open, PrintDesc.newline(), close)
+          | open
+      | desc:
+          PrintDesc.concat(
+            open,
+            PrintDesc.nest(
+              2,
+              PrintDesc.concat(PrintDesc.newline(), desc),
+            ),
+            if close
+            | PrintDesc.concat(sep || "", PrintDesc.newline(), close)
+            | "",
+          )
+    match t
+    | '($(m :: Multi))':
+        do_open_close("(", m, ")", ~sep: ",")
+    | '[$(m :: Multi)]':
+        do_open_close("[", m, "]", ~sep: ",")
+    | '{$(m :: Multi)}':
+        do_open_close("{", m, "}", ~sep: ",")
+    | '«'$(m :: Multi)'»':
+        PrintDesc.concat(
+          "'",
+          PrintDesc.align(do_open_close("«", m, "»")),
+          "'",
+        )
+    | ': $(m :: Multi)':
+        do_open_close(":", m, #false)
+    | '| $(m :: Multi) | ...':
+        do_concat(
+          [do_open_close("|", m, #false), ...],
+          PrintDesc.newline(),
+        )
+    | ~else:
+        Printable.describe(t)
+  let desc = do_multi(stx)
+  let outp = Port.Output.open_string()
+  Printable.render(desc, outp)
+  outp.get_string()
+
+meta fun with_very_pretty_source(stx :~ Syntax):
+  let str = to_very_pretty_source(stx)
+  let new_stx = shrubbery.read(Port.Input.open_string(str))
+  let new_stx = transfer_raw(new_stx, stx)
+  let new_str = new_stx.to_source_string()
+  unless new_str == str
+  | error(
+      ~who: stx.srcloc()!!.to_report_string(),
+      "expected very pretty source string",
+      error.val(~label: "syntax object", stx),
+      error.text(~label: "got", new_str),
+      error.text(~label: "expected", str),
+    )
+  new_stx
+
 expr.macro 'check_spacer:
-              $(pattern:
-                  kind ~multi
-                | '$orig; $pat; $pretty'
-                | '$orig; $pat': field pretty = #false)':
+              $orig
+              $pat':
   ~op_stx self
-  let check = 'check'.relocate(self)
-  fun adjust(orig):
+  let check_id = 'check'.relocate(self)
+  fun make_checks(orig :~ Group):
     let adjusted = spacer.adjust_group(orig, #false, '#,')
     '«block:
-        def orig = Syntax.literal '$orig'
         def adjusted = Syntax.literal '$adjusted'
-        $check:
+        $check_id:
           adjusted.to_source_string()
-          ~is orig.to_source_string()
-        $check:
+          ~is #%literal $(orig.to_source_string())
+        $check_id:
           adjusted
           ~matches '$pat'
       »'
   'block:
-     $(adjust(orig))
-     $(if pretty | adjust(pretty) | '')'
+     $(make_checks(orig))
+     $(make_checks(with_very_pretty_source(orig)))'
+
+fun check_typeset_space(t :~ Term, context):
+  let t_space = t.property(#'#{typeset-space-name})
+  let ok = t_space == context
+  unless ok
+  | println(
+      ~out: stderr,
+      error.message(
+        ~who: t.srcloc()!!.to_report_string(),
+        "wrong space for term",
+        error.val(~label: "term", t),
+        error.val(~label: "got", t_space),
+        error.val(~label: "expected", context),
+      ))
+  ok
 
 namespace def_unquote
 defn.macro 'def_unquote $name: $context_expr':
-  '«def context = $context_expr
-    syntax_class Term:
+  let name_context = Syntax.make_temp_id(name +& "_context", ~keep_name: #true)
+  '«def $name_context = ($context_expr)
+    syntax_class $name:
       kind ~term
-    | '$('$')t':
-        unless t.property(#'#{typeset-space-name}) == context
-        | println(
-            ~out: stderr,
-            t.srcloc()!!.to_report_string() ++ ":", "wrong space for term",
-            "\n  term:", t,
-            "\n  got:", t.property(#'#{typeset-space-name}),
-            "\n  expected:", context,
-        )
-        match_when t.property(#'#{typeset-space-name}) == context
+    | '$('$') t':
+        match_when check_typeset_space(t, $name_context)
     unquote_bind.macro '$name':
-      '_ :: Term'
+      '_ :: $name'
     »'
-defn.macro '(def_unquote.full) $name':
+defn.macro 'def_unquote.full $name':
+  let name_full = Syntax.make_temp_id(name +& "_full", ~keep_name: #true)
   let full:
     let name_sym = name.unwrap()
     if name_sym == #'expr
@@ -54,8 +197,10 @@ defn.macro '(def_unquote.full) $name':
     | '#'$(Symbol.from_string("rhombus/" +& name_sym))'
   'def_unquote $name: #'$name
    namespace $name:
-     export: full
-     def_unquote full: $full'
+     export:
+       rename:
+         $name_full as full
+     def_unquote $name_full: $full'
 
 def_unquote none: #false
 def_unquote datum: #false
@@ -100,44 +245,19 @@ check_spacer:
   def pi = 3 + 0.1 + 0.04
   $(defn.full) $bind $expr $datum $expr $datum $expr $datum
 
-  def pi
-    = 3
-    + 0.1
-    + 0.04
-
 check_spacer:
   def pi:
-     let tau = 6.28
-     tau/2
+    let tau = 6.28
+    tau/2
   $(defn.full) $bind:
     $(defn.full) $bind $expr $datum
     $body $body $datum
-
-  def pi:
-     let tau
-       = 6.28
-     tau
-       / 2
 
 check_spacer:
   def [x, y, z]:
     [1+2, 3+4, 5+6]
   $(defn.full) [$bind, $bind, $bind]:
     [$datum $body $datum, $datum $body $datum, $datum $body $datum]
-
-  def [
-    x,
-    y,
-    z
-  ]:
-    [
-      1
-        + 2,
-      3
-        + 4,
-      5
-        + 6
-    ]
 
 check_spacer:
   fun f(x):
@@ -146,15 +266,6 @@ check_spacer:
   $defn $none($bind):
     $body($body)
     $body $body $datum
-
-  fun f (
-    x
-  ):
-    println (
-      x
-    )
-    x
-      + 1
 
 check_spacer:
   fun (x,
@@ -170,26 +281,6 @@ check_spacer:
            $body $body $body):
     [$body, $body, $body]
 
-  fun (
-    x,
-    y
-      = x
-      + 1,
-    z:
-      println (
-        x
-          +& "+"
-          +& y
-      )
-      x
-        + y
-  ):
-    [
-      x,
-      y,
-      z
-    ]
-
 check_spacer:
   fun transform([x, y],
                 ~scale: factor,
@@ -201,29 +292,6 @@ check_spacer:
               $none: $bind $expr $datum,
               $none: $bind $expr $datum):
     [$body $body $body $body $body, $body $body $body $body $body]
-
-  fun transform (
-    [
-      x,
-      y
-    ],
-    ~scale:
-      factor,
-    ~dx:
-      dx
-        = 0,
-    ~dy:
-      dy
-        = 0
-  ):
-    [
-      factor
-        * x
-        + dx,
-      factor
-        * y
-        + dy
-    ]
 
 check_spacer:
   fun ([x, y],
@@ -237,31 +305,6 @@ check_spacer:
          $none $expr $datum):
     [$body $body $body $body $body, $body $body $body $body $body]
 
-  fun (
-    [
-      x,
-      y
-    ],
-    ~scale:
-      factor:
-        println (
-          "missing"
-        )
-        1,
-    ~dx
-      = 0,
-    ~dy
-      = 0
-  ):
-    [
-      factor
-        * x
-        + dx,
-      factor
-        * y
-        + dy
-    ]
-
 check_spacer:
   fun
   | hello(name):
@@ -274,24 +317,6 @@ check_spacer:
   | $none($bind, $bind):
       $body($body $body $datum $body $body)
 
-  fun
-  |
-    hello (
-      name
-    ):
-      "Hello, "
-        +& name
-  |
-    hello (
-      first,
-      last
-    ):
-      hello (
-        first
-          +& " "
-          +& last
-      )
-
 check_spacer:
   fun
   | (n :: Number): n >= 70
@@ -299,21 +324,6 @@ check_spacer:
   $expr
   | ($bind $(bind.full) $annot): $body $body $datum
   | ($bind $(bind.full) $annot): $body
-
-  fun
-  |
-    (
-      n
-        :: Number
-    ):
-      n
-        >= 70
-  |
-    (
-      pf
-        :: Boolean
-    ):
-      pf
 
 check_spacer:
   fun
@@ -327,33 +337,6 @@ check_spacer:
   | $none([$bind, $bind, $bind $bind]):
       $body $body $body $body $body([$body, $body $body])
 
-  fun
-  |
-    is_sorted (
-      [
-      ]
-        || [
-          _
-        ]
-    ):
-      #true
-  |
-    is_sorted (
-      [
-        head,
-        next,
-        & tail
-      ]
-    ):
-      head
-        <= next
-        && is_sorted (
-          [
-            next,
-            & tail
-          ]
-        )
-
 check_spacer:
   fun
   | ([] || [_]):
@@ -366,35 +349,6 @@ check_spacer:
   | ([$bind, $bind, $bind, $bind]):
       $body $body $body $body $body([$body, $body, $body])
 
-  fun
-  |
-    (
-      [
-      ]
-        || [
-          _
-        ]
-    ):
-      #true
-  |
-    (
-      [
-        head,
-        next,
-        tail,
-        ...
-      ]
-    ):
-      head
-        <= next
-        && is_sorted (
-          [
-            next,
-            tail,
-            ...
-          ]
-        )
-
 check_spacer:
   fun hello :: String
   | hello(name): "Hello, " +& name
@@ -402,24 +356,6 @@ check_spacer:
   $defn $none $bind $annot
   | $none($bind): $datum $body $body
   | $none($none, $none: $bind): $body $body $datum $body $body
-
-  fun hello
-    :: String
-  |
-    hello (
-      name
-    ):
-      "Hello, "
-        +& name
-  |
-    hello (
-      ~surname,
-      ~first_name:
-        main
-    ):
-      surname
-        ++ " "
-        ++ main
 
 check_spacer:
   fun :: (String, String)
@@ -429,39 +365,11 @@ check_spacer:
   | (): $body($datum, $datum)
   | ($bind): $body($datum, $datum, $body)
 
-  fun
-    :: (
-      String,
-      String
-    )
-  |
-    (
-    ):
-      values (
-        "Hi",
-        "Bye"
-      )
-  |
-    (
-      more
-    ):
-      values (
-        "Hi",
-        "Bye",
-        more
-      )
-
 check_spacer:
   operator x ^^^ y:
     x +& y +& x
   $(defn.full) $bind $none $bind:
     $body $body $body $body $body
-
-  operator x
-    ^^^ y:
-      x
-        +& y
-        +& x
 
 check_spacer:
   operator ((x :: String)
@@ -472,21 +380,6 @@ check_spacer:
                   $none ($bind $(bind.full) $annot))
     $bind $annot:
       $body $body $body $body $body
-
-  operator (
-    (
-      x
-        :: String
-    )
-      ^^^ (
-        y
-          :: String
-      )
-  )
-    :: String:
-      x
-        +& y
-        +& x
 
 check_spacer:
   operator ^^^:
@@ -502,22 +395,6 @@ check_spacer:
   | $none $bind:
       $datum $body $body $body $datum
 
-  operator
-    ^^^:
-      ~weaker_than:
-        +
-  |
-    x
-      ^^^ y:
-        x
-          +& y
-          +& x
-  |
-    ^^^ y:
-      "--"
-        +& y
-        +& "--"
-
 check_spacer:
   class Posn(x, y):
     nonfinal
@@ -532,19 +409,6 @@ check_spacer:
     $(class_clause.full) $(class_clause.full) $none():
       $datum
 
-  class Posn (
-    x,
-    y
-  ):
-    nonfinal
-    method mdist (
-    ):
-      x
-        + y
-    final method area (
-    ):
-      0
-
 check_spacer:
   class Posn3D(z):
     extends Posn
@@ -554,17 +418,6 @@ check_spacer:
     $(class_clause.full) $class
     $(class_clause.full) $none():
       $body . $field() $body $body
-
-  class Posn3D (
-    z
-  ):
-    extends Posn
-    override mdist (
-    ):
-      super
-        . mdist (
-        )
-        + z
 
 check_spacer:
   class Posn3D(z):
@@ -576,17 +429,6 @@ check_spacer:
     $(class_clause.full) $(class_clause.full) $none():
       $body . $field() $body $body
 
-  class Posn3D (
-    z
-  ):
-    extends Posn
-    override method mdist (
-    ):
-      super
-        . mdist (
-        )
-        + z
-
 check_spacer:
   interface Shape:
     method area()
@@ -596,15 +438,6 @@ check_spacer:
     $(interface_clause.full) $none()
     $(interface_clause.full) $(interface_clause.full) $none():
       $body() $body $datum
-
-  interface Shape:
-    method area (
-    )
-    abstract method is_empty (
-    ):
-      area (
-      )
-        == 0
 
 check_spacer:
   veneer Posn(this :: Pair):
@@ -628,28 +461,6 @@ check_spacer:
       | $datum: $body
       | $datum: $body
 
-  veneer Posn (
-    this
-      :: Pair
-  ):
-    property x:
-      this
-        . first
-    property y:
-      this
-        . rest
-    private implements Indexable
-    private override get (
-      i
-    ):
-      match i
-      |
-        0:
-          x
-      |
-        1:
-          y
-
 check_spacer:
   class Square(side):
     implements Shape
@@ -659,15 +470,6 @@ check_spacer:
     $(class_clause.full) $class
     $(class_clause.full) $none():
       $body $body $body
-
-  class Square (
-    side
-  ):
-    implements Shape
-    override area (
-    ):
-      side
-        * side
 
 check_spacer:
   class Posn(mutable x, mutable y):
@@ -679,29 +481,11 @@ check_spacer:
       $body $body $datum
       $body $body $datum
 
-  class Posn (
-    mutable x,
-    mutable y
-  ):
-    method go_home (
-    ):
-      x
-        := 0
-      y
-        := 0
-
 check_spacer:
   class Posn(x, y):
     field name = "Jane Doe"
   $(defn.full) $none($none, $none):
     $(class_clause.full) $none $expr $datum
-
-  class Posn (
-    x,
-    y
-  ):
-    field name
-      = "Jane Doe"
 
 check_spacer:
   class Posn(x, y):
@@ -714,27 +498,6 @@ check_spacer:
       $body . $field($body, $body)
     $(class_clause.full) $none $bind $annot:
       $body . $field($body $body $body $body $body $body $body)
-
-  class Posn (
-    x,
-    y
-  ):
-    property angle
-      :: Real:
-        math
-          . atan (
-            y,
-            x
-          )
-    property magnitude
-      :: Real:
-        math
-          . sqrt (
-            x
-              * x
-              + y
-              * y
-          )
 
 check_spacer:
   class Posn(mutable x, mutable y):
@@ -758,47 +521,6 @@ check_spacer:
     $(class_clause.full) $none $bind $annot:
       $body . $field($body $body $body $body $body $body $body)
 
-  class Posn (
-    mutable x,
-    mutable y
-  ):
-    property
-    |
-      angle
-        :: Real:
-          math
-            . atan (
-            y,
-            x
-          )
-    |
-      angle
-        := new_angle
-        :: Real:
-          let m
-            = magnitude
-          x
-            := m
-            * math
-            . cos (
-              new_angle
-            )
-          y
-            := m
-            * math
-            . sin (
-              new_angle
-            )
-    property magnitude
-      :: Real:
-        math
-          . sqrt (
-            x
-              * x
-              + y
-              * y
-          )
-
 check_spacer:
   class Posn(~x, ~y):
     constructor
@@ -819,55 +541,6 @@ check_spacer:
         $body($none: $body $body $body . $field($body),
               $none: $body $body $body . $field($body))
 
-  class Posn (
-    ~x,
-    ~y
-  ):
-    constructor
-    |
-      (
-      ):
-        super (
-          ~x:
-            0,
-          ~y:
-            0
-        )
-    |
-      (
-        ~x:
-          x,
-        ~y:
-          y
-      ):
-        super (
-          ~x:
-            x,
-          ~y:
-            x
-        )
-    |
-      (
-        ~r:
-          r,
-        ~θ:
-          θ
-      ):
-        super (
-          ~x:
-            r
-              * math
-              . cos (
-                θ
-              ),
-          ~y:
-            r
-              * math
-              . sin (
-                θ
-              )
-        )
-
 check_spacer:
   class Car(mpg, private mutable gas = 10):
     method go(dist):
@@ -875,19 +548,6 @@ check_spacer:
   $(defn.full) $none($none, $class_clause $bind $none $expr $datum):
     $(class_clause.full) $none($bind):
       $body $body $body $body $body $body $body
-
-  class Car (
-    mpg,
-    private mutable gas
-      = 10
-  ):
-    method go (
-      dist
-    ):
-      gas
-        := gas
-        - dist
-        / mpg
 
 check_spacer:
   class Car(mpg):
@@ -901,20 +561,6 @@ check_spacer:
     $(class_clause.full) $none($bind):
       $body $body $body $body $body $body $body
 
-  class Car (
-    mpg
-  ):
-    internal _Car
-    private field gas
-      = 10
-    method go (
-      dist
-    ):
-      gas
-        := gas
-        - dist
-        / mpg
-
 check_spacer:
   class Posn(x, y):
     private implements Printable
@@ -925,29 +571,6 @@ check_spacer:
     $(class_clause.full) $(class_clause.full) $none($bind, $bind):
       $body . $field($datum, [$body($body), $body($body)], $datum)
 
-  class Posn (
-    x,
-    y
-  ):
-    private implements Printable
-    private override describe (
-      mode,
-      recur
-    ):
-      PrintDesc
-        . list(
-          "⟨⟨⟨",
-          [
-            recur (
-              x
-            ),
-            recur (
-              y
-            )
-          ],
-          "⟩⟩⟩"
-      )
-
 check_spacer:
   match 1+2
   | 3: "three"
@@ -956,98 +579,39 @@ check_spacer:
   | $none: $datum
   | $none: $datum
 
-  match 1
-    + 2
-  |
-    3:
-      "three"
-  |
-    ~else:
-      "not three"
-
 check_spacer:
   match 'go ~slow'
   | 'go ~fast': "ok"
   $(expr.full) '$expr $none'
   | '$bind $none': $datum
 
-  match '
-    go ~slow
-  '
-  |
-    '
-      go ~fast
-    ':
-      "ok"
-
 check_spacer:
   1+2 matches 3
   $datum $none $datum $(expr.full) $datum
-
-  1
-    + 2 matches 3
 
 check_spacer:
   [1, 2, 3] matches [_, _, _]
   [$datum, $datum, $datum] $(expr.full) [$bind, $bind, $bind]
 
-  [
-    1,
-    2,
-    3
-  ] matches [
-    _,
-    _,
-    _
-  ]
-
 check_spacer:
   [1, 2, 3] :: List
   [$datum, $datum, $datum] $(expr.full) $annot
-
-  [
-    1,
-    2,
-    3
-  ]
-    :: List
 
 check_spacer:
   def x :: List = [1, 2, 3]
   $(defn.full) $bind $(bind.full) $annot $expr [$none, $none, $none]
 
-  def x
-    :: List
-    = [
-      1,
-      2,
-      3
-    ]
-
 check_spacer:
   "oops" :~ List
   $datum $(expr.full) $annot
-
-  "oops"
-    :~ List
 
 check_spacer:
   def x :~ List = "oops"
   $(defn.full) $bind $(bind.full) $annot $expr $datum
 
-  def x
-    :~ List
-    = "oops"
-
 check_spacer:
   [1, 2, 3] is_a List
   [$datum, $datum, $datum] $(expr.full) $annot
-
-  [
-    1,
-    2,
-    3
-  ] is_a List
 
 check_spacer:
   "oops" is_a List
@@ -1057,13 +621,9 @@ check_spacer:
   #'hello
   $(expr.full) $value
 
-  #' hello
-
 check_spacer:
   #'~skeleton
   $(expr.full) $value
-
-  #' ~skeleton
 
 check_spacer:
   match #'goodbye
@@ -1072,15 +632,6 @@ check_spacer:
   $(expr.full) $(expr.full) $value
   | $(bind.full) $value: $datum
   | $(bind.full) $value: $datum
-
-  match
-    #' goodbye
-  |
-    #' hello:
-      "hi"
-  |
-    #' goodbye:
-      "bye"
 
 check_spacer:
   for List:
@@ -1091,16 +642,6 @@ check_spacer:
     $(for_clause.full) $bind $expr [$datum, $datum, $datum]
     $for_body $for_body $for_body $datum
     $body
-
-  for List:
-    each v in [
-      "a",
-      "b",
-      "c"
-    ]
-    skip_when v
-      == "b"
-    v
 
 check_spacer:
   for:
@@ -1114,27 +655,11 @@ check_spacer:
     $body
     $none $reducer
 
-  for:
-    each v:
-      [
-        "a",
-        "b",
-        "c"
-      ]
-    skip_when v
-      == "b"
-    v
-    ~into List
-
 check_spacer:
   import:
     rhombus/math
   $(defn.full):
     $impo $impo $impo
-
-  import:
-    rhombus
-      / math
 
 check_spacer:
   export:
@@ -1148,12 +673,6 @@ check_spacer:
   "hello" is_a Any.of("hello", "goodbye")
   $datum $(expr.full) $(annot.full) . $(annot.full)($datum, $datum)
 
-  "hello" is_a Any
-    . of (
-      "hello",
-      "goodbye"
-    )
-
 check_spacer:
   #'hello
     :: Any.of(#'~goodbye)
@@ -1166,41 +685,14 @@ check_spacer:
   $(defn.full) ($bind $(bind.full) $annot) $(bind.full) $none $none:
     $datum
 
-  def (
-    x
-      :: Int
-  ) described_as An Integer:
-    "oops"
-
 check_spacer:
   def x :: matching([_, 10]): [9, 10]
   $(defn.full) $bind $(bind.full) $(annot.full)([$bind, $datum]):
     [$datum, $datum]
 
-  def x
-    :: matching (
-      [
-        _,
-        10
-      ]
-    ):
-      [
-        9,
-        10
-      ]
-
 check_spacer:
   [1, 2, 3] :: satisfying(is_list_with_one)
   [$datum, $datum, $datum] $(expr.full) $(annot.full)($expr)
-
-  [
-    1,
-    2,
-    3
-  ]
-    :: satisfying (
-      is_list_with_one
-    )
 
 check_spacer:
   def x :: converting(
@@ -1209,17 +701,6 @@ check_spacer:
   $(defn.full) $bind $(bind.full) $(annot.full)(
     $expr ($bind $(bind.full) $annot): $body $body $datum
   ) = $datum
-
-  def x
-    :: converting (
-      fun (
-        x
-          :: Int
-      ):
-        x
-          + 1
-  )
-    = 11
 
 check_spacer:
   syntax_class NTerms
@@ -1245,52 +726,6 @@ check_spacer:
         $body($datum)
         '$body($body $body $datum)'
 
-  syntax_class NTerms
-  |
-    '
-      ~one
-        $ a
-    ':
-      field b
-        = '
-          0
-        '
-      field average:
-        println (
-          "one"
-        )
-        '
-          $ (
-            a
-              . unwrap (
-              )
-              / 2
-          )
-        '
-  |
-    '
-      ~two
-        $ a
-        $ b
-    ':
-      def sum
-        = a
-        . unwrap (
-        )
-        + b
-        . unwrap (
-        )
-      field average:
-        println (
-          "two"
-        )
-        '
-          $ (
-            sum
-              / 2
-          )
-        '
-
 check_spacer:
   syntax_class Parenthesized:
     description "parenthesized"
@@ -1306,25 +741,6 @@ check_spacer:
     $(syntax_class_clause.full): $none $none
     $(syntax_class_clause.full): [$none, $bind]
   | '($(bind.full) $unquote_bind, $bind)'
-
-  syntax_class Parenthesized:
-    description "parenthesized"
-    error_mode ~opaque
-    kind ~term
-    root_swap:
-      content group
-    fields:
-      [
-        g,
-        ...
-      ]
-  |
-    '
-      (
-        $ g,
-        ...
-      )
-    '
 
 check_spacer:
   match stx
@@ -1354,76 +770,21 @@ check_spacer:
          $(pattern_clause.full) $none = $datum):
       $body
 
-  match stx
-  |
-    (
-      pattern:
-        kind ~group
-      |
-        '
-          $ x
-            $ y
-        ':
-          match_when y
-            . unwrap (
-            )
-            == 1
-          field case
-            = 1
-      |
-        '
-          $ x
-            $ y
-        ':
-          match_def '
-            11
-          '
-            = y
-          field case
-            = 2
-      |
-        '
-          $ x
-            $ y
-        ':
-          match_unless y
-            . unwrap (
-            )
-            == 5
-          field case
-            = 3
-    ):
-      case
-
 check_spacer:
   Parameter.def color = "red"
   $(defn.full) . $(defn.full) $none $expr $datum
-
-  Parameter.def color
-    = "red"
 
 check_spacer:
   Parameter.def color :: String = "red"
   $(defn.full) . $(defn.full) $none $bind $annot $expr $datum
 
-  Parameter.def color
-    :: String
-    = "red"
-
 check_spacer:
   Parameter.def color: "red"
   $(defn.full) . $(defn.full) $none: $datum
 
-  Parameter.def color:
-    "red"
-
 check_spacer:
   Parameter.def color :: String: "red"
   $(defn.full) . $(defn.full) $none $bind $annot: $datum
-
-  Parameter.def color
-    :: String:
-      "red"
 
 check_spacer:
   enum Mouse:
@@ -1469,50 +830,17 @@ check_spacer:
     $datum: $datum,
   }
 
-  Map
-    . by (
-      ===
-    ) {
-      1:
-        1,
-      2:
-        2,
-      3:
-        3,
-    }
-
 check_spacer:
   Map.by(===){}
     :: Map.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
 
-  Map
-    . by (
-      ===
-    ) {
-    }
-    :: Map
-    . by (
-      ===
-    )
-
 check_spacer:
   def Map.by(===){}
     = Map.by(===){}
   $(defn.full) $(bind.full) . $(bind.full) ($key_comp){}
     = $(expr.full) . $(expr.full) ($key_comp){}
-
-  def Map
-    . by (
-      ===
-    ) {
-    }
-    = Map
-    . by (
-      ===
-    ) {
-    }
 
 check_spacer:
   MutableMap.by(===){
@@ -1526,33 +854,11 @@ check_spacer:
     $datum: $datum,
   }
 
-  MutableMap
-    . by (
-      ===
-    ) {
-      1:
-        1,
-      2:
-        2,
-      3:
-        3,
-    }
-
 check_spacer:
   MutableMap.by(===){}
     :: MutableMap.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
-
-  MutableMap
-    . by (
-      ===
-    ) {
-    }
-    :: MutableMap
-    . by (
-      ===
-    )
 
 check_spacer:
   WeakMutableMap.by(===){
@@ -1566,33 +872,11 @@ check_spacer:
     $datum: $datum,
   }
 
-  WeakMutableMap
-    . by (
-      ===
-    ) {
-      1:
-        1,
-      2:
-        2,
-      3:
-        3,
-    }
-
 check_spacer:
   WeakMutableMap.by(===){}
     :: WeakMutableMap.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
-
-  WeakMutableMap
-    . by (
-      ===
-    ) {
-    }
-    :: WeakMutableMap
-    . by (
-      ===
-    )
 
 check_spacer:
   Set.by(===){
@@ -1606,47 +890,17 @@ check_spacer:
     $datum,
   }
 
-  Set
-    . by (
-      ===
-    ) {
-      1,
-      2,
-      3,
-    }
-
 check_spacer:
   Set.by(===){}
     :: Set.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
 
-  Set
-    . by (
-      ===
-    ) {
-    }
-    :: Set
-    . by (
-      ===
-    )
-
 check_spacer:
   def Set.by(===){}
     = Set.by(===){}
   $(defn.full) $(bind.full) . $(bind.full) ($key_comp){}
     = $(expr.full) . $(expr.full) ($key_comp){}
-
-  def Set
-    . by (
-      ===
-    ) {
-    }
-    = Set
-    . by (
-      ===
-    ) {
-    }
 
 check_spacer:
   MutableSet.by(===){
@@ -1660,30 +914,11 @@ check_spacer:
     $datum,
   }
 
-  MutableSet
-    . by (
-      ===
-    ) {
-      1,
-      2,
-      3,
-    }
-
 check_spacer:
   MutableSet.by(===){}
     :: MutableSet.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
-
-  MutableSet
-    . by (
-      ===
-    ) {
-    }
-    :: MutableSet
-    . by (
-      ===
-    )
 
 check_spacer:
   WeakMutableSet.by(===){
@@ -1697,27 +932,8 @@ check_spacer:
     $datum,
   }
 
-  WeakMutableSet
-    . by (
-      ===
-    ) {
-      1,
-      2,
-      3,
-    }
-
 check_spacer:
   WeakMutableSet.by(===){}
     :: WeakMutableSet.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
-
-  WeakMutableSet
-    . by (
-      ===
-    ) {
-    }
-    :: WeakMutableSet
-    . by (
-      ===
-    )
