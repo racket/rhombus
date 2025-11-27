@@ -470,6 +470,15 @@ block:
     check: Function.count(1, 2) < Function.count(3, 4, 5)
            ~is #true
 
+block:
+  let [[x, y], ...] = []
+  check: Function.count(x, ...)
+         ~is 0
+  check: Function.count(y, ...)
+         ~is 0
+  check: Function.count(Array(x, y), ...)
+         ~is 0
+
 check:
   [each #'oops, ...] ~throws values(
     "each: " ++ error.annot_msg(),

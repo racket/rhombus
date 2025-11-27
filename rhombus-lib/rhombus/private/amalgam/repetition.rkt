@@ -217,9 +217,9 @@
           [(free-identifier=? #'in-form #'in-vector)
            #`(vector-length e)]
           [else
-           #`(length #,(repetition-as-list ellipses #'rep.parsed 1))])]
+           #`(length #,(repetition-as-list ellipses #'(group (parsed #:rhombus/repet rep.parsed)) 1))])]
        [else
-        #`(length #,(repetition-as-list ellipses #'rep.parsed 1))])]))
+        #`(length #,(repetition-as-list ellipses #'(group (parsed #:rhombus/repet rep.parsed)) 1))])]))
 
 (define-for-syntax (render-repetition for-form rep-parsed
                                       #:depth [depth 1])
