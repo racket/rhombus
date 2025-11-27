@@ -151,7 +151,7 @@
                             (syntax-parse stx
                               [(self . _)
                                (raise-syntax-error #f
-                                                   "cannot use expression binding as a repetition"
+                                                   "cannot use repetition binding as an expression"
                                                    #'self)])))))
      (repetition-transformer
       (lambda (stx)

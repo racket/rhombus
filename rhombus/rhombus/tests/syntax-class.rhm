@@ -528,7 +528,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~throws "cannot use expression binding as a repetition"
+  ~throws "cannot use repetition binding as an expression"
 
 check:
   ~eval
@@ -537,7 +537,7 @@ check:
       field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~throws "cannot use expression binding as a repetition"
+  ~throws "cannot use repetition binding as an expression"
 
 block:
   syntax_class NTerms

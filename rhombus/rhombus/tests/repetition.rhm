@@ -412,7 +412,7 @@ check:
   ~eval
   def [x, ...] = [1, 2, 3]
   [[if 1 | 2 | 3, x,] ...]
-  ~throws "cannot use expression binding as a repetition"
+  ~throws "cannot use repetition binding as an expression"
 
 check:
   ~eval
