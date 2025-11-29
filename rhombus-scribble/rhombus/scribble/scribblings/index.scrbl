@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "index"){Indexing}
+@title(~tag: "indexing"){Indexing}
 
 @doc(~include rhombus/scribble/private/index:
        indexed

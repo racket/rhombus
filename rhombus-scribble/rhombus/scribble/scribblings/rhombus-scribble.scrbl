@@ -12,6 +12,7 @@ renders it to a format such as HTML or PDF.
 
 @table_of_contents()
 
+@include_section("getting_started.scrbl")
 @include_section("overview.scrbl")
 @include_section("base.scrbl")
 @include_section("manual.scrbl")

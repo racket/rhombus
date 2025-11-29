@@ -255,6 +255,7 @@ meta:
       for values(kws :~ Set = Set{}) (opt in options):
         match opt
         | '$(kw_stx && ('~inset' || '~indent' || '~prompt' || '~indent_from_block'
+                          || '~inline' || '~text'
                           || '~spacer_info_box' || '~escape' || '~space' || '~number_from')) $_ ...':
             let kw = kw_stx.unwrap()
             if kw in kws

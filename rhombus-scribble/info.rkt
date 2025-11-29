@@ -12,7 +12,8 @@
     "rhombus"
     "shrubbery"
     "rhombus-pict"
-    "scribble-lib"))
+    "scribble-lib"
+    "scribble-doc"))
 
 (define pkg-desc "Rhombus text-document and documentation library")
 

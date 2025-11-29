@@ -394,6 +394,8 @@
   (render_code stx #:space space-name-in #:content content))
 
 (define (typeset-rhombusblock stx
+                              #:inline [inline? #f]
+                              #:text [text? #f]
                               #:inset [inset? #t]
                               #:indent [indent-amt 0]
                               #:prompt [prompt ""]
@@ -402,12 +404,14 @@
                               #:number_from [number-from #f])
   (define output-block
     (render_code_block stx
+                       #:inline inline?
+                       #:text text?
                        #:indent indent-amt
                        #:prompt prompt
                        #:indent_from_block indent-from-block?
                        #:spacer_info_box info-box
                        #:number_from number-from))
-  (if inset?
+  (if (and inset? (not inline?))
       (nested-flow (style 'code-inset null) (list output-block))
       output-block))
 

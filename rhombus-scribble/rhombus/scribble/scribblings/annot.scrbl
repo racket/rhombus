@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "annot"){Building Blocks}
+@title(~tag: "annot"){Annotations}
 
 @doc(
   annot.macro 'Element'
@@ -24,8 +24,8 @@
 ){
 
  Content is either a @rhombus(ReadableString, ~annot),
- @rhombus(Element, ~annot), a @defterm{convertable} value, or a list of
- @rhombus(Content, ~annot). @defterm{Convertable} values includes images constructed
+ @rhombus(Element, ~annot), a @tech{convertible} value, or a list of
+ @rhombus(Content, ~annot). Convertable values includes images constructed
  via @rhombusmodname(pict).
 
  Pre-content is the same as content, but with the intent that strings

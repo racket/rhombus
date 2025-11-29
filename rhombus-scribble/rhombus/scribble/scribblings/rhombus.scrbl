@@ -130,9 +130,11 @@
                 ...'
   grammar option:
     ~escape: $op
+    ~inline: $body; ...
     ~inset: $body; ...
     ~indent: $body: ...
     ~prompt: $body: ....
+    ~text: $body; ...
     ~indent_from_block: $body; ...
     ~spacer_info_box: $body; ...
     ~number_from: $body; ...
@@ -145,6 +147,9 @@
  @item{@rhombus(~escape): Replaces the escape operator @litchar{#,} with
   @rhombus(op) so that @litchar{#,} is literal (assuming that
   @rhombus(op) is different from @litchar{#,}).}
+
+ @item{@rhombus(~inline): Produces @tech{content} insteda of a
+  @tech{block}. The @rhombus(group) content must be a single line.}
 
  @item{@rhombus(~inset): Insets the block relative to surrounding text
   if the @rhombus(body) sequence after @rhombus(~inset) produces
@@ -161,6 +166,11 @@
   line of the content, and lines afterward get the same number of spaces
   as characters in the prompt. The default is to show no prompt, which is
   equivalent to an empty string.}
+
+ @item{@rhombus(~text): Expects the body @rhombus(group) to be
+  @rhombus(([group, ...])) and ignores metadata of the parentheses and
+  brackets with the expectation that the body @rhombus(group) was
+  originally written between @litchar("@{") and @litchar("}").}
 
  @item{@rhombus(~indent_from_block): Uses the indentation of the block
   overall, instead of the first item in the block, to infer relative

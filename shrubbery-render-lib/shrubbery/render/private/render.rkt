@@ -191,9 +191,11 @@
     (render-one-line elems))
 
   (define (render_block stx
+                        #:inline [inline? #f]
+                        #:text [text? #f]
                         #:indent [indent-amt 0]
                         #:prompt [prompt ""]
-                        #:indent_from_block [indent-from-block? #t]
+                        #:indent_from_block [indent-from-block? (not text?)]
                         #:spacer_info_box [info-box #f]
                         #:number_from [number-from #f])
     ;; Go back to a string, then parse again using the
@@ -201,12 +203,18 @@
     ;; Because having `rhombusblock` work on implicitly quoted syntax
     ;; means that you get nice editor support.
     (define block-stx
-      (syntax-parse stx
-        #:datum-literals (multi group block)
-        [(multi (group (~and b (block . _)))) #'b]
-        [(group (~and b (block . _))) #'b]
-        [(block . _) stx]
-        [_ (error 'typeset-rhombusblock "not a block term: ~e" stx)]))
+      (let ([b (syntax-parse stx
+                 #:datum-literals (multi group block)
+                 [(multi (group (~and b (block . _)))) #'b]
+                 [(group (~and b (block . _))) #'b]
+                 [(block . _) stx]
+                 [_ (error 'typeset-rhombusblock "not a block term: ~e" stx)])])
+        (if text?
+            (syntax-parse b
+              #:datum-literals (block group parens brackets)
+              [(block (group (parens (gruop (brackets g ...)))))
+               #'(block (group (brackets g ...)))])
+            b)))
     (define stx-ranges (make-hasheq))
     (define str (block-string->content-string (shrubbery-syntax->string (replace-name-refs block-stx 'block info-box
                                                                                            render-in-space
@@ -225,21 +233,24 @@
                                                                              (display "\"elem\"" output)
                                                                              #t]
                                                                             [else #f])))
-                                              (syntax-column
-                                               (if indent-from-block?
-                                                   (syntax-parse block-stx
-                                                     #:datum-literals (block)
-                                                     [((~and tag block) . _) #'tag])
-                                                   (syntax-parse block-stx
-                                                     #:datum-literals (group block)
-                                                     [(block (group (~or* (a . _) a) . _) . _) #'a])))
+                                              (if text?
+                                                  0
+                                                  (syntax-column
+                                                   (if indent-from-block?
+                                                       (syntax-parse block-stx
+                                                         #:datum-literals (block)
+                                                         [((~and tag block) . _) #'tag])
+                                                       (syntax-parse block-stx
+                                                         #:datum-literals (group block)
+                                                         [(block (group (~or* (a . _) a) . _) . _) #'a]))))
                                               (and indent-from-block?
                                                    (syntax-parse block-stx
                                                      #:datum-literals (block)
                                                      [((~and tag block) . _)
                                                       (syntax-raw-property #'tag)]))
                                               indent-from-block?
-                                              stx-ranges))
+                                              stx-ranges
+                                              text?))
     (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])
                              (hash-set ht (car v) (cons k (hash-ref ht (car v) '())))))
     (define init-col (infer-indentation str))
@@ -252,7 +263,7 @@
                        [skip-ws init-col]    ; amount of leading space on this line to be skipped
                        [line-shape (make-line-shape)]) ; for generating compatible (e.g., bold) leading whitespace
         (define-values (lexeme attribs paren start+1 end+1 backup new-state)
-          (shrubbery-lexer in 0 (strip-dont-stop state)))
+          ((if text? shrubbery-text-mode-lexer shrubbery-lexer) in 0 (strip-dont-stop state)))
         (cond
           [(eof-object? lexeme) null]
           [else
@@ -426,6 +437,10 @@
                                 [else indent])
                               elements)))))
     (cond
+      [inline?
+       (unless (= 1 (length elementss))
+         (error 'typeset-rhombusblock "multi lines in inline mode: ~e" stx))
+       (car elementss)]
       [(null? elementss)
        (render-lines null)]
       [(null? (cdr elementss))
@@ -440,7 +455,7 @@
   (values render_line
           render_block))
 
-(define (block-string->content-string str/crlf col raw-str indent-from-block? stx-ranges)
+(define (block-string->content-string str/crlf col raw-str indent-from-block? stx-ranges text-mode?)
   (define str (regexp-replace* #rx"\r\n" str/crlf "\n"))
   ;; strip `:` from the beginning, add spaces
   ;; corresponding to `col`, then strip any blank newlines
@@ -452,6 +467,8 @@
           (hash-set! stx-ranges k (cons (- (car v) delta) (- (cdr v) delta)))))))
   (define-values (content-str prefix-len)
     (cond
+      [text-mode?
+       (values str 0)]
       [(regexp-match-positions #rx"^:«(.*)»[ ]*$" str)
        => (lambda (m)
             (define delta (caadr m))
