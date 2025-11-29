@@ -130,8 +130,8 @@
        (define a (cadar lst))
        (define s (syntax-e a))
        (define col (or (syntax-column a) 0))
-       (define n (leading-space-count s))
-       (define add-back-n (max 0 (- n min-col)))
+       (define n (or (leading-space-count s) 0))
+       (define add-back-n (max 0 (- n (or min-col 0))))
        (define trimmed-s (if (eqv? n 0)
                              s
                              (substring s n)))

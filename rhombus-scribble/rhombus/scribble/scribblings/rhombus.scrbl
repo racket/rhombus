@@ -148,8 +148,8 @@
   @rhombus(op) so that @litchar{#,} is literal (assuming that
   @rhombus(op) is different from @litchar{#,}).}
 
- @item{@rhombus(~inline): Produces @tech{content} insteda of a
-  @tech{block}. The @rhombus(group) content must be a single line.}
+ @item{@rhombus(~inline): Produces @tech{content} instead of a
+  @tech{flow block}. The @rhombus(group) content must be a single line.}
 
  @item{@rhombus(~inset): Insets the block relative to surrounding text
   if the @rhombus(body) sequence after @rhombus(~inset) produces

@@ -17,10 +17,19 @@ meta:
     fields:
       [clause, ...]
       doc
-  | '~doc
-     $clause
-     ...':
+  | '$(all && '~doc
+               $(clause_0 :: Group)
+               $clause_1
+               ...')':
       field doc = #true
+      def '$(kw_g :: Group); $_; ...' = all
+      field [clause, ...]:
+        [clause_0.group_property(#'#{raw-prefix}, kw_g.group_property(#'#{raw-prefix}), #true),
+         clause_1,
+         ...]
+  | '~doc':
+      field doc = #true
+      field [clause, ...] = []
   | '$clause
      ...':
      field doc = #false

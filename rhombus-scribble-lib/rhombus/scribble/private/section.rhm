@@ -21,16 +21,17 @@ fun title(~tag: tag :: maybe(TagSuffix) = #false,
           ~version: vers :: maybe(String) = #false,
           ~date: date :: maybe(String) = #false,
           ~index_extras: index_extras :: ExtrasMap = {},
-          pre_content :: PreContent):
-  ~doc
-  maybe_drop_extras:
-    base.title(~tag: convert_list(tag),
-               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
-               ~style: convert_list(style),
-               ~version: vers,
-               ~date: date,
-               ~#{index-extras}: convert_extras(index_extras),
-               pre_content)
+          pre_content :: PreContent)
+  :~ PartDecl:
+    ~doc
+    maybe_drop_extras:
+      base.title(~tag: convert_list(tag),
+                 ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
+                 ~style: convert_list(style),
+                 ~version: vers,
+                 ~date: date,
+                 ~#{index-extras}: convert_extras(index_extras),
+                 pre_content)
 
 meta:
   // Fairly extreme measures to make a `fun`-generating macro's

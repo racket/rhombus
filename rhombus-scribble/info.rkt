@@ -7,6 +7,7 @@
 
 (define build-deps
   '("base"
+    "at-exp-lib"
     "rhombus-lib"
     "racket-doc"
     "rhombus"

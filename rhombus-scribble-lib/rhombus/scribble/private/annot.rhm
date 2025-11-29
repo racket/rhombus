@@ -7,13 +7,31 @@ import:
 
 export:
   Style
+
   Element
+  MultiargElement
+  TraverseElement
+  PartRelativeElement
+  DelayedElement
+  CollectElement
+  RenderElement
+
   Content
   PreContent
   PreFlow
   FlowBlock
+
   Part
   PartDecl
+
+  Paragraph
+  Table
+  Itemization
+  NestedFlow
+  CompoundParagraph
+  TraverseBlock
+  DelayedBlock
+
   Tag
   Taglet
   GeneratedTag
@@ -21,28 +39,136 @@ export:
   TagPrefix
   StyleLike
 
+  TraverseBlockFunction
+  TraverseElementFunction
+
+  CollectInfo
+  ResolveInfo
+
 module convert:
   export:
     convert_list
     convert_list_of_lists
     convert_pre_part
 
-annot.macro 'Element':
+annot.macro '_Style':
+  annot_meta.pack_predicate('core.#{style?}')
+
+veneer Style(this :: _Style):
+  expression 'Style':
+    'make_style'
+  property name:
+    core.#{style-name}(this)
+  property properties :~ List:
+    core.#{style-properties}(this)
+  export:
+    plain
+  def plain = core.plain
+
+annot.macro '_Element':
   annot_meta.pack_predicate('core.#{element?}')
-annot.macro 'MultiargElement':
+
+veneer Element(this :: _Element):
+  expression 'Element':
+    'make_element'
+  property style:
+    core.#{element-style}(this)
+  property content:
+    core.#{element-content}(this)
+
+annot.macro '_MultiargElement':
   annot_meta.pack_predicate('core.#{multiarg-element?}')
-annot.macro 'TraverseElement':
+
+veneer MultiargElement(this :: _MultiargElement):
+  expression 'MultiargElement':
+    'make_multiarg_element'
+  property style :~ Style:
+    core.#{multiarg-element-style}(this)
+  property contents :~ List:
+    core.#{multiarg-element-contents}(this)
+
+annot.macro '_TraverseElement':
   annot_meta.pack_predicate('core.#{traverse-element?}')
-annot.macro 'PartRelativeElement':
+
+veneer TraverseElement(this :: _TraverseElement):
+  expression 'TraverseElement':
+    'make_traverse_element'
+  property traverse :~ Function.of_arity(2):
+    core.#{traverse-element-traverse}(this)
+
+annot.macro '_PartRelativeElement':
   annot_meta.pack_predicate('core.#{part-relative-element?}')
-annot.macro 'DelayedElement':
+
+veneer PartRelativeElement(this :: _PartRelativeElement):
+  expression 'PartRelativeElement':
+    'make_part_relative_element'
+  property collect :~ Function.of_arity(1):
+    core.#{part-relative-element-collect}(this)
+  property sizer :~ Function.of_arity(0):
+    core.#{part-relative-element-sizer}(this)
+  property plain :~ Function.of_arity(0):
+    core.#{part-relative-element-plain}(this)
+
+annot.macro '_DelayedElement':
   annot_meta.pack_predicate('core.#{delayed-element?}')
+
+veneer DelayedElement(this :: _DelayedElement):
+  expression 'DelayedElement':
+    'make_delayed_element'
+  property resolve :~ Function.of_arity(3):
+    core.#{delayed-element-resolve}(this)
+  property sizer :~ Function.of_arity(0):
+    core.#{delayed-element-sizer}(this)
+  property plain :~ Function.of_arity(0):
+    core.#{delayed-element-plain}(this)
+
+annot.macro '_CollectElement':
+  annot_meta.pack_predicate('core.#{collect-element?}')
+
+veneer CollectElement(this :: _CollectElement):
+  extends Element
+  expression 'CollectElement':
+    'make_collect_element'
+  property collect :~ Function.of_arity(1):
+    core.#{collect-element-collect}(this)
+
+annot.macro '_RenderElement':
+  annot_meta.pack_predicate('core.#{render-element?}')
+
+veneer RenderElement(this :: _RenderElement):
+  extends Element
+  expression 'RenderElement':
+    'make_render_element'
+  property resolve :~ Function.of_arity(3):
+    core.#{render-element-render}(this)
 
 annot.macro 'FlowBlock':
   annot_meta.pack_predicate('core.#{block?}')
 
-annot.macro 'Part':
+annot.macro '_Part':
   annot_meta.pack_predicate('core.#{part?}')
+
+veneer Part(this :: _Part):
+  expression 'Part':
+    'make_part'
+  property tag_prefix:
+    core.#{part-tag-prefix}(this)
+  property tags :~ PairList:
+    core.#{part-tags}(this)
+  property title_content:
+    core.#{part-title-content}(this)
+  property style :~ Style:
+    core.#{part-style}(this)
+  property to_collect:
+    core.#{part-to-collect}(this)
+  property blocks :~ PairList:
+    core.#{part-blocks}(this)
+  property parts :~ PairList.of(Part):
+    core.#{part-parts}(this)
+  export:
+    context_accumulation
+  fun context_accumulation(key :: Any):
+    core.#{current-part-context-accumulation}(key)
 
 annot.macro 'PartDecl':
   annot_meta.pack_predicate('fun (x):
@@ -52,8 +178,78 @@ annot.macro 'PartDecl':
                                  || decode.#{part-collect-decl?}(x)
                                  || decode.#{part-tag-decl?}(x)')
 
-annot.macro 'Style':
-  annot_meta.pack_predicate('core.#{style?}')
+annot.macro '_Paragraph':
+  annot_meta.pack_predicate('core.#{paragraph?}')
+
+veneer Paragraph(this :: _Paragraph):
+  expression 'Paragraph':
+    'make_paragraph'
+  property style :~ Style:
+    core.#{paragraph-style}(this)
+  property content:
+    core.#{paragraph-content}(this)
+
+annot.macro '_Table':
+  annot_meta.pack_predicate('core.#{table?}')
+
+veneer Table(this :: _Table):
+  expression 'Table':
+    'make_table'
+  property style :~ Style:
+    core.#{table-style}(this)
+  property blockss :~ PairList.of(PairList):
+    core.#{table-blockss}(this)
+
+annot.macro '_Itemization':
+  annot_meta.pack_predicate('core.#{table?}')
+
+veneer Itemization(this :: _Itemization):
+  expression 'Itemization':
+    'make_itemization'
+  property style :~ Style:
+    core.#{itemization-style}(this)
+  property blockss :~ PairList.of(PairList):
+    core.#{itemization-blockss}(this)
+
+annot.macro '_NestedFlow':
+  annot_meta.pack_predicate('core.#{nested-flow?}')
+
+veneer NestedFlow(this :: _NestedFlow):
+  expression 'NestedFlow':
+    'make_nested_flow'
+  property style :~ Style:
+    core.#{nested-flow-style}(this)
+  property blocks :~ PairList:
+    core.#{nested-flow-blocks}(this)
+
+annot.macro '_CompoundParagraph':
+  annot_meta.pack_predicate('core.#{nested-flow?}')
+
+veneer CompoundParagraph(this :: _CompoundParagraph):
+  expression 'CompoundParagraph':
+    'make_compound_paragraph'
+  property style :~ Style:
+    core.#{compound-paragraph-style}(this)
+  property blocks :~ PairList:
+    core.#{compound-paragraph-blocks}(this)
+
+annot.macro '_TraverseBlock':
+  annot_meta.pack_predicate('core.#{traverse-block?}')
+
+veneer TraverseBlock(this :: _TraverseBlock):
+  expression 'TraverseBlock':
+    'make_traverse_block'
+  property traverse :~ Function.of_arity(2):
+    core.#{traverse-block-traverse}(this)
+
+annot.macro '_DelayedBlock':
+  annot_meta.pack_predicate('core.#{delayed-block?}')
+
+veneer DelayedBlock(this :: _DelayedBlock):
+  expression 'DelayedBlock':
+    'make_delayed_block'
+  property resolve :~ Function.of_arity(3):
+    core.#{delayed-block-resolve}(this)
 
 annot.macro 'StyleLike':
   'Style || String || Symbol || List.of(Symbol)'
@@ -113,6 +309,12 @@ annot.macro 'TagSuffix':
 
 annot.macro 'TagPrefix':
   'String || ModulePath'
+
+annot.macro 'ResolveInfo':
+  annot_meta.pack_predicate('core.#{resolve-info?}')
+
+annot.macro 'CollectInfo':
+  annot_meta.pack_predicate('core.#{collect-info?}')
 
 fun convert_pre_content(v):
   match v
@@ -203,3 +405,142 @@ fun convert_taglet(v):
       convert_list(r)
   | ~else:
       #false
+
+fun make_style(~name: name :: maybe(Symbol || String) = #false,
+               ~properties: properties :: Listable = []) :~ Style:
+  ~name: Style
+  core.#{style}(name, PairList(& properties.to_list()))
+
+fun make_element(~style: style :: maybe(Style || String || Symbol) = #false,
+                 content :: Content.to_s_exp = PairList[]) :~ Element:
+  ~name: Element
+  core.element(style, content)
+
+fun make_multiarg_element(~style: style :: maybe(Style) = #false,
+                          contents :: Listable.to_list && List.of(Content.to_s_exp) = []) :~ MultiargElement:
+  ~name: MultiargElement
+  core.#{multiarg-element}(style, PairList(& contents))
+
+fun wrap_traverse_element_function(f):
+  fun (a, b):
+    ~name: traverse
+    let c = f(a, b)
+    match c
+    | c :: Content.to_s_exp: c
+    | f :: Function.of_arity(2): wrap_traverse_element_function(f)
+    | ~else: error(~who: "traverse",
+                   error.annot_msg("result"),
+                   error.annot("Content || TraverseElementFunction"),
+                   error.val(c))
+
+annot.macro 'TraverseElementFunction':
+  'converting(fun (f :: Function.of_arity(2)): wrap_traverse_element_function(f))'
+
+fun make_traverse_element(~traverse: traverse :: TraverseElementFunction) :~ TraverseElement:
+  ~name: TraverseElement
+  core.#{traverse-element}(traverse)
+
+fun make_part_relative_element(~collect: collect :: CollectInfo -> Content.to_s_exp,
+                               ~sizer: sizer :: () -> Any,
+                               ~plain: plain :: () -> Any) :~ PartRelativeElement:
+  ~name: PartRelativeElement
+  core.#{part-relative-element}(collect, sizer, plain)
+
+fun make_delayed_element(~resolve: resolve :: (Any, Part, ResolveInfo) -> Content.to_s_exp,
+                         ~sizer: sizer :: () -> Any,
+                         ~plain: plain :: () -> Any) :~ DelayedElement:
+  ~name: DelayedElement
+  core.#{delayed-element}(resolve, sizer, plain)
+
+fun make_collect_element(~style: style :: maybe(Style || String || Symbol) = #false,
+                         content :: Content.to_s_exp = PairList[],
+                         ~collect: collect :: CollectInfo -> Any) :~ CollectElement:
+  ~name: CollectElement
+  core.#{collect-element}(style, content, collect)
+
+fun make_render_element(~render: render :: (Any, Part, ResolveInfo) -> Any) :~ RenderElement:
+  ~name: RenderElement
+  core.#{render-element}(render)
+
+fun make_part(~tag_prefix: tag_prefix :: maybe(String || Map) = #false,
+              ~tags: tags :: Listable.to_list && List.of(Tag.to_s_exp) = [],
+              ~title_content: title_content :: maybe(Content.to_s_exp) = #false,
+              ~style: style :: Style = Style.plain,
+              ~to_collect: to_collect :: Content.to_s_exp = [],
+              ~blocks: blocks :: Listable.to_list && List.of(FlowBlock) = [],
+              ~parts: parts :: Listable.to_list && List.of(Part) = []) :~ Part:
+  ~name: Part
+  core.part(tag_prefix,
+            PairList(& tags),
+            match title_content
+            | #false: #false
+            | c :: List: PairList(& c)
+            | ~else: PairList[title_content],
+            style,
+            match to_collect
+            | c :: List: PairList(& c)
+            | ~else: PairList[to_collect],
+            PairList(& blocks),
+            PairList(& parts))
+
+fun make_paragraph(~style: style :: Style = Style.plain,
+                   content :: Content.to_s_exp = PairList[]) :~ Paragraph:
+  ~name: Paragraph
+  core.paragraph(style, content)
+
+enum Cell:
+  ~is_a FlowBlock
+  cont
+
+fun make_table(~style: style :: Style = Style.plain,
+               blockss :: Listable.to_list && List.of(Listable.to_list) && List.of(List.of(Cell)) = [])
+  :~ Table:
+    ~name: Table
+    ~who: who
+    let [[block, ...], ...] = blockss
+    unless math.equal(Function.count(block, ...), ...)
+    | error(~who: who,
+            "table rows are not all the same length",
+            error.val(~label: "row lengths", [Function.count(block, ...), ...]),
+            error.val(~label: "rows", blockss))
+    core.table(style, PairList(PairList(block, ...), ...))
+
+fun make_iemization(~style: style :: Style = Style.plain,
+                    blockss :: Listable.to_list && List.of(Listable.to_list) && List.of(List.of(FlowBlock)) = [])
+  :~ Itemization:
+    ~name: Table
+    let [[block, ...], ...] = blockss
+    core.itemization(style, PairList(PairList(block, ...), ...))
+
+fun make_nested_flow(~style: style :: Style = Style.plain,
+                     blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []) :~ NestedFlow:
+    ~name: NestedFlow
+    core.#{nested-flow}(style, PairList(& blocks))
+
+fun make_compound_paragraph(~style: style :: Style = Style.plain,
+                            blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []) :~ CompoundParagraph:
+    ~name: CompoundParagraph
+    core.#{compound-paragraph}(style, PairList(& blocks))
+
+fun wrap_traverse_block_function(f):
+  fun (a, b):
+    ~name: traverse
+    let c = f(a, b)
+    match c
+    | b :: FlowBlock: b
+    | f :: Function.of_arity(2): wrap_traverse_block_function(f)
+    | ~else: error(~who: "traverse",
+                   error.annot_msg("result"),
+                   error.annot("FlowBlock || TraverseBlockFunction"),
+                   error.val(c))
+
+annot.macro 'TraverseBlockFunction':
+  'converting(fun (f :: Function.of_arity(2)): wrap_traverse_block_function(f))'
+
+fun make_traverse_block(~traverse: traverse :: TraverseBlockFunction) :~ TraverseBlock:
+  ~name: TraverseBlock
+  core.#{make-traverse-block}(traverse)
+
+fun make_delayed_block(~resolve: resolve :: (Any, Part, ResolveInfo) -> FlowBlock) :~ DelayedBlock:
+  ~name: DelayedBlock
+  core.#{make-delayed-block}(resolve)

@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "decoding"){Decoding Parts, Blocks, and Content}
+@title(~tag: "decoding"){Decoding Parts, Flow Blocks, and Content}
 
 Scribble @deftech{decoding} processes a sequence of string literals and
 other values to produce a @tech{part}, @tech{flow}, or @tech{content}.
@@ -38,10 +38,11 @@ subpart are decoded in @tech{flow mode} to determine the part's flow.
 
 In @deftech{flow mode}, decoding recognizes a blank line as a paragraph
 separator, and all non-block values between such separates are collected
-into a @tech{paragraph}.
+into a @tech{paragraph}. An immediate @rhombus(#void) or one nested in a
+list is discarded.
 
 Blocks created by functions like @rhombus(nested) and @rhombus(tabular)
-become immediate blocks in the flow, except that blocks (and decoded
+become immediate blocks in the flow, except that flow blocks (and decoded
 paragraphs) without a blank line in between are collected into a
 @tech{compound paragraph}.
 
