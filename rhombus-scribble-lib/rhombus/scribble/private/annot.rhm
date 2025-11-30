@@ -201,7 +201,7 @@ veneer Table(this :: _Table):
     core.#{table-blockss}(this)
 
 annot.macro '_Itemization':
-  annot_meta.pack_predicate('core.#{table?}')
+  annot_meta.pack_predicate('core.#{itemization?}')
 
 veneer Itemization(this :: _Itemization):
   expression 'Itemization':
@@ -223,7 +223,7 @@ veneer NestedFlow(this :: _NestedFlow):
     core.#{nested-flow-blocks}(this)
 
 annot.macro '_CompoundParagraph':
-  annot_meta.pack_predicate('core.#{nested-flow?}')
+  annot_meta.pack_predicate('core.#{compound-paragraph?}')
 
 veneer CompoundParagraph(this :: _CompoundParagraph):
   expression 'CompoundParagraph':

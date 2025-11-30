@@ -5,12 +5,23 @@
 @title(~tag: "spacing"){Spacing}
 
 @doc(~include rhombus/scribble/private/spacing: linebreak){
+
+ Forces a line break within a @tech{paragraph}.
+
 }
 
 @doc(~include rhombus/scribble/private/spacing: nonbreaking){
+
+ Equivalent to calling @rhombus(elem) with a @tech{style} that prevents
+ automatic line breaks within the element's content.
+
 }
 
 @doc(~include rhombus/scribble/private/spacing: hspace){
+
+ Creates an @rhombus(Element, ~annot) that takes up horizontal
+ whitespace equivalent to @rhombus(n) fixed-width characters.
+
 }
 
 @doc(

@@ -1,6 +1,8 @@
 #lang at-exp racket
 (require scribble/manual
-         (for-label scribble/core))
+         (for-label racket/base
+                    scribble/core
+                    scribble/base))
 
 (provide (all-defined-out))
 
@@ -11,6 +13,8 @@
 (define rkt_block @racket[block?])
 
 (define rkt_style @racket[style?])
+
+(define rkt_item @racket[item?])
 
 (define rkt_collect_info @racket[collect-info?])
 (define rkt_resolve_info @racket[resolve-info?])
@@ -29,3 +33,7 @@
 (define rkt_collect_element @racket[collect-element?])
 (define rkt_delayed_element @racket[delayed-element?])
 (define rkt_render_element @racket[render-element?])
+
+(define rkt_secref @racket[secref])
+
+(define rkt_read @racket[read])

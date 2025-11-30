@@ -15,18 +15,19 @@ export:
   elemtag
   elemref
 
-fun hyperlink(url :: String,
-              pre_content :: PreContent,
-              ~underline: underline = #true,
-              ~style: style :: maybe(Style || String || Symbol) = (if underline
-                                                                   | #false
-                                                                   | "plainlink"))
-  :: Element:
-    ~doc
-    base.hyperlink(url,
-                   pre_content,
-                   ~#{underline?}: underline,
-                   ~style: style)
+fun hyperlink(
+  url_str :: String,
+  pre_content :: PreContent,
+  ~underline: underline = #true,
+  ~style: style :: maybe(Style || String || Symbol) = (if underline
+                                                       | #false
+                                                       | "plainlink")
+) :: Element:
+  ~doc
+  base.hyperlink(url_str,
+                 pre_content,
+                 ~#{underline?}: underline,
+                 ~style: style)
 
 fun url(dest :: String) :: Element:
   ~doc
@@ -34,12 +35,13 @@ fun url(dest :: String) :: Element:
 
 annot.macro 'LinkRenderStyle': 'matching(#'default) || matching(#'number)'
 
-fun secref(tag :: String,
-           ~doc: module_path :: maybe(ModulePath) = #false,
-           ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
-           ~underline: underline = #true,
-           ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false)
-  :: Element:
+fun secref(
+  tag :: String,
+  ~doc: module_path :: maybe(ModulePath) = #false,
+  ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
+  ~underline: underline = #true,
+  ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false
+) :: Element:
     ~doc
     base.secref(tag,
                 ~doc: module_path && (module_path :~ ModulePath).s_exp(),
@@ -47,12 +49,13 @@ fun secref(tag :: String,
                 ~#{underline?}: underline,
                 ~#{link-render-style}: ref_style && core.#{link-render-style}(ref_style))
 
-fun Secref(tag :: String,
-           ~doc: module_path :: maybe(ModulePath) = #false,
-           ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
-           ~underline: underline = #true,
-           ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false)
-  :: Element:
+fun Secref(
+  tag :: String,
+  ~doc: module_path :: maybe(ModulePath) = #false,
+  ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
+  ~underline: underline = #true,
+  ~ref_style: ref_style :: maybe(LinkRenderStyle) = #false
+) :: Element:
     ~doc
     base.Secref(tag,
                 ~doc: module_path && (module_path :~ ModulePath).s_exp(),
@@ -60,13 +63,14 @@ fun Secref(tag :: String,
                 ~#{underline?}: underline,
                 ~#{link-render-style}: ref_style && core.#{link-render-style}(ref_style))
 
-fun seclink(tag :: String,
-            pre_content :: PreContent = [],
-            ~doc: module_path :: maybe(ModulePath) = #false,
-            ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
-            ~underline: underline = #true,
-            ~indirect: indirect = #false)
-  :: Element:
+fun seclink(
+  tag :: String,
+  pre_content :: PreContent = [],
+  ~doc: module_path :: maybe(ModulePath) = #false,
+  ~tag_prefixes: prefixes :: maybe(List.of(String)) = #false,
+  ~underline: underline = #true,
+  ~indirect: indirect = #false
+) :: Element:
     ~doc
     base.seclink(tag,
                  ~doc: module_path && (module_path :~ ModulePath).s_exp(),
@@ -75,26 +79,29 @@ fun seclink(tag :: String,
                  ~#{indirect?}: indirect,
                  pre_content)
 
-fun docref(module_path :: ModulePath,
-           ~underline: underline = #true,
-           ~indirect: indirect :: maybe(Content) = #false)
-  :: Element:
+fun docref(
+  module_path :: ModulePath,
+  ~underline: underline = #true,
+  ~indirect: indirect :: maybe(Content) = #false
+) :: Element:
     ~doc
     base.#{other-doc}(module_path.s_exp(),
                       ~#{underline?}: underline,
                       ~indirect: indirect)
 
-fun elemtag(t :: (Taglet || GeneratedTag),
-            pre_content :: PreContent)
-  :: Element:
-    ~doc
-    base.elemtag(t, pre_content)
+fun elemtag(
+  t :: (Taglet || GeneratedTag),
+  pre_content :: PreContent
+) :: Element:
+  ~doc
+  base.elemtag(t, pre_content)
 
-fun elemref(t :: (Taglet || GeneratedTag),
-            pre_content :: PreContent,
-            ~underline: underline = #true)
-  :: Element:
-    ~doc
-    base.elemref(t,
-                 pre_content,
-                 ~#{underline?}: underline)
+fun elemref(
+  t :: (Taglet || GeneratedTag),
+  pre_content :: PreContent,
+  ~underline: underline = #true
+) :: Element:
+  ~doc
+  base.elemref(t,
+               pre_content,
+               ~#{underline?}: underline)

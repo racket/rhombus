@@ -366,7 +366,7 @@ is not valid as document content.
 
 
 @// ----------------------------------------
-@section(~tag: "how-to:reader"){@"@" Syntax Basics}
+@section(~tag: "how-to:reader"){More @"@" Syntax}
 
 The @at notation used by Scribble is just another way of writing Rhombus
 expressions. Scribble documents could be constructed using normal

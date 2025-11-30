@@ -23,7 +23,7 @@ export:
 fun litchar :~ Element:
   ~doc
 | litchar(str :: String): manual.litchar(str)
-| litchar(str :: List.of(String)): manual.litchar(& str)
+| litchar(strs :: List.of(String)): manual.litchar(& strs)
 
 fun deftech(pre_content :: PreContent,
             ~key: key :: maybe(String) = #false,

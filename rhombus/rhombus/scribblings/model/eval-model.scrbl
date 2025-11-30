@@ -736,7 +736,7 @@ top-levels are in correspondingly higher @tech{phase}s.
 @// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 @subsection(~tag: "module-redeclare"){Module Redeclarations}
 
-@section_indexed("modules", "re-define")
+@section_indexed(["modules", "redefine"])
 
 When a module is declared using a name with which a module is already
 declared, the new declaration's definitions replace and extend the old

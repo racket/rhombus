@@ -6,6 +6,10 @@
 
 @docmodule(~lang, rhombus/scribble)
 
+The general rules of the @rhombuslangname(rhombus/scribble) language are
+described in @secref("overview"). This section describes all of the
+bindings provided by the language.
+
 @local_table_of_contents()
 
 @include_section("section.scrbl")

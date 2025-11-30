@@ -19,13 +19,13 @@ export:
   Cell
 
 fun para(~style: style :: maybe(StyleLike) = #false,
-         pre_content :: PreContent) :: FlowBlock:
+         pre_content :: PreContent) :: Paragraph:
   ~doc
   base.para(~style: style,
             pre_content)
 
 fun nested(~style: style :: maybe(StyleLike) = #false,
-           pre_flow :: PreFlow) :: FlowBlock:
+           pre_flow :: PreFlow) :: NestedFlow:
   ~doc
   base.nested(~style: style,
               pre_flow)
@@ -58,7 +58,7 @@ annot.macro 'Item': 'satisfying(base.#{item?})'
 fun itemlist(~style: style :: maybe(StyleLike) = #false,
              item :: Item,
              ...)
-  :: FlowBlock:
+  :: Itemization:
     ~doc
     base.itemlist(~style: style, item, ...)
 
@@ -79,7 +79,7 @@ fun tabular(cells :: List.of(List.of(Cell)),
             ~row_properties: row_props :: List = [],
             ~cell_properties: cell_props :: List.of(List) = [],
             ~sep_properties: sep_props :: maybe(List) = #false)
-  :: FlowBlock:
+  :: Table:
     ~doc
     base.tabular(convert_list_of_lists(cells),
                  ~style: style,

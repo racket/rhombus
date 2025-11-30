@@ -24,11 +24,12 @@ annot.macro 'ExtrasMap':
   annot_meta.pack_predicate('is_extras_map',
                             map_statinfo)
 
-fun indexed(words :: (String ||  List.of(String)),
-            ~content: content :: (String ||  List.of(String)) = words,
-            ~extras: extras :: ExtrasMap = {},
-            pre_content :: PreContent)
-  :: Element:
+fun indexed(
+  words :: (String ||  List.of(String)),
+  ~content: content :: (String ||  List.of(String)) = words,
+  ~extras: extras :: ExtrasMap = {},
+  pre_content :: PreContent
+) :: Element:
     ~doc
     let norm_words = (if words is_a String | [words] | words)
     let norm_content = (if content is_a String | [content] | content)
@@ -42,18 +43,22 @@ fun indexed(words :: (String ||  List.of(String)),
       base.#{index*}(convert_list(words), convert_list(content), pre_content,
                      ~extras: convert_extras(extras))
 
-fun as_indexed(pre_content :: PreContent,
-               ~extras: extras :: ExtrasMap = {}) :: Element:
+fun as_indexed(
+  pre_content :: PreContent,
+  ~extras: extras :: ExtrasMap = {}
+) :: Element:
   ~doc
   maybe_drop_extras:
     base.#{as-index}(pre_content,
                      ~extras: convert_extras(extras))
 
-fun section_indexed(~extras: extras :: ExtrasMap = {},
-                    word :: String, ...):
+fun section_indexed(
+  words :: String || List.of(String),
+  ~extras: extras :: ExtrasMap = {}
+) :~ PartDecl:
   ~doc
   maybe_drop_extras:
-    base.#{section-index}(word, ...,
+    base.#{section-index}(& (if words is_a String | [words] | words),
                           ~extras: convert_extras(extras))
 
 fun index_section(~tag : tag :: (False || String) = "doc-index")

@@ -6,15 +6,21 @@
 
 @doc(~include rhombus/scribble/private/section: title){
 
- Declares a title for the document. In the main module of a document,
- this title is the overall title of the document. In a section included
- via @rhombus(include_section), it is the name of the section.
+ Declares a title for the document by producing a
+ @rhombus(PartDecl, ~annot) that is recognized by the @tech{decoding}
+ process in @tech{part mode} for a @rhombuslangname(rhombus/scribble)
+ module body.
+
+ In the main module of a document, this title is the overall title of
+ the document. In a section included via @rhombus(include_section), it is
+ the name of the section.
 
 }
 
 @doc(~include rhombus/scribble/private/section: section){
 
- Declares a section at a level nested below @rhombus(title).
+ Declares a section at a level nested below @rhombus(title), recognized
+ by the @tech{decoding} process in @tech{part mode}.
 
 }
 
@@ -23,9 +29,9 @@
        subsubsection
        subsubsub_section){
 
- Declares sections as further nesting levels. By the
- @rhombus(subsubsub_section) level, the result is simply a paragraph that
- renders as an unnumbered section header.
+ Like @rhombus(section), but declares sections as further nesting
+ levels. At the @rhombus(subsubsub_section) level, the result is simply a
+ @tech{paragraph} that renders as an unnumbered section header.
 
 }
 

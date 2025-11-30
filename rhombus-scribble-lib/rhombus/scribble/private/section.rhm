@@ -15,78 +15,52 @@ export:
   subsubsection
   subsubsub_section
 
-fun title(~tag: tag :: maybe(TagSuffix) = #false,
-          ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
-          ~style: style :: maybe(StyleLike) = #false,
-          ~version: vers :: maybe(String) = #false,
-          ~date: date :: maybe(String) = #false,
-          ~index_extras: index_extras :: ExtrasMap = {},
-          pre_content :: PreContent)
-  :~ PartDecl:
-    ~doc
-    maybe_drop_extras:
-      base.title(~tag: convert_list(tag),
-                 ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
-                 ~style: convert_list(style),
-                 ~version: vers,
-                 ~date: date,
-                 ~#{index-extras}: convert_extras(index_extras),
-                 pre_content)
-
-meta:
-  // Fairly extreme measures to make a `fun`-generating macro's
-  // doc output typeset correctly. We'll need something more
-  // general, eventually.
-  fun fix_arg_indentation(orig_len, s):
-    match s
-    | '$fun $id $args $rest ...':
-        let len = '$fun $id'.to_source_string().length() + 1
-        let delta = len - orig_len
-        let '($arg1, ...)' = args
-        let [arg1, ...]:
-          for List (arg1 in [arg1, ...]):
-            let prefix = arg1.group_property(#'#{raw-prefix})
-            let new_prefix:
-              recur loop (prefix = prefix):
-                match prefix
-                | s :: String:
-                    if delta > 0
-                    | s ++ String.make(delta, Char" ")
-                    | s.substring(0, s.length() + delta)
-                | Pair(a, PairList.empty):
-                    Pair(loop(a), PairList.empty)
-                | Pair(a, d):
-                    Pair(a, loop(d))
-                | ~else:
-                    prefix
-            if new_prefix
-            | arg1.group_property(#'#{raw-prefix}, new_prefix, #true)
-            | arg1
-        let args = '($arg1, ...)'.relocate(args)
-        '$fun $id $args $rest ...'
+fun title(
+  ~tag: tag :: maybe(TagSuffix) = #false,
+  ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
+  ~style: style :: maybe(StyleLike) = #false,
+  ~version: vers :: maybe(String) = #false,
+  ~date: date :: maybe(String) = #false,
+  ~index_extras: index_extras :: ExtrasMap = {},
+  pre_content :: PreContent
+) :~ PartDecl:
+  ~doc
+  maybe_drop_extras:
+    base.title(~tag: convert_list(tag),
+               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
+               ~style: convert_list(style),
+               ~version: vers,
+               ~date: date,
+               ~#{index-extras}: convert_extras(index_extras),
+               pre_content)
 
 defn.macro 'def_section $section: $rkt_section':
-  fix_arg_indentation(
-    13,
-    'fun $section(~tag: tag :: maybe(TagSuffix) = #false,
-                  ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
-                  ~style: style :: maybe(StyleLike) = #false,
-                  ~index_extras: index_extras :: ExtrasMap = {},
-                  pre_content :: PreContent)
-       :~ PartDecl:
-         ~doc
-         maybe_drop_extras:
-           base . $rkt_section(~tag: convert_list(tag),
-                               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
-                               ~style: convert_list(style),
-                               ~#{index-extras}: convert_extras(index_extras),
-                               pre_content)'
-  )
+  'fun $section(
+     ~tag: tag :: maybe(TagSuffix) = #false,
+     ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
+     ~style: style :: maybe(StyleLike) = #false,
+     ~index_extras: index_extras :: ExtrasMap = {},
+     pre_content :: PreContent
+   ) :~ PartDecl:
+     ~doc
+     maybe_drop_extras:
+       base . $rkt_section(~tag: convert_list(tag),
+                           ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
+                           ~style: convert_list(style),
+                           ~#{index-extras}: convert_extras(index_extras),
+                           pre_content)'
 
 def_section section: section
 def_section subsection: subsection
 def_section subsubsection: subsubsection
-def_section subsubsub_section: #{subsubsub*section}
+
+fun subsubsub_section(
+  ~tag: tag :: maybe(TagSuffix) = #false,
+  pre_content :: PreContent
+) :~ Paragraph:
+  ~doc
+  base.#{subsubsub*section}(~tag: convert_list(tag),
+                            pre_content)
 
 fun pack_tag_prefix(tag_prefix):
   if utils.#{version<?}(version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
