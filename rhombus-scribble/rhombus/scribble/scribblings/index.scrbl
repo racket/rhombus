@@ -27,7 +27,7 @@
 
  The @rhombus(as_indexed) function is a shorthand for calling
  @rhombus(indexed) with the same text for @rhombus(pre_content) and
- @rhombus(words). Specifically, @rhombus(content_to_string) is used to
+ @rhombus(words). Specifically, @rhombus(Content.to_string) is used to
  convert post-@tech{decoding} @rhombus(pre_content) to a single string to
  supply as @rhombus(words).
 

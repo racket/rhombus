@@ -4,9 +4,13 @@
 
 @title(~tag: "element"){Elements}
 
-@doc(~include rhombus/scribble/private/element: elem){
+@doc(~nonterminal: element_style: Element
+     ~include rhombus/scribble/private/element: elem){
 
  Constructs an @rhombus(Element, ~annot) with a specific style.
+
+ See @rhombus(element_style) for information about @tech{styles} for
+ elements.
 
 }
 

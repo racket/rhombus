@@ -2,7 +2,9 @@
 (require scribble/manual
          (for-label racket/base
                     scribble/core
-                    scribble/base))
+                    scribble/base
+                    scribble/html-properties
+                    scribble/latex-properties))
 
 (provide (all-defined-out))
 
@@ -37,3 +39,31 @@
 (define rkt_secref @racket[secref])
 
 (define rkt_read @racket[read])
+
+(define rkt_numberer @racket[numberer?])
+(define rkt_document_version @racket[document-version?])
+(define rkt_document_date @racket[document-date?])
+(define rkt_document_source @racket[document-source?])
+(define rkt_color @racket[color-property?])
+(define rkt_background_color @racket[background-color-property?])
+(define rkt_render_convertible_as @racket[render-convertible-as?])
+(define rkt_link_render_style @racket[link-render-style?])
+(define rkt_box_mode @racket[box-mode?])
+(define rkt_target_url @racket[target-url?])
+(define rkt_table_columns @racket[table-columns?])
+(define rkt_table_cells @racket[table-cells?])
+
+(define rkt_body_id @racket[body-id?])
+(define rkt_alt_tag @racket[alt-tag?])
+(define rkt_attributes_id @racket[attributes?])
+(define rkt_column_attributes_id @racket[column-attributes?])
+(define rkt_head_extra @racket[head-extra?])
+(define rkt_head_addition @racket[head-addition?])
+(define rkt_hover_property @racket[hover-property?])
+(define rkt_part_title_and_content_wrapper @racket[part-title-and-content-wrapper])
+(define rkt_part_link_redirect @racket[part-link-redirect?])
+(define rkt_url_anchor @racket[url-anchor?])
+(define rkt_script_property @racket[script-property?])
+(define rkt_xexpr_property @racket[xexpr-property?])
+
+(define rkt_command_extras @racket[command-extras?])

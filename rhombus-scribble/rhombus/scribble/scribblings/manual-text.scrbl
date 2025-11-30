@@ -24,7 +24,7 @@
  @rhombus(pre_content) for @rhombus(deftech) renders in a style
  (typically italic) to indicate that it is a technical term or phase.
 
- When @rhombus(key) is @rhombus(#false), the @rhombus(content_to_string)
+ When @rhombus(key) is @rhombus(#false), the @rhombus(Content.to_string)
  of @rhombus(pre_content) after @tech{decoding} is used as a key for
  reference. As long as @rhombus(normalize) is true, then the key string
  is normalized as follows:

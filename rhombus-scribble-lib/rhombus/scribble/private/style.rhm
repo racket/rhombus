@@ -1,0 +1,156 @@
+#lang rhombus/static/and_meta
+import:
+  lib("scribble/core.rkt")
+  lib("scribble/base.rkt")
+  lib("scribble/decode.rkt")
+  lib("scribble/html-properties.rkt") as html
+  lib("scribble/latex-properties.rkt") as latex
+  rhombus/rx open
+
+export:
+  Style
+
+annot.macro '_Style':
+  annot_meta.pack_predicate('core.#{style?}')
+
+veneer Style(this :: _Style):
+  expression 'Style':
+    'make_style'
+  property name:
+    core.#{style-name}(this)
+  property properties :~ List:
+    core.#{style-properties}(this)
+
+  export def plain = core.plain
+
+  export veneer Numberer(this :: satisfying(core.#{numberer?})):
+    expression ~none
+  export veneer DocumentVersion(this :: satisfying(core.#{document-version?})):
+    expression ~none
+  export veneer DocumentDate(this :: satisfying(core.#{document-date?})):
+    expression ~none
+  export veneer DocumentSource(this :: satisfying(html.#{document-source?})):
+    expression ~none
+  export veneer Color(this :: satisfying(core.#{color-property?})):
+    expression 'Color':
+      'make_color'
+  export veneer BackgroundColor(this :: satisfying(core.#{background-color-property?})):
+    expression 'BackgroundColor':
+      'make_background_color'
+  export veneer RenderConvertibleAs(this :: satisfying(html.#{render-convertible-as?})):
+    expression ~none
+  export veneer LinkRenderStyle(this :: satisfying(core.#{link-render-style?})):
+    expression ~none
+  export veneer BoxMode(this :: satisfying(core.#{box-mode?})):
+    expression ~none
+  export veneer TargetURL(this :: satisfying(core.#{target-url?})):
+    expression 'TargetURL':
+      'make_target_url'
+  export veneer TableColumns(this :: satisfying(core.#{table-columns?})):
+    expression 'TableColumns':
+      'make_table_columns'
+  export veneer TableCells(this :: satisfying(core.#{table-cells?})):
+    expression 'TableCells':
+      'make_table_cells'
+
+  export namespace HTML:
+    export veneer BodyId(this :: satisfying(html.#{body-id?})):
+      expression 'BodyId':
+        'make_body_id'
+    export veneer AltTag(this :: satisfying(html.#{alt-tag?})):
+      expression 'AltTag':
+        'make_alt_tag'
+    export veneer Attributes(this :: satisfying(html.#{attributes?})):
+      expression 'Attributes':
+        'make_attributes'
+    export veneer ColumnAttributes(this :: satisfying(html.#{column-attributes?})):
+      expression 'ColumnAttributes':
+        'make_column_attributes'
+    export veneer HeadExtra(this :: satisfying(html.#{head-extra?})):
+      expression ~none
+    export veneer HeadAddition(this :: satisfying(html.#{head-addition?})):
+      expression ~none
+    export veneer Hover(this :: satisfying(html.#{hover-property?})):
+      expression ~none
+    export veneer PartTitleAndContentWrapper(this :: satisfying(html.#{part-title-and-content-wrapper?})):
+      expression ~none
+    export veneer PartLinkRedirect(this :: satisfying(html.#{part-link-redirect?})):
+      expression ~none
+    export veneer URLAnchor(this :: satisfying(html.#{url-anchor?})):
+      expression 'URLAnchor':
+        'make_url_anchor'
+    export veneer Script(this :: satisfying(html.#{script-property?})):
+      expression 'Script':
+        'make_script'
+    export veneer Xexpr(this :: satisfying(html.#{xexpr-property?})):
+      expression ~none
+
+  export namespace Latex:
+    export veneer CommandExtras(this :: satisfying(latex.#{command-extras?})):
+      expression 'CommandExtras':
+        'make_command_extras'
+
+fun make_color :: Style.Color:
+  ~name: Style.Color
+| make_color(color :: String):
+    core.#{color-property}(color)
+| make_color(red :: Byte, green :: Byte, blue :: Byte):
+    core.#{color-property}(PairList[red, green, blue])
+
+fun make_background_color :: Style.BackgroundColor:
+  ~name: Style.Color
+| make_background_color(color :: String):
+    core.#{background-color-property}(color)
+| make_background_color(red :: Byte, green :: Byte, blue :: Byte):
+    core.#{background-color-property}(PairList[red, green, blue])
+
+fun make_target_url ::Style.TargetURL:
+  ~name: Style.TargetURL
+| make_target_url(~path: path :: PathString):
+    core.#{target-url}(path :: PathString.to_path)
+| make_target_url(~url: url :: String):
+    core.#{target-url}(url)
+
+fun make_table_columns(styles :: List.of(Style)) :: Style.TableColumns:
+  ~name: Style.TableColumns
+  core.#{table-columns}(PairList(& styles))
+fun make_table_cells(styles :: List.of(List.of(Style))) :: Style.TableColumns:
+  ~name: Style.TableCells
+  let [[s, ...], ...] = styles
+  core.#{table-columns}(PairList(PairList(s, ...), ...))
+
+fun make_attributes(attribs :: Map.of(Symbol, String) || List.of([Symbol, String]))
+  :: Style.HTML.Attributes:
+    ~name: Style.HTML.Attributes
+    html.#{attributes}(convert_attributes(attribs))
+
+fun make_column_attributes(attribs :: Map.of(Symbol, String) || List.of([Symbol, String]))
+  :: Style.HTML.ColumnAttributes:
+    ~name: Style.HTML.ColumnAttributes
+    html.#{column-attributes}(convert_attributes(attribs))
+
+fun
+| convert_attributes({ key: val, ... }):
+    PairList(Pair(key, val), ...)
+| convert_attributes([[key, val], ... ]):
+    PairList(Pair(key, val), ...)
+
+fun make_body_id(id :: String) :: Style.HTML.BodyId:
+  ~name: Style.HTML.BodyId
+  html.#{body-id}(id)
+
+fun make_alt_tag(tag :: String && matching(rx'[alpha digit]+')) :: Style.HTML.AltTag:
+  ~name: Style.HTML.AltTag
+  html.#{alt-tag}(tag)
+
+fun make_url_anchor(str :: String) :: Style.HTML.URLAnchor:
+  ~name: Style.HTML.URLAnchor
+  html.#{url-anchor}(str)
+
+fun make_script(script :: PathString || List.of(String)) :: Style.HTML.Script:
+  ~name: Style.HTML.Script
+  html.#{script-property}(& if script is_a List | script | [script])
+
+fun make_command_extras(strs :: List.of(String)) :: Style.Latex.CommandExtras:
+  ~name: Style.Latex.CommandExtras
+  latex.#{command-extras}(PairList(& strs))

@@ -60,6 +60,19 @@
 }
 
 @doc(
+  fun Content.to_string(content :: Content) :: String
+  fun Content.width(content :: Content) :: Int
+){
+
+ The @rhombus(Content.to_string) function converts @tech{content} to a
+ plain string, essentially extracting it's ``plain text.''
+
+ The @rhombus(Content.width) function reports an approximate width in
+ characters for the given @tech{content}.
+
+}
+
+@doc(
   annot.macro 'PreFlow'
   annot.macro 'PreFlow.to_s_exp'
 ){

@@ -16,10 +16,10 @@ export:
   larger
   literal
 
-fun elem(~style: style :: maybe(StyleLike) = #false,
+fun elem(~style: element_style :: maybe(StyleLike) = #false,
          pre_content :: PreContent) :~ Element:
   ~doc
-  base.elem(~style: style, pre_content)
+  base.elem(~style: element_style, pre_content)
   
 fun italic(pre_content :: PreContent) :~ Element:
   ~doc

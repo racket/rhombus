@@ -21,4 +21,4 @@ bindings provided by the language.
 @include_section("index.scrbl")
 @include_section("toc.scrbl")
 @include_section("annot.scrbl")
-@include_section("more_annot.scrbl")
+@include_section("more-annot.scrbl")

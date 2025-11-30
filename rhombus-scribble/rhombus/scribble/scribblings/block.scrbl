@@ -5,17 +5,25 @@
 
 @title(~tag: "block"){Flow Blocks}
 
-@doc(~include rhombus/scribble/private/block: para){
+@doc(~nonterminal: paragraph_style: Paragraph
+     ~include rhombus/scribble/private/block: para){
 
  Creates a @tech{paragraph}. Most paragraphs are created implicitly by
  @tech{decoding}, but @rhombus(para) is useful for constructing a
  @tech{flow block} explicitly or giving a @tech{style} to the paragraph.
 
+ See @rhombus(paragraph_style) for information about @tech{styles} for
+ paragraphs.
+
 }
 
-@doc(~include rhombus/scribble/private/block: nested){
+@doc(~nonterminal: nested_flow_style: NestedFlow
+     ~include rhombus/scribble/private/block: nested){
 
  Creates a @tech{nested flow} as a single @tech{flow block}.
+
+ See @rhombus(nested_flow_style) for information about @tech{styles} for
+ nested flows.
 
 }
 
@@ -35,13 +43,14 @@
        margin_note_block
        MarginSide){
 
- Creates @tech{content} or a @rhombus{flow block} that is typeset in the
+ Creates @tech{content} or a @tech{flow block} that is typeset in the
  left or right margin, if maring notes are supported by the
  @tech{renderer} that is used to render the document.
 
 }
 
-@doc(~include rhombus/scribble/private/block:
+@doc(~nonterminal: itemization_style: Itemization
+     ~include rhombus/scribble/private/block:
        itemlist
        item
      annot.macro 'Item'){
@@ -51,6 +60,9 @@
  The @rhombus(item) function provides an @rhombus(Item, ~annot) that is
  ultimately only useful with @rhombus(itemlist).
  @annot_same(Item, rkt_item)
+
+ See @rhombus(itemization_style) for information about @tech{styles} for
+ itemizations.
 
 }
 
@@ -66,7 +78,8 @@
 
 }
 
-@doc(~include rhombus/scribble/private/block:
+@doc(~nonterminal: table_style: Table
+     ~include rhombus/scribble/private/block:
        tabular Cell){
 
  Creates a @tech{table} for a two-dimentional layout of @tech{flow
@@ -111,6 +124,15 @@
  and for individual @emph{cells} (for which other properties are
  recognized), but @rhombus(row_props) and @rhombus(cell_props) provide
  only properties for indvidual cells.
+
+ See @rhombus(table_style) for information about @tech{styles} for
+ tables. A @rhombus(table_style) can have column and cell styles via
+ @rhombus(Style.TableColumns, ~annot) and
+ @rhombus(Style.TableCells, ~annot) properties. Any styles from
+ @rhombus(col_props) are merged with styles in a
+ @rhombus(Style.TableColumns, ~annot) property, and any styles from
+ @rhombus(row_props) and @rhombus(cell_props) are merged with a
+ @rhombus(Style.TableCells, ~annot) property.
 
  If @rhombus(sep) is not @rhombus(#false), then it is used for a column
  added between every column in a row (except for columns that continue

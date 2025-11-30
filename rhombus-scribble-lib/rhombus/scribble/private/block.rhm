@@ -18,16 +18,16 @@ export:
   tabular
   Cell
 
-fun para(~style: style :: maybe(StyleLike) = #false,
+fun para(~style: paragraph_style :: maybe(StyleLike) = #false,
          pre_content :: PreContent) :: Paragraph:
   ~doc
-  base.para(~style: style,
+  base.para(~style: paragraph_style,
             pre_content)
 
-fun nested(~style: style :: maybe(StyleLike) = #false,
+fun nested(~style: nested_flow_style :: maybe(StyleLike) = #false,
            pre_flow :: PreFlow) :: NestedFlow:
   ~doc
-  base.nested(~style: style,
+  base.nested(~style: nested_flow_style,
               pre_flow)
 
 fun centered(pre_flow :: PreFlow) :: FlowBlock:
@@ -55,12 +55,12 @@ fun margin_note_block(~at: at :: MarginSide = #'right,
 
 annot.macro 'Item': 'satisfying(base.#{item?})'
 
-fun itemlist(~style: style :: maybe(StyleLike) = #false,
+fun itemlist(~style: itemization_style :: maybe(StyleLike) = #false,
              item :: Item,
              ...)
   :: Itemization:
     ~doc
-    base.itemlist(~style: style, item, ...)
+    base.itemlist(~style: itemization_style, item, ...)
 
 fun item(pre_flow :: PreFlow) :: Item:
   ~doc
@@ -73,7 +73,7 @@ enum Cell:
   cont
 
 fun tabular(cells :: List.of(List.of(Cell)),
-            ~style: style :: maybe(StyleLike) = #false,
+            ~style: table_style :: maybe(StyleLike) = #false,
             ~sep: sep :: maybe(FlowBlock || Content) = #false,
             ~column_properties: col_props :: List = [],
             ~row_properties: row_props :: List = [],
@@ -82,7 +82,7 @@ fun tabular(cells :: List.of(List.of(Cell)),
   :: Table:
     ~doc
     base.tabular(convert_list_of_lists(cells),
-                 ~style: style,
+                 ~style: table_style,
                  ~sep: sep,
                  ~#{column-properties}: convert_list(col_props),
                  ~#{row-properties}: convert_list(row_props),

@@ -4,6 +4,7 @@ import:
   lib("scribble/base.rkt")
   lib("scribble/decode.rkt")
   lib("file/convertible.rkt") as convert
+  "style.rhm".Style
 
 export:
   Style
@@ -50,20 +51,6 @@ module convert:
     convert_list
     convert_list_of_lists
     convert_pre_part
-
-annot.macro '_Style':
-  annot_meta.pack_predicate('core.#{style?}')
-
-veneer Style(this :: _Style):
-  expression 'Style':
-    'make_style'
-  property name:
-    core.#{style-name}(this)
-  property properties :~ List:
-    core.#{style-properties}(this)
-  export:
-    plain
-  def plain = core.plain
 
 annot.macro '_Element':
   annot_meta.pack_predicate('core.#{element?}')
@@ -279,6 +266,15 @@ namespace Content:
   export to_s_exp
   annot.macro 'to_s_exp':
     'converting(fun (v): convert_content(v)) && True'
+  export:
+    rename: content_to_string as to_string
+    width
+fun content_to_string(content :: Content.to_s_exp) :: String:
+  ~name: Content.to_string
+  to_string(core.#{content->string}(content))
+fun width(content :: Content.to_s_exp) :: Int:
+  ~name: Content.width
+  core.#{content-width}(content)
 
 annot.macro 'PreFlow':
   annot_meta.pack_predicate('convert_pre_flow')

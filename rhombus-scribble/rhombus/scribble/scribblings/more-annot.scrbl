@@ -6,11 +6,13 @@
 @title(~tag: "more_annot"){Additional Datatypes}
 
 @doc(
+  ~nonterminal:
+    part_style: Part
   fun Part(
     ~tag_prefix: tag_prefix :: maybe(String || Map) = #false,
     ~tags: tags :: Listable.to_list && List.of(Tag) = [],
     ~title_content: title_content :: maybe(Content) = #false,
-    ~style: style :: Style = Style.plain,
+    ~style: part_style :: Style = Style.plain,
     ~to_collect: to_collect :: Content = [],
     ~blocks: blocks :: Listable.to_list && List.of(FlowBlock) = [],
     ~parts: parts :: Listable.to_list && List.of(Part) = []
@@ -41,7 +43,8 @@
 
  @item{@rhombus(title_content): The part's title, if any.}
 
- @item{@rhombus(style): See part styles for more information about recognized styles.}
+ @item{@rhombus(part_style): See @rhombus(part_style) for more
+  information about styles for parts.}
 
  @item{@rhombus(to_collect): @tech{Content} that is inspected during the
   @tech{collect pass}, but ignored in later passes, so it doesn't directly

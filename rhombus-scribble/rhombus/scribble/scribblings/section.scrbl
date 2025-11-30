@@ -4,7 +4,8 @@
 
 @title(~tag: "section"){Title and Sections}
 
-@doc(~include rhombus/scribble/private/section: title){
+@doc(~nonterminal: part_style: Part
+     ~include rhombus/scribble/private/section: title){
 
  Declares a title for the document by producing a
  @rhombus(PartDecl, ~annot) that is recognized by the @tech{decoding}
@@ -15,16 +16,22 @@
  the document. In a section included via @rhombus(include_section), it is
  the name of the section.
 
+ See @rhombus(part_style) for information about @tech{styles} for parts.
+
 }
 
-@doc(~include rhombus/scribble/private/section: section){
+@doc(~nonterminal: part_style: Part
+     ~include rhombus/scribble/private/section: section){
 
  Declares a section at a level nested below @rhombus(title), recognized
  by the @tech{decoding} process in @tech{part mode}.
 
+ See @rhombus(part_style) for information about @tech{styles} for parts.
+
 }
 
-@doc(~include rhombus/scribble/private/section:
+@doc(~nonterminal: part_style: Part
+     ~include rhombus/scribble/private/section:
        subsection
        subsubsection
        subsubsub_section){
