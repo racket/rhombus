@@ -325,13 +325,13 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
 @doc(
   operator ((x :: Real) .> (y :: Real)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Real) .>= (y :: Real)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Real) .< (y :: Real)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
   operator ((x :: Real) .<= (y :: Real)) :: Boolean:
-    ~order: comparison
+    ~order: order_comparison
 ){
 
  The usual comparison operators on real numbers prefixed with @litchar{.} to

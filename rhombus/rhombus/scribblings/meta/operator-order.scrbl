@@ -77,7 +77,7 @@ in multple spaces (such as via @rhombus(bind.macro, ~defn) or
  all of the individual @rhombus(order_id_name)s. The defined
  @rhombus(id_name) can be used in @rhombus(~stronger), @rhombus(~weaker),
  etc., options to declare precedence relationships, but it cannot be used
- in @rhombus(~order) (i.e., an operator has at more one operator order).
+ in @rhombus(~order) (i.e., an operator has at most one operator order).
 
 }
 
