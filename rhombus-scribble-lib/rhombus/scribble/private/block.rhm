@@ -81,13 +81,13 @@ fun tabular(cells :: List.of(List.of(Cell)),
             ~sep_properties: sep_props :: maybe(List) = #false)
   :: Table:
     ~doc
-    base.tabular(convert_list_of_lists(cells),
+    base.tabular(convert_list_of_lists(cells, ~per: convert_list),
                  ~style: table_style,
                  ~sep: sep,
-                 ~#{column-properties}: convert_list(col_props),
-                 ~#{row-properties}: convert_list(row_props),
-                 ~#{cell-properties}: convert_list_of_lists(cell_props),
-                 ~#{sep-properties}: convert_list(sep_props))
+                 ~#{column-properties}: convert_list(col_props, ~per: convert_list),
+                 ~#{row-properties}: convert_list(row_props, ~per: convert_list),
+                 ~#{cell-properties}: convert_list_of_lists(cell_props, ~per: convert_list),
+                 ~#{sep-properties}: convert_list(sep_props, ~per: convert_list))
 
 fun verbatim(~indent: indent :: Nat = 0,
              [content :: Content, ...])

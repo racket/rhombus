@@ -241,17 +241,17 @@ veneer DelayedBlock(this :: _DelayedBlock):
 annot.macro 'StyleLike':
   'Style || String || Symbol || List.of(Symbol)'
 
-fun convert_list(v):
+fun convert_list(v, ~per = values):
   match v
   | l :: List:
-      for PairList (e in l): e
+      for PairList (e in l): per(e)
   | ~else:
       v
 
-fun convert_list_of_lists(cells :~ List.of(List)):
+fun convert_list_of_lists(cells :~ List.of(List), ~per = values):
   for PairList (row in cells):
     for PairList (cell in row):
-      cell
+      per(cell)
 
 annot.macro 'PreContent':
   annot_meta.pack_predicate('convert_pre_content')
@@ -401,11 +401,6 @@ fun convert_taglet(v):
       convert_list(r)
   | ~else:
       #false
-
-fun make_style(~name: name :: maybe(Symbol || String) = #false,
-               ~properties: properties :: Listable = []) :~ Style:
-  ~name: Style
-  core.#{style}(name, PairList(& properties.to_list()))
 
 fun make_element(~style: style :: maybe(Style || String || Symbol) = #false,
                  content :: Content.to_s_exp = PairList[]) :~ Element:

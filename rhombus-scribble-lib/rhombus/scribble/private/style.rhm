@@ -90,6 +90,11 @@ veneer Style(this :: _Style):
       expression 'CommandExtras':
         'make_command_extras'
 
+fun make_style(~name: name :: maybe(Symbol || String) = #false,
+               ~properties: properties :: Listable = []) :~ Style:
+  ~name: Style
+  core.#{style}(name, PairList(& properties.to_list()))
+
 fun make_color :: Style.Color:
   ~name: Style.Color
 | make_color(color :: String):
