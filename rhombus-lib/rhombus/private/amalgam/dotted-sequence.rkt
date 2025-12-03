@@ -22,23 +22,31 @@
   (pattern (~seq (~seq _:identifier _::op-dot) ...+ (_::parens (group _::operator)))))
 
 (define (build-dot-symbol ids #:skip-dots? [skip-dots? #f])
-  (string->symbol
-   (apply string-append
-          (let loop ([ids ids])
-            (cond
-              [(null? (cdr ids)) (list (symbol->immutable-string
-                                        (let ([s (syntax-e (car ids))])
-                                          (if (and skip-dots?
-                                                   (pair? s))
-                                              ;; must be `(op)`
-                                              (syntax-e
-                                               (cadr
-                                                (syntax->list
-                                                 (cadr
-                                                 (syntax->list
-                                                  (cadr
-                                                   (syntax->list (car ids))))))))
-                                              s))))]
-              [else (list* (symbol->immutable-string (syntax-e (car ids)))
-                           "."
-                           (loop (if skip-dots? (cddr ids) (cdr ids))))])))))
+  (if (null? (cdr ids))
+      ;; immediate identifer or operator
+      (let ([s (syntax-e (car ids))])
+        (if (pair? s)
+            ;; must be operator
+            (syntax-e (cadr (syntax->list (car ids))))
+            s))
+      ;; sequence of identifiers ending with identifier or parenthesized operator
+      (string->symbol
+       (apply string-append
+              (let loop ([ids ids])
+                (cond
+                  [(null? (cdr ids)) (list (symbol->immutable-string
+                                            (let ([s (syntax-e (car ids))])
+                                              (if (and skip-dots?
+                                                       (pair? s))
+                                                  ;; must be parenthesized operator
+                                                  (syntax-e
+                                                   (cadr
+                                                    (syntax->list
+                                                     (cadr
+                                                      (syntax->list
+                                                       (cadr
+                                                        (syntax->list (car ids))))))))
+                                                  s))))]
+                  [else (list* (symbol->immutable-string (syntax-e (car ids)))
+                               "."
+                               (loop (if skip-dots? (cddr ids) (cdr ids))))]))))))

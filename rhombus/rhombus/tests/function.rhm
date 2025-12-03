@@ -483,3 +483,15 @@ block:
            ~name: f
            x)
     .realm() ~is #'rhombus
+  check (fun (x):
+           ~name: f.g.z
+           x)
+    .name() ~is #'#{f.g.z}
+  check (fun (x):
+           ~name: +=!
+           x)
+    .name() ~is #'#{+=!}
+  check (fun (x):
+           ~name: a.b.(+=!)
+           x)
+    .name() ~is #'#{a.b.+=!}
