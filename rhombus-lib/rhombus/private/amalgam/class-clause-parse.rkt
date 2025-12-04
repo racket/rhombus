@@ -225,7 +225,7 @@
                       #:property #:override-property #:protected-property
                       #:final-property #:final-override-property #:final-protected-property
                       #:private-property #:private-override-property))
-      id rhs has-cases? maybe-ret)
+      id rhs has-cases? maybe-ret doc)
      (define-values (body replace disposition exposure kind)
        (case (syntax-e #'tag)
          [(#:method) (values 'method 'method 'abstract 'public 'method)]
@@ -265,12 +265,13 @@
                                                     exposure
                                                     kind
                                                     arity
-                                                    reflect-name)
+                                                    reflect-name
+                                                    (and (syntax-e #'doc) #'doc))
                                       (hash-ref options 'methods null)))]
     [((~and tag (~or* #:abstract #:abstract-protected
                       #:abstract-property #:abstract-protected-property
                       #:abstract-override #:abstract-override-property))
-      id rhs has-cases? maybe-ret)
+      id rhs has-cases? maybe-ret doc)
      (define-values (replace exposure kind)
        (case (syntax-e #'tag)
          [(#:abstract) (values 'method 'public 'method)]
@@ -298,7 +299,8 @@
                                                     exposure
                                                     kind
                                                     arity
-                                                    reflect-name)
+                                                    reflect-name
+                                                    (and (syntax-e #'doc) #'doc))
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))

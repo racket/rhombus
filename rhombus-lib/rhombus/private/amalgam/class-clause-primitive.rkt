@@ -209,6 +209,26 @@
        (for/list ([ret (syntax->list rets-stx)])
          #`(() #,ret ()))]))
 
+  (define-syntax-class :method-options
+    #:attributes (body doc)
+    #:datum-literals (group)
+    (pattern (b-tag::block
+              (~and doc (group #:doc . _))
+              g ...)
+             #:with body #'(b-tag g ...))
+    (pattern (b-tag::block
+              (~and name-g (group #:name . _))
+              (~and doc (group #:doc . _))
+              g ...)
+             #:with body #'(b-tag name-g g ...))
+    (pattern body
+             #:with doc #'#f))
+
+  (define (extract-prefix stx tail-stx)
+    (let ([all (syntax->list stx)]
+          [tail (syntax->list tail-stx)])
+      (reverse (list-tail (reverse all) (length tail)))))
+
   (define-splicing-syntax-class :maybe-ret
     #:description "optional result annotation"
     #:attributes (seq)
@@ -222,10 +242,19 @@
     #:datum-literals (group)
     (pattern (~seq id:identifier (~and args (_::parens . _)) ret::maybe-ret
                    (~and rhs (_::block . _)))
+             #:with adj-rhs::method-options #'rhs
              #:with form (wrap-class-clause #`(#,mode id
-                                               (block (group fun args rhs))
+                                               (block (group fun args adj-rhs.body))
                                                #f
-                                               [args ret.seq])))
+                                               [args ret.seq]
+                                               #,(if (syntax-e #'adj-rhs.doc)
+                                                     (with-syntax ([(head ...) (extract-prefix stx #'(id args (~@ . ret) block))])
+                                                       #`[(head ...)
+                                                          (id)
+                                                          (args (~@ . ret))
+                                                          adj-rhs.doc
+                                                          #,stx])
+                                                     #'#f))))
     (pattern (~seq (~optional main-id:identifier) main-ret::maybe-ret
                    (~and alts
                          (atag::alts
@@ -251,14 +280,26 @@
                                                #,(if (null? (syntax-e #'main-ret.seq))
                                                      #`([forwarding-annot-id args forwarded-ret] ...)
                                                      #f)
-                                               [(parens) main-ret.seq])))
+                                               [(parens) main-ret.seq]
+                                               #f)))
     (pattern (~seq id:identifier ret::maybe-ret (~and rhs (_::block . _)))
-             #:with form (wrap-class-clause #`(#,mode id rhs #f [(parens) ret.seq]))))
+             #:with form (wrap-class-clause #`(#,mode id rhs #f [(parens) ret.seq] #f))))
   (define-splicing-syntax-class (:method-decl stx mode)
     #:description "method declaration"
-    #:attributes (id rhs maybe-ret forwards)
+    #:attributes (id rhs maybe-ret doc forwards)
     #:datum-literals (group)
-    (pattern (~seq _ ... (~and b (_::block . _)))
+    (pattern (~seq id:identifier (~and args (tag::parens arg ...)) ret::maybe-ret
+                   (_::block (~and kw-g (group #:doc . _))))
+             #:with rhs #'(block (group fun (tag arg ...)
+                                        (block (group (parsed #:rhombus/expr (void))))))
+             #:with maybe-ret #'[args ret.seq]
+             #:with doc (syntax-parse stx
+                          [(head ... (_::block . _))
+                           #`[(group head ...)
+                              kw-g
+                              #,stx]])
+             #:with forwards #f)
+    (pattern (~seq _ ... (~and b (_::block . _) (~not (_::block (group #:doc . _)))))
              #:do [(raise-syntax-error #f
                                        "implementation block not allowed"
                                        stx
@@ -266,15 +307,18 @@
              #:with id #f
              #:with rhs #f
              #:with maybe-ret #'[(parens) ()]
+             #:with doc #'#f
              #:with forwards #f)
     (pattern (~seq id:identifier (~and args (tag::parens arg ...)) ret::maybe-ret)
              #:with rhs #'(block (group fun (tag arg ...)
                                         (block (group (parsed #:rhombus/expr (void))))))
              #:with maybe-ret #'[args ret.seq]
+             #:with doc #'#f
              #:with forwards #f)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:with rhs #'#f
              #:with maybe-ret #'[(parens) ret.seq]
+             #:with doc #'#f
              #:with forwards #f)
     (pattern (~seq (~optional main-id:identifier) ret::maybe-ret
                    (~and alts
@@ -299,24 +343,34 @@
              #:with rhs #'(block (group fun
                                         (atag (btag (gtag args (~@ . forwarding-ret) (block (group (parsed #:rhombus/expr (void))))))
                                               ...)))
+             #:with doc #'#f
              #:with forwards (if (null? (syntax-e #'ret.seq))
                                  #'([forwarding-annot-id args forwarded-ret] ...)
                                  #'#f)))
-  (define-splicing-syntax-class (:property-impl mode)
+  (define-splicing-syntax-class (:property-impl stx mode)
     #:description "property implementation"
     #:attributes (form)
     #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret
                    (~and rhs (_::block . _)))
+             #:with adj-rhs::method-options #'rhs
              #:with form (wrap-class-clause #`(#,mode id
                                                (block
                                                 (group fun/read-only-property
                                                        (alts
-                                                        (block (group (parens) rhs))
+                                                        (block (group (parens) adj-rhs.body))
                                                         (block (group (parens (group ignored))
                                                                       (block (group (parsed #:rhombus/expr (not-assignable 'id)))))))))
                                                #f
-                                               [(parens) ret.seq])))
+                                               [(parens) ret.seq]
+                                               #,(if (syntax-e #'adj-rhs.doc)
+                                                     (with-syntax ([(head ...) (extract-prefix stx #'(id (~@ . ret) a-block))])
+                                                       #`[(head ...)
+                                                          (id)
+                                                          ret
+                                                          adj-rhs.doc
+                                                          #,stx])
+                                                     #'#f))))
 
     (pattern (~seq (_::alts
                     (_::block
@@ -330,7 +384,8 @@
                                                         (block (group (parens (group ignored))
                                                                       (block (group (parsed #:rhombus/expr (not-assignable 'id)))))))))
                                                #f
-                                               [(parens) ret.seq])))
+                                               [(parens) ret.seq]
+                                               #f)))
     (pattern (~seq (~and alts
                          (atag::alts
                           (btag1::block
@@ -338,29 +393,51 @@
                                                (~and body1 (_::block . _))))
                           (btag2::block
                            ((~and gtag2 group) a-id2:identifier
-                                               _:::=-expr
+                                               assign:::=-expr
                                                assign-rhs ...+
                                                (~and body2 (_::block . _)))))))
+             #:with adj-body1::method-options #'body1
              #:do [(check-consistent #:who mode #'alts (list #'a-id1 #'a-id2) "name")]
              #:with form (wrap-class-clause #`(#,mode a-id1
                                                (block (group fun
                                                              (atag
-                                                              (btag1 (group (parens) body1))
+                                                              (btag1 (group (parens) adj-body1.body))
                                                               (btag2 (group (parens (group assign-rhs ...))
                                                                             body2)))))
                                                #f
-                                               [(parens) ret1.seq]))))
-  (define-splicing-syntax-class :property-decl
+                                               [(parens) ret1.seq]
+                                               #,(if (syntax-e #'adj-body1.doc)
+                                                     (with-syntax ([(head ...) (extract-prefix stx #'(an-alts))])
+                                                       #`[(head ...)
+                                                          (a-id1)
+                                                          ret1
+                                                          adj-body1.doc
+                                                          #,stx])
+                                                     #'#f)))))
+  (define-splicing-syntax-class (:property-decl stx)
     #:description "proper declaration"
-    #:attributes (id rhs maybe-ret)
+    #:attributes (id rhs maybe-ret doc)
     #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:with rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed #:rhombus/expr (void))))))
                                                   (block (group (parens (group _)) (block (group (parsed #:rhombus/expr (void)))))))))
-             #:with maybe-ret #'[(parens) ret.seq])
+             #:with maybe-ret #'[(parens) ret.seq]
+             #:with doc #'#f)
+    (pattern (~seq id:identifier ret::maybe-ret
+                   (_::block (~and kw-g (group #:doc . _))))
+             #:with rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed #:rhombus/expr (void))))))
+                                                  (block (group (parens (group _)) (block (group (parsed #:rhombus/expr (void)))))))))
+             #:with maybe-ret #'[(parens) ret.seq]
+             #:with doc (with-syntax ([(head ...) (extract-prefix stx #'(id (~@ . ret) a-block))])
+                          #`[(head ...)
+                             (id)
+                             ret
+                             adj-body1.doc
+                             #,stx]))
     (pattern (~seq (_::alts (_::block (group id:identifier ret::maybe-ret))))
              #:with rhs #'(block (group fun (parens) (block (group (parsed #:rhombus/expr (void))))))
-             #:with maybe-ret #'[(parens) ret.seq])))
+             #:with maybe-ret #'[(parens) ret.seq]
+             #:with doc #'#f)))
 
 (define-class-clause-syntax constructor
   (class-clause-transformer
@@ -489,11 +566,11 @@
     [(_ _::method (~var m (:method-impl stx #'#:final))) #'m.form]
     [(_ _::protected (~var m (:method-impl stx #'#:final-protected))) #'m.form]
     [(_ _::protected _::method (~var m (:method-impl stx #'#:final-protected))) #'m.form]
-    [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
-    [(_ _::property (~var m (:property-impl #'#:final-property))) #'m.form]
+    [(_ _::override _::property (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+    [(_ _::property (~var m (:property-impl stx #'#:final-property))) #'m.form]
     [(_ _::override (~var m (:method-impl stx #'#:final-override))) #'m.form]
-    [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
-    [(_ _::protected _::property (~var m (:property-impl #'#:final-protected-property))) #'m.form]
+    [(_ _::override _::property (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+    [(_ _::protected _::property (~var m (:property-impl stx #'#:final-protected-property))) #'m.form]
     [(_ (~var m (:method-impl stx #'#:final))) #'m.form]))
 
 (define-class-clause-syntax final
@@ -525,7 +602,7 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method-impl stx #'#:method))) #'m.form]
-       [(_ (~var decl (:method-decl stx #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret))]))))
+       [(_ (~var decl (:method-decl stx #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax method
   (veneer-clause-transformer parse-class-method))
@@ -533,7 +610,7 @@
 (define-for-syntax parse-class-property
   (lambda (stx data)
     (syntax-parse stx
-      [(_ (~var m (:property-impl #'#:property))) #'m.form])))
+      [(_ (~var m (:property-impl stx #'#:property))) #'m.form])))
 
 (define-class-clause-syntax property
   (class-clause-transformer parse-class-property))
@@ -542,8 +619,8 @@
   (interface-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_ (~var m (:property-impl #'#:property))) #'m.form]
-       [(_ decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret))]))))
+       [(_ (~var m (:property-impl stx #'#:property))) #'m.form]
+       [(_ (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax property
   (veneer-clause-transformer parse-class-property))
@@ -552,7 +629,7 @@
   (lambda (stx data)
     (syntax-parse stx
       [(_ _::method (~var m (:method-impl stx #'#:override))) #'m.form]
-      [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
+      [(_ _::property (~var m (:property-impl stx #'#:override-property))) #'m.form]
       [(_ (~var m (:method-impl stx #'#:override))) #'m.form])))
 
 (define-class-clause-syntax override
@@ -563,11 +640,11 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ _::method (~var m (:method-impl stx #'#:override))) #'m.form]
-       [(_ _::method (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret))]
-       [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
-       [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret))]
+       [(_ _::method (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::property (~var m (:property-impl stx #'#:override-property))) #'m.form]
+       [(_ _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
        [(_ (~var m (:method-impl stx #'#:override))) #'m.form]
-       [(_ (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret))]))))
+       [(_ (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax override
   (veneer-clause-transformer parse-class-override))
@@ -578,10 +655,10 @@
       [(_ tag::implements form ...)
        (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
       [(_ _::method (~var m (:method-impl stx #'#:private))) #'m.form]
-      [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
+      [(_ _::override _::property (~var m (:property-impl stx #'#:private-override-property))) #'m.form]
       [(_ _::override (~var m (:method-impl stx #'#:private-override))) #'m.form]
       [(_ _::override _::method (~var m (:method-impl stx #'#:private-override))) #'m.form]
-      [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
+      [(_ _::property (~var m (:property-impl stx #'#:private-property))) #'m.form]
       [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
       [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
       [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'mutable)))) #'f.form]
@@ -606,7 +683,7 @@
       [(_ tag::implements form ...)
        (wrap-class-clause #`(#:protected-implements . #,(parse-multiple-names #'(tag form ...))))]
       [(_ _::method (~var m (:method-impl stx #'#:protected))) #'m.form]
-      [(_ _::property (~var m (:property-impl #'#:protected-property))) #'m.form]
+      [(_ _::property (~var m (:property-impl stx #'#:protected-property))) #'m.form]
       [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
       [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
       [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]
@@ -619,7 +696,7 @@
   (lambda (stx data)
     (syntax-parse stx
       [(_ _::method (~var m (:method-impl stx #'#:protected))) #'m.form]
-      [(_ _::property (~var m (:property-impl #'#:protected-property))) #'m.form]
+      [(_ _::property (~var m (:property-impl stx #'#:protected-property))) #'m.form]
       [(_ (~var m (:method-impl stx #'#:protected))) #'m.form])))
 
 (define-interface-clause-syntax protected
@@ -630,15 +707,15 @@
 
 (define-for-syntax (parse-abstract-clause stx data)
   (syntax-parse stx
-    [(_ _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret))]
-    [(_ _::protected (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret))]
-    [(_ _::protected _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret))]
-    [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret))]
-    [(_ _::override (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret))]
-    [(_ _::override _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret))]
-    [(_ _::override _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret))]
-    [(_ _::protected _::property decl::property-decl) (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret))]
-    [(_ (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret))]))
+    [(_ _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+    [(_ _::protected (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+    [(_ _::protected _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+    [(_ _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+    [(_ _::override (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+    [(_ _::override _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+    [(_ _::override _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+    [(_ _::protected _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+    [(_ (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))
 
 (define-class-clause-syntax abstract
   (class-clause-transformer parse-abstract-clause))

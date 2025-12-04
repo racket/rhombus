@@ -6,6 +6,7 @@
                      "class-parse.rkt"
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
+                     "class-options-block.rkt"
                      "interface-parse.rkt"
                      "origin.rkt")
          racket/private/serialize-structs
@@ -41,7 +42,8 @@
          "reconstructor.rkt"
          "serializable.rkt"
          "name-prefix.rkt"
-         "field-case-lambda.rkt")
+         "field-case-lambda.rkt"
+         "doc.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -62,8 +64,8 @@
 (define-for-syntax (parse-class stxes name-prefix effect-id)
   (syntax-parse stxes
     #:datum-literals (group)
-    [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
-        options::options-block)
+    [(form-id name-seq::dotted-identifier-sequence (~and fields (tag::parens field::constructor-field ...))
+              options::class-options-block)
      #:with full-name::dotted-identifier #'name-seq
      #:with name #'full-name.name
      #:with name-extends #'full-name.extends
@@ -85,13 +87,23 @@
                             ;; data accumulated from parsed clauses:
                             ()))
      (annotation-to-be-defined! #'name)
-     #`(#,(cond
-            [(null? (syntax-e body))
-             #`(class-annotation+finish #,finish-data [#:ctx base-stx base-stx] ())]
-            [else
-             #`(rhombus-mixed-nested-forwarding-sequence
-                (class-annotation+finish #,finish-data) rhombus-class
-                (class-body-step #,finish-data . #,(intro body)))]))]))
+     (define defns
+       #`(#,(cond
+              [(null? (syntax-e body))
+               #`(class-annotation+finish #,finish-data [#:ctx base-stx base-stx] ())]
+              [else
+               #`(rhombus-mixed-nested-forwarding-sequence
+                  (class-annotation+finish #,finish-data) rhombus-class
+                  (class-body-step #,finish-data . #,(intro body)))])))
+     (if (syntax-e #'options.doc)
+         (syntax-parse #'options.doc
+           #:datum-literals (group)
+           [(group doc-kw . tail)
+            (maybe-add-doc #'tail
+                           #'(name-seq.head-id name-seq.tail-id ...)
+                           (list #'(group form-id (~@ . name-seq) fields))
+                           #'doc-kw stxes defns)])
+         defns)]))
 
 (define-class-body-step class-body-step
   :class-clause

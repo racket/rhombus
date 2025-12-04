@@ -1,5 +1,6 @@
 #lang rhombus/static
 import:
+  rhombus/cmdline
   rhombus/meta open
   rhombus/runtime_path
   rhombus/shrubbery
@@ -11,6 +12,13 @@ import:
 // of the HTML that keeps only relevant things involving layout
 // and styles, and checks whether that matches an expected content.
 // The expected content may need to be reset if Scribble changes.
+
+def flags:
+  cmdline.parse:
+    cmdline.flag "--show":
+      ~help "show filetered output"
+    cmdline.flag "--save":
+      ~help "save output for regression test"
 
 runtime_path.def doc_expect: "doc_expect.shrub"
 
@@ -68,11 +76,13 @@ fun read(expect):
   let o = Port.Input.open_file(expect)
   shrubbery.read(o)
 
-// println(filter(html), ~pretty: #true)
+when #'show in flags
+| println(filter(html), ~pretty: #true)
 
-check:
-  filter(html)
-  ~prints_like read(doc_expect)
+unless #'save in flags
+| check:
+    filter(html)
+    ~prints_like read(doc_expect)
 
 fun rewrite():
   let o = Port.Output.open_file(doc_expect,
@@ -80,5 +90,5 @@ fun rewrite():
   println(~out: o, filter(html), ~pretty: #true)
   o.flush()
 
-#//
-rewrite()
+when #'save in flags
+| rewrite()

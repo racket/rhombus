@@ -7,6 +7,8 @@
           // doesn't have to be related to the actual documentation;
           // they're just convenient names
           fun
+          method
+          property
           repr
           println
           String
@@ -19,7 +21,8 @@
       rhombus/scribble/tests/string_ext open
       rhombus/draw
       rhombus/cmdline
-      rhombus/date)
+      rhombus/date
+      rhombus/scribble/tests/local open)
 
 @title{Example}
 
@@ -78,6 +81,8 @@ Starting example:
   defn.macro 'fun:
                 $apple
                 $banana'
+  class_clause.macro 'method'
+  class_clause.macro 'property'
   fun rhombus.to_string(a,
                         b,
                         c: fun (x):
@@ -235,4 +240,23 @@ Starting example:
   inp.close()
 )
 
+}
+
+@section{Using @rhombus(~doc)}
+
+@docmodule(rhombus/scribble/tests/local)
+
+@doc(
+  ~include "local.rhm":
+    documented_fun
+){
+}
+
+@doc(
+  ~include "local.rhm":
+    DocumentedClass
+    DocumentedClass.documented_method
+    DocumentedClass.documented_property1
+    DocumentedClass.documented_property2
+){
 }

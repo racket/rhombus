@@ -1,0 +1,29 @@
+#lang rhombus
+
+export:
+  documented_fun
+  DocumentedClass
+
+fun documented_fun(x :: ReadableString) :: String:
+  ~doc
+  "x = " +& x
+
+class DocumentedClass(a :: String, b :: ReadableString):
+  ~doc
+
+  method documented_method():
+    ~doc obj
+    #void
+
+  property documented_property1 :: String:
+    ~doc obj
+    "x1"
+    
+  property
+  | documented_property2 :: String:
+      ~doc obj
+      "x2"
+  | documented_property2 := x :: Int:
+      #void
+
+    

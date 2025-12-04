@@ -181,7 +181,8 @@
                          exposure    ; 'private, 'public, 'protected
                          kind        ; 'method, 'property
                          arity       ; #f, integer, or (list integer required-list allowed-list)
-                         reflect-name)) ; #f or symbol
+                         reflect-name ; #f or symbol
+                         doc))       ; #f or syntax object
 
 ;; used for a table produced by `extract-method-tables`
 (struct mindex (index final? protected? property? arity inherited? reflect-name))

@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/strip-context
                      shrubbery/property
                      "consistent.rkt"
                      "entry-point-adjustment.rkt"
@@ -41,9 +40,9 @@
          (submod "define-arity.rkt" for-info)
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
-         (submod "module.rkt" for-module+)
          (submod "arrow-annotation.rkt" for-arrow-annot)
          "name-prefix.rkt"
+         "doc.rkt"
          "extract-name.rkt")
 
 (provide (for-spaces (#f
@@ -469,7 +468,7 @@
          (define extends (car (syntax->list #'(name.extends ...))))
          (maybe-add-unsafe-definition
           unsafe-id unsafe-proc
-          (maybe-add-doc
+          (maybe-add-function-doc
            (attribute doc)
            #'form-id
            #'(main-name-seq.head-id main-name-seq.tail-id ...)
@@ -518,7 +517,7 @@
          (define unsafe-id (and unsafe-proc (car (generate-temporaries (list #'name.name)))))
          (maybe-add-unsafe-definition
           unsafe-id unsafe-proc
-          (maybe-add-doc
+          (maybe-add-function-doc
            (attribute doc)
            #'form-id
            #'(name-seq.head-id name-seq.tail-id ...)
@@ -665,60 +664,33 @@
         #'(tag body ...)]
        [_ rhs]))))
 
-(define-for-syntax (maybe-add-doc doc form-id names headers doc-kw-stx orig-stx defns)
-  (cond
-    [(and doc
-          (not (eq? 'top-level (syntax-local-context))))
-     (define id (build-dot-symbol (syntax->list names)))
-     (define gs
-       (syntax-parse doc
-         [((tag::block g ...)) #'(g ...)]
-         [() #'()]
-         [_ (raise-syntax-error #f
-                                "expected nothing or a block after `~doc`"
-                                orig-stx
-                                doc)]))
-     (define (add-form header)
-       #`(group #,form-id #,@header))
-     (define (replace-:~-ret header)
-       (syntax-parse header
-         #:datum-literals (parens op :~)
-         [(pre ... (~and args (parens _ ...))
-               ((~and op-id op) (~and colon-tilde :~))
-               post ...)
-          (datum->syntax header
-                         (append (syntax->list #'(pre ...))
-                                 (list #'args)
-                                 (list (datum->syntax #f
-                                                      (list #'op-id
-                                                            (syntax-raw-property
-                                                             (datum->syntax #'colon-tilde
-                                                                            '::
-                                                                            #'colon-tilde
-                                                                            #'colon-tilde)
-                                                             "::"))))
-                                 (syntax->list #'(post ...))))]
-         [_ header]))
-     (cons
-      #`(rhombus-module+
-         #,(datum->syntax #f 'doc doc-kw-stx)
-         #:orig #,orig-stx
-         #:language (lib "rhombus/doc.rhm")
-         (group export #,id)
-         (group def #,id
-                (op =)
-                DocSpec
-                (parens (group List
-                               (parens
-                                #,@(for/list ([header (in-list (syntax->list headers))])
-                                     #`(group Syntax (op |.|) literal (quotes #,(replace-:~-ret
-                                                                                 (strip-context (add-form header))))))))
-                        (group List
-                               (parens
-                                #,@(for/list ([g (in-list (syntax->list gs))])
-                                     #`(group Syntax (op |.|) literal (quotes #,g))))))))
-      defns)]
-    [else defns]))
+(define-for-syntax (maybe-add-function-doc doc form-id names headers doc-kw-stx orig-stx defns)
+  (define (add-form header)
+    #`(group #,form-id #,@header))
+  (define (replace-:~-ret header)
+    (syntax-parse header
+      #:datum-literals (parens op :~)
+      [(pre ... (~and args (parens _ ...))
+            ((~and op-id op) (~and colon-tilde :~))
+            post ...)
+       (datum->syntax header
+                      (append (syntax->list #'(pre ...))
+                              (list #'args)
+                              (list (datum->syntax #f
+                                                   (list #'op-id
+                                                         (syntax-raw-property
+                                                          (datum->syntax #'colon-tilde
+                                                                         '::
+                                                                         #'colon-tilde
+                                                                         #'colon-tilde)
+                                                          "::"))))
+                              (syntax->list #'(post ...))))]
+      [_ header]))
+  (maybe-add-doc doc names
+                 (for/list ([header (in-list (syntax->list headers))])
+                   (replace-:~-ret (add-form header)))
+                 doc-kw-stx orig-stx
+                 defns))
 
 (define-syntax Function.pass/optimize
   (expression-transformer

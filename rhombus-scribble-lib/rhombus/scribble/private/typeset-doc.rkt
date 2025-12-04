@@ -99,6 +99,31 @@
           extract-binding-metavariables
           extract-pattern-metavariables))
 
+(begin-for-syntax
+  (define (build-dotted-name ids-stx)
+    (define ids (syntax->list ids-stx))
+    (if (null? (cdr ids))
+        (car ids)
+        (datum->syntax
+         (car ids)
+         (string->symbol
+          (apply string-append
+                 (let loop ([ids ids])
+                   (define str (symbol->immutable-string (syntax-e (car ids))))
+                   (cond
+                     [(null? (cdr ids)) (list str)]
+                     [else (list* str "." (loop (cdr ids)))])))))))
+
+  (define-splicing-syntax-class :dotted-name
+    #:description "dotted operator or identifier"
+    #:attributes (name)
+    #:datum-literals (parens group op |.|)
+    (pattern (~seq (op name)))
+    (pattern (~seq (~seq head-id:identifier (op |.|)) ... (parens (group (op tail-op))))
+             #:with name (build-dotted-name #'(head-id ... tail-op)))
+    (pattern (~seq (~seq head-id:identifier (op |.|)) ... tail-id:identifier)
+             #:with name (build-dotted-name #'(head-id ... tail-id)))))
+
 (define-syntax (typeset-doc stx)
   (syntax-parse stx
     #:datum-literals (parens group brackets block)
@@ -124,11 +149,11 @@
            [else
             (syntax-parse (car pre-forms)
               #:datum-literals (group block)
-              [(group #:include mod ... (block (group id:identifier ...) ...))
+              [(group #:include mod ... (block (group id::dotted-name ...) ...))
                (syntax-parse #'(group mod ...)
                  [mp::module-path
                   (define mod-path (module-path-convert-parsed #'mp.parsed))
-                  (let mod-loop ([ids (syntax->list #'(id ... ...))]
+                  (let mod-loop ([ids (syntax->list #'(id.name ... ...))]
                                  [accum accum]
                                  [accum-bodys accum-bodys])
                     (cond
@@ -167,6 +192,7 @@
                               [(group . (~var name (:hier-name-seq in-name-root-space in-doc-space name-path-op name-root-ref)))
                                (define t (syntax-local-value* (in-doc-space #'name.name) doc-transformer-ref))
                                (unless t
+                                 (log-error ">> ~s" form)
                                  (raise-syntax-error #f
                                                      "unknown doc form"
                                                      #'err-stx

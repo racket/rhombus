@@ -1,7 +1,6 @@
 #lang racket/base
 (require syntax/parse/pre
-         (for-template racket/unsafe/undefined
-                       "parens.rkt")
+         (for-template "parens.rkt")
          "dotted-sequence.rkt")
 
 (provide :options-block)

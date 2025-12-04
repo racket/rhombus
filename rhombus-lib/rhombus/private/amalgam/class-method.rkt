@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
+                     shrubbery/property
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
@@ -9,7 +10,8 @@
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "entry-point-adjustment.rkt"
-                     "maybe-as-original.rkt")
+                     "maybe-as-original.rkt"
+                     "dotted-sequence.rkt")
          racket/stxparam
          "provide.rkt"
          "expression.rkt"
@@ -41,7 +43,8 @@
          "wrap-expression.rkt"
          (only-in "syntax-parameter.rkt"
                   with-syntax-parameters
-                  syntax-parameters-key))
+                  syntax-parameters-key)
+         "doc.rkt")
 
 (provide (for-syntax extract-method-tables
                      build-interface-vtable
@@ -958,109 +961,186 @@
                            (if property? 'property 'method)))]
                   [(private-interface-name ...) (append (for/list ([intf (in-hash-keys private-interfaces)])
                                                           (interface-desc-id intf)))])
-      (list
-       #`(define-values (#,@(for/list ([added (in-list added-methods)]
-                                       #:when (not (eq? 'abstract (added-method-body added))))
-                              (maybe-as-original (added-method-rhs-id added)
-                                                 (added-method-id added)))
-                         #,@(if (and (syntax-e #'reconstructor-name)
-                                     (not (eq? reconstructor-rhs 'default)))
-                                (list #'reconstructor-name)
-                                null)
-                         #,@(if (syntax-e #'serializer-name)
-                                (list #'serializer-name)
-                                null)
-                         #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
-                                       [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
-                                       #:when (syntax-e rhs))
-                              acc))
-           (let ()
-             (define-syntax field-name (make-field-syntax (quote-syntax field-name)
-                                                          (quote-syntax field-static-infos)
-                                                          (quote-syntax name-field)
-                                                          (quote-syntax maybe-set-name-field!)))
-             ...
-             (define-syntax super-protected-field-name (make-field-syntax (quote-syntax super-protected-field-name)
-                                                                          (quote-syntax super-protected-field-static-infos)
-                                                                          (quote-syntax super-protected-name-field)
-                                                                          (quote-syntax super-protected-maybe-set-name-field!)))
-             ...
-             (define-syntax method-name (make-method-syntax (quote-syntax method-name)
-                                                            (quote-syntax method-index/id)
-                                                            (quote-syntax method-result-id)
-                                                            (quote method-kind)
-                                                            (quote-syntax methods-ref)))
-             ...
-             (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
-                                                                    (quote-syntax private-method-id/intf)
-                                                                    (quote-syntax private-method-result-id)
-                                                                    (quote private-method-kind)
-                                                                    (quote-syntax methods-ref)))
-             ...
-             (define-syntax new-private-tables (list* (cons (quote-syntax name)
-                                                            (hasheq (~@ 'private-method-name
-                                                                        (quote-syntax private-method-id/intf/property))
-                                                                    ...
-                                                                    (~@ 'private-field-name
-                                                                        private-field-desc)
-                                                                    ...))
-                                                      (cons (quote-syntax private-interface-name) ; for access to protected members
-                                                            #hasheq())
-                                                      ...
-                                                      (get-private-tables)))
-             #,@(for/list ([added (in-list added-methods)]
-                           #:when (eq? 'abstract (added-method-body added))
-                           #:when (syntax-e (added-method-rhs added)))
-                  #`(void (rhombus-expression #,(syntax-parse (added-method-rhs added)
-                                                  [(_ rhs) #'rhs]))))
-             (values
+      (append
+       (list
+        #`(define-values (#,@(for/list ([added (in-list added-methods)]
+                                        #:when (not (eq? 'abstract (added-method-body added))))
+                               (maybe-as-original (added-method-rhs-id added)
+                                                  (added-method-id added)))
+                          #,@(if (and (syntax-e #'reconstructor-name)
+                                      (not (eq? reconstructor-rhs 'default)))
+                                 (list #'reconstructor-name)
+                                 null)
+                          #,@(if (syntax-e #'serializer-name)
+                                 (list #'serializer-name)
+                                 null)
+                          #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
+                                        [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
+                                        #:when (syntax-e rhs))
+                               acc))
+            (let ()
+              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
+                                                           (quote-syntax field-static-infos)
+                                                           (quote-syntax name-field)
+                                                           (quote-syntax maybe-set-name-field!)))
+              ...
+              (define-syntax super-protected-field-name (make-field-syntax (quote-syntax super-protected-field-name)
+                                                                           (quote-syntax super-protected-field-static-infos)
+                                                                           (quote-syntax super-protected-name-field)
+                                                                           (quote-syntax super-protected-maybe-set-name-field!)))
+              ...
+              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
+                                                             (quote-syntax method-index/id)
+                                                             (quote-syntax method-result-id)
+                                                             (quote method-kind)
+                                                             (quote-syntax methods-ref)))
+              ...
+              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
+                                                                     (quote-syntax private-method-id/intf)
+                                                                     (quote-syntax private-method-result-id)
+                                                                     (quote private-method-kind)
+                                                                     (quote-syntax methods-ref)))
+              ...
+              (define-syntax new-private-tables (list* (cons (quote-syntax name)
+                                                             (hasheq (~@ 'private-method-name
+                                                                         (quote-syntax private-method-id/intf/property))
+                                                                     ...
+                                                                     (~@ 'private-field-name
+                                                                         private-field-desc)
+                                                                     ...))
+                                                       (cons (quote-syntax private-interface-name) ; for access to protected members
+                                                             #hasheq())
+                                                       ...
+                                                       (get-private-tables)))
               #,@(for/list ([added (in-list added-methods)]
-                            #:when (not (eq? 'abstract (added-method-body added))))
-                   (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
-                   (define method-name (let ([id (added-method-id added)])
-                                         ;; disable check-syntax presence:
-                                         (datum->syntax id (syntax-e id) #f)))
-                   #`(let ([#,method-name (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
-                                                        reflect-name name name? name-convert
-                                                        #,(and r (car r)) #,(added-method-id added)
-                                                        new-private-tables
-                                                        all-static-infos
-                                                        [super-name ...]
-                                                        #,(added-method-kind added))])
-                       #,method-name))
-              #,@(if (and (syntax-e #'reconstructor-name)
-                          (not (eq? reconstructor-rhs 'default)))
-                     (list
-                      #`(method-block (block #,reconstructor-rhs) #,reconstructor-stx-params
-                                      reflect-name name #f #f
-                                      #f reconstructor
-                                      new-private-tables
-                                      all-static-infos
-                                      ()
-                                      reconstructor))
-                     null)
-              #,@(if (syntax-e #'serializer-name)
-                     (list
-                      (syntax-parse #'serializable
-                        [(_ _ serializer-rhs . _)
-                         #`(method-block (block serializer-rhs) #,serializer-stx-params
-                                         reflect-name name #f #f
-                                         #f serializer
-                                         new-private-tables
-                                         all-static-infos
-                                         ()
-                                         serializer)]))
-                     null)
-              #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
-                            [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
-                            #:when (syntax-e rhs))
-                   #`(method-block (block #,rhs) #f ;; FIXME
-                                   reflect-name name #f #f
-                                   #f acc
-                                   new-private-tables
-                                   all-static-infos
-                                   ()
-                                   reconstructor_field)))))))))
+                            #:when (eq? 'abstract (added-method-body added))
+                            #:when (syntax-e (added-method-rhs added)))
+                   #`(void (rhombus-expression #,(syntax-parse (added-method-rhs added)
+                                                   [(_ rhs) #'rhs]))))
+              (values
+               #,@(for/list ([added (in-list added-methods)]
+                             #:when (not (eq? 'abstract (added-method-body added))))
+                    (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
+                    (define method-name (let ([id (added-method-id added)])
+                                          ;; disable check-syntax presence:
+                                          (datum->syntax id (syntax-e id) #f)))
+                    #`(let ([#,method-name (method-block #,(added-method-rhs added) #,(added-method-stx-params added)
+                                                         reflect-name name name? name-convert
+                                                         #,(and r (car r)) #,(added-method-id added)
+                                                         new-private-tables
+                                                         all-static-infos
+                                                         [super-name ...]
+                                                         #,(added-method-kind added))])
+                        #,method-name))
+               #,@(if (and (syntax-e #'reconstructor-name)
+                           (not (eq? reconstructor-rhs 'default)))
+                      (list
+                       #`(method-block (block #,reconstructor-rhs) #,reconstructor-stx-params
+                                       reflect-name name #f #f
+                                       #f reconstructor
+                                       new-private-tables
+                                       all-static-infos
+                                       ()
+                                       reconstructor))
+                      null)
+               #,@(if (syntax-e #'serializer-name)
+                      (list
+                       (syntax-parse #'serializable
+                         [(_ _ serializer-rhs . _)
+                          #`(method-block (block serializer-rhs) #,serializer-stx-params
+                                          reflect-name name #f #f
+                                          #f serializer
+                                          new-private-tables
+                                          all-static-infos
+                                          ()
+                                          serializer)]))
+                      null)
+               #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
+                             [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
+                             #:when (syntax-e rhs))
+                    #`(method-block (block #,rhs) #f ;; FIXME
+                                    reflect-name name #f #f
+                                    #f acc
+                                    new-private-tables
+                                    all-static-infos
+                                    ()
+                                    reconstructor_field))))))
+       (apply
+        append
+        (for/list ([added (in-list added-methods)]
+                   #:when (added-method-doc added))
+          (syntax-parse (added-method-doc added)
+            #:datum-literals (group)
+            [[(pre-head:identifier ... head:identifier)
+              (seq::dotted-operator-or-identifier-sequence)
+              tail
+              doc
+              orig-stx]
+             (syntax-parse #'doc
+               #:datum-literals (group)
+               [(group doc-kw self-id:identifier . doc)
+                (maybe-add-doc #'doc
+                               (datum->syntax
+                                #f
+                                (cons #'reflect-name
+                                      (let loop ([seq (syntax->list #'seq)])
+                                        (cond
+                                          [(null? seq) null]
+                                          [else
+                                           (define s (car seq))
+                                           (cons (syntax-parse s
+                                                   #:datum-literals (op parens group)
+                                                   [(op name) #'name]
+                                                   [(parens (group (op name))) #'name]
+                                                   [else s])
+                                                 (loop (cdr seq)))]))))
+                               (with-syntax ([parens (syntax-raw-tail-property
+                                                      (syntax-raw-prefix-property #'parens "(")
+                                                      ")")]
+                                             [:: (syntax-raw-suffix-property
+                                                  (syntax-raw-prefix-property
+                                                   (syntax-raw-property #':: "::")
+                                                   " ")
+                                                  " ")]
+                                             [|.| (syntax-raw-property #'|.| ".")])
+                                 (define split-reflect-name
+                                   ;; getting reflect-name components by string matching is hacky,
+                                   ;; but simplest for now
+                                   (let ([l (regexp-split #rx"[.]" (symbol->string (syntax-e #'reflect-name)))])
+                                     (if (= (length l) 1)
+                                         (list #'reflect-name)
+                                         (let loop ([l l])
+                                           (if (null? (cdr l))
+                                               (list (datum->syntax #f (string->symbol (car l))))
+                                               (append (loop (list (car l)))
+                                                       (list (list #'op #'|.|))
+                                                       (loop (cdr l))))))))
+                                 (define (relocate-all stx)
+                                   (cond
+                                     [(syntax->list stx)
+                                      => (lambda (l) (datum->syntax #f (map relocate-all l)))]
+                                     [else
+                                      (define (?+ a b) (and a b (+ a b)))
+                                      (datum->syntax stx
+                                                     (syntax-e stx)
+                                                     (srcloc (syntax-source #'head)
+                                                             (syntax-line #'head)
+                                                             (?+ (syntax-column #'head)
+                                                                 (syntax-span #'head))
+                                                             (?+ (syntax-position #'head)
+                                                                 (syntax-span #'head))
+                                                             0)
+                                                     stx)]))
+                                 (list #`(group pre-head ... head
+                                                #,(relocate-all #`(parens (group self-id (op ::) #,@split-reflect-name)))
+                                                (op |.|) (~@ . seq) . tail)))
+                               #'doc-kw
+                               #'orig-stx
+                               null)]
+               [_ (raise-syntax-error #f
+                                      "expected a \"self\" identifier immediately after `~doc`"
+                                      #'orig-stx
+                                      #'doc)])])))))))
 
 (define-syntax (method-block stx)
   (syntax-parse stx

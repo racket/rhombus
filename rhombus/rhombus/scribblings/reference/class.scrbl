@@ -88,6 +88,10 @@
   grammar option:
     ~name $id_name
     ~name: $id_name
+    ~doc
+    ~doc:
+      $desc_body
+      ...
 ){
 
  Binds @rhombus(id_name) as a @deftech{class} name in several
@@ -328,7 +332,11 @@
  A @rhombus(~name) form as an @rhombus(option) is analogous to
  @rhombus(~name) within a @rhombus(fun, ~defn) definition. It specifies a
  name used for run-time reporting, such as from a constructor or as the
- prefix on errors from methods.
+ prefix on errors from methods. A @rhombus(~doc) form as an
+ @rhombus(option) is similarly analogous to @rhombus(~doc) within a
+ @rhombus(fun, ~defn) definition, where the recorded class shape includes
+ only the @rhombus(class id_name(field_spec, ...)) part of the
+ definition.
 
  See @secref(~doc: guide_doc, "static-info-rules") for information about static
  information associated with classes.
@@ -484,6 +492,7 @@
     name_option: fun ~defn
     who_option: fun ~defn
     rest: fun ~defn
+    obj_id: block id
 
   class_clause.macro 'method $method_impl'
   class_clause.macro 'property $property_impl'
@@ -495,7 +504,7 @@
     $id $maybe_res_annot:
       $entry_point
     $id $case_maybe_kw_opt:
-      $name_option; ...
+      $option; ...
       $body
       ...
     Z| $id $case_maybe_kw:
@@ -512,7 +521,7 @@
 
   grammar property_impl:
     $id $maybe_res_annot:
-      $who_option; ...
+      $property_option; ...
       $body
         ...
     Z| $id $maybe_res_annot:
@@ -520,13 +529,28 @@
          $body
          ...
     Z| $id $maybe_res_annot:
-         $who_option; ...
+         $property_option; ...
          $body
          ...
      | $id := $binding:
          $who_option; ...
          $body
          ...
+
+  grammar option:
+    $doc_option
+    $name_option
+    $who_option
+
+  grammar property_option:
+    $doc_option
+    $who_option
+
+  grammar doc_option:
+    ~doc obj_id
+    ~doc obj_id:
+      $desc_body
+      ...
 ){
 
  @margin_note_block{The @rhombus(method, ~class_clause) form is used in
@@ -586,6 +610,13 @@
  mode (which implies that a direct reference to a method name must be a
  call of the method). An argument that has the same name as a field,
  method, or property shadows the field, method, or property.
+
+ A @rhombus(~doc) @rhombus(option) is similarly analogous to
+ @rhombus(~doc) within a @rhombus(fun, ~defn) definition, but a
+ @rhombus(obj_id) must be supplied to be used as a metavariable for the
+ object that is an instance of the class's method. The recorded class
+ shape includes the name of the enclosing class, and it is shown as an
+ annotation on @rhombus(obj_id).
 
 }
 
@@ -660,6 +691,7 @@
     case_maybe_kw: fun ~defn
     bind_maybe_kw_opt: fun ~defn
     rest: fun ~defn
+    doc_option: method ~class_clause
 
   class_clause.macro 'abstract $method_decl'
   class_clause.macro 'abstract #,(@rhombus(method, ~class_clause)) $method_decl'
@@ -673,6 +705,8 @@
   grammar method_decl:
     $id $maybe_res_annot
     $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
+      doc_option
     Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
      | ...
     $id $maybe_res_annot
@@ -681,8 +715,9 @@
 
   grammar property_decl:
     $id $maybe_res_annot
+    $id $maybe_res_annot:
+      doc_option
     Z| $id $maybe_res_annot
-
 ){
 
  A @tech{class clause} that declares a method
