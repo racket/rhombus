@@ -1,0 +1,60 @@
+#lang rhombus/static
+import:
+  csv
+
+fun s([str]):
+  Port.Input.open_string(str)
+
+check:
+  csv.Reader().read_line(s([""])) ~is Port.eof
+  csv.Reader().read_line(@s{a,b,c}) ~is ["a", "b", "c"]
+  csv.Reader().read_line(@s{ a , b , c }) ~is [" a ", " b ", " c "]
+  csv.Reader(~trim: String.trim).read_line(@s{ a , b , c }) ~is ["a", "b", "c"]  
+  csv.Reader(~trim: String.trim).read_line(@s{ a ," b ", c }) ~is ["a", " b ", "c"]
+  csv.Reader().read_line(@s{a,"b",c}) ~is ["a", "b", "c"]
+  csv.Reader().read_line(@s{a,"b""",c}) ~is ["a", "b\"", "c"]
+  csv.Reader().read_line(@s{a,"b"" ",c}) ~is ["a", "b\" ", "c"]
+  csv.Reader().read_line(@s{a,"""b"" ",c}) ~is ["a", "\"b\" ", "c"]
+  csv.Reader().read_line(@s{a,b,"c "}) ~is ["a", "b", "c "]
+  csv.Reader().read_line(@s{a,"b" ,c}) ~is ["a", "b", "c"]
+
+check:
+  csv.Reader().read_line(s(["a,\"b\n\",c"])) ~is ["a", "b\n", "c"]
+  csv.Reader(~newlines_in_quotes: #false).read_line(s(["a,\"b\n\",c"])) ~throws "unterminated quote in line"
+  csv.Reader().read_line(s(["a,\"b\r\n\",c"])) ~is ["a", "b\r\n", "c"]
+  csv.Reader().read_line(s(["a,\"b\r\",c"])) ~is ["a", "b\r", "c"]
+  csv.Reader().read_line(s(["a,\"b\n\",c"])) ~is ["a", "b\n", "c"]
+  csv.Reader().read_line(s(["a,\"b\n\r\",c"])) ~is ["a", "b\n\r", "c"]
+  
+check:
+  csv.Reader(~separator_chars: { Char"x" }).read_line(@s{axbxxc}) ~is ["a", "b", "", "c"]
+  csv.Reader(~separator_chars: { Char"x", Char"!" }).read_line(@s{a!bxxc}) ~is ["a", "b", "", "c"]
+  csv.Reader(~quote_chars: { Char"x" }).read_line(@s{a,xbxxx,c}) ~is ["a", "bx", "c"]
+  csv.Reader(~quote_chars: { Char"x" }).read_line(@s{a,"b,c}) ~is ["a", "\"b", "c"]
+  csv.Reader(~quote_chars: { Char"y", Char"x" }).read_line(@s{a,ybxxy,c}) ~is ["a", "bx", "c"]
+  csv.Reader(~quote_chars: { Char"y", Char"x" }).read_line(@s{a,ybxy,c}) ~throws "closing quote does not match opening quote"
+  csv.Reader().read_line(@s{a,"b"x,c}) ~throws "data after quote before separator in line"
+  csv.Reader(~quote_doubling_escapes: #false).read_line(@s{a,"b""x",c}) ~throws "data after quote before separator in line"
+  csv.Reader(~space_after_quotes: #false).read_line(@s{a,"b" ,c}) ~throws "data after quote before separator in line"
+
+check:
+  csv.Reader().read_line(s(["a\tb\tc"])) ~is ["a\tb\tc"]
+  csv.Reader().tsv().read_line(s(["a\tb\tc"])) ~is ["a", "b", "c"]
+  csv.Reader().tsv().read_line(s(["a\tb,d\tc"])) ~is ["a", "b,d", "c"]
+
+check:
+  csv.Reader().read(s([""])) ~is []
+  csv.Reader().read(s(["a,b,c\nd,e"])) ~is [["a", "b", "c"], ["d", "e"]]
+  csv.Reader().read(s(["a,b,c\r\nd,e"])) ~is [["a", "b", "c"], ["d", "e"]]
+  csv.Reader(~line_mode: #'linefeed).read(s(["a,b,c\r\nd,e"])) ~is [["a", "b", "c\r"], ["d", "e"]]
+  csv.Reader(~line_mode: #'return).read(s(["a,b,c\r\nd,e"])) ~is [["a", "b", "c"], ["\nd", "e"]]
+  csv.Reader(~line_mode: #'any_one).read(s(["a,b,c\r\nd,e"])) ~is [["a", "b", "c"], [], ["d", "e"]]
+  csv.Reader(~line_mode: #'return_linefeed).read(s(["a,b,c\r\nd,e"])) ~is [["a", "b", "c"], ["d", "e"]]
+  csv.Reader(~line_mode: #'return_linefeed).read(s(["a,b,c\n\rd,e"])) ~is [["a", "b", "c\n\rd", "e"]]
+  csv.Reader().read(s(["a,b,c\nd,e\n"])) ~is [["a", "b", "c"], ["d", "e"]]                          
+  csv.Reader().read(s(["a,b,c\r\nd,e\r\n"])) ~is [["a", "b", "c"], ["d", "e"]]
+  csv.Reader(~line_mode: #'linefeed).read(s(["a,b,c\r\nd,e\r\n"])) ~is [["a", "b", "c\r"], ["d", "e\r"]]
+
+check:
+  csv.Reader(~comment_chars: { Char"#" }).read_line(@s{# axbxxc}) ~is Port.eof
+  csv.Reader(~comment_chars: { Char"#" }).read(@s(["#\n#\na,b\n#"])) ~is [["a", "b"]]

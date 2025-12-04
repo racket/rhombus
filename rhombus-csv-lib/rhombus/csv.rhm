@@ -1,0 +1,206 @@
+#lang rhombus/static
+
+namespace csv
+
+export:
+  csv.Reader
+  csv.Writer
+
+class csv.Reader(
+  ~line_mode: line_mode :: Port.Input.ReadLineMode = #'any,
+  ~separator_chars: separator_chars :: Set.of(Char) = Set.by(===){Char","},
+  ~quote_chars: quote_chars :: Set.of(Char) = Set.by(===){Char"\""},
+  ~quote_doubling_escapes: quote_doubling_escapes :: Boolean = #true,
+  ~newlines_in_quotes: newlines_in_quotes :: Boolean = #true,
+  ~space_after_quotes: space_after_quotes :: Boolean = #true,
+  ~comment_chars: comment_chars :: Set.of(Char) = Set.by(===){},
+  ~trim: trim :: (String -> String) = values
+):
+  ~name: csv.Reader
+  ~doc
+
+  method tsv() :~ csv.Reader:
+    ~doc reader    
+    this with (separator_chars = Set.by(===){ Char"\t" })
+
+  method read_line(
+    inp :: Port.Input = stdin
+  ) :~ List.of(String) || Port.EOF:
+    ~doc reader
+    ~who: who
+    let (pre_line, pre_col, pre_pos) = inp.next_location()
+    fun csv_error(msg):
+      let (post_line, post_col, post_pos) = inp.next_location()                              
+      error(~who: who,
+            ~srcloc: Srcloc(inp.name(), pre_line, pre_col, pre_pos,
+                            pre_pos && post_pos && post_pos - pre_pos),
+            msg)
+    fun next_field(line :~ String, line_sep, i, accum :~ List):
+      cond
+      | i >= line.length():
+          accum
+      | ~else:
+          let char = line[i]
+          cond
+          | char in quote_chars:
+              next_quoted_field(char, line, line_sep, i, accum)
+          | ~else:
+              next_unquoted_field(line, line_sep, i, accum)
+    fun next_quoted_field(quote_char :~ Char, line :~ String, line_sep, i, accum :~ List):
+      recur next_char(line :~ String = line, line_sep = line_sep, prefix :~ String = "", i = i+1, start = i):
+        cond
+        | i >= line.length():
+            cond
+            | newlines_in_quotes:
+                let (next_line, next_line_sep) = read_line_with_sep(inp, line_mode)
+                next_char(next_line, next_line_sep, prefix ++ line.substring(start, i) ++ line_sep, 0, 0)
+            | ~else:
+                csv_error("unterminated quote in line")
+        | ~else:
+            let char = line[i]
+            cond
+            | char in quote_chars:
+                cond
+                | quote_doubling_escapes && (i + 1 < line.length()) && line[i+1] == char:
+                    next_char(line, line_sep, prefix ++ line.substring(start, i), i+2, i+1)
+                | char != quote_char:
+                    csv_error("closing quote does not match opening quote")
+                | ~else:
+                    let accum = accum.add(prefix ++ line.substring(start, i))
+                    recur end(i = i + 1):
+                      cond
+                      | space_after_quotes && (i < line.length()) && line[i] == Char" ":
+                          end(i+1)
+                      | (i >= line.length()) || (line[i] in separator_chars):
+                          next_field(line, line_sep, i+1, accum)
+                      | ~else:
+                          csv_error("data after quote before separator in line")
+            | ~else:
+                next_char(line, line_sep, prefix, i+1, start)
+    fun next_unquoted_field(line :~ String, line_sep :~ String, i, accum :~ List):
+      recur next_char(line :~ String = line, i = i, start = i):
+        cond
+        | i >= line.length():
+            accum.add(trim(line.substring(start, i)))
+        | ~else:
+            let char = line[i]
+            cond
+            | char in separator_chars:
+                next_field(line, line_sep, i+1, accum.add(trim(line.substring(start, i))))
+            | ~else:
+                next_char(line, i+1, start)
+    recur retry():
+      let (line, line_sep) = read_line_with_sep(inp, line_mode)
+      cond
+      | line == Port.eof:
+          Port.eof
+      | (String.length(line) > 0) && (line :~ String)[0] in comment_chars:
+          retry()          
+      | ~else:
+          next_field(line, line_sep, 0, [])
+
+  method read(
+    inp :: Port.Input = stdin
+  ) :~ List.of(List.of(String)):
+    ~doc reader
+    recur read_lines(accum :~ List = []):
+      let line = read_line(inp)
+      if line == Port.eof
+      | accum
+      | read_lines(accum.add(line))
+
+fun read_line_with_sep(inp :~ Port.Input, mode) :~ values(String || Port.EOF, String):
+  let sp = Port.Output.open_bytes()
+  fun finish(line_sep):
+    values(sp.get_string(), line_sep)
+  recur loop():
+    let char = inp.read_byte()
+    cond
+    | char == Port.eof:
+        let line = sp.get_string()
+        if line == ""
+        | values(Port.eof, "")
+        | values(line, "")
+    | char == Char"\n".to_int() && (mode != #'return) && (mode != #'return_linefeed):
+        finish("\n")
+    | char == Char"\r".to_int() && (mode != #'linefeed):
+        match mode
+        | #'return || #'any_one:
+            finish("\r")
+        | #'return_linefeed:              
+            let char = inp.read_byte()
+            if char == Char"\n".to_int()
+            | finish("\r\n")
+            | sp.write_byte(Char"\r".to_int())
+              sp.write_byte(char)
+              loop()
+        | ~else:
+            let char = inp.peek_byte()
+            if char == Char"\n".to_int()
+            | inp.read_byte()
+              finish("\r\n")
+            | sp.write_byte(Char"\r".to_int())
+              loop()
+    | ~else:
+        sp.write_byte(char)
+        loop()
+
+class csv.Writer(
+  ~newline: newline :: String = "\r\n",
+  ~separator_char: separator_char :: Char = Char",",
+  ~quote_char: quote_char :: Char = Char"\"",
+  ~extra_quote_chars: extra_quote_chars :: Set.of(Char) = Set.by(===){},
+  ~extra_special_chars: extra_special_chars :: Set.of(Char) = Set.by(===){}
+):
+  ~name: csv.Writer
+  ~doc
+
+  method tsv() :~ csv.Writer:
+    ~doc writer
+    this with (separator_char = Char"\t" )
+
+  method write_line(
+    line :: List.of(String),
+    ~out: outp :: Port.Output = stdout
+  ) :~ Void:
+    ~doc writer
+    for fold(use_sep = #false) (field in line):
+      let need_quote:
+        for any (char in field):
+          char === quote_char
+            || char === separator_char
+            || char in extra_quote_chars
+            || char in extra_special_chars
+            || (for any (nl in newline):
+                  char === nl)
+      when use_sep
+      | print(separator_char, ~out: outp)
+      cond
+      | need_quote:
+          print(quote_char, ~out: outp)
+          for (char in field):
+            if char === quote_char || char in extra_quote_chars
+            | print(char, ~out: outp)
+              print(char, ~out: outp)
+            | print(char, ~out: outp)
+          print(quote_char, ~out: outp)
+      | ~else:
+          print(field, ~out: outp)
+      #true
+    print(newline, ~out: outp)
+  
+  method write(
+    lines :: List.of(List.of(String)),
+    ~out: outp :: Port.Output = stdout
+  ) :~ Void:
+    ~doc writer
+    for (line in lines):
+      write_line(line, ~out: outp)
+
+  method to_string(
+    lines :: List.of(List.of(String))
+  ) :~ String:
+    ~doc writer
+    let p = Port.Output.open_string()
+    write(lines, ~out: p)
+    p.get_string()

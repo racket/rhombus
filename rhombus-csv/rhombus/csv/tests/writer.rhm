@@ -1,0 +1,23 @@
+#lang rhombus/static
+import:
+  csv
+
+check:
+  csv.Writer().to_string([]) ~is ""
+  csv.Writer().to_string([["a"]]) ~is "a\r\n"
+  csv.Writer().to_string([["a"], ["b"]]) ~is "a\r\nb\r\n"
+  csv.Writer().to_string([["a", "b", "c"], ["d", "e"]]) ~is "a,b,c\r\nd,e\r\n"
+  csv.Writer().to_string([["a", "b,B", "c"], ["d", "e"]]) ~is "a,\"b,B\",c\r\nd,e\r\n"
+  csv.Writer().to_string([["a", "b\nB", "c"], ["d", "e"]]) ~is "a,\"b\nB\",c\r\nd,e\r\n"
+  csv.Writer().to_string([["a", "b\r\nB", "c"], ["d", "e"]]) ~is "a,\"b\r\nB\",c\r\nd,e\r\n"
+  csv.Writer().to_string([["a", "\"b\"", "c"], ["d", "e"]]) ~is "a,\"\"\"b\"\"\",c\r\nd,e\r\n"
+
+check:
+  csv.Writer(~newline: "\n").to_string([["a", "b", "c"], ["d", "e"]]) ~is "a,b,c\nd,e\n"
+  csv.Writer(~newline: "\n\n\n").to_string([["a", "b", "c"], ["d", "e"]]) ~is "a,b,c\n\n\nd,e\n\n\n"
+  csv.Writer(~separator_char: Char"!").to_string([["a", "b", "c"], ["d", "e"]]) ~is "a!b!c\r\nd!e\r\n"
+  csv.Writer(~separator_char: Char"!").to_string([["a", "b!", "c"], ["d", "e"]]) ~is "a!\"b!\"!c\r\nd!e\r\n"
+  csv.Writer(~quote_char: Char"%").to_string([["a", "b,B", "c"], ["d", "e"]]) ~is "a,%b,B%,c\r\nd,e\r\n"
+  csv.Writer(~quote_char: Char"%").to_string([["a", "b%B", "c"], ["d", "e"]]) ~is "a,%b%%B%,c\r\nd,e\r\n"
+  csv.Writer(~extra_quote_chars: { Char"%" }).to_string([["a", "b%B", "c"], ["d", "e"]]) ~is "a,\"b%%B\",c\r\nd,e\r\n"
+  csv.Writer(~extra_special_chars: { Char"%" }).to_string([["a", "b%B", "c"], ["d", "e"]]) ~is "a,\"b%B\",c\r\nd,e\r\n"
