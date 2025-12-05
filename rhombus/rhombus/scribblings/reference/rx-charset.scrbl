@@ -278,7 +278,7 @@ bytes to match for a byte-mode @tech{regexp}.
  @rhombus(blank, ~at rhombus/rx_charset) character set has space
  (@rhombus(Char.to_int) value 32) and tab (@rhombus(Char.to_int) value
  7). The @rhombus(space, ~at rhombus/rx_charset) character set combines
- those and adds return (@rhombus(Char.to_int) value 10) and form feed
+ those and adds return (@rhombus(Char.to_int) value 13) and form feed
  (@rhombus(Char.to_int) value 12).
 
 @examples(

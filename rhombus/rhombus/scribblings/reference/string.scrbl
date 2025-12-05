@@ -308,13 +308,18 @@ Strings are @tech{comparable}, which means that generic operations like
     :: List.of(String)
 ){
 
- Removes @rhombus(sep) from the start (when @rhombus(start) is true) and
- end (when @rhombus(end) is true) of @rhombus(str).
+ Removes matches to @rhombus(sep) from the start (when @rhombus(start)
+ is true) and end (when @rhombus(end) is true) of @rhombus(str).
 
- The @rhombus(repeat) argument is relevant only when @rhombus(sep) is a
- string instead of a @tech{regexp}. When @rhombus(repeat) is true, then
- @rhombus(sep) is converted to a pattern that matches one or more
- consecutive instances of @rhombus(sep).
+ When @rhombus(repeat) is true, then repeated matches are found and
+ removed at each end of the string that is trimmed. Note that repeating
+ is not useful with regular expressions with repetition built in,
+ including the default value of @rhombus(sep).
+
+ When trimming both the start and end of a string, matches are found on
+ the original string, as opposed to first trimming the start, then
+ trimming that result at the end. If matches at the start and end of the
+ string overlap, then the result is an empty string.
 
 @examples(
   ~hidden:
@@ -325,6 +330,7 @@ Strings are @tech{comparable}, which means that generic operations like
     "  Hello World  ".trim(~end: #false)
     "_Hello World__".trim("_")
     "_Hello World__".trim("_", ~repeat: #true)
+    "aBaBa".trim("aBa")
 )
 
 }
