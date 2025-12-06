@@ -34,7 +34,8 @@
          "syntax-wrap.rkt"
          "annotation-failure.rkt"
          (submod "syntax-object.rkt" for-quasiquote)
-         "static-info.rkt")
+         "static-info.rkt"
+         "syntax-class-attributes-key.rkt")
 
 (provide (for-spaces (rhombus/defn
                       rhombus/namespace)
@@ -682,9 +683,12 @@
          (for/fold ([ht #hasheq()]) ([var (in-list attributes)])
            (define prev-var (hash-ref ht0 (pattern-variable-sym var) #f))
            (if prev-var
-               (hash-set ht
-                         (pattern-variable-sym var)
-                         (intersect-var stx var prev-var))
+               (let ([var (intersect-var stx var prev-var)])
+                 (if var
+                     (hash-set ht
+                               (pattern-variable-sym var)
+                               var)
+                     (hash-remove ht (pattern-variable-sym var))))
                ht))))
      ;; if commonizing, then add all fields back, intersecting each as generic
      (define ht
@@ -693,10 +697,12 @@
              (for/fold ([ht1 ht1]) ([var (in-list attributes)])
                (define prev-var (hash-ref ht1 (pattern-variable-sym var) #f))
                (if (and prev-var (not (= 1 (length attributess))))
-                   (raise-syntax-error #f
-                                       "field appears in multiple option cases"
-                                       stx
-                                       (pattern-variable-id var))
+                   (if stx
+                       (raise-syntax-error #f
+                                           "field appears in multiple option cases"
+                                           stx
+                                           (pattern-variable-id var))
+                       (hash-remove ht1 (pattern-variable-sym var)))
                    (hash-set ht1 (pattern-variable-sym var)
                              (struct-copy pattern-variable var
                                           [unpack* #'unpack-element*])))))
@@ -764,32 +770,36 @@
      (hash-values filtered-ht #t)]))
 
 (define-for-syntax (intersect-var stx a b)
-  (unless (eqv? (pattern-variable-depth a) (pattern-variable-depth b))
-    (raise-syntax-error #f
-                        "field with different repetition depths in different cases"
-                        stx
-                        (pattern-variable-sym a)))
-  (struct-copy pattern-variable a
-               [unpack*
-                ;; keeping the same unpack, if possible, enables optimizations for
-                ;; tail repetitions; otherwise, the term is sufficiently normalized
-                ;; by matching that we can just use `unpack-element*`
-                (let ()
-                  (define (same-unpack? a b)
-                    (cond
-                      [(and (identifier? a) (identifier? b)) (free-identifier=? a b)]
-                      [(or (identifier? a) (identifier? b)) #f]
-                      [else
-                       (define as (syntax->list a))
-                       (define bs (syntax->list a))
+  (cond
+    [(eqv? (pattern-variable-depth a) (pattern-variable-depth b))
+     (struct-copy pattern-variable a
+                  [unpack*
+                   ;; keeping the same unpack, if possible, enables optimizations for
+                   ;; tail repetitions; otherwise, the term is sufficiently normalized
+                   ;; by matching that we can just use `unpack-element*`
+                   (let ()
+                     (define (same-unpack? a b)
                        (cond
-                         [(and as bs (= (length as) (length bs))) (andmap same-unpack? as bs)]
-                         [else (eq? (syntax-e a) (syntax-e b))])]))
-                  (if (same-unpack? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
-                      (pattern-variable-unpack* a)
-                      #'unpack-element*))]
-               [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
-                                           (normalize-pvar-statinfos (pattern-variable-statinfos b)))]))
+                         [(and (identifier? a) (identifier? b)) (free-identifier=? a b)]
+                         [(or (identifier? a) (identifier? b)) #f]
+                         [else
+                          (define as (syntax->list a))
+                          (define bs (syntax->list a))
+                          (cond
+                            [(and as bs (= (length as) (length bs))) (andmap same-unpack? as bs)]
+                            [else (eq? (syntax-e a) (syntax-e b))])]))
+                     (if (same-unpack? (pattern-variable-unpack* a) (pattern-variable-unpack* b))
+                         (pattern-variable-unpack* a)
+                         #'unpack-element*))]
+                  [statinfos (static-infos-or (normalize-pvar-statinfos (pattern-variable-statinfos a))
+                                              (normalize-pvar-statinfos (pattern-variable-statinfos b)))])]
+    [else
+     (if stx
+         (raise-syntax-error #f
+                             "field with different repetition depths in different cases"
+                             stx
+                             (pattern-variable-sym a))
+         #f)]))
 
 (define (apply-converter val sym depth converter annotation-str)
   (cond
@@ -809,3 +819,18 @@
   (if (syntax*? val)
       val
       (raise-annotation-failure sym val "Syntax")))
+
+(begin-for-syntax
+  (void
+   (let ([merge (lambda (a b commonize?)
+                  (datum->syntax
+                   #f
+                   (map
+                    pattern-variable->list
+                    (intersect-attributes #f
+                                          (list (map syntax-list->pattern-variable (syntax->list a))
+                                                (map syntax-list->pattern-variable (syntax->list b)))
+                                          #f #f commonize?))))])
+     (set-or-and-syntax-class-attributes!
+      (lambda (a b) (and a b (merge a b #f)))
+      (lambda (a b) (if (and a b) (merge a b #t) (or a b)))))))

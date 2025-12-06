@@ -254,7 +254,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ (_::parens (group seq::dotted-identifier-sequence)) . tail)
+       [(form-id (~and parens (_::parens (group seq::dotted-identifier-sequence))) . tail)
         (define (bad [constraint ""])
           (raise-syntax-error #f (string-append "not a syntax class" constraint) stx #'seq))
         (syntax-parse #'seq
@@ -298,11 +298,13 @@
                             #'()))]
                   [else (get-syntax-static-infos)]))
               (values
-               (annotation-predicate-form #`(lambda (v)
-                                              (and (syntax-wrap? v)
-                                                   (eq? (syntax-wrap-key v) (quote #,(rhombus-syntax-class-key rsc)))))
-                                          (get-syntax-class-static-infos statinfos
-                                                                         (root-swap (rhombus-syntax-class-attributes rsc))))
+               (relocate+reraw
+                (datum->syntax #f (list #'form-id #'parens))
+                (annotation-predicate-form #`(lambda (v)
+                                               (and (syntax-wrap? v)
+                                                    (eq? (syntax-wrap-key v) (quote #,(rhombus-syntax-class-key rsc)))))
+                                           (get-syntax-class-static-infos statinfos
+                                                                          (root-swap (rhombus-syntax-class-attributes rsc)))))
                #'tail)]
              [else (bad)])]
           [else (bad)])]))))

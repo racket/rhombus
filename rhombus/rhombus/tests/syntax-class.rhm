@@ -1691,3 +1691,40 @@ check:
     check indirect ~matches good
     check indirect ~prints_like good
   ~completes
+
+block:
+  use_static
+  syntax_class A:
+  | '$x'
+  syntax_class B:
+    fields: a :~ Syntax.matched_of(A)
+  | '$(a :: A)'
+  syntax_class C
+  | '$x $y'
+  fun f(b :~ Syntax.matched_of(B)):
+    (b.a :~ Syntax.matched_of(A)).x
+  fun g(ac :: Syntax.matched_of(A) || Syntax.matched_of(C)):
+    ac.x
+  fun h(ac :~ Syntax.matched_of(A) && Syntax.matched_of(C)):
+    // so value actually satisfies the contract, but `y` should
+    // be statically accessible, and we can pass in an unchecked `C`
+    ac.y
+  let '$(a :: A)' = '3'
+  let '$(b :: B)' = '1'
+  let '$(c :: C)' = '4 5'
+  check f(b) ~matches '1'
+  check g(a) ~matches '3'
+  check g(c) ~matches '4'
+  check h(c) ~matches '5'
+
+check:
+  ~eval
+  use_static
+  syntax_class A:
+  | '$x'
+  syntax_class C
+  | '$x $y'
+  fun g(ac :: Syntax.matched_of(A) || Syntax.matched_of(C)):
+    ac.y
+  ~throws values("y: no such field or method",
+                 "(based on static information)")
