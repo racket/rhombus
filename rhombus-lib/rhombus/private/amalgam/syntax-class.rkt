@@ -23,6 +23,7 @@
          "parse.rkt"
          "pack.rkt"
          "parens.rkt"
+         "op-literal.rkt"
          "forwarding-sequence.rkt"
          "sequence-pattern.rkt"
          (only-in "static-info.rkt"
@@ -326,9 +327,14 @@
                                    in-binding-space
                                    (lambda (e) 'term)
                                    (lambda (e)
-                                     ;; It's possible that `e` is a multi pattern,
-                                     ;; but we infer 'sequence for simplicity
-                                     'sequence)
+                                     (syntax-parse e
+                                       [(group _ ... _::$-bind (_::parens))
+                                        ;; ends in `$()` => group pattern
+                                        'group]
+                                       [_
+                                        ;; It's possible that `e` is a multi pattern,
+                                        ;; but we infer 'sequence for simplicity
+                                        'sequence]))
                                    (lambda (e)
                                      (syntax-parse e
                                        #:datum-literals (multi)
@@ -559,7 +565,13 @@
                             #,(pattern-variable-depth var))))
                       all-attrs)]
                 [(body-form ...) pattern-body])
-    (values #`(pattern #,p
+    (values #`(pattern #,(if (and (eq? kind 'group)
+                                  can-be-empty?)
+                             ;; make sure the pattern only matches a non-empty
+                             ;; sequence, since it's supposed to match a group
+                             #`(~and (_ _ . _)
+                                     #,p)
+                             p)
                        #,@pattern-body
                        attr ... ...)
             all-attrs

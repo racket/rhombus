@@ -356,18 +356,34 @@
             (define could-tail? (or (and (not tail) (not splice?)) as-tail?))
             (define tail? (and (null? (syntax-e #'n-gs))
                                could-tail?))
-            (define fixed-terms-after? (and could-tail?
-                                            (for/and ([n-g (in-list (syntax->list #'n-gs))])
-                                              (syntax-parse n-g
-                                                [(~var _ (:$ in-space)) #f]
-                                                [(~var _ (:... in-space)) #f]
-                                                [_ #t]))))
+            (define fixed-terms-after-gs (and could-tail?
+                                              ;; `$() must be at end
+                                              (syntax-parse #'esc
+                                                [((_::parens)) #f]
+                                                [_ #t])
+                                              (let* ([n-gs (syntax->list #'n-gs)]
+                                                     [n-gs (if (and (pair? n-gs)
+                                                                    (pair? (cdr n-gs)))
+                                                               ;; allow `$()` after a group
+                                                               (let ([rev-n-gs (reverse n-gs)])
+                                                                 (syntax-parse (list (cadr rev-n-gs)
+                                                                                     (car rev-n-gs))
+                                                                   [((~var _ (:$ in-space)) (_::parens))
+                                                                    (reverse (cddr rev-n-gs))]
+                                                                   [_ n-gs]))
+                                                               n-gs)])
+                                                (and (for/and ([n-g (in-list n-gs)])
+                                                       (syntax-parse n-g
+                                                         [(~var _ (:$ in-space)) #f]
+                                                         [(~var _ (:... in-space)) #f]
+                                                         [_ #t]))
+                                                     (datum->syntax #f n-gs)))))
             (define-values (pat new-idrs new-sidrs new-vars pat-as-tail?)
               (handle-escape #'$-id.name #'esc.term e tail?
-                             (or (and fixed-terms-after? #'n-gs) #'())
-                             (and fixed-terms-after?
+                             (or fixed-terms-after-gs #'())
+                             (and fixed-terms-after-gs
                                   (lambda ()
-                                    (loop #'n-gs '() '() '()
+                                    (loop fixed-terms-after-gs '() '() '()
                                           '()
                                           '()
                                           '()

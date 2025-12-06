@@ -583,3 +583,35 @@ check:
   def [[name, ...], ...] = [['x']]
   '$name ...'
   ~throws "name: used with wrong repetition depth"
+
+check:
+  match '1' | '1 $()': "yes"
+  ~is "yes"
+
+block:
+  fun m(stx):
+    match stx
+    | '1 $(g :: Group) $()': g
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 2') ~matches '2'
+  check m('1 2 3') ~matches '2 3'
+  check m('1; 2') ~is "no"
+
+block:
+  fun m(stx):
+    match stx
+    | '1 $(g :: Group) 10 $()': g
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 10') ~is "no"
+  check m('1 2 10') ~matches '2'
+  check m('1 2 3 10') ~matches '2 3'
+  check m('1 2 10; 1 2 10') ~is "no"
+
+check:
+  ~eval
+  def '$() $()' = 1
+  ~throws "incompatible with this context"

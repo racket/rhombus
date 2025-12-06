@@ -81,8 +81,12 @@
  the context within a
  pattern where a syntax class can be used, and it determines the kind
  of match that each pattern specifies. See @rhombus(kind, ~syntax_class_clause)
- for details. The default is inferred from the shapes for @rhombus(pattern_case)s as
- either @rhombus(~term), @rhombus(~sequence), or @rhombus(~multi).
+ for details. The default is inferred from the shapes for @rhombus(pattern_case)s
+ as the earliest of the possibilities that applies to all cases:
+ @rhombus(~term) when the pattern is a single term, @rhombus(~sequence)
+ when the pattern is a single group that does not end in
+ @rhombus(#,(@rhombus($, ~bind))()), @rhombus(~group) when the pattern is
+ a single group, or @rhombus(~multi).
 
  A @rhombus(fields, ~syntax_class_clause) declaration limits the set of pattern variables that
  are accessible from the class, where variables used in all
@@ -347,23 +351,29 @@
 
 @itemlist(
 
- @item{@rhombus(~term): each pattern case represents a single term, and
+ @item{@rhombus(~term): Each pattern case represents a single term, and
   the syntax class can be used in the same way at the
   @rhombus(Term, ~stxclass) syntax class.}
 
- @item{@rhombus(~sequence): each pattern case represents a sequence of
+ @item{@rhombus(~sequence): Each pattern case represents a sequence of
   terms that is spliced within a group. This is the default mode of a
-  syntax class when no @rhombus(kind) is specified.}
+  syntax class when no @rhombus(kind, ~syntax_class_clause) is specified, at least one pattern
+  has multiple terms (even if the terms form a single escape), and no
+  pattern ends with @rhombus(#,(@rhombus($, ~bind))()).}
 
- @item{@rhombus(~group): each pattern case represents a @tech(~doc: shrub_doc){group},
-  and the syntax class can be used in the same places as
-  @rhombus(Group, ~stxclass) (i.e., at the end of an enclosing group).}
+ @item{@rhombus(~group): Each pattern case represents a
+  @tech(~doc: shrub_doc){group}---or, more generally, a nonempty sequence
+  within a group, but only for certain positions within an enclosing group
+  pattern. This kind of syntax class can be used in the same places as
+  @rhombus(Group, ~stxclass). An ending @rhombus(#,(@rhombus($, ~bind))())
+  in the pattern corresponds to just the end of the match within an
+  enclosing group, not necessarily the end of that enclosing group.}
 
- @item{@rhombus(~multi): each pattern case represents multiple groups, and the
+ @item{@rhombus(~multi): Each pattern case represents multiple groups, and the
   syntax class can be used in the same way at the
    @rhombus(Multi, ~stxclass) syntax class.}
 
- @item{@rhombus(~block): each pattern case represents a block, and the
+ @item{@rhombus(~block): Each pattern case represents a block, and the
   syntax class can be used in the same way at the
   @rhombus(Block, ~stxclass) syntax class}
 )
@@ -508,8 +518,9 @@
 
  The @rhombus(Group, ~stxclass) syntax class can be used only for a
  pattern identifier that has no other pattern escapes after it in the
- same group. The identifier is bound to a match for a non-empty sequence
- of term syntax objects.
+ same group, except that @rhombus(#,(@rhombus($, ~bind))()) may appear
+ at the end of the group. The identifier is bound to a match for a
+ nonempty sequence of term syntax objects.
 
  The @rhombus(Multi, ~stxclass) syntax class can be used only for a
  pattern identifier that is alone within its group. The identifier is

@@ -384,7 +384,133 @@ block:
     | '$x + $y'
     match '0 + 1 + 2 + 3'
     | '0 + $(f :: Foo) + $z': [f.x, f.y]
-    ~throws "syntax class incompatible with this context"
+    ~throws "incompatible with this context"
+
+check:
+  ~eval
+  syntax_class AGroup:
+    kind: ~term
+  | '$a ... $()'
+  ~throws "incompatible with this context"
+
+check:
+  ~eval
+  syntax_class AGroup:
+    kind: ~sequence
+  | '$a ... $()'
+  ~throws "incompatible with this context"
+
+block:
+  // `~group` syntax class cannot match empty
+  syntax_class AGroup:
+    kind: ~group
+  | '$a ...'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 2') ~matches '2'
+  check m('1 2 3') ~matches '2 3'
+  fun m2(stx):
+    match stx
+    | '1 $(a :: AGroup)': a
+    | ~else: "no"
+  check m2('') ~is "no"
+  check m2('1') ~is "no"
+  check m2('1 2') ~matches '2'
+  check m2('1 2 3') ~matches '2 3'
+
+block:
+  // `~group` syntax class cannot match empty
+  syntax_class AGroup:
+    kind: ~group
+  | '$a ...'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) 10 $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 10') ~is "no"
+  check m('1 2 10') ~matches '2'
+  check m('1 2 3 10') ~matches '2 3'
+  fun m2(stx):
+    match stx
+    | '1 $(a :: AGroup) 10': a
+    | ~else: "no"
+  check m2('') ~is "no"
+  check m2('1') ~is "no"
+  check m2('1 10') ~is "no"
+  check m2('1 2 10') ~matches '2'
+  check m2('1 2 3 10') ~matches '2 3'
+
+block:
+  syntax_class AGroup:
+  | '$a ... $()'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 2') ~matches '2'
+  check m('1 2 3') ~matches '2 3'
+  fun m2(stx):
+    match stx
+    | '1 $(a :: AGroup)': a
+    | ~else: "no"
+  check m2('') ~is "no"
+  check m2('1') ~is "no"
+  check m2('1 2') ~matches '2'
+  check m('1 2 3') ~matches '2 3'
+
+block:
+  // `~group` syntax class cannot match empty
+  syntax_class AGroup
+  | '$a ... $()'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) 10 $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 10') ~is "no"
+  check m('1 2 10') ~matches '2'
+  check m('1 2 3 10') ~matches '2 3'
+  fun m2(stx):
+    match stx
+    | '1 $(a :: AGroup) 10': a
+    | ~else: "no"
+  check m2('') ~is "no"
+  check m2('1') ~is "no"
+  check m2('1 10') ~is "no"
+  check m2('1 2 10') ~matches '2'
+  check m2('1 2 3 10') ~matches '2 3'
+
+block:
+  syntax_class AGroup:
+  | '$()'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 2') ~is "no"
+
+block:
+  syntax_class AGroup:
+    kind: ~group
+  | '$()'
+  fun m(stx):
+    match stx
+    | '1 $(a :: AGroup) $()': a
+    | ~else: "no"
+  check m('') ~is "no"
+  check m('1') ~is "no"
+  check m('1 2') ~is "no"
 
 block:
   syntax_class Foo:

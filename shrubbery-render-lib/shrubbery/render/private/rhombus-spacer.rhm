@@ -216,11 +216,11 @@ meta:
       match case
       | '$(args :: Args)
            $(pattern:
-               kind ~group
+               kind ~sequence
              | '$(res_ann :: ResAnn): $(body :: Block)'
              | '$(res_ann :: ResAnn)': field body = #false
              | ': $(body :: Block)': field res_ann = #false
-             | '$()': field res_ann = #false; field body = #false)':
+             | '': field res_ann = #false; field body = #false)':
           let new_args = adjust_args(args, adjust_arg)
           let new_res_ann = if res_ann | adjust_res_ann(res_ann, esc) | ''
           let new_body = if body | spacer.adjust_term(body, body_spaces, esc) | ''
