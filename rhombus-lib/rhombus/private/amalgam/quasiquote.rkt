@@ -458,9 +458,8 @@
                                        (or (syntax-property stx 'origin) null))))
   (define (handle-escape $-id e in-e ctx-kind)
     (define parsed
-      (parameterize ([current-unquote-binding-kind ctx-kind])
-        (syntax-parse #`(#,group-tag #,e)
-          [esc::unquote-binding #'esc.parsed])))
+      (syntax-parse #`(#,group-tag #,e)
+        [(~var esc (:unquote-binding ctx-kind)) #'esc.parsed]))
     (define (track stx)
       (syntax-parse stx
         #:datum-literals (~var ~seq)
@@ -475,9 +474,9 @@
        (if (eq? ctx-kind 'grouplet)
            (values #f #f #f #f)
            (identifier-as-unquote-binding (track #'id) ctx-kind
-                                          #:result values
+                                          #:result (lambda (kind . rest) (apply values rest))
                                           #:pattern-variable pattern-variable))]
-      [(pat idrs sidrs vars)
+      [(kind pat idrs sidrs vars)
        (values (track #'pat)
                (syntax->list #'idrs)
                (syntax->list #'sidrs)
@@ -541,23 +540,27 @@
                                          (append new-sidrs tail-sidrs)
                                          (append new-vars tail-vars)
                                          #t))]))
-                          (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'term1)])
-                            (values (if tail? (list p) p) new-idrs new-sidrs new-vars tail?)))))
+                          (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'term)])
+                            (if p
+                                (values (if tail? (list p) p) new-idrs new-sidrs new-vars tail?)
+                                (raise-syntax-error #f
+                                                    "incompatible with this context"
+                                                    e))))))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e 'group1 #f))
+                    (handle-escape/match-head $-id e in-e 'group #f))
                   ;; handle-multi-escape:
                   (lambda ($-id e in-e splice?)
                     (define kind
                       (syntax-parse in-e
                         [(head . _) (if (eq? (syntax-e #'head) 'block)
-                                        'block1
-                                        'multi1)]
-                        [_ 'multi1]))
+                                        'block
+                                        'multi)]
+                        [_ 'multi]))
                     (handle-escape/match-head $-id e in-e kind splice?))
                   #:handle-midgroups-multi-escape
                   (lambda ($-id e in-e fixed-tail-gs handle-fixed-tail)
-                    (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'group1)])
+                    (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'group)])
                       (cond
                         [p
                          (with-syntax ([(tmp) (generate-temporaries '(tail))])
@@ -688,29 +691,28 @@
    #f
    null
    'macro
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
        [(form-id qs . tail)
         (define ((build pat-kind) e)
-          (define ctx-kind (current-unquote-binding-kind))
           (cond
             [(and (eq? pat-kind 'term)
-                  (not (eq? ctx-kind 'term1)))
+                  (not (eq? ctx-kind 'term)))
              #'#f]
             [(and (eq? ctx-kind 'grouplet)
                   (eq? pat-kind 'multi)
                   (syntax-parse e [(_) #t] [_ #f]))
              ;; defer special case to term context
              #'#f]
-            [(and (eq? ctx-kind 'block1)
+            [(and (eq? ctx-kind 'block)
                   (eq? pat-kind 'group))
-             ;; request to the context to again in 'group1 mode:
+             ;; request to the context to again in 'group mode:
              #'#f]
             [else
              (define-values (use-e splice?)
                (cond
                  [(and (eq? pat-kind 'multi)
-                       (memq ctx-kind '(term1 grouplet)))
+                       (memq ctx-kind '(term grouplet)))
                   ;; empty multi-group term is a special case that we can splice
                   ;; into a term context
                   (syntax-parse e
@@ -718,11 +720,11 @@
                     [_ (raise-syntax-error #f
                                            (format "multi-group pattern incompatible with ~a context"
                                                    (case ctx-kind
-                                                     [(term1) "term"]
+                                                     [(term) "term"]
                                                      [(grouplet) "group"]))
                                            #'qs)])]
                  [else (values e (and (eq? pat-kind 'group)
-                                      (eq? ctx-kind 'term1)))]))
+                                      (eq? ctx-kind 'term)))]))
              (define-values (pattern idrs sidrs vars can-be-empty?)
                (convert-pattern use-e
                                 #:splice? splice?))
@@ -731,18 +733,20 @@
                  [(and (not splice?) (eq? pat-kind 'multi))
                   (syntax-parse pattern
                     [(_ . tail)
-                     (if (eq? ctx-kind 'group1)
+                     (if (eq? ctx-kind 'group)
                          ;; turn into a splicing pattern
                          #`(~seq . tail)
                          ;; replace literal `multi` head with a wildcard, and the context
                          ;; will add a constraint for the right head symbol as needed
                          #`(_ . tail))])]
-                 [(and (eq? pat-kind 'group) (eq? ctx-kind 'multi1))
+                 [(and (eq? pat-kind 'group) (eq? ctx-kind 'multi))
                   #`(_ #,pattern)]
-                 [(and (eq? pat-kind 'group) (eq? ctx-kind 'block1))
+                 [(and (eq? pat-kind 'group) (eq? ctx-kind 'block))
                   #`((~datum block) #,pattern)]
                  [else pattern]))
-             #`(#,pattern* #,idrs #,sidrs #,(map pattern-variable->list vars))]))
+             (relocate+reraw
+              stx
+              #`(#,ctx-kind #,pattern* #,idrs #,sidrs #,(map pattern-variable->list vars)))]))
         (define-values (r empty-tail)
           (quoted-shape-dispatch #'(form-id qs)
                                  in-binding-space
@@ -751,14 +755,14 @@
                                  (build 'multi)
                                  (lambda (e)
                                    (cond
-                                     [(eq? (current-unquote-binding-kind) 'term1)
+                                     [(eq? ctx-kind 'term)
                                       (define pat (syntax-parse e
                                                     #:datum-literals (op)
                                                     [((~and tag op) op-name)
                                                      (describe-op-pattern (no-srcloc #`((~datum tag) (~datum op-name)))
                                                                           #'op-name)]
                                                     [_ #`(~datum #,e)]))
-                                      #`(#,pat () () ())]
+                                      #`(#,ctx-kind #,pat () () ())]
                                      [else
                                       #'#f]))))
         (values r #'tail)]))))
@@ -773,15 +777,15 @@
 
 (define-unquote-binding-syntax _
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
        [(form-id . tail)
-        (values #`(#,(syntax/loc #'form-id _) () () ())
+        (values #`(#,ctx-kind #,(syntax/loc #'form-id _) () () ())
                 #'tail)]))))
 
 (define-unquote-binding-syntax cut
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
        [(self . tail)
         (raise-syntax-error #f "incompatible with this context" #'self)]))))

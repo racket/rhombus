@@ -18,6 +18,7 @@
                      "annot-context.rkt"
                      "class-parse.rkt"
                      "origin.rkt"
+                     "annotation-failure.rkt"
                      (for-syntax racket/base))
          "provide.rkt"
          "enforest.rkt"
@@ -105,6 +106,7 @@
              :inline-annotation
              :unparsed-inline-annotation
              :annotation-infix-op+form+tail
+             :annotation-prefix-op+form+tail
              :annotate-op
 
              annotation-predicate-form
@@ -169,9 +171,20 @@
 
   (define (shrubbery-tail->string tail) (shrubbery-syntax->string #`(group . #,tail)))
 
+  (define (check-context who ctx)
+    (unless (annotation-context? ctx)
+      (raise-annotation-failure (case who
+                                  [(:unquote-binding-prefix-op+form+tail) 'annot_meta.AfterPrefixParsed]
+                                  [(:unquote-binding-infix-op+form+tail) 'annot_meta.AfterInfixParsed]
+                                  [else 'annot_meta.Parsed])
+                                ctx
+                                "annot_meta.Context")))
+
   (define-rhombus-enforest
     #:syntax-class (:annotation [ctx empty-annot-context])
     #:infix-more-syntax-class :annotation-infix-op+form+tail
+    #:prefix-more-syntax-class :annotation-prefix-op+form+tail
+    #:check-syntax-class-arguments check-context
     #:desc "annotation"
     #:operator-desc "annotation operator"
     #:parsed-tag #:rhombus/annot

@@ -7,7 +7,8 @@
                      shrubbery/print
                      "name-path-op.rkt"
                      "attribute-name.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "srcloc.rkt")
          racket/treelist
          syntax/parse/pre
          "pack.rkt"
@@ -59,19 +60,19 @@
 
 (define-unquote-binding-syntax #%parens
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
-       [(_ (_::parens g::unquote-binding) . tail)
+       [(_ (_::parens (~var g (:unquote-binding ctx-kind))) . tail)
         (values #'g.parsed
                 #'tail)]
        [(_ (_::parens) . tail)
         ;; empty parentheses match an empty group, which
         ;; is only useful for matching an empty group tail
-        (case (current-unquote-binding-kind)
+        (case ctx-kind
           [(grouplet)
-           (values #`((group) () () ())
+           (values #`(#,ctx-kind (group) () () ())
                    #'tail)]
-          [(term1)
+          [(term)
            (raise-syntax-error #f "incompatible with this context" stx)]
           [else (values #'#f #'())])]))))
 
@@ -119,20 +120,20 @@
 
   (define (context-kind->class-kind ctx-kind)
     (case ctx-kind
-      [(term1) 'term]
-      [(grouplet group1) 'group]
-      [(multi1) 'multi]
-      [(block1) 'block])))
+      [(term) 'term]
+      [(grouplet group) 'group]
+      [(multi) 'multi]
+      [(block) 'block])))
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
    #f
    null
    'macro
-   (lambda (form1 stx)
+   (lambda (form1 stx ctx-kind)
      (unless (or (identifier? form1)
                  (syntax-parse form1
-                   [(underscore () () ())
+                   [(_ underscore () () ())
                     (free-identifier=? #'underscore #'_)]
                    [_ #f]))
        (raise-syntax-error #f
@@ -191,13 +192,12 @@
         (define rsc ((syntax-class-parser-proc parser) (string->symbol
                                                         (shrubbery-syntax->string #'sc-hier.name))
                                                        #'sc
-                                                       (context-kind->class-kind
-                                                        (current-unquote-binding-kind))
+                                                       (context-kind->class-kind ctx-kind)
                                                        match-id
                                                        #'sc-hier.tail))
         (if rsc
             (values (track #'sc-hier.name
-                           (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id #f))
+                           (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 ctx-kind match-id #f))
                     end-tail)
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
@@ -212,13 +212,13 @@
                                                 (lookup-syntax-class #'stx-class-hier.name)
                                                 #'args.args
                                                 open-attributes
-                                                form1
+                                                form1 ctx-kind
                                                 match-id
                                                 #f))
                    tail)])]))
    'none))
 
-(define-for-syntax (parse-pattern stx)
+(define-for-syntax (parse-pattern stx ctx-kind)
   (syntax-parse stx
     [(form-id
       (~optional (~seq form1:identifier
@@ -231,8 +231,7 @@
        (define rsc
          (parse-anonymous-syntax-class (syntax-e #'form-id)
                                        stx
-                                       (context-kind->class-kind
-                                        (current-unquote-binding-kind))
+                                       (context-kind->class-kind ctx-kind)
                                        #f
                                        #'tail))
        (values (if rsc
@@ -243,6 +242,7 @@
                                                         (attribute open?))
                                                     #'form-id)
                                                (attribute form1)
+                                               ctx-kind
                                                #f
                                                #t)
                    #'#f)
@@ -257,7 +257,7 @@
 ;; used for `::` and for `pattern`, returns a parsed binding form that takes advantage
 ;; of a syntax class --- possibly an inlined syntax class and/or one with exposed fields
 (define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
-                                               form1 match-id bind-dot?)
+                                               form1 ctx-kind match-id bind-dot?)
   (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
     (define (compat pack* unpack* #:splice? [splice? #f])
       (define sc (rhombus-syntax-class-class rsc))
@@ -382,7 +382,8 @@
              (get-syntax-class-static-infos
               (normalize-pvar-statinfos (pattern-variable-statinfos swap-to-root-var))
               (datum->syntax #f all-attribs))))
-      #`(#,((if splice?
+      #`(#,ctx-kind
+         #,((if splice?
                 (lambda (p)
                   (with-syntax ([(tmp) (generate-temporaries '(tail))])
                     #`(~and (~seq tmp (... ...))
@@ -475,39 +476,38 @@
                           "syntax class incompatible with this context"
                           stx-class))
     (define (retry) #'#f)
-    (define ctx-kind (current-unquote-binding-kind))
     (cond
       [(eq? (rhombus-syntax-class-kind rsc) 'term)
        (cond
-         [(not (eq? ctx-kind 'term1)) (retry)]
+         [(not (eq? ctx-kind 'term)) (retry)]
          [(rhombus-syntax-class-splicing? rsc)
           (compat #'pack-tail* #'unpack-element*)] ;; `unpack-element*` keeps `group` or `multi` wrapper
          [else (compat #'pack-term* #'unpack-term*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'group)
        (cond
-         [(eq? ctx-kind 'term1) (incompat)]
-         [(not (or (eq? ctx-kind 'grouplet) (eq? ctx-kind 'group1))) (retry)]
+         [(eq? ctx-kind 'term) (incompat)]
+         [(not (or (eq? ctx-kind 'grouplet) (eq? ctx-kind 'group))) (retry)]
          [else (compat #'pack-group* #'unpack-group*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'multi)
        (cond
-         [(or (eq? ctx-kind 'multi1) (eq? ctx-kind 'block1))
+         [(or (eq? ctx-kind 'multi) (eq? ctx-kind 'block))
           (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
-         [(eq? ctx-kind 'group1)
+         [(eq? ctx-kind 'group)
           (compat #'pack-tagged-multi* #'unpack-multi-as-term* #:splice? #t)]
          [else (incompat)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'block)
        (cond
-         [(eq? ctx-kind 'block1)
+         [(eq? ctx-kind 'block)
           (compat #'pack-block* #'unpack-multi-as-term*)]
          [else (incompat)])]
       [else
        (error "unrecognized kind"  (rhombus-syntax-class-kind rsc))])))
 
-(define-for-syntax (normalize-id form)
+(define-for-syntax (normalize-id form ctx-kind)
   (if (identifier? form)
-      (if (eq? (current-unquote-binding-kind) 'grouplet)
+      (if (eq? ctx-kind 'grouplet)
           #f
-          (identifier-as-unquote-binding form (current-unquote-binding-kind)))
+          (identifier-as-unquote-binding form ctx-kind))
       form))
 
 (define-for-syntax (norm-seq pat like-pat)
@@ -526,14 +526,19 @@
    (lambda () (order-quote logical_conjuction))
    null
    'automatic
-   (lambda (form1 form2 stx)
-     (syntax-parse (normalize-id form1)
+   (lambda (form1 form2 stx ctx-kind)
+     (syntax-parse (normalize-id form1 ctx-kind)
        [#f #'#f]
-       [(pat1 (idr1 ...) (sidr1 ...) (var1 ...))
-        (syntax-parse (normalize-id form2)
+       [(kind1 pat1 (idr1 ...) (sidr1 ...) (var1 ...))
+        (syntax-parse (normalize-id form2 ctx-kind)
           [#f #'#f]
-          [(pat2 idrs2 sidrs2 vars2)
-           #`(#,(norm-seq2 #`(~and #,(norm-seq #'pat1 #'pat2)
+          [(kind2 pat2 idrs2 sidrs2 vars2)
+           (unless (eq? (syntax-e #'kind1) (syntax-e #'kind2))
+             (raise-syntax-error (syntax-e stx)
+                                 "mismatched kinds of unquote bindings"
+                                 (respan (datum->syntax #f (list form1 stx form2)))))
+           #`(kind1
+              #,(norm-seq2 #`(~and #,(norm-seq #'pat1 #'pat2)
                                    #,(norm-seq #'pat2 #'pat1))
                            #'pat1
                            #'pat2)
@@ -547,14 +552,19 @@
    (lambda () (order-quote logical_disjuction))
    null
    'automatic
-   (lambda (form1 form2 stx)
-     (syntax-parse (normalize-id form1)
+   (lambda (form1 form2 stx ctx-kind)
+     (syntax-parse (normalize-id form1 ctx-kind)
        [#f #'#f]
-       [(pat1 idrs1 sidrs1 vars1)
-        (syntax-parse (normalize-id form2)
+       [(kind1 pat1 idrs1 sidrs1 vars1)
+        (syntax-parse (normalize-id form2 ctx-kind)
           [#f #'#f]
-          [(pat2 idrs2 sidrs2 vars2)
-           #`(#,(norm-seq2 #`(~or* #,(norm-seq #'pat1 #'pat2)
+          [(kind2 pat2 idrs2 sidrs2 vars2)
+           (unless (eq? (syntax-e #'kind1) (syntax-e #'kind2))
+             (raise-syntax-error (syntax-e stx)
+                                 "mismatched kinds of unquote bindings"
+                                 (datum->syntax #f (list form1 stx form2))))
+           #`(kind1
+              #,(norm-seq2 #`(~or* #,(norm-seq #'pat1 #'pat2)
                                    #,(norm-seq #'pat2 #'pat1))
                            #'pat1
                            #'pat2)
@@ -568,27 +578,28 @@
    (lambda () (order-quote logical_negation))
    `()
    'automatic
-   (lambda (form stx)
-     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term1)
-                        (normalize-id form))
+   (lambda (form stx ctx-kind)
+     (syntax-parse (and (eq? ctx-kind 'term)
+                        (normalize-id form ctx-kind))
        [#f #'#f]
-       [(pat _ _ _)
+       [(kind pat _ _ _)
         (when (is-sequence-pattern? #'pat)
           (raise-syntax-error #f "only allowed before a term pattern" stx))
-        #'((~not (~delimit-cut pat)) () () ())]))))
+        #`(kind (~not (~delimit-cut pat)) () () ())]))))
 
 (define-for-syntax (make-match-operator stxparse-op)
   (unquote-binding-prefix-operator
    (lambda () (order-quote logical_negation))
    `()
    'automatic
-   (lambda (form stx)
-     (syntax-parse (and (eq? (current-unquote-binding-kind) 'term1)
-                        (normalize-id form))
+   (lambda (form stx ctx-kind)
+     (syntax-parse (and (eq? ctx-kind 'term)
+                        (normalize-id form ctx-kind))
        [#f #'#f]
-       [(pat idrs sidrs vars)
+       [(kind pat idrs sidrs vars)
         (with-syntax ([stxparse-op stxparse-op])
-          #`(#,(if (is-sequence-pattern? #'pat)
+          #`(#,ctx-kind
+             #,(if (is-sequence-pattern? #'pat)
                    #'(~seq (stxparse-op pat))
                    #'(stxparse-op pat))
              idrs sidrs vars))]))))
@@ -601,7 +612,7 @@
 
 (define-unquote-binding-syntax #%literal
   (unquote-binding-transformer
-   (lambda (stxes)
+   (lambda (stxes ctx-kind)
      (syntax-parse stxes
        [(_ x . _)
         (raise-syntax-error #f
@@ -613,7 +624,7 @@
 
 (define-unquote-binding-syntax #%block
   (unquote-binding-transformer
-   (lambda (stxes)
+   (lambda (stxes ctx-kind)
      (syntax-parse stxes
        [(_ b)
         (raise-syntax-error #f
@@ -622,12 +633,12 @@
 
 (define-for-syntax (make-option-sequence for-kind as-kind fail-contexts)
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~and all-alts (_::alts blk ...)))
         (cond
-          [(eq? (current-unquote-binding-kind) for-kind)
+          [(eq? ctx-kind for-kind)
            (define option-tags (generate-temporaries (attribute blk)))
            (define options-id (car (generate-temporaries '(options))))
            (define-values (rsc descs defaultss)
@@ -652,9 +663,10 @@
                                                      #'#f
                                                      #'form-id
                                                      #f
+                                                     ctx-kind
                                                      options-id
                                                      #t)
-             [(pat idrs sidrs vars)
+             [(kind pat idrs sidrs vars)
               (define default-name-map ; sym -> expression
                 (for*/hash  ([defaults (in-list defaultss)]
                              [default (in-list defaults)])
@@ -695,19 +707,19 @@
                                               (~fail #:when (check-duplicate-matches (attribute option-tag))
                                                      duplicate-message)
                                               ...)))])
-                  (values #'(pat idrs sidrs vars) #'())))])]
+                  (values #`(#,ctx-kind pat idrs sidrs vars) #'())))])]
           [else
-           (when (memq (current-unquote-binding-kind) fail-contexts)
+           (when (memq ctx-kind fail-contexts)
              (raise-syntax-error #f
                                  "option sequence incompatible with this context"
                                  stx))
            (values #'#f #'())])]))))
 
 (define-unquote-binding-syntax group_option_sequence
-  (make-option-sequence 'group1 '#:group '(term1 grouplet)))
+  (make-option-sequence 'group '#:group '(term grouplet)))
 
 (define-unquote-binding-syntax term_option_sequence
-  (make-option-sequence 'term1 '#:sequence '()))
+  (make-option-sequence 'term '#:sequence '()))
 
 (define (check-duplicate-matches matches)
   (let loop ([matches matches] [found #f])

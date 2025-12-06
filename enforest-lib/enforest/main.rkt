@@ -88,6 +88,8 @@
                          #:defaults ([prefix-op+form+tail #':prefix-op+form+tail]))
               (~optional (~seq #:infix-more-syntax-class infix-op+form+tail)
                          #:defaults ([infix-op+form+tail #':infix-op+form+tail]))
+              (~optional (~seq #:check-syntax-class-arguments check-env)
+                         #:defaults ([check-env #'void]))
               (~optional (~seq #:desc form-kind-str)
                          #:defaults ([form-kind-str #'"form"]))
               (~optional (~seq #:operator-desc operator-kind-str)
@@ -135,12 +137,17 @@
                                 (syntax-parse sc-arg
                                   [(id:identifier default) #'id]
                                   [id:identifier #'id]))
+     #:with (main-check-env ...) (syntax-parse #'form-class
+                                   [(id . _) #'(#:do [(check-env 'id sc-arg-name ...)])]
+                                   [_ #'()])
+
      #'(begin
          tl-decl ...
          (define-syntax-class form-class
            #:attributes (parsed)
            (pattern (~and all ((~datum group) . tail))
                     #:cut
+                    main-check-env ...
                     ;; The calls to `transform-out` and `transform-in` here are in case
                     ;; of an enclosing macro transformer, analogous to the use of
                     ;; `syntax-local-introduce` within `local-expand`
@@ -156,6 +163,7 @@
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
                           (define env (list sc-arg-name ...))
+                          (check-env 'prefix-op+form+tail sc-arg-name ...)
                           (define-values (form new-tail) (enforest-step env (transform-out #'in-tail) op op-stx stop-on-unbound))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))
@@ -166,6 +174,7 @@
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
                           (define env (list sc-arg-name ...))
+                          (check-env 'infix-op+form+tail sc-arg-name ...)
                           (define-values (form new-tail) (enforest-step env (transform-in #'in-tail) op op-stx stop-on-unbound))]
                     #:with parsed (transform-in form)
                     #:with tail (transform-in new-tail)))

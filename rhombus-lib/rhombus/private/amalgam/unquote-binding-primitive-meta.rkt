@@ -35,13 +35,14 @@
 
 (define-unquote-binding-syntax bound_as
   (unquote-binding-transformer
-   (lambda (stxes)
+   (lambda (stxes ctx-kind)
      (cond
-       [(eq? (current-unquote-binding-kind) 'term1)
+       [(eq? ctx-kind 'term)
         (syntax-parse stxes
           #:datum-literals (group)
           [(form-id space ... (_::block (group (_::quotes (group bound::dotted-operator-or-identifier-sequence)))))
-           (values #`((~seq (~var _ (:free=-in-space
+           (values #`(#,ctx-kind
+                      (~seq (~var _ (:free=-in-space
                                      (quote-syntax (group . bound))
                                      (rhombus-expression (group space ...))
                                      'form-id)))

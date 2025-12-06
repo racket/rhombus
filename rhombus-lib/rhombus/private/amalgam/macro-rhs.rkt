@@ -52,12 +52,12 @@
 
 (define-unquote-binding-syntax _Term
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (cond
-       [(eq? 'term1 (current-unquote-binding-kind))
+       [(eq? 'term ctx-kind)
         (syntax-parse stx
           [(form-id . tail)
-           (values #`(#,(syntax/loc #'form-id _) () () ())
+           (values #`(#,ctx-kind #,(syntax/loc #'form-id _) () () ())
                    #'tail)])]
        [else (values #'#f
                      #'())]))))

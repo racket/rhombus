@@ -5,6 +5,7 @@
                      enforest/property
                      enforest/syntax-local
                      "introducer.rkt"
+                     "realm.rkt"
                      (for-syntax racket/base))
          "enforest.rkt")
 
@@ -19,9 +20,9 @@
            in-unquote-binding-space
            unquote-bind-quote
 
-           current-unquote-binding-kind
-
            unquote-binding-prefix+infix-operator
+           :unquote-binding-infix-op+form+tail
+           :unquote-binding-prefix-op+form+tail
 
            unquote-binding-id?))
 
@@ -34,7 +35,7 @@
   (define (unquote-binding-transformer proc)
     (unquote-binding-prefix-operator #f '((default . stronger)) 'macro proc))
 
-  (define (make-identifier-unquote-binding id)
+  (define (make-identifier-unquote-binding id ctx-kind)
     id)
 
   (define in-unquote-binding-space (make-interned-syntax-introducer/add 'rhombus/unquote_bind))
@@ -43,20 +44,31 @@
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/unquote_bind) #'id))]))
 
   ;; Binding context kinds:
-  ;;  'term1 - parse a term, but can splice multi
+  ;;  'term - parse a term, but can splice multi
   ;;  'grouplet - parse a non-empty term sequence, allowed in designated pattern positions
-  ;;  'group1 - parse a whole group; like 'grouplet, but where an id should be group mode
-  ;;  'multi1 - parse a group sequence
-  ;;  'block1 - parse a group sequence within a block
-  ;; There's a close connection between pattern types and binding contexts, but we
-  ;; use different symbols to reflect how pattern-type expands adapt to binding context
-  (define current-unquote-binding-kind (make-parameter 'term1))
+  ;;  'group - parse a whole group; like 'grouplet, but where an id should be group mode
+  ;;  'multi - parse a group sequence
+  ;;  'block - parse a group sequence within a block
+  ;; There's a close connection between pattern types and binding contexts/
+  (define (check-kind who kind)
+    (case kind
+      [(term grouplet group multi block) (void)]
+      [else (raise-argument-error* (case who
+                                     [(:unquote-binding-prefix-op+form+tail) 'unquote_bind_meta.AfterPrefixParsed]
+                                     [(:unquote-binding-infix-op+form+tail) 'unquote_bind_meta.AfterInfixParsed]
+                                     [else 'unquote_bind_meta.Parsed])
+                                   rhombus-realm
+                                   "One.of(#'term, #'grouplet, #'group, #'multi, #'block)"
+                                   kind)]))
 
   (define-rhombus-enforest
-    #:syntax-class :unquote-binding
+    #:syntax-class (:unquote-binding ctx-kind)
+    #:infix-more-syntax-class :unquote-binding-infix-op+form+tail
+    #:prefix-more-syntax-class :unquote-binding-prefix-op+form+tail
+    #:check-syntax-class-arguments check-kind
     #:desc "unquote binding"
     #:operator-desc "unquote binding operator"
-    #:parsed-tag #:rhombus/unquote_binding
+    #:parsed-tag #:rhombus/unquote_bind
     #:in-space in-unquote-binding-space
     #:prefix-operator-ref unquote-binding-prefix-operator-ref
     #:infix-operator-ref unquote-binding-infix-operator-ref

@@ -183,6 +183,7 @@
                      (code:line #:relative-precedence relative-precedence)
                      (code:line #:prefix-more-syntax-class prefix-more-syntax-class)
                      (code:line #:infix-more-syntax-class infix-more-syntax-class)
+                     (code:line #:check-syntax-class-arguments check-class-arguments)
                      (code:line #:desc desc)
                      (code:line #:operator-desc operator-desc)
                      (code:line #:parsed-tag parsed-tag)
@@ -261,6 +262,11 @@
  @racket[prefix-more-syntax-class] and
  @racket[infix-more-syntax-class] accept those additional arguments,
  too, after the operator-name argument.
+
+ The @racket[check-class-arguments] function is applied to a symbol
+ and as many arguments are specified with @racket[syntax-class]. The
+ function is called for any use of @racket[syntax-class],
+  @racket[prefix-more-syntax-class] or @racket[infix-more-syntax-class].
 
  The @racket[desc] (defaulting to @racket["form"]) and
  @racket[operator-desc] (defaulting to @racket["operator"]) strings

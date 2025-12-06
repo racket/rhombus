@@ -166,6 +166,64 @@ block:
     ~is "yes"
 
 block:
+  unquote_bind.macro 'sames[$(g :: Group)]':
+    ~kind: kind
+    let '$(uq :: unquote_bind_meta.Parsed(kind))' = g
+    uq
+  check:
+    match '1 2 3'
+    |  '1 $(sames['2 3'])': "yes"
+    ~is "yes"
+
+block:
+  unquote_bind.macro 'same_term[$(g :: Group)]':
+    ~kind: kind
+    if kind == #'term
+    | let '$(uq :: unquote_bind_meta.Parsed(#'term))' = g
+      uq
+    | unquote_bind_meta.pack_invalid()
+  check:
+    match '1 2'
+    |  '1 $(same_term['2'])': "yes"
+    ~is "yes"
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'same_term[$(g :: Group)]':
+    ~kind: kind
+    check kind ~is #'grouplet
+    let '$(uq :: unquote_bind_meta.Parsed(#'term))' = g
+    uq
+  match '1 2'
+  |  '1 $(same_term['2'])': "yes"
+  ~throws "expected: single-group syntax object for unquote binding `grouplet` context"
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'broken':
+    ~kind: kind
+    let '$(uq1 :: unquote_bind_meta.Parsed(#'term))' = '('1')'
+    let '$(uq2 :: unquote_bind_meta.Parsed(#'grouplet))' = '('1 2')'
+    '$uq1 && $uq2'
+  match '1 2'
+  |  '$broken': "yes"
+  ~throws "&&: mismatched kinds of unquote bindings"
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'broken':
+    ~kind: kind
+    let '$(uq1 :: unquote_bind_meta.Parsed(#'term))' = '('1')'
+    let '$(uq2 :: unquote_bind_meta.Parsed(#'grouplet))' = '('1 2')'
+    '$uq1 || $uq2'
+  match '1 2'
+  |  '$broken': "yes"
+  ~throws "||: mismatched kinds of unquote bindings"
+
+block:
   unquote_bind.macro 'dots':
     '«'$('...')'»'
   check:

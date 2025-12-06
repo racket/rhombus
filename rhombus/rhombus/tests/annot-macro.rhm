@@ -118,3 +118,11 @@ check:
   annot.macro 'bad': 666
   1 :: bad
   ~throws "expected: single-group syntax object for annotation"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  annot.macro 'bad $(a :: annot_meta.Parsed(#'bad)) $()': 666
+  1 :: bad 1
+  ~throws values(error.annot_msg(),
+                 error.annot("annot_meta.Context").msg)

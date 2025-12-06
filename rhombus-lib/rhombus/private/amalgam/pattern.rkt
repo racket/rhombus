@@ -23,10 +23,10 @@
 
 (define-unquote-binding-syntax bounce-to-pattern
   (unquote-binding-transformer
-   (lambda (stx)
+   (lambda (stx ctx-kind)
      (syntax-parse stx
        [(_ . tail)
-        (parse-pattern #'tail)]))))
+        (parse-pattern #'tail ctx-kind)]))))
 
 (define-binding-syntax pattern
   (binding-transformer

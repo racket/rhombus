@@ -15,12 +15,12 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "values-key.rkt"
-                     (for-syntax racket/base)
                      "srcloc.rkt"
                      "syntax-wrap.rkt"
                      "annot-context-meta.rkt"
                      "origin.rkt"
-                     "origin-check.rkt")
+                     "origin-check.rkt"
+                     (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (only-in "binding.rkt" :binding-form)
