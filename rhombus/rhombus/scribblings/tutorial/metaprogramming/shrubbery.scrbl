@@ -130,7 +130,7 @@ look less noisy also use newlines and whitespace. Shrubbery notation
 differs from previous efforts by intentionally adding complexity in the
 abstract structure. Shrubbery notation enables a second layer of syntax to make distinctions
 among forms that used @parens, @brackets, @braces, @litchar{:} or @litchar{|},
-instead making distinctions only based on a leading identifier.
+instead of making distinctions only based on a leading identifier.
 Still, the shrubbery abstract
 grammar is still far simpler than the AST of any realistic
 programming language.

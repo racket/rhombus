@@ -42,7 +42,7 @@ As we will see, macro definition forms like
 precedence specifications, so the operator or macro that's being defined
 has a specification of its behavior at both the enforestation and expansion layers.
 And, while precedence and associativity are the most common use cases to
-motivate enforestation, it is actually a general process of that converts
+motivate enforestation, it is actually a general process that converts
 a linear sequence of terms into a tree that can be programmed in a general way.
 
 The enforestation and expansion layers also both work on shrubbery
