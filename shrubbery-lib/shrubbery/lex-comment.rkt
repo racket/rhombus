@@ -124,7 +124,8 @@
                                               0.5
                                               0))
                           (pending-comment-column pending))
-               (not (not-line-sensitive?)))
+               (not (not-line-sensitive?))
+               (null? stack))
           (case (and (token? tok)
                      (token-name tok))
             [(comment)
