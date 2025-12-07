@@ -56,8 +56,20 @@
      (when (terminal-port? in)
        (flush-output (current-output-port)))
      (define-values (line col pos) (port-next-location in))
-     (parse-all in #:source src #:mode 'interactive
-                #:start-column (or col 0))))
+     (define stx
+       (parse-all in #:source src #:mode 'interactive
+                  #:start-column (or col 0)))
+     ;; If the result is `(multi)`, that means there
+     ;; was only whitespace, so treat it like an EOF
+     (if (and (syntax? stx)
+              (let ([v (syntax-e stx)])
+                (and (pair? v)
+                     (or (null? (cdr v))
+                         (and (syntax? (cdr v))
+                              (null? (syntax-e (cdr v)))))
+                     (eq? 'multi (syntax-e (car v))))))
+         eof
+         stx)))
 
   (print-boolean-long-form #t)
 

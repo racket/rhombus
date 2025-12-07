@@ -9,7 +9,7 @@
 
 (define (shrubbery-submit-predicate in whitespace-after? #:variant [variant default-variant])
   (and whitespace-after?
-       ;; siilar to `lex-all` with `#:interactive? #t`, but staying in lexer
+       ;; similar to `lex-all` with `#:interactive? #t`, but staying in lexer
        ;; land by using `racket-lexer/status`:
        (let loop ([prev-status 'initial] [something? #f] [depth 0] [blanks 0] [multi? #f])
          (let-values ([(tok type paren start end backup status)

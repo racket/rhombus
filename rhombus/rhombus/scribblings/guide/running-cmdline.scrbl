@@ -15,7 +15,7 @@ or
 
 @nested(~style: #'inset){@exec{racket prog.rhm}}
 
-You can get a REPL (read-eval-print loop) with just
+You can get a @tech{REPL} with just
 
 @nested(~style: #'inset){@exec{rhombus}}
 

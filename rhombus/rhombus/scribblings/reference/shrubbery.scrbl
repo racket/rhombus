@@ -32,7 +32,7 @@
 
   @item{@rhombus(#'interactive) mode reads until an end-of-line, unless
   nothing has been read so far, an opener remains unclosed, or a
-  @rhombus{:} was encountered that not within an open-closer sequence. If
+  @litchar{:} was encountered that not within an open-closer sequence. If
   reading continues due to a @litchar{:}, then it stops when a blank line
   is found (where a line containing a comment does not count as blank), as
   long as stopping does not create an empty block.}
