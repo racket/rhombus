@@ -7,6 +7,7 @@
          racket/treelist
          racket/mutable-treelist
          shrubbery/write
+         "../version-case.rkt"
          "provide.rkt"
          (submod "set.rkt" for-print)
          (submod "map-maybe.rkt" for-print)
@@ -18,6 +19,11 @@
          "enum.rkt"
          "syntax-wrap.rkt"
          "realm.rkt")
+
+(meta-if-version-at-least
+ "9.0.0.10"
+ (require file/private/convertible)
+ (define (convertible? v) #f))
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -307,6 +313,14 @@
                            (PrintDesc (default-struct-print v (lambda (v [mode mode]) (pretty v mode ht))))]
                           [else
                            (PrintDesc (pretty next-v mode ht))]))))))]
+    [(convertible? v)
+     (fresh-ref
+      v
+      (lambda ()
+        (pretty-special v
+                        1
+                        'write-special
+                        (default-struct-print v (lambda (v [mode mode]) (pretty v mode ht))))))]
     [(struct? v)
      (fresh-ref
       v

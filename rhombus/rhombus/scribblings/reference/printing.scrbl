@@ -1,6 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      lib("file/convertible.rkt").#{convertible?})
 
 @title{Printing}
 
@@ -23,7 +25,9 @@
  predefined kind of value prints the same in @rhombus(#'text) and
  @rhombus(#'expr) mode, but a class can implement
  @rhombus(Printable, ~class) so that its instances print differently in
- different modes.
+ different modes. A value is that is @rhombus(#{convertible?}) at the
+ Racket level is printed via @rhombus(PrintDesc.special) with the mode
+ @rhombus(#'write_special).
 
  When @rhombus(pretty) is @rhombus(#true), then compound values like
  lists may print with line breaks to split the output across lines.

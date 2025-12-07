@@ -233,7 +233,7 @@
   (define-values (line-advance column-advance)
     (if (eof-object? e)
         (values 0 0)
-        (count-graphemes (or raw e))))
+        (count-graphemes (or raw (if (string? e) e ".")))))
   (token name
          (let loop ([e e] [raw raw] [id-as-keyword? #f])
            (let ([e (if (pair? e)

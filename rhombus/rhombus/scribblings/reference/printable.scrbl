@@ -269,6 +269,13 @@ interface customizes the way that instances of a class print.
 }
 
 @doc(
+  fun PrintDesc.special(v :: Any,
+                        alt_pd :: PrintDesc,
+                        ~length: length :: Nat = 1,
+                        ~mode: mode :: PrintDesc.SpecialMode
+                                 = #'write_special)
+    :: PrintDesc
+
   enum PrintDesc.SpecialMode:
     write_special
     print
@@ -276,22 +283,9 @@ interface customizes the way that instances of a class print.
     display
 ){
 
- Modes for @rhombus(PrintDesc.special).
-
-}
-
-@doc(
-  fun PrintDesc.special(v :: Any,
-                        alt_pd :: PrintDesc,
-                        ~length: length :: Nat = 1,
-                        ~mode: mode :: PrintDesc.SpecialMode
-                                 = #'write_special)
-    :: PrintDesc
-){
-
-
- Prints @rhombus(v) using Racket printing when the output port supports
- ``special'' output, otherwise prints as the given @rhombus(alt_pd). For
+ The @rhombus(PrintDesc.special) function describes printing of @rhombus(v)
+ using Racket printing functions when the output port satisfies
+ @rhombus(Port.Output.Special, ~annot), otherwise printing as the given @rhombus(alt_pd). For
  the purposes of pretty printing, @rhombus(v) is counted as using
  @rhombus(length) columns. The @rhombus(mode) argument indicates which
  Racket printing function is used.
