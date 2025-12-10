@@ -116,7 +116,7 @@ meta:
     | ': $(body :: Block)': spacer.adjust_term(body, body_spaces, esc)
     | ~else: spacer.adjust_sequence(expr_or_body, #'~expr, esc)
   syntax_class Rhs:
-    kind ~group
+    kind ~sequence
   | '= $_ ...'
   fun adjust_rhs(rhs, esc):
     match rhs
@@ -361,16 +361,16 @@ meta:
            kind ~group
          | '$(head && '($(_ :: Header: open))')
               $(pattern:
-                  kind ~group
+                  kind ~sequence
                 | '$(res_ann :: ResAnn): $(body :: Block)'
                 | '$(res_ann :: ResAnn)': field body = #false
                 | ': $(body :: Block)': field res_ann = #false
-                | '$()': field body = #false; field res_ann = #false)'
+                | '': field body = #false; field res_ann = #false)'
          | '$(_ :: Header: open)
               $(pattern:
-                  kind ~group
+                  kind ~sequence
                 | ': $(body :: Block)'
-                | '$()': field body = #false)':
+                | '': field body = #false)':
              field head = #false; field res_ann = #false):
           let new_head:
             let new_lbind = if lbind | spacer.adjust_term(lbind, #'~bind, esc) | ''
@@ -451,13 +451,13 @@ meta:
     match fld
     | '$(name :: Name(esc))
          $(pattern:
-             kind ~group
+             kind ~sequence
            | '$(ann :: Ann) $(rhs :: Rhs)'
            | '$(ann :: Ann): $(rhs :: Block)'
            | '$(ann :: Ann)': field rhs = #false
            | '$(rhs :: Rhs)': field ann = #false
            | ': $(rhs :: Block)': field ann = #false
-           | '$()': field ann = #false; field rhs = #false)':
+           | '': field ann = #false; field rhs = #false)':
         let new_ann = if ann | adjust_ann(ann, esc) | ''
         let new_rhs = if rhs | adjust_rhs(rhs, esc) | ''
         '$name $new_ann $new_rhs'
@@ -537,9 +537,9 @@ spacer.bridge class(self, tail, context, esc):
   match tail
   | '$(name :: Name(esc)) $(args :: Args)
        $(pattern:
-           kind ~group
+           kind ~sequence
          | ': $(body :: Block)'
-         | '$()': field body = #false)':
+         | '': field body = #false)':
       let new_args = adjust_args(args, adjust_arg)
       let new_body = if body | spacer.adjust_term(body, class_spaces, esc) | ''
       '$self $name $new_args $new_body'
@@ -553,9 +553,9 @@ spacer.bridge interface(self, tail, context, esc):
   match tail
   | '$(name :: Name(esc))
        $(pattern:
-           kind ~group
+           kind ~sequence
          | ': $(body :: Block)'
-         | '$()': field body = #false)':
+         | '': field body = #false)':
       let new_body = if body | spacer.adjust_term(body, interface_spaces, esc) | ''
       '$self $name $new_body'
   | ~else: '$self $tail'
@@ -578,9 +578,9 @@ spacer.bridge veneer(self, tail, context, esc):
   match tail
   | '$(name :: Name(esc)) $(args :: Args)
        $(pattern:
-           kind ~group
+           kind ~sequence
          | ': $(body :: Block)'
-         | '$()': field body = #false)':
+         | '': field body = #false)':
       let new_args = adjust_args(args)
       let new_body = if body | spacer.adjust_term(body, veneer_spaces, esc) | ''
       '$self $name $new_args $new_body'
@@ -608,9 +608,9 @@ meta:
       match assign
       | '$(name :: Name(esc)) $(op && ':=') $bind ...
            $(pattern:
-               kind ~group
+               kind ~sequence
              | ': $(body :: Block)'
-             | '$()': field body = #false)':
+             | '': field body = #false)':
           let new_op = spacer.set(op, #'~expr)
           let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
           let new_body = if body | spacer.adjust_term(body, body_spaces, esc) | ''
@@ -654,10 +654,10 @@ meta:
          $(tail :: Sequence)':
         match tail
         | (pattern:
-             kind ~group
+             kind ~sequence
            | '$(res_ann :: ResAnn): $(entry_point :: Block)'
            | ': $(entry_point :: Block)': field res_ann = #false
-           | '$()': field res_ann = #false; field entry_point = #false):
+           | '': field res_ann = #false; field entry_point = #false):
             let new_res_ann = if res_ann | adjust_res_ann(res_ann, esc) | ''
             let new_entry_point:
               match entry_point
@@ -1112,9 +1112,9 @@ meta:
       match g
       | '$(pat && '«'$_'»')
            $(pattern:
-               kind ~group
+               kind ~sequence
              | ': $(body :: Block)'
-             | '$()': field body = #false)':
+             | '': field body = #false)':
           let new_g:
             let new_pat = spacer.adjust_term(pat, #'~bind, esc)
             let new_body = if body | spacer.adjust_term(body, pattern_spaces, esc) | ''
@@ -1160,9 +1160,9 @@ spacer.bridge syntax_class(self, tail, context, esc):
     match name
     | '$(name :: Name(esc))
          $(pattern:
-             kind ~group
+             kind ~sequence
            | '$(args :: Args)'
-           | '$()': field args = #false)':
+           | '': field args = #false)':
         let new_args:
           fun adjust_arg(arg):
             adjust_kw_opt_arg(arg, esc, adjust_bind)
@@ -1217,9 +1217,9 @@ spacer.bridge fields(self, tail, context, esc):
     match specs
     | '$(spec :: NameRepet(esc)) ...
          $(pattern:
-             kind ~group
+             kind ~sequence
            | '$(kind && ': $(_ :: Group)')'
-           | '$()': field kind = #false)':
+           | '': field kind = #false)':
         let [new_spec, ...] = [adjust_name_repet(spec, esc), ...]
         let new_kind = if kind | adjust_kind(kind) | ''
         '$new_spec ... $new_kind'
@@ -1242,10 +1242,10 @@ meta:
     match fld
     | '$(spec :: NameRepet(esc))
          $(pattern:
-             kind ~group
+             kind ~sequence
            | '$(rhs :: Rhs)'
            | ': $(rhs :: Block)'
-           | '$()': field rhs = #false)':
+           | '': field rhs = #false)':
         let new_spec = adjust_name_repet(spec, esc)
         let new_rhs = if rhs | adjust_rhs(rhs, esc) | ''
         '$new_spec $new_rhs'.relocate_group(fld)

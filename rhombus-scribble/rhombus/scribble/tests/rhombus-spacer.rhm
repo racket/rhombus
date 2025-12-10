@@ -396,6 +396,10 @@ check_spacer:
       $datum $body $body $body $datum
 
 check_spacer:
+  class Posn(x :: Int, y :: Int)
+  $(defn.full) $none($none $bind $annot, $none $bind $annot)
+
+check_spacer:
   class Posn(x, y):
     nonfinal
     method mdist():
