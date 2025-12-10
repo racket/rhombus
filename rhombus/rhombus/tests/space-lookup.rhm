@@ -6,6 +6,7 @@ space.transform food:
   meta_namespace food_meta:
     reflection space
     name_start_syntax_class NameStart
+    bound_name_start_syntax_class BoundNameStart
 
 check:
   food.bridge cake:
@@ -33,12 +34,25 @@ block:
   expr.macro 'go $(seq :: food_meta.NameStart) $()':
     '[$(syntax_meta.value(seq.name, food_meta.space, fun (): '#false')),
       '$seq.tail ...']'
+  expr.macro
+  | 'bound_go $(seq :: food_meta.BoundNameStart) $()':
+      '[$(syntax_meta.value(seq.name, food_meta.space, fun (): '#false')),
+        '$seq.tail ...']'
+  | 'bound_go $other ...':
+      '[#'unbound,
+        '$other ...']'
   check: go bakery.cake + icing
          ~matches ["chocolate", '+ icing']
   check: go bakery.cake.to.go
          ~matches ["chocolate", '. to . go']
   check: go non_cake.to.go
          ~matches [#false, '. to . go']
+  check: bound_go bakery.cake + icing
+         ~matches ["chocolate", '+ icing']
+  check: bound_go bakery.cake.to.go
+         ~matches ["chocolate", '. to . go']
+  check: bound_go non_cake.to.go
+         ~matches [#'unbound, 'non_cake . to . go']
 
 check:
   food.bridge List.cake:

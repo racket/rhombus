@@ -13,6 +13,7 @@
                     parse_prefix_more_syntax_class
                     parse_infix_more_syntax_class
                     name_start_syntax_class
+                    bound_name_start_syntax_class
                     reflection
                     description
                     operator_description
@@ -58,6 +59,8 @@
   (make-identifier-transformer '#:syntax_class_infix_more))
 (define-space-meta-clause-syntax name_start_syntax_class
   (make-identifier-transformer '#:syntax_class_name_start))
+(define-space-meta-clause-syntax bound_name_start_syntax_class
+  (make-identifier-transformer '#:syntax_class_bound_name_start))
 (define-space-meta-clause-syntax reflection
   (make-identifier-transformer '#:reflection))
 (define-space-meta-clause-syntax parsed_packer
@@ -93,6 +96,7 @@
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parse_prefix_more_syntax_class)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parse_infix_more_syntax_class)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax name_start_syntax_class)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax bound_name_start_syntax_class)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax reflection)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_packer)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_unpacker)))))
@@ -146,6 +150,11 @@
        (maybe-private (hash-set options '#:syntax_class_name_start #'id)
                       #'public?
                       '#:syntax_class_name_start)]
+      [(_ (#:syntax_class_bound_name_start id public?))
+       (check "bound-name-start syntax classes")
+       (maybe-private (hash-set options '#:syntax_class_bound_name_start #'id)
+                      #'public?
+                      '#:syntax_class_bound_name_start)]
       [(_ (#:reflection id public?))
        (check "syntax_value names")
        (maybe-private (hash-set options '#:reflection #'id)

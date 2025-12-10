@@ -7,12 +7,17 @@
 
 (provide :name-start)
 
-(define-syntax-class (:name-start in-space)
+(define-syntax-class (:name-start in-space [bound? #f])
   #:description "name or dotted name"
   #:attributes (name head tail)
   #:datum-literals (group)
   (pattern (group . g)
            #:with (~var n (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref/maybe)) #'g
            #:attr name #'n.name
+           #:when (or (not bound?)
+                      (let ([spaced-name (in-space #'n.name)])
+                        (if (bound-identifier=? spaced-name #'n.name)
+                            (identifier-binding spaced-name (syntax-local-phase-level) #t)
+                            (identifier-distinct-binding spaced-name #'n.name (syntax-local-phase-level) #t))))
            #:attr head #'n.head
            #:attr tail #'n.tail))

@@ -149,6 +149,7 @@
                                                    #'define-values
                                                    #'define-syntaxes
                                                    #'define-syntax-parameter
+                                                   #'with-syntax-parameters
                                                    ;; etc.
                                                    #'begin
                                                    #'provide
@@ -164,7 +165,7 @@
                                       [_ state]))
        (syntax-parse exp-form
          #:literals (begin define-values define-syntaxes rhombus-forward #%require provide #%provide quote-syntax
-                           define-syntax-parameter #%plain-app void)
+                           define-syntax-parameter with-syntax-parameters #%plain-app void)
          [((~and tag rhombus-forward) . _)
           (syntax-parse exp-form
             [(_ #:enter sub-form ...)
@@ -246,6 +247,14 @@
           (with-syntax ([stx-params (syntax-parameter-update #'key #'rhs #'stx-params)]
                         [new-state (need-end-expr #'state)])
             #`(sequence [new-state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] . forms))]
+         [(with-syntax-parameters new-stx-params #:pop)
+          #`(sequence [state base-ctx add-ctx remove-ctx all-ctx new-stx-params saved ex-id] . forms)]
+         [(with-syntax-parameters new-stx-params form ...)
+          (with-syntax ([merged-stx-params (syntax-parameter-merge #'new-stx-params #'stx-params)])
+            #`(sequence [state base-ctx add-ctx remove-ctx all-ctx merged-stx-params saved ex-id]
+                        form ...
+                        (with-syntax-parameters stx-params #:pop)
+                        . forms))]
          [(begin form-in ...)
           #:with (form ...) (map (lambda (form)
                                    (shift-origin form exp-form))

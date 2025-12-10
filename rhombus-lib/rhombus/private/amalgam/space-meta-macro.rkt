@@ -131,6 +131,7 @@
        (define prefix-more-class-name (hash-ref options '#:syntax_class_prefix_more #'#f))
        (define infix-more-class-name (hash-ref options '#:syntax_class_infix_more #'#f))
        (define name-start-class-name (hash-ref options '#:syntax_class_name_start #'#f))
+       (define bound-name-start-class-name (hash-ref options '#:syntax_class_bound_name_start #'#f))
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
        (define desc (hash-ref options '#:desc #f))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
@@ -164,7 +165,8 @@
        (define expose (make-expose #'scope-stx #'base-stx))
        (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
-                               class-name prefix-more-class-name infix-more-class-name name-start-class-name
+                               class-name prefix-more-class-name infix-more-class-name
+                               name-start-class-name bound-name-start-class-name
                                #'orig-stx)
        (register-field-check #`(base-ctx scope-ctx . #,exs))
        (define (build-pack-and-unpack)
@@ -192,11 +194,11 @@
                      [unpack-parsed*/tag (if (syntax-e unpack-id)
                                              #`(unpack-parsed* '#,parsed-tag)
                                              #'unpack-term*)])
-         (define (build-name-start-syntax-class)
+         (define (build-name-start-syntax-class name-start-class-name bound?)
            (if (syntax-e name-start-class-name)
                (with-syntax ([name (quote-syntax name)])
                  #`((define-syntax-class-syntax #,name-start-class-name (make-syntax-class #':name-start
-                                                                                           #:auto-args #'(in-new-space)
+                                                                                           #:auto-args #'(in-new-space #,bound?)
                                                                                            #:kind 'group
                                                                                            #:fields #'((name name #f 0 unpack-term* stx)
                                                                                                        (head #f head tail unpack-tail-list* stx)
@@ -213,6 +215,7 @@
                           [#,prefix-more-class-name #,prefix-more-class-name #:syntax_class_prefix_more]
                           [#,infix-more-class-name #,infix-more-class-name #:syntax_class_infix_more]
                           [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
+                          [#,bound-name-start-class-name #,bound-name-start-class-name #:syntax_class_bound_name_start]
                           [#,space-reflect-name #,space-reflect-name #:reflection]
                           [#,pack-id #,pack-id #:parsed_packer]
                           [#,unpack-id #,unpack-id #:parsed_unpacker]))
@@ -261,7 +264,8 @@
                                                                                                     (tail #f tail tail unpack-tail-list* stx))
                                                                                         #:root-swap '(parsed . group)
                                                                                         #:arity-mask more-arity-mask)))
-                #,@(build-name-start-syntax-class)
+                #,@(build-name-start-syntax-class name-start-class-name #f)
+                #,@(build-name-start-syntax-class bound-name-start-class-name #t)
                 (define macro-result (#,make-macro-result
                                       (quote name)
                                       (quote #,parsed-tag)
@@ -289,6 +293,7 @@
                      #`([#,class-name #,class-name #:syntax_class]
                         [#,space-reflect-name #,space-reflect-name #:reflection]
                         [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
+                        [#,bound-name-start-class-name #,bound-name-start-class-name #:syntax_class_bound_name_start]
                         . #,exs)))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
                 (maybe-skip
@@ -310,7 +315,8 @@
                                                                              #:fields #'((parsed parsed parsed 0 unpack-term* stx))
                                                                              #:root-swap '(parsed . group)
                                                                              #:arity-mask base-arity-mask)))
-                #,@(build-name-start-syntax-class)
+                #,@(build-name-start-syntax-class name-start-class-name #f)
+                #,@(build-name-start-syntax-class bound-name-start-class-name #t)
                 (maybe-skip
                  #,class-name
                  (define macro-result (#,make-macro-result
@@ -494,7 +500,8 @@
     (keyword-apply proc kws kw-args form null)))
 
 (define-for-syntax (check-distinct-exports ex-ht
-                                           class-name prefix-more-class-name infix-more-class-name name-start-class-name
+                                           class-name prefix-more-class-name infix-more-class-name
+                                           name-start-class-name bound-name-start-class-name
                                            orig-stx)
   (define (check id what)
     (when (and (syntax-e id)
@@ -506,7 +513,8 @@
   (check class-name "syntax class name")
   (check prefix-more-class-name "prefix-more syntax class name")
   (check infix-more-class-name "infix-more syntax class name")
-  (check name-start-class-name "name-start syntax class name"))
+  (check name-start-class-name "name-start syntax class name")
+  (check bound-name-start-class-name "bound-name-start syntax class name"))
 
 (define (id-syntax-error desc)
   (lambda (id)

@@ -7,7 +7,8 @@
          "entry-point.rkt"
          "parens.rkt"
          (only-in "syntax-parameter.rkt"
-                  syntax-parameters-key)
+                  syntax-parameters-key
+                  with-syntax-parameters)
          (only-in "function-arity.rkt"
                   shift-arity)
          "extract-rhs.rkt")
@@ -213,8 +214,8 @@
                                                                     #,(and (syntax-e #'deserialize-fill-rhs)
                                                                            (extract-rhs #'deserialize-fill-rhs))))
                          'serializer-stx-params (car stx-paramss))]
-              [(#:post-forms (form ...)) ; added directly in "class-step.rkt"
-               (hash-set options 'post-forms (syntax->list #'(form ...)))]
+              [(#:post-forms (form)) ; added directly in "class-step.rkt"
+               (hash-set options 'post-forms (list #`(with-syntax-parameters #,(car stx-paramss) form)))]
               [_
                (parse-method-clause orig-stx options clause (car stx-paramss))]))
           (loop (cdr clauses) (cdr stx-paramss) new-options)]))]))

@@ -72,6 +72,7 @@ driver and macro-definitions forms.
     #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(name_start_syntax_class, ~space_meta_clause)) $id
+    #,(@rhombus(bound_name_start_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
     #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
     #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
@@ -291,6 +292,10 @@ driver and macro-definitions forms.
   remaining terms of the group.
   This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
+ @item{@rhombus(bound_name_start_syntax_class, ~space_meta_clause): Like
+  @rhombus(name_start_syntax_class, ~space_meta_clause), but matches only
+  names that are bound in the space.}
+
  @item{@rhombus(parse_checker, ~space_meta_clause): Supplies a
   compile-time function that is applied to one by-position arguments and
   potentially some keyword arguments. The by-position argument is the
@@ -420,6 +425,7 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'parse_prefix_more_syntax_class $id'
   space_meta_clause.macro 'parse_infix_more_syntax_class $id'
   space_meta_clause.macro 'name_start_syntax_class $id'
+  space_meta_clause.macro 'bound_name_start_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'parsed_packer $id'
@@ -452,6 +458,7 @@ driver and macro-definitions forms.
  @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause),
  @rhombus(parse_infix_more_syntax_class, ~space_meta_clause),
  @rhombus(name_start_syntax_class, ~space_meta_clause),
+ @rhombus(bound_name_start_syntax_class, ~space_meta_clause),
  @rhombus(parsed_packer, ~space_meta_clause),
  @rhombus(parsed_unpacker, ~space_meta_clause), and
  @rhombus(reflection, ~space_meta_clause).

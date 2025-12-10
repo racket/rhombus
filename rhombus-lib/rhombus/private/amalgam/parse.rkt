@@ -15,7 +15,8 @@
          "expression.rkt"
          "binding.rkt"
          "parens.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "syntax-parameter.rkt")
 
 (provide rhombus-top
          rhombus-module-top
@@ -154,12 +155,12 @@
 ;; For a module top level (old interface), interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
   (syntax-parse stx
-    [(_ . rest) #'(rhombus-top-step rhombus-top #t #f #f () . rest)]))
+    [(_ . rest) #'(rhombus-top-step rhombus-top #:decl #f #f () . rest)]))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-module-top stx)
   (syntax-parse stx
-    [(_ effect . rest) #'(rhombus-top-step rhombus-module-top #t #f effect (effect) . rest)]))
+    [(_ effect . rest) #'(rhombus-top-step rhombus-module-top #:decl #f effect (effect) . rest)]))
 
 ;; For a nested context
 (define-syntax (rhombus-nested stx)
@@ -171,19 +172,22 @@
   (with-syntax-error-respan
     (syntax-parse stx
       #:datum-literals (group parsed)
-      [(_ top decl-ok? prefix effect data) #`(begin)]
-      [(_ top decl-ok? prefix effect (data ...) (group (parsed #:rhombus/decl decl)) . forms)
+      [(_ top flag prefix effect (data ...))
+       (if (eq? (syntax-e #'flag) '#:no-shortcut)
+           #'(top data ...)
+           #'(begin))]
+      [(_ top flag prefix effect (data ...) (group (parsed #:rhombus/decl decl)) . forms)
        #`(begin decl (top data ... . forms))]
       ;; note that we may perform hierarchical name resolution
       ;; up to four times, since resolution in `:declaration`,
       ;; `:definition`, etc., doesn't carry over
-      [(_ top decl-ok? prefix effect (data ...) e::definition-sequence . tail)
+      [(_ top flag prefix effect (data ...) e::definition-sequence . tail)
        (define-values (parsed new-tail)
          (apply-definition-sequence-transformer #'e #'e.id #'e.tail #'tail
                                                 (and (syntax-e #'prefix) #'prefix)
                                                 (and (syntax-e #'effect) #'effect)))
        #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
-      [(_ top decl-ok? prefix effect (data ...) form . forms)
+      [(_ top flag prefix effect (data ...) form . forms)
        (define d-prefix (and (syntax-e #'prefix) #'prefix))
        (define d-effect (and (syntax-e #'effect) #'effect))
        (define (nestable-parsed)
@@ -217,16 +221,18 @@
                 (values (relocate (maybe-respan #'form) #`(#%expression (rhombus-expression form)))
                         #t))]))
        (define-values (maybe-parsed is-parsed?)
-         (if (syntax-e #'decl-ok?)
+         (if (eq? '#:decl (syntax-e #'flag))
              (syntax-parse #'form
                [e::declaration (values (transfer-origin #'e #'(begin . e.parsed)) #t)]
                [_ (nestable-parsed)])
              (nestable-parsed)))
        (if is-parsed?
            (syntax-parse #'forms
-             [() maybe-parsed]
+             [()
+              #:when (not (eq? (syntax-e #'flag) '#:no-shortcut))
+              maybe-parsed]
              [_ #`(begin #,maybe-parsed (top data ... . forms))])
-           #`(rhombus-top-step top decl-ok? prefix effect (data ...) #,maybe-parsed . forms))])))
+           #`(rhombus-top-step top flag prefix effect (data ...) #,maybe-parsed . forms))])))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)

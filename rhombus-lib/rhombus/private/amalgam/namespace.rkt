@@ -22,6 +22,9 @@
 
 (module+ for-exports
   (provide (for-syntax parse-exports
+                       parse-exports-to-ht
+                       exports-ht->exports
+                       merge-export
                        exports->names)))
 
 (define-defn-syntax namespace
@@ -117,13 +120,16 @@
                   (raise-syntax-error 'namespace+open "unsupported" field)]))))]))
 
 (define-for-syntax (parse-exports ex expose)
+  (exports-ht->exports (parse-exports-to-ht ex expose)))
+
+(define-for-syntax (parse-exports-to-ht ex expose)
   (define (use-space? space-sym spaces-mode spaces)
     (cond
       [(eq? spaces-mode '#:only) (hash-ref spaces space-sym #f)]
       [(eq? spaces-mode '#:except) (not (hash-ref spaces space-sym #f))]
       [else #t]))
   (define ht
-    ;; maps a symbol key to `next+int+rule`, which is like a namespace rule spec
+    ;; maps a symbol key to `ext+int+rule`, which is like a namespace rule spec
     ;; (see "name-root.rkt"), but only identifiers are syntax objects
     (let loop ([ex ex] [ht #hasheq()] [except-ht #hasheq()] [spaces #f] [spaces-mode #f])
       (define (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode)
@@ -271,15 +277,26 @@
          (raise-syntax-error #f
                              "don't know how to parse export"
                              ex)])))
+  ht)
+
+(define-for-syntax (exports-ht->exports ht)
   (for/list ([(key ext+int+rule) (in-hash ht)])
     #`[#,(car ext+int+rule) #,@(cdr ext+int+rule)]))
 
 (define-for-syntax (exports->names exports-stx)
   (for/hasheq ([ex (in-list (if (syntax? exports-stx) (syntax->list exports-stx) exports-stx))])
     (define id (syntax-parse ex
-                 [(id ext-id) #'ext-id]
+                 [(ext-id int-id . rule) #'ext-id]
                  [_ ex]))
     (values (syntax-e id) id)))
+
+(define-for-syntax (merge-export ht ext-id int-id spaces-mode spaces)
+  (define ext-sym (syntax-e ext-id))
+  (hash-set ht ext-sym
+            (merge-ext+int+rule
+             ext-id
+             (hash-ref ht ext-sym #f)
+             (make-ext+int+rule ext-id int-id spaces-mode spaces))))
 
 (define-for-syntax (make-ext+int+rule ext-id int-id spaces-mode spaces)
   (if spaces-mode
@@ -360,8 +377,8 @@
             use-int
             (let loop ([old (cddr old)] [new (cddr new)] [old-int old-int] [new-int new-int] [space-table #hasheq()])
               (cond
-                [(null? old) (add-table space-table new)]
-                [(null? new) (add-table space-table old)]
+                [(null? old) (add-table space-table old)]
+                [(null? new) (add-table space-table new)]
                 [(eq? (car new) '#:space)
                  (loop old (cddr new) old-int new-int (add-to-table space-table (cadr new)))]
                 [(eq? (car old) '#:except)

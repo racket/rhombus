@@ -1,0 +1,90 @@
+#lang rhombus/static/and_meta
+
+space.transform farm_clause:
+  space_path old/mcdonald
+  macro_definer macro
+  meta_namespace farm_clause_meta:
+    parse_syntax_class Parsed
+    bound_name_start_syntax_class BoundNameStart
+
+farm_clause.macro 'cow': '([moo], [], [])'
+farm_clause.macro 'sheep': '([baa], [], [])'
+farm_clause.macro 'barn $(defn :: Group)': '([], [$defn], [])'
+farm_clause.macro 'loft $(expr :: Group)': '([], [], [$expr])'
+
+syntax_parameter.bridge z: '"no"'
+expr.macro 'use_z':
+  syntax_parameter_meta.lookup('z')
+
+def mutable accum :~ List = []
+
+fun log(v): accum := accum.add(v)
+
+namespace.interleave:
+  ~is_clause: fun (x, extras):
+                x matches '$(_ :: farm_clause_meta.BoundNameStart)'
+  ~parse_clause: fun (form, '([$noise ...], [$barned, ...])', extras :~ Map):
+                   let '$(fc :: farm_clause_meta.Parsed)' = form
+                   let '([$new_noise, ...],  [$new_barned_defn, ...], [$new_barned_expr, ...])' = fc
+                   let [new_barned, ...] = [extras[#'close_defn](new_barned_defn), ...,
+                                            extras[#'close_expr]('log($new_barned_expr)'), ...]
+                   values ('',
+                           '([$noise ... $new_noise ...],
+                             [$barned, ..., $new_barned, ...])')
+  ~init: '([], [])'
+  ~complete: fun ('([$sound ...], [$barned, ...])', extras :~ Map):
+               def exports :: namespace_meta.Exports = extras[#'exports]
+               'log('$sound ...')
+                $barned
+                ...
+                $(exports.declaration('me'))'
+  barn def chicken1 = "hen " +& use_z
+  loft "pigeon " +& use_z
+  cow    // a clause
+  sheep  // a clause
+  export:
+    favorite
+    chicken1
+    chicken2
+  def favorite = "cow"
+  log(use_z)
+  syntax_parameter.relet z: '"yes"'
+  log(use_z)
+  barn def chicken2 = "rooster " +& use_z
+  loft "pigeon " +& use_z
+
+check: accum
+       ~matches ["no", "yes", 'moo baa', "pigeon no", "pigeon yes"]
+
+check: me.favorite
+       ~is "cow"
+check: me.chicken1
+       ~is "hen no"
+check: me.chicken2
+       ~is "rooster yes"
+
+accum := []
+
+namespace.interleave:
+  ~is_clause: fun (x, extras):
+                x matches '$(_ :: farm_clause_meta.BoundNameStart)'
+  ~parse_clause: fun (form, '', extras :~ Map):
+                   values ('', '')
+  ~init: ''
+  ~complete: fun ('', extras :~ Map):
+               check extras.maybe[#'exports] ~is #false
+               extras[#'tail]
+  ~no_exports
+  ~defer_tail
+  syntax_parameter.relet z: '"yes"'
+  barn def chicken1 ....
+  loft ....
+  cow
+  sheep
+  def favorite = "cow"
+  log(use_z)
+
+log(use_z)
+
+check: accum
+       ~is ["yes", "no"]

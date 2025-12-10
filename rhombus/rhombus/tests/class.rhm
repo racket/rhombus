@@ -1493,3 +1493,17 @@ check:
           p,
           q = p.x)
   ~throws values("no such field", "based on static")
+
+block:
+  import rhombus/meta open
+  syntax_parameter.bridge z: '"no"'
+  expr.macro 'use_z':
+    syntax_parameter_meta.lookup('z')
+  class Foo():
+    syntax_parameter.relet z: '"yes"'
+    export f
+    fun f ():
+      use_z
+  check Function.name(Foo.f) ~is #'#{Foo.f}
+  check Foo.f() ~is "yes"
+  check use_z ~is "no"

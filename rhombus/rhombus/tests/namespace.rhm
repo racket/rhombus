@@ -301,3 +301,27 @@ block:
   check ns.f("apple") ~throws values("another.example.longer.name.f",
                                      error.annot_msg("argument"))
 
+
+block:
+  import rhombus/meta open
+  namespace ns:
+    def bovine = "cow"
+    annot.macro 'bovine': 'Any.of("cow")'
+    export:
+      bovine
+      only_space expr:
+        bovine
+  check ns.bovine ~is "cow"
+  check "cow" :: ns.bovine ~is "cow"
+
+block:
+  import rhombus/meta open
+  namespace ns:
+    def bovine = "cow"
+    annot.macro 'bovine': 'Any.of("cow")'
+    export:
+      only_space expr:
+        bovine
+      bovine
+  check ns.bovine ~is "cow"
+  check "cow" :: ns.bovine ~is "cow"

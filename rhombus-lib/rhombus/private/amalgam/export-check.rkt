@@ -6,7 +6,7 @@
 (provide (for-syntax register-field-check
                      register-provide-check))
 
-;; Registers a check that an identifie is defined; this check
+;; Registers a check that an identifier is defined; this check
 ;; needs to be deferred until all definitions in the module have
 ;; been discovered
 (define-for-syntax (register-field-check stx)

@@ -4,7 +4,8 @@
 
 (provide (for-syntax syntax-parameters-key
                      current-syntax-parameters-iterator
-                     syntax-parameter-update)
+                     syntax-parameter-update
+                     syntax-parameter-merge)
          define-syntax-parameter
          with-syntax-parameters)
 
@@ -20,11 +21,16 @@
               (wrap next)))))
 
 (define-for-syntax (syntax-parameter-update key val frame)
-  (datum->syntax #f (hash-set (syntax-e frame) (syntax-e key) val)))
+  (datum->syntax #f (hash-set (syntax-e frame) (if (syntax? key) (syntax-e key) key) val)))
+
+(define-for-syntax (syntax-parameter-merge new-frame frame)
+  (for/fold ([frame frame]) ([(key val) (in-hash (syntax-e new-frame))])
+    (syntax-parameter-update key val frame)))
 
 (define-syntax (define-syntax-parameter stx)
   (raise-syntax-error #f "should not expand" stx))
 
+;; also handled in splicing mode in "forwarding-sequence.rkt"
 (define-syntax (with-syntax-parameters stx)
   (syntax-parse stx
     [(_ #f expr) #'expr]
