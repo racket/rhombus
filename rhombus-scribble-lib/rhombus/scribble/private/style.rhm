@@ -5,6 +5,7 @@ import:
   lib("scribble/decode.rkt")
   lib("scribble/html-properties.rkt") as html
   lib("scribble/latex-properties.rkt") as latex
+  "pad.rkt"
   rhombus/rx open
 
 export:
@@ -37,6 +38,9 @@ veneer Style(this :: _Style):
   export veneer BackgroundColor(this :: satisfying(core.#{background-color-property?})):
     expression 'BackgroundColor':
       'make_background_color'
+  export veneer Padding(this :: satisfying(pad.#{cell-padding-property?})):
+    expression 'Padding':
+      'make_padding'
   export veneer RenderConvertibleAs(this :: satisfying(html.#{render-convertible-as?})):
     expression ~none
   export veneer LinkRenderStyle(this :: satisfying(core.#{link-render-style?})):
@@ -108,6 +112,16 @@ fun make_background_color :: Style.BackgroundColor:
     core.#{background-color-property}(color)
 | make_background_color(red :: Byte, green :: Byte, blue :: Byte):
     core.#{background-color-property}(PairList[red, green, blue])
+
+fun make_padding(around :: Real = 0,
+                 ~horiz: horiz :: Real = around,
+                 ~vert: vert :: Real = around,
+                 ~left: left :: Real = horiz,
+                 ~top: top :: Real = vert,
+                 ~right: right :: Real = horiz,
+                 ~bottom: bottom :: Real = vert) :: Style.Padding:
+  ~name: Style.Padding
+  pad.#{cell-padding-property}(left, top, right, bottom)
 
 fun make_target_url ::Style.TargetURL:
   ~name: Style.TargetURL

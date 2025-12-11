@@ -119,6 +119,10 @@
  @item{A @rhombus(Style.BackgroundColor, ~annot): @html{Applies a color
    to the cell background.}}
 
+ @item{A @rhombus(Style.Padding, ~annot): @html{Applies padding around
+   the cell content. Supplying @rhombus(~pad) to @rhombus(tabular) adds
+   this property to each cell's style if it is not already present.}}
+
  @item{A @rhombus(Style.HTML.Attributes, ~annot): @html{Provides additional
    attributes for the cell's @tt{<td>} tag.}}
 
@@ -164,5 +168,25 @@
  @rhombus(Style.TableColumns).
 
  @veneer_same(Style.HTML.ColumnAttributes, rkt_column_attributes_id)
+
+}
+
+@doc(
+  veneer Style.Padding
+  fun Style.Padding(
+    around :: Real = 0,
+    ~horiz: horiz :: Real = around,
+    ~vert: vert :: Real = around,
+    ~left: left :: Real = horiz,
+    ~top: top :: Real = vert,
+    ~right: right :: Real = horiz,
+    ~bottom: bottom :: Real = vert
+  ) :: Style.Padding
+){
+
+ For cells in a @tech{table}, specifies padding to add around each edge
+ of the cell content.
+
+ @veneer_same(Style.Padding, rkt_cell_padding_property)
 
 }

@@ -3,6 +3,7 @@
 import:
   "util.rhm" open
   lib("scribble/base.rkt")
+  "pad.rkt" as rkt_pad
 
 export:
   para
@@ -72,22 +73,28 @@ enum Cell:
   ~is_a Content
   cont
 
-fun tabular(cells :: List.of(List.of(Cell)),
-            ~style: table_style :: maybe(StyleLike) = #false,
-            ~sep: sep :: maybe(FlowBlock || Content) = #false,
-            ~column_properties: col_props :: List = [],
-            ~row_properties: row_props :: List = [],
-            ~cell_properties: cell_props :: List.of(List) = [],
-            ~sep_properties: sep_props :: maybe(List) = #false)
-  :: Table:
-    ~doc
-    base.tabular(convert_list_of_lists(cells, ~per: convert_list),
-                 ~style: table_style,
-                 ~sep: sep,
-                 ~#{column-properties}: convert_list(col_props, ~per: convert_list),
-                 ~#{row-properties}: convert_list(row_props, ~per: convert_list),
-                 ~#{cell-properties}: convert_list_of_lists(cell_props, ~per: convert_list),
-                 ~#{sep-properties}: convert_list(sep_props, ~per: convert_list))
+fun tabular(
+  cells :: List.of(List.of(Cell)),
+  ~style: table_style :: maybe(StyleLike) = #false,
+  ~pad: pad :: Real || [Real, Real] || [Real, Real, Real, Real] = 0,
+  ~sep: sep :: maybe(FlowBlock || Content) = #false,
+  ~column_properties: col_props :: List = [],
+  ~row_properties: row_props :: List = [],
+  ~cell_properties: cell_props :: List.of(List) = [],
+  ~sep_properties: sep_props :: maybe(List) = #false
+) :: Table:
+  ~doc
+  rkt_pad.tabular(convert_list_of_lists(cells, ~per: convert_list),
+                  ~style: table_style,
+                  ~pad: match pad
+                        | _ :: Real: pad
+                        | [h, v]: PairList[h, v]
+                        | [l, t, r, b]: PairList[l, t, r, b],
+                  ~sep: sep,
+                  ~#{column-properties}: convert_list(col_props, ~per: convert_list),
+                  ~#{row-properties}: convert_list(row_props, ~per: convert_list),
+                  ~#{cell-properties}: convert_list_of_lists(cell_props, ~per: convert_list),
+                  ~#{sep-properties}: convert_list(sep_props, ~per: convert_list))
 
 fun verbatim(~indent: indent :: Nat = 0,
              [content :: Content, ...])

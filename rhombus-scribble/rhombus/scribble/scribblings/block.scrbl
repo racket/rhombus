@@ -94,7 +94,7 @@
  columns.
 
  The @rhombus(col_props), @rhombus(row_props), and @rhombus(cell_props)
- arguments all supply properties to be used for indvidual cells:
+ arguments all supply properties to be used for individual cells:
 
 @itemlist(
 
@@ -134,10 +134,13 @@
  @rhombus(row_props) and @rhombus(cell_props) are merged with a
  @rhombus(Style.TableCells, ~annot) property.
 
+ The @rhombus(pad) argument specifies padding around each cell of the
+ table. This padding applies only when a @rhombus(Style.Padding, ~annot)
+ style attribute is not specified for a individual cell.
+
  If @rhombus(sep) is not @rhombus(#false), then it is used for a column
  added between every column in a row (except for columns that continue
- via @rhombus(#'cont). For example, @rhombus(sep) could be
- @rhombus(@hspace(1)) to ensure space between columns. These extra
+ via @rhombus(#'cont). These extra
  columns do not count for distributing properties from
  @rhombus(col_props), @rhombus(row_props), and @rhombus(cell_props);
  instead, each inserted column gets the same properties as te preceding

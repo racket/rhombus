@@ -46,6 +46,7 @@
 (define rkt_document_source @racket[document-source?])
 (define rkt_color @racket[color-property?])
 (define rkt_background_color @racket[background-color-property?])
+(define rkt_cell_padding_property @racket[cell-padding-property?])
 (define rkt_render_convertible_as @racket[render-convertible-as?])
 (define rkt_link_render_style @racket[link-render-style?])
 (define rkt_box_mode @racket[box-mode?])
