@@ -1356,7 +1356,7 @@ spacer.bridge enum(self, tail, context, esc):
               match clause
               | '$(tag && '~is_a'): $(b :: Block)':
                  '$tag $(spacer.adjust_term(b, #'~annot, esc))'.relocate_group(clause)
-              | '$(tag && '~is_a') $seq':
+              | '$(tag && '~is_a') $(seq :: Sequence)':
                  '$tag $(spacer.adjust_sequence(seq, #'~annot, esc))'.relocate_group(clause)
               | ~else:
                   spacer.set_group(clause, #'~datum)

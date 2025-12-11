@@ -1,0 +1,253 @@
+#lang rhombus/and_meta
+import:
+  rhombus/tabular open
+
+check:
+  #'top ~is_a str.VerticalAlign
+  #'vcenter ~is_a str.VerticalAlign
+  #'bottom ~is_a str.VerticalAlign
+  "hello" ~is_a str.Cell
+  #'cont ~is_a str.Cell
+  str.Cell.cont ~is #'cont
+  #'cont ~matches str.Cell.cont
+  str.CellPadding(0) ~is_a str.CellPadding
+  str.CellPadding(~horiz: 10) ~is_a str.CellPadding
+  str.CellPadding(~right: 14) ~is_a str.CellPadding
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]])
+  ~is @str{apple banana
+           cherrydurian}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~column_properties: [#'top_border])
+  ~is @str{------------
+           apple banana
+           ------------
+           cherrydurian}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~column_properties: [#'bottom_border])
+  ~is @str{apple banana
+           ------------
+           cherrydurian
+           ------------}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~column_properties: [[#'top_border, #'bottom_border]])
+  ~is @str{------------
+           apple banana
+           ------------
+           cherrydurian
+           ------------}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~column_properties: [#'top_border, #'bottom_border])
+  ~is @str{------@"      "
+           apple banana
+           ------------
+           cherrydurian
+                 ------}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~column_properties: [#'border])
+  ~is @str{+------+------+
+           |apple |banana|
+           +------+------+
+           |cherry|durian|
+           +------+------+}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~pad: 1,
+              ~column_properties: [#'border])
+  ~is @str{+--------+--------+
+           |        |        |
+           | apple  | banana |
+           |        |        |
+           +--------+--------+
+           |        |        |
+           | cherry | durian |
+           |        |        |
+           +--------+--------+}
+
+check:
+  str.tabular([["apple", "banana", "elderberry"],
+               ["cherry\npie\nyum!", "durian", "fig"]],
+              ~pad: 1,
+              ~column_properties: [[#'border, #'center], #'border, [#'border, #'vcenter]])
+  ~is @str{+--------+--------+------------+
+           |        |        |            |
+           | apple  | banana | elderberry |
+           |        |        |            |
+           +--------+--------+------------+
+           |        |        |            |
+           | cherry | durian |            |
+           |  pie   |        | fig        |
+           |  yum!  |        |            |
+           |        |        |            |
+           +--------+--------+------------+}
+
+check:
+  str.tabular([["apple", "banana", "elderberry"],
+               ["cherry\npie\nyum!", "durian", "fig"]],
+              ~pad: 1,
+              ~row_properties: [[#'top_border, #'bottom_border]],
+              ~column_properties: [[#'left_border, #'center], [], [#'right_border, #'vcenter]])
+  ~is @str{+----------------------------+
+           |                            |
+           | apple   banana  elderberry |
+           |                            |
+           +----------------------------+
+           |                            |
+           | cherry  durian             |
+           |  pie            fig        |
+           |  yum!                      |
+           |                            |
+           +----------------------------+}
+
+check:
+  str.tabular([["apple", "banana", "elderberry"],
+               ["cherry\npie\nyum!", "durian", "fig"]],
+              ~pad: 1,
+              ~row_properties: [[#'top_border, #'bottom_border], #'border],
+              ~column_properties: [[#'left_border, #'right], [], [#'right_border, #'bottom]])
+  ~is @str{+------------------------------+
+           |                              |
+           |  apple   banana   elderberry |
+           |                              |
+           +--------+--------+------------+
+           |        |        |            |
+           | cherry | durian |            |
+           |    pie |        |            |
+           |   yum! |        | fig        |
+           |        |        |            |
+           +--------+--------+------------+}
+
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~pad: [1, 0],
+              ~row_properties: [#'top_border, #'bottom_border],
+              ~column_properties: [[#'left_border, #'right_border], #'border])
+  ~is @str{+--------+--------+
+           | apple  | banana |
+           |        +--------+
+           | cherry | durian |
+           +--------+--------+}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~pad: [1, 0],
+              ~row_properties: [#'top_border, #'bottom_border],
+              ~column_properties: [#'border, [#'left_border, #'right_border]])
+  ~is @str{+--------+--------+
+           | apple  | banana |
+           +--------+        |
+           | cherry | durian |
+           +--------+--------+}
+
+check:
+  str.tabular([["apple", "banana"],
+               ["cherry", "durian"]],
+              ~pad: [1, 0],
+              ~column_properties: [#'left_border, #'right_border],
+              ~row_properties: [[#'right_border], []],
+              ~cell_properties: [[[#'top_border, #'bottom_border]]])
+  ~is @str{+--------+--------+
+           | apple  | banana |
+           +--------+--------+
+           | cherry   durian |
+           +-----------------+}
+
+check:
+  str.tabular([["a", str.tabular([["apple", "banana"],
+                                  ["cherry", "durian"]],
+                                 ~pad: [1, 0],
+                                 ~column_properties: [#'border])],
+               ["b", "c"]],
+              ~column_properties: [#'border])
+  ~is @str{+-+-------------------+
+           |a|+--------+--------+|
+           | || apple  | banana ||
+           | |+--------+--------+|
+           | || cherry | durian ||
+           | |+--------+--------+|
+           +-+-------------------+
+           |b|c                  |
+           +-+-------------------+}
+
+check:
+  str.tabular([["a", str.tabular([["apple", "banana"],
+                                  ["cherry", "durian"]],
+                                 ~pad: [1, 0],
+                                 ~column_properties: [#'right_border, []],
+                                 ~row_properties: [#'bottom_border, []])],
+               ["b", "c"]],
+              ~column_properties: [[#'border, #'center]])
+  ~is @str{+-+-----------------+
+           |a| apple  | banana |
+           | |--------+--------|
+           | | cherry | durian |
+           +-+-----------------+
+           |b|        c        |
+           +-+-----------------+}
+
+check:
+  str.tabular([["this is a very long field", #'cont, #'cont],
+               ["sortof long field", #'cont, "end"],
+               ["a", "b", "c"]],
+              ~column_properties: [[#'border]])
+  ~is @str{+-+---------------+-------+
+           |this is a very long field|
+           +-+---------------+-------+
+           |sortof long field|end    |
+           +-+---------------+-------+
+           |a|b              |c      |
+           +-+---------------+-------+}
+
+check:
+  str.tabular([["this is a very long field, again", #'cont, #'cont],
+               ["sortof long field", #'cont, "end"],
+               ["sortof long field, too", #'cont, "end"],
+               ["a", "b", "c"]],
+              ~column_properties: [[#'border]])
+  ~is @str{+-+--------------------+---------+
+           |this is a very long field, again|
+           +-+--------------------+---------+
+           |sortof long field     |end      |
+           +-+--------------------+---------+
+           |sortof long field, too|end      |
+           +-+--------------------+---------+
+           |a|b                   |c        |
+           +-+--------------------+---------+}
+
+check:
+  str.tabular([["9", "0123456", #'cont, #'cont],
+               ["9", "012", #'cont, "6"],
+               ["901234", #'cont, #'cont, "6"],
+               ["9", #'cont, "3", "6"]],
+              ~column_properties: [[#'border]])
+  ~is @str{+-++---+--+
+           |9|0123456|
+           +-++---+--+
+           |9|012 |6 |
+           +-++---+--+
+           |901234|6 |
+           +-++---+--+
+           |9 |3  |6 |
+           +-++---+--+}

@@ -209,12 +209,12 @@
                                     (lambda () (eval (strip-context expr)))
                                     list)]))])
                  (append
-                  (format-lines (get-output eval) racketoutput* indent)
-                  (format-lines (get-error-output eval) racketerror indent)
+                  (format-lines (get-output eval) racketoutput* indent #t)
+                  (format-lines (get-error-output eval) racketerror indent #f)
                   (cond
                     [(eq? mode 'error)
                      (if (string? vs)
-                         (format-lines vs racketerror indent)
+                         (format-lines vs racketerror indent #f)
                          (raise-arguments-error
                           'examples
                           "example did not error"
@@ -237,14 +237,15 @@
                            (close-output-port out)
                            (format-lines in
                                          (lambda (s) (racketresultfont (keep-spaces s) #:decode? #f))
-                                         indent)])))]))))]))))))))
+                                         indent
+                                         #t)])))]))))]))))))))
   (when once? (close-eval eval))
   (cond
     [hidden? null]
     [label (list label example-block)]
     [else example-block]))
 
-(define (format-lines in-or-str format-str extra-indent)
+(define (format-lines in-or-str format-str extra-indent preserve-spaces?)
   (define split-input
     (if (string? in-or-str)
         (map list (string-split in-or-str "\n"))
@@ -287,7 +288,15 @@
                     [else
                      (define a (car line))
                      (cons (if (string? a)
-                               (format-str a)
+                               (let loop ([a a])
+                                 (cond
+                                   [(not preserve-spaces?) (format-str a)]
+                                   [(regexp-match-positions #rx"  +" a)
+                                    => (lambda (m)
+                                         (list (format-str (substring a 0 (caar m)))
+                                               (hspace (- (cdar m) (caar m)))
+                                               (format-str (substring a (cdar m)))))]
+                                   [else (format-str a)]))
                                (car line))
                            (loop (cdr line) 0 (and blank? (equal? a ""))))]))))))
 

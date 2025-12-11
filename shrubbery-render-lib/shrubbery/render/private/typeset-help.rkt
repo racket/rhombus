@@ -113,7 +113,7 @@
                                             (or (syntax-raw-suffix-property p) '())
                                             (syntax-raw-suffix-property ptag)))
              p))
-       (define (add-rest p)
+       (define (add-rest p [space-name space-name])
          (and p (hash 'target p
                       'remains (cdr fields)
                       'space space-name
@@ -134,17 +134,49 @@
                                            (and is-import? raw-prefix)))
                       'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len))))
        (define (next named-dest)
-         (loop/squashed named-dest (syntax-e field) field-phase
-                        (or ns-root (and (not is-import?) root))
-                        (if is-import?
-                            ns-roots
-                            (cons root ns-roots))
-                        (if is-import?
-                            ns-root-syms
-                            (cons root-sym ns-root-syms))
-                        (cdr fields)
-                        raw (or (and is-import? raw-prefix) ns-raw-prefix)
-                        (if is-import? (add1 raw-prefix-len) raw-prefix-len)))
+         (define r
+           (and named-dest
+                (loop/squashed named-dest (syntax-e field) field-phase
+                               (or ns-root (and (not is-import?) root))
+                               (if is-import?
+                                   ns-roots
+                                   (cons root ns-roots))
+                               (if is-import?
+                                   ns-root-syms
+                                   (cons root-sym ns-root-syms))
+                               (cdr fields)
+                               raw (or (and is-import? raw-prefix) ns-raw-prefix)
+                               (if is-import? (add1 raw-prefix-len) raw-prefix-len))))
+         ;; if there are more fields, also try `root.field` as a root:
+         (define r2
+           (and (pair? (cdr fields))
+                (or (not r) (pair? (hash-ref r 'remains null)))
+                (let* ([id (datum->syntax root (string->symbol raw))]
+                       [dotted-root (transfer-parens-suffix
+                                     (syntax-raw-property
+                                      (datum->syntax id (syntax-e id)
+                                                     (append-consecutive-syntax-objects
+                                                      'loc-stx
+                                                      root
+                                                      field))
+                                      (or given-raw raw)))])
+                  (and (identifier-binding (syntax-shift-phase-level
+                                            (in-name-root-space dotted-root)
+                                            (- root-phase))
+                                           #f)
+                       (loop/squashed dotted-root (syntax-e dotted-root) root-phase
+                                      ns-root
+                                      ns-roots
+                                      ns-root-syms
+                                      (cdr fields)
+                                      raw ns-raw-prefix
+                                      raw-prefix-len)))))
+         (if (and r2 (or (not r)
+                         (< (length (hash-ref r2 'remains null))
+                            (length (hash-ref r 'remains null)))))
+             r2
+             r))
+
        (cond
          [dest
           (define loc-stx
@@ -159,20 +191,26 @@
           (or (next named-dest)
               (add-rest named-dest))]
          [else
-          (define id-space-name (and (pair? space-names)
-                                     (car space-names)))
-          (define id ((make-intro id-space-name) (datum->syntax root (string->symbol raw))))
-          (and (identifier-binding id #f)
-               (let ([named-id (transfer-parens-suffix
-                                (syntax-raw-property
-                                 (datum->syntax id (syntax-e id)
-                                                (append-consecutive-syntax-objects
-                                                 'loc-stx
-                                                 root
-                                                 field))
-                                 (or given-raw raw)))])
-                 (or (next named-id)
-                     (add-rest named-id))))])]))
+          (define named-id+space
+            (for/or ([id-space-name (in-list space-names)])
+              (define unspaced-id (datum->syntax root (string->symbol raw)))
+              (define id ((make-intro id-space-name) unspaced-id))
+              (and (if id-space-name
+                       (identifier-distinct-binding id unspaced-id #f)
+                       (identifier-binding id #f))
+                   (let ([named-id (transfer-parens-suffix
+                                    (syntax-raw-property
+                                     (let ([named-id (append-consecutive-syntax-objects
+                                                      'loc-stx
+                                                      root
+                                                      field)])
+                                       (datum->syntax id (syntax-e id) named-id named-id))
+                                     (or given-raw raw)))])
+                     (cons named-id id-space-name)))))
+          (if named-id+space
+              (or (next (car named-id+space))
+                  (add-rest (car named-id+space) (cdr named-id+space)))
+              (next #f))])]))
   (define (loop/squashed root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len)
     (define r (loop root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len))
     (cond

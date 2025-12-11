@@ -2,6 +2,7 @@
 import:
   "core-meta.rkt" open
   lib("racket/base.rkt")
+  "described_as.rhm" open
   "str_help.rhm" open
   "error.rhm" open
   "maybe.rhm" open
@@ -113,12 +114,12 @@ namespace str:
         ~min_width: min_width :: maybe(Nat) = width,
         ~max_width: max_width :: maybe(Nat) = width,
         ~pad: pad :: Char = Char" ",
-        ~align: align :: Align = #'left,
-        ~clip_align: clip_align :: Align = align,
+        ~align: align :: Align described_as str.Align = #'left,
+        ~clip_align: clip_align :: Align described_as str.Align = align,
         ~minus_sign: minus_sign :: String  = "-",
         ~plus_sign: plus_sign :: String  = "",
         ~zero_sign: zero_sign :: String  = "",
-        ~sign_align: sign_align :: Align = #'center)'
+        ~sign_align: sign_align :: Align described_as str.Align = #'center)'
     'export:
        $name
      fun $name($n :: $annot,
@@ -301,8 +302,8 @@ namespace str:
         ~min_width: min_width :: maybe(Nat) = width,
         ~max_width: max_width :: maybe(Nat) = width,
         ~pad: pad :: Char = Char" ",
-        ~align: align :: Align = #'left,
-        ~clip_align: clip_align :: Align = #'left) :~ String:
+        ~align: align :: Align described_as str.Align = #'left,
+        ~clip_align: clip_align :: Align described_as str.Align = #'left) :~ String:
     build_number(#'s,
                  to_string(v, ~mode: mode),
                  0,

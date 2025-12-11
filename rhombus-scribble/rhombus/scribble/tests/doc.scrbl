@@ -157,6 +157,15 @@ Starting example:
 
 }
 
+@doc(
+  annot.macro 'String.more'
+  grammar string_amore_rhs:
+    3
+){
+
+ Defined by extension.
+
+}
 @section{Meta}
 
 @docmodule(rhombus/meta)
@@ -165,8 +174,8 @@ Starting example:
   ~nonterminal:
     rhs: String.more string_more_rhs
     rhs2: String.more string_more_rhs ~expr
-    rhs3: String.more string_more_rhs ~at rhombus/expr
-    rhs4: String.more string_more_rhs ~at: rhombus/expr
+    rhs3: String.more string_amore_rhs ~at rhombus/annot
+    rhs4: String.more string_amore_rhs ~at: rhombus/annot
 
   defn.macro 'expr.macro'
   fun syntax_meta.DefinitionContext.add_scopes()

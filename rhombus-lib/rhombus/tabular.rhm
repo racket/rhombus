@@ -1,0 +1,345 @@
+#lang rhombus/static/and_meta
+
+export:
+  str
+
+enum str.Cell:
+  ~is_a String
+  cont
+
+enum str.VerticalAlign:
+  top
+  vcenter
+  bottom
+
+enum str.Border:
+  border
+  top_border
+  left_border
+  right_border
+  bottom_border
+
+class str.CellPadding(left :: Nat, top :: Nat, right :: Nat, bottom :: Nat):
+  constructor (around :: Real = 0,
+               ~horiz: horiz :: Real = around,
+               ~vert: vert :: Real = around,
+               ~left: left :: Real = horiz,
+               ~top: top :: Real = vert,
+               ~right: right :: Real = horiz,
+               ~bottom: bottom :: Real = vert):
+    super(left, top, right, bottom)
+
+enum str.CellProperty:
+  ~is_a str.Align
+  ~is_a str.VerticalAlign
+  ~is_a str.Border
+  ~is_a str.CellPadding
+
+annot.macro 'str.CellProperties':
+  'str.CellProperty || List.of(str.CellProperty)'
+
+class NormProp(align = #'left,
+               valign = #'top,
+               left_border = #false,
+               top_border = #false,
+               right_border = #false,
+               bottom_border = #false,
+               pad :~ str.CellPadding = str.CellPadding(0)):
+  method merge(prop):
+    match prop
+    | #'left: this with (align = #'left)
+    | #'center: this with (align = #'center)
+    | #'right: this with (align = #'right)
+    | #'top: this with (valign = #'top)
+    | #'vcenter: this with (valign = #'vcenter)
+    | #'bottom: this with (valign = #'bottom)
+    | #'border: this with (left_border = #true,
+                           top_border = #true,
+                           right_border = #true,
+                           bottom_border = #true)
+    | #'left_border: this with (left_border = #true)
+    | #'top_border: this with (top_border = #true)
+    | #'right_border: this with (right_border = #true)
+    | #'bottom_border: this with (bottom_border = #true)
+    | p :: str.CellPadding: this with (pad = p)
+
+fun str.tabular(cellss :: List.of(List.of(str.Cell)),
+                ~pad: pad :: str.CellPadding || Nat || [Nat, Nat] || [Nat, Nat, Nat, Nat] = 0,
+                ~column_properties: col_props :: List.of(str.CellProperties) = [],
+                ~row_properties: row_props :: List.of(str.CellProperties) = [],
+                ~cell_properties: cell_propss :: List.of(List.of(str.CellProperties)) = []):
+  ~who: who
+  let height = cellss.length()
+  let width = (if cellss.length() == 0 | 0 | cellss[0].length())
+  check_shapes(who, width, height, cellss, col_props, row_props, cell_propss)
+  let cell_props = merge_and_normalize(width, height, pad, col_props, row_props, cell_propss)
+  // like `cell_props[j][j]`, but returns an empty `NormProp` around edges
+  fun cp(j, i) :~ NormProp:
+    if i < 0 || j < 0 || i >= width || j >= height
+    | NormProp()
+    | cell_props[j][i]
+  // get degenerate cases (0 rows or columns) out of the way first
+  cond
+  | height == 0: ""
+  | width == 0:
+      String.append(& for List (j in 0..height-1): "\n")
+  | ~else:
+      // the `any_bars` list has `width+1` booleans
+      let any_bars :~ List:
+        for List (i in 0 ..= width):
+          for any (j in 0 .. height):
+            cp(j, i-1).right_border || cp(j, i).left_border
+      // the `any_dashes` list has `height+1` booleans
+      let any_dashes :~ List:
+        for List (j in 0 ..= height):
+          for any (i in 0 .. width):
+            cp(j-1, i).bottom_border || cp(j, i).top_border
+      // split strings into lines
+      let strsss :~ List.of(List.of(List.of(String))):
+        for List (cells in cellss):
+          for List (cell in cells):
+            match cell
+            | #'cont: []
+            | "": [""]
+            | cell :~ String: cell.split("\n")
+      // compute row heights, not counting borders
+      let row_heights :~ List.of(Int):
+        for List (j in 0..height):
+          for fold(h = 0) (i in 0..width):
+            let strs = strsss[j][i]
+            let prop = cell_props[j][i]
+            math.max(h, strs.length() + prop.pad.top + prop.pad.bottom)
+      // compute column widths, not counting borders
+      let col_widths :~ List.of(Int):
+        // first pass: treat continued cells as 0-width
+        for List (i in 0..width):
+          for fold(w = 0) (j in 0..height):
+            let cw:
+              if i < width-1 && (cellss[j][i+1] == #'cont)
+              | 0
+              | math.max(0, (each strsss[j][i]).length(), ...)
+            let prop = cell_props[j][i]
+            math.max(w, cw + prop.pad.left + prop.pad.right)
+      // make columns longer as needed to fit continued cells
+      let col_widths = adjust_for_cont(col_widths,
+                                       width, height,
+                                       cellss, strsss, cell_props, any_dashes)
+      // vertical-align split strings
+      let strsss :~ List.of(List.of(List.of(String))):
+        for List (j in 0..height):
+          for List (i in 0..width):
+            let strs = strsss[j][i]
+            let prop = cell_props[j][i]
+            let delta = row_heights[j] - (strs.length() + prop.pad.top + prop.pad.bottom)
+            let strs:
+              if delta == 0
+              | strs
+              | match prop.valign
+                | #'top: strs
+                | #'vcenter: (for List (k in 0 .. delta div 2): "") ++ strs
+                | #'bottom: (for List (k in 0 .. delta): "") ++ strs
+            (for List (k in 0 .. prop.pad.top): "") ++ strs
+      // function to form a line before row `j`
+      // (or after the last row if `j` is `height`)
+      fun hline(j, pre_nl, post_nl):
+        if any_dashes[j]
+        | String.append(
+            if pre_nl | "\n" | "",
+            & for List (i in 0 .. width):
+              let str:
+                if cp(j-1, i).bottom_border || cp(j, i).top_border
+                | String.make(col_widths[i], Char"-")
+                | String.make(col_widths[i], Char" ")
+              if any_bars[i]
+              | if cp(j, i-1).right_border || cp(j-1, i-1).right_border || cp(j, i).left_border || cp(j-1, i).left_border
+                | if ((cp(j-1, i).bottom_border || cp(j, i).top_border)
+                        || (cp(j-1, i-1).bottom_border || cp(j, i-1).top_border))
+                  | "+" ++ str
+                  | "|" ++ str
+                | if ((cp(j-1, i).bottom_border || cp(j, i).top_border)
+                        && (cp(j-1, i-1).bottom_border || cp(j, i-1).top_border))
+                  | "-" ++ str
+                  | " " ++ str
+              | str,
+            if any_bars[width]
+            | if cp(j, width-1).right_border || cp(j-1, width-1).right_border
+              | if cp(j, width-1).top_border || cp(j-1, width-1).bottom_border
+                | "+"
+                | "|"
+              | " "
+            | "",
+            if post_nl | "\n" | "",
+          )
+        | (if pre_nl && post_nl | "\n" | "")
+      // format and append cells
+      String.append(
+        & for List:
+          each j in 0..height
+          each k in 0..row_heights[j]
+          String.append(
+            if k == 0
+            | hline(j, j > 0, #true)
+            | "\n",
+            & for List:
+              each i in 0..width
+              skip_when cellss[j][i] == #'cont
+              let strs = strsss[j][i]
+              let str = (if strs.length() > k | strs[k] | "")
+              let w:
+                recur extend (w = col_widths[i], i = i):
+                  if i+1 < width && cellss[j][i+1] == #'cont
+                  | extend(w + col_widths[i+1] + (if any_bars[i] | 1 | 0), i+1)
+                  | w
+              let str = format_cell(str, w, cp(j, i))
+              cond
+              | cp(j, i-1).right_border || cp(j, i).left_border:
+                  "|" ++ str
+              | any_bars[i]:
+                  " " ++ str
+              | ~else:
+                  str,
+            if any_bars[width]
+            | if cp(j, width-1).right_border
+              | "|"
+              | " "
+            | ""
+          ),
+        hline(height, #true, #false)
+      )
+
+fun format_cell(str :~ String, width, prop :~ NormProp):
+  let str = String.make(prop.pad.left, Char" ") ++ str ++ String.make(prop.pad.right, Char" ")
+  let delta = math.max(0, width - str.length())
+  let (left, right):
+    match prop.align
+    | #'left: values(0, delta)
+    | #'center: values(delta div 2, delta - delta div 2)
+    | #'right: values(delta, 0)
+  String.make(left, Char" ") ++ str ++ String.make(right, Char" ")
+
+fun check_shapes(who, width, height,
+                 cellss :~ List.of(List),
+                 col_props :~ List,
+                 row_props :~ List,
+                 cell_propss :~ List.of(List)):
+  unless math.equal((each cellss).length(), ...)
+  | error(~who: who,
+          "rows for cells are not all of the same length",
+          error.val(~label: "length of row 0", cellss[0].length()),
+          block:
+            let i = cellss.find_index(fun (row :~ List): row.length() != cellss[0].length())
+            error.val(~label: "length of row " +& i, cellss[i].length()),
+          error.val(~label: "cells", cellss))
+  unless width == 0
+  | when any((each cellss)[0] == #'cont, ...)
+    | error(~who: who,
+            "first column in a row contains #'cont",
+            error.val(~label: "cells", cellss))
+  when height > 0 && col_props.length() > width
+  | error(~who: who,
+          "more column properties than columns of cells",
+          error.val(~label: "column properties count", col_props.length()),
+          error.val(~label: "cells column count", width),
+          error.val(~label: "column properties", col_props),
+          error.val(~label: "cells", cellss))
+  when row_props.length() > height
+  | error(~who: who,
+          "more row properties than rows of cells",
+          error.val(~label: "row properties count", row_props.length()),
+          error.val(~label: "cells row count", height),
+          error.val(~label: "row properties", row_props),
+          error.val(~label: "cells", cellss))
+
+fun merge_and_normalize(width, height,
+                        pad,
+                        col_props :~ List,
+                        row_props :~ List,
+                        cell_propss :~ List.of(List)):~ List.of(List.of(NormProp)):
+  let default_prop = NormProp() with (pad = (match pad
+                                             | cp :: str.CellPadding: cp
+                                             | [l, t, r, b]:
+                                                 str.CellPadding(~left: l, ~top: t, ~right: r, ~bottom: b)
+                                             | [h, v]: str.CellPadding(~horiz: h, ~vert: v)
+                                             | n: str.CellPadding(n)))
+  for List (j in 0..height):
+    for List (i in 0..width):
+      fun listify(v): if v is_a List | v | List(v)
+      let cell_prop:
+        if cell_propss.length() <= j
+        | if cell_propss.length() == 0
+          | []
+          | let cell_props = cell_propss.last
+            if cell_props.length() <= i
+            | if cell_props.length() == 0
+              | []
+              | listify(cell_props.last)
+            | listify(cell_props[i])
+        | if cell_propss[j].length() <= i
+          | if cell_propss[j].length() == 0
+            | []
+            | listify(cell_propss[j].last)
+          | listify(cell_propss[j][i])
+      let row_prop :~ List:
+        if row_props.length() <= j
+        | if row_props.length() == 0
+          | []
+          | listify(row_props.last)
+        | listify(row_props[j])
+      let col_prop :~ List:
+        if col_props.length() <= i
+        | if col_props.length() == 0
+          | []
+          | listify(col_props.last)
+        | listify(col_props[i])
+      for fold(norm_prop :~ NormProp = default_prop) (prop in row_prop ++ col_prop ++ cell_prop):
+        norm_prop.merge(prop)
+
+fun adjust_for_cont(col_widths :~ List.of(Int),
+                    width, height,
+                    cellss :~ List.of(List.of(str.Cell)),
+                    strsss :~ List.of(List.of(List.of(String))),
+                    cell_props :~ List.of(List.of(NormProp)),
+                    any_dashes :~ List) :~ List.of(Int):
+  // figure out how much room a cell overlapping (j, k) needs
+  // and how much it has based on the current `col_widths`
+  fun cont_need_have(col_widths :~ List.of(Int), j, k) :~ values(Int, Int):
+    let k: recur seek(k = k):
+             if k == width || cellss[j][k] != #'cont
+             | k-1
+             | seek(k + 1)
+    recur measure(have = 0, k = k):
+      if cellss[j][k] == #'cont
+      | measure(have + col_widths[k] + (if any_dashes[k] | 1 | 0), k - 1)
+      | let have = have + col_widths[k]
+        let need = math.max(0, (each strsss[j][k]).length(), ...)
+        let prop = cell_props[j][k]
+        let need = need + prop.pad.left + prop.pad.right
+        values(need, have)
+  // make columns longer as needed to fit continued cells;
+  // work from the right end, which may not be ideal,
+  // because a column further to the left may need to grow
+  // in a way that would have allowed a more rightward column
+  // to stay narrower, but we'll make one more pass to shrink
+  let col_widths :~ List.of(Int):
+    for fold(col_widths :~ List.of(Int) = col_widths) (rev_i in 0..width):
+      let i = width - rev_i - 1
+      for fold(col_widths :~ List.of(Int) = col_widths) (j in 0..height):
+        if cellss[j][i] == #'cont
+        | let (need, have) = cont_need_have(col_widths, j, i + 1)
+          if need > have
+          | col_widths.set(i, col_widths[i] + need - have)
+          | col_widths
+        | col_widths
+  // work from the right end to shrink columns that don't
+  // need to be so wide, after all
+  let col_widths :~ List.of(Int):
+    for fold(col_widths :~ List.of(Int) = col_widths) (rev_i in 0..width):
+      let i = width - rev_i - 1
+      let adj:
+        for fold(adj = #false) (j in 0..height):
+          let (need, have) = cont_need_have(col_widths, j, i + 1)
+          if adj
+          | math.min(adj, have - need)
+          | have - need
+      col_widths.set(i, col_widths[i] - adj)
+  col_widths

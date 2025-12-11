@@ -7,4 +7,5 @@
 @local_table_of_contents()
 
 @include_section("str.scrbl")
+@include_section("tabular.scrbl")
 @include_section("rx.scrbl")

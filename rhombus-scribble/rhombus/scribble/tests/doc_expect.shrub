@@ -1447,6 +1447,7 @@ html:
                                      href:
                                        "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false%29%29%29"}:
                                     "String.more"
+                              span {class: "hspace"}: nbsp
                               span {class: "stt"}: "::"
                               span {class: "hspace"}: nbsp
                               span {class: "stt"}:
@@ -1482,6 +1483,47 @@ html:
                               "|"
                               span {class: "hspace"}: nbsp
                           td: table: tr: td: p: span {class: "RktVal"}: "2"
+              div {class: "SIntrapara"}: "Defined by extension."
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "annotation"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._rhombus%2Fannot%29%29%29"}:
+                                    "String.more"
+                  tr: td: p: span {class: "hspace"}: nbsp
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktVar"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._rhombus%2Fannot._string_amore_rhs%29%29%29"}:
+                                    "string_amore_rhs"
+                          td:
+                            p:
+                              span {class: "hspace"}: nbsp
+                              "="
+                              span {class: "hspace"}: nbsp
+                          td: table: tr: td: p: span {class: "RktVal"}: "3"
               div {class: "SIntrapara"}: "Defined by extension."
           section:
             h2:
@@ -1594,13 +1636,13 @@ html:
               span {class: "RktVar"}:
                 a {class: "RktValLink",
                    href:
-                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._rhombus%2Fannot._string_amore_rhs%29%29%29"}:
                   "rhs3"
               ",\n"
               span {class: "RktVar"}:
                 a {class: "RktValLink",
                    href:
-                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._~23false._string_more_rhs%29%29%29"}:
+                     "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._rhombus%2Fannot._string_amore_rhs%29%29%29"}:
                   "rhs4"
               "."
           section:
