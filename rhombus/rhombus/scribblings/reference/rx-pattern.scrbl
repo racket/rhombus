@@ -427,9 +427,11 @@ multiplying like the expression @rhombus(*) operator.
 
   When @rhombus($, ~at rhombus/rx) forms a splice, then a regular
   expression is formed dynamically by merging the referenced regexp into
-  the enclosing pattern. (A limitation: both the merged regexp and
+  the enclosing pattern. A limitation: both the merged regexp and
   enclosing pattern must be free of backreferences, because backreferences
-  need to be converted from names to absolute positions eagerly.)
+  need to be converted from names to absolute positions eagerly.
+  Spliced regular expressions and non-spliced patterns must consistently
+  imply string or byte string matching.
 
   @examples(
   ~eval: rx_eval

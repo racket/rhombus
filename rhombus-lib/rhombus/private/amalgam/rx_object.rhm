@@ -29,6 +29,7 @@ class RX(private _rkt_partial_rx,
 
   export:
     from_handles
+    quote
 
   private implements Printable
   private override describe(mode, recur) :: String:
@@ -162,6 +163,7 @@ fun from_handles(rx,
                  vars :: Map.of(Symbol, Nat),
                  ~has_backref: has_backref :: Any.to_boolean = #false,
                  ~source: source :: String = "rx'....'") :~ RX:
+  ~name: RX.from_handles
   fun bad(rx, mode):
     error(~who: #'#{RX.from_handles},
           ~exn: Exn.Fail.Annot,
@@ -172,6 +174,19 @@ fun from_handles(rx,
   unless base.#{regexp?}(partial_rx)
   | bad("partial-match")
   _RX(partial_rx, rx, num_captures, vars, has_backref, source)
+
+fun quote(str :: ReadableString || Bytes) :~ RX:
+  ~name: RX.quote
+  let q = base.#{regexp-quote}(str)
+  let partial_rx:
+    if q is_a ReadableString
+    | base.#{pregexp}(q)
+    | base.#{byte-pregexp}(q)
+  let rx:
+    match q
+    | q :: ReadableString: base.#{pregexp}("^" ++ q ++ "$")
+    | q :: Bytes: base.#{byte-pregexp}(#"^" ++ q ++ #"$")
+  _RX(partial_rx, rx, 0, {}, #false, "rx'....'")
 
 fun maybe_range(maybe_pr):
   match maybe_pr
@@ -188,6 +203,7 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
   fun extract(a):
     match a
     | _ :: String: a
+    | _ :: Bytes: a
     | Pair(_, regexp :: _RX):
         when has_backref && (regexp._num_captures != 0)
         | error(~who: who,
@@ -199,14 +215,23 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
                 ~exn: Exn.Fail.Annot,
                 "cannot splice regexp with backreferences into a larger pattern",
                 error.val(~label: "regexp", regexp))
-        "(?:" ++ base.#{object-name}(regexp.in_handle) ++ ")"
+        let str = base.#{object-name}(regexp.in_handle)
+        if str is_a ReadableString
+        | "(?:" ++ str ++ ")"
+        | #"(?:" ++ str ++ #")"
     | Pair(src_str, val):
         error(~who: who,
               ~exn: Exn.Fail.Annot,
               error.annot_msg("spliced value for " +& src_str),
               error.annot("RX"),
-              error.val(~label: "spliced value", a))
-  let str = String.append(extract(a), ...)
+              error.val(~label: "spliced value", val))
+  let [ex_a, ...] = [extract(a), ...]
+  let is_str = all(ex_a is_a String, ...)
+  unless is_str || all(ex_a is_a Bytes, ...)
+  | error(~who: who,
+          ~exn: Exn.Fail.Annot,
+          "cannot splice mixture of string and byte string regexps")
+  let str = if is_str | String.append(ex_a, ...) | Bytes.append(ex_a, ...)
   let (num_captures, vars):
     recur loop(vars :~ Map = {}, as = as, var_seq = var_seq, di = 0):
       match var_seq
@@ -224,8 +249,12 @@ fun splice_regexp(who, PairList(a, ...) && as, var_seq, has_backref, src) :~ RX:
                 as_loop(as)
       | [sym, & var_seq]:
           loop(vars ++ { sym: di + 1 }, as, var_seq, di+1)
-  _RX(base.#{pregexp}(str),
-      base.#{pregexp}("^(?:" ++ str ++ ")$"),
+  _RX(if is_str
+      | base.#{pregexp}(str)
+      | base.#{byte-pregexp}(str),
+      if is_str
+      | base.#{pregexp}("^(?:" ++ str ++ ")$")
+      | base.#{byte-pregexp}(#"^(?:" ++ str ++ #")$"),
       num_captures,
       vars,
       has_backref,

@@ -241,6 +241,18 @@
 
 }
 
+@doc(
+  fun RX.quote(literal :: ReadableString || Bytes) :: RX
+){
+
+ Creates a @tech{regexp} that matches @rhombus(literal).
+
+ If used directly, the regular expression matches case-sensitively, but
+ it adapts to to the case-sensitivity of its context when spliced into a
+ larger regular expression using a @rhombus($, ~at rhombus/rx) escape.
+
+}
+
 
 @doc(
   property (regexp :: RX).handle

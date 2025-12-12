@@ -592,3 +592,23 @@ check:
   let rx'($offset: .)' = "a"
   offset
   ~is "a"
+
+block:
+  let app = RX.quote("ap?{}ple")
+  check app.is_match("ap?{}ple") ~is #true
+  check app.is_match("ap?{}ple!") ~is #false
+  check app.is_match_in("ap?{}ple!") ~is #true
+  check rx'$app "!"'.is_match("ap?{}ple!") ~is #true
+
+block:
+  let app = RX.quote(#"ap?{}ple")
+  check app.is_match(#"ap?{}ple") ~is #true
+  check app.is_match(#"ap?{}ple!") ~is #false
+  check app.is_match_in(#"ap?{}ple!") ~is #true
+  check rx'$app #"!"'.is_match(#"ap?{}ple!") ~is #true
+
+check rx'$(rx'#"a"') "b"' ~throws "cannot splice mixture"
+check rx'$(rx'"a"') #"b"' ~throws "cannot splice mixture"
+check rx'"b" $(rx'#"a"')' ~throws "cannot splice mixture"
+check rx'#"b" $(rx'"a"')' ~throws "cannot splice mixture"
+check rx'$(rx'#"b"') $(rx'"a"')' ~throws "cannot splice mixture"
