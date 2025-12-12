@@ -72,14 +72,14 @@
 }
 
 @doc(
-  enum Method:
-    get
-    post
-    delete
-    head
-    options
-    patch
-    put
+  enum Method
+  | get
+  | post
+  | delete
+  | head
+  | options
+  | patch
+  | put
 ){
 
  Methods recognized by @rhombus(Session.request).

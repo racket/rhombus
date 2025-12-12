@@ -21,75 +21,75 @@
                 $class_clause_or_body_or_export
                 ...'
 
-  grammar field_spec:
-    $modifiers $id $maybe_annot $maybe_default
-    $keyword: $modifiers $id $maybe_annot $maybe_default
-    $keyword $maybe_default
+  grammar field_spec
+  | $modifiers $id $maybe_annot $maybe_default
+  | $keyword: $modifiers $id $maybe_annot $maybe_default
+  | $keyword $maybe_default
 
-  grammar modifiers:
-    #,(@rhombus(private, ~class_clause))
-    #,(@rhombus(mutable, ~bind))
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
-    #,(@rhombus(protected, ~class_clause))
-    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(mutable, ~bind))
-    #,(epsilon)
+  grammar modifiers
+  | #,(@rhombus(private, ~class_clause))
+  | #,(@rhombus(mutable, ~bind))
+  | #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
+  | #,(@rhombus(protected, ~class_clause))
+  | #,(@rhombus(protected, ~class_clause)) #,(@rhombus(mutable, ~bind))
+  | #,(epsilon)
 
-  grammar maybe_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(epsilon)
+  grammar maybe_annot
+  | #,(@rhombus(::, ~bind)) $annot
+  | #,(@rhombus(:~, ~bind)) $annot
+  | #,(epsilon)
 
-  grammar maybe_default:
-    = $default_expr
-    : $default_body; ...
-    #,(epsilon)
+  grammar maybe_default
+  | = $default_expr
+  | : $default_body; ...
+  | #,(epsilon)
 
-  grammar class_clause_or_body_or_export:
-    $class_clause
-    $body
-    $export
+  grammar class_clause_or_body_or_export
+  | $class_clause
+  | $body
+  | $export
 
-  grammar class_clause:
-    #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(immutable, ~class_clause)) $field_impl
-    #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
-    #,(@rhombus(method, ~class_clause)) $method_impl
-    #,(@rhombus(override, ~class_clause)) $method_impl
-    #,(@rhombus(final, ~class_clause)) $method_impl
-    #,(@rhombus(private, ~class_clause)) $method_impl
-    #,(@rhombus(protected, ~class_clause)) $method_impl
-    #,(@rhombus(abstract, ~class_clause)) $method_decl
-    #,(@rhombus(property, ~class_clause)) $property_impl
-    #,(@rhombus(extends, ~class_clause)) $id_name
-    #,(@rhombus(implements, ~class_clause)) $implements_decl
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
-    #,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
-    #,(@rhombus(final, ~class_clause))
-    #,(@rhombus(nonfinal, ~class_clause))
-    #,(@rhombus(internal, ~class_clause)) $id
-    #,(@rhombus(constructor, ~class_clause)) $constructor_decl
-    #,(@rhombus(expression, ~class_clause)) $expression_decl
-    #,(@rhombus(binding, ~class_clause)) $binding_decl
-    #,(@rhombus(annotation, ~class_clause)) $annotation_decl
-    #,(@rhombus(reconstructor, ~class_clause)) $reconstructor_impl
-    #,(@rhombus(reconstructor_fields, ~class_clause)) $reconstructor_fields_decl
-    #,(@rhombus(dot, ~class_clause)) $dot_decl
-    #,(@rhombus(static_info, ~class_clause)) $static_info_decl
-    #,(@rhombus(opaque, ~class_clause))
-    #,(@rhombus(prefab, ~class_clause))
-    #,(@rhombus(serializable, ~class_clause)) $serializable_decl
-    #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
-    $other_class_clause
+  grammar class_clause
+  | #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(immutable, ~class_clause)) $field_impl
+  | #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(private, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(protected, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(protected, ~class_clause)) #,(@rhombus(immutable, ~class_clause)) #,(@rhombus(field, ~class_clause)) $field_impl
+  | #,(@rhombus(method, ~class_clause)) $method_impl
+  | #,(@rhombus(override, ~class_clause)) $method_impl
+  | #,(@rhombus(final, ~class_clause)) $method_impl
+  | #,(@rhombus(private, ~class_clause)) $method_impl
+  | #,(@rhombus(protected, ~class_clause)) $method_impl
+  | #,(@rhombus(abstract, ~class_clause)) $method_decl
+  | #,(@rhombus(property, ~class_clause)) $property_impl
+  | #,(@rhombus(extends, ~class_clause)) $id_name
+  | #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(final, ~class_clause))
+  | #,(@rhombus(nonfinal, ~class_clause))
+  | #,(@rhombus(internal, ~class_clause)) $id
+  | #,(@rhombus(constructor, ~class_clause)) $constructor_decl
+  | #,(@rhombus(expression, ~class_clause)) $expression_decl
+  | #,(@rhombus(binding, ~class_clause)) $binding_decl
+  | #,(@rhombus(annotation, ~class_clause)) $annotation_decl
+  | #,(@rhombus(reconstructor, ~class_clause)) $reconstructor_impl
+  | #,(@rhombus(reconstructor_fields, ~class_clause)) $reconstructor_fields_decl
+  | #,(@rhombus(dot, ~class_clause)) $dot_decl
+  | #,(@rhombus(static_info, ~class_clause)) $static_info_decl
+  | #,(@rhombus(opaque, ~class_clause))
+  | #,(@rhombus(prefab, ~class_clause))
+  | #,(@rhombus(serializable, ~class_clause)) $serializable_decl
+  | #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
+  | $other_class_clause
 
-  grammar option:
-    ~name $id_name
-    ~name: $id_name
-    ~doc
-    ~doc:
+  grammar option
+  | ~name $id_name
+  | ~name: $id_name
+  | ~doc
+  | ~doc:
       $desc_body
       ...
 ){
@@ -372,9 +372,9 @@
   defn.macro 'class.together:
                 $class_or_interface
                 ...'
-  grammar class_or_interface:
-    class $class_decl
-    interface $interface_decl
+  grammar class_or_interface
+  | class $class_decl
+  | interface $interface_decl
 ){
 
  Defines the same bindings as the @rhombus(class_or_interface)s, but
@@ -471,9 +471,9 @@
   class_clause.macro 'immutable $field_impl'
   class_clause.macro 'immutable field $field_impl'
 
-  grammar field_impl:
-    $id $maybe_annot = $expr
-    $id $maybe_annot: $body; ...
+  grammar field_impl
+  | $id $maybe_annot = $expr
+  | $id $maybe_annot: $body; ...
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to add fields to
@@ -500,55 +500,55 @@
   class_clause.macro 'override #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
 
-  grammar method_impl:
-    $id $maybe_res_annot:
+  grammar method_impl
+  | $id $maybe_res_annot:
       $entry_point
-    $id $case_maybe_kw_opt:
+  | $id $case_maybe_kw_opt:
       $option; ...
       $body
       ...
-    Z| $id $case_maybe_kw:
-         $name_option; ...
-         $body
-         ...
-     | ...
-    $id $maybe_res_annot
+  |« Z| $id $case_maybe_kw:
+          $name_option; ...
+          $body
+          ...
+      | ...»
+  | $id $maybe_res_annot
     | $id $case_maybe_kw:
         $name_option; ...
         $body
         ...
     | ...
 
-  grammar property_impl:
-    $id $maybe_res_annot:
+  grammar property_impl
+  | $id $maybe_res_annot:
       $property_option; ...
       $body
         ...
-    Z| $id $maybe_res_annot:
+  |« Z| $id $maybe_res_annot:
+          $who_option; ...
+          $body
+          ...»
+  |« Z| $id $maybe_res_annot:
+          $property_option; ...
+          $body
+          ...»
+  |« Z| $id := $binding:
          $who_option; ...
          $body
-         ...
-    Z| $id $maybe_res_annot:
-         $property_option; ...
-         $body
-         ...
-     | $id := $binding:
-         $who_option; ...
-         $body
-         ...
+         ...»
 
-  grammar option:
-    $doc_option
-    $name_option
-    $who_option
+  grammar option
+  | $doc_option
+  | $name_option
+  | $who_option
 
-  grammar property_option:
-    $doc_option
-    $who_option
+  grammar property_option
+  | $doc_option
+  | $who_option
 
-  grammar doc_option:
-    ~doc obj_id
-    ~doc obj_id:
+  grammar doc_option
+  | ~doc obj_id
+  | ~doc obj_id:
       $desc_body
       ...
 ){
@@ -702,22 +702,22 @@
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
 
-  grammar method_decl:
-    $id $maybe_res_annot
-    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
-    $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
+  grammar method_decl
+  | $id $maybe_res_annot
+  | $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+  | $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
       doc_option
-    Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
-     | ...
-    $id $maybe_res_annot
+  |« Z| $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+      | ...»
+  | $id $maybe_res_annot
     | $id ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
     | ...
 
-  grammar property_decl:
-    $id $maybe_res_annot
-    $id $maybe_res_annot:
+  grammar property_decl
+  | $id $maybe_res_annot
+  | $id $maybe_res_annot:
       doc_option
-    Z| $id $maybe_res_annot
+  |« Z| $id $maybe_res_annot»
 ){
 
  A @tech{class clause} that declares a method
@@ -821,15 +821,15 @@
                        | ...»'
   class_clause.macro 'annotation $disable_form'
 
-  grammar maybe_name:
-    $id
-    #,("ϵ")
+  grammar maybe_name
+  | $id
+  | #,("ϵ")
 
-  grammar disable_form:
-    ~error
-    : ~error
-    ~none
-    : ~none
+  grammar disable_form
+  | ~error
+  | : ~error
+  | ~none
+  | : ~none
 ){
 
  These @tech{class clauses} are recognized by @rhombus(class) to replace or suppress
@@ -1103,9 +1103,9 @@
                       | case_maybe_kw
                       | ...'
   class_clause.macro 'reconstructor $disable_form'
-  grammar disable_form:
-    ~none
-    : ~none
+  grammar disable_form
+  | ~none
+  | : ~none
 ){
 
  A form for @rhombus(class) to provide an implementation of a

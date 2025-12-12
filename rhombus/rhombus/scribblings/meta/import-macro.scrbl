@@ -49,11 +49,11 @@
 
   defn.macro 'impo.modifier $prefix_macro_patterns'
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~import: $imp_id
-    ~import $imp_id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~import: $imp_id
+  | ~import $imp_id
 ){
 
  Like @rhombus(defn.macro), but defines an identifier as an

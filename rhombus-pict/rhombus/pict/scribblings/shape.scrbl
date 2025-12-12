@@ -337,10 +337,10 @@
 }
   
 @doc(
-  enum ColorMode:
-    ~is_a Color
-    ~is_a String
-    inherit
+  enum ColorMode
+  | ~is_a Color
+  | ~is_a String
+  | inherit
 ){
 
  A color specification, where @rhombus(#'inherit) allows the color to be
@@ -349,9 +349,9 @@
 }
 
 @doc(
-  enum LineWidth:
-    ~is_a Real
-    inherit
+  enum LineWidth
+  | ~is_a Real
+  | inherit
 ){
 
  A line-width specification, where @rhombus(#'inherit) allows the color
@@ -360,9 +360,9 @@
 }
 
 @doc(
-  enum AutoReal:
-    ~is_a Real
-    auto
+  enum AutoReal
+  | ~is_a Real
+  | auto
 ){
 
  A dimension with a computed default indicated by @rhombus(#'auto) for
@@ -371,9 +371,9 @@
 }
 
 @doc(
-  enum Refocus:
-    ~is_a Pict
-    around
+  enum Refocus
+  | ~is_a Pict
+  | around
 ){
 
  Refocusing options for functions like @rhombus(rectangle).
@@ -382,9 +382,9 @@
 
 
 @doc(
-  enum Rounded:
-    ~is_a Real
-    default
+  enum Rounded
+  | ~is_a Real
+  | default
 ){
 
  Corner-rounding options for @rhombus(rectangle).
@@ -392,9 +392,9 @@
 }
 
 @doc(
-  enum ArcDirection:
-    cw
-    ccw
+  enum ArcDirection
+  | cw
+  | ccw
 ){
 
  Arc directions, clockwise or counterclockwise.

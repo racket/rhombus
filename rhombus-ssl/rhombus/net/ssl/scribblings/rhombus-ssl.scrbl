@@ -73,9 +73,9 @@ provided by the operating system.
     ~exn: exn :: (String, Continuation.Marks) -> Any = Exn.Fail
   ) :~ values(ssl.Port.Input, ssl.Port.Output)
 
-  enum ssl.Port.Mode:
-    connect
-    accept
+  enum ssl.Port.Mode
+  | connect
+  | accept
 ){
 
  Wraps existing ports to use the SSL protocol. The @rhombus(ssl.connect)
@@ -472,9 +472,9 @@ provided by the operating system.
 
   property (vs :: ssl.Context.PrivateKey).handle  
   
-  enum ssl.Context.KeyKind:
-    rsa
-    any
+  enum ssl.Context.KeyKind
+  | rsa
+  | any
 ){
 
  Loads the first private key from @rhombus(key) for the given context.
@@ -550,10 +550,10 @@ provided by the operating system.
     mode :: ssl.Context.VerifyMode = #'always
   )
 
-  enum ssl.Context.VerifyMode:
-    never
-    try
-    always
+  enum ssl.Context.VerifyMode
+  | never
+  | try
+  | always
 ){
 
  The @rhombus(ssl.Context.set_verify) method requires certificate

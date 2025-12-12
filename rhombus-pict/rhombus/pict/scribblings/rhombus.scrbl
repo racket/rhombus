@@ -37,16 +37,16 @@ form form rendering literal shrubbery forms as a pict.
   expr.macro 'rhombus($form, $space)'
   expr.macro 'rhombus($form, $space)'
 
-  grammar space:
-    ~var
-    ~datum
-    ~value
-    ~result
-    $builtin_space_keyword
-    ~at $space_name
-    ~at: $space_name
-  grammar space_name:
-    $id_or_op ...
+  grammar space
+  | ~var
+  | ~datum
+  | ~value
+  | ~result
+  | $builtin_space_keyword
+  | ~at $space_name
+  | ~at: $space_name
+  grammar space_name
+  | $id_or_op ...
 ){
 
  Produces a @tech{pict} that renders the text of @rhombus(form).

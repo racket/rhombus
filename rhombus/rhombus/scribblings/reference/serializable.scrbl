@@ -21,13 +21,13 @@ serializing and deserializing values.
   class_clause.macro 'serializable:
                         $option
                         ...'
-  grammar option:
-    ~version $nonneg_int
-    ~version: $nonneg_int
-    ~serialize: $entry_point
-    ~deserialize: $entry_point
-    ~deserialize_shell: $entry_point
-    ~deserialize_fill: $entry_point
+  grammar option
+  | ~version $nonneg_int
+  | ~version: $nonneg_int
+  | ~serialize: $entry_point
+  | ~deserialize: $entry_point
+  | ~deserialize_shell: $entry_point
+  | ~deserialize_fill: $entry_point
 ){
 
  A @tech{class clause} recognized by @rhombus(class) that makes
@@ -159,10 +159,10 @@ serializing and deserializing values.
                 $option
                 ...'
 
-  grammar option:
-    ~deserialize: $entry_point
-    ~deserialize_shell: $entry_point
-    ~deserialize_fill: $entry_point
+  grammar option
+  | ~deserialize: $entry_point
+  | ~deserialize_shell: $entry_point
+  | ~deserialize_fill: $entry_point
 ){
 
  For use within a @tech{submodule}, defines and exports

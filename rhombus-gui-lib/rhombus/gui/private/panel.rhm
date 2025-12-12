@@ -144,8 +144,8 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
       flat_portable: #{flat-portable},
       deleted: deleted }
 
-  enum Action:
-    select
-    new
-    close
-    reorder
+  enum Action
+  | select
+  | new
+  | close
+  | reorder

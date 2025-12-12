@@ -64,10 +64,10 @@ class Attribute(~name: name :: String,
                 ~value: value :: String || OtherPermitted,
                 ~srcloc: srcloc :: maybe(SrclocRange) = #false)
 
-enum WriteMode:
-  default
-  cdata
-  entity
+enum WriteMode
+| default
+| cdata
+| entity
 
 class Text(~text: text :: String,
            ~srcloc: srcloc :: maybe(SrclocRange) = #false,

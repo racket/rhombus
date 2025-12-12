@@ -85,9 +85,9 @@
   reducer.macro 'values($bind $init, ...)'
   reducer.macro 'fold($bind $init, ...)'
 
-  grammar init:
-    = $expr
-    : $body; ...
+  grammar init
+  | = $expr
+  | : $body; ...
 ){
 
  A @tech(~doc: guide_doc){reducer} used with @rhombus(for), expects as many results from a

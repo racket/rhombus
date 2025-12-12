@@ -791,36 +791,36 @@ check_spacer:
   $(defn.full) . $(defn.full) $none $bind $annot: $datum
 
 check_spacer:
-  enum Mouse:
-    itchy
-    mickey minnie
-    jerry
-  $(defn.full) $none:
-    $(datum.explicit)
-    $(datum.explicit) $(datum.explicit)
-    $(datum.explicit)
+  enum Mouse
+  | itchy
+  | mickey minnie
+  | jerry
+  $(defn.full) $none
+  | $(datum.explicit)
+  | $(datum.explicit) $(datum.explicit)
+  | $(datum.explicit)
 
 check_spacer:
-  enum Cat:
-    ~is_a String
-    scratchy
-    tom
-  $(defn.full) $none:
-    ~is_a $annot
-    $(datum.explicit)
-    $(datum.explicit)
+  enum Cat
+  | ~is_a String
+  | scratchy
+  | tom
+  $(defn.full) $none
+  | ~is_a $annot
+  | $(datum.explicit)
+  | $(datum.explicit)
 
 check_spacer:
-  enum Cat:
-    ~is_a:
+  enum Cat
+  | ~is_a:
       String
-    scratchy
-    tom
-  $(defn.full) $none:
-    ~is_a:
+  | scratchy
+  | tom
+  $(defn.full) $none
+  | ~is_a:
       $annot
-    $(datum.explicit)
-    $(datum.explicit)
+  | $(datum.explicit)
+  | $(datum.explicit)
 
 check_spacer:
   Map.by(===){

@@ -24,19 +24,19 @@ normally bound to implement @tech{function} calls.
   repet.macro '$fun_expr #%call ($repet_arg, ...)'
   expr.macro '$fun_expr #%call ($arg, ..., _, $arg, ...)'
 
-  grammar arg:
-    $arg_expr
-    $keyword
-    $keyword: $arg_expr
-    $keyword: $body; ...
-    $repet #,(@litchar{,}) $ellipses
-    & $list_expr
-    ~& $map_expr
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar arg
+  | $arg_expr
+  | $keyword
+  | $keyword: $arg_expr
+  | $keyword: $body; ...
+  | $repet #,(@litchar{,}) $ellipses
+  | & $list_expr
+  | ~& $map_expr
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots_expr)
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position

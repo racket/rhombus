@@ -71,10 +71,10 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Int.in($range)'
   annot.macro 'Int.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 
-  grammar inclusivity:
-    #,(epsilon)
-    ~inclusive
-    ~exclusive
+  grammar inclusivity
+  | #,(epsilon)
+  | ~inclusive
+  | ~exclusive
 ){
 
  Matches exact integers: all of them, positive integers, negative

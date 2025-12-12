@@ -10,9 +10,9 @@ when #false
 when #false
 | 10 :: maybe(Posn)
 
-enum Foo:
-  ok
-  ~is_a Posn
+enum Foo
+| ok
+| ~is_a Posn
 
 annot.macro '$a OR $b':
   '$a || $b'

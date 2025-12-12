@@ -308,9 +308,9 @@
   defn.macro '«statinfo.key $id:
                  $clause
                  ...»'
-  grammar clause:
-    ~and: $and_func_expr
-    ~or: $or_func_expr
+  grammar clause
+  | ~and: $and_func_expr
+  | ~or: $or_func_expr
 ){
 
  Binds @rhombus(id) for use as a static info key identifier. Both

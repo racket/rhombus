@@ -15,11 +15,11 @@ defn.macro
        fun is_symbol(v): table.has_key(v)
        fun $convert(v): table[v]
        fun $unconvert(v): rev_table[v]
-       enum $name:
-         ~is_a $annot
-         ...
-         $src
-         ...
+       enum $name
+       | ~is_a $annot
+       | ...
+       | $src
+       | ...
      »'
 | 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier):
      ~is_a $(annot :: Group)
@@ -28,11 +28,11 @@ defn.macro
     '«
        def table = { #'$src: #'$dest, ... }
        fun $convert(v): table[v]
-       enum $name:
-         ~is_a $annot
-         ...
-         $src
-         ...
+       enum $name
+       | ~is_a $annot
+       | ...
+       | $src
+       | ...
      »'
 
 defn.macro 'symbol_set_annot $(name :: Identifier):
@@ -41,9 +41,9 @@ defn.macro 'symbol_set_annot $(name :: Identifier):
               { $(src :: Identifier), ...}':
   '«
      def table = { #'$src, ... }
-     enum $name:
-       ~is_a $annot
-       ...
-       $src
-       ...
+     enum $name
+     | ~is_a $annot
+     | ...
+     | $src
+     | ...
    »'

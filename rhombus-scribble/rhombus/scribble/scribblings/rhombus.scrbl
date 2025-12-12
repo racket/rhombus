@@ -11,40 +11,40 @@
   expr.macro 'rhombus($group, $builtin_space)'
   expr.macro 'rhombus($group, ~at $space_name)'
   expr.macro 'rhombus($group, ~at: $space_name)'
-  grammar builtin_space:
-    ~var
-    ~datum
-    ~value
-    ~result
-    ~expr
-    ~defn
-    ~decl
-    ~bind
-    ~impo
-    ~expo
-    ~modpath
-    ~annot
-    ~repet
-    ~stxclass
-    ~reducer
-    ~class
-    ~space
-    ~for_clause
-    ~class_clause
-    ~interface_clause
-    ~veneer_clause
-    ~entry_point
-    ~unquote_bind
-    ~syntax_class_clause
-    ~pattern_clause
-    ~space_clause
-    ~space_meta_clause
-    ~key_comp
-    ~immediate_callee
-    ~operator_order
-    ~doc
-  grammar space_name:
-    $id_or_op ...
+  grammar builtin_space
+  | ~var
+  | ~datum
+  | ~value
+  | ~result
+  | ~expr
+  | ~defn
+  | ~decl
+  | ~bind
+  | ~impo
+  | ~expo
+  | ~modpath
+  | ~annot
+  | ~repet
+  | ~stxclass
+  | ~reducer
+  | ~class
+  | ~space
+  | ~for_clause
+  | ~class_clause
+  | ~interface_clause
+  | ~veneer_clause
+  | ~entry_point
+  | ~unquote_bind
+  | ~syntax_class_clause
+  | ~pattern_clause
+  | ~space_clause
+  | ~space_meta_clause
+  | ~key_comp
+  | ~immediate_callee
+  | ~operator_order
+  | ~doc
+  grammar space_name
+  | $id_or_op ...
 ){
 
  Typesets @rhombus(group) literally, except as adjusted by spacers and
@@ -128,16 +128,16 @@
   expr.macro 'rhombusblock_etc ($option, ...):
                 $group
                 ...'
-  grammar option:
-    ~escape: $op
-    ~inline: $body; ...
-    ~inset: $body; ...
-    ~indent: $body: ...
-    ~prompt: $body: ....
-    ~text: $body; ...
-    ~indent_from_block: $body; ...
-    ~spacer_info_box: $body; ...
-    ~number_from: $body; ...
+  grammar option
+  | ~escape: $op
+  | ~inline: $body; ...
+  | ~inset: $body; ...
+  | ~indent: $body: ...
+  | ~prompt: $body: ....
+  | ~text: $body; ...
+  | ~indent_from_block: $body; ...
+  | ~spacer_info_box: $body; ...
+  | ~number_from: $body; ...
 ){
 
  Like @rhombus(rhombusblock), but supports @rhombus(option)s:

@@ -116,11 +116,11 @@ which case it supplies its elements in order.
   annot.macro 'PairList'
   annot.macro 'PairList.of($annot)'
   annot.macro 'PairList.tuple_of[$annot, ..., $maybe_ellipsis]'
-  grammar maybe_ellipsis:
-    #,(epsilon)
-    $ellipsis
-  grammar ellipsis:
-    #,(dots)
+  grammar maybe_ellipsis
+  | #,(epsilon)
+  | $ellipsis
+  grammar ellipsis
+  | #,(dots)
 
 ){
 
@@ -145,17 +145,17 @@ which case it supplies its elements in order.
   expr.macro 'PairList[$expr_or_splice, ...]'
   repet.macro 'PairList[$repet_or_splice, ...]'
 
-  grammar expr_or_splice:
-    $expr
-    $repet #,(@litchar{,}) $ellipses
-    & $listable_expr
+  grammar expr_or_splice
+  | $expr
+  | $repet #,(@litchar{,}) $ellipses
+  | & $listable_expr
 
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) ellipsis
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) ellipsis
 
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar ellipsis
+  | #,(dots_expr)
 
 ){
 
@@ -184,17 +184,17 @@ which case it supplies its elements in order.
     repet_bind: def bind ~defn
   bind.macro 'PairList($bind_or_splice, ...)'
   bind.macro 'PairList[$bind_or_splice, ...]'
-  grammar bind_or_splice:
-    $bind
-    $splice
-  grammar splice:
-    $repet_bind #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&, ~bind)) $pair_list_bind
-    #,(@rhombus(&, ~bind)) $pair_list_repet_bind #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots)
-    #,(dots) ~nonempty
-    #,(dots) ~once
+  grammar bind_or_splice
+  | $bind
+  | $splice
+  grammar splice
+  | $repet_bind #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&, ~bind)) $pair_list_bind
+  | #,(@rhombus(&, ~bind)) $pair_list_repet_bind #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots)
+  | #,(dots) ~nonempty
+  | #,(dots) ~once
 ){
 
  Matches a @tech{pair list} with @rhombus(bind_or_splice)s in the same

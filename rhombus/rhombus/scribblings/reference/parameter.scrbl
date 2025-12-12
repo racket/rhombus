@@ -43,14 +43,14 @@ parameter's value using @rhombus(parameterize).
                 $body
                 ...'
 
-  grammar maybe_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(epsilon)
+  grammar maybe_annot
+  | #,(@rhombus(::, ~bind)) $annot
+  | #,(@rhombus(:~, ~bind)) $annot
+  | #,(epsilon)
 
-  grammar option:
-    ~name $id_name
-    ~name: $id_name
+  grammar option
+  | ~name $id_name
+  | ~name: $id_name
 ){
 
  The @rhombus(Parameter.make) function creates a @tech{context parameter} whose initial value is

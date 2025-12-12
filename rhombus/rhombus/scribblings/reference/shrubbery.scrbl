@@ -14,11 +14,11 @@
                      ~mode: mode :: shrubbery.ReadMode = #'top,
                      ~start_column: start_column :: Int = 0)
     :: Syntax || Port.eof
-  enum shrubbery.ReadMode:
-    top
-    interactive
-    line
-    text
+  enum shrubbery.ReadMode
+  | top
+  | interactive
+  | line
+  | text
 ){
 
  Reads a shrubbery form from @rhombus(in). The result can be

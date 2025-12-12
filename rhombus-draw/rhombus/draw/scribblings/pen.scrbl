@@ -40,19 +40,19 @@
 }
 
 @doc(
-  enum draw.Pen.Style:
-    transparent
-    solid
-    xor
-    hilite
-    dot
-    long_dash
-    show_dash
-    dot_dash
-    xor_dot
-    xor_long_dot
-    xor_short_dot
-    xor_dot_dash
+  enum draw.Pen.Style
+  | transparent
+  | solid
+  | xor
+  | hilite
+  | dot
+  | long_dash
+  | show_dash
+  | dot_dash
+  | xor_dot
+  | xor_long_dot
+  | xor_short_dot
+  | xor_dot_dash
 ){
 
  Line-drawing mode.
@@ -60,10 +60,10 @@
 }
 
 @doc(
-  enum draw.Pen.Cap:
-    round
-    projecting
-    butt
+  enum draw.Pen.Cap
+  | round
+  | projecting
+  | butt
 ){
 
  Line-ending modes.
@@ -71,10 +71,10 @@
 }
 
 @doc(
-  enum draw.Pen.Join:
-    round
-    bevel
-    miter
+  enum draw.Pen.Join
+  | round
+  | bevel
+  | miter
 ){
 
  Line-joining modes.

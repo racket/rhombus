@@ -132,9 +132,9 @@
     stx :: Syntax,
     ~track: track_stxes :: Listable.to_list && List.of(Term) = []
   ) :: Syntax
-  grammar evidence_id_tree:
-    $id
-    ($evidence_id_tree, ...)
+  grammar evidence_id_tree
+  | $id
+  | ($evidence_id_tree, ...)
 ){
 
  Packs binding information that specific to a use of a binding form,

@@ -1,6 +1,8 @@
 #lang rhombus/private/amalgam/core
 import:
   "core-meta.rkt" open
+  meta:
+    lib("enforest/deprecated.rkt")
 
 use_static
 
@@ -21,37 +23,68 @@ meta:
                $(clause_0 :: Group)
                $clause_1
                ...')':
-      field doc = #true
       def '$(kw_g :: Group); $_; ...' = all
-      field [clause, ...]:
-        [clause_0.group_property(#'#{raw-prefix}, kw_g.group_property(#'#{raw-prefix}), #true),
-         clause_1,
-         ...]
+      field doc = '$(clause_0.group_property(#'#{raw-prefix}, kw_g.group_property(#'#{raw-prefix}), #true))
+                   $clause_1
+                   ...'
+      field [clause, ...]: [clause_0, clause_1, ...]
   | '~doc':
-      field doc = #true
+      field doc = ''
       field [clause, ...] = []
   | '$clause
      ...':
      field doc = #false
 
-defn.macro 'enum $(name :: IdentifierName):
-              $(body :: EnumBody)':
-  ~op_stx: self
-  ~all_stx: stx
-  when body.doc
-  | syntax_meta.error(#false,
-                      "`~doc` allowed only in a module declaration context",
-                      stx)
-  parse_enum(self, stx, name, #false, [body.clause, ...])
+  syntax_class EnumCases:
+    kind: ~sequence
+    fields:
+      [clause, ...]
+      doc
+  | '$((all :: Sequence) && ': ~doc
+                             | $clause
+                             | ...')':
+      def '$_ $clauses' = all
+      field doc = clauses
+  | ': ~doc':
+      field doc = ''
+      field [clause, ...] = []
+  | '| $clause
+     | ...':
+     field doc = #false
+  | '':
+      field doc = #false
+      field [clause, ...] = []
 
-decl.macro 'enum $(name :: IdentifierName):
-              $(body :: EnumBody)':
-  ~op_stx: self
-  ~all_stx: stx
-  parse_enum(self, stx, name, body.doc, [body.clause, ...])
+defn.macro
+| 'enum $(name :: IdentifierName):
+     $(body :: EnumBody)':
+    ~op_stx: self
+    ~all_stx: stx
+    when body.doc
+    | syntax_meta.error(#false,
+                        "`~doc` allowed only in a module declaration context",
+                        stx)
+    parse_enum(self, stx, name, #false, [body.clause, ...], #true)
+| 'enum $(name :: IdentifierName) $(body :: EnumCases)':
+    ~op_stx: self
+    ~all_stx: stx
+    parse_enum(self, stx, name, #false, [body.clause, ...], #false)
+
+decl.macro
+| 'enum $(name :: IdentifierName):
+     $(body :: EnumBody)':
+    ~op_stx: self
+    ~all_stx: stx
+    parse_enum(self, stx, name, body.doc, [body.clause, ...], #true)
+| 'enum $(name :: IdentifierName) $(body :: EnumCases)':
+    ~op_stx: self
+    ~all_stx: stx
+    parse_enum(self, stx, name, body.doc, [body.clause, ...], #false)
 
 meta:
-  fun parse_enum(self, stx, name, doc, [clause, ...]):
+  fun parse_enum(self, stx, name, doc, [clause, ...], allow_multiple):
+    when allow_multiple && [clause, ...] != []
+    | deprecated.#{warn-deprecated!}(#'#{enum-block-instead-of-alts}, "15-JAN-2026")
     fun parse_annot(ann):
       let '$(ann :: annot_meta.Parsed)' = ann
       ann
@@ -74,6 +107,15 @@ meta:
                   parseds.add(Parsed.Annot(new_anns))
             values(parseds, seen)
         | '$(sym :: Identifier) ...':
+            unless allow_multiple
+            | match [sym, ...]
+              | [_]: #void
+              | []: syntax_meta.error("invalid empty case",
+                                      stx,
+                                      c)
+              | [_, sym, _, ...]: syntax_meta.error("extra identifier in case",
+                                                    stx,
+                                                    sym)
             let new_syms = [sym, ...]
             let seen:
               for values(seen :~ Set = seen):
@@ -140,9 +182,7 @@ meta:
       if doc
       | 'module ~splice doc ~lang rhombus/doc:
            export $name
-           def $name: DocSpec([Syntax.literal '$self $name:
-                                                 $clause
-                                                 ...'],
+           def $name: DocSpec([Syntax.literal '$self $name $doc'],
                               [])'
       | ''
     '«namespace $name:

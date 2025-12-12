@@ -63,15 +63,15 @@
   
 
 @doc(
-  enum draw.Font.Kind:
-    default
-    decorative
-    roman
-    script
-    swiss
-    modern
-    symbol
-    system
+  enum draw.Font.Kind
+  | default
+  | decorative
+  | roman
+  | script
+  | swiss
+  | modern
+  | symbol
+  | system
 ){
 
  A font kind.
@@ -79,10 +79,10 @@
 }
 
 @doc(
-  enum draw.Font.Style:
-    normal
-    slant
-    italic
+  enum draw.Font.Style
+  | normal
+  | slant
+  | italic
 ){
 
  A font style.
@@ -90,20 +90,20 @@
 }
 
 @doc(
-  enum draw.Font.Weight:
-    ~is_a Int.in(100, 1000 ~inclusive)
-    thin
-    ultralight
-    light
-    semilight
-    book
-    normal
-    medium
-    semibold
-    bold
-    ultrabold
-    heavy
-    ultraheavy
+  enum draw.Font.Weight
+  | ~is_a Int.in(100, 1000 ~inclusive)
+  | thin
+  | ultralight
+  | light
+  | semilight
+  | book
+  | normal
+  | medium
+  | semibold
+  | bold
+  | ultrabold
+  | heavy
+  | ultraheavy
 ){
 
  A font weight, either an integer in @rhombus(100) to @rhombus(1000)
@@ -127,11 +127,11 @@
 }
 
 @doc(
-  enum draw.Font.Smoothing:
-    default
-    partly_smoothed
-    smoothed
-    unsmoothed
+  enum draw.Font.Smoothing
+  | default
+  | partly_smoothed
+  | smoothed
+  | unsmoothed
 ){
 
  A font smoothing (anti-aliasing) mode.
@@ -139,9 +139,9 @@
 }
 
 @doc(
-  enum draw.Font.Hinting:
-    aligned
-    unaligned
+  enum draw.Font.Hinting
+  | aligned
+  | unaligned
 ){
 
  A font hinting (to adjust anti-aliasing) mode.

@@ -521,9 +521,9 @@
 }
 
 @doc(
-  enum CrossFit:
-    none
-    scale
+  enum CrossFit
+  | none
+  | scale
 ){
 
  Fit mode for @rhombus(cross_fade).
@@ -531,9 +531,9 @@
 }
 
 @doc(
-  enum NoncommonMode:
-    switch
-    fade
+  enum NoncommonMode
+  | switch
+  | fade
 ){
 
  Mode for elements not common to ``from'' and ``to'' for

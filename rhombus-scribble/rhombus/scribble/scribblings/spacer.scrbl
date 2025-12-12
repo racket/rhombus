@@ -41,9 +41,9 @@ identifier @rhombus(length, ~datum) length might have. See
                 $body
                 ...'
 
-  grammar maybe_left:
-    ~left $left_id
-    #,(epsilon)
+  grammar maybe_left
+  | ~left $left_id
+  | #,(epsilon)
 ){
 
  Binds @rhombus(name) in the typesetting space to a function that

@@ -37,10 +37,10 @@
               | ...
               | ~else $result_expr'
 
-  grammar maybe_arity_decl:
-    ~arity: $given_arity_num
-    ~arity $given_arity_num
-    #,(epsilon)
+  grammar maybe_arity_decl
+  | ~arity: $given_arity_num
+  | ~arity $given_arity_num
+  | #,(epsilon)
 ){
 
  Tries matching the results of @rhombus(target_expr) against each
@@ -169,7 +169,7 @@
  namespace member was intended, bu the member's name was misspelled.
 
 @examples(
-  enum Greek: alpha omega
+  enum Greek | alpha | omega
   match #'alpha
   | Greek.alpha: "ok"
   ~error:
@@ -287,9 +287,9 @@
                 $right_bind_and_expr
                 ...'
 
-  grammar right_bind_and_expr:
-    $right_bind = $expr
-    $right_bind:
+  grammar right_bind_and_expr
+  | $right_bind = $expr
+  | $right_bind:
       $body
       ...
 ){

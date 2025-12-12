@@ -22,35 +22,35 @@
                 ...
                 $body
                 ~into $reducer'
-  grammar maybe_each:
-    ($bind_each, ...)
-    #,(epsilon)
+  grammar maybe_each
+  | ($bind_each, ...)
+  | #,(epsilon)
 
-  grammar clause_or_body:
-    #,(@rhombus(each, ~for_clause)) $bind_each
-    #,(@rhombus(each, ~for_clause)):
+  grammar clause_or_body
+  | #,(@rhombus(each, ~for_clause)) $bind_each
+  | #,(@rhombus(each, ~for_clause)):
       $bind_each
       ...
-    #,(@rhombus(keep_when, ~for_clause)) $expr_or_block
-    #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
-    #,(@rhombus(break_when, ~for_clause)) $expr_or_block
-    #,(@rhombus(final_when, ~for_clause)) $expr_or_block
-    #,(@rhombus(keep_let, ~for_clause)) $bind_let
-    $other_for_clause
-    $body
-  grammar bind_each:
-    $values_bind in $rhs_expr
-    $values_bind:
+  | #,(@rhombus(keep_when, ~for_clause)) $expr_or_block
+  | #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
+  | #,(@rhombus(break_when, ~for_clause)) $expr_or_block
+  | #,(@rhombus(final_when, ~for_clause)) $expr_or_block
+  | #,(@rhombus(keep_let, ~for_clause)) $bind_let
+  | $other_for_clause
+  | $body
+  grammar bind_each
+  | $values_bind in $rhs_expr
+  | $values_bind:
       $body
       ...
-  grammar expr_or_block:
-    $expr
-    :
+  grammar expr_or_block
+  | $expr
+  | :
       $body
       ...
-  grammar bind_let:
-    $values_bind = $rhs_expr
-    $values_bind:
+  grammar bind_let
+  | $values_bind = $rhs_expr
+  | $values_bind:
       $body
       ...
 ){

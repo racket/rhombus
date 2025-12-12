@@ -21,9 +21,9 @@ object after subsequent definitions and expressions. Implementing the
   defn.sequence_macro 'Closeable.let $binds: $rhs_body ...
                        $body
                        ...'
-  grammar binds:
-    $bind
-    ($bind, ...)
+  grammar binds
+  | $bind
+  | ($bind, ...)
 ){
 
  Evaluates @rhombus(rhs_expr) or the @rhombus(rhs_body) sequence

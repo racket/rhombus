@@ -28,6 +28,6 @@ interface PagedDC:
     end_page()
     end_doc()
 
-enum PaperSize:
-  ~is_a SizeLike
-  paper
+enum PaperSize
+| ~is_a SizeLike
+| paper

@@ -354,19 +354,19 @@ check:
 
 check:
   ~eval
-  enum Foo: a b c
+  enum Foo | a | b | c
   match 5
   | Foo.d: "ok"
   ~throws "binding a namespace extension is not allowed in this context"
 
 check:
   ~eval
-  enum Foo: a b c
+  enum Foo | a | b | c
   5 is_a matching(Foo.d)
   ~throws "binding a namespace extension is not allowed in this context"
 
 check:
   ~eval
-  enum Foo: a b c
+  enum Foo | a | b | c
   5 matches Foo.d
   ~throws "binding a namespace extension is not allowed in this context"

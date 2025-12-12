@@ -12,10 +12,10 @@
 @doc(
   decl.macro 'docmodule($option, ...,
                         $mod_path)'
-  grammar option:
-    ~lang
-    ~no_declare
-    ~use_sources:
+  grammar option
+  | ~lang
+  | ~no_declare
+  | ~use_sources:
       $mod_path
       ...
 ){
@@ -58,50 +58,50 @@
                    ...,
                    [$description, ...])'
 
-  grammar entry:
-    #,(@rhombus(fun, ~doc)) $fun_spec
-    #,(@rhombus(operator, ~doc)) $op_spec
-    #,(@rhombus(def, ~doc)) $def_spec
-    #,(@rhombus(enum, ~doc)) $enum_spec
-    #,(@rhombus(expr.macro, ~doc)) $macro_spec
-    #,(@rhombus(defn.macro, ~doc)) $macro_spec
-    #,(@rhombus(decl.macro, ~doc)) $macro_spec
-    #,(@rhombus(annot.macro, ~doc)) $macro_spec
-    #,(@rhombus(bind.macro, ~doc)) $macro_spec
-    #,(@rhombus(repet.macro, ~doc)) $macro_spec
-    #,(@rhombus(class, ~doc)) $class_spec
-    #,(@rhombus(interface, ~doc)) $interface_spec
-    #,(@rhombus(grammar, ~doc)) $grammar_spec
-    $other_doc_entry_form
-    ~include $mod_path:
+  grammar entry
+  | #,(@rhombus(fun, ~doc)) $fun_spec
+  | #,(@rhombus(operator, ~doc)) $op_spec
+  | #,(@rhombus(def, ~doc)) $def_spec
+  | #,(@rhombus(enum, ~doc)) $enum_spec
+  | #,(@rhombus(expr.macro, ~doc)) $macro_spec
+  | #,(@rhombus(defn.macro, ~doc)) $macro_spec
+  | #,(@rhombus(decl.macro, ~doc)) $macro_spec
+  | #,(@rhombus(annot.macro, ~doc)) $macro_spec
+  | #,(@rhombus(bind.macro, ~doc)) $macro_spec
+  | #,(@rhombus(repet.macro, ~doc)) $macro_spec
+  | #,(@rhombus(class, ~doc)) $class_spec
+  | #,(@rhombus(interface, ~doc)) $interface_spec
+  | #,(@rhombus(grammar, ~doc)) $grammar_spec
+  | $other_doc_entry_form
+  | ~include $mod_path:
       $id ...
       ...
 
-  grammar prep:
-    ~nonterminal:
+  grammar prep
+  | ~nonterminal:
       $id: $nt_key_ref
       ...
-    ~nonterminal_key: $nt_key
-    ~literal:
+  | ~nonterminal_key: $nt_key
+  | ~literal:
       id ...
       ...
-    ~meta
-    ~also_meta
-  grammar nt_key_ref:
-    $op_or_id_name
-    $op_or_id_name $nonterm_id
-    $op_or_id_name $space
-    $op_or_id_name $nonterm_id $space
-  grammar nt_key:
-    $op_or_id_name
-    $op_or_id_name $space
-  grammar space:
-    $builtin_space
-    ~at $space_name
-    ~at: $space_name
-  grammar space_name:
-    $id_or_op
-    $id_or_op $space_name
+  | ~meta
+  | ~also_meta
+  grammar nt_key_ref
+  | $op_or_id_name
+  | $op_or_id_name $nonterm_id
+  | $op_or_id_name $space
+  | $op_or_id_name $nonterm_id $space
+  grammar nt_key
+  | $op_or_id_name
+  | $op_or_id_name $space
+  grammar space
+  | $builtin_space
+  | ~at $space_name
+  | ~at: $space_name
+  grammar space_name
+  | $id_or_op
+  | $id_or_op $space_name
 ){
 
  Documents a set of bindings. A documented binding needs to be imported
@@ -298,10 +298,10 @@
   doc '«repet.macro '#,(rhombus($, ~bind)) $op_or_id_name $id_name $quoted_term ...'»'
   doc '«meta.bridge $op_or_id_name $term ...»'
 
-  grammar maybe_fallback:
-    $(epsilon)
-    ~method_fallback $id
-    ~method_fallback: $id
+  grammar maybe_fallback
+  | $(epsilon)
+  | ~method_fallback $id
+  | ~method_fallback: $id
 ){
 
  A @tech{doc entry} form to document an expression, definition,
@@ -342,9 +342,9 @@
                   $direction
                   $widget_expr
                   ...'
-    grammar direction:
-      ~horiz
-      ~vert
+    grammar direction
+    | ~horiz
+    | ~vert
   ){
     Creates a widget, where each @rhombus(widget_expr) supplies a
     child widget for the combined widget.
@@ -483,9 +483,9 @@
 @doc(
   ~nonterminal:
     id_name: namespace ~defn
-  doc 'grammar $id:
-         $quoted_term ...
-         ...'
+  doc 'grammar $id
+       | $quoted_term ...
+       | ...'
 ){
 
  Defines a metavariable @rhombus(id) as a nonterminal. Each

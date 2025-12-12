@@ -32,9 +32,9 @@ formatting a two-dimensional table of strings.
                         = []
   ) :: String
 
-  enum str.Cell:
-    ~is_a String
-    cont
+  enum str.Cell
+  | ~is_a String
+  | cont
 ){
 
  Returns a string that formats the given @rhombus(cell)s into a table.
@@ -135,11 +135,11 @@ formatting a two-dimensional table of strings.
 }
 
 @doc(
-  enum str.CellProperty:
-    ~is_a str.Align
-    ~is_a str.VerticalAlign
-    ~is_a str.Border
-    ~is_a str.CellPadding
+  enum str.CellProperty
+  | ~is_a str.Align
+  | ~is_a str.VerticalAlign
+  | ~is_a str.Border
+  | ~is_a str.CellPadding
 
   annot.macro 'str.CellProperties'
 ){
@@ -158,10 +158,10 @@ formatting a two-dimensional table of strings.
 
 
 @doc(
-  enum str.VerticalAlign:
-    top
-    vcenter
-    bottom
+  enum str.VerticalAlign
+  | top
+  | vcenter
+  | bottom
 ){
 
  Vertical alignment options for a cell formatted by
@@ -172,12 +172,12 @@ formatting a two-dimensional table of strings.
 }
 
 @doc(
-  enum str.Border:
-    border
-    top_border
-    left_border
-    right_border
-    bottom_border
+  enum str.Border
+  | border
+  | top_border
+  | left_border
+  | right_border
+  | bottom_border
 ){
 
  Border options for or a cell formatted by @rhombus(str.tabular). The

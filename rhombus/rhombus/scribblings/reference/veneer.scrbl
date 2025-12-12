@@ -15,30 +15,30 @@
                 $veneer_clause_or_body_or_export
                 ...'
 
-  grammar this_decl:
-    this #,(@rhombus(::, ~bind)) $annot
-    this #,(@rhombus(:~, ~bind)) $annot
+  grammar this_decl
+  | this #,(@rhombus(::, ~bind)) $annot
+  | this #,(@rhombus(:~, ~bind)) $annot
 
-  grammar veneer_clause_or_body_or_export:
-    $veneer_clause
-    $body
-    $export
+  grammar veneer_clause_or_body_or_export
+  | $veneer_clause
+  | $body
+  | $export
 
-  grammar veneer_clause:
-    #,(@rhombus(method, ~veneer_clause)) $method_impl
-    #,(@rhombus(override, ~veneer_clause)) $method_impl
-    #,(@rhombus(final, ~veneer_clause)) $method_impl
-    #,(@rhombus(private, ~veneer_clause)) $method_impl
-    #,(@rhombus(property, ~veneer_clause)) $property_impl
-    #,(@rhombus(extends, ~veneer_clause)) $id_name
-    #,(@rhombus(implements, ~veneer_clause)) $implements_decl
-    #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
-    #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
-    #,(@rhombus(expression, ~veneer_clause)) $expression_decl
-    #,(@rhombus(dot, ~veneer_clause)) $dot_decl
-    #,(@rhombus(static_info, ~veneer_clause)) $static_info_decl
-    #,(@rhombus(converter, ~veneer_clause))
-    $other_veneer_clause
+  grammar veneer_clause
+  | #,(@rhombus(method, ~veneer_clause)) $method_impl
+  | #,(@rhombus(override, ~veneer_clause)) $method_impl
+  | #,(@rhombus(final, ~veneer_clause)) $method_impl
+  | #,(@rhombus(private, ~veneer_clause)) $method_impl
+  | #,(@rhombus(property, ~veneer_clause)) $property_impl
+  | #,(@rhombus(extends, ~veneer_clause)) $id_name
+  | #,(@rhombus(implements, ~veneer_clause)) $implements_decl
+  | #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(expression, ~veneer_clause)) $expression_decl
+  | #,(@rhombus(dot, ~veneer_clause)) $dot_decl
+  | #,(@rhombus(static_info, ~veneer_clause)) $static_info_decl
+  | #,(@rhombus(converter, ~veneer_clause))
+  | $other_veneer_clause
 ){
 
  Similar to @rhombus(class), but binds @rhombus(id_name) as a static

@@ -125,9 +125,9 @@ encoding and decoding.
 
 @doc(
   Parameter.def current_encode_mode :: EncodeMode
-  enum EncodeMode:
-    recommended
-    unreserved
+  enum EncodeMode
+  | recommended
+  | unreserved
 ){
 
 
@@ -155,11 +155,11 @@ encoding and decoding.
   fun form.urlencoded_to_list(s :: String) :: List.of(KeyValue)
   Parameter.def form.current_separator_mode
     :: AListSeparatorMode
-  enum form.AListSeparatorMode:
-    amp
-    semi
-    amp_or_semi
-    semi_or_amp
+  enum form.AListSeparatorMode
+  | amp
+  | semi
+  | amp_or_semi
+  | semi_or_amp
 
 ){
 

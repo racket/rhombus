@@ -124,10 +124,10 @@
 }
 
 @doc(
-  enum xml.Indentation:
-    none
-    peek
-    scan
+  enum xml.Indentation
+  | none
+  | peek
+  | scan
 ){
 
  Indentation modes for @rhombus(xml.write).

@@ -18,8 +18,8 @@
                 $body
                 ...'
 
-  grammar option:
-    ~gc
+  grammar option
+  | ~gc
 ){
 
  Returns the same value(s) as the @rhombus(body) sequence, but first

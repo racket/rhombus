@@ -37,8 +37,8 @@ fun centered(pre_flow :: PreFlow) :: FlowBlock:
 
 enum MarginSide:
   ~doc
-  left
-  right
+| left
+| right
 
 fun margin_note(~at: at :: MarginSide = #'right,
                 pre_content :: PreContent)
@@ -69,9 +69,9 @@ fun item(pre_flow :: PreFlow) :: Item:
 
 enum Cell:
   ~doc
-  ~is_a FlowBlock
-  ~is_a Content
-  cont
+| ~is_a FlowBlock
+| ~is_a Content
+| cont
 
 fun tabular(
   cells :: List.of(List.of(Cell)),

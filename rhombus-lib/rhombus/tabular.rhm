@@ -3,21 +3,21 @@
 export:
   str
 
-enum str.Cell:
-  ~is_a String
-  cont
+enum str.Cell
+| ~is_a String
+| cont
 
-enum str.VerticalAlign:
-  top
-  vcenter
-  bottom
+enum str.VerticalAlign
+| top
+| vcenter
+| bottom
 
-enum str.Border:
-  border
-  top_border
-  left_border
-  right_border
-  bottom_border
+enum str.Border
+| border
+| top_border
+| left_border
+| right_border
+| bottom_border
 
 class str.CellPadding(left :: Nat, top :: Nat, right :: Nat, bottom :: Nat):
   constructor (around :: Real = 0,
@@ -29,11 +29,11 @@ class str.CellPadding(left :: Nat, top :: Nat, right :: Nat, bottom :: Nat):
                ~bottom: bottom :: Real = vert):
     super(left, top, right, bottom)
 
-enum str.CellProperty:
-  ~is_a str.Align
-  ~is_a str.VerticalAlign
-  ~is_a str.Border
-  ~is_a str.CellPadding
+enum str.CellProperty
+| ~is_a str.Align
+| ~is_a str.VerticalAlign
+| ~is_a str.Border
+| ~is_a str.CellPadding
 
 annot.macro 'str.CellProperties':
   'str.CellProperty || List.of(str.CellProperty)'

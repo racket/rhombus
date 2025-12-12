@@ -21,56 +21,56 @@
               | $op_case
               | ...'
 
-  grammar op_case:
-    $op_or_id_name $bind_term $impl_block
-    $bind_term $op_or_id_name $bind_term $impl_block
-    $bind_term $op_or_id_name $impl_block
-    ($op_or_id_name $bind_term) $maybe_res_annot $impl_block
-    ($bind_term $op_or_id_name $bind_term) $maybe_res_annot $impl_block
-    ($bind_term $op_or_id_name) $maybe_res_annot $impl_block
+  grammar op_case
+  | $op_or_id_name $bind_term $impl_block
+  | $bind_term $op_or_id_name $bind_term $impl_block
+  | $bind_term $op_or_id_name $impl_block
+  | ($op_or_id_name $bind_term) $maybe_res_annot $impl_block
+  | ($bind_term $op_or_id_name $bind_term) $maybe_res_annot $impl_block
+  | ($bind_term $op_or_id_name) $maybe_res_annot $impl_block
 
-  grammar impl_block:
-    :
+  grammar impl_block
+  | :
       $case_option; ...
       $body
       ...
 
-  grammar case_option:
-    option
-    ~unsafe: $unsafe_body; ...
+  grammar case_option
+  | option
+  | ~unsafe: $unsafe_body; ...
 
-  grammar option:
-    ~order $name
-    ~order: $name
-    ~stronger_than $other ...
-    ~stronger_than: $other ...; ...
-    ~weaker_than $other ...
-    ~weaker_than: $other ...; ...
-    ~same_as $other ...
-    ~same_as: $other ...; ...
-    ~same_on_left_as $other ...
-    ~same_on_left_as: $other ...; ...
-    ~same_on_right_as $other ...
-    ~same_on_right_as: $other ...; ...
-    ~associativity $assoc
-    ~associativity: $assoc
-    ~name $op_or_id_name
-    ~name: $op_or_id_name
-    ~who $id
-    ~who: $id
+  grammar option
+  | ~order $name
+  | ~order: $name
+  | ~stronger_than $other ...
+  | ~stronger_than: $other ...; ...
+  | ~weaker_than $other ...
+  | ~weaker_than: $other ...; ...
+  | ~same_as $other ...
+  | ~same_as: $other ...; ...
+  | ~same_on_left_as $other ...
+  | ~same_on_left_as: $other ...; ...
+  | ~same_on_right_as $other ...
+  | ~same_on_right_as: $other ...; ...
+  | ~associativity $assoc
+  | ~associativity: $assoc
+  | ~name $op_or_id_name
+  | ~name: $op_or_id_name
+  | ~who $id
+  | ~who: $id
 
-  grammar other:
-    $id
-    $op
-    ~other
+  grammar other
+  | $id
+  | $op
+  | ~other
 
-  grammar assoc:
-    ~left
-    ~right
-    ~none
+  grammar assoc
+  | ~left
+  | ~right
+  | ~none
 
-  grammar bind_term:
-    $bind
+  grammar bind_term
+  | $bind
 ){
 
  Binds @rhombus(op_or_id_name) as a operator, either

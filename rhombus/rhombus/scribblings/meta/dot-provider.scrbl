@@ -20,15 +20,15 @@
 
   defn.macro 'dot.macro $prefix_macro_patterns'
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~is_static: $id
-    ~is_static $id
-    ~tail: '$pattern'
-    ~tail '$pattern'
-    ~is_repet: $id
-    ~is_repet $id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~is_static: $id
+  | ~is_static $id
+  | ~tail: '$pattern'
+  | ~tail '$pattern'
+  | ~is_repet: $id
+  | ~is_repet $id
 ){
 
  Similar to @rhombus(defn.macro), but binds a @tech(~doc: guide_doc){dot provider} that
@@ -93,17 +93,17 @@
                           $option; ...
                           $body
                           ...»'
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~head_stx: $id
-    ~head_stx $id
-    ~is_static: $id
-    ~is_static $id
-    ~tail: '$pattern'
-    ~tail '$pattern'
-    ~is_repet: $id
-    ~is_repet $id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~head_stx: $id
+  | ~head_stx $id
+  | ~is_static: $id
+  | ~is_static $id
+  | ~tail: '$pattern'
+  | ~tail '$pattern'
+  | ~is_repet: $id
+  | ~is_repet $id
 ){
 
  A form for @rhombus(class), @rhombus(interface), or @rhombus(veneer) to bind a macro that

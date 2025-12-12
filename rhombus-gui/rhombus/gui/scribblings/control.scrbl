@@ -228,10 +228,10 @@
 
 
 @doc(
-  enum gui.Button.Style:
-    border
-    multi_line
-    deleted
+  enum gui.Button.Style
+  | border
+  | multi_line
+  | deleted
 ){
 
  A button style option.
@@ -239,11 +239,11 @@
 }
 
 @doc(
-  enum gui.Button.LabelPosition:
-    left
-    top
-    right
-    bottom
+  enum gui.Button.LabelPosition
+  | left
+  | top
+  | right
+  | bottom
 ){
 
  A button label-position option for text combined with an image.
@@ -252,10 +252,10 @@
 
 
 @doc(
-  enum gui.Choice.Style:
-    horizontal_label
-    vertical_label
-    deleted
+  enum gui.Choice.Style
+  | horizontal_label
+  | vertical_label
+  | deleted
 ){
 
  A choice control style option.
@@ -264,13 +264,13 @@
 
 
 @doc(
-  enum gui.Slider.Style:
-    horizontal
-    vertical
-    plain
-    horizontal_label
-    vertical_label
-    deleted
+  enum gui.Slider.Style
+  | horizontal
+  | vertical
+  | plain
+  | horizontal_label
+  | vertical_label
+  | deleted
 ){
 
  A slider style option.
@@ -279,14 +279,14 @@
 
 
 @doc(
-  enum gui.Input.StyleSymbol:
-    deleted
-    horizontal_label
-    hscroll
-    multiple
-    password
-    single
-    vertical_label
+  enum gui.Input.StyleSymbol
+  | deleted
+  | horizontal_label
+  | hscroll
+  | multiple
+  | password
+  | single
+  | vertical_label
 ){
 
  An input style option.
@@ -294,9 +294,9 @@
 }
 
 @doc(
-  enum gui.Input.Action:
-    input
-    return
+  enum gui.Input.Action
+  | input
+  | return
 ){
 
  An action provided to the @rhombus(~action) callback function of an

@@ -11,41 +11,41 @@
                        $repl,
                        ...)'
 
-  grammar option:
-    ~label: $content_expr
-    ~eval: $evaluator_expr
-    ~indent: $indentation_expr
-    ~spacer_info_box: $box_expr
-    ~escape: $op
+  grammar option
+  | ~label: $content_expr
+  | ~eval: $evaluator_expr
+  | ~indent: $indentation_expr
+  | ~spacer_info_box: $box_expr
+  | ~escape: $op
 
-  grammar chunk:
-    ~defn:
+  grammar chunk
+  | ~defn:
       $repl
       ...
-    ~repl:
+  | ~repl:
       $repl
       ...
-    ~result:
+  | ~result:
       $repl
       ...
-    ~hidden:
+  | ~hidden:
       $repl
       ...
-    ~version_and_later $version_string:
+  | ~version_and_later $version_string:
       $chunk
       ...
 
-  grammar repl:
-    $form
-    ~error:
+  grammar repl
+  | $form
+  | ~error:
       $form
-    ~check:
+  | ~check:
       $form
       ~is $expect_form
-    ~fake:
+  | ~fake:
       $typeset_form
       $result_form
-    ~blank
+  | ~blank
 ){
 
  Evaluates @rhombus(form)s, rendering (by default) both the

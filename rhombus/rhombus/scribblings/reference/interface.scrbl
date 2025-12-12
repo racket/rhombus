@@ -17,27 +17,27 @@
                 $interface_clause_or_body_or_export
                 ...'
 
-  grammar interface_clause_or_body_or_export:
-    $interface_clause
-    $body
-    $export
+  grammar interface_clause_or_body_or_export
+  | $interface_clause
+  | $body
+  | $export
 
-  grammar interface_clause:
-    #,(@rhombus(method, ~interface_clause)) $method_impl
-    #,(@rhombus(override, ~interface_clause)) $method_impl
-    #,(@rhombus(final, ~interface_clause)) $method_impl
-    #,(@rhombus(private, ~interface_clause)) $method_impl
-    #,(@rhombus(protected, ~interface_clause)) $method_impl
-    #,(@rhombus(abstract, ~interface_clause)) $method_decl
-    #,(@rhombus(property, ~interface_clause)) $property_impl
-    #,(@rhombus(extends, ~interface_clause)) $extends_decl
-    #,(@rhombus(internal, ~interface_clause)) $internal_decl
-    #,(@rhombus(expression, ~interface_clause)) $expression_decl
-    #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
-    #,(@rhombus(dot, ~interface_clause)) $dot_decl
-    #,(@rhombus(static_info, ~interface_clause)) $static_info_decl
-    #,(@rhombus(primitive_property, ~interface_clause)) $primitive_property_decl
-    $other_interface_clause
+  grammar interface_clause
+  | #,(@rhombus(method, ~interface_clause)) $method_impl
+  | #,(@rhombus(override, ~interface_clause)) $method_impl
+  | #,(@rhombus(final, ~interface_clause)) $method_impl
+  | #,(@rhombus(private, ~interface_clause)) $method_impl
+  | #,(@rhombus(protected, ~interface_clause)) $method_impl
+  | #,(@rhombus(abstract, ~interface_clause)) $method_decl
+  | #,(@rhombus(property, ~interface_clause)) $property_impl
+  | #,(@rhombus(extends, ~interface_clause)) $extends_decl
+  | #,(@rhombus(internal, ~interface_clause)) $internal_decl
+  | #,(@rhombus(expression, ~interface_clause)) $expression_decl
+  | #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
+  | #,(@rhombus(dot, ~interface_clause)) $dot_decl
+  | #,(@rhombus(static_info, ~interface_clause)) $static_info_decl
+  | #,(@rhombus(primitive_property, ~interface_clause)) $primitive_property_decl
+  | $other_interface_clause
 
 ){
 

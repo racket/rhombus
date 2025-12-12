@@ -7,9 +7,9 @@ export:
   cross_fade
   CrossFit
 
-enum CrossFit:
-  none
-  scale
+enum CrossFit
+| none
+| scale
 
 // Interpolation on `from` and `to` picts at fraction `n`
 // (ranges 0 to 1) assuming that `from` and `to` are not

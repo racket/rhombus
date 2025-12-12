@@ -244,11 +244,11 @@
 }
 
 @doc(
-  enum SlideLayout:
-    auto
-    center
-    top
-    tall
+  enum SlideLayout
+  | auto
+  | center
+  | top
+  | tall
 ){
 
  Slide layout options used with @rhombus(slide) and
@@ -257,9 +257,9 @@
 }
 
 @doc(
-  enum Aspect:
-    widescreen
-    fullscreen
+  enum Aspect
+  | widescreen
+  | fullscreen
 ){
 
  Slide aspect options used with @rhombus(slide) and

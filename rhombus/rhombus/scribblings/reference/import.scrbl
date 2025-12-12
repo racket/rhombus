@@ -12,56 +12,56 @@
 
   defn.macro 'import $import_clause'
 
-  grammar import_clause:
-    $import_item
-    $import_item:
+  grammar import_clause
+  | $import_item
+  | $import_item:
       $modifier
       ...
-    $import_item $modifier
-    $import_item $modifier:
+  | $import_item $modifier
+  | $import_item $modifier:
       $modifier
       ...
-    $modifier:
+  | $modifier:
       $import_clause
       ...
 
-  grammar import_item:
-    $module_path
-    #,(@rhombus(namespace, ~impo)) $id: $body; ...
-    ($import_item)
-    $other_import_item
+  grammar import_item
+  | $module_path
+  | #,(@rhombus(namespace, ~impo)) $id: $body; ...
+  | ($import_item)
+  | $other_import_item
 
-  grammar module_path:
-    $collection_module_path
-    $string
-    #,(@rhombus(lib, ~impo))($string)
-    #,(@rhombus(file, ~impo))($string)
-    $module_path #,(@rhombus(!, ~impo)) $id
-    #,(@rhombus(., ~impo)) $id
-    $module_path #,(@rhombus(., ~impo)) $id
-    $module_path #,(@rhombus(., ~impo)) ($op)
-    #,(@rhombus(self, ~impo)) #,(@rhombus(!, ~impo)) $id
-    #,(@rhombus(parent, ~impo)) #,(@rhombus(!, ~impo)) ...
+  grammar module_path
+  | $collection_module_path
+  | $string
+  | #,(@rhombus(lib, ~impo))($string)
+  | #,(@rhombus(file, ~impo))($string)
+  | $module_path #,(@rhombus(!, ~impo)) $id
+  | #,(@rhombus(., ~impo)) $id
+  | $module_path #,(@rhombus(., ~impo)) $id
+  | $module_path #,(@rhombus(., ~impo)) ($op)
+  | #,(@rhombus(self, ~impo)) #,(@rhombus(!, ~impo)) $id
+  | #,(@rhombus(parent, ~impo)) #,(@rhombus(!, ~impo)) ...
 
-  grammar collection_module_path:
-    $id
-    $id #,(@rhombus(/, ~impo)) $collection_module_path
+  grammar collection_module_path
+  | $id
+  | $id #,(@rhombus(/, ~impo)) $collection_module_path
 
-  grammar modifier:
-    #,(@rhombus(as, ~impo)) $id
-    #,(@rhombus(as, ~impo)) ~none
-    #,(@rhombus(open, ~impo)) $open_decl
-    #,(@rhombus(expose, ~impo)) $expose_decl
-    #,(@rhombus(rename, ~impo)) $rename_decl
-    #,(@rhombus(only, ~impo)) $only_decl
-    #,(@rhombus(except, ~impo)) $except_decl
-    #,(@rhombus(meta, ~impo)) $meta_decl
-    #,(@rhombus(meta_label, ~impo))
-    #,(@rhombus(only_meta, ~impo)) $meta_decl
-    #,(@rhombus(only_meta_label, ~impo))
-    #,(@rhombus(only_space, ~impo)) $only_space_decl
-    #,(@rhombus(except_space, ~impo)) $except_space_decl
-    $other_modifier
+  grammar modifier
+  | #,(@rhombus(as, ~impo)) $id
+  | #,(@rhombus(as, ~impo)) ~none
+  | #,(@rhombus(open, ~impo)) $open_decl
+  | #,(@rhombus(expose, ~impo)) $expose_decl
+  | #,(@rhombus(rename, ~impo)) $rename_decl
+  | #,(@rhombus(only, ~impo)) $only_decl
+  | #,(@rhombus(except, ~impo)) $except_decl
+  | #,(@rhombus(meta, ~impo)) $meta_decl
+  | #,(@rhombus(meta_label, ~impo))
+  | #,(@rhombus(only_meta, ~impo)) $meta_decl
+  | #,(@rhombus(only_meta_label, ~impo))
+  | #,(@rhombus(only_space, ~impo)) $only_space_decl
+  | #,(@rhombus(except_space, ~impo)) $except_space_decl
+  | $other_modifier
 
 ){
 
@@ -314,9 +314,9 @@
   impo.modifier 'expose:
                    $id_or_rename_as
                    ...'
-  grammar id_or_rename_as:
-    $id
-    $rename_as
+  grammar id_or_rename_as
+  | $id
+  | $rename_as
 ){
 
  Modifies an @rhombus(import) clause so that the listed
@@ -336,8 +336,8 @@
   impo.modifier 'rename:
                    $rename_as
                    ...'
-  grammar rename_as:
-    $id #,(@rhombus(as, ~impo)) $local_id
+  grammar rename_as
+  | $id #,(@rhombus(as, ~impo)) $local_id
 ){
 
  Modifies an @rhombus(import) clause so that @rhombus(local_id)

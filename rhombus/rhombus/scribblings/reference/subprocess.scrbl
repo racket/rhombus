@@ -221,14 +221,14 @@
 }
 
 @doc(
-  enum subprocess.Subprocess.Pipe:
-    pipe
-  enum subprocess.Subprocess.ErrorPipe:
-    ~is_a Subprocess.Pipe
-    out
-  enum subprocess.Subprocess.Group:
-    same
-    new
+  enum subprocess.Subprocess.Pipe
+  | pipe
+  enum subprocess.Subprocess.ErrorPipe
+  | ~is_a Subprocess.Pipe
+  | out
+  enum subprocess.Subprocess.Group
+  | same
+  | new
   annot.macro 'subprocess.Subprocess.NewGroup'
 ){
 

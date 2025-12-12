@@ -78,17 +78,17 @@ it supplies its elements in an unspecified order.
   expr.macro 'Set{$expr_or_splice, ...}'
   repet.macro 'Set{$repet_or_splice, ...}'
 
-  grammar expr_or_splice:
-    $expr
-    $repet #,(@litchar{,}) ellipses
-    & $set_expr
+  grammar expr_or_splice
+  | $expr
+  | $repet #,(@litchar{,}) ellipses
+  | & $set_expr
 
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) $ellipsis
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) $ellipsis
 
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar ellipsis
+  | #,(dots_expr)
 
   fun Set(val :: Any, ...) :: Set.of(Any.like(val))
   expr.macro 'Set.by($key_comp){$expr_or_splice, ...}'
@@ -134,11 +134,11 @@ it supplies its elements in an unspecified order.
   bind.macro 'Set.by($key_comp){$expr, ..., $rest}'
   bind.macro 'Set.by($key_comp)($expr, ...)'
   bind.macro 'Set.by($key_comp)($expr, ..., $rest)'
-  grammar rest:
-    #,(@rhombus(&, ~bind)) $set_bind
-    $rest_bind #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots)
+  grammar rest
+  | #,(@rhombus(&, ~bind)) $set_bind
+  | $rest_bind #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots)
 ){
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.

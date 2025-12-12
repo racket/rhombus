@@ -47,17 +47,17 @@
 
   defn.macro 'expr.macro $macro_patterns'
 
-  grammar macro_patterns:
-    $macro_case
-    Z| $macro_case
-     | ...
-    $op_or_id_name:
+  grammar macro_patterns
+  | $macro_case
+  |« Z| $macro_case
+      | ...»
+  | $op_or_id_name:
       $option; ...
     | $macro_case
     | ...
 
-  grammar macro_case:
-    $macro_pattern:
+  grammar macro_case
+  | $macro_pattern:
       $option; ...
       $body
       ...

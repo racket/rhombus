@@ -130,9 +130,9 @@
 
 
 @doc(
-  enum Port.FileStream.LockMode:
-    shared
-    exclusive
+  enum Port.FileStream.LockMode
+  | shared
+  | exclusive
 ){
 
  Lock modes for @rhombus(Port.FileStream.try_lock).

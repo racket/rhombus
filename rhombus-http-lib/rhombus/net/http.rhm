@@ -45,14 +45,14 @@ export:
 
   Exn
 
-enum Method:
-  get
-  post
-  delete
-  head
-  options
-  patch
-  put
+enum Method
+| get
+| post
+| delete
+| head
+| options
+| patch
+| put
 
 annot.macro 'Headers':
   'Map.of(String, Bytes || String)'

@@ -482,12 +482,12 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 
 
 @doc(
-  enum Port.Input.ReadLineMode:
-    linefeed
-    return
-    return_linefeed
-    any
-    any_one
+  enum Port.Input.ReadLineMode
+  | linefeed
+  | return
+  | return_linefeed
+  | any
+  | any_one
 ){
 
  Line reading modes for @rhombus(Port.Input.read_line).

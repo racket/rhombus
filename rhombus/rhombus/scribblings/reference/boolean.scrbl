@@ -117,9 +117,9 @@
     ellipses: List
   reducer.macro 'any'
   expr.macro 'any($expr_or_splice, ...)'
-  grammar expr_or_splice:
-    $expr
-    $repet #,(@litchar{,}) $ellipses
+  grammar expr_or_splice
+  | $expr
+  | $repet #,(@litchar{,}) $ellipses
 ){
 
  The @rhombus(any, ~reducer) form as a @tech(~doc: guide_doc){reducer} is like

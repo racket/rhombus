@@ -109,9 +109,9 @@ different than the enclosing (sub)module.
                 $decl ...
                 ...'
 
-  grammar decl:
-    ~unsafe
-    ~empty_evaluator
+  grammar decl
+  | ~unsafe
+  | ~empty_evaluator
 ){
 
  Controls properties of a module's compilation:
@@ -210,10 +210,10 @@ different than the enclosing (sub)module.
                 $body
                 ...'
 
-  grammar option:
-    ~effect $effect_id
-    ~effect: $effect_id
-    ~no_added_submodules
+  grammar option
+  | ~effect $effect_id
+  | ~effect: $effect_id
+  | ~no_added_submodules
 ){
 
  Like @rhombus(#%module_block), but with options that affect how the

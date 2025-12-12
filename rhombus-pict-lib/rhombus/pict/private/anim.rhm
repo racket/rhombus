@@ -56,7 +56,7 @@ namespace bend:
   fun fast_edges(n :: Real.in(0, 1)):
     rkt.#{fast-edges}(n)
 
-enum SequentialJoin:  step splice
+enum SequentialJoin | step | splice
 
 annot.macro 'named($name, $ann)':
   match ann

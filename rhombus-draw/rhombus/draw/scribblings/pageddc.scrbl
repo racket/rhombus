@@ -44,9 +44,9 @@
 
 
 @doc(
-  enum PaperSize:
-    ~is_a SizeLike
-    paper
+  enum PaperSize
+  | ~is_a SizeLike
+  | paper
 ){
 
  A size specification to be used with @rhombus(PSDC, ~class) and

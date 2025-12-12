@@ -74,9 +74,9 @@
 }
 
 @doc(
-  enum PrintMode:
-    text
-    expr
+  enum PrintMode
+  | text
+  | expr
 ){
 
  A printing mode for use with functions like @rhombus(print).

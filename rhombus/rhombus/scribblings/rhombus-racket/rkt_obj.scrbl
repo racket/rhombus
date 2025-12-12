@@ -39,9 +39,9 @@ forms for instantiating Racket classes and working with instances.
 
 @doc(
   expr.macro 'rkt_obj.send $expr . $name($arg, ...)'
-  grammar arg:
-    $expr
-    $keyword: $body
+  grammar arg
+  | $expr
+  | $keyword: $body
 ){
 
  Rhombus syntax for Racket's @racket_send, which calls a method of an

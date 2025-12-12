@@ -46,13 +46,13 @@
                    ...
                | ...»'
   class_clause.macro 'class_clause.macro $macro_decl'
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~all_stx: $id
-    ~all_stx $id
-    ~info: $id
-    ~info $id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~all_stx: $id
+  | ~all_stx $id
+  | ~info: $id
+  | ~info $id
 ){
 
  Like @rhombus(defn.macro), but defines a name in the

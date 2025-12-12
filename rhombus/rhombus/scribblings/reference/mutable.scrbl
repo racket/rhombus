@@ -8,10 +8,10 @@
 @doc(
   bind.macro 'mutable $id $maybe_annot'
 
-  grammar maybe_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(epsilon)
+  grammar maybe_annot
+  | #,(@rhombus(::, ~bind)) $annot
+  | #,(@rhombus(:~, ~bind)) $annot
+  | #,(epsilon)
 ){
 
  Binds @rhombus(id) so that its value can be changed using an

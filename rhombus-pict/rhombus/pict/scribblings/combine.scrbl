@@ -518,10 +518,10 @@
 }
 
 @doc(
-  enum HorizAlignment:
-    left
-    center
-    right
+  enum HorizAlignment
+  | left
+  | center
+  | right
 ){
 
  Options for horizontal alignment.
@@ -529,12 +529,12 @@
 }
 
 @doc(
-  enum VertAlignment:
-    top
-    topline
-    center
-    baseline
-    bottom
+  enum VertAlignment
+  | top
+  | topline
+  | center
+  | baseline
+  | bottom
 ){
 
  Options for vertical alignment. The @rhombus(#'topline) alignment mode
@@ -545,9 +545,9 @@
 }
 
 @doc(
-  enum DurationAlignment:
-    pad
-    sustain
+  enum DurationAlignment
+  | pad
+  | sustain
 ){
 
  Options for duration alignment.
@@ -555,12 +555,12 @@
 }
 
 @doc(
-  enum TimeAlignment:
-    ~is_a Int
-    start
-    insert
-    sync
-    end
+  enum TimeAlignment
+  | ~is_a Int
+  | start
+  | insert
+  | sync
+  | end
 ){
 
  Options for time alignment and insertion when pinning.
@@ -568,11 +568,11 @@
 }
 
 @doc(
-  enum EpochAlignment:
-    early
-    center
-    stretch
-    late
+  enum EpochAlignment
+  | early
+  | center
+  | stretch
+  | late
 ){
 
  Options for epoch alignment.
@@ -580,9 +580,9 @@
 }
 
 @doc(
-  enum SequentialJoin:
-    step
-    splice
+  enum SequentialJoin
+  | step
+  | splice
 ){
 
  Options for sequential joining.
@@ -591,9 +591,9 @@
 
 
 @doc(
-  enum OverlayOrder:
-    front
-    back
+  enum OverlayOrder
+  | front
+  | back
 ){
 
  Options for overlaying.
@@ -601,9 +601,9 @@
 }
 
 @doc(
-  enum HorizAttachment:
-    line
-    paragraph
+  enum HorizAttachment
+  | line
+  | paragraph
 ){
 
  Options for combining with @rhombus(beside).
@@ -611,9 +611,9 @@
 }
 
 @doc(
-  enum FindMode:
-    always
-    maybe
+  enum FindMode
+  | always
+  | maybe
 ){
 
  Options for handling finder failure in function such as @rhombus(pin)
@@ -623,10 +623,10 @@
 
 
 @doc(
-  enum ConnectStyle:
-    line
-    arrow
-    arrows
+  enum ConnectStyle
+  | line
+  | arrow
+  | arrows
 ){
 
  Options for a @rhombus(connect) style.
@@ -634,12 +634,12 @@
 }
 
 @doc(
-  enum ConnectLineStyle:
-    solid
-    long_dash
-    short_dash
-    dot
-    dot_dash
+  enum ConnectLineStyle
+  | solid
+  | long_dash
+  | short_dash
+  | dot
+  | dot_dash
 ){
 
  Options for a @rhombus(connect) line style.

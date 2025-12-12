@@ -209,10 +209,10 @@
 }
 
 @doc(
-  enum str.Align:
-    left
-    center
-    right
+  enum str.Align
+  | left
+  | center
+  | right
 ){
 
  Alignment for functions like @rhombus(str.s).

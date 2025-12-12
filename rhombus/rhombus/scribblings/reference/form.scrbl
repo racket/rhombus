@@ -13,9 +13,9 @@ identifiers, expressions, or binding patterns.
   ~nonterminal_key: block
   grammar id
   grammar op
-  grammar id_or_op:
-    $id
-    $op
+  grammar id_or_op
+  | $id
+  | $op
 ){
 
  An @rhombus(id) or @rhombus(op) is a @shrublink("top"){shrubbery}
@@ -116,9 +116,9 @@ identifiers, expressions, or binding patterns.
 
 @doc(
   ~nonterminal_key: block
-  grammar body:
-    $expr
-    $defn
+  grammar body
+  | $expr
+  | $defn
 ){
 
  In syntax descriptions, @rhombus(body) is always used with ellipses
@@ -132,9 +132,9 @@ identifiers, expressions, or binding patterns.
   ~nonterminal_key: block
   grammar decl
   grammar nestable_decl
-  grammar nestable_body:
-    $body
-    $nestable_decl
+  grammar nestable_body
+  | $body
+  | $nestable_decl
 ){
 
  In syntax descriptions, @rhombus(decl) is a @deftech{declaration} form that can appear
@@ -152,10 +152,10 @@ identifiers, expressions, or binding patterns.
 @doc(
   ~nonterminal_key: def ~defn
   grammar bind
-  grammar values_bind:
-    $bind
-    #,(@rhombus(values, ~bind))($bind, ...)
-    ($bind, ...)
+  grammar values_bind
+  | $bind
+  | #,(@rhombus(values, ~bind))($bind, ...)
+  | ($bind, ...)
 ){
 
  In syntax descriptions, @rhombus(bind) refers to any @deftech{binding} form,
@@ -203,17 +203,17 @@ identifiers, expressions, or binding patterns.
 @doc(
   ~nonterminal_key: namespace ~defn
 
-  grammar id_name:
-    $id
-    $id_name #,(@rhombus(., ~datum)) $id
+  grammar id_name
+  | $id
+  | $id_name #,(@rhombus(., ~datum)) $id
 
-  grammar op_name:
-    $op
-    $id_name #,(@rhombus(., ~datum)) ($op)
+  grammar op_name
+  | $op
+  | $id_name #,(@rhombus(., ~datum)) ($op)
 
-  grammar op_or_id_name:
-    $op_name
-    $id_name
+  grammar op_or_id_name
+  | $op_name
+  | $id_name
 ){
 
  Refers to an identifier or operator that is potentially accessed

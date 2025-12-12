@@ -98,20 +98,20 @@ in an unspecified order.
     val_repet: block repet
     elem_repet: block repet
   expr.macro '#%braces {$key_val_or_splice, ...}'
-  grammar key_val_or_splice:
-    $key_expr: $val_body; ...
-    $key_repet: $val_repet #,(@litchar{,}) $ellipses
-    & $map_expr
+  grammar key_val_or_splice
+  | $key_expr: $val_body; ...
+  | $key_repet: $val_repet #,(@litchar{,}) $ellipses
+  | & $map_expr
   expr.macro '#%braces {$expr_or_splice, ...}'
-  grammar expr_or_splice:
-    $elem_expr
-    $elem_repet #,(@litchar{,}) $ellipses
-    & $set_expr
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar expr_or_splice
+  | $elem_expr
+  | $elem_repet #,(@litchar{,}) $ellipses
+  | & $set_expr
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots_expr)
   repet.macro '#%braces {$key_repet_or_splice, ...}'
   repet.macro '#%braces {$repet_or_splice, ...}'
 ){
@@ -162,12 +162,12 @@ in an unspecified order.
     val_repet: block repet
   expr.macro 'Map{$key_val_or_splice, ...}'
   repet.macro 'Map{$key_repet_or_splice, ...}'
-  grammar key_val_or_splice:
-    $key_expr: $val_expr
-    $key_repet: $val_repet #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&)) $map_expr
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar key_val_or_splice
+  | $key_expr: $val_expr
+  | $key_repet: $val_repet #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&)) $map_expr
+  grammar ellipsis
+  | #,(dots_expr)
   fun Map([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: Map
   expr.macro 'Map.by($key_comp){$key_val_or_splice, ...}'
@@ -208,20 +208,20 @@ in an unspecified order.
     rest_bind: def bind ~defn
   bind.macro '#%braces {$key_val, ...}'
   bind.macro '#%braces {$key_val, ..., $map_rest}'
-  grammar key_val:
-    $key_expr: $val_bind = $default_expr
-    $key_expr: $val_bind: $default_body; ...
-    $key_expr: $val_bind
-  grammar map_rest:
-    #,(@rhombus(&, ~bind)) $map_bind
-    $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
+  grammar key_val
+  | $key_expr: $val_bind = $default_expr
+  | $key_expr: $val_bind: $default_body; ...
+  | $key_expr: $val_bind
+  grammar map_rest
+  | #,(@rhombus(&, ~bind)) $map_bind
+  | $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   bind.macro '#%braces {$expr, ...}'
   bind.macro '#%braces {$expr, ..., $set_rest}'
-  grammar set_rest:
-    #,(@rhombus(&, ~bind)) $set_bind
-    $rest_bind #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots)
+  grammar set_rest
+  | #,(@rhombus(&, ~bind)) $set_bind
+  | $rest_bind #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots)
 ){
 
  Matches either an immutable map or immutable set, depending on whether
@@ -262,15 +262,15 @@ in an unspecified order.
   bind.macro 'Map.by($key_comp){$key_val, ...}'
   bind.macro 'Map.by($key_comp){$key_val, ..., $rest}'
   bind.macro 'Map.by($key_comp)([$key_expr, $val_bind], ...)'
-  grammar key_val:
-    $key_expr: $val_bind = $default_expr
-    $key_expr: $val_bind: $default_body; ...
-    $key_expr: $val_bind
-  grammar rest:
-    #,(@rhombus(&, ~bind)) $map_bind
-    $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots)
+  grammar key_val
+  | $key_expr: $val_bind = $default_expr
+  | $key_expr: $val_bind: $default_body; ...
+  | $key_expr: $val_bind
+  grammar rest
+  | #,(@rhombus(&, ~bind)) $map_bind
+  | $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots)
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values

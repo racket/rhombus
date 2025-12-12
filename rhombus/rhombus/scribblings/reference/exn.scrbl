@@ -16,26 +16,26 @@
                 $maybe_catch
                 $maybe_finally'
 
-  grammar maybe_escape:
-    ~escape_as $escape_id
-    #,(epsilon)
+  grammar maybe_escape
+  | ~escape_as $escape_id
+  | #,(epsilon)
 
-  grammar maybe_initially:
-    ~initially: $body; ...
-    ~initially $expr
-    #,(epsilon)
+  grammar maybe_initially
+  | ~initially: $body; ...
+  | ~initially $expr
+  | #,(epsilon)
 
-  grammar maybe_catch:
-    ~catch $bind: $body; ...
-    ~catch
+  grammar maybe_catch
+  | ~catch $bind: $body; ...
+  | ~catch
     | $bind: $body; ...
     | ...
-    #,(epsilon)
+  | #,(epsilon)
 
-  grammar maybe_finally:
-    ~finally: $body; ...
-    ~finally $expr
-    #,(epsilon)
+  grammar maybe_finally
+  | ~finally: $body; ...
+  | ~finally $expr
+  | #,(epsilon)
 ){
 
 

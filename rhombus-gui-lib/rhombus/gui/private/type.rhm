@@ -17,9 +17,9 @@ annot.macro '(View.Size)':
 annot.macro '(View.PositionInt)':
   'Int.in(-1000000, 1000000)'
 
-enum View.Position:
-  center
-  ~is_a [View.PositionInt, View.PositionInt]
+enum View.Position
+| center
+| ~is_a [View.PositionInt, View.PositionInt]
 
 annot.macro '(View.SpacingInt)':
   'Int.in(0, 1000)'
@@ -27,15 +27,15 @@ annot.macro '(View.SpacingInt)':
 annot.macro '(View.Margin)':
   '[View.SpacingInt, View.SpacingInt]'
 
-enum View.HorizAlignment:
-  left
-  center
-  right
+enum View.HorizAlignment
+| left
+| center
+| right
 
-enum View.VertAlignment:
-  top
-  center
-  bottom
+enum View.VertAlignment
+| top
+| center
+| bottom
 
 annot.macro '(View.Alignment)':
   '[View.HorizAlignment, View.VertAlignment]'

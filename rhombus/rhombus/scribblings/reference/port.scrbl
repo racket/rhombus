@@ -186,9 +186,9 @@ output; it is possible for an object to be both an input and output port.
 
 
 @doc(
- enum Port.Mode:
-   binary
-   text
+ enum Port.Mode
+ | binary
+ | text
 ){
 
  Modes for reading and writing files that determine how newlines are
@@ -197,10 +197,10 @@ output; it is possible for an object to be both an input and output port.
 }
 
 @doc(
- enum Port.BufferMode:
-   none
-   line
-   block
+ enum Port.BufferMode
+ | none
+ | line
+ | block
 ){
 
  Buffer modes for input and output ports; see @rhombus(Port.buffer). The
@@ -209,11 +209,11 @@ output; it is possible for an object to be both an input and output port.
 }
 
 @doc(
- enum Port.WaitMode:
-   all
-   some
-   none
-   enable_break
+ enum Port.WaitMode
+ | all
+ | some
+ | none
+ | enable_break
 ){
 
  Modes used for methods like @rhombus(Port.Input.read_bytes_to) and
