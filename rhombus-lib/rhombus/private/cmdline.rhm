@@ -90,10 +90,10 @@ class OnceEach(choices :: List.of(Flag || OnceEach)):
 class OnceAny(choices :: List.of(Flag || OnceAny)):
   implements Content
 
-enum TextPlacement:
-  inline
-  after_options
-  after_notation
+enum TextPlacement
+| inline
+| after_options
+| after_notation
 
 class Text(text :: String,
            ~placement: placement :: TextPlacement = #'inline):

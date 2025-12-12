@@ -169,7 +169,7 @@
  namespace member was intended, bu the member's name was misspelled.
 
 @examples(
-  enum Greek: alpha omega
+  enum Greek | alpha | omega
   match #'alpha
   | Greek.alpha: "ok"
   ~error:

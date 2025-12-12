@@ -123,25 +123,25 @@
 
 
 @doc(
-  enum gui.HPanel.Style:
-    deleted
-    border
-    vscroll
-    hscroll
-    auto_vscroll
-    auto_hscroll
-    hide_vscroll
-    hide_hscroll
+  enum gui.HPanel.Style
+  | deleted
+  | border
+  | vscroll
+  | hscroll
+  | auto_vscroll
+  | auto_hscroll
+  | hide_vscroll
+  | hide_hscroll
 
-  enum gui.VPanel.Style:
-    deleted
-    border
-    vscroll
-    hscroll
-    auto_vscroll
-    auto_hscroll
-    hide_vscroll
-    hide_hscroll
+  enum gui.VPanel.Style
+  | deleted
+  | border
+  | vscroll
+  | hscroll
+  | auto_vscroll
+  | auto_hscroll
+  | hide_vscroll
+  | hide_hscroll
 ){
 
  A panel style option (the same for horizontal and vertical panels).
@@ -149,8 +149,8 @@
 }
 
 @doc(
-  enum gui.GroupPanel.Style:
-    deleted
+  enum gui.GroupPanel.Style
+  | deleted
 ){
 
  A group panel style option.
@@ -159,13 +159,13 @@
 
 
 @doc(
-  enum gui.TabsPanel.Style:
-    deleted
-    no_border
-    can_reorder
-    can_close
-    new_button
-    flat_portable
+  enum gui.TabsPanel.Style
+  | deleted
+  | no_border
+  | can_reorder
+  | can_close
+  | new_button
+  | flat_portable
 
 ){
 
@@ -174,11 +174,11 @@
 }
 
 @doc(
-  enum gui.TabsPanel.Action:
-    select
-    new
-    close
-    reorder
+  enum gui.TabsPanel.Action
+  | select
+  | new
+  | close
+  | reorder
 ){
 
  A tab panel action provided to the @rhombus(~action) callback function

@@ -275,15 +275,15 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 
 @doc(
-  enum Port.Output.ExistsMode:
-    error
-    append
-    update
-    can_update
-    replace
-    truncate
-    must_truncate
-    truncate_replace
+  enum Port.Output.ExistsMode
+  | error
+  | append
+  | update
+  | can_update
+  | replace
+  | truncate
+  | must_truncate
+  | truncate_replace
 ){
 
   Flags for handling existing files when opening @tech{output ports}.

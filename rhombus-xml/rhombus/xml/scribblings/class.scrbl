@@ -78,10 +78,10 @@
   class xml.Text(~text: text :: String,
                  ~srcloc: srcloc :: maybe(xml.SrclocRange) = #false,
                  ~write_mode: write_mode :: xml.Text.WriteMode = #'default)
-  enum xml.Text.WriteMode:
-    default
-    cdata
-    entity
+  enum xml.Text.WriteMode
+  | default
+  | cdata
+  | entity
 ){
 
  Represents text for the content of an @rhombus(xml.Element).

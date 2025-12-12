@@ -346,10 +346,10 @@
 
 
 @doc(
-  enum BoundingBoxMode:
-    unit
-    shrink
-    stretch
+  enum BoundingBoxMode
+  | unit
+  | shrink
+  | stretch
 ){
 
  A bounding-box mode for @rhombus(radial_pict) and similar functions.
@@ -357,10 +357,10 @@
 }
 
 @doc(
-  enum ArrowBoundingBoxMode:
-    unit
-    shrink
-    line    
+  enum ArrowBoundingBoxMode
+  | unit
+  | shrink
+  | line    
 ){
 
  Bounding-box mode for @rhombus(arrow).

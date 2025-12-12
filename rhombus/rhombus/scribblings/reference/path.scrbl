@@ -26,9 +26,9 @@ Paths are @tech{comparable}, which means that generic operations like
   annot.macro 'Path.DriveRelative'
   annot.macro 'Path.Directory'
   annot.macro 'Path.Element'
-  enum Path.Dot:
-    same
-    up
+  enum Path.Dot
+  | same
+  | up
   annot.macro 'Path.like($expr)'
 ){
 

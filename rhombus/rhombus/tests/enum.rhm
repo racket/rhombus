@@ -1,13 +1,13 @@
 #lang rhombus
 
-enum RainbowColor:
-  red
-  orange
-  yellow
-  green
-  blue
-  indigo
-  violet
+enum RainbowColor
+| red
+| orange
+| yellow
+| green
+| blue
+| indigo
+| violet
 
 check RainbowColor.red ~is #'red
 check RainbowColor.violet ~is #'violet
@@ -53,10 +53,10 @@ check:
   | ~else: "no"
   ~is "now yes"
 
-enum CrayonColor:
-  ~is_a RainbowColor
-  black
-  white
+enum CrayonColor
+| ~is_a RainbowColor
+| black
+| white
 
 check #'red is_a CrayonColor ~is #true
 check #'pink is_a CrayonColor ~is #false
@@ -92,9 +92,9 @@ class B():
   override whoami():
     "B"
 
-enum AB:
-  ~is_a A
-  ~is_a B
+enum AB
+| ~is_a A
+| ~is_a B
 
 check:
   A() is_a AB ~is #true
@@ -112,9 +112,9 @@ check:
   class A():
     method whoami():
       "A"
-  enum NoIntersection:
-    oops
-    ~is_a A
+  enum NoIntersection
+  | oops
+  | ~is_a A
   (#'oops :: NoIntersection).whoami()
   ~throws "no such field or method (based on static information)"
 
@@ -127,18 +127,18 @@ check:
   class B():
     method whoami():
       "B"
-  enum NoIntersection:
-    ~is_a A
-    ~is_a B
+  enum NoIntersection
+  | ~is_a A
+  | ~is_a B
   (dynamic(A()) :: NoIntersection).whoami()
   ~throws "no such field or method (based on static information)"
 
 // duplicate identifier
 check:
   ~eval
-  enum Dup:
-    dup
-    dup
+  enum Dup
+  | dup
+  | dup
   ~throws values(
     "duplicate enum identifier",
     "dup",
@@ -155,10 +155,10 @@ block:
   fun third(val):
     println("third")
     val == #'third
-  enum Order:
-    ~is_a satisfying(first)
-    ~is_a satisfying(second)
-    ~is_a satisfying(third)
+  enum Order
+  | ~is_a satisfying(first)
+  | ~is_a satisfying(second)
+  | ~is_a satisfying(third)
   check #'first is_a Order ~prints "first\n"
   check #'second is_a Order ~prints "first\nsecond\n"
   check #'third is_a Order ~prints "first\nsecond\nthird\n"
@@ -173,12 +173,12 @@ block:
   fun third(val):
     println("third")
     val == #'third
-  enum Order:
-    ~is_a satisfying(first)
-    first_and_a_half
-    ~is_a satisfying(second)
-    second_and_a_half
-    ~is_a satisfying(third)
+  enum Order
+  | ~is_a satisfying(first)
+  | first_and_a_half
+  | ~is_a satisfying(second)
+  | second_and_a_half
+  | ~is_a satisfying(third)
   check #'first is_a Order ~prints "first\n"
   check #'first_and_a_half is_a Order ~prints "first\n"
   check #'second is_a Order ~prints "first\nsecond\n"
@@ -187,21 +187,21 @@ block:
 
 // (non-)converter
 block:
-  enum Order:
-    ~is_a matching(#'first) && converting(fun (v): println("first"); v)
-    ~is_a matching(#'second) && converting(fun (v): println("second"); v)
-    ~is_a matching(#'third) && converting(fun (v): println("third"); v)
+  enum Order
+  | ~is_a matching(#'first) && converting(fun (v): println("first"); v)
+  | ~is_a matching(#'second) && converting(fun (v): println("second"); v)
+  | ~is_a matching(#'third) && converting(fun (v): println("third"); v)
   check #'first is_a Order ~prints ""
   check #'second is_a Order ~prints ""
   check #'third is_a Order ~prints ""
 
 block:
-  enum Order:
-    ~is_a matching(#'first) && converting(fun (v): println("first"); v)
-    first_and_a_half
-    ~is_a matching(#'second) && converting(fun (v): println("second"); v)
-    second_and_a_half
-    ~is_a matching(#'third) && converting(fun (v): println("third"); v)
+  enum Order
+  | ~is_a matching(#'first) && converting(fun (v): println("first"); v)
+  | first_and_a_half
+  | ~is_a matching(#'second) && converting(fun (v): println("second"); v)
+  | second_and_a_half
+  | ~is_a matching(#'third) && converting(fun (v): println("third"); v)
   check #'first is_a Order ~prints ""
   check #'first_and_a_half is_a Order ~prints ""
   check #'second is_a Order ~prints ""
@@ -210,7 +210,7 @@ block:
 
 
 namespace ns
-enum ns.Example:
-  one
-  two
+enum ns.Example
+| one
+| two
 check #'one ~is_a ns.Example

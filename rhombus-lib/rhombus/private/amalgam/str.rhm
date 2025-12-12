@@ -23,10 +23,10 @@ namespace str:
   export:
     Align
 
-  enum Align:
-    left
-    center
-    right
+  enum Align
+  | left
+  | center
+  | right
 
   // given a signless string form, formats a number within
   // a given width, alignment, etc.

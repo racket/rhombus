@@ -39,8 +39,8 @@ synchronization result is just the thread object itself.
   grammar option:
     ~pool: $pool_body; ...
     ~keep: $keep_body; ...
-  enum Thread.Keep:
-    results
+  enum Thread.Keep
+  | results
 
 ){
 
@@ -105,10 +105,10 @@ synchronization result is just the thread object itself.
   method (th :: Thread).break(
     kind :: Thread.Break = #'interrupt
   ) :: Void
-  enum Thread.Break:
-    interrupt
-    hang_up
-    terminate
+  enum Thread.Break
+  | interrupt
+  | hang_up
+  | terminate
 ){
 
  Asynchronously throws an @rhombus(Exn.Break) exception in

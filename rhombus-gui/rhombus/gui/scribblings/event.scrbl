@@ -111,16 +111,16 @@
 
 
 @doc(
-  enum gui.MouseEvent.Kind:
-    enter
-    leave
-    left_down
-    left_up
-    middle_down
-    middle_up
-    right_down
-    right_up
-    motion    
+  enum gui.MouseEvent.Kind
+  | enter
+  | leave
+  | left_down
+  | left_up
+  | middle_down
+  | middle_up
+  | right_down
+  | right_up
+  | motion    
 ){
 
  General category for a mouse event.
@@ -129,15 +129,15 @@
 
 
 @doc(
-  enum gui.MouseEvent.Down:
-    shift
-    control
-    meta
-    alt
-    caps
-    mod3
-    mod4
-    mod5
+  enum gui.MouseEvent.Down
+  | shift
+  | control
+  | meta
+  | alt
+  | caps
+  | mod3
+  | mod4
+  | mod5
 ){
 
  Modifier keys that can be down during a mouse event.
@@ -146,11 +146,11 @@
 
 
 @doc(
-  enum gui.MouseEvent.Button:
-    left
-    middle
-    right
-    any
+  enum gui.MouseEvent.Button
+  | left
+  | middle
+  | right
+  | any
 ){
 
  Mouse buttons that can be down during a mouse event.
@@ -158,15 +158,15 @@
 }
 
 @doc(
-  enum gui.KeyEvent.Down:
-    shift
-    control
-    meta
-    alt
-    caps
-    mod3
-    mod4
-    mod5
+  enum gui.KeyEvent.Down
+  | shift
+  | control
+  | meta
+  | alt
+  | caps
+  | mod3
+  | mod4
+  | mod5
 ){
 
  Modifier keys that can be down during a key event.
@@ -175,81 +175,81 @@
 
 
 @doc(
-  enum gui.KeyEvent.Key:
-    start
-    cancel
-    clear
-    shift
-    rshift
-    control
-    rcontrol
-    menu
-    pause
-    capital
-    prior
-    next
-    end
-    home
-    left
-    up
-    right
-    down
-    escape
-    select
-    print
-    execute
-    snapshot
-    insert
-    help
-    numpad0
-    numpad1
-    numpad2
-    numpad3
-    numpad4
-    numpad5
-    numpad6
-    numpad7
-    numpad8
-    numpad9
-    numpad_enter
-    multiply
-    add
-    separator
-    subtract
-    decimal
-    divide
-    f1
-    f2
-    f3
-    f4
-    f5
-    f6
-    f7
-    f8
-    f9
-    f10
-    f11
-    f12
-    f13
-    f14
-    f15
-    f16
-    f17
-    f18
-    f19
-    f20
-    f21
-    f22
-    f23
-    f24
-    numlock
-    scroll
-    wheel_up
-    wheel_down
-    wheel_left
-    wheel_right
-    release
-    press
+  enum gui.KeyEvent.Key
+  | start
+  | cancel
+  | clear
+  | shift
+  | rshift
+  | control
+  | rcontrol
+  | menu
+  | pause
+  | capital
+  | prior
+  | next
+  | end
+  | home
+  | left
+  | up
+  | right
+  | down
+  | escape
+  | select
+  | print
+  | execute
+  | snapshot
+  | insert
+  | help
+  | numpad0
+  | numpad1
+  | numpad2
+  | numpad3
+  | numpad4
+  | numpad5
+  | numpad6
+  | numpad7
+  | numpad8
+  | numpad9
+  | numpad_enter
+  | multiply
+  | add
+  | separator
+  | subtract
+  | decimal
+  | divide
+  | f1
+  | f2
+  | f3
+  | f4
+  | f5
+  | f6
+  | f7
+  | f8
+  | f9
+  | f10
+  | f11
+  | f12
+  | f13
+  | f14
+  | f15
+  | f16
+  | f17
+  | f18
+  | f19
+  | f20
+  | f21
+  | f22
+  | f23
+  | f24
+  | numlock
+  | scroll
+  | wheel_up
+  | wheel_down
+  | wheel_left
+  | wheel_right
+  | release
+  | press
 ){
 
  Keys that can be pressed or released for a key event.

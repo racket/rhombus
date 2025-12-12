@@ -479,9 +479,9 @@ fun make_paragraph(~style: style :: Style = Style.plain,
   ~name: Paragraph
   core.paragraph(style, content)
 
-enum Cell:
-  ~is_a FlowBlock
-  cont
+enum Cell
+| ~is_a FlowBlock
+| cont
 
 fun make_table(~style: style :: Style = Style.plain,
                blockss :: Listable.to_list && List.of(Listable.to_list) && List.of(List.of(Cell)) = [])

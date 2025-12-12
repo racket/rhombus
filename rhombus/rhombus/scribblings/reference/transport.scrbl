@@ -19,9 +19,9 @@
 }
 
 @doc(
-  enum NetworkWait:
-    all
-    enable_break
+  enum NetworkWait
+  | all
+  | enable_break
 ){
 
  The @rhombus(NetworkWait, ~annot) enumeration is used by various

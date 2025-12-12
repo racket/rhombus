@@ -121,9 +121,9 @@ Starting example:
 @doc(
   property (dc :: draw.DC).handle :: Any
   fun draw.DC.from_handle(hand :: Any) :: draw.DC
-  enum draw.DC.Fill:
-    even_odd
-    winding
+  enum draw.DC.Fill
+  | even_odd
+  | winding
 ){
 
  Draw description.

@@ -220,10 +220,10 @@
 }
 
 @doc(
-  enum draw.DC.Smoothing:
-    unsmoothed
-    aligned
-    smoothed
+  enum draw.DC.Smoothing
+  | unsmoothed
+  | aligned
+  | smoothed
 ){
 
  Smoothing modes for use with @rhombus(DC.smoothing).
@@ -231,10 +231,10 @@
 }
 
 @doc(
-  enum draw.DC.BitmapOverlay:
-    solid
-    opaque
-    xor
+  enum draw.DC.BitmapOverlay
+  | solid
+  | opaque
+  | xor
 ){
 
  Bitmap transfer modes.
@@ -242,10 +242,10 @@
 }
 
 @doc(
-  enum draw.DC.TextCombine:
-    kern
-    grapheme
-    char
+  enum draw.DC.TextCombine
+  | kern
+  | grapheme
+  | char
 ){
 
  Typesetting modes for text.
@@ -254,9 +254,9 @@
 
 
 @doc(
-  enum draw.DC.Fill:
-    even_odd
-    winding
+  enum draw.DC.Fill
+  | even_odd
+  | winding
 ){
 
  Polygon fill modes.

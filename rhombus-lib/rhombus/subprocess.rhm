@@ -74,19 +74,19 @@ class Subprocess(hand, output, input, error_output, desc, is_new):
     NewGroup
     Group
 
-  enum Pipe:
-    pipe
-  enum ErrorPipe:
-    ~is_a Pipe
-    out
+  enum Pipe
+  | pipe
+  enum ErrorPipe
+  | ~is_a Pipe
+  | out
 
   annot.macro 'NewGroup':
     'satisfying(fun (p): p is_a Subprocess && _Subprocess.is_new(p))'
 
-  enum Group:
-    same
-    new
-    ~is_a NewGroup
+  enum Group
+  | same
+  | new
+  | ~is_a NewGroup
 
 fun do_run(desc :: String,
            exe :: PathString,

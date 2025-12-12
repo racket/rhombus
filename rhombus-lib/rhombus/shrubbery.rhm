@@ -6,11 +6,11 @@ export:
   read
   ReadMode
 
-enum ReadMode:
-  top
-  interactive
-  line
-  text
+enum ReadMode
+| top
+| interactive
+| line
+| text
 
 fun read(in :: Port.Input,
          ~mode: mode :: ReadMode = #'top,

@@ -67,16 +67,16 @@
   class OnceAny(choices :: List.of(Flag || OnceAny))
   class Text(text :: String,
              ~placement: placement :: TextPlacement = #'inline)
-  enum Content:
-    ~is_a Flag
-    ~is_a Multi
-    ~is_a OnceEach
-    ~is_a OnceAny
-    ~is_a Text
-  enum TextPlacement:
-    inline
-    after_options
-    after_notation
+  enum Content
+  | ~is_a Flag
+  | ~is_a Multi
+  | ~is_a OnceEach
+  | ~is_a OnceAny
+  | ~is_a Text
+  enum TextPlacement
+  | inline
+  | after_options
+  | after_notation
 ){
 
  Flags, flag sets, and help text that can be part of a command-line

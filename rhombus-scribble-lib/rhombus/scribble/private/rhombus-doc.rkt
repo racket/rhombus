@@ -998,12 +998,18 @@
   head-extract-metavariables
   head-extract-typeset)
 
+(begin-for-syntax
+  (define-splicing-syntax-class :enum-rhs
+    #:datum-literals (group block alts)
+    (pattern (~seq (block clause ...)))
+    (pattern (~seq (alts (block clause) ...)))))
+
 (define-for-syntax (enum-extract-descs stx)
   (syntax-parse stx
     #:datum-literals (group block)
     [(group _ ...
-            (block clause ...))
-     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+            rhs::enum-rhs)
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (cons "enumeration"
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                "value")))]))
@@ -1012,8 +1018,8 @@
   (syntax-parse stx
     #:datum-literals (group block)
     [(group _ ...
-            (block clause ...))
-     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+            rhs::enum-rhs)
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (cons (list 'rhombus/annot)
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                (list #f 'rhombus/bind))))]))
@@ -1022,8 +1028,8 @@
   (syntax-parse stx
     #:datum-literals (group block)
     [(group _ (~var id (identifier-target space-name))
-            (block clause ...))
-     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+            rhs::enum-rhs)
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (cons #'id.name
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
@@ -1034,8 +1040,8 @@
   (syntax-parse stx
     #:datum-literals (group block)
     [(group form (~var id (identifier-target (car space-namess)))
-            (block-tag clause ...))
-     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(clause ...))])
+            rhs::enum-rhs)
+     (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (with-syntax ([(((def-sym ...) ...) ...)
                       (let loop ([symss (syntax->list #'((sym ...) ...))]
                                  [substs (cdr substs)])
@@ -1052,16 +1058,23 @@
                                 (iloop (cdr syms) (cdr substs) (cons ((car substs) (car syms))
                                                                      accum))]))]))])
          (with-syntax ([(new-clause ...)
-                        (for/list ([clause (in-list (syntax->list #'(clause ...)))]
+                        (for/list ([clause (in-list (syntax->list #'(rhs.clause ...)))]
                                    [def-syms (in-list (syntax->list #'(((def-sym ...) ...) ...)))])
                           (syntax-parse clause
                             [(group-tag _:identifier ...)
                              (with-syntax ([((def-sym ...) ...) def-syms])
                                #'(group-tag def-sym ... ...))]
                             [_ clause]))])
-           (rb #:at stx
-               #`(group form #,@((car substs) #'id.name)
-                        (block-tag new-clause ...))))))]))
+           (syntax-parse #'rhs
+             #:datum-literals (block)
+             [(((~and block block-tag) _ ...))
+              (rb #:at stx
+                  #`(group form #,@((car substs) #'id.name)
+                           (block-tag new-clause ...)))]
+             [((alts-tag (block-tag . _) ...))
+              (rb #:at stx
+                  #`(group form #,@((car substs) #'id.name)
+                           (alts-tag (block-tag new-clause) ...)))]))))]))
 
 (define-for-syntax (enum-extract-syms clauses)
   (for/list ([clause (in-list (syntax->list clauses))])

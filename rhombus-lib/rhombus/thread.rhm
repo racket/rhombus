@@ -74,10 +74,10 @@ namespace ~open:
               error.val(hand))
       _Thread(hand)
 
-    enum Break:
-      interrupt
-      hang_up
-      terminate
+    enum Break
+    | interrupt
+    | hang_up
+    | terminate
 
     class Pool(private hand):
       opaque
@@ -101,8 +101,8 @@ namespace ~open:
                 error.val(hand))
         _Pool(hand)
 
-    enum Keep:
-      results
+    enum Keep
+    | results
 
 namespace ~open:
   export: Semaphore

@@ -491,13 +491,13 @@ absolute point in time as a date and time in a specific time zone.
 @section(~tag: "date-format"){Date Formats and Utilities}
 
 @doc(
-  enum date.Format:
-    rfc2822
-    rfc3339
-    iso8601
-    american
-    european
-    julian
+  enum date.Format
+  | rfc2822
+  | rfc3339
+  | iso8601
+  | american
+  | european
+  | julian
 ){
 
  A format supported by @rhombus(date.Date.to_string),
@@ -535,14 +535,14 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  enum date.TimeFormat:
-    minutes
-    seconds
-    milliseconds
-    microseconds
-    nanoseconds
-    auto_subminutes
-    auto_subseconds
+  enum date.TimeFormat
+  | minutes
+  | seconds
+  | milliseconds
+  | microseconds
+  | nanoseconds
+  | auto_subminutes
+  | auto_subseconds
 ){
 
  A time format that selects the smallest time granularity to be shown,
@@ -576,8 +576,8 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  enum date.TimeZoneFormat:
-    offset
+  enum date.TimeZoneFormat
+  | offset
 ){
 
  A time-zone format. Although only one format is currently supported,

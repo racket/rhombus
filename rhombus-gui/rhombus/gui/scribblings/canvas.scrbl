@@ -47,17 +47,17 @@
 }
 
 @doc(
-  enum gui.Canvas.Style:
-    control_border
-    combo
-    vscroll
-    hscroll
-    resize_corner
-    gl
-    no_autoclear
-    transparent
-    no_focus
-    deleted
+  enum gui.Canvas.Style
+  | control_border
+  | combo
+  | vscroll
+  | hscroll
+  | resize_corner
+  | gl
+  | no_autoclear
+  | transparent
+  | no_focus
+  | deleted
 ){
 
  A canvas style symbol.

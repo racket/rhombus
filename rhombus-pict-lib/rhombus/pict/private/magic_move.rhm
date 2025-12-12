@@ -7,9 +7,9 @@ export:
   magic_move
   NoncommonMode
 
-enum NoncommonMode:
-  switch
-  fade
+enum NoncommonMode
+| switch
+| fade
 
 fun magic_move(all_pre :: Pict, post :: Pict,
                ~join: join :: SequentialJoin = #'step,

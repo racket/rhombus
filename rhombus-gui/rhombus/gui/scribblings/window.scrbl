@@ -28,16 +28,16 @@
 }
 
 @doc(
-  enum gui.Window.Style:
-    no_resize_border
-    no_caption
-    no_system_menu
-    hide_menu_bar
-    toolbar_button
-    float
-    metal
-    fullscreen_button
-    fullscreen_aux
+  enum gui.Window.Style
+  | no_resize_border
+  | no_caption
+  | no_system_menu
+  | hide_menu_bar
+  | toolbar_button
+  | float
+  | metal
+  | fullscreen_button
+  | fullscreen_aux
 ){
 
   A window style option.

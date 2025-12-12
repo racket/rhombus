@@ -78,10 +78,10 @@ namespace xml:
     :~ Document:
       to_syntax(read(~in: Port.Input.open_bytes(bstr)))
 
-  enum Indentation:
-    none
-    peek
-    scan
+  enum Indentation
+  | none
+  | peek
+  | scan
 
   fun write(doc :: Document || Element,
             ~out: outp :: Port.Output = Port.Output.current(),

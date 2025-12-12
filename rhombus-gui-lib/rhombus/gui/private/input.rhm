@@ -66,6 +66,6 @@ class Input(private _handle, private _at_content :: Obs):
       single: single,
       vertical_label: #{vertical-label} }
 
-  enum Action:
-    input
-    return
+  enum Action
+  | input
+  | return

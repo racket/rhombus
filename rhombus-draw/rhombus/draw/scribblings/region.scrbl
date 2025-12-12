@@ -80,9 +80,9 @@
 }
 
 @doc(
-  enum draw.Region.Fill:
-    odd_even
-    winding
+  enum draw.Region.Fill
+  | odd_even
+  | winding
 ){
 
  A region polygon-fill mode.

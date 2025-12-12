@@ -17,9 +17,9 @@ export:
   uri
   form
 
-enum EncodeMode:
-  recommended
-  unreserved
+enum EncodeMode
+| recommended
+| unreserved
 
 class PathWithParams(path :: String || Path.Dot,
                      params :: List.of(String))
@@ -149,11 +149,11 @@ namespace form:
         #{form-urlencoded->alist}(s)
     [KeyValue(to_string(k), to_string(v)), ...]
 
-  enum AListSeparatorMode:
-    amp
-    semi
-    amp_or_semi
-    semi_or_amp
+  enum AListSeparatorMode
+  | amp
+  | semi
+  | amp_or_semi
+  | semi_or_amp
 
   Parameter.def current_separator_mode :: AListSeparatorMode:
     match #{current-alist-separator-mode}()

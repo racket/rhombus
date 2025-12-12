@@ -37,19 +37,19 @@
 }
 
 @doc(
-  enum draw.Brush.Style:
-    transparent
-    solid
-    opaque
-    xor
-    hilite
-    panel
-    bdiagonal_hatch
-    crossdiag_hatch
-    fdiagonal_hatch
-    cross_hatch
-    horizontal_hatch
-    vertical_hatch
+  enum draw.Brush.Style
+  | transparent
+  | solid
+  | opaque
+  | xor
+  | hilite
+  | panel
+  | bdiagonal_hatch
+  | crossdiag_hatch
+  | fdiagonal_hatch
+  | cross_hatch
+  | horizontal_hatch
+  | vertical_hatch
 ){
 
  Brush-filling mode.

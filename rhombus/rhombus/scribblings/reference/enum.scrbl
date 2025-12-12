@@ -6,16 +6,16 @@
 @title{Enumerations}
 
 @doc(
-  defn.macro 'enum $id_name:
-                $enum_clause
-                ...'
+  defn.macro 'enum $id_name
+              | $enum_clause
+              | ...'
   decl.macro 'enum $id_name:
                 $maybe_doc
-                $enum_clause
-                ...'
+              | $enum_clause
+              | ...'
   grammar enum_clause:
-    $id ...
-    ~is_a: $annot; ...
+    $id
+    ~is_a: $annot
     ~is_a $annot
   grammar maybe_doc:
     ~doc
@@ -42,10 +42,11 @@
 
 @examples(
   ~defn:
-    enum Mouse:
-      itchy
-      mickey minnie
-      jerry
+    enum Mouse
+    | itchy
+    | mickey
+    | minnie
+    | jerry
   ~repl:
     Mouse.itchy
     #'itchy is_a Mouse
@@ -54,10 +55,10 @@
     | Mouse.itchy: "scratchy"
     | Mouse.jerry: "tom"
   ~defn:
-    enum Cat:
-      ~is_a String
-      scratchy
-      tom
+    enum Cat
+    | ~is_a String
+    | scratchy
+    | tom
   ~repl:
     Cat.tom is_a Cat
     "Felix" is_a Cat

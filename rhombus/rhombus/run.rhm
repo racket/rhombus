@@ -16,15 +16,15 @@ fun file_to_mod_path(str :: String):
   | ~else: #false
 
 // Keys for `args` map
-enum S:
-  evals
-  leftover_args
-  action
-  repl
-  init_lib
-  no_lib
-  no_make
-  version
+enum S
+| evals
+| leftover_args
+| action
+| repl
+| init_lib
+| no_lib
+| no_make
+| version
 
 def args :~ Map:
   cmdline.parse:

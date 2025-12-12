@@ -276,11 +276,11 @@ interface customizes the way that instances of a class print.
                                  = #'write_special)
     :: PrintDesc
 
-  enum PrintDesc.SpecialMode:
-    write_special
-    print
-    write
-    display
+  enum PrintDesc.SpecialMode
+  | write_special
+  | print
+  | write
+  | display
 ){
 
  The @rhombus(PrintDesc.special) function describes printing of @rhombus(v)

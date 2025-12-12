@@ -1297,13 +1297,11 @@ html:
                                      href:
                                        "#%28def._%28%28lib._rhombus%2Fdraw..rhm%29._.D.C._%28.D.C...Fill._rhombus%2Fannot%29%29%29"}:
                                     "DC.Fill"
-                              span {class: "stt"}: ":"
                         tr:
                           td:
                             p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
+                              span {class: "stt"}: "|"
+                              span {class: "hspace"}: nbsp
                               a:«»
                               a:«»
                               span:
@@ -1315,9 +1313,8 @@ html:
                         tr:
                           td:
                             p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
+                              span {class: "stt"}: "|"
+                              span {class: "hspace"}: nbsp
                               a:«»
                               a:«»
                               span:

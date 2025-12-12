@@ -70,15 +70,15 @@ fun titlet(a, ...) :~ Pict:
 
 // ----------------------------------------
 
-enum SlideLayout:
-  auto
-  center
-  top
-  tall
+enum SlideLayout
+| auto
+| center
+| top
+| tall
 
-enum Aspect:
-  widescreen
-  fullscreen
+enum Aspect
+| widescreen
+| fullscreen
 
 fun slide(~title: title :: maybe(String || Pict) = #false,
           ~name: name = title,

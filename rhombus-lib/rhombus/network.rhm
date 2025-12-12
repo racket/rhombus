@@ -19,9 +19,9 @@ export:
 annot.macro 'PortNumber': 'Int.in(1, 65535)'
 annot.macro 'ListenPortNumber': 'Int.in(0, 65535)'
 
-enum NetworkWait:
-  all
-  enable_break
+enum NetworkWait
+| all
+| enable_break
 
 // TCP ----------------------------------------
 

@@ -19,9 +19,9 @@ paths, cross-platform paths, and combinations. Paths with the
 @rhombus(#'windows) convention.
 
 @doc(
-  enum CrossPath.Convention:
-    unix
-    windows
+  enum CrossPath.Convention
+  | unix
+  | windows
   annot.macro 'CrossPath'
   annot.macro 'CrossPath.Absolute'
   annot.macro 'CrossPath.Relative'

@@ -50,9 +50,9 @@ count.
     wrapf :: (Any, ...) -> Any
   ) :: Evt
 
-  enum Evt.WrapReturn:
-    no_break
-    tail
+  enum Evt.WrapReturn
+  | no_break
+  | tail
 ){
 
  Creates an @rhombus(Evt, ~annot) that is ready for synchronization when @rhombus(evt)

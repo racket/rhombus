@@ -88,28 +88,28 @@ module private:
     METHOD
     do_convert
 
-enum ColorMode:
-  ~is_a Color
-  ~is_a String
-  inherit
+enum ColorMode
+| ~is_a Color
+| ~is_a String
+| inherit
 
-enum LineWidth:
-  ~is_a Real
-  inherit
+enum LineWidth
+| ~is_a Real
+| inherit
 
-enum HorizAlignment: left center right
-enum VertAlignment: top topline center baseline bottom
-enum EpochAlignment: early center stretch late
-enum DurationAlignment: sustain pad
-enum TimeAlignment: ~is_a Int; start sync insert end
-enum OverlayOrder: front back
-enum HorizAttachment: line paragraph
-enum TimeOrder: before after
-enum ConnectStyle: line arrow arrows
-enum ConnectLineStyle: solid long_dash dot short_dash dot_dash
-enum ArcDirection: cw ccw
-enum FindMode: always maybe
-enum AutoReal: ~is_a Real; auto
+enum HorizAlignment | left | center | right
+enum VertAlignment | top | topline | center | baseline | bottom
+enum EpochAlignment | early | center | stretch | late
+enum DurationAlignment | sustain | pad
+enum TimeAlignment | ~is_a Int | start | sync | insert | end
+enum OverlayOrder | front | back
+enum HorizAttachment | line | paragraph
+enum TimeOrder | before | after
+enum ConnectStyle | line | arrow | arrows
+enum ConnectLineStyle | solid | long_dash | dot | short_dash | dot_dash
+enum ArcDirection | cw | ccw
+enum FindMode | always | maybe
+enum AutoReal | ~is_a Real | auto
 
 def empty_instances = []
 
@@ -1066,13 +1066,13 @@ fun maybe_pad(p :~ Pict, dw, dh):
   | p
   | p.pad(~horiz: dw/2, ~vert: dh/2)
 
-enum Rounded:
-  ~is_a Real
-  default
+enum Rounded
+| ~is_a Real
+| default
 
-enum Refocus:
-  ~is_a Pict
-  around
+enum Refocus
+| ~is_a Pict
+| around
 
 fun extract_auto_sizes(around, width, height, resize):
   let w:

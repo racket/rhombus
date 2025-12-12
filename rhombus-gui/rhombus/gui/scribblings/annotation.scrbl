@@ -58,14 +58,14 @@
 
 @doc(
   annot.macro 'gui.View.Alignment'
-  enum gui.View.HorizAlignment:
-    left
-    center
-    right
-  enum gui.View.HorizAlignment:
-    top
-    center
-    bottom
+  enum gui.View.HorizAlignment
+  | left
+  | center
+  | right
+  enum gui.View.HorizAlignment
+  | top
+  | center
+  | bottom
 ){
 
  A @rhombus(View.Alighment, ~annot) is a 2-element list containing a

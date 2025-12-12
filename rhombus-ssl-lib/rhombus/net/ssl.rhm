@@ -78,9 +78,9 @@ class SSLPort(private _handle):
     from_ports
     Mode
 
-  enum Mode:
-    connect
-    accept
+  enum Mode
+  | connect
+  | accept
 
 class Input(private _handle):
   ~name: ssl.Port
@@ -117,14 +117,14 @@ class Context(private _handle):
   constructor Context(hand):
     super(hand)
 
-  enum VerifyMode:
-    never
-    try
-    always
+  enum VerifyMode
+  | never
+  | try
+  | always
 
-  enum KeyKind:
-    rsa
-    any
+  enum KeyKind
+  | rsa
+  | any
 
   method load_verify_source(src :: PathString || ssl.Context.VerifySource):
     match src

@@ -75,25 +75,25 @@ fun time_zone_string(time_zone_offset, sep :~ String):
     ++ str_2d(h)
     ++ sep ++ str_2d(m)
 
-enum Format:
-  rfc2822
-  rfc3339
-  iso8601
-  american
-  european
-  julian
+enum Format
+| rfc2822
+| rfc3339
+| iso8601
+| american
+| european
+| julian
 
-enum TimeFormat:
-  minutes
-  seconds
-  milliseconds
-  microseconds
-  nanoseconds
-  auto_subminutes
-  auto_subseconds
+enum TimeFormat
+| minutes
+| seconds
+| milliseconds
+| microseconds
+| nanoseconds
+| auto_subminutes
+| auto_subseconds
 
-enum TimeZoneFormat:
-  offset
+enum TimeZoneFormat
+| offset
 
 def default_format = #'rfc3339
 

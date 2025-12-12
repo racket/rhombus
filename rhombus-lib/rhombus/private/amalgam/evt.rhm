@@ -47,9 +47,9 @@ interface Evt:
       | #'no_break: base.#{wrap-evt}(h(this), wr_fun)
     WrapEvt(hand)
 
-enum WrapReturn:
-  tail
-  no_break
+enum WrapReturn
+| tail
+| no_break
 
 class WrapEvt(hand):
   implements Evt

@@ -507,9 +507,9 @@
 }
 
 @doc(
-  enum TimeOrder:
-    before
-    after
+  enum TimeOrder
+  | before
+  | after
 ){
 
  Options for time directions.
