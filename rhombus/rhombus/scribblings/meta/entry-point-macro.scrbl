@@ -28,13 +28,13 @@
 
   defn.macro 'entry_point.macro $prefix_macro_patterns'
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~mode: $mode_id
-    ~mode $mode_id
-    ~adjustment: $adj_id
-    ~adjustment $adj_id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~mode: $mode_id
+  | ~mode $mode_id
+  | ~adjustment: $adj_id
+  | ~adjustment $adj_id
 
 ){
 

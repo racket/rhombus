@@ -31,51 +31,51 @@
                      | $macro_case
                      | ...'
 
-  grammar macro_case:
-    $macro_pattern:
+  grammar macro_case
+  | $macro_pattern:
       $option; ...
       '$template'
 
-  grammar macro_pattern:
-    '$defined_name $ $right_parsed_id'
-    '$defined_name $pattern ...'
-    '$ $left_parsed_id $defined_name $ $right_parsed_id'
-    '$ $left_parsed_id $defined_name $pattern ...'
-  grammar defined_name:
-    $id_name
-    $op_name
-    ($id_name)
-    ($op_name)
-    ()
-  grammar parsed_id:
-    $id
-    ($parsed_id)
-  grammar option:
-    ~order $name
-    ~order: $name
-    ~stronger_than $other ...
-    ~stronger_than: $other ...; ...
-    ~weaker_than $other ...
-    ~weaker_than: $other ...; ...
-    ~same_as $other ...
-    ~same_as: $other ...; ...
-    ~same_on_left_as $other ...
-    ~same_on_left_as: $other ...; ...
-    ~same_on_right_as $other ...
-    ~same_on_right_as: $other ...; ...
-    ~associativity $assoc
-    ~associativity: $assoc
-    ~op_stx $id
-    ~op_stx: $id
-    ~all_stx $id
-    ~all_stx: $id
-  grammar other:
-    $name
-    ~other
-  grammar assoc:
-    ~left
-    ~right
-    ~none
+  grammar macro_pattern
+  | '$defined_name $ $right_parsed_id'
+  | '$defined_name $pattern ...'
+  | '$ $left_parsed_id $defined_name $ $right_parsed_id'
+  | '$ $left_parsed_id $defined_name $pattern ...'
+  grammar defined_name
+  | $id_name
+  | $op_name
+  | ($id_name)
+  | ($op_name)
+  | ()
+  grammar parsed_id
+  | $id
+  | ($parsed_id)
+  grammar option
+  | ~order $name
+  | ~order: $name
+  | ~stronger_than $other ...
+  | ~stronger_than: $other ...; ...
+  | ~weaker_than $other ...
+  | ~weaker_than: $other ...; ...
+  | ~same_as $other ...
+  | ~same_as: $other ...; ...
+  | ~same_on_left_as $other ...
+  | ~same_on_left_as: $other ...; ...
+  | ~same_on_right_as $other ...
+  | ~same_on_right_as: $other ...; ...
+  | ~associativity $assoc
+  | ~associativity: $assoc
+  | ~op_stx $id
+  | ~op_stx: $id
+  | ~all_stx $id
+  | ~all_stx: $id
+  grammar other
+  | $name
+  | ~other
+  grammar assoc
+  | ~left
+  | ~right
+  | ~none
 ){
 
  As a definition form, @rhombus(macro) defines the @rhombus(id_name) or

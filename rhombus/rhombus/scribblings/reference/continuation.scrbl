@@ -27,21 +27,21 @@ or by using it with @rhombus(Continuation.in).
                 ...
                 $maybe_catch'
 
-  grammar maybe_tag_expr:
-    $tag_expr
-    #,(epsilon)
+  grammar maybe_tag_expr
+  | $tag_expr
+  | #,(epsilon)
 
-  grammar maybe_catch:
-    ~catch $arg_bindings: $body; ...
-    ~catch
+  grammar maybe_catch
+  | ~catch $arg_bindings: $body; ...
+  | ~catch
     | $arg_bindings: $body; ...
     | ...
-    ~catch: $entry_point
-    #,(epsilon)
+  | ~catch: $entry_point
+  | #,(epsilon)
 
-  grammar arg_bindings:
-    $bind
-    ($bind, ...)
+  grammar arg_bindings
+  | $bind
+  | ($bind, ...)
 ){
 
  Returns the value(s) of the @rhombus(body) sequence, but also establishes
@@ -68,9 +68,9 @@ or by using it with @rhombus(Continuation.in).
   expr.macro 'Continuation.capture $maybe_tag_expr $id:
                 $body
                 ....'
-  grammar maybe_tag_expr:
-    $tag_expr
-    #,(epsilon)
+  grammar maybe_tag_expr
+  | $tag_expr
+  | #,(epsilon)
 ){
 
  Captures the continuation of the @rhombus(Continuation.capture)

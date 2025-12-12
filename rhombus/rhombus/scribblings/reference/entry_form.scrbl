@@ -67,9 +67,9 @@ have a locally defined grammar, such as @rhombus(peano_num, ~var) below.
 @doc(
   non_target:
     defn.macro 'def_peano $bind = $peano_num'
-  grammar peano_num:
-    0
-    $peano_num + 1
+  grammar peano_num
+  | 0
+  | $peano_num + 1
 ){}
 }
 

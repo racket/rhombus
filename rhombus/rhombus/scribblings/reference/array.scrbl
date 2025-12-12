@@ -114,9 +114,9 @@ contents, even if one is mutable and the other is immutable.
   bind.macro 'Array($bind, ...)'
   bind.macro 'Array($bind, ..., $repet_bind #,(@litchar{,}) $ellipsis)'
 
-  grammar ellipsis:
-    #,(dots)
-    #,(dots) ~nonempty
+  grammar ellipsis
+  | #,(dots)
+  | #,(dots) ~nonempty
 ){
 
  Matches an array with as many elements as @rhombus(bind)s, where
@@ -151,9 +151,9 @@ contents, even if one is mutable and the other is immutable.
   reducer.macro 'Array'
   reducer.macro 'Array.of_length($len_expr, $maybe_fill)'
 
-  grammar maybe_fill:
-    ~fill: $fill_expr
-    #,(@epsilon)
+  grammar maybe_fill
+  | ~fill: $fill_expr
+  | #,(@epsilon)
 ){
 
  @tech(~doc: guide_doc){Reducers} used with @rhombus(for), accumulates each result of a

@@ -4,6 +4,7 @@
                      shrubbery/property
                      shrubbery/print
                      enforest/name-parse
+                     enforest/deprecated
                      rhombus/private/enforest
                      rhombus/private/name-path-op
                      racket/list)
@@ -1108,20 +1109,24 @@
           (extract-pattern-metavariables #'(group b) vars))]))
    #:extract-typeset
    (lambda (stx space-name subst)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(group grammar id)
-        #`(paragraph plain #,(subst #'id #:as_wrap #f))]
-       [(group grammar id (block g ...))
-        #`(typeset-grammar #,(subst #'id #:as_wrap #f)
-                           #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
-                                (syntax-parse g
-                                  #:datum-literals (group)
-                                  [(group t ...)
-                                   (rb #'(group t ...)
-                                       #:at g
-                                       #:pattern? #t
-                                       #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))]))))
+     (let retry ([stx stx]) 
+       (syntax-parse stx
+         #:datum-literals (group alts block)
+         [(group grammar id)
+          #`(paragraph plain #,(subst #'id #:as_wrap #f))]
+         [(group grammar id (block g ...))
+          (warn-deprecated! 'grammar-block-instead-of-alts "15-JAN-2026")
+          (retry #'(group grammar id (alts (block g) ...)))]
+         [(group grammar id (alts (block g) ...))
+          #`(typeset-grammar #,(subst #'id #:as_wrap #f)
+                             #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
+                                  (syntax-parse g
+                                    #:datum-literals (group)
+                                    [(group t ...)
+                                     (rb #'(group t ...)
+                                         #:at g
+                                         #:pattern? #t
+                                         #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))])))))
 
 (define-doc-syntax non_target
   (let ()

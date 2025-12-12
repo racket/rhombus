@@ -25,31 +25,31 @@
               | $pattern_case
               | ...'
 
-  grammar maybe_args:
-    ($bind_id_maybe_kw_opt, ...)
-    ($bind_id_maybe_kw_opt, ..., & $rest_id)
-    #,(epsilon)
+  grammar maybe_args
+  | ($bind_id_maybe_kw_opt, ...)
+  | ($bind_id_maybe_kw_opt, ..., & $rest_id)
+  | #,(epsilon)
 
-  grammar bind_id_maybe_kw_opt:
-    #,(@elem{a @rhombus(bind_maybe_kw_opt), but with a plain @nontermref(id) as @nontermref(bind)})
+  grammar bind_id_maybe_kw_opt
+  | #,(@elem{a @rhombus(bind_maybe_kw_opt), but with a plain @nontermref(id) as @nontermref(bind)})
 
-  grammar class_clause:
-    #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
-    #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
-    #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
-    #,(@rhombus(fields, ~syntax_class_clause)): $field_decl
-    #,(@rhombus(root_swap, ~syntax_class_clause)): $field_to_root_id $root_to_field_id
+  grammar class_clause
+  | #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
+  | #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
+  | #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
+  | #,(@rhombus(fields, ~syntax_class_clause)): $field_decl
+  | #,(@rhombus(root_swap, ~syntax_class_clause)): $field_to_root_id $root_to_field_id
 
-  grammar pattern_case:
-    $syntax_pattern
-    $syntax_pattern: $pattern_body; ...
+  grammar pattern_case
+  | $syntax_pattern
+  | $syntax_pattern: $pattern_body; ...
 
-  grammar pattern_body:
-    #,(@rhombus(field, ~pattern_clause)) $field_decl
-    #,(@rhombus(match_def, ~pattern_clause)) $also_decl
-    #,(@rhombus(match_when, ~pattern_clause)) $when_rhs
-    #,(@rhombus(match_unless, ~pattern_clause)) $unless_rhs
-    $body
+  grammar pattern_body
+  | #,(@rhombus(field, ~pattern_clause)) $field_decl
+  | #,(@rhombus(match_def, ~pattern_clause)) $also_decl
+  | #,(@rhombus(match_when, ~pattern_clause)) $when_rhs
+  | #,(@rhombus(match_unless, ~pattern_clause)) $unless_rhs
+  | $body
 ){
 
  Defines a @deftech{syntax class} @rhombus(stxclass_id_name) that can be used in syntax patterns with
@@ -233,21 +233,21 @@
   syntax_class_clause.macro 'fields $spec ...'
   syntax_class_clause.macro 'fields: $spec ...; ...'
 
-  grammar spec:
-    $id_maybe_rep
-    $id_maybe_rep: #,(@rhombus(kind, ~syntax_class_clause)) $kind_decl
+  grammar spec
+  | $id_maybe_rep
+  | $id_maybe_rep: #,(@rhombus(kind, ~syntax_class_clause)) $kind_decl
 
-  grammar id_maybe_rep:
-    $id_maybe_annot
-    [$id_maybe_rep, $ellipsis]
+  grammar id_maybe_rep
+  | $id_maybe_annot
+  | [$id_maybe_rep, $ellipsis]
 
-  grammar id_maybe_annot:
-    $id
-    $id #,(@rhombus(::, ~bind)) $annot
-    $id #,(@rhombus(:~, ~bind)) $annot
+  grammar id_maybe_annot
+  | $id
+  | $id #,(@rhombus(::, ~bind)) $annot
+  | $id #,(@rhombus(:~, ~bind)) $annot
 
-  grammar ellipsis:
-    #,(dots)
+  grammar ellipsis
+  | #,(dots)
 ){
 
  Limits the set of fields that are provided by a syntax class to the
@@ -322,9 +322,9 @@
 @doc(
   syntax_class_clause.macro 'error_mode: $error_mode_keyword'
   syntax_class_clause.macro 'error_mode $error_mode_keyword'
-  grammar error_mode_keyword:
-    ~opaque
-    ~transparent
+  grammar error_mode_keyword
+  | ~opaque
+  | ~transparent
 ){
 
  Configures the way that failures to match a syntax class are reported.
@@ -338,12 +338,12 @@
   syntax_class_clause.macro 'kind: $kind_keyword'
   syntax_class_clause.macro 'kind $kind_keyword'
 
-  grammar kind_keyword:
-    ~term
-    ~sequence
-    ~group
-    ~multi
-    ~block
+  grammar kind_keyword
+  | ~term
+  | ~sequence
+  | ~group
+  | ~multi
+  | ~block
 ){
 
  Determines the contexts where a syntax class can be used and the kinds
@@ -392,17 +392,17 @@
                           ...'
   pattern_clause.macro 'field $id_maybe_rep = $expr'
 
-  grammar id_maybe_rep:
-    $id_maybe_annot
-    [$id_maybe_rep, $ellipsis]
+  grammar id_maybe_rep
+  | $id_maybe_annot
+  | [$id_maybe_rep, $ellipsis]
 
-  grammar id_maybe_annot:
-    $id
-    $id #,(@rhombus(::, ~bind)) $annot
-    $id #,(@rhombus(:~, ~bind)) $annot
+  grammar id_maybe_annot
+  | $id
+  | $id #,(@rhombus(::, ~bind)) $annot
+  | $id #,(@rhombus(:~, ~bind)) $annot
 
-  grammar ellipsis:
-    #,(dots)
+  grammar ellipsis
+  | #,(dots)
 ){
 
  Similar to @rhombus(def), but restricted to defining a plain identifier

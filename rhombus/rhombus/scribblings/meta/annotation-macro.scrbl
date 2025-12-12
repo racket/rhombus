@@ -38,9 +38,9 @@
 
   defn.macro 'annot.macro $macro_patterns'
 
-  grammar more_options:
-    ~context $id
-    ~context: $id
+  grammar more_options
+  | ~context $id
+  | ~context: $id
 ){
 
  Like @rhombus(expr.macro), but defines an identifier or operator as an

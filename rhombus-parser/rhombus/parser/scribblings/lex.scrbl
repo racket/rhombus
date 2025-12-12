@@ -49,12 +49,12 @@ match. Still, the same syntax is used as much as possible, and the
                   $body
                   ...
               | ...'
-  grammar trigger:
-    $pat
-    ~eof
-  grammar maybe_option:
-    ϵ
-    : ~allow_empty
+  grammar trigger
+  | $pat
+  | ~eof
+  grammar maybe_option
+  | ϵ
+  | : ~allow_empty
 ){
 
  Returns a @tech{lexer} as a function

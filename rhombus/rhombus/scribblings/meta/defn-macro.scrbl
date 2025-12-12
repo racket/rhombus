@@ -32,35 +32,35 @@
 @doc(
   defn.macro 'defn.macro $prefix_macro_patterns'
 
-  grammar prefix_macro_patterns:
-    prefix_macro_case
-    Z| prefix_macro_case
-     | ...
+  grammar prefix_macro_patterns
+  | prefix_macro_case
+  |« Z| prefix_macro_case
+      | ...»
 
-  grammar prefix_macro_case:
-    $prefix_macro_pattern:
+  grammar prefix_macro_case
+  | $prefix_macro_pattern:
       $option; ...
       $body
       ...
 
-  grammar prefix_macro_pattern:
-    '$defined_name $pattern ...'
+  grammar prefix_macro_pattern
+  | '$defined_name $pattern ...'
 
-  grammar defined_name:
-    $id_name
-    $op_name
-    ($id_name)
-    ($op_name)
+  grammar defined_name
+  | $id_name
+  | $op_name
+  | ($id_name)
+  | ($op_name)
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~all_stx: $id
-    ~all_stx $id
-    ~name_prefix: $id
-    ~name_prefix $id
-    ~effect_id: $id
-    ~effect_id $id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~all_stx: $id
+  | ~all_stx $id
+  | ~name_prefix: $id
+  | ~name_prefix $id
+  | ~effect_id: $id
+  | ~effect_id $id
 ){
 
  Defines the @rhombus(id_name) or @rhombus(op_name) within

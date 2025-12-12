@@ -22,9 +22,9 @@ instances of classes that implement @rhombus(Indexable, ~class).
   expr.macro '$expr #%index [$at_expr]'
   expr.macro '$expr #%index [$at_expr] $assign_op $rhs_expr'
   repet.macro '$repet #%index [$at_repet]'
-  grammar assign_op:
-    :=
-    $other_assign_op
+  grammar assign_op
+  | :=
+  | $other_assign_op
 ){
 
  Without an @rhombus(assign_op), accesses an element of an

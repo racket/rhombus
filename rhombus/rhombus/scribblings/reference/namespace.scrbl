@@ -48,9 +48,9 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
                 $nestable_body
                 ...'
 
-  grammar option:
-    ~name $id_name
-    ~name: $id_name
+  grammar option
+  | ~name $id_name
+  | ~name: $id_name
 ){
 
  Similar to the same @rhombus(nestable_body) sequence spliced into the

@@ -27,11 +27,11 @@ it supplies its elements in order.
   annot.macro 'List.of($annot)'
   annot.macro 'List.tuple_of[$annot, ..., $maybe_ellipsis]'
   annot.macro '#%brackets [$annot, ..., $maybe_ellipsis]'
-  grammar maybe_ellipsis:
-    #,(epsilon)
-    $ellipsis
-  grammar ellipsis:
-    #,(dots)
+  grammar maybe_ellipsis
+  | #,(epsilon)
+  | $ellipsis
+  grammar ellipsis
+  | #,(dots)
 ){
 
  The @rhombus(List, ~annot) annotation by itself matches any list. The
@@ -76,17 +76,17 @@ it supplies its elements in order.
   expr.macro '#%brackets [$expr_or_splice, ...]'
   repet.macro '#%brackets [$repet_or_splice, ...]'
 
-  grammar expr_or_splice:
-    $expr
-    $repet #,(@litchar{,}) $ellipses
-    & $listable_expr
+  grammar expr_or_splice
+  | $expr
+  | $repet #,(@litchar{,}) $ellipses
+  | & $listable_expr
 
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) ellipsis
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) ellipsis
 
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar ellipsis
+  | #,(dots_expr)
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of the
@@ -117,17 +117,17 @@ it supplies its elements in order.
   bind.macro 'List($bind_or_splice, ...)'
   bind.macro 'List[$bind_or_splice, ...]'
   bind.macro '#%brackets [$bind_or_splice, ...]'
-  grammar bind_or_splice:
-    $bind
-    $splice
-  grammar splice:
-    $repet_bind #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&, ~bind)) $list_bind
-    #,(@rhombus(&, ~bind)) $list_repet_bind #,(@litchar{,}) $ellipsis
-  grammar ellipsis:
-    #,(dots)
-    #,(dots_expr) ~nonempty
-    #,(dots_expr) ~once
+  grammar bind_or_splice
+  | $bind
+  | $splice
+  grammar splice
+  | $repet_bind #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&, ~bind)) $list_bind
+  | #,(@rhombus(&, ~bind)) $list_repet_bind #,(@litchar{,}) $ellipsis
+  grammar ellipsis
+  | #,(dots)
+  | #,(dots_expr) ~nonempty
+  | #,(dots_expr) ~once
 ){
 
  Matches a list with as many elements as @rhombus(bind)s, or if a

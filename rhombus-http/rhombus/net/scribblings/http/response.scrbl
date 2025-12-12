@@ -19,15 +19,15 @@
     expression ~none
     binding 'Response($field, ...)'
   
-  grammar field:
-    ~status_line: $bstr_bind
-    ~status_code: $status_code_bind
-    ~status_message: $bstr_bind
-    ~http_version: $bstr_bind
-    ~history: $response_list_bind
-    ~headers: { $key_str: $bstr_bind, ... }
-    ~headers: { $key_str: $bstr_bind, ..., & $bstr_list_bind }
-    ~body: $bstr_bind
+  grammar field
+  | ~status_line: $bstr_bind
+  | ~status_code: $status_code_bind
+  | ~status_message: $bstr_bind
+  | ~http_version: $bstr_bind
+  | ~history: $response_list_bind
+  | ~headers: { $key_str: $bstr_bind, ... }
+  | ~headers: { $key_str: $bstr_bind, ..., & $bstr_list_bind }
+  | ~body: $bstr_bind
 
 ){
 

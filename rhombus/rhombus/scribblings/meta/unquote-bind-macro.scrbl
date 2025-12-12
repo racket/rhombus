@@ -35,9 +35,9 @@ bindings versus @rhombus(::, ~bind) and
 
   defn.macro 'unquote_bind.macro $macro_patterns'
 
-  grammar more_options:
-    ~kind $id
-    ~kind: $id
+  grammar more_options
+  | ~kind $id
+  | ~kind: $id
 
 ){
 

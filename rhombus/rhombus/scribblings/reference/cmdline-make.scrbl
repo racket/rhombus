@@ -26,10 +26,10 @@
                 $content_expr
                 ...'
 
-  grammar option:
-    ~init $expr
-    ~init: $body; ...
-    ~no_builtin
+  grammar option
+  | ~init $expr
+  | ~init: $body; ...
+  | ~no_builtin
 ){
 
  The @rhombus(cmdline.parser) form produces a @rhombus(Parser), where
@@ -80,27 +80,27 @@
                 ...
                 $body
                 ...'
-  grammar arg:
-    $identifier
-    ($identifier #,(@rhombus(::, ~bind)) $annot)
-    ($identifier #,(@rhombus(as, ~impo)) $identifier)
-    ($identifier #,(@rhombus(as, ~impo)) $identifier #,(@rhombus(::, ~bind)) $annot)
+  grammar arg
+  | $identifier
+  | ($identifier #,(@rhombus(::, ~bind)) $annot)
+  | ($identifier #,(@rhombus(as, ~impo)) $identifier)
+  | ($identifier #,(@rhombus(as, ~impo)) $identifier #,(@rhombus(::, ~bind)) $annot)
 
-  grammar option:
-    ~alias $flag_string ...
-    ~alias: $flag_string ...; ...
-    ~help $expr
-    ~help: $body; ...
-    ~key $expr
-    ~key: $body; ...
-    ~init $expr
-    ~init: $body; ...  
-    ~multi
-    ~final
+  grammar option
+  | ~alias $flag_string ...
+  | ~alias: $flag_string ...; ...
+  | ~help $expr
+  | ~help: $body; ...
+  | ~key $expr
+  | ~key: $body; ...
+  | ~init $expr
+  | ~init: $body; ...  
+  | ~multi
+  | ~final
 
-  grammar maybe_ellipsis:
-    #,(dots)
-    #,(epsilon)
+  grammar maybe_ellipsis
+  | #,(dots)
+  | #,(epsilon)
 
 ){
 
@@ -233,9 +233,9 @@
                 ...
                 $body
                 ...'
-  grammar option:
-    ~init $expr
-    ~init: $body; ...
+  grammar option
+  | ~init $expr
+  | ~init: $body; ...
 ){
 
  Like @rhombus(cmdline.flag), but creates a @rhombus(Handler) object to
@@ -295,12 +295,12 @@
                 $body
                 ...'
 
-  grammar option:
-    $placement
+  grammar option
+  | $placement
 
-  grammar placement:
-    ~after_options
-    ~after_notation
+  grammar placement
+  | ~after_options
+  | ~after_notation
 ){
 
  Creates a @rhombus(Text) object to provide help text for

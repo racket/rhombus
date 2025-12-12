@@ -52,66 +52,66 @@ form or @rhombus(fun) expression form, but see also
                   ...
               | ...'
 
-  grammar case_maybe_kw_opt:
-    ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
+  grammar case_maybe_kw_opt
+  | ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot
 
-  grammar case_maybe_kw:
-    ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot
+  grammar case_maybe_kw
+  | ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot
 
-  grammar option:
-    ~doc
-    ~doc:
+  grammar option
+  | ~doc
+  | ~doc:
       $desc_body
       ...
-    name_option
-    case_option
+  | name_option
+  | case_option
 
-  grammar name_option:
-    ~name $op_or_id_name
-    ~name: $op_or_id_name
-    who_option
+  grammar name_option
+  | ~name $op_or_id_name
+  | ~name: $op_or_id_name
+  | who_option
 
-  grammar case_option:
-    ~unsafe:
+  grammar case_option
+  | ~unsafe:
       $unsafe_body
       ...
-    who_option
+  | who_option
 
-  grammar who_option:
-    ~who $id
-    ~who: $id
+  grammar who_option
+  | ~who $id
+  | ~who: $id
 
-  grammar bind_maybe_kw_opt:
-    $bind
-    $keyword: $bind
-    $bind = $default_expr
-    $bind: $default_body; ...
-    $keyword: $bind = $default_expr
-    $keyword: $bind: $default_body; ...
-    $keyword
-    $keyword = $default_expr
+  grammar bind_maybe_kw_opt
+  | $bind
+  | $keyword: $bind
+  | $bind = $default_expr
+  | $bind: $default_body; ...
+  | $keyword: $bind = $default_expr
+  | $keyword: $bind: $default_body; ...
+  | $keyword
+  | $keyword = $default_expr
 
-  grammar bind_maybe_kw:
-    $bind
-    $keyword: $bind
-    $keyword
+  grammar bind_maybe_kw
+  | $bind
+  | $keyword: $bind
+  | $keyword
 
-  grammar maybe_res_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(@rhombus(::, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
-    #,(@rhombus(:~, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
-    #,(@rhombus(::, ~bind)) ($annot, ...)
-    #,(@rhombus(:~, ~bind)) ($annot, ...)
-    #,(epsilon)
+  grammar maybe_res_annot
+  | #,(@rhombus(::, ~bind)) $annot
+  | #,(@rhombus(:~, ~bind)) $annot
+  | #,(@rhombus(::, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
+  | #,(@rhombus(:~, ~bind)) #,(@rhombus(values, ~annot))($annot, ...)
+  | #,(@rhombus(::, ~bind)) ($annot, ...)
+  | #,(@rhombus(:~, ~bind)) ($annot, ...)
+  | #,(epsilon)
 
-  grammar rest:
-    $repet_bind #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&, ~bind)) $list_bind
-    #,(@rhombus(~&, ~bind)) $map_bind
+  grammar rest
+  | $repet_bind #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&, ~bind)) $list_bind
+  | #,(@rhombus(~&, ~bind)) $map_bind
 
-  grammar ellipsis:
-    #,(dots)
+  grammar ellipsis
+  | #,(dots)
 
 ){
 

@@ -19,9 +19,9 @@ The @rhombuslangname(rhombus/reader) language is useful for defining a
   ~nonterminal:
     module_path: import ~defn
   non_target:
-    grammar clause:
-      ~lang $module_path
-      ~lang: $module_path
+    grammar clause
+    | ~lang $module_path
+    | ~lang: $module_path
 ){
 
  Each group in the body of a @rhombuslangname(rhombus/reader) module

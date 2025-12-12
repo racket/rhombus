@@ -15,9 +15,9 @@
                  $ref_by_clause
                  ...
                  »'
-  grammar ref_by_clause:
-    ~equals: $equals_func_expr
-    ~hash_code: $hash_code_func_expr
+  grammar ref_by_clause
+  | ~equals: $equals_func_expr
+  | ~hash_code: $hash_code_func_expr
 ){
 
  Defines @rhombus(op_or_id_name) as a @deftech{map configuration} like

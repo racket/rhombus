@@ -14,9 +14,9 @@
   repet.macro '$target_repet . $id'
   operator_order:
     ~order: member_access
-  grammar assign_op:
-    :=
-    $other_assign_op
+  grammar assign_op
+  | :=
+  | $other_assign_op
 
 ){
 

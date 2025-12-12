@@ -148,9 +148,9 @@ Starting example:
 
 @doc(
   def String.more :: String
-  grammar string_more_rhs:
-    1
-    2
+  grammar string_more_rhs
+  | 1
+  | 2
 ){
 
  Defined by extension.
@@ -159,8 +159,8 @@ Starting example:
 
 @doc(
   annot.macro 'String.more'
-  grammar string_amore_rhs:
-    3
+  grammar string_amore_rhs
+  | 3
 ){
 
  Defined by extension.

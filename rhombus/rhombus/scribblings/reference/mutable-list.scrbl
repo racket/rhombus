@@ -96,17 +96,17 @@ and it is not managed by a lock.
   expr.macro 'MutableList[$expr_or_splice, ...]'
   repet.macro 'MutableList[$repet_or_splice, ...]'
 
-  grammar expr_or_splice:
-    $expr
-    $repet #,(@litchar{,}) $ellipses
-    & $listable_expr
+  grammar expr_or_splice
+  | $expr
+  | $repet #,(@litchar{,}) $ellipses
+  | & $listable_expr
 
-  grammar ellipses:
-    $ellipsis
-    $ellipses #,(@litchar{,}) ellipsis
+  grammar ellipses
+  | $ellipsis
+  | $ellipses #,(@litchar{,}) ellipsis
 
-  grammar ellipsis:
-    #,(dots_expr)
+  grammar ellipsis
+  | #,(dots_expr)
 
 ){
 

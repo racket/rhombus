@@ -49,9 +49,9 @@ an @deftech{output string port} writes to a @tech{byte string}.
                 $body
                 ...'
 
-  grammar option:
-    ~exists $exists_mode_expr
-    ~exists: $exists_mode_body; ...
+  grammar option
+  | ~exists $exists_mode_expr
+  | ~exists: $exists_mode_body; ...
 ){
 
  The @rhombus(Port.Output.current) @tech{context parameter} determines a

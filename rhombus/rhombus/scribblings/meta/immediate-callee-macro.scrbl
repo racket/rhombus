@@ -35,15 +35,15 @@ propagation than would normally take place at a function call.
 
   defn.macro 'immediate_callee.macro $prefix_macro_patterns'
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~static_infos: $statinfo_id
-    ~static_infos $statinfo_id
-    ~in_op_mode: $in_op_mode_id
-    ~in_op_mode $in_op_mode_id
-    ~in_op_stx: $in_op_stx_id
-    ~in_op_stx $in_op_stx_id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~static_infos: $statinfo_id
+  | ~static_infos $statinfo_id
+  | ~in_op_mode: $in_op_mode_id
+  | ~in_op_mode $in_op_mode_id
+  | ~in_op_stx: $in_op_stx_id
+  | ~in_op_stx $in_op_stx_id
 
 ){
 

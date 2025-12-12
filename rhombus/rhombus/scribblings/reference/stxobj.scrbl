@@ -342,21 +342,21 @@ or adjusted in any way
 
   bind.macro '$ $stx_pat_bind_term'
 
-  grammar stx_pat_bind_term:
-    $id
-    #,(@rhombus(_, ~unquote_bind))
-    ($ stx_bind)
-    '$term ...; ...'
-    $other_stx_bind_term
+  grammar stx_pat_bind_term
+  | $id
+  | #,(@rhombus(_, ~unquote_bind))
+  | ($ stx_bind)
+  | '$term ...; ...'
+  | $other_stx_bind_term
 
-  grammar stx_bind:
-    $stx_pat_bind_term
-    $id #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
-    $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
-    $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
-    #,(@rhombus(!, ~unquote_bind)) $stx_bind
-    #,(@rhombus(pattern, ~unquote_bind)) $pattern_spec
-    $other_stx_bind
+  grammar stx_bind
+  | $stx_pat_bind_term
+  | $id #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
+  | $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
+  | $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
+  | #,(@rhombus(!, ~unquote_bind)) $stx_bind
+  | #,(@rhombus(pattern, ~unquote_bind)) $pattern_spec
+  | $other_stx_bind
 ){
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
@@ -580,26 +580,26 @@ or adjusted in any way
                         $field_expose
                         ...'
 
-  grammar syntax_class_ref:
-    $id
-    (syntax_class:
+  grammar syntax_class_ref
+  | $id
+  | (syntax_class:
        $class_clause
        ...
      | $pattern_case
      | ...)
 
-  grammar maybe_args:
-    ($arg, ...)
-    #,(epsilon)
+  grammar maybe_args
+  | ($arg, ...)
+  | #,(epsilon)
 
-  grammar arg:
-    $arg_expr
-    $keyword: $arg_expr
+  grammar arg
+  | $arg_expr
+  | $keyword: $arg_expr
 
-  grammar field_expose:
-    #,(@rhombus(open, ~impo))
-    $field_id #,(@rhombus(as, ~impo)) $pattern_id; ...
-    $field_id ....
+  grammar field_expose
+  | #,(@rhombus(open, ~impo))
+  | $field_id #,(@rhombus(as, ~impo)) $pattern_id
+  | $field_id ....
 ){
 
  Unquote binding operator for use with @rhombus($, ~bind) that binds
@@ -670,10 +670,10 @@ or adjusted in any way
                       | $pattern_case
                       | ...'
 
-  grammar maybe_id_open:
-    $id ~open
-    $id
-    #,(epsilon)
+  grammar maybe_id_open
+  | $id ~open
+  | $id
+  | #,(epsilon)
 ){
 
  The @rhombus(pattern, ~unquote_bind) form acts as a shorthand for
@@ -729,18 +729,18 @@ or adjusted in any way
                       | $pattern_case
                       | ...'
 
-  grammar pattern_case:
-    syntax_pattern
-    syntax_pattern:
+  grammar pattern_case
+  | syntax_pattern
+  | syntax_pattern:
       $option_pattern_body
       ...
 
-  grammar option_pattern_body:
-    pattern_body
-    #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep = $expr
-    #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep: $body; ...
-    #,(@rhombus(description, ~pattern_clause)) $string
-    #,(@rhombus(description, ~pattern_clause)): $string
+  grammar option_pattern_body
+  | pattern_body
+  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep = $expr
+  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep: $body; ...
+  | #,(@rhombus(description, ~pattern_clause)) $string
+  | #,(@rhombus(description, ~pattern_clause)): $string
 ){
 
  Creates a pattern that matches a sequence of groups in the case of
@@ -809,7 +809,7 @@ or adjusted in any way
         ~min_args: 2
         ~min_args: 3
 )
-
+<
 }
 
 @doc(

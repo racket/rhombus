@@ -17,35 +17,35 @@
 
   decl.nestable_macro 'export ~scope_like $id $defn'
 
-  grammar export_clause:
-    $export_item
-    $export_item:
+  grammar export_clause
+  | $export_item
+  | $export_item:
       $modifier
       ...
-    $modifier:
+  | $modifier:
       $export_clause
       ...
 
-  grammar export_item:
-    $id_or_op
-    #,(@rhombus(all_from, ~expo))($source)
-    #,(@rhombus(rename, ~expo)) $rename_decl
-    #,(@rhombus(names, ~expo)) $names_decl
-    #,(@rhombus(all_defined, ~expo)) $all_defined_decl
-    $export_item #,(@rhombus(#%juxtapose, ~expo)) $export_item
-    $other_export
+  grammar export_item
+  | $id_or_op
+  | #,(@rhombus(all_from, ~expo))($source)
+  | #,(@rhombus(rename, ~expo)) $rename_decl
+  | #,(@rhombus(names, ~expo)) $names_decl
+  | #,(@rhombus(all_defined, ~expo)) $all_defined_decl
+  | $export_item #,(@rhombus(#%juxtapose, ~expo)) $export_item
+  | $other_export
 
-  grammar id_or_op:
-    $id_name
-    $op_name
+  grammar id_or_op
+  | $id_name
+  | $op_name
 
-  grammar modifier:
-    #,(@rhombus(except, ~expo)) $except_decl
-    #,(@rhombus(meta, ~expo)) $meta_decl
-    #,(@rhombus(meta_label, ~expo))
-    #,(@rhombus(only_space, ~expo)) $only_space_decl
-    #,(@rhombus(except_space, ~expo)) $except_space_decl
-    $other_modifier
+  grammar modifier
+  | #,(@rhombus(except, ~expo)) $except_decl
+  | #,(@rhombus(meta, ~expo)) $meta_decl
+  | #,(@rhombus(meta_label, ~expo))
+  | #,(@rhombus(only_space, ~expo)) $only_space_decl
+  | #,(@rhombus(except_space, ~expo)) $except_space_decl
+  | $other_modifier
 
 ){
 

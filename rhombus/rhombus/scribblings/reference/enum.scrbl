@@ -13,13 +13,13 @@
                 $maybe_doc
               | $enum_clause
               | ...'
-  grammar enum_clause:
-    $id
-    ~is_a: $annot
-    ~is_a $annot
-  grammar maybe_doc:
-    ~doc
-    #,(epsilon)
+  grammar enum_clause
+  | $id
+  | ~is_a: $annot
+  | ~is_a $annot
+  grammar maybe_doc
+  | ~doc
+  | #,(epsilon)
 ){
 
  Defines @rhombus(id_name) as a @tech(~doc: guide_doc){predicate annotation} and as a

@@ -49,39 +49,39 @@ driver and macro-definitions forms.
                 $space_clause_or_body_or_export
                 ...'
 
-  grammar space_clause_or_body_or_export:
-    #,(@rhombus(space_path, ~space_clause)) $space_id_path
-    #,(@rhombus(macro_definer, ~space_clause)) $id
-    #,(@rhombus(macro_definer, ~space_clause)) $id:
+  grammar space_clause_or_body_or_export
+  | #,(@rhombus(space_path, ~space_clause)) $space_id_path
+  | #,(@rhombus(macro_definer, ~space_clause)) $id
+  | #,(@rhombus(macro_definer, ~space_clause)) $id:
       $keyword
       ...
-    #,(@rhombus(bridge_definer, ~space_clause)) $id
-    #,(@rhombus(private, ~space_clause)) $clause
-    #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
+  | #,(@rhombus(bridge_definer, ~space_clause)) $id
+  | #,(@rhombus(private, ~space_clause)) $clause
+  | #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
       ...
-    $nestable_body
+  | $nestable_body
 
-  grammar space_id_path:
-    $id
-    $space_id_path / $id
+  grammar space_id_path
+  | $id
+  | $space_id_path / $id
 
-  grammar space_meta_clause_or_body:
-    #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id($id, ...)
-    #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(name_start_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(bound_name_start_syntax_class, ~space_meta_clause)) $id
-    #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
-    #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
-    #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
-    #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
-    #,(@rhombus(description, ~space_meta_clause)) $meta_expr
-    #,(@rhombus(operator_description, ~space_meta_clause)) $meta_expr
-    #,(@rhombus(reflection, ~space_meta_clause)) $id
-    #,(@rhombus(private, ~space_meta_clause)) $meta_clause
-    $nestable_body
+  grammar space_meta_clause_or_body
+  | #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id
+  | #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id($id, ...)
+  | #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
+  | #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
+  | #,(@rhombus(name_start_syntax_class, ~space_meta_clause)) $id
+  | #,(@rhombus(bound_name_start_syntax_class, ~space_meta_clause)) $id
+  | #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
+  | #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
+  | #,(@rhombus(description, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(operator_description, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(reflection, ~space_meta_clause)) $id
+  | #,(@rhombus(private, ~space_meta_clause)) $meta_clause
+  | $nestable_body
 ){
 
  Defines @rhombus(space_id) as a @tech{space} with syntax

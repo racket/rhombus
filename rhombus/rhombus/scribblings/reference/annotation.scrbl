@@ -355,10 +355,10 @@
   annot.macro 'converting(fun ($bind) $maybe_res_annot:
                             $body
                             ...)'
-  grammar maybe_res_annot:
-    #,(@rhombus(::, ~bind)) $annot
-    #,(@rhombus(:~, ~bind)) $annot
-    #,(epsilon)
+  grammar maybe_res_annot
+  | #,(@rhombus(::, ~bind)) $annot
+  | #,(@rhombus(:~, ~bind)) $annot
+  | #,(epsilon)
 ){
 
  Produces a @tech(~doc: guide_doc){converter annotation} by pairing @rhombus(bind) with

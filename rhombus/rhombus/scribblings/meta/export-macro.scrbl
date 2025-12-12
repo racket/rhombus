@@ -55,11 +55,11 @@
 
   defn.macro 'expo.modifier $prefix_macro_patterns'
 
-  grammar option:
-    ~op_stx: $id
-    ~op_stx $id
-    ~export: $exp_id
-    ~export $exp_id
+  grammar option
+  | ~op_stx: $id
+  | ~op_stx $id
+  | ~export: $exp_id
+  | ~export $exp_id
 ){
 
  Like @rhombus(defn.macro), but defines an identifier as an

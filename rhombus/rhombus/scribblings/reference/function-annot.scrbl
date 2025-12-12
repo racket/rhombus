@@ -10,9 +10,9 @@
 @doc(
   annot.macro 'Function'
   annot.macro 'Function.of_arity($expr_or_keyword, $expr_or_keyword, ...)'
-  grammar expr_or_keyword:
-    $expr
-    $keyword
+  grammar expr_or_keyword
+  | $expr
+  | $keyword
 ){
 
  The @rhombus(Function, ~annot) annotation matches any function.
@@ -52,45 +52,45 @@
     list_annot: :: annot
     map_annot: :: annot
   annot.macro '$args -> $results'
-  grammar args:
-    $annot
-    ($arg, ..., $rest_arg, ...)
-    (~any)
-  grammar results:
-    $annot
-    ($result, ..., $rest_result, ...)
-    #,(@rhombus(values, ~annot))($result, ..., $rest_result, ...)
-    ~any
-    (~any)
-  grammar arg:
-    plain_arg
-    named_arg
-    rest_arg
-  grammar plain_arg:
-    $annot
-    $annot = #,(@rhombus(_, ~bind))
-    $keyword: $annot
-    $keyword: $annot = #,(@rhombus(_, ~bind))
-  grammar named_arg:
-    $id #,(@rhombus(::, ~bind)) $annot
-    $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
-    $keyword: $id #,(@rhombus(::, ~bind)) $annot
-    $keyword: $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
-  grammar rest_arg:
-    $annot #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&, ~bind)) $list_annot
-    #,(@rhombus(~&, ~bind)) $map_annot
-    #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
-    #,(@rhombus(~&, ~bind)) $id #,(@rhombus(::, ~bind)) $map_annot
-  grammar result:
-    $annot
-    $id #,(@rhombus(::, ~bind)) $annot
-  grammar rest_result:
-    $annot #,(@litchar{,}) $ellipsis
-    #,(@rhombus(&, ~bind)) $list_annot
-    #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
-  grammar ellipsis:
-    #,(dots)
+  grammar args
+  | $annot
+  | ($arg, ..., $rest_arg, ...)
+  | (~any)
+  grammar results
+  | $annot
+  | ($result, ..., $rest_result, ...)
+  | #,(@rhombus(values, ~annot))($result, ..., $rest_result, ...)
+  | ~any
+  | (~any)
+  grammar arg
+  | plain_arg
+  | named_arg
+  | rest_arg
+  grammar plain_arg
+  | $annot
+  | $annot = #,(@rhombus(_, ~bind))
+  | $keyword: $annot
+  | $keyword: $annot = #,(@rhombus(_, ~bind))
+  grammar named_arg
+  | $id #,(@rhombus(::, ~bind)) $annot
+  | $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
+  | $keyword: $id #,(@rhombus(::, ~bind)) $annot
+  | $keyword: $id #,(@rhombus(::, ~bind)) $annot = #,(@rhombus(_, ~bind))
+  grammar rest_arg
+  | $annot #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&, ~bind)) $list_annot
+  | #,(@rhombus(~&, ~bind)) $map_annot
+  | #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
+  | #,(@rhombus(~&, ~bind)) $id #,(@rhombus(::, ~bind)) $map_annot
+  grammar result
+  | $annot
+  | $id #,(@rhombus(::, ~bind)) $annot
+  grammar rest_result
+  | $annot #,(@litchar{,}) $ellipsis
+  | #,(@rhombus(&, ~bind)) $list_annot
+  | #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
+  grammar ellipsis
+  | #,(dots)
 ){
 
  A @tech(~doc: guide_doc){converter annotation} that is immediately satisfied by a
@@ -220,9 +220,9 @@
   ~nonterminal:
     arrow_annot: :: annot
   annot.macro 'Function.all_of($annot_or_name, ...)'
-  grammar annot_or_name:
-    $arrow_annot
-    ~name:
+  grammar annot_or_name
+  | $arrow_annot
+  | ~name:
       $body
       ...
 ){

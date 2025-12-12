@@ -30,27 +30,27 @@
                 ...'
   expr.macro 'check $expr $expected_result'
 
-  grammar maybe_eval:
-    ~eval
-    ~eval: $evaluator_expr
-    #,(epsilon)
+  grammar maybe_eval
+  | ~eval
+  | ~eval: $evaluator_expr
+  | #,(epsilon)
 
-  grammar expected_result:
-    ~is $expected_expr
-    ~is: $expected_body; ...
-    ~is_now $expected_expr
-    ~is_now: $expected_body; ...
-    ~is_a $annot
-    ~is_a: $annot
-    ~prints_like $expected_expr
-    ~prints_like: $expected_body; ...
-    ~matches $expected_values_bind
-    ~matches: $expected_values_bind
-    ~prints $expected_expr
-    ~prints: $expected_body; ...
-    ~throws $expected_expr
-    ~throws: $expected_body; ...
-    ~completes
+  grammar expected_result
+  | ~is $expected_expr
+  | ~is: $expected_body; ...
+  | ~is_now $expected_expr
+  | ~is_now: $expected_body; ...
+  | ~is_a $annot
+  | ~is_a: $annot
+  | ~prints_like $expected_expr
+  | ~prints_like: $expected_body; ...
+  | ~matches $expected_values_bind
+  | ~matches: $expected_values_bind
+  | ~prints $expected_expr
+  | ~prints: $expected_body; ...
+  | ~throws $expected_expr
+  | ~throws: $expected_body; ...
+  | ~completes
 ){
 
  Evaluates the @rhombus(body) or @rhombus(expr) form, catching any

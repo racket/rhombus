@@ -20,19 +20,19 @@
                 $body
                 ...'
 
-  grammar option:
-    ~is_clause $expr
-    ~is_clause: $body; ...
-    ~parse_clause $expr
-    ~parse_clause: $body; ...
-    ~complete $expr
-    ~complete: $body; ...
-    ~init '$term ...; ...'
-    ~init: '$term ...; ...'
-    ~name $id_name
-    ~name: $id_name
-    ~defer_tail
-    ~no_exports
+  grammar option
+  | ~is_clause $expr
+  | ~is_clause: $body; ...
+  | ~parse_clause $expr
+  | ~parse_clause: $body; ...
+  | ~complete $expr
+  | ~complete: $body; ...
+  | ~init '$term ...; ...'
+  | ~init: '$term ...; ...'
+  | ~name $id_name
+  | ~name: $id_name
+  | ~defer_tail
+  | ~no_exports
 ){
 
  Intended as an expansion step for a macro that implements a new

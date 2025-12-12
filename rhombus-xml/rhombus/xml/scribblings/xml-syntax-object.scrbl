@@ -52,24 +52,24 @@ example, @rhombus(xml.from_syntax) accepts a
   expr.macro 'xml.syntax:
                 $element'
 
-  grammar element:
-    $id:
+  grammar element
+  | $id:
       $attribute
       ...
       $content
       ...
 
-  grammar attribute:
-    $keyword: $value_string
+  grammar attribute
+  | $keyword: $value_string
 
-  grammar content:
-    $element
-    $string
-    #,(@rhombus(&, ~datum)) $entity_id_or_int
-    $content ...
-    ($content, ...)
-    [$content, ...]
-    $other
+  grammar content
+  | $element
+  | $string
+  | #,(@rhombus(&, ~datum)) $entity_id_or_int
+  | $content ...
+  | ($content, ...)
+  | [$content, ...]
+  | $other
 ){
 
  Returns the same syntax object as @rhombus('#,(@rhombus(element))'),
@@ -146,8 +146,8 @@ example, @rhombus(xml.from_syntax) accepts a
                 ...
                 $element'
 
-  grammar option:
-    ~swap_underscore_dash: $swap_expr
+  grammar option
+  | ~swap_underscore_dash: $swap_expr
 ){
 
  Like @rhombus(xml.syntax), but converts the XML syntax object to a

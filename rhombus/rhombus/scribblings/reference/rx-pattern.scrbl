@@ -155,10 +155,10 @@ multiplying like the expression @rhombus(*) operator.
   rx.macro '$pat * $mode'
   operator_order:
     ~order: rx_repetition
-  grammar mode:
-    ~greedy
-    ~nongreedy
-    ~possessive
+  grammar mode
+  | ~greedy
+  | ~nongreedy
+  | ~possessive
 ){
 
  Matches a sequence of 0 or more matches to @rhombus(pat).
