@@ -24,7 +24,7 @@
  @rhombus(::) for annotations. The number of result values must match
  the number of @nontermref(bind)s. Static information is gathered from
  @rhombus(rhs_expr) or @rhombus(body) and propagated to
- @rhombus(values_bind) as described in @secref(~doc: guide_doc, "static-info-rules").
+ @rhombus(values_bind) as described in @secref(~doc: model_doc, "static-info-rules").
 
  An identifier is bound in the @rhombus(expr, ~space) @tech(~doc: meta_doc){space}, and
  most binding operators also create bindings in the

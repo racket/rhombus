@@ -8,7 +8,7 @@
 @title(~tag: "stxobj-track"){Syntax Tracking}
 
 As macros in a space are expanded, the resulting syntax object acquires
-an @rhombus(#'origin) syntax property to track the history of expansion.
+an @rhombus(#'origin) @tech(~doc: ref_doc){syntax property} to track the history of expansion.
 Specifically, when the expander dispatches to a macro bound to
 @nontermref(op_or_id_name), then the result of the macro gets an @rhombus(#'origin)
 property with the use-site @nontermref(op_or_id_name) identifier. If a result

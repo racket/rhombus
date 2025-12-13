@@ -59,7 +59,7 @@ in an unspecified order.
  @rhombus(val_annot), where satisfaction of the annotation is confirmed
  by immediately checking all keys and values. No future obligation is
  attached to a map satisfying the annotation, so in the case of
- @rhombus(MutableMap.now_of), no static information is associated with
+ @rhombus(MutableMap.now_of, ~annot), no static information is associated with
  value access using @brackets.
 
  The @rhombus(later_of) annotation variants create a @tech(~doc: guide_doc){converter

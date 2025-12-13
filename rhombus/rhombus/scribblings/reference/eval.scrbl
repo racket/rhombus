@@ -96,6 +96,15 @@ by an evaluator, for example.
 }
 
 @doc(
+  fun Evaluator.from_module(mod :: ModulePath) :: Evaluator
+){
+
+ Returns an @tech{evaluator} that corresonds to the inside of the module
+ named by @rhombus(mod).
+
+}
+
+@doc(
   fun Evaluator.module_is_declared(mod :: ModulePath,
                                    ~load: load = #false) :: Boolean
 ){

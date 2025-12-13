@@ -32,7 +32,7 @@
 ){
 
  Similar to @rhombus(defn.macro), but binds a @tech(~doc: guide_doc){dot provider} that
- is normally referenced indirectly via @tech(~doc: guide_doc){static information},
+ is normally referenced indirectly via @tech(~doc: model_doc){static information},
  instead of directly. The @rhombus(pattern) sequence after the leading
  @rhombus(defined_name) should match a sequence of three
  terms: a parsed left-hand expression or repetition, a @rhombus(.) term, and a

@@ -2,14 +2,14 @@
 @(import:
     "common.rhm" open)
 
-@title{Static Information}
+@title(~tag: "static-info-rule"){Role of Static Information}
 
-A binding or an expression can have associated @deftech{static
+A binding or an expression can have associated @tech{static
  information} that is used to enable, reject (in @rhombus(use_static) mode), or resolve certain
 expression forms. For example, an expression to the left of
 a @rhombus(.) can have static information to specify how a field
 name after @rhombus(.) resolves to an field accessor. See the
-@secref("annotation") for an introduction to static information and its
+@secref(~doc: guide_doc, "annotation") for an introduction to static information and its
 role.
 
 Static information is associated to a binding through a binding
@@ -19,7 +19,9 @@ information to its parsed form (i.e., expansion). For example, the
 @rhombus(::) operator associates static information through an annotation. An
 annotation, meanwhile, pairs a predicate with a set of static information to
 associate with any variable that is bound with the annotation. That's
-why a binding @rhombus(p :: Posn, ~bind) makes every reference to @rhombus(p) a @tech{dot provider}: the annotation
+why a binding @rhombus(p :: Posn, ~bind) (as in
+@seclink(~doc: guide_doc, "annotation"){the introduction section})
+makes every reference to @rhombus(p) a @tech{dot provider}: the annotation
 @rhombus(Posn) indicates that every binding with the annotation gets a dot
 provider to access the @rhombus(x) and @rhombus(y) fields of @rhombus(Posn). When @rhombus(::) is used in an expression,
 then static information indicated by the annotation is similarly

@@ -13,12 +13,23 @@
 
 @title(~tag: "annotation-macro"){Annotation Low-Level Protocol}
 
+An @deftech{annotation} pairs a run-time predicate or converter with
+static information. For example, the annotation @rhombus(Int)
+encapsulates a run-time predicate that can be applied using
+@rhombus(is_a) or @rhombus(::), and it provides static information about
+@rhombus(<) ordering. Annotations are recognized by various expression
+and binding forms, such as the @rhombus(::) expression form,
+@rhombus(::, ~bind) binding form, or @rhombus(fun) expression form (with
+its optional result accnotation); those forms extract the components of
+an annotation to apply in their expansions.
+
+New annotations can be defined as macros with @rhombus(annot.macro).
 With annotation constructors such as @rhombus(&&, ~annot),
 @rhombus(satisfying, ~annot), and @rhombus(converting, ~annot), most
 annotation macros can be implemented by rewriting into existing
-annotation forms as shown in @secref("bind-macro"). The
+annotation forms as shown in @secref(~doc: guide_doc, "bind-macro"). The
 @rhombus(annot.macro) form also supports a low-level protocol. A
-macro opts into the low-level protocol by returning a result build with
+macro opts into the low-level protocol by returning a result built with
 @rhombus(annot_meta.pack_predicate) or @rhombus(annot_meta.pack_converter).
 
 A simple predicate annotation can be implemented with just

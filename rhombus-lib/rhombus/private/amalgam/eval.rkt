@@ -28,6 +28,7 @@
   #:fields
   (make_rhombus_empty
    make_rhombus
+   from_module
    [current current-namespace]
    [current_print Evaluator.current_print]
    import
@@ -47,6 +48,10 @@
   (parameterize ([current-namespace ns])
     (namespace-require '(lib "rhombus/main.rhm")))
   ns)
+
+(define/arity (from_module mod-path)
+  (check-module-path who mod-path)
+  (module->namespace (module-path-s-exp-or-index-or-resolved mod-path)))
 
 (define/arity #:name eval (rhombus-eval e
                                         #:as_interaction [as_interaction #f])

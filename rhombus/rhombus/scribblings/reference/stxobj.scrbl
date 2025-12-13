@@ -17,7 +17,9 @@ individual terms, and metadata potentially on individual syntax objects. See
 Rhombus values. The @rhombus(Syntax.make) function takes such a value
 and wraps it as a syntax object, so that it can accumulate binding
 scopes or hold other metadata, and functions like @rhombus(Syntax.unwrap)
-expose that structure.
+expose that structure. Metedata includes @tech{source locations} and
+@deftech{syntax properties}, which can be adjusted with methods like
+@rhombus(Syntax.relocate) and @rhombus(Syntax.property).
 
 In addition to normal shrubbery structure, a syntax object can contain
 @deftech{parsed} terms, which are opaque. The meaning and internal
@@ -51,7 +53,7 @@ An individual term or group can be represented in multiple ways. In the
 case of a term, it can be represented as the term by itself, as the sole
 term in a group, or even as the sole term in the sole group of a
 multi-group sequence. In most cases, conversion between these internal
-representations happens automatically; for example, attaching a property
+representations happens automatically; for example, attaching a @tech{syntax property}
 to a term will remove any group or multi-group representation layers and
 attach to the individual term. @deftech{Ephemeral properties} are
 attached to a specific representation, and they are more fragile; they
@@ -1305,7 +1307,7 @@ or adjusted in any way
     :: Term
 ){
 
- Returns the value of the @rhombus(key) syntax property of @rhombus(stx)
+ Returns the value of the @rhombus(key) @tech{syntax property} of @rhombus(stx)
  or returns a syntax object with the property set to @rhombus(val). When
  @rhombus(val) is supplied, the property value is preserved in a compiled
  quoted form of the syntax object only when @rhombus(is_preserved) is

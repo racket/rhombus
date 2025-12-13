@@ -87,7 +87,7 @@ via @rhombus(#,(@rhombus(p, ~datum)) :: #,(@rhombus(Posn, ~datum)), ~bind) is an
 efficient access to the @rhombus(x, ~datum) field.
 In general, an annotation that is associated to a binding
 or expression with @rhombus(:~, ~bind) or @rhombus(::, ~bind) might make the binding
-or expression a dot provider. See @secref("static-info") for more
+or expression a dot provider. See @secref(~doc: model_doc, "static-info") for more
 information on dot providers and other static information.
 
 The @rhombus(use_static) definition form redefines

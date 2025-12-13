@@ -24,7 +24,7 @@ two annotations.
 )
 
 A binding that uses an @rhombus(||, ~annot) annotation has only
-@tech{static information} that is common to the two annotations. If is
+@tech(~doc: model_doc){static information} that is common to the two annotations. If is
 possible, for example, that two annotations both imply a third one.
 
 @examples(
@@ -63,7 +63,7 @@ two annotations.
 )
 
 As illustrated in this example, a binding that uses an
-@rhombus(&&, ~annot) annotation has @tech{static information} combined
+@rhombus(&&, ~annot) annotation has @tech(~doc: model_doc){static information} combined
 from the two annotations. If the two annotations provide differing
 static information, the left-hand annotation's information is used. (If
 the static information from the two annotations is inherently in

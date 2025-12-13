@@ -338,7 +338,7 @@
  only the @rhombus(class id_name(field_spec, ...)) part of the
  definition.
 
- See @secref(~doc: guide_doc, "static-info-rules") for information about static
+ See @secref(~doc: model_doc, "static-info-rules") for information about static
  information associated with classes.
 
 @examples(

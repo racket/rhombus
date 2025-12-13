@@ -54,7 +54,7 @@
       def many String as names = "oops"
 )
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for examples using the low-level
+ See @secref(~doc: model_doc, "bind-macro-protocol") for examples using the low-level
  protocol.
 
  See @secref("stxobj-track") for information about expansion tracking,
@@ -83,7 +83,7 @@
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }
@@ -121,7 +121,7 @@
  @rhombus(bind.committer), and binder transformer defined with
  @rhombus(bind.binder).
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }
@@ -222,7 +222,7 @@
  expansion tracking from the @rhombus(track_stxes) members to the packed
  binding expansion.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 }
 
@@ -260,7 +260,7 @@
  the packed syntax object and expose information about the binding's
  expansion.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for an example.
+ See @secref(~doc: model_doc, "bind-macro-protocol") for an example.
 
 }
 
@@ -297,7 +297,7 @@
  adjusted by @rhombus(let). Instead, those definitions should be deferred
  to the binder function's result.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }
@@ -330,7 +330,7 @@
  groups of the block are spliced into a definition context where the
  binding is used.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }
@@ -362,7 +362,7 @@
  adjusted by @rhombus(let). Instead, those definitions should be deferred
  to the binder function's result.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }
@@ -395,7 +395,7 @@
  need to be referenced by generated bindings should be in the committer
  function's output.
 
- See @secref(~doc: guide_doc, "bind-macro-protocol") for more explanation and for
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
 }

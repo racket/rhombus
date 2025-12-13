@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "static-info-rules"){Rules for Static Information}
+@title(~tag: "static-info-rules"){Propagating Static Information}
 
 Exactly how static information is associated to expressions and
 bindings depends on the expression or binding form. It's not

@@ -28,7 +28,7 @@ as a prefix operator to constrain a pattern to number inputs:
 More expressive binding operators can use a lower-level protocol where a
 binding is represented by transformers that generate checking and
 binding code. It gets complicated, and it's tied up with the propagation
-of static information, so the details are in @secref("bind-macro-protocol").
+of static information, so the details are in @secref(~doc: model_doc, "bind-macro-protocol").
 After an expressive set of binding forms are implemented with the
 low-level interface, however, many others can be implemented though
 simple expansion.
@@ -81,8 +81,8 @@ could be implemented if @rhombus(List.of, ~annot) did not exist already:
 )
 
 At a lower level, the bridge between binding patterns and annotations is
-based on their shared use of @seclink("static-info"){static information}
-as described in the @seclink("bind-macro-protocol"){binding API} and the
-@seclink("annotation-macro"){annotation API}.
+based on their shared use of @seclink(~doc: model_doc, "static-info"){static information}
+as described in the @seclink(~doc: model_doc, "bind-macro-protocol"){binding API} and the
+@seclink(~doc: model_doc, "annotation-macro"){annotation API}.
 
 @(close_eval(macro_eval))

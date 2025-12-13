@@ -44,7 +44,7 @@ converter annotation given three pieces:
  @item{a body that can refer to variable bound in the pattern; and}
 
  @item{an optional annotation for the result of conversion, which can be
- checked and can supply @tech{static information} about the converted
+ checked and can supply @tech(~doc: model_doc){static information} about the converted
  result.}
 
 )
@@ -78,7 +78,7 @@ When a converting annotation is used in a position that depends only on
 whether it matches, such as with @rhombus(is_a), then the converting
 body is not used.@margin_note{When used with @rhombus(is_a), the binding pattern is also used in
 match-only mode, so its ``committer'' and ``binder'' steps (as described
-in @secref("bind-macro-protocol")) are not used.} When a further
+in @secref(~doc: model_doc, "bind-macro-protocol")) are not used.} When a further
 annotation wraps a converting annotation, however, the conversion must
 be computed to apply a predicate (even the @rhombus(Any, ~annot)
 predicate) or further conversion. The nested-annotation strategy is used

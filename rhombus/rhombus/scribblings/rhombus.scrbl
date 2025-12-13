@@ -24,7 +24,6 @@ documentation, see @docref(getting_started_doc).
 @include_section("guide/io.scrbl")
 @include_section("guide/macro.scrbl")
 @include_section("guide/annotation-overview.scrbl")
-@include_section("guide/static-overview.scrbl")
 @include_section("guide/lang.scrbl")
 @include_section("guide/running.scrbl")
 @include_section("guide/racket.scrbl")

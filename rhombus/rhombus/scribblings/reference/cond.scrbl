@@ -33,7 +33,7 @@
 
  Static information is gathered from @rhombus(then_body) and
  @rhombus(else_body) under the same conditions as the right-hand side of
- @rhombus(def) (see @secref(~doc: guide_doc, "static-info-rules")), and the information is
+ @rhombus(def) (see @secref(~doc: model_doc, "static-info-rules")), and the information is
  intersected to determine the static information of the @rhombus(if)
  form.
 
@@ -88,7 +88,7 @@
 
  Static information is gathered from @rhombus(clause_result_body)s or
  @rhombus(clause_result_expr) under the same conditions as the right-hand
- side of @rhombus(def) (see @secref(~doc: guide_doc, "static-info-rules")), and the
+ side of @rhombus(def) (see @secref(~doc: model_doc, "static-info-rules")), and the
  information is intersected to determine the static information of the
  @rhombus(cond) form.
 

@@ -4,6 +4,11 @@
 
 @title{Source Locations}
 
+A @deftech{source location} represents a source (typically using a
+@rhombus(Path, ~annot), an optional line number (counts from 1),
+optional column within the line (counts from 0), position within an
+overall source (counts from 1), and optional span.
+
 @doc(
   annot.macro 'Srcloc'
 ){

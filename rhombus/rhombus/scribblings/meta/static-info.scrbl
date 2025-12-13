@@ -33,7 +33,7 @@
  @rhombus(id) is bound in the @rhombus(statinfo, ~space)
  @tech{space}.
 
- See @secref(~doc: guide_doc, "annotation-macro") for an example.
+ See @secref(~doc: model_doc, "annotation-macro") for an example.
 
 }
 
@@ -50,7 +50,7 @@
  information must be in unpacked form (i.e.,
  @rhombus(statinfo_meta.pack) is applied automatically).
 
- See @secref(~doc: guide_doc, "annotation-macro") for an example.
+ See @secref(~doc: model_doc, "annotation-macro") for an example.
 
 }
 
@@ -70,7 +70,7 @@
  the key's symbolic form. Key identifiers should be defined with
  @rhombus(statinfo.key, ~defn).
 
- See @secref(~doc: guide_doc, "annotation-macro") for an example.
+ See @secref(~doc: model_doc, "annotation-macro") for an example.
 
 }
 
@@ -468,7 +468,7 @@
 
 )
 
- See @secref(~doc: guide_doc, "annotation-macro") for examples using some of these keys.
+ See @secref(~doc: model_doc, "annotation-macro") for examples using some of these keys.
 
 }
 
