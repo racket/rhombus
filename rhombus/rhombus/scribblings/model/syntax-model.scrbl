@@ -17,9 +17,9 @@ The syntax of a Rhombus program is defined by
  @item{An @deftech{expand} pass processes a @tech{syntax object} to
  produce one that is fully parsed and ready for evaluation. The expansion
  pass is extensible within Rhombus itself, so that the syntax of a
- Rhombus program can be customized @tech{Binding} information in a
- @tech{syntax object} drives the @tech{expansion} process, and when the
- @tech{expansion} process encounters a @tech{binding} form, it extends
+ Rhombus program can be customized. @tech{Binding} information in a
+ syntax object drives the @tech{expansion} process, and when the
+ expansion process encounters a binding form, it extends
  syntax objects for subexpressions with new binding information.}
 
 )
@@ -28,13 +28,13 @@ The syntax of a Rhombus program is defined by
 @section(~tag: "id-model"){Identifiers, Binding, and Scopes}
 
 An @deftech{identifier} is a source-program entity. Parsing (i.e.,
-expanding) a Rhombus program reveals that some @tech{identifiers}
+expanding) a Rhombus program reveals that some identifiers
 correspond to @tech{variables}, some refer to @tech{syntactic forms}
 (such as @rhombus(fun), which is the @tech{syntactic form} for
 functions), some refer to @tech{transformers} for macro expansion, and
 some are quoted to produce @tech(~doc: ref_doc){symbols} or @tech{syntax objects}. An
 identifier @deftech{binds} another (i.e., it is a @deftech{binding})
-when the former is parsed as a @tech{variable} or syntactic form and
+when the former is parsed as a variable or syntactic form and
 the latter is parsed as a @deftech{reference} to the former; the
 latter is @deftech{bound}.
 
@@ -45,7 +45,7 @@ For example, as a fragment of source, the text
   x
 )
 
-includes two @tech{identifiers}: @rhombus(def) and @rhombus(x) (which
+includes two identifiers: @rhombus(def) and @rhombus(x) (which
 appears twice). When this source is parsed in a context where
 @rhombus(def) has its usual meaning, the first @rhombus(x) @tech{binds}
 the second @rhombus(x).
@@ -54,32 +54,32 @@ Bindings and references are determined through @tech{scope sets}. A
 @deftech{scope} corresponds to a region of the program that is either
 in part of the source or synthesized through elaboration of the
 source. Nested binding contexts (such as nested functions) create
-nested @tech{scopes}, while macro expansion creates scopes that
-overlap in more complex ways. Conceptually, each @tech{scope} is
+nested scopes, while macro expansion creates scopes that
+overlap in more complex ways. Conceptually, each scope is
 represented by a unique token, but the token is not directly
-accessible. Instead, each @tech{scope} is represented by a value that
+accessible. Instead, each scope is represented by a value that
 is internal to the representation of a program.
 
 A @deftech{form} is a fragment of a program, such as an identifier or
-a function call. A @tech{form} is represented as a @tech{syntax
+a function call. A form is represented as a @tech{syntax
 object}, and each syntax object has an associated set of @tech{scopes}
 (i.e., a @deftech{scope set}). In the above example,
-the representations of the @rhombus(x)s include the @tech{scope} that
+the representations of the @rhombus(x)s include the scope that
 corresponds to the @rhombus(def) form.
 
-When a @tech{form} parses as the binding of a particular identifier,
+When a form parses as the binding of a particular identifier,
 parsing updates a global table that maps a combination of an
 identifier's @tech(~doc: ref_doc){symbol} and @tech{scope set} to its meaning: a
 @tech{variable}, a @tech{syntactic form}, or a @tech{transformer}. An
 identifier refers to a particular binding when the reference's symbol
 and the identifier's symbol are the same, and when the reference's
-@tech{scope set} is a superset of the binding's
-@tech{scope set}. For a given identifier, multiple bindings may have
-@tech{scope sets} that are subsets of the identifier's; in that case,
+scope set is a superset of the binding's
+scope set. For a given identifier, multiple bindings may have
+scope sets that are subsets of the identifier's; in that case,
 the identifier refers to the binding whose set is a superset of all
 others; if no such binding exists, the reference is ambiguous (and triggers a syntax
 error if it is parsed as an expression). A binding @deftech{shadows}
-any @tech{binding} (i.e., it is @deftech{shadowing} any @tech{binding})
+any binding (i.e., it is @deftech{shadowing} any binding)
 with the same symbol but a subset of scopes.
 
 For example, in
@@ -93,7 +93,7 @@ in a context where @rhombus(fun) corresponds to the usual
 @tech{syntactic form}, the parsing of @rhombus(fun) introduces a new
 scope for the binding of @rhombus(x). Since the second @rhombus(x)
 receives that scope as part of the @rhombus(fun) body, the first
-@rhombus(x) @tech{binds} the second @rhombus(x). In the more complex
+@rhombus(x) binds the second @rhombus(x). In the more complex
 case
 
 @rhombusblock(
@@ -103,20 +103,20 @@ case
 )
 
 the inner @rhombus(run) creates a second scope for the second
-@rhombus(x), so its @tech{scope set} is a superset of the first
-@rhombus(x)'s @tech{scope set}---which means that the binding for the
-second @rhombus(x) @tech{shadows} the one for the first @rhombus(x), and
+@rhombus(x), so its scope set is a superset of the first
+@rhombus(x)'s scope set---which means that the binding for the
+second @rhombus(x) shadows the one for the first @rhombus(x), and
 the third @rhombus(x) refers to the binding created by the second one.
 
 A @deftech{top-level binding} is a @tech{binding} from a definition at
 the top-level; a @deftech{module binding} is a binding from a
 definition in a module; all other bindings are @deftech{local
-bindings}. Within a module, references to @tech{top-level bindings}
+bindings}. Within a module, references to top-level bindings
 are disallowed. An identifier without a binding is @deftech{unbound}.
 
-Throughout the documentation, @tech{identifiers} are typeset to
+Throughout the documentation, identifiers are typeset to
 suggest the way that they are parsed. A hyperlinked identifier
-like @rhombus(run) indicates a reference to a syntactic form or
+like @rhombus(fun) indicates a reference to a syntactic form or
 variable. A plain identifier like @rhombus(x, ~datum) is a
 @tech{variable} or a reference to an unspecified @tech{top-level
 variable}.
@@ -143,18 +143,18 @@ bindings spaces through subforms like @rhombus(only_space, ~impo) and
 @subsection{Binding Phases}
 
 Every binding has a @deftech{phase level} in which it can be
-referenced, where a @tech{phase level} normally corresponds to an
+referenced, where a phase level normally corresponds to an
 integer (but the special @tech{label phase level} does not
-correspond to an integer).  @tech{Phase level} 0 corresponds to the
+correspond to an integer).  Phase level 0 corresponds to the
 run time of the enclosing module (or the run time of top-level
-expressions). Bindings in @tech{phase level} 0 constitute the
-@deftech{base environment}.  @tech{Phase level} 1 corresponds to the
+expressions). Bindings in phase level 0 constitute the
+@deftech{base environment}.  Phase level 1 corresponds to the
 time during which the enclosing module (or top-level expression) is
-expanded; bindings in @tech{phase level} 1 constitute the
+expanded; bindings in phase level 1 constitute the
 @deftech{transformer environment}.  Phase level -1 corresponds to the
 run time of a different module for which the enclosing module is
-imported for use at @tech{phase level} 1 (relative to the importing
-module); bindings in @tech{phase level} -1 constitute the
+imported for use at phase level 1 (relative to the importing
+module); bindings in phase level -1 constitute the
 @deftech{template environment}. The @deftech{label phase level} does not
 correspond to any execution time; it is used to track bindings (e.g.,
 to identifiers within documentation) without implying an execution
@@ -165,8 +165,8 @@ levels}. More precisely, the @tech{scope set} associated with a
 @tech{form} can be different at different phase levels; a top-level or
 module context implies a distinct scope at every phase level, while
 scopes from macro expansion or other syntactic forms are added to a
-form's @tech{scope sets} at all phases. The context of each binding
-and reference determines the @tech{phase level} whose @tech{scope set} is
+form's scope sets at all phases. The context of each binding
+and reference determines the phase level whose scope set is
 relevant.
 
 @// ------------------------------------------------------------------------
@@ -174,26 +174,26 @@ relevant.
 
 A @deftech{syntax object} combines a simpler Rhombus value, such as a symbol or list, with
 @tech{lexical information}, @tech{source-location} information, and @tech{syntax properties}.
-The @deftech{lexical information} of a @tech{syntax object} comprises a set of @tech{scope
+The @deftech{lexical information} of a syntax object comprises a set of @tech{scope
 sets}, one for each @tech{phase level}. In particular, an @tech{identifier} is represented as a syntax
-object containing a @tech(~doc: ref_doc){symbol}, and its @tech{lexical information} can be combined with the global
-table of bindings to determine its @tech{binding} (if any) at each @tech{phase level}.
+object containing a @tech(~doc: ref_doc){symbol}, and its lexical information can be combined with the global
+table of bindings to determine its @tech{binding} (if any) at each phase level.
 
-For example, a @rhombus(List, ~datum) @tech{identifier} might have
-@tech{lexical information} that designates it as the @rhombus(List) from
+For example, a @rhombus(List, ~datum) identifier might have
+lexical information that designates it as the @rhombus(List) from
 the @rhombuslangname(rhombus) language (i.e., the built-in
 @rhombus(List)). Similarly, a @rhombus(fun, ~datum) identifier's
-@tech{lexical information} may indicate that it represents a function
-form. Some other @tech{identifier}'s @tech{lexical information} may
+lexical information may indicate that it represents a function
+form. Some other identifier's lexical information may
 indicate that it references a @tech{top-level variable}.
 
-When a @tech{syntax object} represents a more complex expression than
-an @tech{identifier} or simple constant, its internal components can
+When a syntax object represents a more complex expression than
+an identifier or simple constant, its internal components can
 be extracted. Even for extracted identifiers, detailed information
 about binding is available mostly indirectly; two identifiers can be
 compared to determine whether they refer to the same binding (i.e.,
 @rhombus(syntax_meta.equal_binding)), or whether the identifiers have the same
-@tech{scope set} so that each identifier would bind the
+scope set so that each identifier would bind the
 other if one were in a binding position and the other in an expression
 position (i.e., @rhombus(syntax_meta.equal_name_and_scopes)).
 
@@ -204,20 +204,20 @@ For example, when the program written as
     x + 6
 )
 
-is represented as a @tech{syntax object}, then two @tech{syntax
-objects} can be extracted for the two @rhombus(x)s. Both the
+is represented as a syntax object, then two syntax
+objects can be extracted for the two @rhombus(x)s. Both the
 @rhombus(syntax_meta.equal_binding) and @rhombus(syntax_meta.equal_name_and_scopes)
 predicates will indicate that the @rhombus(x)s are the same. In contrast, the
-@rhombus(fun) @tech{identifier} is not @rhombus(syntax_meta.equal_binding)
+@rhombus(fun) identifier is not @rhombus(syntax_meta.equal_binding)
 or @rhombus(syntax_meta.equal_name_and_scopes) to either @rhombus(x).
 
-The @tech{lexical information} in a @tech{syntax object} is
-independent of the rest of the @tech{syntax object}, and it can be copied to a new syntax
+The lexical information in a syntax object is
+independent of the rest of the syntax object, and it can be copied to a new syntax
 object in combination with an arbitrary other Rhombus value. Thus,
-identifier-@tech{binding} information in a @tech{syntax object} is
-predicated on the symbolic name of the @tech{identifier} as well as
-the identifier's @tech{lexical information}; the same question with
-the same @tech{lexical information} but different base value can
+identifier-binding information in a syntax object is
+predicated on the symbolic name of the identifier as well as
+the identifier's lexical information; the same question with
+the same lexical information but different base value can
 produce a different answer.
 
 For example, combining the lexical information from @rhombus(fun) in
@@ -879,7 +879,7 @@ least one expression must appear after the last definition.
 Before partial expansion begins, expansion of an internal-definition
 context begins with the introduction of a fresh @deftech{outside-edge
 scope} on the content of the internal-definition context. This
-outside-edge scope effectively identifies syntax objects that are
+outside-edge @tech{scope} effectively identifies syntax objects that are
 present in the original form. An @deftech{inside-edge scope} is also
 created and added to the original content; furthermore, the
 inside-edge scope is added to the result of any partial expansion.
@@ -901,32 +901,32 @@ time, but also @deftech{visits} the referenced module when it is
 encountered by the expander. That is, the expander instantiates any
 variables defined in the module within @rhombus(meta), and it also
 evaluates all expressions for @tech{transformer} bindings via
-@rhombus(meta.bridge), @rhombus(expr_meta.macro) and similar.
+@rhombus(meta.bridge), @rhombus(expr.macro) and similar.
 
 Module @tech{visits} propagate through @rhombus(import)s in the same
 way as module @tech{instantiation}. Moreover, when a module is
-@tech{visit}ed at @tech{phase} 0, any module that it @rhombus(import)s
-@rhombus(import meta) is @tech{instantiate}d at @tech{phase} 1, while
+visited at @tech{phase} 0, any module that it imports with
+@rhombus(import meta) is instantiated at phase 1, while
 further @rhombus(import meta -1)s  leading back
-to @tech{phase} 0 causes the required module to be visited at
-@tech{phase} 0 (i.e., not @tech{instantiate}d).
+to phase 0 causes the required module to be visited at
+phase 0 (i.e., not instantiated).
 
 During compilation, the top-level of module context is itself
-implicitly @tech{visit}ed. Thus, when the expander encounters
+implicitly visited. Thus, when the expander encounters
 @rhombus(import meta), it immediately
-@tech{instantiate}s the required module at @tech{phase} 1, in addition
+instantiates the required module at phase 1, in addition
 to adding bindings at @tech{phase level} 1 (i.e., the
 @tech{transformer environment}). Similarly, the expander immediately
 evaluates any form that it encounters within
 @rhombus(meta).
 
-@tech{Phases} beyond 0 are @tech{visit}ed on demand. For example,
-when the right-hand side of a @tech{phase}-0 @rhombus(expr_meta.macro) is to
-be expanded, then modules that are @tech{available} at @tech{phase} 1
-are visited. More generally, initiating expansion at @tech{phase}
-@math{n} @tech{visit}s modules at @tech{phase} @math{n}, which in turn
-@tech{instantiates} modules at @tech{phase} @math{n+1}. These
-@tech{visits} and @tech{instantiations} apply to @tech{available}
+Phases beyond 0 are visited on demand. For example,
+when the right-hand side of a phase-0 @rhombus(expr.macro) is to
+be expanded, then modules that are @tech{available} at phase 1
+are visited. More generally, initiating expansion at phase
+@math{n} visits modules at phase @math{n}, which in turn
+instantiates modules at phase @math{n+1}. These
+visits and instantiations apply to available
 modules in the enclosing @tech{namespace}'s @tech{module registry};
 a per-registry lock prevents multiple threads from concurrently
 instantiating and visiting available modules.
@@ -937,9 +937,9 @@ of available modules uses the same reentrant lock as
 
 When the expander encounters @rhombus(import) and @rhombus(import meta)
 within a @tech{module context}, the resulting
-@tech{visits} and @tech{instantiations} are specific to the expansion
-of the enclosing module, and are kept separate from @tech{visits} and
-@tech{instantiations} triggered from a @tech{top-level context} or
+visits and instantiations are specific to the expansion
+of the enclosing module, and are kept separate from visits and
+instantiations triggered from a @tech{top-level context} or
 from the expansion of a different module.
 
 @//|--{Along the same lines, when a

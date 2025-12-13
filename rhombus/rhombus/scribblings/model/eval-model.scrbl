@@ -70,8 +70,8 @@ single-step simplification (highlighted), and the
 @deftech{continuation}, which is the evaluation
 context surrounding the redex. In @rhombus(4 - (1 + 1)), the redex is @rhombus((1 + 1)), and
 the continuation is @rhombus(4 - #,(hole)), where @hole takes the place
-of the @tech{redex} as it is reduced. That is, the continuation says how to ``continue''
-after the @tech{redex} is reduced to a @tech{value}.
+of the redex as it is reduced. That is, the continuation says how to ``continue''
+after the redex is reduced to a value.
 
 Before some expressions can be evaluated, some or all of their sub-expressions must be
 evaluated. For example, in the expression @rhombus(4 - (1 + 1)), the
@@ -89,20 +89,20 @@ evaluation steps during which the expression contains the @tech{redex}.
 
 An expression @rhombus(expr1, ~var) is in @deftech{tail position} with
 respect to an enclosing expression @rhombus(expr2, ~var) if, whenever
-@rhombus(expr1, ~var) becomes a redex, its @tech{continuation} is the same
-as was the enclosing @rhombus(expr2, ~var)'s @tech{continuation}.
+@rhombus(expr1, ~var) becomes a redex, its continuation is the same
+as was the enclosing @rhombus(expr2, ~var)'s continuation.
 
 For example, the @rhombus((1 + 1)) expression is @italic{not} in @tech{tail
  position} with respect to @rhombus(4 - (1 + 1)). To illustrate, we use
 the notation @sub(#,(_C), #,(@rhombus(expr, ~var))) to mean the expression that is produced by
-substituting @rhombus(expr, ~var) in place of @hole in some @tech{continuation}
+substituting @rhombus(expr, ~var) in place of @hole in some continuation
 @rhombus(C, ~var):
 
 @rhombusblock(
   #,(sub(#,(_C), 4 - (1 + 1))) #,(reduces) #,(sub(#,(_C), 4 - 2))
 )
 
-In this case, the @tech{continuation} for reducing @rhombus((1 + 1)) is
+In this case, the continuation for reducing @rhombus((1 + 1)) is
 @sub(#,(@_C), (4 - #,(hole))), not just @rhombus(C, ~var).
 The requirement specified in the first paragraph above is not met.
 
@@ -115,13 +115,13 @@ to @rhombus(if 0 == 0 | (1 + 1) | 3) because, for any continuation @_C,
 
 The requirement specified in the first paragraph is met.
 The steps in this reduction sequence are driven by the definition of
-@rhombus(if), and they do not depend on the @tech{continuation}
+@rhombus(if), and they do not depend on the continuation
 @_C. The ``then'' branch of an @rhombus(if) form is always in
-@tech{tail position} with respect to the @rhombus(if) form. Due to a
+tail position with respect to the @rhombus(if) form. Due to a
 similar reduction rule for @rhombus(if) and @rhombus(#false), the ``else''
-branch of an @rhombus(if) form is also in @tech{tail position}.
+branch of an @rhombus(if) form is also in tail position.
 
-@tech{Tail-position} specifications provide a guarantee about the
+Tail-position specifications provide a guarantee about the
 asymptotic space consumption of a computation. In general, the
 specification of tail positions accompanies the description of
 each syntactic form, such as @rhombus(if); subexpressions of a
@@ -134,9 +134,9 @@ A Rhombus expression can evaluate to @deftech{multiple values}, to
 provide symmetry with the fact that a function can accept multiple arguments.
 
 Most @tech{continuations} expect a certain number of result
-@tech{values}, although some @tech{continuations} can accept
-an arbitrary number. Indeed, most @tech{continuations}, such as
-@rhombus(#,(hole) + 1), expect a single @tech{value}. The @tech{continuation}
+@tech{values}, although some continuations can accept
+an arbitrary number. Indeed, most continuations, such as
+@rhombus(#,(hole) + 1), expect a single value. The continuation
 
 @rhombusblock(
   block:
@@ -145,9 +145,9 @@ an arbitrary number. Indeed, most @tech{continuations}, such as
 )
 
 expects two result
-@tech{values}; the first result replaces @rhombus(x) in
+values; the first result replaces @rhombus(x) in
 @rhombus(body, ~var), and the second replaces @rhombus(y) in
-@rhombus(body, ~var). The @tech{continuation}
+@rhombus(body, ~var). The continuation
 
 @rhombusblock(
   block:
@@ -155,15 +155,15 @@ expects two result
     1 + 2
 )
 
-accepts any number of result @tech{values}, because it ignores the
+accepts any number of result values, because it ignores the
 result(s).
 
 In general, the specification of a syntactic form indicates the
-number of @tech{values} that it produces and the number that it
+number of values that it produces and the number that it
 expects from each of its sub-expressions. In addition, some functions
-(notably @rhombus(values)) produce multiple @tech{values}, and some
+(notably @rhombus(values)) produce multiple values, and some
 functions (notably @rhombus(call_with_values)) create continuations
-internally that accept a certain number of @tech{values}.
+internally that accept a certain number of values.
 
 @// ------------------------------------------------------------------------
 @section{Top-Level Variables}
@@ -267,19 +267,19 @@ To explain such modifications to data, we must distinguish between
 @tech{values}, which are the results of expressions, and
 @deftech{objects}, which actually hold data.
 
-A few kinds of @tech{objects} can serve directly as values, including
+A few kinds of objects can serve directly as values, including
 booleans, @rhombus(#void), and small exact integers. More generally,
-however, a @tech{value} is a reference to an @tech{object} stored somewhere
-else. For example, a @tech{value} can refer to a particular array that
+however, a value is a reference to an object stored somewhere
+else. For example, a value can refer to a particular array that
 currently holds the value @rhombus(10) in its first slot. If an
-@tech{object} is modified via one @tech{value},
+object is modified via one value,
 then the modification is visible through
-all the @tech{values} that reference the @tech{object}.
+all the values that reference the object.
 
-In the evaluation model, a set of @tech{objects} must be carried along
+In the evaluation model, a set of objects must be carried along
 with each step in evaluation, just like the definition set. Operations
-that create @tech{objects}, such as @rhombus(Array), add to the set of
-@tech{objects}:
+that create objects, such as @rhombus(Array), add to the set of
+objects:
 
 @(
   prog_steps:
@@ -362,19 +362,19 @@ that create @tech{objects}, such as @rhombus(Array), add to the set of
 
 
 The distinction between a @tech{top-level variable} and an object
-reference is crucial. A @tech{top-level variable} is not a
+reference is crucial. A top-level variable is not a
 @tech{value}, so it must be evaluated. Each time
 a @tech{variable} expression is evaluated, the
 value of the variable is extracted from the current set of definitions. An object
 reference, in contrast, is a value and therefore needs no further
 evaluation. The evaluation steps above use @o1
 for an object reference to distinguish it from a
-@tech{variable} name.
+variable name.
 
 An object reference can never appear directly in a text-based source
 program. A program representation created with
 @rhombus(Syntax.make), however, can embed direct references to
-existing @tech{objects}.
+existing objects.
 
 @// ------------------------------------------------------------------------
 @section(~tag: "gc-model"){Garbage Collection}
@@ -398,24 +398,23 @@ In the program state
 
 evaluation cannot depend on @o2, because it is not part of the program
 to evaluate, and it is not referenced by any definition that is
-accessible by the program. The object is said to not be
-@deftech{reachable}. The @tech{object} @o2 may therefore be removed from
+accessible by the program. The @tech{object} is said to not be
+@deftech{reachable}. The object @o2 may therefore be removed from
 the program state by @deftech{garbage collection}.
 
 A few special compound datatypes hold @deftech{weak references} to
 objects. Such weak references are treated specially by the garbage
-collector in determining which @tech{objects} are reachable for the
-remainder of the computation. If an @tech{object} is reachable @italic{only}
-via a @tech{weak reference}, then the object can be reclaimed, and the
-@tech{weak reference} is replaced by a different @tech{value}
+collector in determining which objects are reachable for the
+remainder of the computation. If an object is reachable @italic{only}
+via a weak reference, then the object can be reclaimed, and the
+weak reference is replaced by a different value
 (typically @rhombus(#false)).
 
 As a special case, a @tech(~doc: ref_doc){fixnum} is always considered reachable by
 the garbage collector. Many other values are always reachable due to
-the way they are implemented and used: A @tech(~doc: ref_doc){character} in the
-Latin-1 range is always reachable, because @rhombus(==) Latin-1
-characters are always @rhombus(===), and all of the Latin-1 characters
-are referenced by an internal module. Similarly, @rhombus(PairList[]),
+the way they are implemented and used: A @tech(~doc: ref_doc){character}
+is always reachable, and @rhombus(==) 
+characters are always @rhombus(===). Similarly, @rhombus(PairList[]),
 @rhombus(#true), @rhombus(#false), @rhombus(Port.eof), and @rhombus(#void) are
 always reachable. Values produced by @rhombus(#%literal) remain reachable
 when the @rhombus(#%literal) expression itself is reachable.
@@ -478,14 +477,14 @@ an @tech{object}, so evaluating @rhombus(f(7)) starts with a
 If a variable like @rhombus(x) is made @rhombus(mutable, ~bind), however,
 the @tech{value} associated with the variable can be changed in the body of a function by using
 @rhombus(:=), as in the example @rhombus(fun (mutable x): x := 3; x).
-Since the @tech{value} associated with a @rhombus(mutable, ~bind) argument variable @rhombus(x) should be
+Since the value associated with a @rhombus(mutable, ~bind) argument variable @rhombus(x) should be
 able to change, we cannot just substitute the value in for @rhombus(x) when
 we first call the function.
 
-Instead, a new @deftech{location} is created for each @tech{variable}
-on each function call. The argument @tech{value} is placed in the
-@tech{location}, and each instance of the @tech{variable} in the
-function body is replaced with the new @tech{location}:
+Instead, a new @deftech{location} is created for each variable
+on each function call. The argument value is placed in the
+location, and each instance of the variable in the
+function body is replaced with the new location:
 
 @(
   prog_steps:
@@ -530,15 +529,15 @@ function body is replaced with the new @tech{location}:
 )
 
 A @tech{location} is the same as a @tech{top-level variable}, but when
-a @tech{location} is generated, it (conceptually) uses a name that has
+a location is generated, it (conceptually) uses a name that has
 not been used before and that cannot be generated again or
 accessed directly.
 
-Generating a @tech{location} in this way means that @rhombus(:=)
+Generating a location in this way means that @rhombus(:=)
 evaluates for @tech{local variables}, including argument
 variables, in the same way as for
-@tech{top-level variables}, because the @tech{local variable} is
-always replaced with a @tech{location} by the time the @rhombus(:=)
+@tech{top-level variables}, because the local variable is
+always replaced with a location by the time the @rhombus(:=)
 form is evaluated:
 
 @(
@@ -587,8 +586,8 @@ form is evaluated:
 The @tech{location}-generation and substitution step of function
 call requires that the argument is a @tech{value}. Therefore,
 in @rhombus((fun (mutable x): x + 10)(1 + 2)), the @rhombus(1 + 2)
-subexpression must be simplified to the @tech{value} @rhombus(3), and
-then @rhombus(3) can be placed into a @tech{location} for
+subexpression must be simplified to the value @rhombus(3), and
+then @rhombus(3) can be placed into a location for
 @rhombus(x). In other words, Rhombus is a @deftech{call-by-value}
 language.
 
@@ -601,21 +600,21 @@ Evaluation of a local-variable form, such as
 )
 
 is the same as for a function call. After @rhombus(1 + 2)
-produces a @tech{value}, it is stored in a fresh @tech{location}
+produces a value, it is stored in a fresh location
 that replaces every instance of @rhombus(x) in @rhombus(expr, ~var).
 
 @// ------------------------------------------------------------------------
 @section(~tag: "vars-and-locs"){Variables and Locations}
 
 A @deftech{variable} is a placeholder for a @tech{value}, and
-expressions in an initial program refer to @tech{variables}. A
-@deftech{top-level variable} is both a @tech{variable} and a
-@tech{location}. Any other @tech{variable} is always replaced by a
-@tech{location} at run-time---conceptually, even in the case of
+expressions in an initial program refer to variables. A
+@deftech{top-level variable} is both a variable and a
+@tech{location}. Any other variable is always replaced by a
+location at run-time---conceptually, even in the case of
 variables that are not @rhombus(mutable, ~bind). Thus, evaluation of expressions
-involves only @tech{locations}. A single @deftech{local variable}
-(i.e., a non-top-level, non-module-level @tech{variable}), such as an
-argument variable, can correspond to different @tech{locations}
+involves only locations. A single @deftech{local variable}
+(i.e., a non-top-level, non-module-level variable), such as an
+argument variable, can correspond to different locations
 during different calls.
 
 For example, in the program
@@ -624,29 +623,29 @@ For example, in the program
   def y = (block: let x = 5; x) + 6
 )
 
-both @rhombus(y) and @rhombus(x) are @tech{variables}. The @rhombus(y)
-@tech{variable} is a @tech{top-level variable}, and the @rhombus(x) is
-a @tech{local variable}. When this code is evaluated, a
-@tech{location} is created for @rhombus(x) to hold the value
-@rhombus(5), and a @tech{location} is also created for @rhombus(y) to
+both @rhombus(y) and @rhombus(x) are variables. The @rhombus(y)
+variable is a top-level variable, and the @rhombus(x) is
+a local variable. When this code is evaluated, a
+location is created for @rhombus(x) to hold the value
+@rhombus(5), and a location is also created for @rhombus(y) to
 hold the value @rhombus(11).
 
-The replacement of a @tech{variable} with a @tech{location} during
+The replacement of a variable with a location during
 evaluation implements Rhombus's @deftech{lexical scoping}.
 @margin_note{For the purposes of substituting @rhombus(xloc) for @rhombus(x),
 all variable bindings must use distinct names, so no @rhombus(x) that
 is really a different variable will get replaced. Ensuring that
 distinction is one of the jobs of the macro expander; see @secref("syntax-model").}
 For example, when an argument variable @rhombus(x) is replaced by
-the @tech{location} @rhombus(xloc), it is replaced @italic{throughout} the
+the location @rhombus(xloc), it is replaced @italic{throughout} the
 body of the function, including any nested @rhombus(fun)
-forms. As a result, future references to the @tech{variable} always
-access the same @tech{location}.
+forms. As a result, future references to the variable always
+access the same location.
 
 @// ------------------------------------------------------------------------
 @section(~tag: "module-eval-model"){Modules and Module-Level Variables}
 
-Most definitions in Rhombus are in @deftech{modules}. In terms of evaluation,
+Most definitions in Rhombus are within @deftech{modules}. In terms of evaluation,
 a module is essentially a prefix on a defined name, so that different
 modules can define the same name. That is, a @deftech{module-level
  variable} is like a @tech{top-level variable} from the perspective of
@@ -677,62 +676,62 @@ module-specific prefix).
 @subsection(~tag: "module-phase"){Phases}
 
 The purpose of @deftech{phases} is to
-address the necessary separation of names defined at execution time versus
+address the necessary separation of names defined at evaluation time versus
 names defined at expansion time.
 
-A module can be @tech{instantiate}d in multiple @tech{phases}. A
+A module can be @tech{instantiate}d in multiple phases. A
 phase is an integer that, like a module name, is effectively a prefix on the names
 of module-level definitions. Phase 0 is the run-time phase.
 
 A top-level @rhombus(import)
-@tech{instantiates} a module at @tech{phase} 0, if the module is not
-already @tech{instantiate}d at phase 0.  A top-level
-@rhombus(import meta) @tech{instantiates} a module at
-@tech{phase} 1 (if it is not already @tech{instantiate}d at that
+instantiates a module at phase 0, if the module is not
+already instantiated at phase 0.  A top-level
+@rhombus(import meta) instantiates a module at
+phase 1 (if it is not already instantiated at that
 phase); @rhombus(meta, ~impo) also has a different binding
 effect on further program parsing, as described in
 @secref("intro-binding").
 
 Within a module, some definitions are already shifted by a phase: the
-@rhombus(meta) form shifts expressions and definitions by a relative @tech{phase} +1.
-Thus, if the module is @tech{instantiate}d at phase 1,
+@rhombus(meta) form shifts expressions and definitions by a relative phase +1.
+Thus, if the module is instantiated at phase 1,
 the variables defined with @rhombus(meta) are created at phase 2,
 and so on. Moreover, this relative phase acts as another layer of
 prefixing, so that @rhombus(x) defined with @rhombus(def) and
 @rhombus(x) defined with @rhombus(meta def) can co-exist in a module
 without colliding. A @rhombus(meta) form can be nested
 within a @rhombus(meta) form, in which case the inner definitions and
-expressions are in relative @tech{phase} +2, and so on. Higher phases are
+expressions are in relative phase +2, and so on. Higher phases are
 mainly related to program parsing instead of normal evaluation.
 
-If a module @tech{instantiate}d at @tech{phase} @math{n}
-@rhombus(import)s another module, then the @rhombus(import)ed module is
-first @tech{instantiate}d at phase @math{n}, and so on
+If a module instantiated at phase @math{n}
+@rhombus(import)s another module, then the imported module is
+first instantiated at phase @math{n}, and so on
 transitively. (Module @rhombus(import)s cannot form cycles.) If a
-module @tech{instantiate}d at phase @math{n} @rhombus(import)s
+module instantiated at phase @math{n} imports
 another module @rhombus(M, ~var) with @rhombus(meta), then @rhombus(M, ~var) becomes
-@deftech{available} at @tech{phase} @math{n+1}, and it later may be
-@tech{instantiate}d at @tech{phase} @math{n+1}.  If a module that is
-@tech{available} at phase @math{n} (for @math{n>0}) @rhombus(import)s
+@deftech{available} at phase @math{n+1}, and it later may be
+instantiated at phase @math{n+1}.  If a module that is
+available at phase @math{n} (for @math{n>0}) @rhombus(import)s
 another module @rhombus(M, ~var) with @rhombus(meta -1), then @rhombus(M, ~var) becomes
-@tech{available} at @tech{phase} @math{n-1}, and so
-on. @tech{Instantiation}s of @tech{available} modules above
-@tech{phase} 0 are triggered on demand as described in
+available at phase @math{n-1}, and so
+on. Instantiations of available modules above
+phase 0 are triggered on demand as described in
 @secref("mod-parse").
 
-A final distinction among module @tech{instantiations} is that
-multiple @tech{instantiations} may exist at @tech{phase} 1 and
-higher. These @tech{instantiations} are created by the parsing of
+A final distinction among module instantiations is that
+multiple instantiations may exist at phase 1 and
+higher. These instantiations are created by the parsing of
 module forms (see @secref("mod-parse")), and are, again, conceptually
 distinguished by prefixes.
 
 Top-level variables can exist in multiple phases in the same way as
 within modules. For example, @rhombus(def) within @rhombus(meta) creates a
-@tech{phase} 1 variable. Furthermore, reflective operations like
+phase 1 variable. Furthermore, reflective operations like
 @rhombus(Evaluator.make_rhombus) and @rhombus(eval) provide access to
-top-level variables in higher @tech{phases}, while module
-@tech{instantiations} (triggered by @rhombus(import)) relative to such
-top-levels are in correspondingly higher @tech{phase}s.
+top-level variables in higher phases, while module
+instantiations (triggered by @rhombus(import)) relative to such
+top-levels are in correspondingly higher phases.
 
 @// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 @subsection(~tag: "module-redeclare"){Module Redeclarations}
@@ -749,7 +748,7 @@ declaration, it effectively assigns to the old variable.
 
 If a module is @tech{instantiate}d in the current namespace's
 @tech{base phase} before the module is redeclared, the redeclaration
-of the module is immediately @tech{instantiate}d in that
+of the module is immediately instantiated in that
 @tech{phase}.
 
 If the current @tech{inspector} does not manage a module's declaration
@@ -824,7 +823,7 @@ particular, when an exception handler is called, a continuation
 barrier prohibits the continuation of the handler from capturing the
 continuation past the exception point.
 
-An @deftech{escape continuation} is essentially a derived concept. It
+An @deftech{escape continuation} is a derived concept. It
 combines a prompt for escape purposes with a continuation for
 mark-gathering purposes. As the name implies, escape continuations are
 used only to abort to the point of capture.
@@ -836,8 +835,10 @@ used only to abort to the point of capture.
 
 Rhombus supports multiple @deftech{threads} of evaluation.  Threads run
 concurrently, in the sense that one thread can preempt another without
-its cooperation, but threads currently all run on the same processor
-(i.e., the same underlying operating system process and thread).
+its cooperation, independent of whether the threads all run on the same processor
+(i.e., the same underlying operating system process and thread) as
+@tech(~doc: ref_doc){coroutine threads} or potentially on different
+processors as @tech(~doc: ref_doc){parallel threads}.
 
 Threads are created explicitly by forms such as @rhombus(thread).
 In terms of the evaluation model, each step in evaluation
@@ -845,7 +846,7 @@ actually deals with multiple concurrent
 expressions, up to one per thread, rather than a single expression. The expressions all
 share the same objects and top-level variables, so that they can
 communicate through shared state, and @defterm{sequential consistency} is
-guaranteed (i.e., the result is consistent with some global sequence
+guaranteed for coroutine threads (i.e., the result is consistent with some global sequence
 imposed on all evaluation steps across threads). Most evaluation steps involve a
 single step in a single thread, but certain synchronization
 primitives require multiple threads to progress together in one step; for example,
@@ -886,31 +887,12 @@ for the cell in the created thread. For a non-preserved thread cell, a
 new thread sees the same initial value (specified when the thread cell
 is created) as all other threads.
 
-@//|=={
-
-@tech{Futures} and @tech{places} offer different kinds of concurrency
-and parallelism, and they have weaker guarantees about shared state.
-(Places can share state through functions like
-@racket[make-shared-bytes].) Each thread of evaluation in a future or
-place is constrained to behave consistent with the possibility of some
-other thread that might inspect any shared data starting at any point
-that a future or place starts. In the case that two futures or two
-places share state, each read or write operation to shared state
-corresponds to a read or write operation at the virtual-memory level,
-and the operations are constrained to the order they could be observed
-or affected by a thread. However, Rhombus does not enforce additional
-guarantees about reordering that might be performed at the
-virtual-memory level or below, except in the case of operations that
-specify such guarantees explicitly (e.g., @racket[box-cas!]).
-
-}==|
-
 @// ------------------------------------------------------------------------
 @section(~tag: "parameter-model"){Context Parameters}
 
 @margin_note{See @secref(~doc: ref_doc, "context-parameters") for context-parameter forms and functions.}
 
-@deftech{Context parameters} are essentially a derived concept in Rhombus; they
+@deftech{Context parameters} are a derived concept in Rhombus; they
 are defined in terms of @tech{continuation marks} and @tech{thread
  cells}. However, parameters are also ``built in,'' due to the fact that some
 primitive functions consult parameter values. For example, the
@@ -928,7 +910,7 @@ a @deftech{parameterization} that is associated with the nearest
 enclosing continuation frame via a continuation mark (whose key is
 not directly accessible). A parameterization maps each parameter to a
 preserved thread cell, and the combination of the thread cell and the current
-thread yields the parameter's value. A @tech{parameter function} sets or
+thread yields the parameter's value. A parameter function sets or
 accesses the relevant thread cell for its parameter.
 
 Various operations, such as @rhombus(parameterize), install a parameterization into
@@ -939,7 +921,7 @@ the current continuation's frame.
 
 @margin_note{See @secref(~doc: ref_doc, "Exceptions") for exception forms, functions, and types.}
 
-@deftech{Exceptions} are essentially a derived concept in Rhombus; they
+@deftech{Exceptions} are a derived concept in Rhombus; they
 are defined in terms of continuations, prompts, and continuation
 marks.  However, exceptions are also ``built in,'' due to the fact that
 primitive forms and functions may throw exceptions.
@@ -947,11 +929,11 @@ primitive forms and functions may throw exceptions.
 An @deftech{exception handler} to @deftech{catch} exceptions can be associated
 with a continuation frame though a @tech{continuation mark} (whose key
 is not directly accessible). When an exception is thrown, the current
-continuation's marks determine a chain of @tech{exception handler}
+continuation's marks determine a chain of exception-handler
 functions that are consulted to handle the exception.
 A handler for uncaught exceptions is designated through a built-in @tech{context parameter}.
 
-One potential action of an @tech{exception handler} is to abort the
+One potential action of an exception handler is to abort the
 current @tech{continuation} up to an enclosing @tech{prompt} with a
 particular @tech{prompt tag}.  The default handler for uncaught
 exceptions, in particular, aborts to a particular tag for which a
@@ -971,12 +953,12 @@ Whenever a thread, etc., is created, it is placed under the management
 of the @deftech{current custodian} as determined by the
 @rhombus(Custodian.current) @tech{context parameter}.
 
-Except for the root custodian, every @tech{custodian} itself is
-managed by a @tech{custodian}, so that custodians form a hierarchy.
+Except for the root custodian, every custodian itself is
+managed by a custodian, so that custodians form a hierarchy.
 Every object managed by a subordinate custodian is also managed by the
 custodian's owner.
 
-When a @tech{custodian} is shut down via
+When a custodian is shut down via
 @rhombus(Custodian.shutdown_all), it forcibly and immediately closes
 the ports, TCP connections, etc., that it manages, as well as
 terminating (or suspending) its threads. A custodian that has been
