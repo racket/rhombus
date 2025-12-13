@@ -261,8 +261,8 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  When @rhombus(maybe_res_annot) is present, it provides an annotation for
  the function's result, but only for the corresponding case if a
  @rhombus(maybe_res_annot) is present in a multi-case function written with
- @(vbar). In the case of a checked annotation using @rhombus(::), the
- function's body is @emph{not} in tail position with respect to a call to
+ @(vbar). In the case of a checked annotation using @rhombus(::, ~bind), the
+ function's body is @emph{not} in @tail_position with respect to a call to
  the function, since a check will be applied to the function's result.
  When @rhombus(maybe_res_annot) is present for a function declared with
  cases afterward, a @rhombus(maybe_res_annot) applies to all cases, in addition to any
@@ -293,6 +293,10 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
     ~error:
       things_to_say("Nachos")
 )
+
+ When @rhombus(::, ~bind) is not used for a result declaration, then the
+ @rhombus(body) in a function expression or definition is in
+ @tail_position with respect to a call of the function.
 
  When @rhombus(~doc) is present as an @rhombus(option) and @rhombus(fun) is used in a
  declaration context, then a @rhombus(doc, ~datum) submodule splice is

@@ -48,6 +48,8 @@
  result of the corresponding @rhombus(result_body) block. The keyword
  @rhombus(~else) can be used as a synonym for a pattern that always
  matches without binding any identifiers in the last clause.
+ Each @rhombus(result_body) is in @tail_position with respect to the
+ @rhombus(match) form.
 
  Typically, a @nontermref(bind) in @rhombus(values_bind) imposes requirement on a value and binds
  some number of identifiers as a result of a successful match. For

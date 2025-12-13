@@ -114,7 +114,8 @@ parameter's value using @rhombus(parameterize).
  Returns the result of the @rhombus(body) block as evaluated in a fresh
  parameterization that binds the @tech{context parameter} produced by
  each @rhombus(parameter_expr) to the value produced by the corresponding
- @rhombus(val_body) sequence.
+ @rhombus(val_body) sequence. The @rhombus(body) is in @tail_position with
+ respect to the @rhombus(parameterize) form.
 
  If a context parameter for a @rhombus(parameter_expr) is mutated during
  the evaluation of @rhombus(body), the mutation is not preserved

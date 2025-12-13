@@ -126,6 +126,11 @@ identifiers, expressions, or binding patterns.
  In some cases, the expanded form of the @rhombus(body) sequence must end
  with an expression to provide a result value.
 
+ When a @rhombus(body) ends with an @rhombus(expr), the @rhombus(expr)
+ is in @tail_position with respect to the @rhombus(body). That's relevant
+ if the @rhombus(body) is specified to be in tail position with respect
+ to an enclosing form.
+
 }
 
 @doc(

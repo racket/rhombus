@@ -16,7 +16,8 @@
 
  Returns the result of the @rhombus(body) block, which may include local
  definitions in the case of an expression use of @rhombus(block) (but not
- a repetition use of @rhombus(block)).
+ a repetition use of @rhombus(block)). The @rhombus(body) is in @tail_position
+ with respect to the @rhombus(block) form.
 
 @examples(
   block:

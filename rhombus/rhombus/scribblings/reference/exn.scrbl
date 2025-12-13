@@ -110,8 +110,9 @@
       println("doesn't get here")
 )
 
- The last @rhombus(body) form of @rhombus(try) is not in tail position
- if any of @rhombus(~escape_as), @rhombus(~initially), @rhombus(~catch), or @rhombus(~finally)
+ The last @rhombus(body) form of @rhombus(try) is in @tail_position with
+ respect to @rhombus(try) only when no
+ @rhombus(~escape_as), @rhombus(~initially), @rhombus(~catch), or @rhombus(~finally)
  is present. If none are present, the @rhombus(try) form is the same as
  @rhombus(block).
 

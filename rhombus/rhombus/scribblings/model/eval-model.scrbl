@@ -123,8 +123,9 @@ branch of an @rhombus(if) form is also in @tech{tail position}.
 
 @tech{Tail-position} specifications provide a guarantee about the
 asymptotic space consumption of a computation. In general, the
-specification of @tech{tail positions} accompanies the description of
-each syntactic form, such as @rhombus(if).
+specification of tail positions accompanies the description of
+each syntactic form, such as @rhombus(if); subexpressions of a
+form are not in tail position unless documented otherwise.
 
 @// ------------------------------------------------------------------------
 @section(~tag: "values-model"){Multiple Return Values}

@@ -27,7 +27,9 @@
 
  If @rhombus(test_expr) produces a true value (which is value other than
  @rhombus(#false)), returns the result of the @rhombus(then_body) clause,
- otherwise returns the result of the @rhombus(else_body) clause.
+ otherwise returns the result of the @rhombus(else_body) clause. The
+ @rhombus(then_body) and @rhombus(else_body) are in @tail_position with
+ respect to the @rhombus(if) form.
 
  Static information is gathered from @rhombus(then_body) and
  @rhombus(else_body) under the same conditions as the right-hand side of
@@ -78,7 +80,8 @@
  produces a non-@rhombus(#false) value, returns the result of the
  corresponding @rhombus(clause_result_body) block. The keyword
  @rhombus(~else) can be used as a synonym for @rhombus(#true) in the last
- clause.
+ clause. Each @rhombus(clause_result_body) is in @tail_position with
+ respect to the @rhombus(cond) form.
 
  If no @rhombus(clause_test_expr) produces a true value and there is no
  @rhombus(~else) clause, a run-time exception is thrown.
@@ -102,7 +105,8 @@
 
  If @rhombus(test_expr) produces a true value (which is value other than
  @rhombus(#false)), returns the result of the @rhombus(body) clause,
- otherwise returns @rhombus(#void).
+ otherwise returns @rhombus(#void). The @rhombus(body) is in
+ @tail_position with respect to the @rhombus(when) form.
 
 @examples(
   when #true
@@ -122,8 +126,10 @@
                 ...'
 ){
 
- If @rhombus(test_expr) produces @rhombus(#false), returns the result
- of the @rhombus(body) clause, otherwise returns @rhombus(#void).
+ If @rhombus(test_expr) produces @rhombus(#false), returns the result of
+ the @rhombus(body) clause, otherwise returns @rhombus(#void). The
+ @rhombus(body) is in @tail_position with respect to the @rhombus(unless)
+ form.
 
 @examples(
   unless #true

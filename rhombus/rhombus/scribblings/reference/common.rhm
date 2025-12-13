@@ -1,5 +1,9 @@
 #lang rhombus
 import:
   "../common.rhm"
+  rhombus/scribble/manual
 export:
   all_from(.common)
+  tail_position
+
+def tail_position = @manual.tech(~doc: common.model_doc){tail position}

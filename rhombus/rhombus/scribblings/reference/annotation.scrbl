@@ -11,7 +11,8 @@
 ){
 
  Checks that the value of @rhombus(expr) satisfies @rhombus(annot),
- and returns the value if so.
+ and returns the value if so. The @rhombus(expr) is @emph{not} in
+ @tail_position with respect to the @rhombus(::) expression.
 
  If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation},
  the converted value is returned.
@@ -51,7 +52,8 @@
  Associates static information to the overall expression the same as
  @rhombus(::), but performs no run-time check on the value of
  @rhombus(expr). The @rhombus(annot) must specify a @tech(~doc: guide_doc){predicate
-  annotation}.
+  annotation}. The @rhombus(expr) is in @tail_position with respect to
+ the @rhombus(::) expression.
 
 @examples(
   [1, 2, 3] :~ List

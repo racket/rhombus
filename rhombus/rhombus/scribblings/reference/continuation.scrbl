@@ -75,7 +75,8 @@ or by using it with @rhombus(Continuation.in).
 
  Captures the continuation of the @rhombus(Continuation.capture)
  expression, binds it to @rhombus(id), and then evaluates the
- @rhombus(body) sequence in tail position. The continuation is
+ @rhombus(body) sequence in @tail_position with respect to the
+ @rhombus(Continuation.capture) form. The continuation is
  callable as a function that accepts values to deliver to the
  continuation, but it can also be used with @rhombus(Continuation.in).
 
@@ -105,7 +106,8 @@ or by using it with @rhombus(Continuation.in).
  continuation produced by @rhombus(cont_expr), as opposed to
  delivering values to it. More precisely, the current continuation is
  extended with the captured continuation, and the @rhombus(body)
- sequence is evaluated with that as the continuation.
+ sequence is evaluated with that as the continuation and (i.e., in
+ @tail_position with respect to to the capture of the continuation).
 
 }
 
@@ -204,7 +206,7 @@ or by using it with @rhombus(Continuation.in).
 
  Sets the current frame's continuation mark for the result of
  @rhombus(key_expr) to the result of @rhombus(val_expr) and evaluates the
- @rhombus(body) sequence in tail position.
+ @rhombus(body) sequence in @tail_position.
 
 }
 
@@ -217,7 +219,7 @@ or by using it with @rhombus(Continuation.in).
   )
 ){
 
- Calls @rhombus(fn) in tail position, providing as its argument the
+ Calls @rhombus(fn) in @tail_position, providing as its argument the
  current frame's mark value for @rhombus(key), or @rhombus(default) if the
  current frame has no mark for @rhombus(key).
 
