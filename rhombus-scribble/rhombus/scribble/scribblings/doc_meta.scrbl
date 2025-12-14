@@ -33,6 +33,7 @@
 }
 
 @doc(
+  ~meta
   fun doc_meta.transformer(
     ~extract_desc: extract_desc :: Function.of_arity(1),
     ~extract_space: extract_space :: Function.of_arity(1),
@@ -110,7 +111,11 @@
 
    )}
 
-  )}
+  )
+
+  To convert a name (potentially dotted) to one of these forms, use
+  @rhombus(doc_meta.extract_name) or
+  @rhombus(doc_meta.extract_identifier_name).}
 
  @item{@rhombus(extract_metavariables): Takes a syntax object, a space
   or space list (produced by @rhombus(extract_space)), and a set of names
@@ -120,11 +125,13 @@
 
  @item{@rhombus(extract_typeset): Takes a syntax object, a space, space
   list, or list of space lists (produced by @rhombus(extract_space)), and
-  a function or list of converter functions. Each converter function
-  converts a syntax object at the location of the defined name and
-  produces a syntax object for the typeset replacement. The result should
-  be a syntax object to use as an expression that produces the typeset
-  form, typically produced via @rhombus(doc_meta.typeset_rhombusblock).
+  a function or list of converter functions.
+
+  Each converter function converts an identifier or map (like a result
+  from @rhombus(extract_name)) and produces a syntax object for the
+  typeset replacement. The result should be a syntax object to use as an
+  expression that produces the typeset form, typically produced via
+  @rhombus(doc_meta.typeset_rhombusblock).
 
   Each convert function accepts optional arguments:
 
@@ -164,52 +171,95 @@
 }
 
 @doc(
-  fun head_extract_name(
+  ~meta
+  fun doc_meta.extract_name(
     stx :: Syntax, space :: SpaceName
-  ) :: Identifier || List
-  fun parens_extract_name(
+  ) :: Identifier || Map
+  fun doc_meta.extract_identifier_name(
     stx :: Syntax, space :: SpaceName
-  ) :: Identifier || List
-  fun operator_macro_extract_name(
-    stx :: Syntax, space :: SpaceName
-  ) :: Identifier || List
-  fun identifier_macro_extract_name(
-    stx :: Syntax, space :: SpaceName
-  ) :: Identifier || List
+  ) :: Identifier || Map
+){
 
-  fun head_extract_metavariables(
-    stx :: Syntax, space :: SpaceName, vars :: Map
-  ) :: Map
-  fun parens_extract_metavariables(
-    stx :: Syntax, space :: SpaceName, vars :: Map
-  ) :: Map
-  fun operator_macro_extract_metavariables(
-    stx :: Syntax, space :: SpaceName, vars :: Map
-  ) :: Map
-  fun identifier_macro_extract_metavariables(
-    stx :: Syntax, space :: SpaceName, vars :: Map
-  ) :: Map
+ Converts a potentially dotted name to an identifier or map suitable as
+ a result for a @rhombus(~extract_name) function for
+ @rhombus(doc_meta.transformer).
 
-  fun head_extract_typeset(
-    stx :: Syntax, space :: SpaceName, subst
-  ) :: Syntax
-  fun parens_extract_typeset(
-    stx :: Syntax, space :: SpaceName, subst
-  ) :: Syntax
-  fun operator_macro_extract_typeset(
-    stx :: Syntax, space :: SpaceName, subst
-  ) :: Syntax
-  fun identifier_macro_extract_typeset(
+}
+
+@doc(
+  ~meta
+  fun doc_meta.head_extract_name(
+    stx :: Syntax, space :: SpaceName
+  ) :: Identifier || Map || List
+  fun doc_meta.head_extract_metavariables(
+    stx :: Syntax, space :: SpaceName, vars :: Map
+  ) :: Map
+  fun doc_meta.head_extract_typeset(
     stx :: Syntax, space :: SpaceName, subst
   ) :: Syntax
 ){
 
  Extraction functions for use with @rhombus(doc_meta.transformer) that
- handle common documentation patterns.
+ handle a form that starts with two names, where the second is the name
+ to document (while the first name is the documentation form's name).
 
 }
 
 @doc(
+  ~meta
+  fun doc_meta.parens_extract_name(
+    stx :: Syntax, space :: SpaceName
+  ) :: Identifier || Map || List
+
+  fun doc_meta.parens_extract_metavariables(
+    stx :: Syntax, space :: SpaceName, vars :: Map
+  ) :: Map
+
+  fun doc_meta.parens_extract_typeset(
+    stx :: Syntax, space :: SpaceName, subst
+  ) :: Syntax
+){
+
+ Extraction functions for use with @rhombus(doc_meta.transformer) that
+ are like @rhombus(doc_meta.head_extract_name), etc., but also check that
+ the second name is followed by a parenthesized sequence of groups as a
+ term.
+
+}
+
+@doc(
+  ~meta
+  fun doc_meta.operator_macro_extract_name(
+    stx :: Syntax, space :: SpaceName
+  ) :: Identifier || Map || List
+  fun doc_meta.identifier_macro_extract_name(
+    stx :: Syntax, space :: SpaceName
+  ) :: Identifier || Map || List
+
+  fun doc_meta.operator_macro_extract_metavariables(
+    stx :: Syntax, space :: SpaceName, vars :: Map
+  ) :: Map
+  fun doc_meta.identifier_macro_extract_metavariables(
+    stx :: Syntax, space :: SpaceName, vars :: Map
+  ) :: Map
+
+  fun doc_meta.operator_macro_extract_typeset(
+    stx :: Syntax, space :: SpaceName, subst
+  ) :: Syntax
+  fun doc_meta.identifier_macro_extract_typeset(
+    stx :: Syntax, space :: SpaceName, subst
+  ) :: Syntax
+){
+
+ Extraction functions for use with @rhombus(doc_meta.transformer) that
+ handle a form that starts with a name (the documentation form's name)
+ followed by a quoted pattern, analogous to @rhombus(macro) or
+ @rhombus(expr.macro).
+
+}
+
+@doc(
+  ~meta
   fun doc_meta.add_metavariable(
     vars :: Map,
     id :: Identifier,
@@ -223,6 +273,7 @@
 }
 
 @doc(
+  ~meta
   fun doc_meta.typeset_rhombusblock(
     form :: Syntax,
     ~at: at_form :: Syntax = form,

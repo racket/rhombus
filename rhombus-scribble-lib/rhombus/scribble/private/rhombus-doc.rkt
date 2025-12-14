@@ -7,7 +7,8 @@
                      enforest/deprecated
                      rhombus/private/enforest
                      rhombus/private/name-path-op
-                     racket/list)
+                     racket/list
+                     rhombus/private/pack)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
          (submod "doc.rkt" for-class)
@@ -33,7 +34,10 @@
 
 (module+ for_doc_transformer
   (provide
-   (for-syntax head-extract-name
+   (for-syntax extract-name
+               extract-identifier-name
+
+               head-extract-name
                parens-extract-name
                identifier-macro-extract-name
                operator-macro-extract-name
@@ -146,17 +150,15 @@
         [else target]))
     (define target-raw (syntax-raw-property target))
     (define raw-prefix (hash-ref resolved 'raw-prefix #f))
-    (datum->syntax
-     #f
-     (cond
-       [raw-prefix
-        (let* ([ht (if (identifier? def-ht)
-                       (hash 'target def-ht)
-                       def-ht)]
-               [ht (hash-set ht 'raw_prefix raw-prefix)])
-          ht)]
-       [else
-        def-ht])))
+    (cond
+      [raw-prefix
+       (let* ([ht (if (identifier? def-ht)
+                      (hash 'target def-ht)
+                      def-ht)]
+              [ht (hash-set ht 'raw_prefix raw-prefix)])
+         ht)]
+      [else
+       def-ht]))
 
   (define-splicing-syntax-class (identifier-target space-name #:raw [raw #f])
     #:attributes (name sym)
@@ -167,7 +169,7 @@
                                                       (syntax->list #'(field ...))
                                                       #:raw raw))]
              #:when resolved
-             #:with name (resolved->typeset resolved raw)
+             #:attr name (resolved->typeset resolved raw)
              #:attr sym (car (reverse (syntax->datum #'(root field ...)))))
     (pattern (~seq name:identifier)
              #:attr sym (syntax-e #'name)))
@@ -180,7 +182,7 @@
                                                       (syntax->list #'(field ... opname))
                                                       #:parens #'ptag))]
              #:when resolved
-             #:with name (resolved->typeset resolved #f)
+             #:attr name (resolved->typeset resolved #f)
              #:attr sym (syntax->datum #'opname))
     (pattern (~seq (op name:identifier))
              #:attr sym (syntax-e #'name))
@@ -189,20 +191,32 @@
 (define-for-syntax (none-extract-spacer-infos stx space-names)
   (map (lambda (x) #f) space-names))
 
-(define-for-syntax (head-extract-name stx space-name)
-  (syntax-parse stx
+(define-for-syntax (extract-name stx space-name)
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals (group)
-    [(group _ (~var id (identifier-target space-name)) . _) #'id.name]))
+    [(group (~var id (target space-name))) (attribute id.name)]
+    [_ #f]))
+
+(define-for-syntax (extract-identifier-name stx space-name)
+  (syntax-parse (unpack-group stx #f #f)
+    #:datum-literals (group)
+    [(group (~var id (identifier-target space-name))) (attribute id.name)]
+    [_ #f]))
+
+(define-for-syntax (head-extract-name stx space-name)
+  (syntax-parse (unpack-group stx #f #f)
+    #:datum-literals (group)
+    [(group _::doc-form (~var id (identifier-target space-name)) . _) (attribute id.name)]))
 
 (define-for-syntax (head-dot-head-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group op |.|)
-    [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) #'id.name]))
+    [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) (attribute id.name)]))
 
 (define-for-syntax (parens-extract-name stx space-name)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals (group parens)
-    [(group _ (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]))
+    [(group _::doc-form (~var id (identifier-target space-name)) (parens . _) . _) (attribute id.name)]))
 
 (define-for-syntax (parens-extract-metavariables stx space-name vars #:just-parens? [just-parens? #f])
   (define (extract-groups stx)
@@ -240,19 +254,21 @@
        (for/fold ([vars vars]) ([g (in-list (syntax->list #'gs))])
          (extract-binding-metavariables g vars))]))
   (if just-parens?
-      (syntax-parse stx
+      (syntax-parse (unpack-group stx #f #f)
         #:datum-literals (parens)
         [(parens . gs)
-         (extract-groups #'gs)])
-      (syntax-parse stx
+         (extract-groups #'gs)]
+        [_ vars])
+      (syntax-parse (unpack-group stx #f #f)
         #:datum-literals (parens group)
-        [(group _ (~var _ (identifier-target space-name)) (parens . gs) . _)
-         (extract-groups #'gs)])))
+        [(group _::doc-form (~var _ (identifier-target space-name)) (parens . gs) . _)
+         (extract-groups #'gs)]
+        [_ vars])))
 
 (define-for-syntax (parens-extract-spacer-infos stx space-names)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals (parens group op ::)
-    [(group _ (~var _ (identifier-target (caar space-names))) (parens . gs) (op ::) . ret)
+    [(group _::doc-form (~var _ (identifier-target (caar space-names))) (parens . gs) (op ::) . ret)
      (ret-extract-spacer-infos #'ret)]
     [_ #f]))
 
@@ -261,10 +277,10 @@
     [(identifier? name)
      name]
     [else
-     (define ht (syntax-e name))
+     (define ht (if (syntax? name) (syntax-e name) name))
      (define t (hash-ref ht 'target #f))
      (define root (hash-ref ht 'root #f))
-     (define root-syms (syntax->datum (hash-ref ht 'root-syms #'#f)))
+     (define root-syms (hash-ref ht 'root-syms #'#f))
      (if root
          (hash 'id t 'sym sym 'root_id root 'root_syms root-syms)
          t)]))
@@ -279,34 +295,35 @@
     [(id:identifier (alts . _))
      (hash 'result_annotation #'id)]
     [((~var id (identifier-target 'rhombus/annot)))
-     (hash 'result_annotation (target->dotted-identifier #'id.name (attribute id.sym)))]
+     (hash 'result_annotation (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
     [_
      #f]))
 
 (define-for-syntax (identifier-macro-extract-name stx space-name)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals (group op quotes parens)
-    [(group _::doc-form (quotes (group (parens (group (~var id (identifier-target space-name)))) . _) . _)) #'id.name]
-    [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _) . _)) #'id.name]
-    [(group _::doc-form (quotes (~var id (identifier-target space-name)))) #'id.name]))
+    [(group _::doc-form (quotes (group (parens (group (~var id (identifier-target space-name)))) . _) . _)) (attribute id.name)]
+    [(group _::doc-form (quotes (group (~var id (identifier-target space-name)) . _) . _)) (attribute id.name)]
+    [(group _::doc-form (quotes (~var id (identifier-target space-name)))) (attribute id.name)]
+    [_ #f]))
 
 (define-for-syntax (operator-macro-extract-name stx space-name)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals ($ group op quotes)
-    [(group _::doc-form (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
-    [(group _::doc-form (quotes (group (~var id (target space-name)) . _))) #'id.name]
+    [(group _::doc-form (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) (attribute id.name)]
+    [(group _::doc-form (quotes (group (~var id (target space-name)) . _))) (attribute id.name)]
     [_ (identifier-macro-extract-name stx space-name)]))
 
 (define-for-syntax (space-extract-name stx space-name)
   (syntax-parse stx
     #:datum-literals (group)
-    [(group _::doc-form (~var id (identifier-target space-name))) #'id.name]))
+    [(group _::doc-form (~var id (identifier-target space-name))) (attribute id.name)]))
 
 (define-for-syntax (head-extract-metavariables stx space-name vars)
   vars)
 
 (define-for-syntax (identifier-macro-extract-metavariables stx space-name vars)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals (group op quotes parens)
     [(group _::doc-form (quotes (group (parens (group (~var _ (identifier-target space-name)))) t ...)
                                 (group t2 ...)
@@ -317,10 +334,11 @@
                                 ...))
      (extract-pattern-metavariables #'(group t ... t2 ... ...) vars)]
     [(group _::doc-form (quotes (~var _ (identifier-target space-name))))
-     vars]))
+     vars]
+    [_ vars]))
 
 (define-for-syntax (operator-macro-extract-metavariables stx space-name vars)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals ($ group op quotes)
     [(group _::doc-form (quotes (group (op $) t0:identifier (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group (op $) t0 t ...) vars)]
@@ -333,59 +351,59 @@
     #:datum-literals (group)
     [(group _::doc-form (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
-         #`(group #,@(subst #'id.name) e ...))]))
+         #`(group #,@(subst (attribute id.name)) e ...))]))
 
 (define-for-syntax (head-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals (group)
-    [(group tag (~var id (identifier-target space-name)) e ...)
+    [(group tag::doc-form (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
-         #`(group tag #,@(subst #'id.name) e ...))]))
+         #`(group (~@ . tag) #,@(subst (attribute id.name)) e ...))]))
 
 (define-for-syntax (head-dot-head-extract-typeset stx space-name subst)
   (syntax-parse stx
     #:datum-literals (group)
     [(group tag dot tag2 (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
-         #`(group tag dot tag2 #,@(subst #'id.name) e ...))]))
+         #`(group tag dot tag2 #,@(subst (attribute id.name)) e ...))]))
 
 (define-for-syntax (parens-extract-typeset stx space-name subst)
   (head-extract-typeset stx space-name subst))
 
 (define-for-syntax (identifier-macro-extract-typeset stx space-name subst)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals ($ group op quotes)
     [(group _::doc-form (quotes (~and g (group (parens (group (~var id (identifier-target space-name)))) e ...))))
      ;; just one group; don't keep `group` tag prefix and suffix
      (rb #:at #'g
          #:pattern? #t
-         #`(group #,@(subst #'id.name) e ...))]
+         #`(group #,@(subst (attribute id.name)) e ...))]
     [(group _::doc-form (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
      ;; just one group; don't keep `group` tag prefix and suffix
      (rb #:at #'g
          #:pattern? #t
-         #`(group #,@(subst #'id.name) e ...))]
+         #`(group #,@(subst (attribute id.name)) e ...))]
     [(group _::doc-form (quotes (~and g ((~and g-tag group) (~var id (identifier-target space-name)) e ...)) g2 ...))
      (rb #:at #'g
          #:pattern? #t
          #`(multi
-            (g-tag #,@(subst #'id.name) e ...)
+            (g-tag #,@(subst (attribute id.name)) e ...)
             g2
             ...))]
     [(group _::doc-form (quotes (~var id (identifier-target space-name))))
-     #`(paragraph plain #,(subst #'id.name))]))
+     #`(paragraph plain #,(subst (attribute id.name)))]))
 
 (define-for-syntax (operator-macro-extract-typeset stx space-name subst)
-  (syntax-parse stx
+  (syntax-parse (unpack-group stx #f #f)
     #:datum-literals ($ group op quotes)
     [(group _::doc-form (quotes (~and g (group (~and $0 (op $)) e0:identifier (~var id (target space-name)) e ...))) . more)
      (rb #:at #'g
          #:pattern? #t
-         #`(group $0 e0 #,@(subst #'id.name) e ...))]
+         #`(group $0 e0 #,@(subst (attribute id.name)) e ...))]
     [(group _::doc-form (quotes (~and g (group (~var id (target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
-         #`(group #,@(subst #'id.name) e ...))]
+         #`(group #,@(subst (attribute id.name)) e ...))]
     [_ (identifier-macro-extract-typeset stx space-name subst)]))
 
 (define-doc meta.bridge meta
@@ -500,9 +518,9 @@
   (syntax-parse stx
     #:datum-literals (group block)
     [(group head ... (block (group #:method_fallback (~var id (identifier-target 'rhombus/annot)))))
-     (hash 'method_fallback (target->dotted-identifier #'id.name (attribute id.sym)))]
+     (hash 'method_fallback (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
     [(group head ... (block (group #:method_fallback (block (group (~var id (identifier-target 'rhombus/annot)))))))
-     (hash 'method_fallback (target->dotted-identifier #'id.name (attribute id.sym)))]
+     (hash 'method_fallback (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
     [(group head ... (block (~and fallback (group #:method_fallback . _))))
      (raise-syntax-error #f
                          "invalid method-fallback clause"
@@ -633,11 +651,11 @@
   (define r-root (hash-ref resolved 'root))
   (cond
     [r-root
-     (datum->syntax #f (hash 'root r-root
-                             ;; 'raw property used to typeset object
-                             'target target
-                             ;; string for key, index, and search:
-                             'raw (hash-ref resolved 'raw)))]
+     (hash 'root r-root
+           ;; 'raw property used to typeset object
+           'target target
+           ;; string for key, index, and search:
+           'raw (hash-ref resolved 'raw))]
     [else target]))
 
 (define-for-syntax (dotted-to-identifier head tail)
@@ -731,7 +749,7 @@
     ;; allow plain-function form
     [(group tag (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
-         #`(group as_class_clause tag #,@(subst #'id.name) e ...))]))
+         #`(group as_class_clause tag #,@(subst (attribute id.name)) e ...))]))
 
 (define-for-syntax (method-extract-spacer-infos stx space-names #:property? [property? #f])
   (syntax-parse stx
@@ -802,14 +820,14 @@
   (lambda (stx space-name)
     (syntax-parse stx
       #:datum-literals (group |.| op)
-      [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) #'id.name]))
+      [(group _ (op |.|) _ (~var id (identifier-target space-name)) . _) (attribute id.name)]))
   (lambda (stx space-name vars) vars)
   (lambda (stx space-name subst)
     (syntax-parse stx
       #:datum-literals (group |.| op)
       [(group ns (~and dot (op |.|)) tag (~var id (identifier-target space-name)) e ...)
        (rb #:at stx
-           #`(group ns dot tag #,@(subst #'id.name) e ...))])))
+           #`(group ns dot tag #,@(subst (attribute id.name)) e ...))])))
 
 (define-doc operator
   "operator"
@@ -818,8 +836,8 @@
   (lambda (stx space-name)
     (syntax-parse stx
       #:datum-literals (group parens)
-      [(group _ (parens (group (~var id (target space-name)) arg1)) . _) #'id.name]
-      [(group _ (parens (group arg1 (~var id (target space-name)) arg2)) . _) #'id.name]))
+      [(group _ (parens (group (~var id (target space-name)) arg1)) . _) (attribute id.name)]
+      [(group _ (parens (group arg1 (~var id (target space-name)) arg2)) . _) (attribute id.name)]))
   (lambda (stx space-name vars)
     (syntax-parse stx
       #:datum-literals (group parens)
@@ -833,10 +851,10 @@
       #:datum-literals (group parens)
       [(group tag ((~and p-tag parens) ((~and g-tag group) (~var id (target space-name)) arg)) e ...)
        (rb #:at stx
-           #`(group tag (p-tag (g-tag #,@(subst #'id.name) arg)) e ...))]
+           #`(group tag (p-tag (g-tag #,@(subst (attribute id.name)) arg)) e ...))]
       [(group tag ((~and p-tag parens) ((~and g-tag group) arg0 (~var id (target space-name)) arg1)) e ...)
        (rb #:at stx
-           #`(group tag (p-tag (g-tag arg0 #,@(subst #'id.name) arg1)) e ...))])))
+           #`(group tag (p-tag (g-tag arg0 #,@(subst (attribute id.name)) arg1)) e ...))])))
 
 (define-doc operator_order.def operator_order
   "operator order"
@@ -858,7 +876,7 @@
   (lambda (stx space-name)
     (syntax-parse stx
       #:datum-literals (group)
-      [(group _ (~var id (identifier-target space-name)) . _) #'id.name]))
+      [(group _ (~var id (identifier-target space-name)) . _) (attribute id.name)]))
   (lambda (stx space-name vars)
     (syntax-parse stx
       #:datum-literals (group parens)
@@ -871,7 +889,7 @@
       #:datum-literals (group)
       [(group tag (~var id (identifier-target space-name)) e ...)
        (rb #:at stx
-           #`(group tag #,@(subst #'id.name) e ...))])))
+           #`(group tag #,@(subst (attribute id.name)) e ...))])))
 
 (define-for-syntax (class-extract-descs stx)
   (syntax-parse stx
@@ -912,12 +930,12 @@
     #:datum-literals (group block parens)
     [(group _ (~var id (identifier-target space-name)) (parens field ...) . _)
      (cons
-      #'id.name
+      (attribute id.name)
       (for/list ([field (in-list (syntax->list #'(field ...)))])
         (define (field-name->name sym)
           (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
             [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
-             #'sym.name]))
+             (attribute sym.name)]))
         (syntax-parse field
           #:datum-literals (group block mutable)
           [(group mutable id:identifier . _)
@@ -956,7 +974,7 @@
             ((~and p-tag parens) field ...)
             e ...)
      (rb #:at stx
-         #`(group tag #,@((car substs) #'id.name)
+         #`(group tag #,@((car substs) (attribute id.name))
                   (p-tag #,@(for/list ([field (in-list (syntax->list #'(field ...)))]
                                        [subst (in-list (cdr substs))])
                               (syntax-parse field
@@ -1031,11 +1049,11 @@
     [(group _ (~var id (identifier-target space-name))
             rhs::enum-rhs)
      (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
-       (cons #'id.name
+       (cons (attribute id.name)
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
                  [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
-                  #'sym.name]))))]))
+                  (attribute sym.name)]))))]))
 
 (define-for-syntax (enum-extract-typeset stx space-namess substs)
   (syntax-parse stx
@@ -1070,11 +1088,11 @@
              #:datum-literals (block)
              [(((~and block block-tag) _ ...))
               (rb #:at stx
-                  #`(group form #,@((car substs) #'id.name)
+                  #`(group form #,@((car substs) (attribute id.name))
                            (block-tag new-clause ...)))]
              [((alts-tag (block-tag . _) ...))
               (rb #:at stx
-                  #`(group form #,@((car substs) #'id.name)
+                  #`(group form #,@((car substs) (attribute id.name))
                            (alts-tag (block-tag new-clause) ...)))]))))]))
 
 (define-for-syntax (enum-extract-syms clauses)
@@ -1126,7 +1144,7 @@
                                      (rb #'(group t ...)
                                          #:at g
                                          #:pattern? #t
-                                         #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))))])))])))))
+                                         #:options #'(parens (group #:inset (block (group (parsed #:rhombus/expr #f))))))])))])))))
 
 (define-doc-syntax non_target
   (let ()
@@ -1179,8 +1197,8 @@
        #:datum-literals (group block)
        [(group _ (block option0 option ...))
         (rb #:at #'option0
-            #:options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))
-                                 (group #:space (block (group rhombus/operator_order #f)))))
+            #:options #'(parens (group #:inset (block (group (parsed #:rhombus/expr #f))))
+                                (group #:space (block (group rhombus/operator_order #f))))
             #'(multi option0 option ...))]))))
 
 (define (typeset-grammar id . prods)

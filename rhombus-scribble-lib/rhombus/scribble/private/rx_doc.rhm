@@ -19,18 +19,18 @@ doc.bridge #{rx.macro}:
   doc_meta.transformer(
     ~extract_desc: fun (stx): "regexp operator",
     ~extract_space: fun (stx): #'#{rhombus/rx},
-    ~extract_name: operator_macro_extract_name,
-    ~extract_metavariables: operator_macro_extract_metavariables,
-    ~extract_typeset: operator_macro_extract_typeset
+    ~extract_name: doc_meta.operator_macro_extract_name,
+    ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+    ~extract_typeset: doc_meta.operator_macro_extract_typeset
   )
 
 doc.bridge #{rx_charset.macro}:
   doc_meta.transformer(
     ~extract_desc: fun (stx): "regexp charset operator",
     ~extract_space: fun (stx): #'#{rhombus/rx_charset},
-    ~extract_name: operator_macro_extract_name,
-    ~extract_metavariables: operator_macro_extract_metavariables,
-    ~extract_typeset: operator_macro_extract_typeset
+    ~extract_name: doc_meta.operator_macro_extract_name,
+    ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+    ~extract_typeset: doc_meta.operator_macro_extract_typeset
   )
 
 spacer.bridge rx(self, tail, context, esc):

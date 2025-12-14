@@ -97,7 +97,9 @@
           extract-term-metavariables
           extract-group-metavariables
           extract-binding-metavariables
-          extract-pattern-metavariables))
+          extract-pattern-metavariables
+          wrap-expr
+          unwrap-expr))
 
 (begin-for-syntax
   (define (build-dotted-name ids-stx)
@@ -120,9 +122,9 @@
     #:datum-literals (parens group op |.|)
     (pattern (~seq (op name)))
     (pattern (~seq (~seq head-id:identifier (op |.|)) ... (parens (group (op tail-op))))
-             #:with name (build-dotted-name #'(head-id ... tail-op)))
+             #:attr name (build-dotted-name #'(head-id ... tail-op)))
     (pattern (~seq (~seq head-id:identifier (op |.|)) ... tail-id:identifier)
-             #:with name (build-dotted-name #'(head-id ... tail-id)))))
+             #:attr name (build-dotted-name #'(head-id ... tail-id)))))
 
 (define-syntax (typeset-doc stx)
   (syntax-parse stx
@@ -139,7 +141,12 @@
                 (group
                  (brackets content-group ...))))
      #:with (_ . err-stx) stx
-     (define pre-forms (map (lambda (stx) (datum->syntax #f (syntax-e stx)))
+     (define pre-forms (map (lambda (stx) (datum->syntax #f (let ([g (syntax-e stx)])
+                                                              ;; remove any group prefix or suffix
+                                                              (cons (syntax-raw-suffix-property
+                                                                     (syntax-raw-prefix-property (car g) #f)
+                                                                     #f)
+                                                                    (cdr g)))))
                             (syntax->list #'((group-tag form ...) ...))))
      ;; expand `~include`s:
      (define-values (forms include-bodys)
@@ -260,14 +267,14 @@
                                         (cond
                                           [def-name
                                             (unless (or (identifier? def-name)
-                                                        (and (hash? (syntax-e def-name))
-                                                             (identifier? (hash-ref (syntax-e def-name) 'target #f))))
+                                                        (and (hash? def-name)
+                                                             (identifier? (hash-ref def-name 'target #f))))
                                               (raise-syntax-error 'doc
                                                                   "identifier or syntax hash table with 'target key"
                                                                   def-name))
                                             (define def-ht (if (identifier? def-name)
                                                                (hash 'target def-name)
-                                                               (syntax-e def-name)))
+                                                               def-name))
                                             (unless (eq? space-name 'grammar)
                                               (define def-id (let ([root (hash-ref def-ht 'root #f)])
                                                                (if root
@@ -359,7 +366,9 @@
                                          (hash-ref immed-def-ht 'target)
                                          (and str-id
                                               (or (and index-str
-                                                       (syntax-e index-str))
+                                                       (if (syntax? index-str)
+                                                           (syntax-e index-str)
+                                                           index-str))
                                                   (shrubbery-syntax->string str-id))))
                                      space-name))
               (define raw-prefix-str
@@ -407,7 +416,9 @@
                                #f
                                #,(make-typeset-id kind-rev-strs)
                                #,(if raw-prefix-str
-                                     (string-length (syntax-e raw-prefix-str))
+                                     (string-length (if (syntax? raw-prefix-str)
+                                                        (syntax-e raw-prefix-str)
+                                                        raw-prefix-str))
                                      0))))
                      rev-mk-as-defs)
                (cons seen-key rev-keys)
@@ -862,9 +873,16 @@
                  (from-property from)))
   (define substs
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
-      (define (subst name #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
-        (define id (if (identifier? name) name (hash-ref (syntax-e name) 'target)))
-        (define prefix-str (and (hash? (syntax-e name)) (hash-ref (syntax-e name) 'raw_prefix #f)))
+      (define (subst name-in #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
+        (define name (cond
+                       [(hash? name-in) name-in]
+                       [else (let ([t (and (syntax? name-in)
+                                           (unpack-term name-in #f #f))])
+                               (cond
+                                 [(identifier? t) t]
+                                 [else (raise-argument-error* 'subst 'rhombus "Identifier || Map" name-in)]))]))
+        (define id (if (identifier? name) name (hash-ref name 'target)))
+        (define prefix-str (and (hash? name) (hash-ref name 'raw_prefix #f)))
         (define exp
           (cond
             [(not def-id-as-def)
@@ -1064,24 +1082,28 @@
                     form
                     #:at [at-form form]
                     #:pattern? [pattern? #f]
-                    #:options [options #'((parens (group #:inset (block (group (parsed #:rhombus/expr #f))))))])
+                    #:options [options #'(parens (group #:inset (block (group (parsed #:rhombus/expr #f)))))])
   (with-syntax ([t-form (if pattern?
                             (drop-pattern-escapes form)
                             form)]
                 [t-block (syntax-raw-property
                           (datum->syntax #f 'block
-                                         (syntax-parse at-form
-                                           #:datum-literals (op parens)
-                                           [(_ (op a) . _) #'a]
-                                           [(_ (seq . _) . _) #'seq]
-                                           [(_ a . _) #'a]))
+                                         (let loop ([at-form at-form])
+                                           (syntax-parse at-form
+                                             #:datum-literals (op parens group)
+                                             [(group (op a) . _) #'a]
+                                             [(group (seq . _) . _) #'seq]
+                                             [(group a . _) #'a]
+                                             [(multi a . _) (loop #'a)]
+                                             [_ at-form])))
                           "")]
-                [(option ...) options])
+                [options options])
     (with-syntax ([body (syntax-parse #'t-form
                           #:datum-literals (multi group)
                           [(group . _) #'(t-block t-form)]
-                          [(multi g g2 ...) #'(t-block g g2 ...)])])
-      #'(rhombus-expression (group rhombusblock_etc option ... body)))))
+                          [(multi g g2 ...) #'(t-block g g2 ...)]
+                          [_ #'(t-block (group t-form))])])
+      #'(rhombus-expression (group rhombusblock_etc options body)))))
 
 (define-for-syntax (drop-pattern-escapes g)
   (syntax-parse g
@@ -1112,4 +1134,15 @@
                                  (car (loop (list b)))))
                      (loop (cdr ts)))]
               [_ (cons (car ts) (loop (cdr ts)))])])))
-     #`(g #,@new-ts)]))
+     #`(g #,@new-ts)]
+    [_ (drop-pattern-escapes #`(group #,g))]))
+
+(define-for-syntax (wrap-expr stx)
+  (syntax-parse stx
+    #:literals (rhombus-expression)
+    #:datum-literals (parsed)
+    [(rhombus-expression g) #'g]
+    [_ #`(group (parsed #:rhombus/expr #,stx))]))
+
+(define-for-syntax (unwrap-expr stx proc)
+  #`(rhombus-expression #,(unpack-group stx proc #f)))

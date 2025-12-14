@@ -5,6 +5,8 @@ import:
     expose:
       #{doc-typeset-rhombusblock}
       #{add-metavariable}
+      #{wrap-expr}
+      #{unwrap-expr}
   "rhombus-doc.rkt"!for_doc_transformer open
   shrubbery/render/spacer.SpaceName
 
@@ -16,18 +18,6 @@ export:
   doc
   meta:
     doc_meta
-    head_extract_name
-    parens_extract_name
-    operator_macro_extract_name
-    identifier_macro_extract_name
-    head_extract_metavariables
-    parens_extract_metavariables
-    operator_macro_extract_metavariables
-    identifier_macro_extract_metavariables
-    head_extract_typeset
-    parens_extract_typeset
-    operator_macro_extract_typeset
-    identifier_macro_extract_typeset
 
 space.transform doc:
   space_path rhombus/doc
@@ -38,6 +28,20 @@ space.transform doc:
       transformer
       add_metavariable
       typeset_rhombusblock
+      extract_name
+      extract_identifier_name
+      head_extract_name
+      parens_extract_name
+      operator_macro_extract_name
+      identifier_macro_extract_name
+      head_extract_metavariables
+      parens_extract_metavariables
+      operator_macro_extract_metavariables
+      identifier_macro_extract_metavariables
+      head_extract_typeset
+      parens_extract_typeset
+      operator_macro_extract_typeset
+      identifier_macro_extract_typeset
 
 meta:
   fun transformer(~extract_desc: extract_desc :: Function.of_arity(1),
@@ -65,7 +69,8 @@ meta:
                                                            PairList[order, ...],
                                 ~#{extract-name}: extract_name,
                                 ~#{extract-metavariables}: extract_metavariables,
-                                ~#{extract-typeset}: extract_typeset,
+                                ~#{extract-typeset}: fun (stx, spaces, subst):
+                                                       #{unwrap-expr}(extract_typeset(stx, spaces, subst), extract_typeset),
                                 ~#{extract-spacer-infos}: fun (stx, PairList[PairList[spc, ...], ...]):
                                                              match extract_spacer_infos(stx, [[spc, ...], ...])
                                                              | [m, ...]: PairList[m, ...]
@@ -80,34 +85,39 @@ meta:
                            ~at: at_form :: Syntax = form,
                            ~is_pattern = #false,
                            ~options: options :: Term = '(~inset: #false)'):
-    #{doc-typeset-rhombusblock}(form,
-                                ~at: at_form,
-                                ~#{pattern?}: is_pattern,
-                                ~options: options)
+    #{wrap-expr}(#{doc-typeset-rhombusblock}(form,
+                                             ~at: at_form,
+                                             ~#{pattern?}: is_pattern,
+                                             ~options: options))
 
-  fun head_extract_name(stx :: Syntax, space :: SpaceName):
+  fun extract_name(stx :: Group, space :: SpaceName):
+    #{extract-name}(stx, space)
+  fun extract_identifier_name(stx :: Group, space :: SpaceName):
+    #{extract-identifier-name}(stx, space)
+
+  fun head_extract_name(stx :: Group, space :: SpaceName):
     #{head-extract-name}(stx, space)
-  fun parens_extract_name(stx :: Syntax, space :: SpaceName):
+  fun parens_extract_name(stx :: Group, space :: SpaceName):
     #{parens-extract-name}(stx, space)
-  fun operator_macro_extract_name(stx :: Syntax, space :: SpaceName):
+  fun operator_macro_extract_name(stx :: Group, space :: SpaceName):
     #{operator-macro-extract-name}(stx, space)
-  fun identifier_macro_extract_name(stx :: Syntax, space :: SpaceName):
+  fun identifier_macro_extract_name(stx :: Group, space :: SpaceName):
     #{identifier-macro-extract-name}(stx, space)
 
-  fun head_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+  fun head_extract_metavariables(stx :: Group, space :: SpaceName, vars :: Map) :: Map:
     #{head-extract-metavariables}(stx, space, vars)
-  fun parens_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+  fun parens_extract_metavariables(stx :: Group, space :: SpaceName, vars :: Map) :: Map:
     #{parens-extract-metavariables}(stx, space, vars)
-  fun operator_macro_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+  fun operator_macro_extract_metavariables(stx :: Group, space :: SpaceName, vars :: Map) :: Map:
     #{operator-macro-extract-metavariables}(stx, space, vars)
-  fun identifier_macro_extract_metavariables(stx :: Syntax, space :: SpaceName, vars :: Map) :: Map:
+  fun identifier_macro_extract_metavariables(stx :: Group, space :: SpaceName, vars :: Map) :: Map:
     #{identifier-macro-extract-metavariables}(stx, space, vars)
 
-  fun head_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
-    #{head-extract-typeset}(stx, space, subst)
-  fun parens_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
-    #{parens-extract-typeset}(stx, space, subst)
-  fun operator_macro_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
-    #{operator-macro-extract-typeset}(stx, space, subst)
-  fun identifier_macro_extract_typeset(stx :: Syntax, space :: SpaceName, subst) :: Syntax:
-    #{identifier-macro-extract-typeset}(stx, space, subst)
+  fun head_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
+    #{wrap-expr}(#{head-extract-typeset}(stx, space, subst))
+  fun parens_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
+    #{wrap-expr}(#{parens-extract-typeset}(stx, space, subst))
+  fun operator_macro_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
+    #{wrap-expr}(#{operator-macro-extract-typeset}(stx, space, subst))
+  fun identifier_macro_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
+    #{wrap-expr}(#{identifier-macro-extract-typeset}(stx, space, subst))

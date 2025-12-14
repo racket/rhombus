@@ -17,9 +17,9 @@ namespace lex_pattern:
     doc_meta.transformer(
       ~extract_desc: fun (stx): "lex pattern operator",
       ~extract_space: fun (stx): #'#{rhombus/parser/lex_pattern},
-      ~extract_name: operator_macro_extract_name,
-      ~extract_metavariables: operator_macro_extract_metavariables,
-      ~extract_typeset: operator_macro_extract_typeset
+      ~extract_name: doc_meta.operator_macro_extract_name,
+      ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+      ~extract_typeset: doc_meta.operator_macro_extract_typeset
     )
 
 spacer.bridge lexer(self, tail, context, esc):
