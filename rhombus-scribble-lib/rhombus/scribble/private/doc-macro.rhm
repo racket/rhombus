@@ -7,6 +7,7 @@ import:
       #{add-metavariable}
       #{wrap-expr}
       #{unwrap-expr}
+      #{group-content}
   "rhombus-doc.rkt"!for_doc_transformer open
   shrubbery/render/spacer.SpaceName
 
@@ -123,10 +124,21 @@ meta:
     #{identifier-macro-extract-metavariables}(stx, space, vars)
 
   fun head_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
-    #{wrap-expr}(#{head-extract-typeset}(stx, space, subst))
-  fun parens_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
-    #{wrap-expr}(#{parens-extract-typeset}(stx, space, subst))
+    #{wrap-expr}(#{head-extract-typeset}(stx, space, ungroup(subst)))
+  fun parens_extract_typeset(stx :: Group, space :: SpaceName,subst) :: Group:
+    #{wrap-expr}(#{parens-extract-typeset}(stx, space,  ungroup(subst)))
   fun operator_macro_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
-    #{wrap-expr}(#{operator-macro-extract-typeset}(stx, space, subst))
+    #{wrap-expr}(#{operator-macro-extract-typeset}(stx, space, ungroup(subst)))
   fun identifier_macro_extract_typeset(stx :: Group, space :: SpaceName, subst) :: Group:
-    #{wrap-expr}(#{identifier-macro-extract-typeset}(stx, space, subst))
+    #{wrap-expr}(#{identifier-macro-extract-typeset}(stx, space, ungroup(subst)))
+
+  fun ungroup(subst_in):
+    fun subst(id :: Identifier || Map,
+              ~as_wrap = #true,
+              ~as_redef = #false,
+              ~as_meta = #false):
+      #{group-content}(subst_in(id,
+                                ~as_wrap: as_wrap,
+                                ~as_redef: as_redef,
+                                ~as_meta: as_meta))
+    subst

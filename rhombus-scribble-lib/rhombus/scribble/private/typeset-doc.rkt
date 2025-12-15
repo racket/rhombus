@@ -99,7 +99,8 @@
           extract-binding-metavariables
           extract-pattern-metavariables
           wrap-expr
-          unwrap-expr))
+          unwrap-expr
+          group-content))
 
 (begin-for-syntax
   (define (build-dotted-name ids-stx)
@@ -1151,3 +1152,8 @@
 
 (define-for-syntax (unwrap-expr stx proc)
   #`(rhombus-expression #,(unpack-group stx proc #f)))
+
+(define-for-syntax (group-content stx)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(group . c) #'c]))
