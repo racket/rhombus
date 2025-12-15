@@ -873,7 +873,7 @@
                  (from-property from)))
   (define substs
     (for/list ([def-id-as-def (in-list def-id-as-defs)])
-      (define (subst name-in #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f])
+      (define (subst name-in #:as_wrap [wrap? #t] #:as_redef [as-redef? #f] #:as_meta [meta? #f] #:as_group [as-group? #f])
         (define name (cond
                        [(hash? name-in) name-in]
                        [else (let ([t (and (syntax? name-in)
@@ -899,14 +899,19 @@
           [wrap?
            (datum->syntax
             #f
-            (list
-             (list 'op (relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
-             (list
-              (relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
-              ;; span is taken from `parens` above, so more nested srclocs don't matter
-              #`(group (parsed #:rhombus/expr
-                               #,exp)))))]
-          [else exp]))
+            (let ([l (list
+                      (list 'op (relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
+                      (list
+                       (relocate #'parens id syntax-raw-suffix-property syntax-raw-suffix-property)
+                       ;; span is taken from `parens` above, so more nested srclocs don't matter
+                       #`(group (parsed #:rhombus/expr
+                                        #,exp))))])
+              (if as-group?
+                  (cons 'group l)
+                  l)))]
+          [else (if as-group?
+                    #`(group (parsed #:rhombus/expr #,exp))
+                    exp)]))
       subst))
   ((doc-transformer-extract-typeset t) stx
                                        (if single? (car space-names) space-names)

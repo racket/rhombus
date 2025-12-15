@@ -2613,4 +2613,36 @@ html:
                                  href:
                                    "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._.String._rhombus%2Fannot%29%29"}:
                                 "String"
+          section:
+            h2:
+              "9"
+              span {class: "stt"}: nbsp
+              a:«»
+              "Doc Meta"
+              span {class: "button-group"}:
+                a {class: "heading-anchor", href: "#(part._.Doc_.Meta)"}: "🔗"
+                span {style: "visibility: hidden"}: " "
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "thing"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "thing"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._math._%28math..abs._~23false%29%29%29"}:
+                                    "math.abs"
+              div {class: "SIntrapara"}: "Actually a function."
     div: nbsp

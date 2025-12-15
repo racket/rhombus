@@ -14,6 +14,7 @@
           String
           ReadableString
           Port
+          math
       rhombus/meta:
         expose:
           expr
@@ -268,4 +269,31 @@ Starting example:
     DocumentedClass.documented_property1
     DocumentedClass.documented_property2
 ){
+}
+
+@section{Doc Meta}
+
+@(import:
+    rhombus/meta open
+    scribble/doc_meta open)
+
+@(doc.bridge thing:
+    doc_meta.transformer(
+      ~extract_desc: fun (stx): "thing",
+      ~extract_space: fun (stx): #false,
+      ~extract_name: doc_meta.operator_macro_extract_name,
+      ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+      ~extract_typeset: fun (stx, space, subst):
+                          let '«$head '$name ...'»' = stx
+                          let s = subst(doc_meta.extract_name('$name ...', #false))
+                          unless s is_a Group | error("bad result")
+                          doc_meta.typeset_rhombusblock('$head $s')
+    ))
+
+@doc(
+  thing 'math.abs'
+){
+
+ Actually a function.
+
 }

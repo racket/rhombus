@@ -69,7 +69,16 @@ meta:
                                                            PairList[order, ...],
                                 ~#{extract-name}: extract_name,
                                 ~#{extract-metavariables}: extract_metavariables,
-                                ~#{extract-typeset}: fun (stx, spaces, subst):
+                                ~#{extract-typeset}: fun (stx, spaces, subst_in):
+                                                       fun subst(id :: Identifier || Map,
+                                                                 ~as_wrap = #true,
+                                                                 ~as_redef = #false,
+                                                                 ~as_meta = #false):
+                                                         subst_in(id,
+                                                                  ~as_wrap: as_wrap,
+                                                                  ~as_redef: as_redef,
+                                                                  ~as_meta: as_meta,
+                                                                  ~as_group: #true)
                                                        #{unwrap-expr}(extract_typeset(stx, spaces, subst), extract_typeset),
                                 ~#{extract-spacer-infos}: fun (stx, PairList[PairList[spc, ...], ...]):
                                                              match extract_spacer_infos(stx, [[spc, ...], ...])
