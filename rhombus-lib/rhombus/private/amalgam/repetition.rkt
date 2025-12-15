@@ -40,6 +40,7 @@
 
             flatten-repetition
             consume-repetition
+            unwrap-repetition
 
             :repetition
             :repetition-info
@@ -308,6 +309,27 @@
                             #`((#%index-result rep-info.element-static-infos)
                                . #,static-infos)
                             (+ (syntax-e #'rep-info.used-depth) 1)))]))
+
+(define-for-syntax (unwrap-repetition rep-parsed count)
+  (cond
+    [(= 0 count) rep-parsed]
+    [else
+     (syntax-parse rep-parsed
+       [rep-info::repetition-info
+        (define for-clausess (syntax->list #'rep-info.for-clausess))
+        (when (count . > . (length for-clausess))
+          (raise-wrong-depth #'rep-info.rep-expr
+                             #'rep-info.used-depth
+                             (length for-clausess)
+                             count
+                             #:at-least? #t))
+        (transfer-origin
+         rep-parsed
+         (make-repetition-info #'rep-info.rep-expr
+                               (list-tail for-clausess count)
+                               #'rep-info.body
+                               #'rep-info.element-static-infos
+                               (+ (syntax-e #'rep-info.used-depth) count)))])]))
 
 ;; Optimize `for/list` over `in-list`, etc. We do this while
 ;; constructing the form, instead of using a `for/list` variant

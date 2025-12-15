@@ -548,3 +548,33 @@ block:
   version_guard.at_least "9.0.0.2":
     check [[{x, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"
     check [[{deepen x ~like y, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"
+
+block:
+  fun f([z, ...],
+        [[x, ...], ...],
+        [[y, ...], ...]):
+    [if z
+     | [[x, y], ...]
+     | [x, ...],
+     ...]
+  check: f([#true, #false],
+           [[1, 2], [3, 4, 5,]],
+           [["a", "b"], ["d", "e"]])
+         ~is [[[1, "a"], [2, "b"]], [3, 4, 5]]
+  check: f([#true, #true],
+           [[1, 2], [3, 4, 5,]],
+           [["a", "b"], ["d", "e"]])
+         ~throws "incompatible repetition lengths"
+
+block:
+  let '($hd $tl ..., ...)' = '(42)'
+  check: [if #true
+          | #void
+          | '(1, $tl ...)',
+          ...]
+         ~is [#void]
+  check: [if #false
+          | #void
+          | '(1, $tl ...)',
+          ...]
+         ~throws "generated an empty group"

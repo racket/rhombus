@@ -888,7 +888,7 @@
                        ;; handle-maybe-misformed-group
                        (lambda (tag ts tail idrs sidrs vars can-be-empty? empty-ok?)
                          ;; Need to check that `ts` followed by an optional tail is well formed
-                         ;; (e.g., no alnternativs in the middle of the group); the `tail` is
+                         ;; (e.g., no alnternatives in the middle of the group); the `tail` is
                          ;; provided separately, because we can assume that its well-formed and
                          ;; shouldn't be checked (otherwise we may create quadratic work);
                          ;; unless `empty-ok?`, then error if the group would be empty
@@ -910,10 +910,9 @@
                                  vars
                                  can-be-empty?))))
 
-     (define-values (depth new-idrs new-template)
-       (cond
-         [repetition? (deepen-for-repetition idrs template)]
-         [else (values 0 idrs template)]))
+     (define depth (if repetition?
+                       (get-repetition-depth idrs template)
+                       0))
      (define (wrap-bindings idrs body)
        (cond
          [(null? idrs) body]
@@ -923,24 +922,23 @@
                            [(id-pat e)
                             #`(with-syntax ([id-pat e])
                                 #,body)]))]))
-     (define template-e
-       (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
      (cond
-       [repetition? (if (eqv? depth 0)
-                        (make-repetition-info (list e)
-                                              null
-                                              #`(pack-element* #,template-e #,depth)
-                                              (get-syntax-static-infos)
-                                              0)
-                        (make-repetition-info (list e)
-                                              #`(([(elem) (in-list (pack-element* #,template-e #,depth))])
-                                                 #,@(for/list ([i (in-range (sub1 depth))])
-                                                      #`([(elem) (in-list elem)])))
-                                              #'elem
-                                              (get-syntax-static-infos)
-                                              0))]
-       [else (wrap-static-info* template-e
-                                (get-syntax-static-infos))])]))
+       [repetition?
+        (define new-idrs (adjust-template-sibling-depths idrs))
+        (define template-e
+          (wrap-bindings (unwrap-template-repetitions new-idrs depth)
+                         #`(#,(quote-syntax quasisyntax) #,template)))
+        (make-repetition-info (list e)
+                              (for/list ([i (in-range depth)])
+                                (template-repetition-bindings new-idrs (- depth i 1)))
+                              #`(pack-element* #,template-e 0)
+                              (get-syntax-static-infos)
+                              0)]
+        [else
+         (define template-e
+           (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
+         (wrap-static-info* template-e
+                            (get-syntax-static-infos))])]))
 
 (define-for-syntax (convert-repetition-template e)
   (convert-template e #:repetition? #t))
@@ -988,6 +986,33 @@
                      new-idrs)
                (hash-set deepened (extract-idr-name idr) #t))])))
 
+(define-for-syntax (unwrap-template-repetitions idrs overall-depth)
+  (for/list ([idr (in-list idrs)])
+    (syntax-parse idr
+      #:literals (unpacking delaying dependent-unpack)
+      [(id-pat (unpacking depth k rep-info::repetition-info unpack* $-name))
+       (define i-depth (- (length (syntax->list #'rep-info.for-clausess))
+                          (syntax-e #'depth)))
+       (with-syntax ([new-rep (unwrap-repetition #'rep-info i-depth)])
+         #`[id-pat (unpacking depth k new-rep unpack* $-name)])]
+      [_ idr])))
+
+(define-for-syntax (template-repetition-bindings idrs i)
+  (apply
+   append
+   (for/list ([idr (in-list idrs)])
+     (syntax-parse idr
+       #:literals (unpacking delaying dependent-unpack)
+       [(id-pat (unpacking depth k rep-info::repetition-info . u))
+        (define i-depth (- (length (syntax->list #'rep-info.for-clausess))
+                           (syntax-e #'depth)))
+        (if (i-depth . > . i)
+            (syntax->list (list-ref (syntax->list #'rep-info.for-clausess)
+                                    (- i-depth i 1)))
+            null)]
+       [_
+        null]))))
+
 (define-for-syntax (extract-idr-name idr)
   (syntax-parse idr
     [(id-pat . _)
@@ -1033,7 +1058,7 @@
           #`[id-pat (unpacking 0 0 rep.parsed . u)]])]
       [_ idr])))
 
-(define-for-syntax (deepen-for-repetition idrs template)
+(define-for-syntax (get-repetition-depth idrs template)
   (define u-idrs (expose-repetitions idrs))
   (define depth
     (for/fold ([max-depth 0]) ([idr (in-list u-idrs)])
@@ -1043,13 +1068,7 @@
          (max max-depth (- (length (syntax->list #'rep-info.for-clausess))
                            (syntax-e #'depth)))]
         [_ max-depth])))
-  (let loop ([d depth] [idrs u-idrs] [template template])
-    (cond
-      [(d . <= . 0) (values (max depth 0) idrs template)]
-      [else (loop (sub1 d)
-                  (deepen-template-escapes
-                   (adjust-template-sibling-depths idrs))
-                  #`(#,template (... ...)))])))
+  (max depth 0))
 
 ;; if we get here, it means that an escape was not under `...`
 (define-syntax (pending-unpack stx)
