@@ -184,7 +184,7 @@
                                                      name? name-instance
                                                      internal-name? internal-name-instance
                                                      all-static-infos internal-all-static-infos))
-              #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
+              #,@(build-extra-internal-id-aliases internal-name extra-internal-names #:interface? #t)
               (interface-finish [orig-stx base-stx scope-stx
                                           reflect-name name name-extends tail-name
                                           name? name-instance

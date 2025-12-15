@@ -1449,6 +1449,18 @@ block:
   check _World(1) ~throws "_World curried"
   check _World()() ~throws "_World super"
 
+block:
+  class Posn(x, y):
+    internal _Posn
+    internal _Posn2
+
+  check:
+    Posn(1, 2) ~is_a _Posn2
+    _Posn2(1, 2) ~is_a Posn
+    (match Posn(1, 2) | _Posn2(x, y): [x, y]) ~is [1, 2]
+    _Posn2.x(Posn(1, 2)) ~is 1
+    (_Posn(1, 2)).y ~is 2
+
 // check prefix in post forms
 block:
   class A():

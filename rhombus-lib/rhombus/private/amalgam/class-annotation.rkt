@@ -6,7 +6,11 @@
          (submod "annot-macro.rkt" for-class)
          "class-transformer.rkt"
          "dotted-sequence-parse.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "expression.rkt"
+         "annotation.rkt"
+         "binding.rkt"
+         "name-root-space.rkt")
 
 (provide (for-syntax build-class-annotation-form
                      build-guard-expr
@@ -188,9 +192,17 @@
                                                              'annotation-str)))])
              (m obj val))))]))
 
-(define-for-syntax (build-extra-internal-id-aliases internal extra-internals)
-  (for/list ([extra (in-list extra-internals)])
-    #`(define-syntax #,extra (make-rename-transformer (quote-syntax #,internal)))))
+(define-for-syntax (build-extra-internal-id-aliases internal extra-internals
+                                                    #:interface? [interface? #f])
+  (for*/list ([extra (in-list extra-internals)]
+              [in-space (in-list (if interface?
+                                     (list in-annotation-space
+                                           in-name-root-space)
+                                     (list in-expression-space
+                                           in-annotation-space
+                                           in-binding-space
+                                           in-name-root-space)))])
+    #`(define-syntax #,(in-space extra) (make-rename-transformer (quote-syntax #,(in-space internal))))))
 
 (define-for-syntax no-annotation-transformer
   (annotation-prefix-operator
