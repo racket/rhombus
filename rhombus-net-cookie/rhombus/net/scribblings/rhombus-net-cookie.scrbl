@@ -4,7 +4,7 @@
     meta_label:
       rhombus open)
 
-@title(~style: #'toc){Rhombus Cookies: HTTP State Manegement}
+@title(~style: #'toc, ~category: #'#{net-library}){Cookies: HTTP State Management}
 
 The @rhombusmodname(net/cookie), @rhombusmodname(net/cookie/server), and
 @rhombusmodname(net/cookie/user_agent) libraries provide functions for

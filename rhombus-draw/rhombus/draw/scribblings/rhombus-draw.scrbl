@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title{Rhombus Draw}
+@title(~category: #'#{gui-library}){Draw: Drawing Toolkit}
 
 @docmodule(~use_sources: lib("rhombus/draw.rhm"),
            draw)

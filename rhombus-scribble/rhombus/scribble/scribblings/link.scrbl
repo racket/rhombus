@@ -33,7 +33,7 @@
  automatically adds a @tech{tag prefix} to the document based on the
  source module. So, for example, to refer to a section of the Rhombus
  guide, @rhombus(module_path) would be
- @rhombus(ModulePath'lib("rhombus/scribblings/rhombus.scrbl")').
+ @rhombus(ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")').
 
  The @rhombus(~tag_prefixes: prefixes) argument similarly supports
  selecting a particular section as determined by a path of tag prefixes.

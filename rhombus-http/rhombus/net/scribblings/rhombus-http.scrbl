@@ -5,7 +5,7 @@
       net/http open
       net/url)
 
-@title(~style: #'toc){Rhombus HTTP Client}
+@title(~style: #'toc, ~category: #'#{net-library}){HTTP Client}
 
 @docmodule(net/http)
 

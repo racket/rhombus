@@ -21,13 +21,15 @@ fun title(
   ~style: part_style :: maybe(StyleLike) = #false,
   ~version: vers :: maybe(String) = #false,
   ~date: date :: maybe(String) = #false,
+  ~category: category :: DocCategory = #'library,
+  ~foreign_category: foreign_category :: DocCategory = category,
   ~index_extras: index_extras :: ExtrasMap = {},
   pre_content :: PreContent
 ) :~ PartDecl:
   ~doc
   maybe_drop_extras:
     base.title(~tag: convert_list(tag),
-               ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
+               ~#{tag-prefix}: pack_tag_prefix(tag_prefix, category, foreign_category),
                ~style: convert_list(part_style),
                ~version: vers,
                ~date: date,
@@ -45,7 +47,7 @@ defn.macro 'def_section $section: $rkt_section':
      ~doc
      maybe_drop_extras:
        base . $rkt_section(~tag: convert_list(tag),
-                           ~#{tag-prefix}: pack_tag_prefix(tag_prefix),
+                           ~#{tag-prefix}: pack_tag_prefix(tag_prefix, #false, #false),
                            ~style: convert_list(part_style),
                            ~#{index-extras}: convert_extras(index_extras),
                            pre_content)'
@@ -62,16 +64,30 @@ fun subsubsub_section(
   base.#{subsubsub*section}(~tag: convert_list(tag),
                             pre_content)
 
-fun pack_tag_prefix(tag_prefix):
+fun pack_tag_prefix(tag_prefix, category, foreign_category):
   if utils.#{version<?}(version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
   | tag_prefix
   | let t = { #'#{default-language-family}: PairList["Rhombus"] }
-    if tag_prefix
-    | t ++ { #'#{tag-prefix}:
-               match tag_prefix
-               | mp :: ModulePath: mp.s_exp()
-               | ~else: tag_prefix }
-    | t
+    fun norm_category(category):
+      match category
+      | [cat, sort_no]: PairList[cat, sort_no]
+      | ~else: PairList[category]
+    let t: if category
+           | t ++ { #'#{doc-properties}:
+                      { #'#{language-family}: PairList["Rhombus"],
+                        #'category: { "Rhombus": norm_category(category),
+                                      #'default: norm_category(foreign_category) } } }
+           | t
+    fun normalize(tag_prefix):
+      match tag_prefix
+      | mp :: ModulePath: mp.s_exp()
+      | ~else: tag_prefix
+    let tp:
+      match tag_prefix
+      | False: { }
+      | tp :: Map: tp ++ { #'#{tag-prefix} : normalize(tp[#'#{tag-prefix}]) }
+      | ~else: { #'#{tag-prefix} : normalize(tag_prefix) }
+    t ++ tp
 
 fun author(c :: Content,
            ~email: email :: maybe(String),

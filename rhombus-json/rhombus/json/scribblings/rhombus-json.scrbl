@@ -11,7 +11,7 @@
     import json
 )
 
-@title{Rhombus JSON}
+@title(~category: #'#{parsing-library}){JSON Exchange Format}
 
 @docmodule(json)
 

@@ -39,6 +39,7 @@ export:
   TagSuffix
   TagPrefix
   StyleLike
+  DocCategory
 
   TraverseBlockFunction
   TraverseElementFunction
@@ -241,6 +242,9 @@ veneer DelayedBlock(this :: _DelayedBlock):
 annot.macro 'StyleLike':
   'Style || String || Symbol || List.of(Symbol)'
 
+annot.macro 'DocCategory':
+  'Symbol || String || Box.now_of(String) || [Symbol || String || Box.now_of(String), Real]'
+
 fun convert_list(v, ~per = values):
   match v
   | l :: List:
@@ -304,7 +308,7 @@ annot.macro 'TagSuffix':
   'String || List.of(String)'
 
 annot.macro 'TagPrefix':
-  'String || ModulePath'
+  'String || ModulePath || Map'
 
 annot.macro 'ResolveInfo':
   annot_meta.pack_predicate('core.#{resolve-info?}')

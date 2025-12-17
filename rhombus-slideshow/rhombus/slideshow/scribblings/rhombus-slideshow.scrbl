@@ -6,7 +6,7 @@
       slideshow open      
       draw.Font)
 
-@title{Rhombus Slideshow: Figure and Presentation Tools}
+@title(~category: #'tool){Slideshow: Presentation Tool}
 
 @docmodule(slideshow)
 

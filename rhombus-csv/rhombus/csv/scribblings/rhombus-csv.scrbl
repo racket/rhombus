@@ -4,7 +4,7 @@
       rhombus open
       rhombus/csv)
 
-@title{Rhombus CSV Reading and Writing}
+@title(~category: #'#{parsing-library}){CSV Reading and Writing}
 
 @docmodule(rhombus/csv)
 

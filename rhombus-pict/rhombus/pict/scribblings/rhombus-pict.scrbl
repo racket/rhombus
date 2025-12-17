@@ -6,7 +6,7 @@
       draw
     "pict_eval.rhm" open)
 
-@title{Rhombus Pict: Functional Pictures}
+@title(~category: #'#{gui-library}){Pict: Functional Pictures}
 
 @docmodule(pict)
 

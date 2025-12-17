@@ -196,3 +196,23 @@
  convert Rhombus lists to pair lists.
 
 }
+
+@doc(
+  annot.macro 'DocCategory'
+){
+
+ Recognizes a @rhombus(Symbol, ~annot), @rhombus(Symbol, ~annot), or
+ @rhombus(Box.now_of(Symbol), ~annot) as a category name, or a list of
+ two items: a category name and a @rhombus(Real, ~annot) to specify an
+ order within the category. A category is used to classify documentation
+ in a listing of all installed documentation.
+
+ The recognized category symbols are @rhombus(#'#{getting-started}),
+ @rhombus(#'tutorial), @rhombus(#'core), @rhombus(#'teaching),
+ @rhombus(#'language), @rhombus(#'tool), @rhombus(#'#{gui-library}),
+ @rhombus(#'#{net-library}), @rhombus(#'#{parsing-library}),
+ @rhombus(#'#{tool-library}), @rhombus(#'foreign), @rhombus(#'interop),
+ @rhombus(#'#{drracket-plugin}), @rhombus(#'library),
+ @rhombus(#'experimental), and @rhombus(#'legacy).
+
+}

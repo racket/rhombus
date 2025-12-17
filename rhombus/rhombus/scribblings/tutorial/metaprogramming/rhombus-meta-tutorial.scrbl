@@ -1,8 +1,8 @@
 #lang rhombus/scribble
 
-@(def guide_doc = ModulePath'lib("rhombus/scribblings/rhombus.scrbl")')
+@(def guide_doc = ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")')
 
-@title{Rhombus Metaprogramming Tutorial}
+@title(~category: #'tutorial){Rhombus Metaprogramming Tutorial}
 
 This tutorial is about syntax and macros in @docref(guide_doc). It's
 intended for readers who are familiar with environment-passing

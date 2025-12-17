@@ -19,6 +19,7 @@
 
 (define build-deps
   '("at-exp-lib"
+    "racket-index"
     "racket-doc"
     "scribble-lib"
     "shrubbery"

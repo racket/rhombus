@@ -98,7 +98,7 @@ fun shrubref(tag):
 fun shrublink(tag, content):
   scribble.seclink(~doc: shrub_doc, tag, content)
 
-def guide_doc = ModulePath'lib("rhombus/scribblings/rhombus.scrbl")'
+def guide_doc = ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")'
 def model_doc = ModulePath'lib("rhombus/scribblings/model/rhombus-model.scrbl")'
 def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'
 def meta_doc = ModulePath'lib("rhombus/scribblings/meta/rhombus-meta.scrbl")'

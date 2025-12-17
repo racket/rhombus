@@ -1,3 +1,3 @@
 #lang info
 
-(define scribblings '(("scribblings/rhombus-csv.scrbl" ())))
+(define scribblings '(("scribblings/rhombus-csv.scrbl" () ("Rhombus Libraries"))))

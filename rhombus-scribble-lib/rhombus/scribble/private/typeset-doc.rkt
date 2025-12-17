@@ -663,9 +663,12 @@
                                     (lambda (libs)
                                       (exported-index-desc*
                                        name libs
-                                       (hash 'kind kind-str
-                                             'sort-order sort-order
-                                             'display-from-libs (map module-path->rhombus-module-path libs))))))
+                                       (let ([ht (hash 'kind kind-str
+                                                       'sort-order sort-order
+                                                       'display-from-libs (map module-path->rhombus-module-path libs))])
+                                         (if prefix-str
+                                             (hash-set ht 'long-key (string-foldcase (content->string content)))
+                                             ht))))))
                                  tag
                                  ref-content/no-prefix)))
                           (cond

@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title{Rhombus Parser Generator Tools}
+@title(~category: #'#{parsing-library}){Parser Generator Tools}
 
 The @rhombusmodname(parser/lex) library provides a parser generator for
 tokenizing. Expect a parser generater for context-free grammars in the

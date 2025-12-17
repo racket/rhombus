@@ -2,7 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title{Rhombus Scribble}
+@title(~category: #'tool){Scribble Document Language}
 
 Rhombus Scribble is a language for writing prose documents, especially
 documentation for Rhombus libraries. The result of running a Rhombus

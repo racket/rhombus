@@ -15,7 +15,7 @@
 
 @(def envvar = tt)
 
-@title{Rhombus SSL: Secure Communication}
+@title(~category: #'#{net-library}){SSL: Secure Communication}
 
 @docmodule(net/ssl)
 

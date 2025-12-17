@@ -10,7 +10,7 @@ metaprogramming in the sense of the rest of the tutorial. We use
 interpreters merely as a domain that we expect to be familiar to anyone
 following the tutorial.
 
-Skip @seclink("top", ~doc: ModulePath'lib("rhombus/scribblings/rhombus.scrbl")'){the docs},
+Skip @seclink("top", ~doc: ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")'){the docs},
 because Rhombus looks like a lot of things you've seen before.
 
 @section(~tag: "ex-interp1"){Exercise}

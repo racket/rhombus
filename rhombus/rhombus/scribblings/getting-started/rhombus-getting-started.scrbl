@@ -2,7 +2,9 @@
 @(import:
     "../common.rhm" open)
 
-@title{Getting Started with Rhombus}
+@title(
+  ~category: #'#{getting-started},
+){Getting Started with Rhombus}
 
 @itemlist(
 

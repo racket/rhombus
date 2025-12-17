@@ -2,7 +2,9 @@
 @(import:
     "common.rhm" open)
 
-@title{Rhombus Metaprogramming Reference}
+@title(
+  ~category: [#'core, 17],
+){Rhombus Metaprogramming Reference}
 
 This document defines Rhombus's advanced metaprogramming facilities.
 

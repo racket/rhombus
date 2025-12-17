@@ -7,7 +7,7 @@
 @(def rfc_name = "RFC 3986")
 @(def url_rfc = @hyperlink("http://www.ietf.org/rfc/rfc3986.txt"){@rfc_name})
 
-@title(~style: #'toc){Rhombus URL and Form Parsing}
+@title(~style: #'toc, ~category: #'#{net-library}){URL and Web Form Parsing}
 
 @docmodule(net/url)
 

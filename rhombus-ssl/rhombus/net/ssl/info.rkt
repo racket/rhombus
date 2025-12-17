@@ -1,3 +1,3 @@
 #lang info
 
-(define scribblings '(("scribblings/rhombus-ssl.scrbl" (multi-page))))
+(define scribblings '(("scribblings/rhombus-ssl.scrbl" (multi-page) ("Rhombus Libraries"))))

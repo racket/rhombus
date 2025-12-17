@@ -42,7 +42,7 @@ accumulate information in a side @rhombus(CollectInfo, ~annot) map and
 @section(~tag: "tag"){Cross-Reference Tags}
 
 Cross-reference information that is gathered during the @tech{collect
- pass} and used during the @rhombus{resolve pass} can make use of
+ pass} and used during the @tech{resolve pass} can make use of
 @deftech{tags} as keys. A @tech{tag} is represented by a list (or pair
 list) that starts with a symbol or as @rhombus(GeneratedTag, ~annot)
 object. The symbol effectively identifies the type of the tag, such as

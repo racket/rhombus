@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title{Rhombus XML}
+@title(~category: #'#{parsing-library}){XML Reading and Writing}
 
 @docmodule(xml)
 

@@ -6,7 +6,7 @@
       rhombus/draw
       pict)
 
-@title{Rhombus Logo}
+@title(~category: #'#{gui-library}){Rhombus Logo}
 
 @docmodule(rhombus/logo)
 

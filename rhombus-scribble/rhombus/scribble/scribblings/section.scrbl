@@ -17,6 +17,17 @@
  the name of the section.
 
  See @rhombus(part_style) for information about @tech{styles} for parts.
+ The @rhombus(vers) and @rhombus(date) argumentsa sre converted into
+ style properties for the part.
+
+ The @rhombus(category), @rhombus(foreign_category), and
+ @rhombus(index_extras) arguments are merged into the @rhombus(tag_prefix)
+ argument. If @rhombus(tag_prefix) is not a map that includes
+ @rhombus(#'#{default-language-family}) already, then that key is added
+ with the value @rhombus(PairList["Rhombus"]). Similarly,
+ @rhombus(category) and @rhombus(foreign_category) arguments are merged
+ into @rhombus(index_extras) if it does not already a have a
+ @rhombus(#'#{doc-properties}) key.
 
 }
 

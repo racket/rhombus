@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title{Rhombus GUI}
+@title(~category: #'#{gui-library}){GUI: Graphical User Interface Toolkit}
 
 @docmodule(~use_sources: lib("rhombus/gui.rhm"),
            gui)
