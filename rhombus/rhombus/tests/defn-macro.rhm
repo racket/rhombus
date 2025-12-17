@@ -91,6 +91,13 @@ check:
   bells
   ~is ["ding", "ding", "ding"]
 
+check:
+  defn.macro 'List.three $id $x':
+    'def $id: [$x, $x, $x]'
+  List.three bells "ding"
+  bells
+  ~is ["ding", "ding", "ding"]
+
 // operator as macro
 check:
   defn.macro '!!! $id $x':
@@ -113,6 +120,20 @@ block:
   namespace n
 
   defn.macro '(n.dz) $id':
+    'def $id = 0'
+
+  n.dz k
+  check k ~is 0
+
+  block:
+   import .n open
+   dz w
+   check w ~is 0
+
+block:
+  namespace n
+
+  defn.macro 'n.dz $id':
     'def $id = 0'
 
   n.dz k

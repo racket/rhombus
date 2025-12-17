@@ -8,23 +8,23 @@ export:
 
 namespace View
 
-annot.macro '(View.SizeInt)':
+annot.macro 'View.SizeInt':
   'Int.in(0 ..= 1000000)'
 
-annot.macro '(View.Size)':
+annot.macro 'View.Size':
   '[maybe(View.SizeInt), maybe(View.SizeInt)]'
 
-annot.macro '(View.PositionInt)':
+annot.macro 'View.PositionInt':
   'Int.in(-1000000 ..= 1000000)'
 
 enum View.Position
 | center
 | ~is_a [View.PositionInt, View.PositionInt]
 
-annot.macro '(View.SpacingInt)':
+annot.macro 'View.SpacingInt':
   'Int.in(0 ..= 1000)'
 
-annot.macro '(View.Margin)':
+annot.macro 'View.Margin':
   '[View.SpacingInt, View.SpacingInt]'
 
 enum View.HorizAlignment
@@ -37,14 +37,14 @@ enum View.VertAlignment
 | center
 | bottom
 
-annot.macro '(View.Alignment)':
+annot.macro 'View.Alignment':
   '[View.HorizAlignment, View.VertAlignment]'
 
-annot.macro '(View.Stretch)':
+annot.macro 'View.Stretch':
   '[Boolean, Boolean]'
 
 
-annot.macro '(View.LabelString)':
+annot.macro 'View.LabelString':
   'String && LabelStringSized'
 
 annot.macro 'LabelStringSized':

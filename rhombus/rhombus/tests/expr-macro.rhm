@@ -475,6 +475,13 @@ check:
   ns.id 42
   ~is 42
 
+check:
+  namespace ns
+  expr.macro 'ns.id $(rhs :: expr_meta.AfterPrefixParsed('ns.id')) $()':
+    values(rhs, '$rhs.tail ...')
+  ns.id 42
+  ~is 42
+
 block:
   expr.macro '($)g': '"ok"'
   check $g ++ "z" ~is "okz"

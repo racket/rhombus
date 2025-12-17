@@ -1,7 +1,6 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open:
-      except: def
+    "common.rhm" open
     "nonterminal.rhm" open
     meta_label:
       rhombus/cmdline
@@ -41,7 +40,7 @@
 }
 
 @doc(
-  annot.macro '(cmdline.String.to_lib_module_path)'
+  annot.macro 'cmdline.String.to_lib_module_path'
 ){
 
  A @tech(~doc: guide_doc){converter annotation} that recognizes strings

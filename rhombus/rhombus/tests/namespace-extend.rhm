@@ -159,7 +159,7 @@ check:
   ~is "left"
 
 check:
-  import: 
+  import:
     lib("rhombus/tests/example-extend-a.rhm") open
     lib("rhombus/tests/example-extend-b.rhm") open
   List(List.a, List.b, ExList.a)
@@ -189,20 +189,20 @@ check:
   ~eval
   import rhombus/meta open
   namespace N
-  expr.rule '(N.z) 0': '1'
+  expr.rule 'N.z 0': '1'
   block:
     namespace N
     import: .N as n
     n.z 0
   ~throws "identifier not provided"
 
-//No shadowing => extension is visible
+// No shadowing => extension is visible
 check:
   ~eval
   import rhombus/meta open
   namespace N
   def N.y = 10
-  expr.macro '(N.z) 0': '1'
+  expr.macro 'N.z 0': '1'
   block:
     import: .N as n
     [n.y, n.z 0]

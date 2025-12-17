@@ -40,7 +40,7 @@ module class ~lang rhombus:
     Content
     make_builtin_flags
 
-annot.macro '(String.to_lib_module_path)':
+annot.macro 'String.to_lib_module_path':
   'converting(fun (s :: String where p :: ModulePath = convert_lib_module_path(s)) :: ModulePath: p)'
 
 annot.macro 'providing($statinfos)':

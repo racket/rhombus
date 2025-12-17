@@ -36,7 +36,7 @@
 @examples(
   ~eval: macro_eval
   ~defn:
-    reducer.macro '(Array.len5)':
+    reducer.macro 'Array.len5':
       'Array.of_length(5)'
   ~repl:
     for Array.len5 (i in 0..3): i

@@ -11,7 +11,7 @@ module ~early m1 ~lang rhombus/and_meta:
     export annot.macro 'XInt': 'Int'
     export class XObj(a)
   def ns.y = "wy"
-  annot.macro '(ns.YFlonum)': 'Flonum'
+  annot.macro 'ns.YFlonum': 'Flonum'
   class ns.YObj(b)
   class ns.ZObj(c)
   export:
@@ -65,7 +65,7 @@ namespace ns1:
     export annot.macro 'XInt': 'Int'
     export class XObj(a)
   def ns.y = "y"
-  annot.macro '(ns.YFlonum)': 'Flonum'
+  annot.macro 'ns.YFlonum': 'Flonum'
   class ns.YObj(b)
   export:
     ns.x

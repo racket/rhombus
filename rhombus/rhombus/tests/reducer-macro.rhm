@@ -9,13 +9,13 @@ block:
     reducer_meta.unpack(s)
 
 check:
-  reducer.macro '(Array.len5)':
+  reducer.macro 'Array.len5':
     'Array.of_length(5)'
   for Array.len5 (i in 0..3): i
   ~is_now Array(0, 1, 2, 0, 0)
 
 block:
-  reducer.macro '(List.nested)':
+  reducer.macro 'List.nested':
     let (_, si):
       let '$(a :: annot_meta.Parsed)' = 'List'
       annot_meta.unpack_predicate(a)
