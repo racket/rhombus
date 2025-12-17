@@ -899,25 +899,46 @@
        #:break (not r)
        (range-intersect r other-r))]))
 
-(define-for-syntax (sequence-range-normalize/inline range-expr)
-  (syntax-parse range-expr
-    #:literals (quote range-from-to/who range-from-to-inclusive/who range-from/who)
-    [(range-from-to/who 'who start-expr end-expr)
-     (values (syntax-e #'who)
-             (unwrap-static-infos #'start-expr) (unwrap-static-infos #'end-expr)
-             'exclusive)]
-    [(range-from-to-inclusive/who 'who start-expr end-expr)
-     (values (syntax-e #'who)
-             (unwrap-static-infos #'start-expr) (unwrap-static-infos #'end-expr)
-             'inclusive)]
-    [(range-from/who 'who start-expr)
-     (values (syntax-e #'who)
-             (unwrap-static-infos #'start-expr) #f
-             'infinite)]
-    [_
-     (values #f
-             #f #f
-             #f)]))
+(define-for-syntax (range-explode/inline range-expr)
+  (define-values (who-stx start-expr start-type end-expr end-type)
+    (syntax-parse range-expr
+      #:literals (quote
+                  range-from-to/who
+                  range-from/who
+                  range-from-to-inclusive/who
+                  range-to-inclusive/who
+                  range-to/who
+                  range-from-exclusive/who
+                  range-from-exclusive-to/who
+                  range-from-exclusive-to-inclusive/who
+                  range-full)
+      [(range-from-to/who 'who start-expr end-expr)
+       (values #'who #'start-expr 'inclusive #'end-expr 'exclusive)]
+      [(range-from-to-inclusive/who 'who start-expr end-expr)
+       (values #'who #'start-expr 'inclusive #'end-expr 'inclusive)]
+      [(range-from/who 'who start-expr)
+       (values #'who #'start-expr 'inclusive #f 'infinite)]
+      [(range-from-exclusive-to/who 'who start-expr end-expr)
+       (values #'who #'start-expr 'exclusive #'end-expr 'exclusive)]
+      [(range-from-exclusive-to-inclusive/who 'who start-expr end-expr)
+       (values #'who #'start-expr 'exclusive #'end-expr 'inclusive)]
+      [(range-from-exclusive/who 'who start-expr)
+       (values #'who #'start-expr 'exclusive #f 'infinite)]
+      [(range-to/who 'who end-expr)
+       (values #'who #f 'infinite #'end-expr 'exclusive)]
+      [(range-to-inclusive/who 'who end-expr)
+       (values #'who #f 'infinite #'end-expr 'inclusive)]
+      [(range-full)
+       (values #'#f #f 'infinite #f 'infinite)]
+      [_
+       (values #f #f #f #f #f)]))
+  (if who-stx
+      (values (syntax-e who-stx)
+              (and start-expr (discard-static-infos start-expr))
+              start-type
+              (and end-expr (discard-static-infos end-expr))
+              end-type)
+      (values #f #f #f #f #f)))
 
 (define-sequence-syntax SequenceRange.to_sequence/optimize
   (lambda () #'SequenceRange.to_sequence)
@@ -926,10 +947,10 @@
       [[(id) (_ range-expr/statinfo)]
        (define who 'SequenceRange.to_sequence)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
-       (define-values (range-who start-expr end-expr type)
-         (sequence-range-normalize/inline range-expr))
-       (if range-who
-           (range-sequence/inline #'id range-who start-expr end-expr type)
+       (define-values (range-who start-expr start-type end-expr end-type)
+         (range-explode/inline range-expr))
+       (if (eq? start-type 'inclusive)
+           (range-sequence/inline #'id range-who start-expr end-expr end-type)
            (range-sequence/optimize #'id who range-expr))]
       [_ #f])))
 
@@ -951,10 +972,10 @@
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define step-who who)
        (define step-expr (unwrap-static-infos #'step-expr/statinfo))
-       (define-values (range-who start-expr end-expr type)
-         (sequence-range-normalize/inline range-expr))
-       (if range-who
-           (range-sequence/inline #'id range-who start-expr end-expr type
+       (define-values (range-who start-expr start-type end-expr end-type)
+         (range-explode/inline range-expr))
+       (if (eq? start-type 'inclusive)
+           (range-sequence/inline #'id range-who start-expr end-expr end-type
                                   #:step-who step-who
                                   #:step-expr step-expr)
            (range-sequence/optimize #'id who range-expr
@@ -1115,15 +1136,4 @@
 (void (set-range->list! list-range->list list-range->treelist))
 
 (begin-for-syntax
-  (void (install-range #'range? #'range-contains?
-                       (lambda (e)
-                         (syntax-parse (unwrap-static-infos e)
-                           [((~literal range-from-to/who) _ l r) (values #'l #'<= #'r #'<)]
-                           [((~literal range-from/who) _ l) (values #'l #'<= #f #f)]
-                           [((~literal range-from-to-inclusive/who) _ l r) (values #'l #'<= #'r #'<=)]
-                           [((~literal range-to-inclusive/who) _ r) (values #f #f #'r #'<=)]
-                           [((~literal range-to/who) _ r) (values #f #f #'r #'<)]
-                           [((~literal range-from-exclusive/who) _ l) (values #'l #'< #f #f)]
-                           [((~literal range-from-exclusive-to/who) _ l r) (values #'l #'< #'r #'<)]
-                           [((~literal range-from-exclusive-to-inclusive/who) _ l r) (values #'l #'< #'r #'<=)]
-                           [_ (values #f #f #f #f)])))))
+  (void (install-range #'range? #'range-contains? range-explode/inline)))

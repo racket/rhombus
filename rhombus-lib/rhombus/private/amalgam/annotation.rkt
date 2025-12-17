@@ -1241,39 +1241,35 @@
 
   (define is-range?-id #f)
   (define range-contains?-id #f)
-  (define parse-range (lambda (e) (values #f #f #f #f)))
-  (define (install-range is-range? range-contains? parse)
+  (define explode-range/inline (lambda (e) (values #f #f #f #f #f)))
+  (define (install-range is-range? range-contains? explode/inline)
     (set! is-range?-id is-range?)
     (set! range-contains?-id range-contains?)
-    (set! parse-range parse)))
+    (set! explode-range/inline explode/inline)))
 
-(define-for-syntax (build-in-predicate form-id pred-stx annot-str lo-e lo-comp hi-e hi-comp)
-  (cond
-    [(and lo-e hi-e)
-     #`(let ([lo-v #,lo-e]
-             [hi-v #,hi-e])
-         (unless (#,pred-stx lo-v)
-           (raise-annotation-failure '#,form-id lo-v '#,annot-str))
-         (unless (#,pred-stx hi-v)
-           (raise-annotation-failure '#,form-id hi-v '#,annot-str))
-         (lambda (v)
-           (and (#,pred-stx v)
-                (#,lo-comp lo-v v)
-                (#,hi-comp v hi-v))))]
-    [lo-e
-     #`(let ([lo-v #,lo-e])
-         (unless (#,pred-stx lo-v)
-           (raise-annotation-failure '#,form-id lo-v '#,annot-str))
-         (lambda (v)
-           (and (#,pred-stx v)
-                (#,lo-comp lo-v v))))]
-    [else
-     #`(let ([hi-v #,hi-e])
-         (unless (#,pred-stx hi-v)
-           (raise-annotation-failure '#,form-id hi-v '#,annot-str))
-         (lambda (v)
-           (and (#,pred-stx v)
-                (#,hi-comp v hi-v))))]))
+(define-for-syntax (build-in-predicate check-who pred-stx annot-str lo-e lo-comp hi-e hi-comp)
+  #`(let (#,@(if lo-e
+                 (list #`[lo-v #,lo-e])
+                 null)
+          #,@(if hi-e
+                 (list #`[hi-v #,hi-e])
+                 null))
+      #,@(if lo-e
+             (list #`(unless (#,pred-stx lo-v)
+                       (raise-annotation-failure '#,check-who lo-v '#,annot-str)))
+             null)
+      #,@(if hi-e
+             (list #`(unless (#,pred-stx hi-v)
+                       (raise-annotation-failure '#,check-who hi-v '#,annot-str)))
+             null)
+      (lambda (v)
+        (and (#,pred-stx v)
+             #,@(if lo-e
+                    (list #`(lo-v . #,lo-comp . v))
+                    null)
+             #,@(if hi-e
+                    (list #`(v . #,hi-comp . hi-v))
+                    null)))))
 
 (define-for-syntax (make-in-annotation pred-stx annot-str get-static-infos allow-range?)
   (define (gen-in form-id args-stx lo-e lo-comp hi-e hi-comp)
@@ -1318,17 +1314,24 @@
 (define-syntax (optimize-range-predicate stx)
   (syntax-parse stx
     [(_ form-id pred annot-str e::expression)
-     (define-values (lo lo-comp hi hi-comp) (parse-range #'e.parsed))
+     (define unwrapped-e (unwrap-static-infos #'e.parsed))
+     (define-values (range-who lo lo-type hi hi-type) (explode-range/inline unwrapped-e))
      (cond
        [(or lo hi)
-        (build-in-predicate #'form-id #'pred #'annot-str lo lo-comp hi hi-comp)]
+        (define (get-comp type)
+          (case type
+            [(exclusive) #'<]
+            [(inclusive) #'<=]
+            [(infinite) #f]
+            [else (error "cannot happen")]))
+        (build-in-predicate range-who #'pred #'annot-str lo (get-comp lo-type) hi (get-comp hi-type))]
        [else
-        #`(let ([rng e.parsed])
+        #`(let ([rng #,unwrapped-e])
             (unless (#,is-range?-id rng)
               (raise-annotation-failure 'form-id rng "Range"))
             (lambda (v)
               (and (pred v)
-                   (#,range-contains?-id rng v))))])]))     
+                   (#,range-contains?-id rng v))))])]))
 
 (define-annotation-syntax Real.in
   (make-in-annotation

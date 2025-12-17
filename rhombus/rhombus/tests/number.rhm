@@ -71,6 +71,9 @@ check:
 
   2 is_a Int.in(1 * 1 .. 2 + 0) ~is #false
 
+  1 is_a Int.in(..) ~is #true
+  2 is_a Int.in(..) ~is #true
+
   1 is_a Int.in(Function.black_box(1 ..= 2)) ~is #true
   1 is_a Int.in(Function.black_box(1 <..= 2)) ~is #false
   1 is_a Int.in(Function.black_box(1 <.. 2)) ~is #false
@@ -81,11 +84,22 @@ check:
   2 is_a Int.in(Function.black_box(1 <.. 2)) ~is #false
   2 is_a Int.in(Function.black_box(1 .. 2)) ~is #false
 
-  1 is_a Int.in("oops", 2) ~throws values(error.annot_msg(), "Int", "\"oops\"")
-  1 is_a Int.in(1, "oops") ~throws values(error.annot_msg(), "Int", "\"oops\"")
-  1 is_a Int.in("oops" .. 2) ~throws values(error.annot_msg(), "Int", "\"oops\"")
-  1 is_a Int.in(1 .. "oops") ~throws values(error.annot_msg(), "Int", "\"oops\"")
-  2 is_a Int.in("oops") ~throws values(error.annot_msg(), "Range", "\"oops\"")
+  1 is_a Int.in(Function.black_box(..)) ~is #true
+  2 is_a Int.in(Function.black_box(..)) ~is #true
+
+  1 is_a Int.in("oops", 2) ~throws values("Int.in: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(1, "oops") ~throws values("Int.in: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in("oops" .. 2) ~throws values("..: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(1 .. "oops") ~throws values("..: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in("oops" ..= 2) ~throws values("..=: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(1 ..= "oops") ~throws values("..=: " ++ error.annot_msg(), "Int", "\"oops\"")
+
+  1 is_a Int.in(Function.black_box("oops" .. 2)) ~throws values("..: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(Function.black_box(1 .. "oops")) ~throws values("..: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(Function.black_box("oops" ..= 2)) ~throws values("..=: " ++ error.annot_msg(), "Int", "\"oops\"")
+  1 is_a Int.in(Function.black_box(1 ..= "oops")) ~throws values("..=: " ++ error.annot_msg(), "Int", "\"oops\"")
+
+  1 is_a Int.in("oops") ~throws values("Int.in: " ++ error.annot_msg(), "Range", "\"oops\"")
 
 block:
   fun f(x :: Int, y :: Int.in(x ..= x + 1)):
