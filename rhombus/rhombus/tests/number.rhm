@@ -323,3 +323,9 @@ check:
   fun test(a :: Int.in(-128, 127), b :: Int.in(-128, 127)):
     a > b
   ~completes
+
+check:
+  use_static
+  fun test(a :: Int.in(-128 ..= 127), b :: Int.in(-128 ..= 127)):
+    a > b
+  ~completes

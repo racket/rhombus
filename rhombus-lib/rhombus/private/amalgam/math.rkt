@@ -356,5 +356,5 @@
 (void (set-primitive-who! 'fx->fl 'from_flonum))
 (void (set-primitive-who! 'fl->fx 'to_flonum))
 
-(void (set-primitive-contract! '16-bit-fixnum? "Fixnum && Int.in(0, 65535)"))
-(void (set-primitive-contract! '32-bit-fixnum? "Fixnum && Int.in(0, 4294967295)"))
+(void (set-primitive-contract! '16-bit-fixnum? "Fixnum && Int.in(0 ..= 65535)"))
+(void (set-primitive-contract! '32-bit-fixnum? "Fixnum && Int.in(0 ..= 4294967295)"))

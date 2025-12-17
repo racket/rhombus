@@ -214,35 +214,35 @@ check:
   String.maybe_to_int("17", ~radix: 16) ~is 23
   String.maybe_to_int("17", ~radix: 160) ~throws values(
     error.val(160).msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.maybe_to_int("17", ~radix: "nan") ~throws values(
     error.val("nan").msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.maybe_to_number("4.35") ~is 4.35
   String.maybe_to_number("4.35", ~radix: 16) ~is 4.20703125
   String.maybe_to_number("17", ~radix: 160) ~throws values(
     error.val(160).msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.to_int("17") ~is 17
   String.to_int("17", ~radix: 16) ~is 23
   String.to_int("17", ~radix: 160) ~throws values(
     error.val(160).msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.to_number("4.35") ~is 4.35
   String.to_number("4.35", ~radix: 16) ~is 4.20703125
   String.to_number("17", ~radix: 160) ~throws values(
     error.val(160).msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.from_int(16) ~is "16"
   String.from_int(16, ~radix: 8) ~is "20"
   String.from_int(17, ~radix: 160) ~throws values(
     error.val(160).msg,
-    error.annot("Int.in(2, 16)").msg
+    error.annot("Int.in(2 ..= 16)").msg
   )
   String.from_number(16.5) ~is "16.5"
   String.upcase("hello") ~is "HELLO"
@@ -587,7 +587,7 @@ block:
 block:
   fun f(s):
     match s
-    | n :: String.to_int && Int.in(-3, 3): [n]
+    | n :: String.to_int && Int.in(-3 ..= 3): [n]
     | n :: String.to_int: n
     | n :: String.to_number: { n }
     | ~else: #false

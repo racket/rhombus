@@ -129,8 +129,8 @@ unspecialized and flonum-specific operations.
 
 @doc(
   fun flonum.bit_field(x :: Flonum,
-                       start :: Int.in(0, 64),
-                       end :: Int.in(0, 64))
+                       start :: Int.in(0 ..= 64),
+                       end :: Int.in(0 ..= 64))
     :: Int
 ){
 

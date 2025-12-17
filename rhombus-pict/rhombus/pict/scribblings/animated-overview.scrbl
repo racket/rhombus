@@ -60,7 +60,7 @@ bounding box. The @rhombus(Pict.time_pad) function extends time box on
 either end, which can shift the pict's drawing relative to the start of
 its time box. Let's shift @rhombus(rect) to define @rhombus(late_rect):
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def late_rect = rect.time_pad(~before: 1)
@@ -91,7 +91,7 @@ on the ``after'' side to define @rhombus(early_circ), then
 combining them with @rhombus(stack) makes a composite pict
 @rhombus(ping_pong):
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def early_circ = circ.time_pad(~after: 1)
@@ -111,7 +111,7 @@ We could have used @rhombus(overlay) instead of @rhombus(stack) to have
 the two shapes overlap, and then a circle would appear to change to a
 square in place:
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def together_apart = overlay(early_circ, late_rect)
@@ -190,7 +190,7 @@ To create an animated picture with a duration of @rhombus(1) epoch and a
 non-@rhombus(0) extent for that epoch, use the @rhombus(animate)
 constructor:
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def fade_out = animate(fun (n): circ.alpha(1-n))
@@ -213,7 +213,7 @@ We can combine a fade-in animation with a fade-out animation, and then
 shift the pict's time box so that it corresponds to the point where the
 pict is fully faded in.
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def fade_in = animate(fun (n): circ.alpha(n))
@@ -281,7 +281,7 @@ sustains at the desired side of the animation:
 @(def fade_out2 = animate(fun (n): circ.alpha(1-n), ~sustain_edge: #'before))
 @(def fade_in_out2 = switch(fade_in, fade_out2).time_pad(~before: -1))
 
-@examples(  
+@examples(
   ~eval: pict_eval
   ~defn:
     def fade_out2 = animate(fun (n): circ.alpha(1-n),
@@ -330,7 +330,7 @@ snapshot of the pict at the start of its time box, i.e., at time
 The @rhombus(Pict.snapshot) method explicitly converts an animated pict
 to a static pict that shows the animate pict's representation at a
 specific epoch and time. The @rhombus(Pict.snapshot) method accepts a
-number in the inclusive range @rhombus(Int.in(0, 1), ~annot) for the
+number in the inclusive range @rhombus(Real.in(0, 1), ~annot) for the
 time within an epoch, which means that there are two different ways to
 get a snapshot at boundary times: @rhombus(1) within epoch
 @rhombus(N, ~var) and @rhombus(0) with epoch @rhombus(N-1, ~var). Those

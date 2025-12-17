@@ -1346,9 +1346,10 @@
        (pair? (cddr form))
        (exact-integer? (caddr form))
        (null? (cdddr form))
-       (string-append "Int.in(" (number->string (cadr form))
-                      ", " (number->string (caddr form))
-                      ")")))
+       (string-append
+        "Int.in("
+        (number->string (cadr form)) " ..= " (number->string (caddr form))
+        ")")))
 
 (void (set-primitive-contract-combinator! 'integer-in handle-integer-in))
 (define-annotation-syntax Int.in

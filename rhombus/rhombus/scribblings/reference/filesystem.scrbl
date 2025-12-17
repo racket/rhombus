@@ -147,7 +147,7 @@
   fun filesystem.make_directory(
     path :: PathString,
     ~parents: parents = #false,
-    ~permissions: permissions :: Int.in(0, 65535) = 0o777
+    ~permissions: permissions :: Int.in(0 ..= 65535) = 0o777
   ) :: Void
 ){
 
@@ -184,7 +184,7 @@
            = #'file,
     ~make_name: make_name :: String -> Path.Relative
                   = fun (s): Path("tmp" +& s),
-    ~permissions: permissions :: maybe(Int.in(0, 65535))
+    ~permissions: permissions :: maybe(Int.in(0 ..= 65535))
                     = #false,
     ~replace_permissions: replace_permissions = #false
   ) :: filesystem.Temporary
@@ -240,7 +240,7 @@
     ~recur: recur = #false,
     ~exists_ok: exists_ok = #false,
     ~follow_links: follow_links = #true,
-    ~permissions: permissions :: maybe(Int.in(0, 65535)) = #false,
+    ~permissions: permissions :: maybe(Int.in(0 ..= 65535)) = #false,
     ~replace_permissions: replace_permissions = #true,
     ~keep_modify_seconds: keep_modify_seconds = #false
   ) :: Void
@@ -319,7 +319,7 @@
   fun filesystem.permissions(
     path :: PathString,
     ~bits: bits = #false,
-    ~set_to: set_to :: maybe(Int.in(0, 65535)) = #false
+    ~set_to: set_to :: maybe(Int.in(0 ..= 65535)) = #false
   ) :: Int || Set.of(matching(#'read || #'write || #'execute)) || Void
 ){
 

@@ -325,9 +325,9 @@
 
 (define (check-radix who radix)
   (unless (and (exact-integer? radix)
-               (radix . >= . 2)
+               (2 . <= . radix)
                (radix . <= . 16))
-    (raise-annotation-failure who radix "Int.in(2, 16)")))
+    (raise-annotation-failure who radix "Int.in(2 ..= 16)")))
 
 (define/method (String.maybe_to_int s #:radix [radix 10])
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))

@@ -23,9 +23,9 @@
   method (prng :: Random).random()
     :: Real.in(0 ~exclusive, 1 ~exclusive)
   method (prng :: Random).random(n :: PosInt)
-    :: Int.in(0, n ~exclusive)
+    :: Int.in(0 .. n)
   method (prng :: Random).random(start :: Int, end :: Int)
-    :: Int.in(start, end ~exclusive)
+    :: Int.in(start .. end)
 ){
 
  Steps @rhombus(prng) to obtain a number.
@@ -58,10 +58,9 @@
   annot.macro 'RandomState'
 ){
 
- Satisfied by an array of 6 values where the first three values are
- integers in the range @rhombus(0) to @rhombus(4294967086), inclusive,
- and the last three integers are in the range @rhombus(0) to
- @rhombus(4294944442), inclusive.
+ Satisfied by an array of 6 integers where the first three integers
+ are @rhombus(Int.in(0 .. = 4294967086), ~annot) and the last three
+ integers are @rhombus(Int.in(0 .. = 4294944442), ~annot).
 
 }
 

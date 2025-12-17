@@ -166,7 +166,7 @@ check:
 
 version_guard.at_least "8.14.0.7":
   block:
-    let annot = @str{Int.in(@repr(0x0), @repr(0x10FFFF)) && !Int.in(@repr(0xD800), @repr(0xDFFF))}
+    let annot = @str{Int.in(@repr(0x0) ..= @repr(0x10FFFF)) && !Int.in(@repr(0xD800) ..= @repr(0xDFFF))}
     check:
       Char.from_int(0x0) ~is Char"\0"
       Char.from_int(0x10FFFF) ~is Char"\U10FFFF"

@@ -36,7 +36,7 @@ absolute point in time as a date and time in a specific time zone.
     ~hour: hour :: Int.in(0 ..= 23) = 0,
     ~minute: minute :: Int.in(0 ..= 59) = 0,
     ~second: second :: Int.in(0 ..= 59) = 0,
-    ~nanosecond: nanosecond :: Int.in(0, 999_999_999) = 0
+    ~nanosecond: nanosecond :: Int.in(0 ..= 999_999_999) = 0
   )
 ){
 
@@ -251,7 +251,7 @@ absolute point in time as a date and time in a specific time zone.
     ~hour: hour :: Int.in(0 ..= 23) = 0,
     ~minute: minute :: Int.in(0 ..= 59) = 0,
     ~second: second :: Int.in(0 ..= 59) = 0,
-    ~nanosecond: nanosecond :: Int.in(0, 999_999_000) = 0
+    ~nanosecond: nanosecond :: Int.in(0 ..= 999_999_999) = 0
   )
 ){
 

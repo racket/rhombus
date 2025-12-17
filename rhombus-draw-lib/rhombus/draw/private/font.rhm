@@ -80,7 +80,7 @@ class Font(private _handle):
     { normal, italic, slant }
 
   symbol_set_annot Weight:
-    ~is_a Int.in(100, 1000)
+    ~is_a Int.in(100 ..= 1000)
     { thin, ultralight, light, semilight, book, normal,
       medium, semibold, bold, ultrabold, heavy, ultraheavy }
 

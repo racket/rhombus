@@ -51,8 +51,8 @@ like @rhombus(<) and @rhombus(>) work on characters.
 }
 
 @doc(
-  fun Char.from_int(i :: Int.in(0x0, 0x10FFFF)
-                      && !Int.in(0xD800, 0xDFFF))
+  fun Char.from_int(i :: Int.in(0x0 ..= 0x10FFFF)
+                      && !Int.in(0xD800 ..= 0xDFFF))
     :: Char
 ){
 

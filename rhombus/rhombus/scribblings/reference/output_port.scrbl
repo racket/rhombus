@@ -78,7 +78,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
     path :: PathString,
     ~exists: exists_flag :: Port.Output.ExistsMode = #'error,
     ~mode: mode :: Port.Mode = #'binary,
-    ~permissions: permissions :: Int.in(0, 65535) = 0o666,
+    ~permissions: permissions :: Int.in(0 ..= 65535) = 0o666,
     ~replace_permissions: replace_permissions = #false
   ) :: Port.Output && Port.FileStream
 ){

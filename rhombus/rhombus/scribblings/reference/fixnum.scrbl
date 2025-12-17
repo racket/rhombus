@@ -116,9 +116,9 @@ unspecialized and fixnum-specific operations.
 
 @doc(
   fun fixnum.bits.popcount(x :: Fixnum) :: Fixnum
-  fun fixnum.bits.popcount16(x :: Fixnum && Int.in(0, 65535))
+  fun fixnum.bits.popcount16(x :: Fixnum && Int.in(0 ..= 65535))
     :: Fixnum
-  fun fixnum.bits.popcount32(x :: Fixnum && Int.in(0, 4294967295))
+  fun fixnum.bits.popcount32(x :: Fixnum && Int.in(0 ..= 4294967295))
     :: Fixnum
 ){
 

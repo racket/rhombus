@@ -10,7 +10,7 @@
   annot.macro 'gui.View.SizeInt'
 ){
 
- Equivalent to @rhombus(Int.in(0, 1000000), ~annot).
+ Equivalent to @rhombus(Int.in(0 ..= 1000000), ~annot).
 
 }
 
@@ -26,7 +26,7 @@
   annot.macro 'gui.View.PositionInt'
 ){
 
- Equivalent to @rhombus(Int.in(-1000000, 1000000), ~annot).
+ Equivalent to @rhombus(Int.in(-1000000 ..= 1000000), ~annot).
 
 }
 
@@ -44,7 +44,7 @@
   annot.macro 'gui.View.SpacingInt'
 ){
 
- Equivalent to @rhombus(Int.in(0, 1000), ~annot).
+ Equivalent to @rhombus(Int.in(0 ..= 1000), ~annot).
 
 }
 

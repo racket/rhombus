@@ -14,11 +14,11 @@
     bstr_bind: def bind ~defn
     bstr_list_bind: def bind ~defn
     response_list_bind: def bind ~defn
-  
+
   class Response():
     expression ~none
     binding 'Response($field, ...)'
-  
+
   grammar field
   | ~status_line: $bstr_bind
   | ~status_code: $status_code_bind
@@ -145,7 +145,7 @@
   annot.macro 'StatusCode'
 ){
 
- Equivalent to @rhombus(Int.in(100, 999)).
+ Equivalent to @rhombus(Int.in(100 ..= 999) ~annot).
 
 }
 

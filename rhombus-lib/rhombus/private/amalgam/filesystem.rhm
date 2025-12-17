@@ -177,7 +177,7 @@ namespace filesystem:
 
   fun make_directory(p :: PathString,
                      ~parents = #false,
-                     ~permissions: permissions :: Int.in(0, 65535) = 0o777):
+                     ~permissions: permissions :: Int.in(0 ..= 65535) = 0o777):
     ~who: who
     fun make_one(p):
       rkt_error.local_error_adjust { #'#{make-directory}: who }:
@@ -215,7 +215,7 @@ namespace filesystem:
                                    ~name: #'#{|make_name for make_temporary|})
         = fun (s): Path("tmp" +& s),
     ~permissions:
-      permissions :: maybe(Int.in(0, 65535)) = #false,
+      permissions :: maybe(Int.in(0 ..= 65535)) = #false,
     ~replace_permissions = #false
   ) :~ Temporary:
     ~who: who
@@ -261,7 +261,7 @@ namespace filesystem:
            dest_path :: PathString,
            ~recur = #false,
            ~exists_ok = #false,
-           ~permissions: permissions :: maybe(Int.in(0, 65535)) = #false,
+           ~permissions: permissions :: maybe(Int.in(0 ..= 65535)) = #false,
            ~replace_permissions = #true,
            ~keep_modify_seconds = #false,
            ~follow_links = #true):
@@ -352,7 +352,7 @@ namespace filesystem:
 
   fun permissions(path :: PathString,
                   ~bits = #false,
-                  ~set_to: change_to :: maybe(Int.in(0, 65535)) = #false):
+                  ~set_to: change_to :: maybe(Int.in(0 ..= 65535)) = #false):
     ~who: who
     rkt_error.local_error_adjust { #'#{file-or-directory-permissions}: who }:
       cond

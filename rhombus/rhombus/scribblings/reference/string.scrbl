@@ -390,12 +390,12 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.to_int(
     str :: ReadableString,
-    ~radix: radix :: Int.in(2, 16) = 10
+    ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: Int
   annot.macro 'String.to_int'
   method String.maybe_to_int(
     str :: ReadableString,
-    ~radix: radix :: Int.in(2, 16) = 10
+    ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: maybe(Int)
 ){
 
@@ -427,7 +427,7 @@ Strings are @tech{comparable}, which means that generic operations like
   def n :: String.to_int = "-42"
   n
   ~error:
-    def m :: String.to_int && Int.in(0, 40) = "-42"
+    def m :: String.to_int && Int.in(0 ..= 40) = "-42"
 )
 
 }
@@ -436,12 +436,12 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.to_number(
     str :: ReadableString,
-    ~radix: radix :: Int.in(2, 16) = 10
+    ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: Number
   annot.macro 'String.to_number'
   method String.maybe_to_number(
     str :: ReadableString,
-    ~radix: radix :: Int.in(2, 16) = 10
+    ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: maybe(Number)
 ){
 
@@ -477,7 +477,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.from_int(
     n :: Integer,
-    ~radix: radix :: Int.in(2, 16) = 10
+    ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: String
   method String.from_number(n :: Number) :: String
 ){

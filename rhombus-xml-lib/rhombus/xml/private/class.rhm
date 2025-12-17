@@ -93,12 +93,12 @@ class Text(~text: text :: String,
 class Inject(~text: text :: String,
              ~srcloc: srcloc :: maybe(SrclocRange) = #false)
 
-annot.macro 'EntityInt': 'Int.in(1, 0xD7FF)
-                            || Int.in(0xE000, 0xFFFD)
-                            || Int.in(0x10000, 0x10FFFF)'
+annot.macro 'EntityInt': 'Int.in(1 ..= 0xD7FF)
+                            || Int.in(0xE000 ..= 0xFFFD)
+                            || Int.in(0x10000 ..= 0x10FFFF)'
 
 class Entity(~text: text :: String || EntityInt,
-             ~srcloc: srcloc :: maybe(SrclocRange) = #false)             
+             ~srcloc: srcloc :: maybe(SrclocRange) = #false)
 
 class Element(~name: name :: String,
               ~attributes: attributes :: List.of(Attribute) = [],

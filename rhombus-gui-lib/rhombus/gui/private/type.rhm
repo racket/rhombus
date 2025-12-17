@@ -9,20 +9,20 @@ export:
 namespace View
 
 annot.macro '(View.SizeInt)':
-  'Int.in(0, 1000000)'
+  'Int.in(0 ..= 1000000)'
 
 annot.macro '(View.Size)':
   '[maybe(View.SizeInt), maybe(View.SizeInt)]'
 
 annot.macro '(View.PositionInt)':
-  'Int.in(-1000000, 1000000)'
+  'Int.in(-1000000 ..= 1000000)'
 
 enum View.Position
 | center
 | ~is_a [View.PositionInt, View.PositionInt]
 
 annot.macro '(View.SpacingInt)':
-  'Int.in(0, 1000)'
+  'Int.in(0 ..= 1000)'
 
 annot.macro '(View.Margin)':
   '[View.SpacingInt, View.SpacingInt]'

@@ -223,11 +223,11 @@ class ZonedDateTime(~year: year :: Int,
                    secs,
                    d)
 
-  fun find_seconds(~second: second :: Int.in(0, 60) = 0,
-                   ~minute: minute :: Int.in(0, 59) = 0,
-                   ~hour: hour :: Int.in(0, 23) = 0,
-                   ~day: day :: Int.in(1, 31),
-                   ~month: month :: Int.in(1, 12),
+  fun find_seconds(~second: second :: Int.in(0 ..= 60) = 0,
+                   ~minute: minute :: Int.in(0 ..= 59) = 0,
+                   ~hour: hour :: Int.in(0 ..= 23) = 0,
+                   ~day: day :: Int.in(1 ..= 31),
+                   ~month: month :: Int.in(1 ..= 12),
                    ~year: year :: Int,
                    ~local: local = #true) :~ Int:
     rkt_date.#{find-seconds}(second, minute, hour, day, month, year, local)

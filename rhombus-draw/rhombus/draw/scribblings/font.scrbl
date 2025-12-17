@@ -60,7 +60,7 @@
  between that of @litchar{#} and @litchar{~}, inclusive.
 
 }
-  
+
 
 @doc(
   enum draw.Font.Kind
@@ -91,7 +91,7 @@
 
 @doc(
   enum draw.Font.Weight
-  | ~is_a Int.in(100, 1000 ~inclusive)
+  | ~is_a Int.in(100 ..= 1000)
   | thin
   | ultralight
   | light

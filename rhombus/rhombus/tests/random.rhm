@@ -53,12 +53,12 @@ block:
   check:
     cur_rng.state ~is_a RandomState
     cur_rng.state ~matches Array(
-      _ :: Int.in(0, 4294967086),
-      _ :: Int.in(0, 4294967086),
-      _ :: Int.in(0, 4294967086),
-      _ :: Int.in(0, 4294944442),
-      _ :: Int.in(0, 4294944442),
-      _ :: Int.in(0, 4294944442),
+      _ :: Int.in(0 ..= 4294967086),
+      _ :: Int.in(0 ..= 4294967086),
+      _ :: Int.in(0 ..= 4294967086),
+      _ :: Int.in(0 ..= 4294944442),
+      _ :: Int.in(0 ..= 4294944442),
+      _ :: Int.in(0 ..= 4294944442),
     )
   let similar_rng = Random(cur_rng.state)
   check:

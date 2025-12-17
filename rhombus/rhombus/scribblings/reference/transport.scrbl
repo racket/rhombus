@@ -11,8 +11,8 @@
   annot.macro 'ListenPortNumber'
 ){
 
- A @rhombus(PortNumber, ~annot) is a @rhombus(Int.in(1, 65535)). A
- @rhombus(ListenPortNumber, ~annot) is a @rhombus(Int.in(0, 65535)),
+ A @rhombus(PortNumber, ~annot) is a @rhombus(Int.in(1 ..= 65535), ~annot). A
+ @rhombus(ListenPortNumber, ~annot) is a @rhombus(Int.in(0 ..= 65535), ~annot),
  where @rhombus(0) indicates that the operating system should chose an
  ephemeral port number.
 

@@ -153,7 +153,7 @@ output; it is possible for an object to be both an input and output port.
     path :: PathString,
     ~exists: exists_flag :: Port.Output.ExistsMode = #'error,
     ~mode: mode :: Port.Mode = #'binary,
-    ~permissions: permissions :: Int.in(0, 65535) = 0o666,
+    ~permissions: permissions :: Int.in(0 ..= 65535) = 0o666,
     ~replace_permissions: replace_permissions = #false
   ) :: values(Port.Input, Port.Output)
 ){

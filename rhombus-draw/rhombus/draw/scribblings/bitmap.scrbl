@@ -75,7 +75,7 @@
   method (bm :: draw.Bitmap).write(
     dest :: Path,
     ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
-    ~quality: quality :: Int.in(0, 100) = 75,
+    ~quality: quality :: Int.in(0 ..= 100) = 75,
     ~as_unscaled: as_unscaled :: Any = #false,
   ) :: Void
 ){

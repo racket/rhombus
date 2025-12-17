@@ -58,7 +58,7 @@ annot.macro 'Headers':
   'Map.of(String, Bytes || String)'
 
 annot.macro 'StatusCode':
-  'Int.in(100, 999)'
+  'Int.in(100 ..= 999)'
 
 namespace hdr:
   export:
