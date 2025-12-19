@@ -7,8 +7,10 @@
       lib("scribblings/main/contents.rkt")
     contents.#{build-contents}(~style: PairList[#'#{no-navigation}],
                                ~#{main-language-family}: "Rhombus",
+                               ~#{default-language-family}: PairList["Rhombus"],
                                ~#{self-path}: "rhombus/index.html",
-                               ~#{bug-url}: "https://github.com/racket/rhombus/issues")
+                               ~#{bug-url}: "https://github.com/racket/rhombus/issues",
+                               ~version: default_document_version())
   | @title(~category: #'language){Rhombus}
     def start_doc = ModulePath'lib("rhombus/scribblings/getting-started/rhombus-getting-started.scrbl")'
     @para{Please see @secref(~doc: start_doc, "top").}

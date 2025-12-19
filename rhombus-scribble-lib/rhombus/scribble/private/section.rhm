@@ -4,7 +4,6 @@ import:
   "util.rhm" open
   lib("scribble/base.rkt")
   lib("version/utils.rkt")
-  lib("racket/base.rkt").version
   "index.rhm"!for_extras open
   "maybe_drop_extras.rhm" open
 
@@ -15,11 +14,13 @@ export:
   subsubsection
   subsubsub_section
 
+  default_document_version
+
 fun title(
   ~tag: tag :: maybe(TagSuffix) = #false,
   ~tag_prefix: tag_prefix :: maybe(TagPrefix) = #false,
   ~style: part_style :: maybe(StyleLike) = #false,
-  ~version: vers :: maybe(String) = #false,
+  ~version: vers :: maybe(String) = default_document_version(),
   ~date: date :: maybe(String) = #false,
   ~category: category :: DocCategory = #'library,
   ~foreign_category: foreign_category :: DocCategory = category,
@@ -65,7 +66,7 @@ fun subsubsub_section(
                             pre_content)
 
 fun pack_tag_prefix(tag_prefix, category, foreign_category):
-  if utils.#{version<?}(version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
+  if utils.#{version<?}(system.racket_version(), "8.14.0.5") // assuming implies "scribble-lib" version 1.54
   | tag_prefix
   | let t = { #'#{default-language-family}: PairList["Rhombus"] }
     fun norm_category(category):
@@ -95,3 +96,6 @@ fun author(c :: Content,
   if email
   | base.#{author+email}(c, email, ~#{obfuscate?}: obfuscate)
   | base.author(c)
+
+fun default_document_version():
+  system.version() +& "+" +& system.racket_version()

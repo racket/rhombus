@@ -23,4 +23,7 @@
   @item{@docref(ModulePath'lib("rhombus/scribblings/rhombus-racket/rhombus-racket.scrbl")')
         --- mixing Rhombus and Racket modules}
 
+  @item{@seclink("top", ~doc: ModulePath'lib("rhombus/scribblings/main/rhombus.scrbl")'){Rhombus Documentation}
+        --- all documentation}
+
 )

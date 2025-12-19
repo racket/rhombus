@@ -66,3 +66,11 @@
  @rhombus(subsection), and so on.
 
 }
+
+@doc(
+  fun default_document_version() :: String
+){
+
+ Returns @rhombus(system.version() +& "+" +& system.racket_version()).
+
+}
