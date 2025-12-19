@@ -493,15 +493,16 @@
                         (define raw (bytes->string/utf-8 (read-bytes len in) #\?))
                         (define-values (line-advance column-advance) (count-graphemes raw))
                         (define kind (s-exp-mode-kind status))
+                        (define rkt-type (if (hash? type) (hash-ref type 'type #f) type))
                         (define type* (case kind
                                         [(any) type]
                                         [(keyword)
-                                         (case type
+                                         (case rkt-type
                                            [(eof) 'eof]
                                            [(symbol) 'hash-colon-keyword]
                                            [else 'error])]
                                         [(none)
-                                         (case type
+                                         (case rkt-type
                                            [(eof) 'eof]
                                            [else 'error])]))
                         (values (s-exp-token tok line-advance column-advance) type* paren start end backup
