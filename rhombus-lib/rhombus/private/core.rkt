@@ -10,7 +10,8 @@
            shrubbery/private/lang
            shrubbery/variant)
   (provide get-info-proc
-           make-get-info-proc)
+           make-get-info-proc
+           documentation-language-family-hash)
   (define (get-info-proc key default make-default
                          #:variant [variant default-variant]
                          #:semantic-type-guess [semantic-type-guess default-semantic-type-guess])
@@ -24,6 +25,8 @@
       [(drracket:define-popup)
        (dynamic-require 'rhombus/private/define-popup
                         'define-popup)]
+      [(documentation-language-family)
+       documentation-language-family-hash]
       [else
        (shrubbery-get-info-proc/mode key default make-default #:variant variant)]))
   (define (make-get-info-proc #:variant [variant default-variant]
@@ -33,4 +36,9 @@
                      #:variant variant
                      #:semantic-type-guess semantic-type-guess)))
   (define (default-semantic-type-guess str default)
-    (default str)))
+    (default str))
+  (define documentation-language-family-hash
+    (hash 'doc-language-name "Rhombus"
+          'doc-path "rhombus/index.html"
+          'doc-query
+          (hash 'fam "Rhombus" 'famroot "rhombus"))))

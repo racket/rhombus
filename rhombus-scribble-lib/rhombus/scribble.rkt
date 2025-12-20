@@ -36,7 +36,9 @@
   #:info get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           shrubbery/private/lang)
+           shrubbery/private/lang
+           (only-in (submod rhombus/private/core reader)
+                    documentation-language-family-hash))
   (provide read-proc
            read-syntax-proc
            get-info-proc)
@@ -54,6 +56,8 @@
        (dynamic-require 'scribble/tools/drracket-buttons 'drracket-buttons)]
       [(drracket:default-extension)
        "scrbl"]
+      [(documentation-language-family)
+       documentation-language-family-hash]
       [else
        (shrubbery-get-info-proc/mode key default make-default
                                      #:mode 'text)])))
