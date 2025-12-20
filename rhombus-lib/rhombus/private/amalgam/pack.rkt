@@ -354,7 +354,7 @@
   (cond
     [(syntax-wrap? r) (unpack-multi/tagged (syntax-unwrap r) who at-stx)]
     [(multi-syntax? r) r]
-    [else (datum->syntax #f (list 'multi (unpack-multi r who at-stx)))]))
+    [else (datum->syntax #f (cons 'multi (unpack-multi r who at-stx)))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
 ;; an empty list turns into `multi` with no groups

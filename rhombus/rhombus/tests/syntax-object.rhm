@@ -173,8 +173,10 @@ block:
 check:
   'x'.ephemeral_term() ~matches 'x'
   'x'.ephemeral_group() ~matches 'x'
+  'x'.ephemeral_term().ephemeral_group() ~matches 'x'
   'x y'.ephemeral_group() ~matches 'x y'
   'x y'.ephemeral_sequence() ~matches 'x y'
+  'x y'.ephemeral_group().ephemeral_sequence() ~matches 'x y'
   'x y; z'.ephemeral_sequence() ~matches 'x y; z'
   'x'.ephemeral_term().ephemeral_property(#'a, 1).ephemeral_term().ephemeral_property(#'a) ~is 1
   'x'.ephemeral_group().ephemeral_property(#'a, 1).ephemeral_group().ephemeral_property(#'a) ~is 1
