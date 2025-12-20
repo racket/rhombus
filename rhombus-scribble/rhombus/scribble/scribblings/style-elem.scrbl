@@ -64,6 +64,14 @@
  @item{A @rhombus(Style.HTML.Xexpr, ~annot): @html{Supplies literal HTML
    to render before and after the element's content.}}
 
+ @item{A @rhombus(Style.HTML.LinkResource, ~annot): @html{Copies a
+   referenced file to the location of the rendered document and renders a
+   hyperlink to the copy.}}
+
+ @item{A @rhombus(Style.HTML.InstallResource, ~annot): @html{Copies a
+   referenced file to the location of the rendered document (without a
+   hyperlink).}}
+
  @item{@symkey(#'aux): @all{Intended for use in titles, where the
   auxiliary part of the title can be omitted in hyperlinks. See, for
   example, @rhombus(secref).}}

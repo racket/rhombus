@@ -209,11 +209,19 @@
 }
 
 @doc(
-  expr.macro 'rhombusmodname ($module_path)'
-  expr.macro 'rhombuslangname ($module_path)'
-  expr.macro 'racketmodname ($module_path)'
+  expr.macro 'rhombusmodname $module_path_and_flags'
+  expr.macro 'rhombuslangname $module_path_and_flags'
+  expr.macro 'racketmodname $module_path_and_flags'
+
+  grammar module_path_and_flags
+  | ($module_path)
+  | ($module_path, ~indirect)
 ){
 
  Form for referencing Rhombus modules, languages, and Racket modules.
+
+ When @rhombus(~indirect) is present, then the hyperlink's resolution in
+ HTML is potentially delayed until the HTML is viewed, and it may link to
+ a documentation server instead of requiring installed documentation.
 
 }

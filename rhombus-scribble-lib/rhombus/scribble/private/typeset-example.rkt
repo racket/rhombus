@@ -306,7 +306,64 @@
                                   (parameterize ([error-print-context-length 0]
                                                  [current-error-port o])
                                     ((error-display-handler) (exn-message exn) exn))))
-  (string->immutable-string (get-output-string o)))
+  (string->immutable-string
+   (flow-error-lines (get-output-string o))))
+
+(define (flow-error-lines s)
+  (define lines (string-split s "\n"))
+  (define limit 72)
+  (cond
+    [(ormap (lambda (l) ((string-length s) . > . limit)) lines)
+     (define (reflow s width)
+       (let loop ([i 0] [start 0] [last #f])
+         (cond
+           [(= i (string-length s))
+            (cond
+              [(and ((- i start) . > . width)
+                    last)
+               (cons (substring s start last)
+                     (loop i (add1 last) #f))]
+              [else
+               (list (substring s start))])]
+           [(char=? #\space (string-ref s i))
+            (cond
+              [((- i start) . > . width)
+               (if last
+                   (cons (substring s start last)
+                         (loop i (add1 last) #f))
+                   (loop i start i))]
+              [else
+               (loop (add1 i) start i)])]
+           [else (loop (add1 i) start last)])))
+     (define s+newline
+       (apply
+        string-append
+        (apply
+         append
+         (for/list ([l (in-list lines)])
+           (cond
+             [((string-length l) . <= . limit)
+              (list (string-append l "\n"))]
+             [(regexp-match? #rx"^   " l)
+              (for/list ([sub-line (in-list (reflow (substring l 3) (- limit 3)))])
+                (string-append "   " sub-line "\n"))]
+             [(regexp-match-positions #rx"^  ([^:]+): " l)
+              => (lambda (m)
+                   (define prefix-len (cdar m))
+                   (define tail (substring l prefix-len))
+                   (define sub-lines (reflow tail (- limit (cdar m))))
+                   (cons
+                    (string-append (substring l 0 prefix-len) (car sub-lines) "\n")
+                    (for/list ([sub-line (in-list (cdr sub-lines))])
+                      (string-append (make-string prefix-len #\space) sub-line "\n"))))]
+             [(regexp-match? #rx"^ " l)
+              (for/list ([sub-line (in-list (reflow (substring l 1) (- limit 1)))])
+                (string-append " " sub-line "\n"))]
+             [else
+              (for/list ([sub-line (in-list (reflow l (- limit 1)))])
+                (string-append sub-line "\n"))])))))
+     (substring s+newline 0 (sub1 (string-length s+newline)))]
+    [else s]))
 
 (define (adjust-top-srcloc stx)
   (define l (syntax->list stx))

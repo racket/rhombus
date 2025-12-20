@@ -224,6 +224,35 @@
 
 }
 
+@doc(
+  veneer Style.HTML.LinkResource
+  fun Style.HTML.LinkResource(
+    script :: PathString
+  ):: Style.HTML.LinkResource
+){
+
+ @html{Used as a @tech{style property} in an @nontermref(element_style)
+  to refer to a file that should be copied to the rendered document's
+  location and hyperlinked to that copy.}
+
+ @veneer_same(Style.HTML.LinkResource, rkt_link_resource)
+
+}
+
+@doc(
+  veneer Style.HTML.InstallResource
+  fun Style.HTML.InstallResource(
+    script :: PathString
+  ):: Style.HTML.InstallResource
+){
+
+ @html{Like @rhombus(Style.HTML.LinkResource), but without hyperlinking
+  to the copied file.}
+
+ @veneer_same(Style.HTML.InstallResource, rkt_install_resource)
+
+}
+
 
 @doc(
   veneer Style.Latex.CommandExtras

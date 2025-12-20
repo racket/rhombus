@@ -7,4 +7,5 @@
 @include_section("memory.scrbl")
 @include_section("measure.scrbl")
 @include_section("random.scrbl")
+@include_section("version.scrbl")
 @include_section("collect.scrbl")

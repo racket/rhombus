@@ -12,6 +12,9 @@
 
  Reports the running Rhombus version.
 
+ See @rhombusmodname(rhombus/version) for version-number conversion and
+ comparison utilities.
+
 @examples(
   system.version()
 )
@@ -23,6 +26,9 @@
 ){
 
  Reports the host Racket version.
+
+ See @rhombusmodname(rhombus/version) for version-number conversion and
+ comparison utilities.
 
 @examples(
   system.racket_version()

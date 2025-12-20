@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title{Rhombus}
+@title(~category: #'#{omit-start}){Rhombus}
 
 See @docref(ModulePath'lib("rhombus/scribblings/main/rhombus.scrbl")').
 

@@ -1,0 +1,36 @@
+#lang rhombus/static
+import:
+  lib("version/utils.rkt") as rkt
+
+export:
+  Version
+
+veneer Version(this :: satisfying(rkt.#{valid-version?})):
+  private implements Comparable
+  private override compare_to(other):
+    cond
+    | rkt.#{version<?}(this, other):
+        -1
+    | rkt.#{version<?}(other, this):
+        1
+    | ~else:
+        0
+  private override less(other):
+    rkt.#{version<?}(this, other)
+  private override less_or_equal(other):
+    rkt.#{version<=?}(this, other)
+  private override greater(other):
+    rkt.#{version<?}(other, this)
+  private override greater_or_equal(other):
+    rkt.#{version<=?}(other, this)
+  private override compares_equal(other):
+    other == this
+  private override compares_unequal(other):
+    other != this
+
+  method to_list() :~ List:
+    List[& rkt.#{version->list}(this)]
+  method is_alpha() :~ Boolean:
+    rkt.#{alpha-version?}(this)
+  method to_int() :~ Int:
+    rkt.#{version->integer}(this)

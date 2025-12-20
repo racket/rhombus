@@ -66,5 +66,7 @@
 (define rkt_url_anchor @racket[url-anchor?])
 (define rkt_script_property @racket[script-property?])
 (define rkt_xexpr_property @racket[xexpr-property?])
+(define rkt_link_resource @racket[link-resource?])
+(define rkt_install_resource @racket[install-resource?])
 
 (define rkt_command_extras @racket[command-extras?])

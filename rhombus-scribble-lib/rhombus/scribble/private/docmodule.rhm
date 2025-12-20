@@ -8,6 +8,7 @@ import:
   "rhombus.rhm" open
   meta:
     rhombus/rx open
+    rhombus/version
   meta_label:
     rhombus:
       expose:
@@ -90,17 +91,29 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
              option.form, ..., ...]
   )
 
-expr.macro 'rhombusmodname ($mod ...)':
-  expr_meta.pack_s_exp(['racketmodlink',
-                        pack_tree(ModulePath('$mod ...').s_exp()),
-                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
+meta:
+  syntax_class ModArg
+  | '($(mod :: Group))':
+      field flags = []
+  | '($(mod :: Group), ~indirect)':
+      field flags: if (system.racket_version() :: version.Version) >= ("9.0.0.11" :: version.Version)
+                   | ['~indirect']
+                   | []
 
-expr.macro 'rhombuslangname ($mod ...)':
+expr.macro 'rhombusmodname $(mod_arg :: ModArg)':
   expr_meta.pack_s_exp(['racketmodlink',
-                        as_racket_mod_name('$mod ...'),
-                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
+                        pack_tree(ModulePath('$mod_arg.mod').s_exp()),
+                        & mod_arg.flags,
+                        expr_meta.pack_expr('@rhombus($mod_arg.mod, ~datum)')])
 
-expr.macro 'racketmodname ($mod ...)':
+expr.macro 'rhombuslangname $(mod_arg :: ModArg)':
   expr_meta.pack_s_exp(['racketmodlink',
-                        as_racket_mod_name('$mod ...'),
-                        expr_meta.pack_expr('@rhombus($mod ..., ~datum)')])
+                        as_racket_mod_name('$mod_arg.mod'),
+                        & mod_arg.flags,
+                        expr_meta.pack_expr('@rhombus($mod_arg.mod, ~datum)')])
+
+expr.macro 'racketmodname $(mod_arg :: ModArg)':
+  expr_meta.pack_s_exp(['racketmodlink',
+                        as_racket_mod_name('$mod_arg.mod'),
+                        & mod_arg.flags,
+                        expr_meta.pack_expr('@rhombus($mod_arg.mod, ~datum)')])

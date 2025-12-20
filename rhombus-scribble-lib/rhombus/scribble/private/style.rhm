@@ -88,6 +88,12 @@ veneer Style(this :: _Style):
         'make_script'
     export veneer Xexpr(this :: satisfying(html.#{xexpr-property?})):
       expression ~none
+    export veneer LinkResource(this :: satisfying(html.#{link-resource?})):
+      expression 'LinkResource':
+        'make_link_resource'
+    export veneer InstallResource(this :: satisfying(html.#{link-resource?})):
+      expression 'InstallResource':
+        'make_install_resource'
 
   export namespace Latex:
     export veneer CommandExtras(this :: satisfying(latex.#{command-extras?})):
@@ -169,6 +175,14 @@ fun make_url_anchor(str :: String) :: Style.HTML.URLAnchor:
 fun make_script(script :: PathString || List.of(String)) :: Style.HTML.Script:
   ~name: Style.HTML.Script
   html.#{script-property}(& if script is_a List | script | [script])
+
+fun make_link_resource(path :: PathString) :: Style.HTML.LinkResource:
+  ~name: Style.HTML.LinkResource
+  html.#{link-resource}(path)
+
+fun make_install_resource(path :: PathString) :: Style.HTML.InstallResource:
+  ~name: Style.HTML.InstallResource
+  html.#{install-resource}(path)
 
 fun make_command_extras(strs :: List.of(String)) :: Style.Latex.CommandExtras:
   ~name: Style.Latex.CommandExtras
