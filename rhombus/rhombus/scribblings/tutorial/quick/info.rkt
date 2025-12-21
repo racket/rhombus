@@ -1,3 +1,3 @@
 #lang info
 
-(define scribblings '(("rhombus-quick.scrbl" () (tutorial))))
+(define scribblings '(("rhombus-quick.scrbl" () ("Rhombus"))))
