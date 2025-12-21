@@ -218,52 +218,48 @@
     #:datum-literals (group parens)
     [(group _::doc-form (~var id (identifier-target space-name)) (parens . _) . _) (attribute id.name)]))
 
-(define-for-syntax (parens-extract-metavariables stx space-name vars #:just-parens? [just-parens? #f])
-  (define (extract-groups stx)
-    (define-syntax-class maybe-kw-opt
-      #:attributes (g)
-      #:datum-literals (group block)
-      (pattern (group _:keyword (block :maybe-opt)))
-      (pattern :maybe-opt))
-    (define-syntax-class maybe-opt
-      #:datum-literals (group block op =)
-      (pattern ((~and tag group) t ... (op =) . _)
-        #:with g #'(tag t ...))
-      (pattern ((~and tag group) t ... (block . _))
-        #:with g #'(tag t ...))
-      (pattern g))
-    (define-syntax-class and
-      #:datum-literals (group op &)
-      (pattern ((~and tag group) (op &) . g)))
-    (define-syntax-class kw-and
-      #:datum-literals (group op ~&)
-      (pattern ((~and tag group) (op ~&) . g)))
-    (syntax-parse stx
+(define-for-syntax (do-parens-extract-metavariables gs space-name vars)
+  (define-syntax-class maybe-kw-opt
+    #:attributes (g)
+    #:datum-literals (group block)
+    (pattern (group _:keyword (block :maybe-opt)))
+    (pattern :maybe-opt))
+  (define-syntax-class maybe-opt
+    #:datum-literals (group block op =)
+    (pattern ((~and tag group) t ... (op =) . _)
+      #:with g #'(tag t ...))
+    (pattern ((~and tag group) t ... (block . _))
+      #:with g #'(tag t ...))
+    (pattern g))
+  (define-syntax-class and
+    #:datum-literals (group op &)
+    (pattern ((~and tag group) (op &) . g)))
+  (define-syntax-class kw-and
+    #:datum-literals (group op ~&)
+    (pattern ((~and tag group) (op ~&) . g)))
+  (define norm-gs
+    (syntax-parse gs
       #:datum-literals (group op [ooo ...])
-      [(~or* (~and (pre-g ... dot-g (group (op ooo)))
-                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
-                   (~parse gs #'(kw-opt-g.g ... dot-g)))
-             (~and (pre-g ... and:and (~optional kw-and:kw-and))
-                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
-                   (~parse gs #'(kw-opt-g.g ... (and.tag . and.g) (~? (kw-and.tag . kw-and.g)))))
-             (~and (pre-g ... kw-and:kw-and (~optional and:and))
-                   (~parse (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...))
-                   (~parse gs #'(kw-opt-g.g ... (kw-and.tag . kw-and.g) (~? (and.tag . and.g)))))
-             (~and (kw-opt-g:maybe-kw-opt ...)
-                   (~parse gs #'(kw-opt-g.g ...))))
-       (for/fold ([vars vars]) ([g (in-list (syntax->list #'gs))])
-         (extract-binding-metavariables g vars))]))
-  (if just-parens?
-      (syntax-parse (unpack-group stx #f #f)
-        #:datum-literals (parens)
-        [(parens . gs)
-         (extract-groups #'gs)]
-        [_ vars])
-      (syntax-parse (unpack-group stx #f #f)
-        #:datum-literals (parens group)
-        [(group _::doc-form (~var _ (identifier-target space-name)) (parens . gs) . _)
-         (extract-groups #'gs)]
-        [_ vars])))
+      [(pre-g ... dot-g (group (op ooo)))
+       #:with (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...)
+       #'(kw-opt-g.g ... dot-g)]
+      [(pre-g ... and:and (~optional kw-and:kw-and))
+       #:with (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...)
+       #'(kw-opt-g.g ... (and.tag . and.g) (~? (kw-and.tag . kw-and.g)))]
+      [(pre-g ... kw-and:kw-and (~optional and:and))
+       #:with (kw-opt-g:maybe-kw-opt ...) #'(pre-g ...)
+       #'(kw-opt-g.g ... (kw-and.tag . kw-and.g) (~? (and.tag . and.g)))]
+      [(kw-opt-g:maybe-kw-opt ...)
+       #'(kw-opt-g.g ...)]))
+  (for/fold ([vars vars]) ([g (in-list (syntax->list norm-gs))])
+    (extract-binding-metavariables g vars)))
+
+(define-for-syntax (parens-extract-metavariables stx space-name vars)
+  (syntax-parse (unpack-group stx #f #f)
+    #:datum-literals (parens group)
+    [(group _::doc-form (~var _ (identifier-target space-name)) (parens . gs) . _)
+     (do-parens-extract-metavariables #'gs space-name vars)]
+    [_ vars]))
 
 (define-for-syntax (parens-extract-spacer-infos stx space-names)
   (syntax-parse (unpack-group stx #f #f)
@@ -707,8 +703,8 @@
      (define vars+self (add-metavariable vars (add-annot #'self class-id) #f))
      (syntax-parse #'more
        #:datum-literals (parens)
-       [((~and p (parens . _)) . _)
-        (parens-extract-metavariables #'p space-name vars+self #:just-parens? #t)]
+       [((parens . gs) . _)
+        (do-parens-extract-metavariables #'gs space-name vars+self)]
        [_ vars+self])]
     ;; allow plain-function form
     [_ (parens-extract-metavariables stx space-name vars)]))
@@ -949,7 +945,7 @@
 
 (define-for-syntax (class-body-extract-metavariables stx space-name vars)
   (syntax-parse stx
-    #:datum-literals (block parens)
+    #:datum-literals (group block parens)
     [(group _ _ ... (parens . _) (block g ...))
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (syntax-parse g
@@ -959,11 +955,11 @@
             #:datum-literals (alts block group parens)
             [(#:none) vars]
             [((block (group #:none))) vars]
-            [((~and p (parens . _)) . _)
-             (parens-extract-metavariables #'p space-name vars #:just-parens? #t)]
-            [((alts (block (group (~and p (parens . _))) . _) ...))
-             (for/fold ([vars vars]) ([p (in-list (syntax->list #'(p ...)))])
-               (parens-extract-metavariables p space-name vars #:just-parens? #t))])]
+            [((parens . gs) . _)
+             (do-parens-extract-metavariables #'gs space-name vars)]
+            [((alts (block (group (parens . gs)) . _) ...))
+             (for/fold ([vars vars]) ([gs (in-list (syntax->list #'(gs ...)))])
+               (do-parens-extract-metavariables gs space-name vars))])]
          [_ vars]))]
     [_ vars]))
 
@@ -1127,7 +1123,7 @@
           (extract-pattern-metavariables #'(group b) vars))]))
    #:extract-typeset
    (lambda (stx space-name subst)
-     (let retry ([stx stx]) 
+     (let retry ([stx stx])
        (syntax-parse stx
          #:datum-literals (group alts block)
          [(group grammar id)
