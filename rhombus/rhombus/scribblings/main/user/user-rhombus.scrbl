@@ -7,7 +7,6 @@
       lib("scribblings/main/contents.rkt")
     contents.#{build-contents}(~#{user?}: #true,
                                ~supplant: "rhombus",
-                               ~style: PairList[#'#{no-navigation}],
                                ~#{main-language-family}: "Rhombus",
                                ~#{default-language-family}: PairList["Rhombus"],
                                ~#{default-category}: PairList[#'omit],

@@ -88,6 +88,17 @@
    the main part of a document, causes the output to not include an ``on
    this page'' margin box.}}
 
+ @item{@symkey(#'#{no-navigation}): @html{As a @tech{style property} for
+   the main part of a rendered page, causes the output to not include
+   ``top,'' ``up,'', ``prev,'' and ``next'' controls if they would
+   otherwise apply.}}
+
+ @item{@symkey(#'#{family-navigation}): @html{As a @tech{style property}
+   for the main part of a rendered page, causes the output to include
+   ``top,'' ``up,'', ``prev,'' and ``next'' controls only when the viewing
+   context indicates a language family not in the page's language
+   families.}}
+
  @item{@symkey(#'#{no-header-controls}): @html{Suppresses link and
    link-information icons (if any) as part of a section header.}}
 
