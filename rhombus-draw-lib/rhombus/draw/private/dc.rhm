@@ -182,6 +182,18 @@ interface DC:
                                  0,
                                  angle)
 
+  method text_extent(
+    str :: String,
+    ~combine: combine :: DC.TextCombine = #'kern
+  ) :~ values(NonnegReal, NonnegReal, NonnegReal, NonnegReal):
+    rkt.send handle.#{get-text-extent}(str,
+                                       #false,
+                                       match combine
+                                       | #'kern: #true
+                                       | #'grapheme: #'grapheme
+                                       | ~else: #false,
+                                       0)
+
   method
   | scale(sx :: Real, sy :: Real):
       rkt.send handle.#{scale}(sx, sy)

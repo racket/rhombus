@@ -211,6 +211,33 @@
 }
 
 @doc(
+  method (dc:: draw.DC).text_extent(
+    str :: String,
+    ~combine: combine :: DC.TextCombine = #'kern
+  ) :: values(NonnegReal, NonnegReal, NonnegReal, NonnegReal)
+){
+
+ Returns the size of @rhombus(str) as it would be drawn.
+
+ The result is four numbers:
+
+@itemlist(
+
+  @item{the total width of the text (depends on both the font and the text);}
+
+  @item{the total height of the font (depends only on the font);}
+
+  @item{the distance from the baseline of the font to the bottom of the
+  descender (included in the height, depends only on the font); and}
+
+  @item{extra vertical space added to the font by the font designer
+  (included in the height, and often zero; depends only on the font).}
+
+)
+
+}
+
+@doc(
   method (dc :: draw.DC).font_metrics_key() :: Any
 ){
 
