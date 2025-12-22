@@ -70,11 +70,17 @@ bindings versus @rhombus(::, ~bind) and
 
 )
 
- These context are tried last to first for possibilities that apply at
- the use site of an unquote binding form. If an unquote binding form is
- not compatible with the given context, it can return
+ When it encounters a @rhombus($, ~bind) escape, the
+ @rhombus(#%quotes, ~bind) binding form tries these contexts last to
+ first for possibilities that apply at the use site. If an unquote
+ binding form is not compatible with the given context, it can return
  @rhombus(unquote_bind_meta.pack_invalid) to have the next possibility
- tried.
+ tried. A new form with unquote bindings positions should similarly try
+ applicable contexts in order. Compound unquote binding forms like
+ @rhombus(&&, ~unquote_bind) and @rhombus(||, ~unquote_bind), meanwhile,
+ propagate failure for subforms, which means that a new unquote binding
+ form that expands to existing forms can usually rely on context
+ fallbacks to work automatically.
 
 @examples(
   ~eval: macro_eval
@@ -100,7 +106,7 @@ bindings versus @rhombus(::, ~bind) and
 @doc(
   ~meta
   fun unquote_bind_meta.unpack_kind(stx :: Term)
-    :: One.of(#false, #'term, #'grouplet, #'group, #'multi, #'block, #'id)
+    :: Any.of(#false, #'term, #'grouplet, #'group, #'multi, #'block, #'id)
   fun unquote_bind_meta.pack_invalid() :: Term
 ){
 
@@ -121,14 +127,14 @@ bindings versus @rhombus(::, ~bind) and
 @doc(
   ~meta
   syntax_class unquote_bind_meta.Parsed(
-    kind :: One.of(#'term, #'grouplet, #'group, #'multi, #'block)
+    kind :: Any.of(#'term, #'grouplet, #'group, #'multi, #'block)
   ):
     kind: ~group
     fields:
       group
   syntax_class unquote_bind_meta.AfterPrefixParsed(
     op_name :: Name,
-    kind :: One.of(#'term, #'grouplet, #'group, #'multi, #'block)
+    kind :: Any.of(#'term, #'grouplet, #'group, #'multi, #'block)
   ):
     kind: ~group
     fields:
@@ -136,7 +142,7 @@ bindings versus @rhombus(::, ~bind) and
       [tail, ...]
   syntax_class unquote_bind_meta.AfterInfixParsed(
     op_name :: Name,
-    kind :: One.of(#'term, #'grouplet, #'group, #'multi, #'block)
+    kind :: Any.of(#'term, #'grouplet, #'group, #'multi, #'block)
   ):
     kind: ~group
     fields:

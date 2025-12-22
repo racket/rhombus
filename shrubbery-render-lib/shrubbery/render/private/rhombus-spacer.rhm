@@ -1147,15 +1147,16 @@ meta:
 
 spacer.bridge syntax_class(self, tail, context, esc):
   ~in: ~defn
-  fun adjust_bind(bind):
-    match bind
+  fun adjust_bind(arg_bind):
+    match arg_bind
     | (pattern:
          kind ~group
-       | '$id ... $(rhs :: Rhs)'
-       | '$id ...: $(rhs :: Block)'):
+       | '$bind ... $(rhs :: Rhs)'
+       | '$bind ...: $(rhs :: Block)'):
+        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
         let new_rhs = adjust_rhs(rhs, esc)
-        '$id ... $new_rhs'.relocate_group(bind)
-    | ~else: bind
+        '$new_bind $new_rhs'.relocate_group(arg_bind)
+    | ~else: spacer.adjust_group(arg_bind, #'~bind, esc)
   fun adjust_name(name):
     match name
     | '$(name :: Name(esc))
