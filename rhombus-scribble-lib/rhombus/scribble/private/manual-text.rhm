@@ -58,11 +58,11 @@ fun tech(pre_content :: PreContent,
 
 fun onscreen(pre_content :: PreContent) :~ Element:
   ~doc
-  manual.math(pre_content)
+  manual.onscreen(pre_content)
 
 fun defterm(pre_content :: PreContent) :~ Element:
   ~doc
-  manual.math(pre_content)
+  manual.defterm(pre_content)
 
 fun math(pre_content :: PreContent) :~ Element:
   ~doc
