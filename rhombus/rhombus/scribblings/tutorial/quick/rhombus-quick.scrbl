@@ -21,7 +21,7 @@
 @(def meta_tutorial_doc:
     ModulePath'lib("rhombus/scribblings/tutorial/metaprogramming/rhombus-meta-tutorial.scrbl")')
 
-@title(~category: #'tutorial){Quick Introduction to Rhombus with Pictures}
+@title(~category: #'tutorial){Quick Introduction to Rhombus}
 
 This tutorial provides a brief introduction to the
 @seclink("top", ~doc: guide_doc){Rhombus} programming language by using
