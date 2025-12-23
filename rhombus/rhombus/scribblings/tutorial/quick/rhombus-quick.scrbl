@@ -17,8 +17,6 @@
 @(expr.macro 'repl($arg, ...)':
     '@examples(~eval: pict_eval, $arg, ...)')
 
-@(def bracket = @elem{@litchar{[}…@litchar{]}})
-
 @(runtime_path.def rhombus_quick_scrbl: "rhombus-quick.scrbl")
 @(def meta_tutorial_doc:
     ModulePath'lib("rhombus/scribblings/tutorial/metaprogramming/rhombus-meta-tutorial.scrbl")')
@@ -59,7 +57,7 @@ area that you see in DrRacket:
 @rhombusblock(
   #,(@hash_lang()) #,@(rhombuslangname(rhombus))
   import:
-    #,(@racketmodname(pict)) open
+    #,(@rhombusmodname(pict)) open
 )
 
 Then click the @onscreen{Run} button. You'll see the text caret move
