@@ -7,4 +7,4 @@
 
 (define language-family (list (hash 'fam "Rhombus"
                                     'famroot "rhombus"
-                                    'doc '(lib "rhombus/scribblings/guide/rhombus-guide.scrbl"))))
+                                    'describe-doc '(lib "rhombus/scribblings/guide/rhombus-guide.scrbl"))))
