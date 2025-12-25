@@ -25,7 +25,7 @@ line with
 raco pkg install rhombus
 ```
 
-See also the [documentation Quick Start](https://docs.racket-lang.org/rhombus@rhombus/Quick_Start.html).
+See also the [documentation Quick Start](https://docs.racket-lang.org/rhombus-guide/Quick_Start.html).
 
 # Other Resources
 
