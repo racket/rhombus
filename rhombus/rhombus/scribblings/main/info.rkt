@@ -5,6 +5,6 @@
 
 (define main-doc-index "rhombus/scribblings/main")
 
-(define language-family (list (hash 'fam "Rhombus"
-                                    'famroot "rhombus"
+(define language-family (list (hash 'family "Rhombus"
+                                    'family-root "rhombus"
                                     'describe-doc '(lib "rhombus/scribblings/guide/rhombus-guide.scrbl"))))
