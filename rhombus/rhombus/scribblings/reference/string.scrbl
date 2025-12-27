@@ -20,8 +20,10 @@ generate immutable strings. Some operations allow mutable strings as
 input, and @rhombus(ReadableString, ~annot) recognizes both mutable and
 immutable strings.
 
-Two strings are equal by @rhombus(is_now) as long as they have equal
-contents, even if one is mutable and the other is immutable.
+Two strings are equal by @rhombus(==) only if they are both immutable
+and have the same character content. Two strings are equal by
+@rhombus(is_now) as long as they have equal contents, even if one is
+mutable and the other is immutable.
 
 Strings are @tech{comparable}, which means that generic operations like
 @rhombus(<) and @rhombus(>) work on strings.

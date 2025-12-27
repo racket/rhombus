@@ -8,7 +8,11 @@
 
 @title{Sets}
 
-Immutable @deftech{sets} can be constructed using the syntax
+A @deftech{set}@intro_note("set", "sets") is an unordered collection of elements, where a value
+can appear as an element only once. A set's length is the number of
+elements that it contains.
+
+Immutable sets can be constructed using the syntax
 @rhombus({#,(@rhombus(val_expr, ~var)), ...}),
 which creates a set containing the values of the @rhombus(val_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
@@ -18,6 +22,18 @@ A set supports @tech{membership tests} with the @rhombus(in) operator.
 Use @rhombus(++) or @rhombus(Set.add) to functionally add to an
 immutable set. A set can be used as @tech{sequence}, in which case
 it supplies its elements in an unspecified order.
+
+Like @tech{maps}, aset is normally immutable, but a mutable set can be
+created by operations such as @rhombus(Set.copy), mutable sets may hold
+their elements weakly, and different sets can use different
+@tech(~doc: meta_doc){map configurations} that determine the functions
+used for comparing and hashing set elements.
+
+Two immutable sets tables are equal by @rhombus(==) when they have the
+same same map configuration and the same elements (where ``same'' is
+determined by the map configuration). Two sets are equal by
+@rhombus(is_now) when they have the same mutability, both hold their
+elements strongly or both weakly, and have the same elements.
 
 @doc(
   annot.macro 'Set'

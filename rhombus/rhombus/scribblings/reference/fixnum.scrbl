@@ -12,11 +12,10 @@
 A @deftech{fixnum} is an integer that fits into a range that has a
 specialized representation. This range depends on the architecture's
 word size and Racket implementation, but it corresponds to integers that
-fit into a two's complete representation using either 30, 31, 61, or 63
+fit into a two's complement representation using either 30, 31, 61, or 63
 bits. In some cases, using functions and operators from
 @rhombusmodname(rhombus/fixnum) can reduce run time, but performance
 improvements (if any) may require unsafe mode via @rhombus(use_unsafe).
-
 
 The functions exported by @rhombusmodname(rhombus/fixnum) explicitly
 require fixnum arguments and produce fixnum results.
@@ -27,6 +26,9 @@ when all arguments have static information for the
 between that inferred specialization and these operators, and a
 conversion is inferred only when the result value is the same for
 unspecialized and fixnum-specific operations.
+
+Two fixnums that are the same according to @rhombus(==) are also the
+same according to @rhombus(===).
 
 @(~version_at_least "8.14.0.4")
 

@@ -7,7 +7,15 @@
 
 @title{Arrays}
 
-An @deftech{array} is @tech{indexable} using @brackets to access an array element
+An @deftech{array}@intro_note("array", "arrays") is like a @tech{list} in that it is an ordered
+collection of elements, a value can appear multiple times as elements of
+an array, and array's length is the number of elements that it contains.
+An array has a fixed length, and access to an element is constant-time,
+but changing the size of an array requires creating an entirely new
+array. An array is normally mutable, and updating an array element is
+a constant-time operation.
+
+An @tech{array} is @tech{indexable} using @brackets to access an array element
 by position (in constant time) via @rhombus(#%index), and it also supports element
 assignment via @brackets and @rhombus(:=). An array also
 works with the @rhombus(++) operator to append arrays.
@@ -15,13 +23,16 @@ An array supports @tech{membership tests} using the @rhombus(in) operator.
 An array can be used as @tech{sequence}, in which case it supplies its elements in
 order.
 
-An array is normally mutable, but immutable arrays can originate from
+Immutable arrays can originate from
 Racket or @rhombus(Array.snapshot). The @rhombus(Array, ~annot) annotation is satisfied by both
 mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
 @rhombus(ImmutableArray, ~annot) require one or the other.
 
-Two arrays are equal by @rhombus(is_now) as long as they have equal
-contents, even if one is mutable and the other is immutable.
+Two arrays are equal by @rhombus(is_now) as long as they have the same
+length and their elements are pairwise equal by @rhombus(is_now), even
+if one array mutable and the other is immutable. Two arrays are equal by
+@rhombus(==) only if they are both immutable and their elements are
+pairwise equal by @rhombus(==).
 
 @doc(
   annot.macro 'Array'

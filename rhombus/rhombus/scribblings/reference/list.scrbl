@@ -1,14 +1,27 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    lib("racket/treelist.rkt").treelist)
 
 @(def dots = @rhombus(..., ~bind))
 @(def dots_expr = @rhombus(...))
 
 @title{Lists}
 
-@deftech{Lists} can be constructed using the syntax
+A @deftech{list}@intro_note("list", "lists") is an ordered collection of elements, where a value can
+appear multiple times as elements of a list. A list's length is the
+number of elements that it contains. Most operations on
+lists---including accessing an element, adding an element, appending
+lists, or extracting a contiguous sublist---can be performed in
+@math{O(log N)} time for a list of @math{N} elements. Lists are
+immutable, so adding to a list or removing an element of a list produces
+a new list without modifying the old one.
+
+@margin_note_block{A Rhombus list is a Racket @rhombus(treelist) and not
+ a Racket list.}
+
+Lists can be constructed using the syntax
 @rhombus([#,(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the
@@ -16,11 +29,14 @@ brackets without a preceding expression implicitly uses the
 construct a list.
 
 A list is @tech{indexable} using @brackets to access a list
-element by position---in @math{O(log N)} time---via
+element by position via
 @rhombus(#%index). A list also works with the @rhombus(++) operator
 to append lists. A list supports @tech{membership tests} using
 the @rhombus(in) operator. A list can be used as @tech{sequence}, in which case
 it supplies its elements in order.
+
+Two lists are equal by @rhombus(==) if they have the same length and
+their elements are pairwise equal by @rhombus(==).
 
 @doc(
   annot.macro 'List'

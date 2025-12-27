@@ -6,10 +6,19 @@
 
 @title{Characters}
 
-A @deftech{character} is Unicode code point.
+A @deftech{character} is a Unicode scalar value, which includes
+characters whose values range from @rhombus(0x0) to @rhombus(0x10FFFF),
+but not including @rhombus(0xD800) to @rhombus(0xDFFF). Unicode scalar
+values are a subset of Unicode code points.
 
 Characters are @tech{comparable}, which means that generic operations
 like @rhombus(<) and @rhombus(>) work on characters.
+
+Character literals can be written at the
+@seclink(~doc: shrub_doc, "token-parsing"){shrubbery} layer only by an
+escape to S-expression syntax, but the @rhombus(Char) form takes
+advantage of Rhombus string syntax to produce or match a literal
+character.
 
 @doc(
   annot.macro 'Char'

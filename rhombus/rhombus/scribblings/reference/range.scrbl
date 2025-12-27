@@ -5,7 +5,7 @@
 
 @title{Ranges}
 
-A @deftech{range}, or an @deftech{interval}, represents a contiguous
+A @deftech{range}@intro_note("range", "ranges"), or an @deftech{interval}, represents a contiguous
 set of integers between two points. When the starting point is
 included, the range can be used as a @tech{sequence}; in addition,
 when the ending point is not @rhombus(#inf), the range is

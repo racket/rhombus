@@ -5,5 +5,10 @@ import:
 export:
   all_from(.common)
   tail_position
+  intro_note
 
 def tail_position = @manual.tech(~doc: common.model_doc){tail position}
+
+fun intro_note(tag, whats):
+  @manual.margin_note{See @manual.secref(tag, ~doc: common.guide_doc)
+                      in the Rhombus Guide for an introduction to @whats.}

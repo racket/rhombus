@@ -25,7 +25,7 @@
                  ...'
 ){
 
- If @rhombus(test_expr) produces a true value (which is value other than
+ If @rhombus(test_expr) produces a @tech{true value} (which is value other than
  @rhombus(#false)), returns the result of the @rhombus(then_body) clause,
  otherwise returns the result of the @rhombus(else_body) clause. The
  @rhombus(then_body) and @rhombus(else_body) are in @tail_position with

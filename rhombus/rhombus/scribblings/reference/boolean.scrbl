@@ -5,6 +5,11 @@
 
 @title{Booleans}
 
+True and false booleans are represented by the literals @rhombus(#true)
+and @rhombus(#false). For most contexts, such as the test position in
+@rhombus(if), any value other than @rhombus(#false) is counts as a
+@deftech{true value}.
+
 @doc(
   annot.macro 'Boolean'
 ){
@@ -43,8 +48,8 @@
 
  Produces the value of @rhombus(left_expr) if it is
  non-@rhombus(#false), otherwise produces the value(s) of
- @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
- position with respect to the @rhombus(||) form, if evaluated at all.
+ @rhombus(right_expr). The @rhombus(right_expr) is evaluated in @tail_position
+ with respect to the @rhombus(||) form, if evaluated at all.
 
  The static information of a @rhombus(||) expression is the
  @rhombus(statinfo_meta.or) of static information from
@@ -138,7 +143,7 @@
  @rhombus(any) supports repetition arguments, and it stops iterating
  through a repetition as soon as a non-@rhombus(#false) result is found.
  When the last @rhombus(expr_or_splice) is an @nontermref(expr), it is in
- tail position. When no @rhombus(expr_or_splice) is provided, the result
+ @tail_position. When no @rhombus(expr_or_splice) is provided, the result
  is @rhombus(#false). The static information of an @rhombus(any)
  expression is derived as in @rhombus(||), but generalized to multiple
  arguments.
@@ -165,8 +170,8 @@
 
  Produces @rhombus(#false) if the value of @rhombus(left_expr) is
  @rhombus(#false), otherwise produces the value(s) of
- @rhombus(right_expr). The @rhombus(right_expr) is evaluated in tail
- position with respect to the @rhombus(&&) form, if evaluated at all.
+ @rhombus(right_expr). The @rhombus(right_expr) is evaluated in @tail_position
+ with respect to the @rhombus(&&) form, if evaluated at all.
 
  The static information of a @rhombus(&&) expression is like that of
  @rhombus(maybe(#,(@nontermref(annot))), ~annot) if the static
@@ -267,8 +272,8 @@
  The @rhombus(all) expression form is like @rhombus(&&), but
  @rhombus(all) supports repetition arguments, and it stops iterating
  through a repetition as soon as a @rhombus(#false) result is found. When
- the last @rhombus(expr_or_splice) is a @nontermref(expr), it is in tail
- position. When no @rhombus(expr_or_splice) is provided, the result is
+ the last @rhombus(expr_or_splice) is a @nontermref(expr), it is in
+ @tail_position. When no @rhombus(expr_or_splice) is provided, the result is
  @rhombus(#true). The static information of an @rhombus(all)
  expression is derived as in @rhombus(&&), but generalized to multiple
  arguments.

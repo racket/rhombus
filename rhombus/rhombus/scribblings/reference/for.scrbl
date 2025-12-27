@@ -5,6 +5,9 @@
 
 @title{Iteration}
 
+The @rhombus(for) form@intro_note("for", "iteration") can express many
+forms of iteration, including list comprehensions and other folds.
+
 @doc(
   ~nonterminal:
     rhs_expr: block expr

@@ -19,6 +19,11 @@ immutable box. The @rhombus(Box, ~annot) annotation is satisfied by both
 mutable and immutable boxes, while @rhombus(MutableBox, ~annot) and
 @rhombus(ImmutableBox, ~annot) require one or the other.
 
+Two immutable boxes are the same according to @rhombus(==) when their
+contents are the same according to @rhombus(==). Two boxes, immutable or
+not, are the same according to @rhombus(is_now) when their contents are
+the same according to @rhombus(is_now).
+
 @doc(
   annot.macro 'Box'
   annot.macro 'Box.now_of($annot)'

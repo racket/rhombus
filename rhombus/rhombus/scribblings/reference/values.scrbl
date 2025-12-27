@@ -13,9 +13,10 @@
 ){
 
  A @rhombus(values) form by itself acts as a function that takes any
- number of values and returns them as multiple result values. If only one
- @rhombus(expr) is provided, the result is the same as just
- @rhombus(expr), except that it is not in tail position with respect to
+ number of values and returns them as
+ @tech(~doc: model_doc, ~key: "multiple value"){multiple result values}.
+ If only one @rhombus(expr) is provided, the result is the same as just
+ @rhombus(expr), except that it is not in @tail_position with respect to
  the @rhombus(values) form. Any other number of values must be received
  by a context that is expecting multiple values, such as with a
  @rhombus(values, ~bind) binding pattern.
@@ -45,8 +46,9 @@
 ){
 
  The @rhombus(values, ~bind) binding operator can only be used in
- places where it's specifically recognized, normally to match multiple
- result values. For example, the left-hand side @rhombus(values_bind)
+ places where it's specifically recognized, normally to match
+ @tech(~doc: model_doc, ~key: "multiple values"){multiple result values}.
+ For example, the left-hand side @rhombus(values_bind)
  position of @rhombus(def) recognizes @rhombus(values, ~bind).
 
  Plain parentheses as a binding (as implemented by the

@@ -8,7 +8,7 @@
 
 @title{Repetitions}
 
-A @deftech{repetition} represents a sequence of values, and it can be used
+A @deftech{repetition}@intro_note("repetition", "repetitions") represents a sequence of values, and it can be used
 in designated repetition positions (in much the same way that
 expressions appear in expression positions and bindings in binding
 positions). For example, a repetition can be used at the end of a list

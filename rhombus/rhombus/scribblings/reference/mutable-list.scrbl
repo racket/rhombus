@@ -31,6 +31,11 @@ other operations will sometimes negate one of the modifications.
 Concurrent modification is thus somewhat unpredictable but still safe,
 and it is not managed by a lock.
 
+Two mutable lists are equal by @rhombus(is_now) if they have the same
+length and their elements are pairwise equal by @rhombus(is_now). A
+mutable list is never equal by @rhombus(is_now) or @rhombus(==) to an
+immutable list.
+
 @doc(
   annot.macro 'MutableList'
   annot.macro 'MutableList.now_of($annot)'

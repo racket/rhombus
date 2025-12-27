@@ -6,9 +6,42 @@
 
 @title(~style: #'toc){Numbers}
 
-Real numbers are @tech{comparable}, which means that generic operations like
-@rhombus(<) and @rhombus(>) work on real numbers, while specialized
+A number can be an @deftech{integer} (see @rhombus(Integer, ~annot)),
+@deftech{rational number} (see @rhombus(Rational, ~annot)), or
+@deftech{real number} (see @rhombus(Real, ~annot)), or @deftech{complex
+ number} (see @rhombus(Number, ~annot)), where each of those categories
+includes the earlier categories. For the last three categories, a number
+is either @deftech{exact} (see @rhombus(Exact, ~annot)) or
+@deftech{inexact} (see @rhombus(Inexact, ~annot)), where inexact real
+numbers are represented using a 64-bit IEEE floating-point
+representation. An integer is always exact. Inexact complex numbers have
+inexact real and imaginary components, except that the real component
+can be exact @rhombus(0). The ``real'' category is something of a
+misnomer, since it is rational numbers plus the special constants
+@rhombus(#inf), @rhombus(#neginf), and @rhombus(#nan) that correspond to
+IEEE floating-point infinities and non-a-number. An inexact real number
+is a @tech{flonum}.
+
+The precision and size of exact numbers is limited only by available
+memory and the precision of operations that can produce irrational
+numbers. Adding, multiplying, subtracting, and dividing exact numbers
+always produces an exact result. A @tech{fixnum} (see
+@rhombus(Fixnum, ~annot)) is an integer that is small enough to have a
+specialized representation.
+
+Real numbers are @tech{comparable}, which means that generic operations
+like @rhombus(<) and @rhombus(>) work on real numbers, while specialized
 operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
+Two numbers are the same according to @rhombus(==) when they have the
+same exactness as well as the same numerical value. Comparison with
+@rhombus(.=) conceptually coerces an inexact argument to an exact
+representation before comparing with @rhombus(==).
+
+The syntax of numbers is determined by the
+@seclink(~doc: shrub_doc, "token-parsing"){shrubbery} layer. Note that
+@litchar{_} is allowed as a separator between digits, so
+@rhombus(1_000_000) is the same as @rhombus(1000000). Complex number
+literals rely on a escape to S-expression syntax.
 
 @doc(
   annot.macro 'Number'
@@ -16,7 +49,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
 
  Matches any number.
 
- Although only real numbers are comparable, to make the results of
+ Although only @tech{real numbers} are comparable, to make the results of
  arithmetic operations easier to compare in static mode, static
  information associated by @rhombus(Number, ~annot) specifies
  @rhombus(Real, ~annot)-specific @rhombus(Comparable, ~class)
@@ -36,7 +69,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Inexact'
 ){
 
- Matches exact and inexact numbers, respectively. An inexact number is
+ Matches @tech{exact} and @tech{inexact} numbers, respectively. An inexact number is
  one that is represented as a floating-point number or a complex number
  with an inexact real or imaginary part. These two annotations are
  mutually exclusive.
@@ -77,7 +110,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   | ~exclusive
 ){
 
- Matches exact integers: all of them, positive integers, negative
+ Matches @tech{exact} @tech{integers}: all of them, positive integers, negative
  integers, nonnegative integers, or integers in a given range.
  None that a range can omit a lower bound or upper bound, such as
  when @rhombus(..) is used as a prefix or postfix operator. The
@@ -124,7 +157,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Real.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 ){
 
- The @rhombus(Real, ~annot) annotation matches real numbers (as opposed
+ The @rhombus(Real, ~annot) annotation matches @tech{real numbers} (as opposed
  to imaginary numbers like the result of @rhombus(math.sqrt(-1))). The
  @rhombus(PosReal, ~annot), @rhombus(NegReal, ~annot), and
  @rhombus(NonnegReal, ~annot) annotations match positive, negative, and
@@ -160,8 +193,8 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Rational'
 ){
 
- Matches the same numbers as @rhombus(Real) except for @rhombus(#inf),
- @rhombus(#neginf), and @rhombus(#nan).
+ Matches @tech{rational numbers}: the same numbers as @rhombus(Real)
+ except for @rhombus(#inf), @rhombus(#neginf), and @rhombus(#nan).
 
 @examples(
   5 is_a Rational
@@ -174,7 +207,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   annot.macro 'Integral'
 ){
 
- Matches the same numbers as @rhombus(Int) plus real numbers that have
+ Matches the same numbers as @rhombus(Int) plus @tech{real numbers} that have
  no fractional component.
 
 @examples(
@@ -410,8 +443,8 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   fun math.inexact(x :: Number) :: Inexact
 ){
 
- Converts a number to ensure that it is exact or inexact, respectively.
- Some real numbers, such as @rhombus(#inf), cannot be made exact.
+ Converts a number to ensure that it is @tech{exact} or @tech{inexact}, respectively.
+ Some @tech{real numbers} and @tech{complex numbers}, such as @rhombus(#inf), cannot be made exact.
 
 @examples(
   math.exact(5.0)
@@ -428,7 +461,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   fun math.angle(x :: Number) :: Real
 ){
 
- Operations on complex numbers.
+ Operations on @tech{complex numbers}.
 
 @examples(
   math.real_part(5)
@@ -446,7 +479,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   fun math.denominator(q :: Rational) :: Integral
 ){
 
- Coerces @rhombus(q) to an exact number, finds the numerator of the
+ Coerces @rhombus(q) to an @tech{exact} number, finds the numerator of the
  number expressed in its simplest fractional form, and returns this
  number coerced to the exactness of @rhombus(q).
 
@@ -463,7 +496,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
   fun math.lcm(q :: Rational, ...) :: Rational
 ){
 
- Coerces each @rhombus(q) to an exact number and finds the greatest
+ Coerces each @rhombus(q) to an @tech{exact} number and finds the greatest
  common divisor or least common multiple.
 
  For non-integer arguments, the result for @rhombus(math.gcd) is the
@@ -498,10 +531,10 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
     :: Int.in(start, end ~exclusive)
 ){
 
- When called with no arguments, returns a random real number between
+ When called with no arguments, returns a random @tech{real number} between
  @rhombus(0) (exclusive) and @rhombus(1) (exclusive).
 
- When called with @rhombus(n), returns a random integer between
+ When called with @rhombus(n), returns a random @tech{integer} between
  @rhombus(0) (inclusive) and @rhombus(n) (exclusive).
 
  When called with @rhombus(start) and @rhombus(end), returns a random
@@ -600,7 +633,7 @@ operations like @rhombus(.<) and @rhombus(.>) work only on real numbers.
     :: Int
 ){
 
- Bitwise operations on integers interpreted as a semi-infinite two's
+ Bitwise operations on @tech{integers} interpreted as a semi-infinite two's
  complement representation:
 
 @itemlist(

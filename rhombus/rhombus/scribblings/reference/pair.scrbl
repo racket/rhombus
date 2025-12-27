@@ -11,7 +11,11 @@
 A @deftech{pair} combines two values: a ``first'' value and a ``rest''
 value. A @deftech{pair list} is a @tech{listable} value that is
 constructed with pairs and the empty pair list; every non-empty pair
-list is a pair, a pair is a pair list only if its ``rest'' is a list.
+list is a pair, while a pair represents a pair list only if its
+``rest'' is a pair list.
+
+@margin_note_block{A pair list is an immutable linked list. A Rhombus
+ pair list is also a Racket list.}
 
 A pair list is @tech{indexable} using @brackets to access a list
 element by position---in @math{O(N)} time---via @rhombus(#%index). A
@@ -19,6 +23,12 @@ pair list also works with the @rhombus(++) operator to append pair
 lists. A pair list supports @tech{membership tests} using the
 @rhombus(in) operator. A pair list can be used as @tech{sequence}, in
 which case it supplies its elements in order.
+
+The empty pair-list value is unique and @rhombus(===) to itself. Two
+pairs are equal as long as the ``first'' and ``rest'' values are
+pairwire equal by @rhombus(==). Consequently, two pair lists are equal
+by @rhombus(==) if they have the same length and their elements are
+pairwise equal by @rhombus(==).
 
 @doc(
   ~nonterminal:

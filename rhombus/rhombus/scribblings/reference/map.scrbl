@@ -8,7 +8,8 @@
 
 @title{Maps}
 
-A @deftech{map} associates a value with each of a set of keys.
+A @deftech{map}@intro_note("map", "maps")
+associates a value with each of a set of keys.
 Immutable maps can be constructed using the syntax
 @rhombus({#,(@rhombus(key_expr, ~var)): #,(@rhombus(val_expr, ~var)), ...}),
 which creates a map from the values of the @rhombus(key_expr, ~var)s to
@@ -17,6 +18,8 @@ that using @litchar{,} in place of @litchar{:} creates a set with
 separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
 implicit use of the @rhombus(#%braces) form.
+
+@margin_note_block{A Rhombus map is a Racket @defterm{hash table}.}
 
 A map is @tech{indexable} using @brackets after a map expression with an
 expression for the key within @brackets. Mutable maps can be
@@ -28,6 +31,29 @@ immutable map). These uses of square brackets are implemented by
 A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
 in an unspecified order.
+
+A map is normally immutable, but a mutable map can be created by
+operations such as @rhombus(Map.copy). The @rhombus(Map, ~annot)
+annotation is satisfied by only immutable maps. Mutable maps may hold
+their keys weakly, where the entry for a weakly held key can be dropped
+if it is unreachable (where reachability does not consider values in the
+map that have unreachable keys).
+
+Different maps can use different @tech(~doc: meta_doc){map
+ configurations} that determine the functions used for comparing and
+hashing keys. By default, a map uses @rhombus(==, ~key_comp), but other
+options include @rhombus(===, ~key_comp) and
+@rhombus(is_now, ~key_comp).
+
+Two immutable maps are equal by @rhombus(==) when they have the same
+same map configuration, the same keys (where ``same'' is determined by
+the map configuration), and when each key maps to pairwise @rhombus(==)
+values. Two maps are equal by @rhombus(is_now) when they have the
+same mutability, both hold their keys strongly or both weakly, have the
+same keys, and each key maps to pairwise @rhombus(is_now) values. Note
+that the requirement for @rhombus(is_now) to have the same mutability is
+like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
+@tech(~key: "box"){boxes}.
 
 @doc(
   ~nonterminal:
