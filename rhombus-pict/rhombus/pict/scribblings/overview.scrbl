@@ -1,6 +1,12 @@
 #lang rhombus/scribble/manual
+@(import:
+    meta_label:
+      pict.Pict)
 
 @title(~style: #'toc){Overview}
+
+The @rhombus(Pict, ~annot) datatype encompasses both @tech{static picts}
+and @tech{animated picts}.
 
 @local_table_of_contents()
 

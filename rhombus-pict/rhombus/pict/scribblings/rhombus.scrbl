@@ -55,9 +55,21 @@ form form rendering literal shrubbery forms as a pict.
  (such as @rhombus(10), @rhombus(0xA), and @rhombus(000010)) is preserved
  verbatim.
 
- Within @rhombus(form), @litchar{#,} followed by a parenthesized
+@examples(
+  ~eval: rhombus_eval,
+  rhombus(my_example(1, "two"))
+  rhombus(1_000)
+)
+
+ Within @rhombus(form), the @rhombus(#,) operator followed by a parenthesized
  expression is an escape where the expression must produce a pict. The
  pict is rendered in place of the escape.
+
+@examples(
+  ~eval: rhombus_eval
+  ~escape: !!!
+  rhombus(1 + #,(circle(~size: 20)))
+)
 
  If @rhombus(space) is provided as @rhombus(~var), then @rhombus(form)
  is italicized. If @rhombus(space) is @rhombus(~datum), then
@@ -81,8 +93,8 @@ form form rendering literal shrubbery forms as a pict.
 ){
 
  Produces a @tech{pict} that renders the text of @rhombus(form)
- verbatim, preserving whitespace and comments, except that @litchar{#,}
- followed by a parenthesized expression is an escape that must produce a
+ verbatim, preserving whitespace and comments, except that an @rhombus(#,)
+ operator followed by a parenthesized expression is an escape that must produce a
  pict to render in place of the escape.
 
  Use @rhombus(rhombusblock) with @litchar("@") notation (see
@@ -128,7 +140,7 @@ form form rendering literal shrubbery forms as a pict.
  Like @rhombus(rhombusblock), but with options that are the same as for
  Scribble's @scribble_rhombusblock_etc. In particular, using the
  @rhombus(~escape: #,(@rhombus(op, ~var))) option changes the escape operator
- from @litchar{#,} to @rhombus(op, ~var).
+ from @rhombus(#,) to @rhombus(op, ~var).
 
 @examples(
   ~eval: rhombus_eval,

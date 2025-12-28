@@ -11,7 +11,8 @@
                      "rhombus-lib"
                      "rhombus-pict"
                      "rhombus-scribble-lib"
-                     "slideshow-doc"))
+                     "slideshow-doc"
+                     "racket-doc"))
 
 (define pkg-desc "Rhombus slide-presentation library")
 

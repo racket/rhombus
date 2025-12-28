@@ -59,7 +59,7 @@ meta:
       field [decl_form, ...] = [form, ...]
       field kw: #'~use_sources
 
-decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
+decl.macro 'docmodule ($(option :: Option), ..., $mod ..., ...)':
   let kws = { option.kw, ... }
   decl_meta.pack_s_exp(
     cond
@@ -71,23 +71,26 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
         | #'~hidden in kws:
             ['#{declare-exporting}',
              as_racket_mod_name('$mod ...'),
+             ...,
              option.decl_form, ..., ...]
         | ~else:
             ['defmodule',
-             as_racket_mod_name('$mod ...'),
+             '~multi', [as_racket_mod_name('$mod ...'),
+                        ...],
              option.form, ..., ...]
     | ~else:
         cond
         | #'~hidden in kws:
             ['#{declare-exporting}',
-             expr_meta.pack_expr('@rhombusmodname($mod ...)'),
-             '~#{module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
+             pack_tree([ModulePath('$mod ...').s_exp()]),
+             ...,
              option.decl_form, ..., ...]
         | ~else:
             ['defmodule',
              '~#{require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
-             expr_meta.pack_expr('@rhombusmodname($mod ...)'),
-             '~#{module-paths}', pack_tree([ModulePath('$mod ...').s_exp()]),
+             '~multi', pack_tree([expr_meta.pack_expr('@rhombusmodname($mod ...)'),
+                                  ...]),
+             '~#{module-paths}', pack_tree([ModulePath('$mod ...').s_exp(), ...]),
              option.form, ..., ...]
   )
 

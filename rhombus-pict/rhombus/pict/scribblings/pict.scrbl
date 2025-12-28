@@ -15,8 +15,8 @@
     ~method_fallback: Pict
 ){
 
- The @rhombus(Pict) annotation is satisfied by any @tech{pict} value.
- The @rhombus(StaticPict) annotation is statisfied only by a pict that is
+ The @rhombus(Pict, ~annot) annotation is satisfied by any @tech{pict} value.
+ The @rhombus(StaticPict, ~annot) annotation is statisfied only by a pict that is
  specifically a @tech{static pict}.
 
 @examples(
@@ -497,7 +497,8 @@
   fun Pict.from_handle(hand :: Any) :: StaticPict
 ){
 
- Converts a rhombus @tech{pict} to/from a Racket pict.
+ Converts a rhombus @tech{pict} to/from a Racket pict as implemented by
+ the Racket @racketmodname(pict) library.
 
  The @rhombus(StaticPict.draw_handle) property returns a Racket pict
  suitable for drawing directly or embedding in a Racket pict

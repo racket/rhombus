@@ -11,7 +11,7 @@
 
 @doc(
   decl.macro 'docmodule($option, ...,
-                        $mod_path)'
+                        $mod_path, ...)'
   grammar option
   | ~lang
   | ~no_declare
@@ -22,7 +22,7 @@
 
  A declaration to set the context of @rhombus(doc) documentation forms
  that appear later in the same section or nested subsections. The
- bindings will be documented as exports from @rhombus(mod_path).
+ bindings will be documented as exports from all @rhombus(mod_path)s.
 
  If the @rhombus(~lang) option is specified, then the module is
  documented as a language module for use with @hash_lang().
@@ -34,7 +34,7 @@
  The @rhombus(~use_sources) option declares modules that should be
  treated as exporting modules for hyperlinking purposes, even though the
  rendered documentation says that the bindings originate from the main
- @rhombus(mod_path). Use @rhombus(~use_sources) when bindings are
+ @rhombus(mod_path)s. Use @rhombus(~use_sources) when bindings are
  reexported from multiple documented modules, and where bindings accessed
  via all of those modules should be linked to the @rhombus(docs) in this
  section.

@@ -12,7 +12,7 @@
   annot.macro 'SlideContent'
 ){
 
- Satisfied by allowed arguments to @rhombus(slide): a pict,
+ Satisfied by allowed arguments to @rhombus(slide): a @rhombus(Pict, ~annot),
  @rhombus(slide.next), @rhombus(slide.sync), a value produced by @rhombus(slide.alts),
  @rhombus(slide.align), or @rhombus(slide.horiz), or a list of values
  that satisfy @rhombus(SlideContent, ~annot).
@@ -99,7 +99,7 @@
 
  When a pict representing a slide has the @rhombus(#'nonarchival) key
  mapped to a true value in its metadata for some epoch, then the slide
- for that epoch is skipped in condense mode---as are any slides for
+ for that epoch is skipped in @tech{condensed mode}---as are any slides for
  transitions in the epoch. See also @rhombus(nonarchival).
 
 }
@@ -125,25 +125,6 @@
 }
 
 @doc(
-  fun blank_client(
-    ~aspect: aspect :: Aspect = #'widescreen,
-    ~title: title :: maybe(String || Pict) = #false,
-    ~layout: layout :: SlideLayout = #'auto
-  ) :: Pict
-){
-
- Creates a blank pict that corersponds to the ``client'' area of a
- slide, which is below the title (if any) and inset by a small margin.
-
- If @rhombus(title) is not @rhombus(#false), then @rhombus(title) and
- @rhombus(layout) determine a height for a client area that is consistent
- with the default value of @rhombus(current_assembler). The
- @rhombus(layout) argument matters only in whether it is @rhombus(#'tall)
- or not.
-
-}
-
-@doc(
   def slide.next
   def slide.sync
   fun slide.alts([content :: SlideContent, ...], ...)
@@ -161,149 +142,13 @@
                   content :: SlideContent, ...)
 ){
 
- Constructors for slide descriptions hat are recognized by
+ Constructors for slide descriptions that are recognized by
  @rhombus(slide) and @rhombus(slide_pict). See @rhombus(slide) for
  more information.
 
  The @rhombus(slide.left), @rhombus(slide.center), and
  @rhombus(slide.right) functions are shorthands for @rhombus(slide.horiz)
  with a specific @rhombus(~horiz) argument.
-
-}
-
-
-@doc(
-  def slide.gap = 24
-){
-
- The default separation used by @rhombus(slide) and @rhombus(slide_pict).
-
-}
-
-
-@doc(
-  Parameter.def current_assembler
-    :: (title :: False || Pict,
-        layout:: SlideLayout,
-        aspect :: Aspect,
-        p :: Pict) -> Pict
-){
-
- A context parameter for a function used to combine a slide title, layout mode,
- aspect, and content pict to produce an overall pict.
-
- The default slide assembler vertically combines a title with the pict
- content using @rhombus(slide.gap) space for the @rhombus(#'tall) layout
- and @rhombus(2*slide.gap) space for the @rhombus(#'top) layout. In
- @rhombus(#'center) mode, the content pict is centered with respect to
- the full slide client area, and then the title is combined with
- @rhombus(overlay) and @rhombus(#'top) alignment. The @rhombus(#'auto)
- mode is treated like @rhombus(#'tall) or @rhombus(#'center), whichever
- would cause the pict to appear lower in the client area.
-
-}
-
-@doc(
-  Parameter.def current_title_font :: Font
-){
-
- A context parameter for the font used by @rhombus(titlet).
-
-}
-
-@doc(
- fun titlet(content, ...) :: Pict
-){
-
- Like @rhombus(t) from @rhombusmodname(pict/text), but using
- @rhombus(current_title_font()).
-
-}
-
-@doc(
- expr.macro 'titlely($content_expr, ...)'
- expr.macro 'titlely: $body; ...'
-){
-
- Like @rhombus(boldly), etc., but for the slide title font configured
- via @rhombus(current_title_font).
-
-}
-
-@doc(
-  fun nonarchival(pict ::Pict) :: Pict
-  fun nonarchival(pict ::Pict, epoch :: Int) :: Pict
-){
-
- Returns a pict that is like @rhombus(pict), but with metadata that
- indicates that the pict should be skipped in some epochs in condensed
- mode, which might be used when printing to PDF form. Metadata is
- installed via @rhombus(Pict.epoch_set_metadata) using the key
- @rhombus(#'nonarchival).
-
-}
-
-@doc(
-  enum SlideLayout
-  | auto
-  | center
-  | top
-  | tall
-){
-
- Slide layout options used with @rhombus(slide) and
- @rhombus(current_assembler).
-
-}
-
-@doc(
-  enum Aspect
-  | widescreen
-  | fullscreen
-){
-
- Slide aspect options used with @rhombus(slide) and
- @rhombus(current_assembler). The @rhombus(#'widescreen) apsect is 16:9
- as 1360 by 766 in drawing units. The @rhombus(#'fullscreen) aspect if
- 4:3 as 1024 by 768 in drawing units.
-
-}
-
-@doc(
-  fun interactive(pict :: Pict,
-                  callback :: Function.of_arity(1)) :: Pict
-){
-
- Creates a pict that renders as @rhombus(pict) for printing or other
- non-interactive contexts, but in Slideshow GUI creates a floating window
- at the same position as the pict would appear, and @rhombus(callback) is
- called a window handle to initialize the window. The @rhombus(callback)
- function must produce a function of zero arguments, which is called to
- deinitialize the floating when when the slide changes so that the
- interactive pict is not longer on the screen.
-
-}
-
-
-@doc(
-  fun is_printing() :: Boolean
-  fun is_condensing() :: Boolean
-){
-
- Functions that report whether slides are being collected to be printed
- (e.g,. to PDF) instead of shown interactively, and whether slides are
- being collected in ``condensed'' mode (which is normally enabled when
- printing, but also can be enabled separately).
-
-}
-
-@doc(
-  fun start_at_recent()
-){
-
- When slides are being accumulated to show interactively, causes the
- slide viewer to fast-forward to the most recently registered slide as
- soon as it's available.
 
 }
 

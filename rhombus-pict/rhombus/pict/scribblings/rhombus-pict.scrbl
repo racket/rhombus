@@ -6,21 +6,25 @@
       draw
     "pict_eval.rhm" open)
 
+@(def scribble_doc:
+    ModulePath'lib("rhombus/scribble/scribblings/rhombus-scribble.scrbl")')
+
+@(def slideshow_doc:
+    ModulePath'lib("rhombus/slideshow/scribblings/rhombus-slideshow.scrbl")')
+
 @title(~category: #'#{gui-library}){Pict: Functional Pictures}
 
 @docmodule(pict)
 
-The @rhombusmodname(pict) Rhombus library starts with the same
-@deftech{pict} concept as the Racket @racketmodname(pict) library, but
-the Rhombus pict abstraction includes direct support for slideshow
-animations. That is, the @rhombus(Pict) datatype from the
-@rhombusmodname(pict) library covers both static pictures, as useful in
-a paper, and dynamic pictures, as useful in a slide presentation. In
-particular, a @rhombus(Pict, ~annot) can represent an entire Slideshow talk.
-Concretely, you can pass an animated pict to a function like
-@rhombus(above), and the result will be an animated pict that animates
-and steps concurrent to other animated picts provided in the same
-@rhombus(above) combination.
+The @rhombusmodname(pict) library for Rhombus supports functional
+construction of 2-D animated pictures. A @deftech{pict} (satisfying
+@rhombus(Pict, ~annot)) can implement a static picture, as might appear
+in a paper, or an animated sequence, as might appear in a slide
+presentation. A pict can be drawn to the screen, saved to a bitmap or
+vector-graphics file, incorporated into a
+@seclink(~doc: scribble_doc, "top", ~indirect: #true){Scribble}
+document, or used in a
+@seclink(~doc: slideshow_doc, "top", ~indirect: #true){Slideshow} talk.
 
 @table_of_contents()
 

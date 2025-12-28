@@ -5,8 +5,8 @@
 @title(~category: #'tool){Scribble Document Language}
 
 Rhombus Scribble is a language for writing prose documents, especially
-documentation for Rhombus libraries. The result of running a Rhombus
-Scribble program is a document, and a Rhombus Scribble program is meant
+documentation for Rhombus libraries. The result of running a
+Scribble program is a document, and a Scribble program is meant
 to be run with @exec{raco scribble}, which takes the document result and
 renders it to a format such as HTML or PDF.
 

@@ -13,8 +13,7 @@
 
 @title(~tag: "static-pict"){Static Picts}
 
-A @deftech{static pict} is a pict like one from Racket's
-@racketmodname(pict) library. It has a width, height, and a rendering as
+A @deftech{static pict} has a width, height, and a rendering as
 an image. A pict does not have a particular location on the page or
 screen. Instead, different picts are combined relative to each other to
 form a larger pict, and then the overall pict can be included in a
