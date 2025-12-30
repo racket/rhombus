@@ -15,9 +15,7 @@
 @(def point_sym = @rhombus(#'point))
 @(def size_sym = @rhombus(#'size))
 
-@title(~tag: "point-et-al"){Point, Size, and Rectangle}
-
-@(~version_at_least "8.14.0.4")
+@title(~tag: "point-et-al"){Drawing Geometry}
 
 @doc(
   class draw.Point(x :: Real, y :: Real)

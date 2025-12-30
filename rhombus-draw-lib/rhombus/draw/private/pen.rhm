@@ -64,7 +64,6 @@ class Pen(private _handle):
   symbol_map_annot Style style_convert style_unconvert:
     { transparent: transparent,
       solid: solid,
-      xor: xor,
       hilite: hilite,
       dot: dot,
       long_dash: #{long-dash},

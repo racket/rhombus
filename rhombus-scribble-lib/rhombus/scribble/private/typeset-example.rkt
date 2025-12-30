@@ -8,6 +8,7 @@
          racket/sandbox
          file/convertible
          racket/port
+         rhombus/private/pack
          syntax/strip-context
          (only-in rhombus/private/srcloc
                   respan)
@@ -125,7 +126,10 @@
                       '(multi))))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
   (call-in-sandbox-context eval (lambda () (error-print-source-location #f)))
-  eval)
+  (lambda (stx)
+    (eval (if (syntax? stx)
+              (unpack-multi/tagged stx 'rhombus_eval #f)
+              stx))))
 
 (define (examples #:eval eval
                   #:once? once?

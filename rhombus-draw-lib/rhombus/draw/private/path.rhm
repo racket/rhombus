@@ -8,6 +8,7 @@ import:
       RectLike
       Rect
   "font.rhm".Font
+  "transformation.rhm".Transformation
   "text-combine.rhm".DC
 
 export:
@@ -43,6 +44,8 @@ class Path(private _handle):
     rkt.send handle.#{rotate}(radians)
   method translate(dx :: Real, dy :: Real):
     rkt.send handle.#{translate}(dx, dy)
+  method transform(t :: Transformation):
+    rkt.send handle.#{transform}(Array(t.xx, t.yx, t.yx, t.yy, t.x0, t.y0))
 
   method curve_to(pt1 :: PointLike,
                   pt2 :: PointLike,

@@ -8,6 +8,7 @@ import:
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
+  lib("file/convertible.rkt") as fileconv
 
 export:
   Bitmap
@@ -31,8 +32,17 @@ class Bitmap():
   internal _Bitmap
   extends intf.Bitmap
 
+  primitive_property fileconv.#{prop:convertible}:
+    fun (self :~ Bitmap, req, defval):
+      fileconv.convert(self.handle, req, defval)
+
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.special(copy().handle, ~mode: #'print,
+                      @str{draw.Bitmap([@width, @height]})
+
   constructor (size :: SizeLike,
-               ~backing_scale: backing_space :: Real.above(0.0) = 1,
+               ~backing_scale: backing_scale :: Real.above(0.0) = 1,
                ~has_color = #true,
                ~has_alpha = #true):
     _Bitmap(rkt.make_object(rkt.#{bitmap%},
@@ -40,13 +50,11 @@ class Bitmap():
                             size.height,
                             !has_color,
                             has_alpha,
-                            backing_space))()
+                            backing_scale))()
 
-  export from_file
-
-  private implements Printable
-  private override describe(mode, recur):
-    PrintDesc.special(handle, ~mode: #'print, "Bitmap()")
+  export:
+    make_platform
+    read
 
   override property width:
     rkt.send handle.#{get-width}()
@@ -79,18 +87,30 @@ class Bitmap():
                      ~y: y :: Nat = 0,
                      ~width: width :: Nat = width,
                      ~height: height :: Nat = height,
-                     ~dest: dest :: Bytes = Bytes.make(width * height * 4)) :: Bytes:
-    rkt.send handle.#{get-argb-pixels}(x, y, width, height, dest)
+                     ~dest: dest :: Bytes = Bytes.make(width * height * 4),
+                     ~just_alpha = #false,
+                     ~premultiplied = #false,
+                     ~unscaled = #false) :: Bytes:
+    rkt.send handle.#{get-argb-pixels}(x, y, width, height, dest,
+                                       just_alpha,
+                                       premultiplied,
+                                       ~#{unscaled?}: unscaled)
     dest
 
   method set_argb_pixels(bstr :: Bytes,
                          ~x: x :: Nat = 0,
                          ~y: y :: Nat = 0,
                          ~width: width :: Nat = width,
-                         ~height: height :: Nat = height) :~ Void:
-    rkt.send handle.#{set-argb-pixels}(x, y, width, height, bstr)
+                         ~height: height :: Nat = height,
+                         ~just_alpha = #false,
+                         ~premultiplied = #false,
+                         ~unscaled = #false) :~ Void:
+    rkt.send handle.#{set-argb-pixels}(x, y, width, height, bstr,
+                                       just_alpha,
+                                       premultiplied,
+                                       ~#{unscaled?}: unscaled)
 
-  method write(dest,
+  method write(dest :: PathString || Port.Output,
                ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
                ~quality: quality :: Int.in(0 ..= 100) = 75,
                ~as_unscaled: as_unscaled :: Any.to_boolean = #false):
@@ -100,7 +120,21 @@ class Bitmap():
             "error writing bitmap",
             error.text(~label: "destination", dest))
 
+  method copy() :: Bitmap:
+    def bm2 = Bitmap(size,
+                     ~backing_scale: backing_scale,
+                     ~has_color: has_color,
+                     ~has_alpha: has_alpha)
+    bm2.make_dc().bitmap(this)
+    bm2
+
 annot.delayed_complete intf.BitmapForward: Bitmap
 
-fun from_file(name :: String || Path) :: Bitmap:
+fun read(name :: PathString || Port.Input) :: Bitmap:
   _Bitmap(rkt.#{read-bitmap}(name))()
+
+fun make_platform(size :: SizeLike,
+                  ~backing_scale: backing_scale :: Real.above(0.0) = 1) :~ Bitmap:
+  _Bitmap(rkt.#{make-platform-bitmap}(size.width,
+                                      size.height,
+                                      ~#{backing-scale}: backing_scale))

@@ -8,8 +8,6 @@
 
 @title{Color}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class draw.Color():
     constructor
@@ -23,9 +21,9 @@
 
  When @rhombus(alpha) is not supplied, @rhombus(1.0) is used.
 
- Color like an existing one can be constructed using @rhombus(with)
- and the field names @rhombus(red), @rhombus(green), @rhombus(blue),
- and/or @rhombus(alpha).
+ A color like an existing one can be constructed using @rhombus(with) and
+ the field names @rhombus(red, ~datum), @rhombus(green, ~datum),
+ @rhombus(blue, ~datum), and/or @rhombus(alpha, ~datum).
 
 }
 
@@ -59,7 +57,7 @@
 
  Blends two colors to produce a new one. Each red, green, and blue
  component contributes to the corresponding blended component by its
- weighted average, where each color's alpha is is weight. The result
+ weighted average, where each color's alpha is its weight. The result
  color's alpha is the average of the two color's alphas.
 
 }

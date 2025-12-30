@@ -20,13 +20,20 @@ expr.macro 'new $target ... ($(kw :: Keyword): $kw_arg, ...)':
                          expr_meta.pack_expr('block: $kw_arg')],
                         ...])
 
-expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
+meta:
+  syntax_class Arg:
+    kind: ~group
+  | '$(kw :: Keyword): $arg':
+      field kws = [kw]
+  | '$arg':
+      field kws = []
+
+expr.macro 'send $target ... . $(method :: Identifier)($(arg :: Arg), ...)':
   expr_meta.pack_s_exp(['rkt_send',
                         expr_meta.pack_expr('$target ...'),
                         method,
-                        & List.append([kw, expr_meta.pack_expr(kw_arg)],
-                                      ...),
-                        expr_meta.pack_expr(arg), ...])
+                        & List.append([& arg.kws, expr_meta.pack_expr(arg.arg)],
+                                      ...)])
 
 expr.macro '$obj is_a $class':
   expr_meta.pack_s_exp(['rkt_is_a', obj, class])

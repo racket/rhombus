@@ -21,3 +21,4 @@ export:
   draw.#{pdf-dc%}
   draw.#{post-script-dc%}
   draw.#{read-bitmap}
+  draw.#{make-platform-bitmap}

@@ -80,9 +80,10 @@
   method (path :: draw.Path).scale(sx :: Real, sy :: Real) :: Void
   method (path :: draw.Path).rotate(radians :: Real) :: Void
   method (path :: draw.Path).translate(dx :: Real, dy :: Real) :: Void
+  method (path :: draw.Path).transform(t :: Transformation) :: Void
 ){
 
- Adjusts a path to scale, rotate, or translate every point defining the
+ Adjusts a path to scale, rotate, translate, or transform every point defining the
  path.
 
 }

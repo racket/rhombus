@@ -5,6 +5,7 @@ import:
   "dc-interface.rhm".DCForward as DC
   "dc-interface.rhm"._DC
   "region-interface.rhm" as intf
+  "path.rhm".Path
   "symbol_map.rhm":
     expose:
       symbol_map_annot
@@ -60,7 +61,7 @@ class Region():
               ~dx: dx :: Real = 0.0,
               ~dy: dy :: Real = 0.0,
               ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send handle.#{set-path}(p, dpt.x + dx, dpt.y + dy, fill_convert(fill))
+    rkt.send handle.#{set-path}(p.handle, dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method union(region :: Region):
     rkt.send handle.#{union}(region.handle)

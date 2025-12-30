@@ -6,6 +6,7 @@ import:
   "dc-interface.rhm"._DC as _DCer
   "dc-interface.rhm".DCForward
   "color.rhm".Color
+  "color.rhm"!private.unwrap_color
   "pen.rhm".Pen
   "pen.rhm"!private._Pen
   "brush.rhm".Brush
@@ -56,6 +57,21 @@ interface DC:
     | _:
         syntax_meta.error("expected a block afterward", head)
 
+  dot '$left . using_alpha':
+    ~head_stx: head
+    ~tail: '$(tail :: Group)'
+    match tail
+    | '($(alpha :: Group)): $(body :: Block)':
+        values('block:
+                  def dc :: DC = $left
+                  try:
+                    ~initially dc.start_alpha($alpha)
+                    block $body
+                    ~finally dc.end_alpha()',
+               '')
+    | _:
+        syntax_meta.error("expected a parenthesized alpha and then block afterward", head)
+
   property size :: Size:
     let (w, h) = rkt.send handle.#{get-size}()
     Size(w, h)
@@ -66,8 +82,13 @@ interface DC:
   method save()
   method restore()
 
+  method start_alpha(a :: Real.in(0, 1)):
+    rkt.send handle.#{start-alpha}(a)
+  method end_alpha():
+    rkt.send handle.#{end-alpha}()
+
   method clear():
-    rkt.send handle.clear()
+    rkt.send handle.erase()
 
   method font_metrics_key():
     rkt.send handle.#{cache-font-metrics-key}()
@@ -91,6 +112,12 @@ interface DC:
       rkt.send handle.#{set-font}(f.handle)
 
   property
+  | text_color :: Color:
+      Color.from_handle(rkt.send handle.#{get-text-foreground}())
+  | text_color := c :: (String || Color):
+      rkt.send handle.#{set-text-foreground}(unwrap_color(c))
+
+  property
   | clipping_region :: maybe(Region):
       let r = rkt.send handle.#{get-clipping-region}()
       r && _Region(r)()
@@ -102,6 +129,18 @@ interface DC:
       rkt.send handle.#{get-smoothing}()
   | smoothing := v :: Smoothing:
       rkt.send handle.#{set-smoothing}(v)
+
+  property
+  | alignment_scale :: PosReal:
+      rkt.send handle.#{get-alignment-scale}()
+  | alignment_scale := v :: PosReal:
+      rkt.send handle.#{set-alignment-scale}(v)
+
+  property
+  | alpha :: Real.in(0, 1):
+      rkt.send handle.#{get-alpha}()
+  | alpha := v :: Real.in(0, 1):
+      rkt.send handle.#{set-alpha}(v)
 
   method copy(src :: RectLike,
               dest :: PointLike):
@@ -207,8 +246,8 @@ interface DC:
 
   method rotate(radians :: Real):
     rkt.send handle.#{rotate}(radians)
-  method transform(a :: Transformation):
-    rkt.send handle.#{transform}(a)
+  method transform(t :: Transformation):
+    rkt.send handle.#{transform}(Array(t.xx, t.yx, t.yx, t.yy, t.x0, t.y0))
 
   property
   | transformation :: Transformation:
@@ -252,7 +291,9 @@ fun from_handle(handle) :: DC:
           error.val(handle))
   SomeDC(handle)
 
-class DCDump(pen, brush, font, clipping_region, layered_transformation, dump)
+class DCDump(pen, brush, font, clipping_region, layered_transformation,
+             alpha, text_color,
+             dump)
 
 class SomeDC(private _handle):
   nonfinal
@@ -265,7 +306,9 @@ class SomeDC(private _handle):
   private field dump = #false
 
   override method save():
-    dump := DCDump(pen, brush, font, clipping_region, layered_transformation, dump)
+    dump := DCDump(pen, brush, font, clipping_region, layered_transformation,
+                   alpha, text_color,
+                   dump)
 
   override method restore():
     unless dump
@@ -281,6 +324,8 @@ class SomeDC(private _handle):
       .font
       .clipping_region
       .layered_transformation
+      .alpha
+      .text_color
       .dump
 
   private implements Printable
