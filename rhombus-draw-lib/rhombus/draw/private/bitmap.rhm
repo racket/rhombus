@@ -44,6 +44,10 @@ class Bitmap():
 
   export from_file
 
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.special(handle, ~mode: #'print, "Bitmap()")
+
   override property width:
     rkt.send handle.#{get-width}()
 
