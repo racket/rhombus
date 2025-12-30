@@ -5,9 +5,9 @@
 
 @title{Ranges}
 
-A @deftech{range}@intro_note("range", "ranges"), or an @deftech{interval}, represents a contiguous
+A @deftech{range}@intro_note("range", "ranges") represents a contiguous
 set of integers between two points. When the starting point is
-included, the range can be used as a @tech{sequence}; in addition,
+not @rhombus(#neginf), the range can be used as a @tech{sequence}; in addition,
 when the ending point is not @rhombus(#inf), the range is
 @tech{listable}. Generally, the starting point must be less than or
 equal to the ending point, so that the lower bound is ``less than or
@@ -25,12 +25,12 @@ operator, which is the same as @rhombus(Range.contains).
  The @rhombus(Range, ~annot) annotation matches any range.
 
  The @rhombus(SequenceRange, ~annot) annotation matches a range that
- can be used as a @tech{sequence}, for which
- @rhombus(Range.includes_start) returns true.
+ can be used as a @tech{sequence}. Such a range has a
+ non-@rhombus(#neginf) starting point.
 
  The @rhombus(ListRange, ~annot) annotation matches a range that is
- @tech{listable}, for which @rhombus(Range.includes_start) returns
- true, and @rhombus(Range.end) returns non-@rhombus(#inf).
+ @tech{listable}. Such a range has a non-@rhombus(#neginf) starting
+ point and a non-@rhombus(#inf) ending point.
 
  Static information associated by @rhombus(SequenceRange, ~annot) or
  @rhombus(ListRange, ~annot) makes an expression acceptable as a
@@ -122,6 +122,11 @@ operator, which is the same as @rhombus(Range.contains).
  The same as @rhombus(Range.from_exclusive_to, ~expr) and
  @rhombus(Range.from_exclusive, ~expr), respectively.
 
+ When @rhombus(start_expr <.. end_expr) or @rhombus(start_expr <..) is
+ used in an @rhombus(each, ~for_clause) clause of @rhombus(for), the
+ optimization is more aggressive in that no intermediate range is
+ created.
+
 }
 
 @doc(
@@ -140,6 +145,10 @@ operator, which is the same as @rhombus(Range.contains).
 ){
 
  The same as @rhombus(Range.from_exclusive_to_inclusive, ~expr).
+
+ When @rhombus(start_expr <..= end_expr) is used in an
+ @rhombus(each, ~for_clause) clause of @rhombus(for), the optimization
+ is more aggressive in that no intermediate range is created.
 
 }
 
@@ -162,8 +171,7 @@ operator, which is the same as @rhombus(Range.contains).
   ~nonterminal:
     start_bind: def bind ~defn
     end_bind: def bind ~defn
-  fun Range.from_to_inclusive(start :: Int, end :: Int)
-    :: ListRange
+  fun Range.from_to_inclusive(start :: Int, end :: Int) :: ListRange
   bind.macro 'Range.from_to_inclusive($start_bind, $end_bind)'
 ){
 
@@ -190,8 +198,7 @@ operator, which is the same as @rhombus(Range.contains).
   ~nonterminal:
     start_bind: def bind ~defn
     end_bind: def bind ~defn
-  fun Range.from_exclusive_to(start :: Int, end :: Int)
-    :: Range
+  fun Range.from_exclusive_to(start :: Int, end :: Int) :: ListRange
   bind.macro 'Range.from_exclusive_to($start_bind, $end_bind)'
 ){
 
@@ -208,7 +215,7 @@ operator, which is the same as @rhombus(Range.contains).
     start_bind: def bind ~defn
     end_bind: def bind ~defn
   fun Range.from_exclusive_to_inclusive(start :: Int, end :: Int)
-    :: Range
+    :: ListRange
   bind.macro 'Range.from_exclusive_to_inclusive($start_bind, $end_bind)'
 ){
 
@@ -221,7 +228,7 @@ operator, which is the same as @rhombus(Range.contains).
 @doc(
   ~nonterminal:
     start_bind: def bind ~defn
-  fun Range.from_exclusive(start :: Int) :: Range
+  fun Range.from_exclusive(start :: Int) :: SequenceRange
   bind.macro 'Range.from_exclusive($start_bind)'
 ){
 
@@ -523,7 +530,7 @@ operator, which is the same as @rhombus(Range.contains).
 
  When invoked as @rhombus(rge.step_by(step)) in an
  @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
- optimized, in addition to the optimization in @rhombus(..) or
- @rhombus(..=).
+ optimized, in cooperation with the optimization in @rhombus(..),
+ @rhombus(..=), @rhombus(<..), or @rhombus(<..=).
 
 }

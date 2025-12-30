@@ -12,7 +12,7 @@ integers between two points, and they support constant-time operations
 that work with integers. Ranges are typically created with the
 @rhombus(..), @rhombus(..=), @rhombus(<..), or @rhombus(<..=)
 operators, where a prefix @litchar{<} alludes to an exclusive (as
-opposed to inclusive) starting point, and a suffix @litchar{=} alludes
+opposed to inclusive) starting point, while a suffix @litchar{=} alludes
 to an inclusive (as opposed to exclusive) ending point. There are also
 @rhombus(Range, ~annot) functions that correspond to these operators.
 
@@ -42,12 +42,17 @@ integer that the other range contains.
 
 Ranges in the forms
 @rhombus(#,(@rhombus(x, ~var)) .. #,(@rhombus(y, ~var))),
-@rhombus(#,(@rhombus(x, ~var)) ..= #,(@rhombus(y, ~var))), or
-@rhombus(#,(@rhombus(x, ~var)) ..) satisfy
+@rhombus(#,(@rhombus(x, ~var)) ..= #,(@rhombus(y, ~var))),
+@rhombus(#,(@rhombus(x, ~var)) ..),
+@rhombus(#,(@rhombus(x, ~var)) <.. #,(@rhombus(y, ~var))),
+@rhombus(#,(@rhombus(x, ~var)) <..= #,(@rhombus(y, ~var))), or
+@rhombus(#,(@rhombus(x, ~var)) <..) satisfy
 @rhombus(SequenceRange, ~annot) and can be used as sequences, as
 already shown in @secref("for"). Moreover, ranges in the forms
-@rhombus(#,(@rhombus(x, ~var)) .. #,(@rhombus(y, ~var))) or
-@rhombus(#,(@rhombus(x, ~var)) ..= #,(@rhombus(y, ~var))) also satisfy
+@rhombus(#,(@rhombus(x, ~var)) .. #,(@rhombus(y, ~var))),
+@rhombus(#,(@rhombus(x, ~var)) ..= #,(@rhombus(y, ~var))),
+@rhombus(#,(@rhombus(x, ~var)) <.. #,(@rhombus(y, ~var))), or
+@rhombus(#,(@rhombus(x, ~var)) <..= #,(@rhombus(y, ~var))) also satisfy
 @rhombus(ListRange, ~annot) and are listable (see @secref("list")).
 
 @examples(
@@ -58,6 +63,12 @@ already shown in @secref("for"). Moreover, ranges in the forms
   ~repl:
     [& less_than_five]
     [& up_to_five]
+  ~defn:
+    def less_than_five_no_zero = 0 <.. 5
+    def up_to_five_no_zero = 0 <..= 5
+  ~repl:
+    [& less_than_five_no_zero]
+    [& up_to_five_no_zero]
 )
 
 

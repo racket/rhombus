@@ -64,10 +64,13 @@
 (module+ for-substring
   (provide range-canonical-start+end))
 
+(define-static-info-getter get-any-range-static-infos
+  (#%contains Range.contains))
+
 (define-primitive-class Range range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%contains Range.contains))
+  #:instance-static-info #,(get-any-range-static-infos)
   #:existing
   #:just-annot #:no-primitive
   #:fields ()
@@ -98,15 +101,15 @@
    gap
    intersect))
 
-(define-static-info-getter get-sequence-range-static-infos/sequence
+(define-static-info-getter get-any-sequence-range-static-infos
   (#%sequence-constructor SequenceRange.to_sequence/optimize)
   (#%sequence-element #,(get-int-static-infos))
-  #,@(get-range-static-infos))
+  #,@(get-any-range-static-infos))
 
 (define-primitive-class SequenceRange sequence-range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,(get-sequence-range-static-infos/sequence)
+  #:instance-static-info #,(get-any-sequence-range-static-infos)
   #:existing
   #:just-annot #:no-primitive
   #:parent #f range
@@ -122,7 +125,7 @@
 (define-primitive-class ListRange list-range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info #,(get-sequence-range-static-infos/sequence)
+  #:instance-static-info #,(get-any-sequence-range-static-infos)
   #:existing
   #:just-annot #:no-primitive
   #:parent #f sequence-range
@@ -237,7 +240,7 @@
         (respan (datum->syntax #f (list left self-stx)))
         #`(range-from-exclusive/who '<..
                                     #,(discard-static-infos left)))
-       (get-range-static-infos))]
+       (get-sequence-range-static-infos))]
      [(left right self-stx)
       (wrap-static-info*
        (relocate+reraw
@@ -245,7 +248,7 @@
         #`(range-from-exclusive-to/who '<..
                                        #,(discard-static-infos left)
                                        #,(discard-static-infos right)))
-       (get-range-static-infos))])
+       (get-list-range-static-infos))])
    'none))
 
 (define-syntax <..
@@ -266,7 +269,7 @@
        #`(range-from-exclusive-to-inclusive/who '<..=
                                                 #,(discard-static-infos left)
                                                 #,(discard-static-infos right)))
-      (get-range-static-infos)))
+      (get-list-range-static-infos)))
    'none))
 
 (define-syntax <..=
@@ -375,11 +378,6 @@
                             "starting point" (unquoted-printing-string (number->string start))
                             "ending point" (unquoted-printing-string (number->string end)))))
 
-(define (step->inc step)
-  (if step
-      (lambda (i) (+ i step))
-      add1))
-
 (define-syntax (define-range stx)
   (syntax-parse stx
     [(_ range name Name op-str (~or* (~and #:none)
@@ -448,7 +446,7 @@
                                      (pretty-text 'op-str)
                                      (~? (~@ (pretty-text " ")
                                              (PrintDesc-doc (recur (name-end v)))))))
-          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r))))))
+          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r 1))))))
      (syntax-local-lift-module-end-declaration
       #'(define-primitive-class Name name
           #:existing
@@ -480,12 +478,12 @@
 (define-range list-range range-from-to Range.from_to ".." #:both
   #:->sequence range-from-to->sequence)
 
-(define (range-from-to->sequence r [step #f])
+(define (range-from-to->sequence r step)
   (define start (range-from-to-start r))
   (define end (range-from-to-end r))
   (define (cont? i)
     (i . < . end))
-  (range-sequence start (step->inc step) cont?))
+  (range-sequence start step cont?))
 
 (define (range-from-to->list r)
   (define start (range-from-to-start r))
@@ -502,12 +500,12 @@
 (define-range list-range range-from-to-inclusive Range.from_to_inclusive "..=" #:both
   #:->sequence range-from-to-inclusive->sequence)
 
-(define (range-from-to-inclusive->sequence r [step #f])
+(define (range-from-to-inclusive->sequence r step)
   (define start (range-from-to-inclusive-start r))
   (define end (range-from-to-inclusive-end r))
   (define (cont? i)
     (i . <= . end))
-  (range-sequence start (step->inc step) cont?))
+  (range-sequence start step cont?))
 
 (define (range-from-to-inclusive->list r)
   (define start (range-from-to-inclusive-start r))
@@ -524,15 +522,60 @@
 (define-range sequence-range range-from Range.from ".." #:left
   #:->sequence range-from->sequence)
 
-(define (range-from->sequence r [step #f])
+(define (range-from->sequence r step)
   (define start (range-from-start r))
-  (range-sequence start (step->inc step) #f))
+  (range-sequence start step #f))
 
-(define-range range range-from-exclusive-to Range.from_exclusive_to "<.." #:both-not-equal)
+(define-range list-range range-from-exclusive-to Range.from_exclusive_to "<.." #:both-not-equal
+  #:->sequence range-from-exclusive-to->sequence)
 
-(define-range range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both)
+(define (range-from-exclusive-to->sequence r step)
+  (define start (add1 (range-from-exclusive-to-start r)))
+  (define end (range-from-exclusive-to-end r))
+  (define (cont? i)
+    (i . < . end))
+  (range-sequence start step cont?))
 
-(define-range range range-from-exclusive Range.from_exclusive "<.." #:left)
+(define (range-from-exclusive-to->list r)
+  (define start (add1 (range-from-exclusive-to-start r)))
+  (define end (range-from-exclusive-to-end r))
+  (for/list ([i (in-range start end)])
+    i))
+
+(define (range-from-exclusive-to->treelist r)
+  (define start (add1 (range-from-exclusive-to-start r)))
+  (define end (range-from-exclusive-to-end r))
+  (for/treelist ([i (in-range start end)])
+    i))
+
+(define-range list-range range-from-exclusive-to-inclusive Range.from_exclusive_to_inclusive "<..=" #:both
+  #:->sequence range-from-exclusive-to-inclusive->sequence)
+
+(define (range-from-exclusive-to-inclusive->sequence r step)
+  (define start (add1 (range-from-exclusive-to-inclusive-start r)))
+  (define end (range-from-exclusive-to-inclusive-end r))
+  (define (cont? i)
+    (i . <= . end))
+  (range-sequence start step cont?))
+
+(define (range-from-exclusive-to-inclusive->list r)
+  (define start (add1 (range-from-exclusive-to-inclusive-start r)))
+  (define end (range-from-exclusive-to-inclusive-end r))
+  (for/list ([i (in-inclusive-range start end)])
+    i))
+
+(define (range-from-exclusive-to-inclusive->treelist r)
+  (define start (add1 (range-from-exclusive-to-inclusive-start r)))
+  (define end (range-from-exclusive-to-inclusive-end r))
+  (for/treelist ([i (in-inclusive-range start end)])
+    i))
+
+(define-range sequence-range range-from-exclusive Range.from_exclusive "<.." #:left
+  #:->sequence range-from-exclusive->sequence)
+
+(define (range-from-exclusive->sequence r step)
+  (define start (add1 (range-from-exclusive-start r)))
+  (range-sequence start step #f))
 
 (define-range range range-to Range.to ".." #:right)
 
@@ -540,7 +583,9 @@
 
 (define-range range range-full Range.full ".." #:none)
 
-(define (range-sequence start inc cont?)
+(define (range-sequence start step cont?)
+  (define (inc i)
+    (+ i step))
   (make-do-sequence
    (lambda ()
      (values values #f inc start cont? #f #f))))
@@ -900,18 +945,70 @@
        #:break (not r)
        (range-intersect r other-r))]))
 
+(define (sequence-range->sequence r step)
+  (cond
+    [(range-from-to? r) (range-from-to->sequence r step)]
+    [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r step)]
+    [(range-from? r) (range-from->sequence r step)]
+    [(range-from-exclusive-to? r) (range-from-exclusive-to->sequence r step)]
+    [(range-from-exclusive-to-inclusive? r) (range-from-exclusive-to-inclusive->sequence r step)]
+    [else (range-from-exclusive->sequence r step)]))
+
+(define-sequence-syntax SequenceRange.to_sequence/optimize
+  (lambda () #'SequenceRange.to_sequence)
+  (lambda (stx)
+    (syntax-parse stx
+      [[(id) (_ range-expr/statinfo)]
+       (define who 'SequenceRange.to_sequence)
+       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
+       (range-sequence/inline/optimize #'id who range-expr)]
+      [_ #f])))
+
+(define/method (SequenceRange.to_sequence r)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t)
+                                  (#%sequence-element #,(get-int-static-infos)))))
+  (check-sequence-range who r)
+  (sequence-range->sequence r 1))
+
+(define-sequence-syntax SequenceRange.step_by/optimize
+  (lambda () #'values)
+  (lambda (stx)
+    (syntax-parse stx
+      #:literals (SequenceRange.step_by/bounce)
+      [[(id) (_ step-by-expr/statinfo)]
+       #:do [(define step-by-expr (unwrap-static-infos #'step-by-expr/statinfo))]
+       #:with (SequenceRange.step_by/bounce range-expr/statinfo step-expr/statinfo) step-by-expr
+       (define who 'SequenceRange.step_by)
+       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
+       (define step-expr (unwrap-static-infos #'step-expr/statinfo))
+       (range-sequence/inline/optimize #'id who range-expr
+                                       #:step-expr step-expr)]
+      [_ #f])))
+
+(define/arity (SequenceRange.step_by/bounce r step)
+  #:static-infos ((#%call-result ((#%sequence-constructor SequenceRange.step_by/optimize)
+                                  (#%sequence-element #,(get-int-static-infos)))))
+  (SequenceRange.step_by r step))
+
+(define/method #:direct-id SequenceRange.step_by/bounce (SequenceRange.step_by r step)
+  #:static-infos ((#%call-result ((#%sequence-constructor #t)
+                                  (#%sequence-element #,(get-int-static-infos)))))
+  (check-sequence-range who r)
+  (check-pos-int who step)
+  (sequence-range->sequence r step))
+
 (define-for-syntax (range-explode/inline range-expr)
   (define-values (who-stx start-expr start-type end-expr end-type)
     (syntax-parse range-expr
       #:literals (quote
                   range-from-to/who
-                  range-from/who
                   range-from-to-inclusive/who
-                  range-to-inclusive/who
-                  range-to/who
-                  range-from-exclusive/who
+                  range-from/who
                   range-from-exclusive-to/who
                   range-from-exclusive-to-inclusive/who
+                  range-from-exclusive/who
+                  range-to/who
+                  range-to-inclusive/who
                   range-full)
       [(range-from-to/who 'who start-expr end-expr)
        (values #'who #'start-expr 'inclusive #'end-expr 'exclusive)]
@@ -941,75 +1038,28 @@
               end-type)
       (values #f #f #f #f #f)))
 
-(define-sequence-syntax SequenceRange.to_sequence/optimize
-  (lambda () #'SequenceRange.to_sequence)
-  (lambda (stx)
-    (syntax-parse stx
-      [[(id) (_ range-expr/statinfo)]
-       (define who 'SequenceRange.to_sequence)
-       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
-       (define-values (range-who start-expr start-type end-expr end-type)
-         (range-explode/inline range-expr))
-       (if (eq? start-type 'inclusive)
-           (range-sequence/inline #'id range-who start-expr end-expr end-type)
-           (range-sequence/optimize #'id who range-expr))]
-      [_ #f])))
+(define-for-syntax (range-sequence/inline/optimize id who range-expr
+                                                   #:step-expr [step-expr #f])
+  (define step-who (and step-expr who))
+  (define-values (range-who start-expr start-type end-expr end-type)
+    (range-explode/inline range-expr))
+  (if (or (eq? start-type 'inclusive)
+          (eq? start-type 'exclusive))
+      (range-sequence/inline id range-who start-expr start-type end-expr end-type
+                             #:step-who step-who
+                             #:step-expr step-expr)
+      (range-sequence/optimize id who range-expr
+                               #:step-who step-who
+                               #:step-expr step-expr)))
 
-(define/method (SequenceRange.to_sequence r)
-  #:static-infos ((#%call-result ((#%sequence-constructor #t)
-                                  (#%sequence-element #,(get-int-static-infos)))))
-  (check-sequence-range who r)
-  (cond
-    [(range-from-to? r) (range-from-to->sequence r)]
-    [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r)]
-    [else (range-from->sequence r)]))
-
-(define-sequence-syntax SequenceRange.step_by/optimize
-  (lambda () #'values)
-  (lambda (stx)
-    (syntax-parse stx
-      #:literals (SequenceRange.step_by/bounce)
-      [[(id) (_ step-by-expr/statinfo)]
-       #:do [(define step-by-expr (unwrap-static-infos #'step-by-expr/statinfo))]
-       #:with (SequenceRange.step_by/bounce range-expr/statinfo step-expr/statinfo) step-by-expr
-       (define who 'SequenceRange.step_by)
-       (define range-expr (unwrap-static-infos #'range-expr/statinfo))
-       (define step-who who)
-       (define step-expr (unwrap-static-infos #'step-expr/statinfo))
-       (define-values (range-who start-expr start-type end-expr end-type)
-         (range-explode/inline range-expr))
-       (if (eq? start-type 'inclusive)
-           (range-sequence/inline #'id range-who start-expr end-expr end-type
-                                  #:step-who step-who
-                                  #:step-expr step-expr)
-           (range-sequence/optimize #'id who range-expr
-                                    #:step-who step-who
-                                    #:step-expr step-expr))]
-      [_ #f])))
-
-(define/arity (SequenceRange.step_by/bounce r step)
-  #:static-infos ((#%call-result ((#%sequence-constructor SequenceRange.step_by/optimize)
-                                  (#%sequence-element #,(get-int-static-infos)))))
-  (SequenceRange.step_by r step))
-
-(define/method #:direct-id SequenceRange.step_by/bounce (SequenceRange.step_by r step)
-  #:static-infos ((#%call-result ((#%sequence-constructor #t)
-                                  (#%sequence-element #,(get-int-static-infos)))))
-  (check-sequence-range who r)
-  (check-pos-int who step)
-  (cond
-    [(range-from-to? r) (range-from-to->sequence r step)]
-    [(range-from-to-inclusive? r) (range-from-to-inclusive->sequence r step)]
-    [else (range-from->sequence r step)]))
-
-(define-for-syntax (range-sequence/inline id range-who start-expr end-expr type
-                                          #:step-who [step-who #f]
-                                          #:step-expr [step-expr #f])
+(define-for-syntax (range-sequence/inline id range-who start-expr start-type end-expr end-type
+                                          #:step-who step-who
+                                          #:step-expr step-expr)
   (define (maybe-unwrap-fixnum stx)
     (syntax-parse stx
       #:literals (quote)
-      [(quote num)
-       (define datum (syntax-e #'num))
+      [(quote datum-stx)
+       (define datum (syntax-e #'datum-stx))
        (and (fixnum-for-every-system? datum)
             datum)]
       [_ #f]))
@@ -1024,11 +1074,16 @@
                              ;; ending integer must be fixnum
                              (and step
                                   (fixnum-for-every-system?
-                                   (+ (case type
+                                   (+ (case end-type
                                         [(exclusive) (sub1 end)]
                                         [(inclusive) end]
                                         [else (error "cannot happen")])
                                       step))))))
+  (define check-start-end-stx (if (and (eq? start-type 'exclusive)
+                                       (eq? end-type 'exclusive))
+                                  #'check-start-end/not-equal
+                                  #'check-start-end))
+  (define +-stx (if use-unsafe? #'unsafe-fx+ #'+))
   #`[(#,id) (:do-in
              ([(start) #,start-expr]
               #,@(if end-expr
@@ -1041,24 +1096,26 @@
                (check-int '#,range-who start)
                #,@(if end-expr
                       (list #`(check-int '#,range-who end)
-                            #`(check-start-end '#,range-who start end))
+                            #`(#,check-start-end-stx '#,range-who start end))
                       '())
                #,@(if step-expr
                       (list #`(check-pos-int '#,step-who step))
                       '()))
-             ([pos start])
-             #,(let ([<-stx (case type
-                              [(exclusive) (if use-unsafe? #'unsafe-fx< #'<)]
-                              [(inclusive) (if use-unsafe? #'unsafe-fx<= #'<=)]
-                              [(infinite) #f]
-                              [else (error "cannot happen")])])
-                 (if <-stx #`(pos . #,<-stx . end) #'#t))
+             ([pos #,(case start-type
+                       [(exclusive) #'(add1 start)]
+                       [(inclusive) #'start]
+                       [else (error "cannot happen")])])
+             #,(if end-expr
+                   (let ([<-stx (case end-type
+                                  [(exclusive) (if use-unsafe? #'unsafe-fx< #'<)]
+                                  [(inclusive) (if use-unsafe? #'unsafe-fx<= #'<=)]
+                                  [else (error "cannot happen")])])
+                     #`(pos . #,<-stx . end))
+                   #'#t)
              ([(#,id) pos])
              #t
              #t
-             ((#,(if use-unsafe? #'unsafe-fx+ #'+)
-               pos
-               #,(if step-expr #'step #''1))))])
+             ((#,+-stx pos #,(if step-expr #'step #''1))))])
 
 (define (sequence-range-normalize r)
   (cond
@@ -1070,43 +1127,31 @@
      (values (range-from-to-inclusive-start r)
              (range-from-to-inclusive-end r)
              <=)]
-    [else
+    [(range-from? r)
      (values (range-from-start r)
+             #f
+             #f)]
+    [(range-from-exclusive-to? r)
+     (values (add1 (range-from-exclusive-to-start r))
+             (range-from-exclusive-to-end r)
+             <)]
+    [(range-from-exclusive-to-inclusive? r)
+     (values (add1 (range-from-exclusive-to-inclusive-start r))
+             (range-from-exclusive-to-inclusive-end r)
+             <=)]
+    [else
+     (values (add1 (range-from-exclusive-start r))
              #f
              #f)]))
 
-;; detect wrapper that hides an otherwise immediate sequence range
-(define-syntax (sequence-range/not-inlinable stx)
-  (syntax-parse stx
-    [(_ range-expr)
-     (define expanded
-       (local-expand #'range-expr
-                     'expression
-                     (list #'range-from-to/who
-                           #'range-from-to-inclusive/who
-                           #'range-from/who)))
-     (syntax-parse expanded
-       #:literals (range-from-to/who range-from-to-inclusive/who range-from/who)
-       [(~or* (range-from-to/who _ _ _)
-              (range-from-to-inclusive/who _ _ _)
-              (range-from/who _ _))
-        (raise-syntax-error #f
-                            "should not get here;\n sequence range is inlinable"
-                            stx
-                            #'range-expr
-                            (list expanded))]
-       [_
-        (void)])
-     expanded]))
-
 (define-for-syntax (range-sequence/optimize id who range-expr
-                                            #:step-who [step-who #f]
-                                            #:step-expr [step-expr #f])
+                                            #:step-who step-who
+                                            #:step-expr step-expr)
   #`[(#,id) (:do-in
-             ([(start end <?) (let ([range (sequence-range/not-inlinable #,range-expr)])
+             ([(start end <?) (let ([rge #,range-expr])
                                 (unless (variable-reference-from-unsafe? (#%variable-reference))
-                                  (check-sequence-range '#,who range))
-                                (sequence-range-normalize range))]
+                                  (check-sequence-range '#,who rge))
+                                (sequence-range-normalize rge))]
               #,@(if step-expr
                      (list #`[(step) (let ([step #,step-expr])
                                        (unless (variable-reference-from-unsafe? (#%variable-reference))
@@ -1119,19 +1164,21 @@
              ([(#,id) pos])
              #t
              #t
-             ((+
-               pos
-               #,(if step-expr #'step #''1))))])
+             ((+ pos #,(if step-expr #'step #''1))))])
 
 (define (list-range->list r)
   (cond
     [(range-from-to? r) (range-from-to->list r)]
-    [else (range-from-to-inclusive->list r)]))
+    [(range-from-to-inclusive? r) (range-from-to-inclusive->list r)]
+    [(range-from-exclusive-to? r) (range-from-exclusive-to->list r)]
+    [else (range-from-exclusive-to-inclusive->list r)]))
 
 (define (list-range->treelist r)
   (cond
     [(range-from-to? r) (range-from-to->treelist r)]
-    [else (range-from-to-inclusive->treelist r)]))
+    [(range-from-to-inclusive? r) (range-from-to-inclusive->treelist r)]
+    [(range-from-exclusive-to? r) (range-from-exclusive-to->treelist r)]
+    [else (range-from-exclusive-to-inclusive->treelist r)]))
 
 (define/method (ListRange.to_list r)
   #:static-infos ((#%call-result ((#%index-result #,(get-int-static-infos))

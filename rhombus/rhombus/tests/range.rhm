@@ -683,11 +683,11 @@ check:
   0..=5 ~is_a Listable
   0.. ~is_a Sequence
   0.. ~is_a !Listable
-  0 <.. 5 ~is_a !Sequence
-  0 <.. 5 ~is_a !Listable
-  0 <..= 5 ~is_a !Sequence
-  0 <..= 5 ~is_a !Listable
-  0 <.. ~is_a !Sequence
+  0 <.. 5 ~is_a Sequence
+  0 <.. 5 ~is_a Listable
+  0 <..= 5 ~is_a Sequence
+  0 <..= 5 ~is_a Listable
+  0 <.. ~is_a Sequence
   0 <.. ~is_a !Listable
   ..5 ~is_a !Sequence
   ..5 ~is_a !Listable
@@ -710,260 +710,77 @@ check:
 
 // sequences
 block:
-  use_static
-  check:
-    for List (x in 0..5):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in (0..5).to_sequence()):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in (0..5).step_by(2)):
-      x
-    ~is [0, 2, 4]
-  block:
-    def rge = 0..5
-    check:
-      for List (x in rge):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in dynamic(rge) :~ SequenceRange):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in dynamic(rge) :~ ListRange):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.to_sequence()):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in SequenceRange.to_sequence(rge)):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.step_by(2)):
-        x
-      ~is [0, 2, 4]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2)):
-        x
-      ~is [0, 2, 4]
-
-block:
-  check:
-    for List (x in dynamic(0..5)):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in dynamic(0..5).to_sequence()):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in dynamic(0..5).step_by(2)):
-      x
-    ~is [0, 2, 4]
-  block:
-    def rge = dynamic(0..5)
-    check:
-      for List (x in rge):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.to_sequence()):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in SequenceRange.to_sequence(rge)):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.step_by(2)):
-        x
-      ~is [0, 2, 4]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2)):
-        x
-      ~is [0, 2, 4]
-
-block:
-  use_static
-  check:
-    for List (x in 0..=5):
-      x
-    ~is [0, 1, 2, 3, 4, 5]
-  check:
-    for List (x in (0..=5).to_sequence()):
-      x
-    ~is [0, 1, 2, 3, 4, 5]
-  check:
-    for List (x in (0..=5).step_by(2)):
-      x
-    ~is [0, 2, 4]
-  block:
-    def rge = 0..=5
-    check:
-      for List (x in rge):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in dynamic(rge) :~ SequenceRange):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in dynamic(rge) :~ ListRange):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in rge.to_sequence()):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in SequenceRange.to_sequence(rge)):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in rge.step_by(2)):
-        x
-      ~is [0, 2, 4]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2)):
-        x
-      ~is [0, 2, 4]
-
-block:
-  check:
-    for List (x in dynamic(0..=5)):
-      x
-    ~is [0, 1, 2, 3, 4, 5]
-  check:
-    for List (x in dynamic(0..=5).to_sequence()):
-      x
-    ~is [0, 1, 2, 3, 4, 5]
-  check:
-    for List (x in dynamic(0..=5).step_by(2)):
-      x
-    ~is [0, 2, 4]
-  block:
-    def rge = dynamic(0..=5)
-    check:
-      for List (x in rge):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in rge.to_sequence()):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in SequenceRange.to_sequence(rge)):
-        x
-      ~is [0, 1, 2, 3, 4, 5]
-    check:
-      for List (x in rge.step_by(2)):
-        x
-      ~is [0, 2, 4]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2)):
-        x
-      ~is [0, 2, 4]
-
-block:
-  use_static
-  check:
-    for List (x in 0..,
-              _ in 0..5):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in (0..).to_sequence(),
-              _ in 0..5):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in (0..).step_by(2),
-              _ in 0..5):
-      x
-    ~is [0, 2, 4, 6, 8]
-  block:
-    def rge = 0..
-    check:
-      for List (x in dynamic(rge) :~ SequenceRange,
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge,
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.to_sequence(),
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in SequenceRange.to_sequence(rge),
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.step_by(2),
-                _ in 0..5):
-        x
-      ~is [0, 2, 4, 6, 8]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2),
-                _ in 0..5):
-        x
-      ~is [0, 2, 4, 6, 8]
-
-block:
-  check:
-    for List (x in dynamic(0..),
-              _ in 0..5):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in dynamic(0..).to_sequence(),
-              _ in 0..5):
-      x
-    ~is [0, 1, 2, 3, 4]
-  check:
-    for List (x in dynamic(0..).step_by(2),
-              _ in 0..5):
-      x
-    ~is [0, 2, 4, 6, 8]
-  block:
-    def rge = dynamic(0..)
-    check:
-      for List (x in rge,
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.to_sequence(),
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in SequenceRange.to_sequence(rge),
-                _ in 0..5):
-        x
-      ~is [0, 1, 2, 3, 4]
-    check:
-      for List (x in rge.step_by(2),
-                _ in 0..5):
-        x
-      ~is [0, 2, 4, 6, 8]
-    check:
-      for List (x in SequenceRange.step_by(rge, 2),
-                _ in 0..5):
-        x
-      ~is [0, 2, 4, 6, 8]
+  import rhombus/meta open
+  expr.macro 'generate_checks:
+                $(('~seq_range' || '~list_range') && tag): $rge
+                ~seq: $seq
+                ~step_seq: $step_seq':
+    ~op_stx self
+    let check_id = 'check'.relocate(self)
+    let is_list_range = tag.unwrap() == #'~list_range
+    fun make_for(rge, seq):
+      if is_list_range
+      | '$check_id:
+           for List (x in $rge):
+             x
+           ~is $seq'
+      | '$check_id:
+           for List (x in $rge,
+                     _ in 0..5):
+             x
+           ~is $seq'
+    'block:
+       block:
+         use_static
+         $(make_for(rge, seq))
+         $(make_for('($rge).to_sequence()', seq))
+         $(make_for('($rge).step_by(2)', step_seq))
+         block:
+           def rge = $rge
+           $(make_for('rge', seq))
+           $(make_for('dynamic(rge) :~ SequenceRange', seq))
+           $(if is_list_range
+             | make_for('dynamic(rge) :~ ListRange', seq)
+             | '')
+           $(make_for('rge.to_sequence()', seq))
+           $(make_for('SequenceRange.to_sequence(rge)', seq))
+           $(make_for('rge.step_by(2)', step_seq))
+           $(make_for('SequenceRange.step_by(rge, 2)', step_seq))
+       block:
+         $(make_for('dynamic($rge)', seq))
+         $(make_for('dynamic($rge).to_sequence()', seq))
+         $(make_for('dynamic($rge).step_by(2)', step_seq))
+         block:
+           def rge = dynamic($rge)
+           $(make_for('rge', seq))
+           $(make_for('rge.to_sequence()', seq))
+           $(make_for('SequenceRange.to_sequence(rge)', seq))
+           $(make_for('rge.step_by(2)', step_seq))
+           $(make_for('SequenceRange.step_by(rge, 2)', step_seq))'
+  generate_checks:
+    ~list_range: 0..5
+    ~seq: [0, 1, 2, 3, 4]
+    ~step_seq: [0, 2, 4]
+  generate_checks:
+    ~list_range: 0..=5
+    ~seq: [0, 1, 2, 3, 4, 5]
+    ~step_seq: [0, 2, 4]
+  generate_checks:
+    ~seq_range: 0..
+    ~seq: [0, 1, 2, 3, 4]
+    ~step_seq: [0, 2, 4, 6, 8]
+  generate_checks:
+    ~list_range: 0 <.. 5
+    ~seq: [1, 2, 3, 4]
+    ~step_seq: [1, 3]
+  generate_checks:
+    ~list_range: 0 <..= 5
+    ~seq: [1, 2, 3, 4, 5]
+    ~step_seq: [1, 3, 5]
+  generate_checks:
+    ~seq_range: 0 <..
+    ~seq: [1, 2, 3, 4, 5]
+    ~step_seq: [1, 3, 5, 7, 9]
 
 block:
   use_static
@@ -1015,6 +832,16 @@ check:
   PairList[& 0..=5] ~is PairList[0, 1, 2, 3, 4, 5]
   PairList[& -2..0, & 0..=2] ~is PairList[-2, -1, 0, 1, 2]
 
+check:
+  [& 0 <.. 5] ~is [1, 2, 3, 4]
+  [& 0 <..= 5] ~is [1, 2, 3, 4, 5]
+  [& -2 <.. 0, & 0 <..= 2] ~is [-1, 1, 2]
+
+check:
+  PairList[& 0 <.. 5] ~is PairList[1, 2, 3, 4]
+  PairList[& 0 <..= 5] ~is PairList[1, 2, 3, 4, 5]
+  PairList[& -2 <.. 0, & 0 <..= 2] ~is PairList[-1, 1, 2]
+
 block:
   use_static
   check:
@@ -1030,6 +857,22 @@ block:
 check:
   dynamic(0..5).to_list() ~is [0, 1, 2, 3, 4]
   dynamic(0..=5).to_list() ~is [0, 1, 2, 3, 4, 5]
+
+block:
+  use_static
+  check:
+    (0 <.. 5).to_list() ~is [1, 2, 3, 4]
+    (0 <..= 5).to_list() ~is [1, 2, 3, 4, 5]
+  check:
+    (0 <.. 5).to_list().length() ~is 4
+    (0 <..= 5).to_list().length() ~is 5
+  check:
+    (0 <.. 5).to_list()[0] < dynamic(1) ~is #false
+    (0 <..= 5).to_list()[0] < dynamic(1) ~is #false
+
+check:
+  dynamic(0 <.. 5).to_list() ~is [1, 2, 3, 4]
+  dynamic(0 <..= 5).to_list() ~is [1, 2, 3, 4, 5]
 
 check:
   ~eval
@@ -1140,229 +983,185 @@ block:
 
 // errors in optimized cases
 block:
-  check:
-    for List (i in "oops"..5):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in 0.."oops"):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in 5..0):
-      i
-    ~throws values(
-      "..: starting point must be less than or equal to ending point",
-      "starting point: 5",
-      "ending point: 0",
-    )
-  check:
-    for List (i in "oops"..=5):
-      i
-    ~throws values(
-      "..=: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in 0..="oops"):
-      i
-    ~throws values(
-      "..=: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in 5..=0):
-      i
-    ~throws values(
-      "..=: starting point must be less than or equal to ending point",
-      "starting point: 5",
-      "ending point: 0",
-    )
-  check:
-    for List (i in "oops"..):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-
-block:
-  check:
-    for List (i in ("oops"..5).step_by(2)):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in (0.."oops").step_by(2)):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in (5..0).step_by(2)):
-      i
-    ~throws values(
-      "..: starting point must be less than or equal to ending point",
-      "starting point: 5",
-      "ending point: 0",
-    )
-  check:
-    for List (i in (0..5).step_by("oops")):
-      i
-    ~throws values(
-      "SequenceRange.step_by: " ++ error.annot_msg(),
-      error.annot("PosInt").msg,
-      error.val("oops").msg
-    )
-  check:
-    for List (i in ("oops"..=5).step_by(2)):
-      i
-    ~throws values(
-      "..=: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in (0..="oops").step_by(2)):
-      i
-    ~throws values(
-      "..=: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in (5..=0).step_by(2)):
-      i
-    ~throws values(
-      "..=: starting point must be less than or equal to ending point",
-      "starting point: 5",
-      "ending point: 0",
-    )
-  check:
-    for List (i in (0..=5).step_by("oops")):
-      i
-    ~throws values(
-      "SequenceRange.step_by: " ++ error.annot_msg(),
-      error.annot("PosInt").msg,
-      error.val("oops").msg
-    )
-  check:
-    for List (i in ("oops"..).step_by(2)):
-      i
-    ~throws values(
-      "..: " ++ error.annot_msg(),
-      error.annot("Int").msg,
-      error.val("oops").msg,
-    )
-  check:
-    for List (i in (0..).step_by("oops")):
-      i
-    ~throws values(
-      "SequenceRange.step_by: " ++ error.annot_msg(),
-      error.annot("PosInt").msg,
-      error.val("oops").msg
-    )
+  import rhombus/meta open
+  expr.macro
+  | 'generate_checks $(('~both' || '~both_not_equal') && tag) $op':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      let who = op +& ": "
+      let step_by_who = "SequenceRange.step_by: "
+      let must_not_equal = tag.unwrap() == #'~both_not_equal
+      let invariant_msg:
+        if !must_not_equal
+        | "starting point must be less than or equal to ending point"
+        | "starting point must be less than ending point"
+      'block:
+         $check_id:
+           for List (i in "oops" $op 5):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in 0 $op "oops"):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in 5 $op 0):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 0",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in 0 $op 0):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )
+                $check_id:
+                  for List (i in 5 $op 5):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )'
+           | '')
+         $check_id:
+           for List (i in ("oops" $op 5).step_by(2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (0 $op "oops").step_by(2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (5 $op 0).step_by(2)):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 0",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in (0 $op 0).step_by(2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )
+                $check_id:
+                  for List (i in (5 $op 5).step_by(2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )'
+           | '')
+         $check_id:
+           for List (i in (0 $op 5).step_by("oops")):
+             i
+           ~throws values(
+             #%literal $step_by_who ++ error.annot_msg(),
+             error.annot("PosInt").msg,
+             error.val("oops").msg,
+           )'
+  | 'generate_checks ~left $op':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      let who = op +& ": "
+      let step_by_who = "SequenceRange.step_by: "
+      'block:
+         $check_id:
+           for List (i in "oops" $op):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in ("oops" $op).step_by(2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (0 $op).step_by("oops")):
+             i
+           ~throws values(
+             #%literal $step_by_who ++ error.annot_msg(),
+             error.annot("PosInt").msg,
+             error.val("oops").msg,
+           )'
+  generate_checks ~both ..
+  generate_checks ~both ..=
+  generate_checks ~left ..
+  generate_checks ~both_not_equal <..
+  generate_checks ~both <..=
+  generate_checks ~left <..
 
 // non-unsafe for non-fixnums
 block:
   import rhombus/meta open
   expr.macro 'generate_checks $(power :: Int)':
     ~op_stx self
-    let check = 'check'.relocate(self)
+    let check_id = 'check'.relocate(self)
     let power = power.unwrap() - 1
     let most_positive = 2**power - 1
     let most_positive_to = most_positive + 5
+    let most_positive_step = most_positive + 1
     let most_negative = -(2**power)
     let most_negative_from = most_negative - 5
-    'block:
-       $check:
-         for List (i in (#%literal $most_positive) .. (#%literal $most_positive_to)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in most_positive .. most_positive_to):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in (#%literal $most_negative_from) .. (#%literal $most_negative)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in most_negative_from .. most_negative):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in ((#%literal $most_positive) .. (#%literal $most_positive_to)).step_by(2)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in (most_positive .. most_positive_to).step_by(2)):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in ((#%literal $most_negative_from) .. (#%literal $most_negative)).step_by(2)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in (most_negative_from .. most_negative).step_by(2)):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in (0..5).step_by(#%literal $(most_positive + 1))):
-           i
-         ~is [0]
-       $check:
-         for List (i in (#%literal $most_positive) ..= (#%literal $most_positive_to)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in most_positive ..= most_positive_to):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in (#%literal $most_negative_from) ..= (#%literal $most_negative)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in most_negative_from ..= most_negative):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in ((#%literal $most_positive) ..= (#%literal $most_positive_to)).step_by(2)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in (most_positive ..= most_positive_to).step_by(2)):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in ((#%literal $most_negative_from) ..= (#%literal $most_negative)).step_by(2)):
-           i
-         ~is $(block:
-                 let [num, ...]:
-                   for List (i in (most_negative_from ..= most_negative).step_by(2)):
-                     i
-                 '[#%literal $num, ...]')
-       $check:
-         for List (i in (0..=5).step_by(#%literal $(most_positive + 1))):
-           i
-         ~is [0]'
+    fun make_checks(op):
+      fun make_check(make_seq):
+        fun make_for(make_lit):
+          'for List (i in $(make_seq(make_lit))):
+             i'
+        '$check_id:
+           $(make_for(fun (x): '(#%literal $x)'))
+           ~is $(make_for(fun (x): 'Function.black_box(#%literal $x)'))'
+      'block:
+         $(make_check(fun (make_lit):
+                        '$(make_lit(most_positive)) $op $(make_lit(most_positive_to))'))
+         $(make_check(fun (make_lit):
+                        '$(make_lit(most_negative_from)) $op $(make_lit(most_negative))'))
+         $(make_check(fun (make_lit):
+                        '($(make_lit(most_positive)) $op $(make_lit(most_positive_to))).step_by(2)'))
+         $(make_check(fun (make_lit):
+                        '($(make_lit(most_negative_from)) $op $(make_lit(most_negative))).step_by(2)'))
+         $(make_check(fun (make_lit):
+                        '(0 $op 5).step_by($(make_lit(most_positive_step)))'))'
+    make_checks('..')
+    make_checks('..=')
+    make_checks('<..')
+    make_checks('<..=')
   generate_checks 29
   generate_checks 30
   generate_checks 31
@@ -1437,6 +1236,47 @@ block:
   (..0) canonicalized
   (..=0) canonicalized_to (..1)
   (..) canonicalized
+
+block:
+  import rhombus/meta open
+  expr.macro
+  | 'generate_checks ~list_range $rge ...':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      fun make_for_check(make_seq):
+        '$check_id:
+           for List (i in $(make_seq('rge'))):
+             i
+           ~is (for List (i in $(make_seq('rge.canonicalize()'))):
+                  i)'
+      'block:
+         def rge = $rge ...
+         $(make_for_check(fun (rge): rge))
+         $(make_for_check(fun (rge): '$(rge).step_by(2)'))
+         $check_id:
+           rge.to_list() ~is rge.canonicalize().to_list()
+           [& rge] ~is [& rge.canonicalize()]'
+  | 'generate_checks ~seq_range $rge ...':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      fun make_for_check(make_seq):
+        '$check_id:
+           for List (i in $(make_seq('rge')),
+                     _ in 0..5):
+             i
+           ~is (for List (i in $(make_seq('rge.canonicalize()')),
+                          _ in 0..5):
+                  i)'
+      'block:
+         def rge = $rge ...
+         $(make_for_check(fun (rge): rge))
+         $(make_for_check(fun (rge): '$(rge).step_by(2)'))'
+  generate_checks ~list_range 0..5
+  generate_checks ~list_range 0..=5
+  generate_checks ~seq_range 0..
+  generate_checks ~list_range 0 <.. 5
+  generate_checks ~list_range 0 <..= 5
+  generate_checks ~seq_range 0 <..
 
 // The following checks are borrowed from Rebellion
 // `Range.contains`
@@ -1935,7 +1775,7 @@ block:
     [x..y, ...] ~is [1..2, 2..3, 3..4, 4..5, 5..6]
     [x.., ...] ~is [1.., 2.., 3.., 4.., 5..]
     [..y, ...] ~is [..2, ..3, ..4, ..5, ..6]
-    [[.., x, y], ...] ~is [[.., 1, 2], [.., 2, 3], [.., 3, 4], [.., 4, 5], [.., 5, 6]]
+    [deepen .. ~like x, ...] ~is [.., .., .., .., ..]
     [x..=y, ...] ~is [1..=2, 2..=3, 3..=4, 4..=5, 5..=6]
     [..=y, ...] ~is [..=2, ..=3, ..=4, ..=5, ..=6]
     [x <.. y, ...] ~is [1 <.. 2, 2 <.. 3, 3 <.. 4, 4 <.. 5, 5 <.. 6]
@@ -1944,12 +1784,16 @@ block:
   check:
     [(x..y).to_list(), ...] ~is [[1], [2], [3], [4], [5]]
     [(x..=y).to_list(), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+    [(x <.. y).to_list(), ...] ~is [[], [], [], [], []]
+    [(x <..= y).to_list(), ...] ~is [[2], [3], [4], [5], [6]]
   fun sequence_to_list(xs :: Sequence):
     for List (x in xs):
       x
   check:
     [sequence_to_list((x..y).to_sequence()), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_to_list((x..=y).to_sequence()), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+    [sequence_to_list((x <.. y).to_sequence()), ...] ~is [[], [], [], [], []]
+    [sequence_to_list((x <..= y).to_sequence()), ...] ~is [[2], [3], [4], [5], [6]]
   fun sequence_take(xs :: Sequence, num :: Nat):
     for List (x in xs,
               _ in 0..num):
@@ -1957,6 +1801,8 @@ block:
   check:
     [sequence_take((x..).to_sequence(), 1), ...] ~is [[1], [2], [3], [4], [5]]
     [sequence_take((x..).to_sequence(), 2), ...] ~is [[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]]
+    [sequence_take((x <..).to_sequence(), 1), ...] ~is [[2], [3], [4], [5], [6]]
+    [sequence_take((x <..).to_sequence(), 2), ...] ~is [[2, 3], [3, 4], [4, 5], [5, 6], [6, 7]]
 
 block:
   let [x, ...] = [1, 2, 3, 4, 5]

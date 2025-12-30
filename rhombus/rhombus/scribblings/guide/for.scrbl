@@ -35,10 +35,24 @@ using parentheses before the @rhombus(for) body block:
 )
 
 Alternatively, the @rhombus(..=) operator is like @rhombus(..), except
-the ending integer is included.
+the ending integer is included; the @rhombus(<..) and @rhombus(<..=)
+operators are like @rhombus(..) and @rhombus(..=), except the starting
+integer is excluded.
 
 @examples(
-  for (i: 1..=4):
+  for (i in 1..=4):
+    println(i)
+  for (i in 1 <.. 4):
+    println(i)
+  for (i in 1 <..= 4):
+    println(i)
+)
+
+In addition, the step size can be specified with the
+@rhombus(SequenceRange.step_by) method.
+
+@examples(
+  for (i in (1..10).step_by(2)):
     println(i)
 )
 
@@ -93,7 +107,7 @@ In this latest example, the sequence for @rhombus(index) could be
 a range from a starting integer (inclusive) to positive infinity,
 which works as an infinite sequence of integers, and when
 @rhombus(for) iterates over sequences in parallel, it stops when the
-shortest sequence stops.
+shortest sequence stops. The @rhombus(<..) operator works similarly.
 
 The @rhombus(for) form acts as a comprehension form when a
 @deftech{reducer} is specified before the @rhombus(for) body block.
