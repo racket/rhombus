@@ -103,11 +103,22 @@ property.
 
 }
 
-
 @doc(
   def draw.Pen.none :: Pen
 ){
 
  A pen with style @rhombus(#'transparent).
+
+}
+
+@doc(
+  property (path :: draw.Pen).handle :: Any
+  fun draw.Pen.from_handle(hand :: Any) :: Pen
+){
+
+ The @rhombus(Pen.handle) property returns a Racket object that
+ corresponds to the pen for use directly with
+ @racketmodname(racket/draw). The @rhombus(Pen.from_handle) function
+ creates a @rhombus(Pen, ~class) from such a Racket object.
 
 }

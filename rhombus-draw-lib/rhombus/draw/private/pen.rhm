@@ -60,6 +60,7 @@ class Pen(private _handle):
     Style
     Cap
     Join
+    from_handle
 
   symbol_map_annot Style style_convert style_unconvert:
     { transparent: transparent,
@@ -79,6 +80,15 @@ class Pen(private _handle):
 
   symbol_set_annot Join:
     { round, bevel, miter }
+
+  fun from_handle(handle) :~ Pen:
+    unless handle rkt.is_a rkt.#{pen%}
+    | error(~who: "Pen.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a pen handle",
+            error.val(handle))
+    _Pen(handle)
+
 
 def none = _Pen(rkt.send rkt.#{the-pen-list}
                   .#{find-or-create-pen}(rkt.#{make-color}(0, 0, 0),

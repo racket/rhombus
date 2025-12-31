@@ -55,6 +55,7 @@ class Bitmap():
   export:
     make_platform
     read
+    from_handle
 
   override property width:
     rkt.send handle.#{get-width}()
@@ -127,6 +128,14 @@ class Bitmap():
                      ~has_alpha: has_alpha)
     bm2.make_dc().bitmap(this)
     bm2
+
+  fun from_handle(handle) :~ Bitmap:
+    unless handle rkt.is_a rkt.#{bitmap%}
+    | error(~who: "Bitmap.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a bitmap handle",
+            error.val(handle))
+    _Bitmap(handle)
 
 annot.delayed_complete intf.BitmapForward: Bitmap
 

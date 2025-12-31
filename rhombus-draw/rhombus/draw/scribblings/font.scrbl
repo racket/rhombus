@@ -4,32 +4,51 @@
 
 @title{Font}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class draw.Font():
     constructor (
       ~kind: kind :: Font.Kind = #'default,
       ~name: name :: maybe(String) = #false,
       ~size: size :: Real.in(0.0, 1024.0) = 12.0,
-      ~in_pixels: in_pixels :: Any = #false,
+      ~in_pixels: in_pixels :: Any.to_boolean = #false,
       ~style: style :: Font.Style = #'normal,
       ~weight: weight :: Font.Weight = #'normal,
       ~has_underline: has_underline :: Any = #false,
       ~smoothing: smoothing :: Font.Smoothing = #'default,
       ~hinting: hinting :: Font.Hinting = #'aligned,
-      ~features:
-        features :: Map.of(Font.FeatureString, Nat) = {},
+      ~features: features :: Map.of(Font.FeatureString, Nat) = {},
     )
 ){
 
- Creates a font configuration.
+ Creates an object representing a font configuration.
+
+ The @rhombus(kind) argument acts as a default and fallback for
+ @rhombus(name). The specific, system-specific font used for a
+ @rhombus(kind) can be obtained from @rhombus(Font.kind_to_name).
+ For valid names on a system system, use @rhombus(Font.get_names).
+
+ The font @rhombus(size) is in ``points,'' unless @rhombus(in_pixels) is
+ true. On Mac OS, 1 point is 1 pixel. On Windows and Unix, 1 point is
+ @rhombus(96/72) pixels.
+
+ The @rhombus(style) and @rhombus(weight) arguments select italic,
+ slanted, and/or bold. If @rhombus(has_underline) is true, then text is
+ drawn as underlined as well.
+
+ The @rhombus(smoothing) argument controls whether and how much
+ anti-aliasing is applied to text, and @rhombus(hinting) controls pixel
+ alignment. See @rhombus(Font.Smoothing, ~annot) and
+ @rhombus(Font.Hinting, ~annot) for more information.
+
+ The @rhombus(features) argument provides access to additional font
+ features. See @rhombus(Font.FeatureString, ~annot) for more information.
 
  A font like an existing one can be constructed using @rhombus(with) and
- the field names @rhombus(kind), @rhombus(name), @rhombus(size),
- @rhombus(in_pixels), @rhombus(style), @rhombus(weight),
- @rhombus(has_underline), @rhombus(smoothing), @rhombus(hinting), and
- @rhombus(features).
+ the field names @rhombus(kind, ~datum), @rhombus(name, ~datum),
+ @rhombus(size, ~datum), @rhombus(in_pixels, ~datum),
+ @rhombus(style, ~datum), @rhombus(weight, ~datum),
+ @rhombus(has_underline, ~datum), @rhombus(smoothing, ~datum),
+ @rhombus(hinting, ~datum), and @rhombus(features, ~datum).
 
 }
 
@@ -59,6 +78,15 @@
  space), @litchar{!}, or characters with @rhombus(Char.to_int) values
  between that of @litchar{#} and @litchar{~}, inclusive.
 
+ The @rhombus(Font.features) property of a font object is a map of
+ @hyperlink("https://practicaltypography.com/opentype-features.html"){OpenType
+  feature} settings to enable or disable optional typographic features of
+ OpenType fonts. Each entry in the hash maps a
+ @rhombus(Font.FeatureString, ~annot) feature tag to its desired value.
+ For boolean OpenType features, a value of 0 means ``disabled'' and a
+ value of 1 means ``enabled''; for other features, the meaning of the
+ value varies (and may even depend on the font itself).
+
 }
 
 
@@ -74,7 +102,9 @@
   | system
 ){
 
- A font kind.
+ A font kind, which is a fallback or default for a font name. The
+ specific, system-specific font used for a @rhombus(Font.Kind, ~annot)
+ can be obtained from @rhombus(Font.kind_to_name).
 
 }
 
@@ -85,7 +115,8 @@
   | italic
 ){
 
- A font style.
+ A font style. Typically, @rhombus(#'slant) is a skewed form of a face's
+ base shape, while @rhombus(#'italic) can be a different shape.
 
 }
 
@@ -134,7 +165,20 @@
   | unsmoothed
 ){
 
- A font smoothing (anti-aliasing) mode.
+ A font smoothing (anti-aliasing) mode:
+
+@itemlist(
+
+ @item{@rhombus(#'default): Platform-specific, sometimes
+  user-configurable.}
+
+ @item{@rhombus(#'partly_smoothed): Grayscale anti-aliasing.}
+
+ @item{@rhombus(#'smoothed): Sub-pixel anti-aliasing.}
+
+ @item{@rhombus(#'unsmoothed): No anti-aliasing.}
+
+)
 
 }
 
@@ -144,6 +188,66 @@
   | unaligned
 ){
 
- A font hinting (to adjust anti-aliasing) mode.
+ Whether font metrics should be rounded to integers:
+
+@itemlist(
+
+ @item{@rhombus(#'aligned) (the default): Rounds to integers to improve
+  the consistency of letter spacing for pixel-based targets, but at the
+  expense of making metrics less precisely scalable.}
+
+ @item{@rhombus(#'unaligned): Disables rounding.}
+
+)
+
+}
+
+@doc(
+  fun draw.Font.get_names(
+    ~kind: kind :: Font.NameListKind = #'all,
+    ~detail: detail :: Font.NameListDetail = #'face
+  ) :: List.of(String)
+
+  enum draw.Font.NameListKind
+  | all
+  | mono
+
+  enum draw.Font.NameListDetail
+  | face
+  | font
+){
+
+ Returns a list of font names available on the current system. If
+ @rhombus(kind) is @rhombus(#'mono), then only names that are known to
+ correspond to monospace fonts are included in the list.
+
+ If @rhombus(detail) is @rhombus(#'face), then the result is in more
+ standard terminology a list of typefaces, which are combined with style
+ and weight options to arrive at a font. If @rhombus(detail) is
+ @rhombus(#'font), then the result includes a string for each available
+ font.
+
+}
+
+@doc(
+  fun draw.Font.kind_to_name(
+    kind :: Font.Kind
+  ) :: String
+){
+
+ Returns the font name on he current system that is used whenever the
+ given @rhombus(kind) is specified.
+
+}
+
+@doc(
+  property (path :: draw.Font).handle :: Any
+  fun draw.Font.from_handle(hand :: Any) :: Font
+){
+
+ The @rhombus(Font.handle) property returns a Racket object that
+ corresponds to the font for use directly with
+ @racketmodname(racket/draw). The @rhombus(Font.from_handle) function
+ creates a @rhombus(Font, ~class) from such a Racket object.
 
 }

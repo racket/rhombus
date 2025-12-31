@@ -79,5 +79,16 @@ class Region():
     { odd_even: #{odd-even},
       winding: winding }
 
+  export:
+    from_handle
+
+  fun from_handle(handle) :~ Path:
+    unless handle rkt.is_a rkt.#{region%}
+    | error(~who: "Region.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a region handle",
+            error.val(handle))
+    _Region(handle)
+
 def mutable wrap_dc = #false
 fun set_wrap_dc(f): wrap_dc := f

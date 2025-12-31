@@ -173,3 +173,15 @@
  @rhombus(Bitmap.write).
 
 }
+
+@doc(
+  property (path :: draw.Bitmap).handle :: Any
+  fun draw.Bitmap.from_handle(hand :: Any) :: Bitmap
+){
+
+ The @rhombus(Bitmap.handle) property returns a Racket object that
+ corresponds to the bitmap for use directly with
+ @racketmodname(racket/draw). The @rhombus(Bitmap.from_handle) function
+ creates a @rhombus(Bitmap, ~class) from such a Racket object.
+
+}

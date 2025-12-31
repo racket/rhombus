@@ -106,6 +106,7 @@ class Brush(private _handle):
   export:
     none
     Style
+    from_handle
 
   symbol_map_annot Style style_convert style_unconvert:
     { transparent: transparent,
@@ -118,6 +119,14 @@ class Brush(private _handle):
       cross_hatch: #{cross-hatch},
       horizontal_hatch: #{horizontal-hatch},
       vertical_hatch: #{vertical-hatch} }
+
+  fun from_handle(handle) :~ Brush:
+    unless handle rkt.is_a rkt.#{brush%}
+    | error(~who: "Brush.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a brush handle",
+            error.val(handle))
+    _Brush(handle)
 
 def none = _Brush(rkt.send rkt.#{the-brush-list}
                     .#{find-or-create-brush}(

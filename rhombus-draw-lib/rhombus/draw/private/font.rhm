@@ -71,6 +71,11 @@ class Font(private _handle):
     Smoothing
     Hinting
     FeatureString
+    NameListKind
+    NameListDetail
+    get_names
+    kind_to_name
+    from_handle
 
   symbol_set_annot Kind:
     { default, decorative, roman, script, swiss,
@@ -93,6 +98,12 @@ class Font(private _handle):
   symbol_set_annot Hinting:
     { aligned, unaligned }
 
+  symbol_set_annot NameListKind:
+    { all, mono }
+
+  symbol_set_annot  NameListDetail:
+    { face, font }
+
   annot.macro 'FeatureString':
     annot_meta.pack_predicate('is_feature_string',
                               '()')
@@ -105,3 +116,18 @@ class Font(private _handle):
       v.length() == 4 && ok(v[0]) && ok(v[1]) && ok(v[2]) && ok(v[3])
   | is_feature_string(_):
       #false
+
+  fun get_names(~kind: kind :: Font.NameListKind = #'all,
+                ~detail: detail :: Font.NameListDetail = #'face) :~ List.of(String):
+    [& rkt.#{get-face-list}(kind, ~#{all-variants?}: detail == #'font)].map(to_string)
+
+  fun kind_to_name(kind :: Font.Kind):
+    to_string(rkt.#{get-family-builtin-face}(kind))
+
+  fun from_handle(handle) :~ Font:
+    unless handle rkt.is_a rkt.#{font%}
+    | error(~who: "Font.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a font handle",
+            error.val(handle))
+    _Font(handle)

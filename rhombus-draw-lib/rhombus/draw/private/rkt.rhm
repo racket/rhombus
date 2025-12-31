@@ -22,3 +22,5 @@ export:
   draw.#{post-script-dc%}
   draw.#{read-bitmap}
   draw.#{make-platform-bitmap}
+  draw.#{get-face-list}
+  draw.#{get-family-builtin-face}

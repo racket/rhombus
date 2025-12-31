@@ -26,9 +26,10 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).line(pt1 :: PointLike,
-                              pt2 :: PointLike)
-    :: Void
+  method (dc :: draw.DC).line(
+    pt1 :: PointLike,
+    pt2 :: PointLike
+  ) :: Void
   method (dc :: draw.DC).lines(
     [pt :: PointLike, ...],
     ~dpt: dpt :: PointLike = Point.zero,
@@ -81,8 +82,9 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).rectangle(r :: RectLike)
-    :: Void
+  method (dc :: draw.DC).rectangle(
+    r :: RectLike
+  ) :: Void
 ){
 
  Draws a rectangle with the given top-left corner and size. The
@@ -103,9 +105,10 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).rounded_rectangle(r :: RectLike,
-                                           radius :: Real = -0.25)
-    :: Void
+  method (dc :: draw.DC).rounded_rectangle(
+    r :: RectLike,
+    radius :: Real = -0.25
+  ) :: Void
 ){
 
  Draws a rectangle with the given top-left corner and size, except that
@@ -119,8 +122,8 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
  rounded corner. If @rhombus(radius) is negative, the absolute value is
  used as the proportion of the smallest dimension of the rectangle.
 
- If @rhombus(radius) is less than -0.5 or more than half of width or
- height, an exception is thrown.
+ If @rhombus(radius) is less than -0.5 or more than half of the width or
+ height of @rhombus(r), an exception is thrown.
 
  In @rhombus(#'unsmoothed) or @rhombus(#'aligned)
  @rhombuslink(DC.smoothing){smoothing mode}, the path for the outline is
@@ -131,8 +134,9 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).ellipse(r :: RectLike)
-    :: Void
+  method (dc :: draw.DC).ellipse(
+    r :: RectLike
+  ) :: Void
 ){
 
  Draws an ellipse contained in a rectangle with the given top-left
@@ -150,10 +154,11 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).arc(r :: RectLike,
-                             start_radians :: Real,
-                             end_radians :: Real)
-    :: Void
+  method (dc :: draw.DC).arc(
+    r :: RectLike,
+    start_radians :: Real,
+    end_radians :: Real
+  ) :: Void
 ){
 
  Draws a counter-clockwise circular arc, a part of the ellipse inscribed
@@ -179,12 +184,13 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).path(p :: draw.Path,
-                              ~dpt: dpt :: PointLike = Point.zero,
-                              ~dx: dx :: Real = 0,
-                              ~dy: dy :: Real = 0,
-                              ~fill: fill :: DC.Fill = #'odd_even)
-    :: Void
+  method (dc :: draw.DC).path(
+    p :: draw.Path,
+    ~dpt: dpt :: PointLike = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0,
+    ~fill: fill :: DC.Fill = #'odd_even
+  ) :: Void
 ){
 
  Draws the subpaths of the given @rhombus(draw.Path) object, adding
@@ -273,9 +279,10 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 }
 
 @doc(
-  method (dc :: draw.DC).copy(source :: RectLike,
-                              dest :: PointLike)
-    :: Void
+  method (dc :: draw.DC).copy(
+    source :: RectLike,
+    dest :: PointLike
+  ) :: Void
 ){
 
  Copies a portion of the draw context's content to another portion of

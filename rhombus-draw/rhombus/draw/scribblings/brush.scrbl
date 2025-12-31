@@ -155,3 +155,15 @@ property.
  the same way for as @rhombus(LinearGradient).
 
 }
+
+@doc(
+  property (path :: draw.Brush).handle :: Any
+  fun draw.Brush.from_handle(hand :: Any) :: Brush
+){
+
+ The @rhombus(Brush.handle) property returns a Racket object that
+ corresponds to the brush for use directly with
+ @racketmodname(racket/draw). The @rhombus(Brush.from_handle) function
+ creates a @rhombus(Brush, ~class) from such a Racket object.
+
+}

@@ -47,6 +47,9 @@ class Path(private _handle):
   method transform(t :: Transformation):
     rkt.send handle.#{transform}(Array(t.xx, t.yx, t.yx, t.yy, t.x0, t.y0))
 
+  method reverse():
+    rkt.send handle.#{reverse}()
+
   method curve_to(pt1 :: PointLike,
                   pt2 :: PointLike,
                   pt3 :: PointLike):
@@ -73,11 +76,19 @@ class Path(private _handle):
              ~clockwise = #false):
     rkt.send handle.#{arc}(r.x, r.y, r.width, r.height, start_radians, end_radians, !clockwise)
 
+  method lines([[pt :: PointLike], ...],
+               ~dpt: dpt :: PointLike = Point.zero,
+               ~dx: dx :: Real = 0,
+               ~dy: dy :: Real = 0):
+    rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+
   method polygon([[pt :: PointLike], ...],
                  ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0):
+    rkt.send handle.#{close}()
     rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+    rkt.send handle.#{close}()
 
   method text_outline(str :: String,
                       ~dpt: dpt :: Point = Point.zero,
@@ -86,3 +97,14 @@ class Path(private _handle):
                       ~font: font :: Font = Font(),
                       ~combine: combine :: DC.TextCombine = #'kern):
     rkt.send handle.#{text-outline}(font.handle, str, dpt.x + dx, dpt.y + dy, combine)
+
+  export:
+    from_handle
+
+  fun from_handle(handle) :~ Path:
+    unless handle rkt.is_a rkt.#{dc-path%}
+    | error(~who: "Path.from_handle",
+            ~exn: Exn.Fail.Annot,
+            "not a path handle",
+            error.val(handle))
+    _Path(handle)
