@@ -437,8 +437,8 @@ operator, which is the same as @rhombus(Range.contains).
   method (rge :: Range).span(another_rge :: Range, ...) :: Range
 ){
 
- Returns the smallest range that encloses @rhombus(rgs) and all
- @rhombus(rge)s.
+ Returns the smallest range that encloses @rhombus(rge) and all
+ @rhombus(another_rge)s.
 
 @examples(
   (2..=5).span()
@@ -469,7 +469,8 @@ operator, which is the same as @rhombus(Range.contains).
 @doc(
   method (rge :: Range).intersect(another_rge :: Range, ...)
     :: maybe(Range)
-  fun Range.intersect(rge :: Range, ...) :: maybe(Range)
+  fun Range.intersect(rge :: Range, ...)
+    :: maybe(Range)
 ){
 
  Returns the intersection of the given ranges, or @rhombus(#false)
@@ -492,7 +493,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method (rge :: ListRange).to_list() :: List
+  method (rge :: ListRange).to_list() :: List.of(Int)
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list} of
@@ -502,7 +503,8 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method (rge :: SequenceRange).to_sequence() :: Sequence
+  method (rge :: SequenceRange).to_sequence()
+    :: Sequence.expect_of(Int)
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -512,7 +514,8 @@ operator, which is the same as @rhombus(Range.contains).
 }
 
 @doc(
-  method (rge :: SequenceRange).step_by(step :: PosInt) :: Sequence
+  method (rge :: SequenceRange).step_by(step :: PosInt)
+    :: Sequence.expect_of(Int)
 ){
 
  Returns a @tech{sequence} of integers in @rhombus(rge) in order,

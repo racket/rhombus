@@ -34,6 +34,7 @@
          "call-result-key.rkt"
          "contains-key.rkt"
          "sequence-constructor-key.rkt"
+         "index-result-key.rkt"
          "order.rkt"
          "order-primitive.rkt"
          "to-list.rkt")
@@ -1129,7 +1130,8 @@
     [else (range-from-to-inclusive->treelist r)]))
 
 (define/method (ListRange.to_list r)
-  #:static-infos ((#%call-result #,(indirect-get-treelist-static-infos)))
+  #:static-infos ((#%call-result ((#%index-result #,(get-int-static-infos))
+                                  #,@(indirect-get-treelist-static-infos))))
   (check-list-range who r)
   (list-range->treelist r))
 
