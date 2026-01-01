@@ -266,20 +266,20 @@ class DateTime(~year: year :: Int,
   property week_day :~ Int: date.week_day(year, month, day)
   property year_day :~ Int: date.year_day(year, month, day)
 
-  method to_seconds() :~ Real:
+  method to_seconds(~local = #true) :~ Real:
     let s = ZonedDateTime.find_seconds(~second: second,
                                        ~minute: minute,
                                        ~hour: hour,
                                        ~day: day,
                                        ~month: month,
                                        ~year: year,
-                                       ~local: #false)
+                                       ~local: local)
     if nanosecond .= 0
     | s
     | s + nanosecond / 1e9
 
-  method to_zoned() :~ ZonedDateTime:
-    ZonedDateTime.from_seconds(to_seconds(), ~local: #false)
+  method to_zoned(~local = #true) :~ ZonedDateTime:
+    ZonedDateTime.from_seconds(to_seconds(~local: local), ~local: local)
 
   method to_string(~format: format :: date.Format = default_format,
                    ~time_format: show_time :: maybe(date.TimeFormat) = #'seconds) :~ String:
@@ -354,8 +354,8 @@ class Date(~year: year :: Int,
              ~minute: time.minute,
              ~hour: time.hour)
 
-  method to_seconds() :~ Real:
-    to_datetime().to_seconds()
+  method to_seconds(~local = #true) :~ Real:
+    to_datetime().to_seconds(~local: local)
 
   method to_string(~format: format :: date.Format = default_format) :~ String:
     match format

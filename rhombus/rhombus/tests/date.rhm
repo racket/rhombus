@@ -117,8 +117,10 @@ check:
   dt.year_day ~is 141
   DateTime.now() > dt ~is #true
   DateTime.now() >= DateTime.from_seconds(now) ~is #true
-  DateTime.from_seconds(now, ~local: #false).to_seconds() ~is now
-  dt.to_zoned().time_zone_offset ~is 0
+  DateTime.from_seconds(now).to_seconds() ~is now
+  DateTime.from_seconds(now, ~local: #false).to_seconds(~local: #false) ~is now
+  DateTime.from_seconds(now, ~local: #true).to_seconds(~local: #true) ~is now
+  dt.to_zoned(~local: #false).time_zone_offset ~is 0
   dt.to_zoned().year ~is 2003
   dt.to_zoned().minute ~is 20
   dt.to_string() ~is "2003-05-22 09:20:00"

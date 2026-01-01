@@ -60,7 +60,9 @@ absolute point in time as a date and time in a specific time zone.
 }
 
 @doc(
-  fun date.Time.now(~local: local :: Any = #true) :: date.Time
+  fun date.Time.now(
+    ~local: local :: Any.to_boolean = #true
+  ) :: date.Time
 ){
 
  Uses the system clock via @rhombus(system.milliseconds) to get the
@@ -74,7 +76,7 @@ absolute point in time as a date and time in a specific time zone.
 @doc(
   fun date.Time.from_seconds(
     secs :: Real,
-    ~local: local :: Any = #true
+    ~local: local :: Any.to_boolean = #true
   ) :: date.Time
 ){
 
@@ -167,7 +169,9 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  fun date.Date.now(~local: local :: Any = #true) :: date.Date
+  fun date.Date.now(
+    ~local: local :: Any.to_boolean = #true
+  ) :: date.Date
 ){
 
  Uses the system clock via @rhombus(system.milliseconds) to get the
@@ -181,7 +185,7 @@ absolute point in time as a date and time in a specific time zone.
 @doc(
   fun date.Date.from_seconds(
     secs :: Real,
-    ~local: local :: Any = #true
+    ~local: local :: Any.to_boolean = #true
   ) :: date.Date
 ){
 
@@ -226,16 +230,17 @@ absolute point in time as a date and time in a specific time zone.
 ){
 
  Converts a @rhombus(date.Date) to a @rhombus(date.DateTime) using
- @rhombus(tm) for the time portion of the new @rhombus(date.DateTime),
- and using UTC as the time zone.
+ @rhombus(tm) for the time portion of the new @rhombus(date.DateTime).
 
 }
 
 @doc(
-  method (dt :: date.Date).to_seconds() :: Real
+  method (dt :: date.Date).to_seconds(
+    ~local: local :: Any.to_boolean = #true
+  ) :: Real
 ){
 
- Equivalent to @rhombus(dt.to_datetime().to_seconds()).
+ Equivalent to @rhombus(dt.to_datetime().to_seconds(~local: local)).
 
 }
 
@@ -294,7 +299,9 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  fun date.DateTime.now(~local: local :: Any = #true) :: date.DateTime
+  fun date.DateTime.now(
+    ~local: local :: Any.to_boolean = #true
+  ) :: date.DateTime
 ){
 
  Like @rhombus(date.Date.now), but preserving the current time within
@@ -306,7 +313,7 @@ absolute point in time as a date and time in a specific time zone.
 @doc(
   fun date.DateTime.from_seconds(
     secs :: Real,
-    ~local: local :: Any = #true
+    ~local: local :: Any.to_boolean = #true
   ) :: date.TimeDate
 ){
 
@@ -350,21 +357,26 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  method (dt :: date.DateTime).to_zoned() :: date.ZonedDateTime
+  method (dt :: date.DateTime).to_zoned(
+    ~local: local :: Any.to_boolean = #true
+  ) :: date.ZonedDateTime
 ){
 
  Converts a @rhombus(date.DateTime) to a @rhombus(date.ZonedDateTime)
- using using UTC as the time zone. This conversion can fail if the date
+ using using the current time zone if @rhombus(local) is true or UTC
+ otherwise. This conversion can fail if the date
  falls outside the (large) range of dates that the operating system can
  locate.
 
 }
 
 @doc(
-  method (dt :: date.DateTime).to_seconds() :: Real
+  method (dt :: date.DateTime).to_seconds(
+    ~local: local :: Any.to_boolean = #true
+  ) :: Real
 ){
 
- Equivalent to @rhombus(dt.to_zoned().to_seconds()).
+ Equivalent to @rhombus(dt.to_zoned(~local: local).to_seconds()).
 
 }
 
@@ -422,7 +434,7 @@ absolute point in time as a date and time in a specific time zone.
 
 
 @doc(
-  fun date.ZonedDateTime.now(~local: local :: Any = #true) :: date.DateTime
+  fun date.ZonedDateTime.now(~local: local :: Any.to_boolean = #true) :: date.DateTime
 ){
 
  Like @rhombus(date.DateTime.now), but preserving the time zone selected
@@ -435,7 +447,7 @@ absolute point in time as a date and time in a specific time zone.
 @doc(
   fun date.ZonedDateTime.from_seconds(
     secs :: Real,
-    ~local: local :: Any = #true
+    ~local: local :: Any.to_boolean = #true
   ) :: date.TimeDate
 ){
 
