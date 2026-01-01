@@ -965,10 +965,13 @@
     [else (range-from->sequence r)]))
 
 (define-sequence-syntax SequenceRange.step_by/optimize
-  (lambda () #'SequenceRange.step_by)
+  (lambda () #'values)
   (lambda (stx)
     (syntax-parse stx
-      [[(id) (_ range-expr/statinfo step-expr/statinfo)]
+      #:literals (SequenceRange.step_by/bounce)
+      [[(id) (_ step-by-expr/statinfo)]
+       #:do [(define step-by-expr (unwrap-static-infos #'step-by-expr/statinfo))]
+       #:with (SequenceRange.step_by/bounce range-expr/statinfo step-expr/statinfo) step-by-expr
        (define who 'SequenceRange.step_by)
        (define range-expr (unwrap-static-infos #'range-expr/statinfo))
        (define step-who who)
@@ -984,11 +987,12 @@
                                     #:step-expr step-expr))]
       [_ #f])))
 
-(define-static-info-syntax SequenceRange.step_by/optimize
-  (#%call-result ((#%sequence-constructor #t)
-                  (#%sequence-element #,(get-int-static-infos)))))
+(define/arity (SequenceRange.step_by/bounce r step)
+  #:static-infos ((#%call-result ((#%sequence-constructor SequenceRange.step_by/optimize)
+                                  (#%sequence-element #,(get-int-static-infos)))))
+  (SequenceRange.step_by r step))
 
-(define/method #:direct-id SequenceRange.step_by/optimize (SequenceRange.step_by r step)
+(define/method #:direct-id SequenceRange.step_by/bounce (SequenceRange.step_by r step)
   #:static-infos ((#%call-result ((#%sequence-constructor #t)
                                   (#%sequence-element #,(get-int-static-infos)))))
   (check-sequence-range who r)
