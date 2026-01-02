@@ -332,26 +332,28 @@
       (make-continuation-prompt-tag)))
 
 (define-for-syntax (build-try-handler b-parseds rhss)
-  (for/foldr ([next #'raise])
-             ([b-parsed (in-list b-parseds)]
-              [rhs (in-list rhss)])
-    (syntax-parse b-parsed
-      [arg-parsed::binding-form
-       #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-       #:with arg::binding-info #'arg-impl.info
-       #:with (tag g ...) rhs
-       #`(let ()
-           (arg.oncer-id arg.data)
-           (lambda (arg-id)
-             (arg.matcher-id arg-id arg.data
-                             if/blocked
-                             (let ()
-                               (arg.committer-id arg-id arg.evidence-ids arg.data)
-                               (arg.binder-id arg-id arg.evidence-ids arg.data)
-                               (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
-                               ...
-                               (rhombus-body-at tag g ...))
-                             (#,next arg-id))))])))
+  #`(lambda (exn)
+      #,(for/foldr ([next #'(raise exn)])
+                   ([b-parsed (in-list b-parseds)]
+                    [rhs (in-list rhss)])
+          (syntax-parse b-parsed
+            [arg-parsed::binding-form
+             #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+             #:with arg::binding-info #'arg-impl.info
+             #:with (tag g ...) rhs
+             ;; use `((lambda ....) ....)` to keep textual order
+             #`((lambda (try-next)
+                  (arg.oncer-id arg.data)
+                  (arg.matcher-id exn arg.data
+                                  if/blocked
+                                  (begin
+                                    (arg.committer-id exn arg.evidence-ids arg.data)
+                                    (arg.binder-id exn arg.evidence-ids arg.data)
+                                    (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
+                                    ...
+                                    (rhombus-body-at tag g ...))
+                                  (try-next)))
+                (lambda () #,next))]))))
 
 (define (always-true x) #t)
 
