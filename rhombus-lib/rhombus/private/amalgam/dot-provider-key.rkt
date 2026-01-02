@@ -10,8 +10,8 @@
 ;;  * (alts alts ...) ; search just first `alts`; rest are "supertypes" for finding common on intersection
 ;;
 ;; A alts is
-;;  * identifer             ; equivakent to (list identifier)
-;;  * (list identifier ...) ; created by union; try each `identifier` until success
+;;  * identifer             ; equivalent to (list identifier)
+;;  * (list identifier ...) ; created by "or"; try each `identifier` until success
 ;;
 ;; It's possible for the search through on alts list to be ambigious, especially
 ;; if a non-checking `:~` is used with a `&&` annotation. Absent a good idea on
@@ -19,8 +19,10 @@
 
 (define-static-info-key-syntax/provide #%dot-provider
   (static-info-key (lambda (a b)
+                     ;; or
                      (common-tail a b))
                    (lambda (a b)
+                     ;; and
                      (merge-lists a b))))
 
 (define-for-syntax (merge-lists a b)
@@ -30,12 +32,22 @@
       [(not (pair? as)) b] ; defensive check: use other if one is ill-formed or empty
       [(not (pair? bs)) a] ; ditto
       [else
-       ;; both lists are non-empty, so we can pad by duplicating the first
+       ;; both lists are non-empty, so we can pad by duplicating the first,
+       ;; but specialize the case that one list is a tail of the other,
+       ;; so that we don't pollute an `alts` with its superclasses
        (define a-len (length as))
        (define b-len (length bs))
-       (map union-alts-ids
-            (pad as (- b-len a-len))
-            (pad bs (- a-len b-len)))])))
+       (cond
+         [(and (> a-len b-len)
+               (andmap same-alts-ids? (list-tail as (- a-len b-len)) bs))
+          as]
+         [(and (> b-len a-len)
+               (andmap same-alts-ids? (list-tail bs (- b-len a-len)) as))
+          bs]
+         [else
+          (map union-alts-ids
+               (pad as (- b-len a-len))
+               (pad bs (- a-len b-len)))])])))
 
 (define-for-syntax (union-alts-ids a b)
   (let ([as (if (identifier? a) (list a) (syntax->list a))]
@@ -85,6 +97,17 @@
                            (free-identifier=? (in-dot-provider-space a)
                                               (in-dot-provider-space b))))
          a)])))
+
+(define-for-syntax (same-alts-ids? a b)
+  (let ([as (if (identifier? a) (list a) (syntax->list a))]
+        [bs (if (identifier? b) (list b) (syntax->list b))])
+    (and as
+         bs
+         (= (length as) (length bs))
+         (for/and ([a (in-list as)])
+           (for/or ([b (in-list bs)])
+             (free-identifier=? (in-dot-provider-space a)
+                                (in-dot-provider-space b)))))))
 
 (define-for-syntax (pad l n)
   (if (n . > . 0)

@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+
+block:
+  class Base():
+    nonfinal
+  class Derived(x):
+    extends Base
+  fun f(s :: Base):
+    match s
+    | Derived(_) && d:
+        d with (x = 0)
+  check f(Derived(1)) ~is Derived(0)
+
+check:
+  ~eval
+  use_static
+  class One(x)
+  class TheOther(x)
+  fun f(s :: One || TheOther):
+    s with (x = 0)
+  ~throws values("no update implementation available",
+                 "based on static information")

@@ -414,8 +414,8 @@
         element is itself a sequence, the dot providers are tried in order.
         The rest of an overall sequence records progressively less-specific
         dot providers, such as the dot providers for superclasses of a class
-        or superinterfaces of an interface. Intersection of overall sequences finds
-        a shared tail, while union of overall sequences combines elements pairwise.}
+        or superinterfaces of an interface. Intersection (``or'') of overall sequences finds
+        a shared tail, while union (``and'') of overall sequences combines elements pairwise.}
 
   @item{@rhombus(statinfo_meta.sequence_constructor_key): An identifier
         bound as a variable or a macro that is wrapped around an expression
