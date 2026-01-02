@@ -39,7 +39,7 @@ class Bitmap():
   private implements Printable
   private override describe(mode, recur):
     PrintDesc.special(copy().handle, ~mode: #'print,
-                      @str{draw.Bitmap([@width, @height]})
+                      @str{draw.Bitmap([@width, @height])})
 
   constructor (size :: SizeLike,
                ~backing_scale: backing_scale :: Real.above(0.0) = 1,
