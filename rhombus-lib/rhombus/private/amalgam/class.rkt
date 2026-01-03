@@ -810,7 +810,7 @@
                                                  base-stx scope-stx))
                (build-class-static-infos exposed-internal-id
                                          super
-                                         (and (not (constructor-as-expression?  given-constructor-rhs))
+                                         (and (not (constructor-as-expression? given-constructor-rhs))
                                               given-constructor-rhs)
                                          (append super-keywords constructor-public-keywords)
                                          (append super-defaults constructor-public-defaults)

@@ -12,6 +12,8 @@
                               objects-desc-dot-provider
                               check-exports-distinct
                               check-fields-methods-dots-distinct
+                              constructor-as-expression?
+                              check-consistent-construction
                               added-method-body))
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -237,8 +239,8 @@
        (define dot-provider-rhss (map cdr dots))
        (check-fields-methods-dots-distinct stxes #hasheq() method-mindex method-names method-decls dots)
 
-       (define exs (parse-exports #'(combine-out . exports)
-                                  (make-expose #'scope-stx #'base-stx)))
+       (define expose (make-expose #'scope-stx #'base-stx))
+       (define exs (parse-exports #'(combine-out . exports) expose))
        (define replaced-ht (check-exports-distinct stxes exs '() method-mindex dots))
 
        (define internal-name (let ([id #'maybe-internal-name])
@@ -246,7 +248,19 @@
        (define internal-internal-name (and (syntax-e #'internal-internal-name-id)
                                            #'internal-internal-name-id))
 
-       (define expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
+       (define given-expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
+       (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
+       (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
+       (define given-constructor-name (hash-ref options 'constructor-name #f))
+       (check-consistent-construction #'orig-stx null null null #'name
+                                      given-constructor-rhs given-constructor-name given-expression-macro-rhs)
+       (define constructor-rhs
+         (and (not (constructor-as-expression? given-constructor-rhs))
+              given-constructor-rhs))
+       (define expression-macro-rhs
+         (or given-expression-macro-rhs
+             (and (constructor-as-expression? given-constructor-rhs)
+                  given-constructor-rhs)))
 
        (define parent-dot-providers
          (for/list ([parent (in-list supers)]
@@ -279,6 +293,12 @@
                      [name-ref (temporary "~a-ref")]
                      [name-ref-or-error (temporary "~a-ref-or-error")]
                      [prop:internal-name (temporary "prop:~a" #:name internal-internal-name)]
+                     [constructor-name (and (or (not expression-macro-rhs)
+                                                constructor-rhs)
+                                            (or (and given-constructor-name
+                                                     (not (bound-identifier=? #'name (expose given-constructor-name)))
+                                                     (expose given-constructor-name))
+                                                #'name))]
                      [(super-name ...) parent-names]
                      [(export ...) exs]
                      [(dot-id ...) (map car dots)]
@@ -320,14 +340,20 @@
                                                  prop:internal-name internal-name? internal-name-ref))
                (build-interface-dot-handling method-mindex method-names method-vtable method-results replaced-ht
                                              internal-name
-                                             expression-macro-rhs dot-provider-rhss parent-dot-providers
+                                             expression-macro-rhs constructor-rhs given-constructor-stx-params
+                                             dot-provider-rhss parent-dot-providers
                                              #'(name reflect-name name-extends tail-name
                                                      name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]
                                                      dot-providers
+                                                     constructor-name
                                                      [export ...]
                                                      base-stx scope-stx))
+               (if constructor-rhs
+                   (build-interface-constructor-static-info given-constructor-rhs
+                                                            #'(constructor-name all-static-infos))
+                   null)
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private
                                      dots

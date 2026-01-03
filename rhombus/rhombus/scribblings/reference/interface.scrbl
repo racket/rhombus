@@ -258,19 +258,25 @@ or protectedly using
 }
 
 @doc(
+  interface_clause.macro 'constructor $constructor_decl'
   interface_clause.macro 'expression: $expression_decl'
   interface_clause.macro 'annotation: $annotation_point'
 ){
 
  These @tech{interface clause} forms have the same syntax and analogous
- meaning as the @rhombus(expression, ~class_clause) and
+ meaning as the @rhombus(constructor, ~class_clause),
+ @rhombus(expression, ~class_clause), and
  @rhombus(annotation, ~class_clause) @tech{class clauses}.
 
- There is no @rhombus(constructor, ~class_clause) for interfaces, since
- interfaces cannot be instantiated directly, but an
+ There is no default constructor for interfaces, since
+ interfaces cannot be instantiated directly, but a
+ @rhombus(constructor, ~class_clause) or
  @rhombus(expression, ~interface_clause) clause can make an interface
  identifier behave like a constructor, perhaps instantiating some default
- class. There is no @rhombus(binding, ~class_clause) for interfaces,
+ class. When @rhombus(constructor, ~class_clause) is declared, its
+ result is checked to ensure that it is an instance of the interface.
+
+ There is no @rhombus(binding, ~class_clause) for interfaces,
  because @rhombus(interface) does not otherwise define an interface name
  for binding, and so @rhombus(bind.macro) can be
  used alongside @rhombus(interface) with the same interface name.

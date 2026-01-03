@@ -98,7 +98,10 @@
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
 
-       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
+       (define expression-macro-rhs (or (hash-ref options 'expression-rhs #f)
+                                        (let ([c (hash-ref options 'constructor-rhs #f)])
+                                          (and (constructor-as-expression? c)
+                                               c))))
 
        (define intro (make-syntax-introducer))
 
@@ -210,7 +213,20 @@
                                                                                #:results values))
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
-       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
+
+       (define given-expression-macro-rhs (hash-ref options 'expression-rhs #f))
+       (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
+       (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
+       (define given-constructor-name (hash-ref options 'constructor-name #f))
+       (check-consistent-construction #'orig-stx null null null #'name
+                                      given-constructor-rhs given-constructor-name given-expression-macro-rhs)
+       (define constructor-rhs
+         (and (not (constructor-as-expression? given-constructor-rhs))
+              given-constructor-rhs))
+       (define expression-macro-rhs
+         (or given-expression-macro-rhs
+             (and (constructor-as-expression? given-constructor-rhs)
+                  given-constructor-rhs)))
 
        (define converter? (or (hash-ref options 'converter? #f)
                               (and super
@@ -271,8 +287,12 @@
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
 
        (with-syntax ([(export ...) exs])
-         (with-syntax ([constructor-name (and (not expression-macro-rhs)
-                                              (car (generate-temporaries (list #'name))))]
+         (with-syntax ([constructor-name (and (or (not expression-macro-rhs)
+                                                  constructor-rhs)
+                                              (or (and given-constructor-name
+                                                       (not (bound-identifier=? #'name (expose given-constructor-name)))
+                                                       (expose given-constructor-name))
+                                                  (car (generate-temporaries (list #'name)))))]
                        [(super-name* ...) (if super #'(super-name) '())]
                        [(interface-name ...) interface-names]
                        [(dot-id ...) (map car dots)]
@@ -309,10 +329,12 @@
                                       #f))
                ;; includes defining the namespace and constructor name:
                (build-class-dot-handling #:veneer? #t
+                                         #:veneer-constructor-rhs constructor-rhs
+                                         #:veneer-constructor-stx-params given-constructor-stx-params
                                          method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          #f #f
-                                         expression-macro-rhs intro #f
+                                         expression-macro-rhs intro given-constructor-name
                                          #f
                                          #f
                                          dot-provider-rhss parent-dot-providers
@@ -331,7 +353,8 @@
                (build-class-static-infos #:veneer? #t
                                          #f
                                          super
-                                         #f
+                                         (and (not (constructor-as-expression? given-constructor-rhs))
+                                              given-constructor-rhs)
                                          null
                                          null
                                          null

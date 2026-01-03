@@ -62,6 +62,18 @@
                (when (hash-has-key? options 'expression-macro-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
                (hash-set options 'expression-macro-rhs (extract-rhs #'rhs))]
+              [(#:constructor id forward-rets rhs)
+               (when (hash-has-key? options 'constructor-rhs)
+                 (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
+               (define rhs-options (hash-set (hash-set options 'constructor-rhs #'rhs)
+                                             'constructor-stx-params (car stx-paramss)))
+               (define rhs+name-options
+                 (if (syntax-e #'id)
+                     (hash-set rhs-options 'constructor-name #'id)
+                     rhs-options))
+               (if (syntax-e #'forward-rets)
+                   (hash-set rhs+name-options 'constructor-forward-rets #'forward-rets)
+                   rhs+name-options)]
               [(#:annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
               [(#:dot name block)

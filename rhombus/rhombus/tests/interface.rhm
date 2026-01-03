@@ -677,6 +677,47 @@ check:
   ~throws "cannot be used as an annotation"
 
 block:
+  interface Foo:
+    constructor
+    | (x): x
+    | (x, f): f(x)
+    method m(): this
+  class Bar():
+    implements Foo
+  check Foo(Bar()).m() ~is Bar()
+  check Foo(10).m() ~throws error.annot_msg("constructor result")
+  check Foo([Bar()], fun([x]): x).m() ~is Bar()
+  check Foo([], fun([]): 0).m() ~throws error.annot_msg("constructor result")
+
+block:
+  interface Foo:
+    expression: ~error
+    constructor C(x): x
+    method m(): this
+  class Bar():
+    implements Foo
+  check C(Bar()).m() ~is Bar()
+  check C(10).m() ~throws error.annot_msg("constructor result")
+
+block:
+  interface Foo:
+    expression: ~none
+    constructor C(x): x
+    method m(): this
+  class Bar():
+    implements Foo
+  check C(Bar()).m() ~is Bar()
+  check C(10).m() ~throws error.annot_msg("constructor result")
+
+check:
+  ~eval
+  interface Foo:
+    expression: ~error
+    constructor C(x): x
+  Foo()
+  ~throws "cannot be used as an expression"
+
+block:
   interface Pointy:
     ~name Dotty
     final method m(): 0

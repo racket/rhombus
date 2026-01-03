@@ -17,7 +17,8 @@
 
 (provide (for-syntax extract-instance-static-infoss
                      build-instance-static-infos-defs
-                     build-class-static-infos)
+                     build-class-static-infos
+                     build-interface-constructor-static-info)
          define-constructor-static-info)
 
 (define-for-syntax (extract-instance-static-infoss name-id options super interfaces
@@ -359,6 +360,19 @@
         #'(begin
             (define-static-info-syntax/maybe* public-name-field/mutate . sis)
             ...))))))
+
+(define-for-syntax (build-interface-constructor-static-info given-constructor-rhs names)
+  (with-syntax ([(constructor-name
+                  (all-static-info ...))
+                 names])
+    (with-syntax ([arity-mask (syntax-parse given-constructor-rhs
+                                [(_ e-arity::entry-point-shape)
+                                 (hash-ref (or (syntax->datum #'e-arity.parsed) #hasheq()) 'arity #f)])])
+      (list
+       #`(define-static-info-syntax constructor-name
+           (#%call-result (all-static-info ...))
+           (#%function-arity arity-mask)
+           . (#,(quote-syntax unsyntax) (get-function-static-infos)))))))
 
 ;; drops empty `#%call-result`:
 (define-syntax (define-static-info-syntax/maybe* stx)

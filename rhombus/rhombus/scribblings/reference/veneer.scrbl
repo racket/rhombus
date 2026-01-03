@@ -34,6 +34,7 @@
   | #,(@rhombus(implements, ~veneer_clause)) $implements_decl
   | #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
   | #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(constructor, ~veneer_clause)) $constructor_decl
   | #,(@rhombus(expression, ~veneer_clause)) $expression_decl
   | #,(@rhombus(dot, ~veneer_clause)) $dot_decl
   | #,(@rhombus(static_info, ~veneer_clause)) $static_info_decl
@@ -270,6 +271,16 @@
 @doc(
   ~nonterminal:
     disable_form: constructor ~class_clause
+    maybe_name: constructor ~class_clause
+    case_maybe_kw_opt: fun ~defn
+    case_maybe_kw: fun ~defn
+
+  veneer_clause.macro 'constructor $maybe_name: $entry_point'
+  veneer_clause.macro 'constructor $maybe_name $case_maybe_kw_opt'
+  veneer_clause.macro 'constructor
+                       | $maybe_name $case_maybe_kw
+                       | ...'
+
   veneer_clause.macro 'expression: $entry_point'
   veneer_clause.macro '«expression '$id $pattern ...': '$template ...'»'
   veneer_clause.macro '«expression
@@ -280,6 +291,11 @@
 
  A @tech{veneer clauses} as recognized by @rhombus(veneer) to replace
  the default expression form, analogous to
+ @rhombus(constructor, ~class_clause) and
  @rhombus(expression, ~class_clause) for @rhombus(class).
+
+ When @rhombus(expression, ~veneer_clause) is declared, the
+ constructor's result is checked or converted by the veneer's annotation
+ in the same way as by the default constructor.
 
 }

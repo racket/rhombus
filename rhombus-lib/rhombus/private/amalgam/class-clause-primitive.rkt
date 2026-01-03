@@ -33,7 +33,6 @@
                     authentic
                     field
                     immutable
-                    constructor
                     reconstructor
                     reconstructor_fields
                     serializable)
@@ -49,7 +48,8 @@
                      override
                      private
                      protected
-                     final)
+                     final
+                     constructor)
          (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
                      internal
@@ -439,59 +439,66 @@
              #:with maybe-ret #'[(parens) ret.seq]
              #:with doc #'#f)))
 
-(define-class-clause-syntax constructor
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ #:none)
-        (wrap-class-clause #`(#:constructor #f #f #:none))]
-       [(_ (_::block (group #:none)))
-        (wrap-class-clause #`(#:constructor #f #f #:none))]
-       [(_ #:error)
-        (wrap-class-clause #`(#:constructor #f #f #:error))]
-       [(_ (_::block (group #:error)))
-        (wrap-class-clause #`(#:constructor #f #f #:error))]
-       [(_ id:identifier (~and args (_::parens . _)) ret::maybe-ret
-           (~and rhs (_::block . _)))
-        #:with ([forwarding-annot-id forwarding-ret forwarded-ret]) (forwarding-annotations #'() #'(ret.seq))
-        (wrap-class-clause #`(#:constructor id
-                              ([forwarding-annot-id args forwarded-ret])
-                              (block (group fun args (~@ . forwarding-ret) rhs))))]
-       [(_ (~and args (_::parens . _)) ret::maybe-ret
-           (~and rhs (_::block . _)))
-        #:with ([forwarding-annot-id forwarding-ret forwarded-ret]) (forwarding-annotations #'() #'(ret.seq))
-        (wrap-class-clause #`(#:constructor #f
-                              ([forwarding-annot-id args forwarded-ret])
-                              (block (group fun args (~@ . forwarding-ret) rhs))))]
-       [(_ (atag::alts
-            (btag::block id:identifier (gtag (~and args (_::parens . _)) ret::maybe-ret
-                                             (~and body (_::block . _))))
-            ...+))
-        #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
-        #:with (id0 idx ...) #'(id ...)
-        (for ([idx (in-list (syntax->list #'(idx ...)))])
-          (unless (bound-identifier=? idx #'id0)
-            (raise-syntax-error #f "inconsistent name identifier" stx idx)))
-        (wrap-class-clause #`(#:constructor id0
-                              ([forwarding-annot-id args forwarded-ret] ...)
-                              (block (group fun (atag
-                                                 (btag id (gtag args (~@ . forwarding-ret)
-                                                                body))
-                                                 ...)))))]
-       [(_ (atag::alts
-            (btag::block (gtag (~and args (_::parens . _)) ret::maybe-ret
-                               (~and body (_::block . _))))
-            ...+))
-        #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
-        (wrap-class-clause #`(#:constructor #f
-                              ([forwarding-annot-id args forwarded-ret] ...)
-                              (block (group fun (atag
-                                                 (btag (gtag args (~@ . forwarding-ret)
+(define-for-syntax (parse-constructor stx data)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(_ #:none)
+     (wrap-class-clause #`(#:constructor #f #f #:none))]
+    [(_ (_::block (group #:none)))
+     (wrap-class-clause #`(#:constructor #f #f #:none))]
+    [(_ #:error)
+     (wrap-class-clause #`(#:constructor #f #f #:error))]
+    [(_ (_::block (group #:error)))
+     (wrap-class-clause #`(#:constructor #f #f #:error))]
+    [(_ id:identifier (~and args (_::parens . _)) ret::maybe-ret
+        (~and rhs (_::block . _)))
+     #:with ([forwarding-annot-id forwarding-ret forwarded-ret]) (forwarding-annotations #'() #'(ret.seq))
+     (wrap-class-clause #`(#:constructor id
+                           ([forwarding-annot-id args forwarded-ret])
+                           (block (group fun args (~@ . forwarding-ret) rhs))))]
+    [(_ (~and args (_::parens . _)) ret::maybe-ret
+        (~and rhs (_::block . _)))
+     #:with ([forwarding-annot-id forwarding-ret forwarded-ret]) (forwarding-annotations #'() #'(ret.seq))
+     (wrap-class-clause #`(#:constructor #f
+                           ([forwarding-annot-id args forwarded-ret])
+                           (block (group fun args (~@ . forwarding-ret) rhs))))]
+    [(_ (atag::alts
+         (btag::block id:identifier (gtag (~and args (_::parens . _)) ret::maybe-ret
+                                          (~and body (_::block . _))))
+         ...+))
+     #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
+     #:with (id0 idx ...) #'(id ...)
+     (for ([idx (in-list (syntax->list #'(idx ...)))])
+       (unless (bound-identifier=? idx #'id0)
+         (raise-syntax-error #f "inconsistent name identifier" stx idx)))
+     (wrap-class-clause #`(#:constructor id0
+                           ([forwarding-annot-id args forwarded-ret] ...)
+                           (block (group fun (atag
+                                              (btag id (gtag args (~@ . forwarding-ret)
                                                              body))
-                                                 ...)))))]
-       [(_ (~and rhs (_::block . _)))
-        (wrap-class-clause #`(#:constructor #f #f rhs))]))))
+                                              ...)))))]
+    [(_ (atag::alts
+         (btag::block (gtag (~and args (_::parens . _)) ret::maybe-ret
+                            (~and body (_::block . _))))
+         ...+))
+     #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
+     (wrap-class-clause #`(#:constructor #f
+                           ([forwarding-annot-id args forwarded-ret] ...)
+                           (block (group fun (atag
+                                              (btag (gtag args (~@ . forwarding-ret)
+                                                          body))
+                                              ...)))))]
+    [(_ (~and rhs (_::block . _)))
+     (wrap-class-clause #`(#:constructor #f #f rhs))]))
+
+(define-class-clause-syntax constructor
+  (class-clause-transformer parse-constructor))
+
+(define-interface-clause-syntax constructor
+  (interface-clause-transformer parse-constructor))
+
+(define-veneer-clause-syntax constructor
+  (veneer-clause-transformer parse-constructor))
 
 (define-class-clause-syntax reconstructor
   (class-clause-transformer

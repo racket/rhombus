@@ -22,7 +22,8 @@
                      need-class-constructor-wrapper?
                      encode-protocol
                      replace-public-protocol-with-arity
-                     extract-constructor-arity))
+                     extract-constructor-arity)
+         wrap-constructor)
 
 ;; Note: `constructor.macro` is handled in "class-dot.rkt"
 
@@ -304,7 +305,7 @@
                                                    ...))
                                      (get-private-tables)))])
                      (wrap-constructor
-                      name name?
+                      name (#f) (name?)
                       #,(if (eq? constructor-rhs 'synthesize)
                             (make-default-constructor super
                                                       super-constructor-fields constructor-fields
@@ -392,9 +393,9 @@
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
     #:datum-literals (parsed)
-    [(_ name predicate-id (parsed #:rhombus/expr e) stx-params)
+    [(_ name convert-id/args predicate-id/args (parsed #:rhombus/expr e) stx-params)
      #'(with-syntax-parameters stx-params e)]
-    [(_ name predicate-id (_::block g) stx-params)
+    [(_ name (convert-id convert-arg ...) (predicate-id predicate-arg ...) (_::block g) stx-params)
      (define adjustments (entry-point-adjustment
                           (syntax-e #'name)
                           '()
@@ -404,10 +405,16 @@
                                (let ([r (with-syntax-parameters
                                           stx-params
                                           #,(wrap-expression body))])
-                                 (if (predicate-id r)
-                                     r
-                                     #,(quasisyntax/loc #'g
-                                         (raise-constructor-result-error 'name r))))))
+                                 #,(if (syntax-e #'convert-id)
+                                       #`(let ([get (convert-id r convert-arg ...)])
+                                           (if get
+                                               (get)
+                                               #,(quasisyntax/loc #'g
+                                                   (raise-constructor-result-error 'name r))))
+                                       #`(if (predicate-id r predicate-arg ...)
+                                             r
+                                             #,(quasisyntax/loc #'g
+                                                 (raise-constructor-result-error 'name r)))))))
                           #f))
      (with-continuation-mark
       syntax-parameters-key #'stx-params

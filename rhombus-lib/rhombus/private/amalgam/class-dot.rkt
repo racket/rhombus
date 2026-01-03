@@ -33,6 +33,8 @@
          (submod "function-parse.rkt" for-call)
          "class-transformer.rkt"
          "class-dot-transformer.rkt"
+         (only-in "class-constructor.rkt"
+                  wrap-constructor)
          "is-static.rkt"
          "realm.rkt"
          "name-prefix.rkt"
@@ -53,7 +55,9 @@
                                              exported-of internal-exported-of
                                              dot-provider-rhss parent-dot-providers
                                              names
-                                             #:veneer? [veneer? #f])
+                                             #:veneer? [veneer? #f]
+                                             #:veneer-constructor-rhs [veneer-constructor-rhs #f]
+                                             #:veneer-constructor-stx-params [veneer-constructor-stx-params #f])
   (with-syntax ([(name reflect-name name-extends tail-name
                        name? name-convert constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance dot-provider-name
@@ -77,48 +81,65 @@
                   [(dot-rhs ...) dot-provider-rhss]
                   [(dot-rhs-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))]
                   [(dot-class-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))])
+      (define (veneer-constructor)
+        #`(define constructor-name
+            (let ([name (wrap-constructor
+                         name (name-convert #f) (name?)
+                         #,veneer-constructor-rhs
+                         #,veneer-constructor-stx-params)])
+              name)))
       (append
        method-defns
        (append
         ;; build `(define-syntax name ....)`, but supporting `name-extends`
         (cond
           [expression-macro-rhs
-           (cond
-             [(eq? '#:none (syntax-e expression-macro-rhs))
-              null]
-             [else
-              (list
-               (build-syntax-definition/maybe-extension
-                #f #'name #'name-extends
-                (if (eq? '#:error (syntax-e expression-macro-rhs))
-                    #'no-constructor-transformer
-                    (wrap-class-transformer #'name #'tail-name
-                                            (intro expression-macro-rhs)
-                                            #'make-expression-prefix-operator
-                                            "class"))))])]
+           (append
+            (cond
+              [(eq? '#:none (syntax-e expression-macro-rhs))
+               null]
+              [else
+               (list
+                (build-syntax-definition/maybe-extension
+                 #f #'name #'name-extends
+                 (if (eq? '#:error (syntax-e expression-macro-rhs))
+                     #'no-constructor-transformer
+                     (wrap-class-transformer #'name #'tail-name
+                                             (intro expression-macro-rhs)
+                                             #'make-expression-prefix-operator
+                                             "class"))))])
+            (if veneer-constructor-rhs
+                (list (veneer-constructor))
+                null))]
+          [(and constructor-given-name
+                (not (free-identifier=? #'name constructor-given-name)))
+           (append
+            (list
+             (build-syntax-definition/maybe-extension
+              #f #'name #'name-extends
+              #'no-constructor-transformer))
+            (if veneer-constructor-rhs
+                (list (veneer-constructor))
+                null))]
           [veneer?
            (cons
-            #`(define constructor-name
-                (let ([name (lambda (v)
-                              #,(cond
-                                  [(syntax-e #'name-convert)
-                                   #`(name-convert v 'name)]
-                                  [(syntax-e #'name?)
-                                   #`(begin
-                                       (name? v 'name)
-                                       v)]
-                                  [else
-                                   #`v]))])
-                  name))
+            (if (not veneer-constructor-rhs)
+                #`(define constructor-name
+                    (let ([name (lambda (v)
+                                  #,(cond
+                                      [(syntax-e #'name-convert)
+                                       #`(name-convert v 'name)]
+                                      [(syntax-e #'name?)
+                                       #`(begin
+                                           (name? v 'name)
+                                           v)]
+                                      [else
+                                       #`v]))])
+                      name))
+                (veneer-constructor))
             (build-syntax-definitions/maybe-extension
              (list #f 'rhombus/repet) #'name #'name-extends
              #`(class-expression-transformers (quote-syntax name) (quote-syntax constructor-name) #t)))]
-          [(and constructor-given-name
-                (not (free-identifier=? #'name constructor-given-name)))
-           (list
-            (build-syntax-definition/maybe-extension
-             #f #'name #'name-extends
-             #'no-constructor-transformer))]
           [else
            (build-syntax-definitions/maybe-extension
             (list #f 'rhombus/repet) #'name #'name-extends
@@ -203,7 +224,7 @@
 
 (define-for-syntax (build-interface-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht
                                                  internal-name
-                                                 expression-macro-rhs
+                                                 expression-macro-rhs constructor-rhs constructor-stx-params
                                                  dot-provider-rhss parent-dot-providers
                                                  names)
   (with-syntax ([(name reflect-name name-extends tail-name
@@ -211,6 +232,7 @@
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
                        dot-providers
+                       constructor-name
                        [ex ...]
                        base-ctx scope-ctx)
                  names])
@@ -226,8 +248,10 @@
       (append
        method-defns
        (cond
-         [(and expression-macro-rhs
-               (eq? '#:none (syntax-e expression-macro-rhs)))
+         [(or (and expression-macro-rhs
+                   (eq? '#:none (syntax-e expression-macro-rhs)))
+              (and (not expression-macro-rhs)
+                   constructor-rhs))
           null]
          [else
           (list
@@ -241,6 +265,15 @@
                                        #'make-expression-prefix-operator
                                        "interface")]
               [else #'no-constructor-transformer])))])
+       (if constructor-rhs
+           (list
+            #`(define constructor-name
+                (let ([name (wrap-constructor
+                             name (#f) (name?)
+                             #,constructor-rhs
+                             #,constructor-stx-params)])
+                  name)))
+           null)
        (list
         #`(define-name-root name
             #:extends name-extends

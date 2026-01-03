@@ -291,6 +291,58 @@ check:
   Stubborn(0)
   ~throws "cannot be used as an expression"
 
+block:
+  veneer X(this :: String):
+    constructor (x, y):
+      x +& y
+    method m(): this
+  check X("x", 10).m() ~is "x10"
+
+block:
+  veneer X(this :: ReadableString.to_string):
+    converter
+    constructor (x, y):
+      (x +& y).copy()
+    method m(): this
+
+  check X("x", 10).m() ~is "x10"
+
+block:
+  veneer X(this :: Int):
+    constructor (x, y):
+      x +& y
+    method m(): this
+  check X("x", 10).m() ~throws error.annot_msg("constructor result")
+
+block:
+  veneer X(this :: ReadableString.to_string):
+    converter
+    constructor (x):
+      x
+    method m(): this
+  check X(1).m() ~throws error.annot_msg("constructor result")
+
+block:
+  veneer Stubborn(this :: Int):
+    expression ~error
+    constructor S(x): x
+  check S(10) ~is 10
+  check S("10") ~throws error.annot_msg("constructor result")
+
+check:
+  ~eval
+  veneer Stubborn(this :: Any):
+    expression ~error
+    constructor (x): x
+  ~throws "unnamed constructor inaccessible due to expression macro"
+
+check:
+  ~eval
+  veneer Stubborn(this :: Any):
+    expression ~none
+    constructor (x): x
+  ~throws "unnamed constructor inaccessible due to expression macro"
+
 // check prefix in post forms
 block:
   veneer A(this :: Any):
