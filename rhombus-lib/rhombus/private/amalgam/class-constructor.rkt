@@ -402,19 +402,24 @@
                           (lambda (arity body)
                             #`(parsed
                                #:rhombus/expr
-                               (let ([r (with-syntax-parameters
-                                          stx-params
-                                          #,(wrap-expression body))])
-                                 #,(if (syntax-e #'convert-id)
-                                       #`(let ([get (convert-id r convert-arg ...)])
-                                           (if get
-                                               (get)
-                                               #,(quasisyntax/loc #'g
-                                                   (raise-constructor-result-error 'name r))))
-                                       #`(if (predicate-id r predicate-arg ...)
-                                             r
-                                             #,(quasisyntax/loc #'g
-                                                 (raise-constructor-result-error 'name r)))))))
+                               #,(let ([r #`(with-syntax-parameters
+                                              stx-params
+                                              #,(wrap-expression body))])
+                                   (cond
+                                     [(syntax-e #'convert-id)
+                                      #`(let ([r #,r])
+                                          (let ([get (convert-id r convert-arg ...)])
+                                            (if get
+                                                (get)
+                                                #,(quasisyntax/loc #'g
+                                                    (raise-constructor-result-error 'name r)))))]
+                                     [(syntax-e #'predicate-id)
+                                      #`(let ([r #,r])
+                                          (if (predicate-id r predicate-arg ...)
+                                              r
+                                              #,(quasisyntax/loc #'g
+                                                  (raise-constructor-result-error 'name r))))]
+                                     [else r]))))
                           #f))
      (with-continuation-mark
       syntax-parameters-key #'stx-params

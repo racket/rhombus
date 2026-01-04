@@ -314,6 +314,15 @@ block:
     method m(): this
   check X("x", 10).m() ~throws error.annot_msg("constructor result")
 
+// check that `:~` doesn't imply a check, but static info is
+// propagated to constructor use
+block:
+  veneer X(this :~ Int):
+    constructor (x, y):
+      x +& y
+    method m(): this
+  check X("x", 10).m() ~is "x10"
+
 block:
   veneer X(this :: ReadableString.to_string):
     converter
