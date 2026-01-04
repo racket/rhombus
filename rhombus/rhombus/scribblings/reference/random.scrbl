@@ -59,8 +59,8 @@
 ){
 
  Satisfied by an array of 6 integers where the first three integers
- are @rhombus(Int.in(0 .. = 4294967086), ~annot) and the last three
- integers are @rhombus(Int.in(0 .. = 4294944442), ~annot).  At least
+ are @rhombus(Int.in(0 ..= 4294967086), ~annot) and the last three
+ integers are @rhombus(Int.in(0 ..= 4294944442), ~annot). At least
  one of the first three integers must be non-zero and at least one
  of the last three integers must also be non-zero.
 
