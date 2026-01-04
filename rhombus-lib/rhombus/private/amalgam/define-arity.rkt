@@ -39,7 +39,7 @@
 (define-syntax (define/method stx)
   (syntax-parse stx
     [(self (~seq #:direct-id direct-id) . tail)
-     (expand-define/arity #'(self . tail)
+     (expand-define/arity (syntax/loc stx (self . tail))
                           (lambda (id name primitive-ids local-primitive-ids static-infos rhs)
                             (build-define/method id #'direct-id name primitive-ids local-primitive-ids static-infos rhs)))]
     [_
