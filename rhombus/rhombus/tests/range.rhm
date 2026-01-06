@@ -27,6 +27,7 @@ block:
     Range.intersect(rge, ...) ~method
     SequenceRange.to_sequence(rge) ~method
     SequenceRange.step_by(rge, step) ~method
+    // `ListRange.descending` is in "descending-range.rhm"
     ListRange.to_list(rge) ~method
 
 // basic sanity checks
@@ -533,8 +534,8 @@ block:
     ~op_stx self
     let throws = '~throws'.relocate(self)
     let is = '~is'.relocate(self)
-    let op_who = to_string(op)
-    let range_who = "Range." ++ to_string(variant)
+    let op_who = op +& ": "
+    let range_who = "Range." +& variant +& ": "
     match side.unwrap()
     | #'~none:
         // no error can happen in this case, so just check that it works at all
@@ -544,14 +545,14 @@ block:
     | #'~left:
         'check:
            "oops" $op $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            0 $op $is 0 $op
            5 $op $is 5 $op
            Range . $variant("oops") $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
@@ -560,28 +561,29 @@ block:
     | #'~right:
         'check:
            $op "oops" $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            $op 0 $is $op 0
            $op 5 $is $op 5
            Range . $variant("oops") $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            Range . $variant(0) $is $op 0
            Range . $variant(5) $is $op 5'
     | #'~both:
+        let invariant_msg = "starting point must be less than or equal to ending point"
         'check:
            "oops" $op 5 $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            0 $op "oops" $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
@@ -589,17 +591,17 @@ block:
            0 $op 5 $is 0 $op 5
            5 $op 5 $is 5 $op 5
            5 $op 0 $throws values(
-             #%literal $(op_who ++ ": starting point must be less than or equal to ending point"),
+             #%literal $op_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 0",
            )
            Range . $variant("oops", 5) $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            Range . $variant(0, "oops") $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
@@ -607,61 +609,62 @@ block:
            Range . $variant(0, 5) $is 0 $op 5
            Range . $variant(5, 5) $is 5 $op 5
            Range . $variant(5, 0) $throws values(
-             #%literal $(range_who ++ ": starting point must be less than or equal to ending point"),
+             #%literal $range_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 0",
            )'
     | #'~both_not_equal:
+        let invariant_msg = "starting point must be less than ending point"
         'check:
            "oops" $op 5 $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            0 $op "oops" $throws values(
-             #%literal $(op_who ++ ": " ++ error.annot_msg()),
+             #%literal $op_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            0 $op 0 $throws values(
-             #%literal $(op_who ++ ": starting point must be less than ending point"),
+             #%literal $op_who ++ #%literal $invariant_msg,
              "starting point: 0",
              "ending point: 0",
            )
            0 $op 5 $is 0 $op 5
            5 $op 5 $throws values(
-             #%literal $(op_who ++ ": starting point must be less than ending point"),
+             #%literal $op_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 5",
            )
            5 $op 0 $throws values(
-             #%literal $(op_who ++ ": starting point must be less than ending point"),
+             #%literal $op_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 0",
            )
            Range . $variant("oops", 5) $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            Range . $variant(0, "oops") $throws values(
-             #%literal $(range_who ++ ": " ++ error.annot_msg()),
+             #%literal $range_who ++ error.annot_msg(),
              error.annot("Int").msg,
              error.val("oops").msg,
            )
            Range . $variant(0, 0) $throws values(
-             #%literal $(range_who ++ ": starting point must be less than ending point"),
+             #%literal $range_who ++ #%literal $invariant_msg,
              "starting point: 0",
              "ending point: 0",
            )
            Range . $variant(0, 5) $is 0 $op 5
            Range . $variant(5, 5) $throws values(
-             #%literal $(range_who ++ ": starting point must be less than ending point"),
+             #%literal $range_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 5",
            )
            Range . $variant(5, 0) $throws values(
-             #%literal $(range_who ++ ": starting point must be less than ending point"),
+             #%literal $range_who ++ #%literal $invariant_msg,
              "starting point: 5",
              "ending point: 0",
            )'
@@ -925,6 +928,20 @@ block:
       error.val("oops").msg,
     )
   check:
+    SequenceRange.step_by(0..5, "oops")
+    ~throws values(
+      "SequenceRange.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg,
+    )
+  check:
+    (dynamic(0..5) :~ SequenceRange).step_by("oops")
+    ~throws values(
+      "SequenceRange.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg,
+    )
+  check:
     for List (x in "oops" :~ SequenceRange):
       x
     ~throws values(
@@ -962,6 +979,22 @@ block:
     ~throws values(
       "SequenceRange.step_by: " ++ error.annot_msg(),
       error.annot("SequenceRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in SequenceRange.step_by(0..5, "oops")):
+      x
+    ~throws values(
+      "SequenceRange.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in (dynamic(0..5) :~ SequenceRange).step_by("oops")):
+      x
+    ~throws values(
+      "SequenceRange.step_by: " ++ error.annot_msg(),
+      error.annot("PosInt").msg,
       error.val("oops").msg,
     )
 

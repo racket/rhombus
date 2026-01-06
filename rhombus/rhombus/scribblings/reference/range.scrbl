@@ -504,7 +504,13 @@ operator, which is the same as @rhombus(Range.contains).
 ){
 
  Implements @rhombus(Listable, ~class) by returning a @tech{list} of
- integers in @rhombus(rge) in order.
+ integers in @rhombus(rge) in ascending order.
+
+@examples(
+  (0..5).to_list()
+  [& 0..5]
+  (0 <..= 5).to_list()
+)
 
 }
 
@@ -515,8 +521,17 @@ operator, which is the same as @rhombus(Range.contains).
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
- @tech{sequence} of integers in @rhombus(rge) in order. The sequence
- is infinite when the ending point is @rhombus(#inf).
+ @tech{sequence} of integers in @rhombus(rge) in ascending order. The
+ sequence is infinite when @rhombus(rge) lacks an ending point.
+
+@examples(
+  :
+    for List (i in 0..5): // optimizing
+      i
+  :
+    for List (i in (0..5).to_sequence()): // non-optimizing
+      i
+)
 
 }
 
@@ -525,12 +540,188 @@ operator, which is the same as @rhombus(Range.contains).
     :: Sequence.expect_of(Int)
 ){
 
- Returns a @tech{sequence} of integers in @rhombus(rge) in order,
- stepping by the given @rhombus(step) size.
+ Returns a @tech{sequence} of integers in @rhombus(rge) in ascending
+ order, stepping by the given @rhombus(step) size. The sequence is
+ infinite when @rhombus(rge) lacks an ending point.
 
  When invoked as @rhombus(rge.step_by(step)) in an
  @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
  optimized, in cooperation with the optimization in @rhombus(..),
  @rhombus(..=), @rhombus(<..), or @rhombus(<..=).
+
+@examples(
+  for List (i in (0..5).step_by(2)):
+    i
+  for List (i in (0 <..= 10).step_by(3)):
+    i
+)
+
+}
+
+
+@doc(
+  annot.macro 'DescendingRange'
+){
+
+ The @rhombus(DescendingRange, ~annot) annotation matches a
+ ``descending range'' produced by @rhombus(>=..), @rhombus(>=..=),
+ @rhombus(>..), @rhombus(>..=), or
+ @rhombus(ListRange.descending). Such an object isn't actually a
+ range, but is merely created for the purpose of producing range-like
+ @tech{sequences} in descending order.
+
+ Since the resulting sequence is in descending order, generally, the
+ starting point must be @emph{greater} than (as opposed to less than)
+ or equal to the ending point. Moreover, each
+ @rhombus(DescendingRange, ~annot) form corresponds to one of the
+ @rhombus(SequenceRange, ~annot) forms. In particular, the same kind
+ of optimization in @rhombus(SequenceRange, ~annot) forms also applies
+ to @rhombus(DescendingRange, ~annot) forms.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    start_expr: block expr
+    end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
+  expr.macro '$start_expr >=.. $end_expr'
+  repet.macro '$start_repet >=.. $end_repet'
+  expr.macro '$start_expr >=..'
+  repet.macro '$start_repet >=..'
+  fun DescendingRange.from_to(start :: Int, end :: Int)
+    :: DescendingRange
+  fun DescendingRange.from(start :: Int)
+    :: DescendingRange
+){
+
+ Corresponds to @rhombus(..), @rhombus(Range.from_to), and
+ @rhombus(Range.from).
+
+}
+
+@doc(
+  ~nonterminal:
+    start_expr: block expr
+    end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
+  expr.macro '$start_expr >=..= $end_expr'
+  repet.macro '$start_repet >=..= $end_repet'
+  fun DescendingRange.from_to_inclusive(start :: Int, end :: Int)
+    :: DescendingRange
+){
+
+ Corresponds to @rhombus(..=) and @rhombus(Range.from_to_inclusive).
+
+}
+
+@doc(
+  ~nonterminal:
+    start_expr: block expr
+    end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
+  expr.macro '$start_expr >.. $end_expr'
+  repet.macro '$start_repet >.. $end_repet'
+  expr.macro '$start_expr >..'
+  repet.macro '$start_repet >..'
+  fun DescendingRange.from_exclusive_to(start :: Int, end :: Int)
+    :: DescendingRange
+  fun DescendingRange.from_exclusive(start :: Int)
+    :: DescendingRange
+){
+
+ Corresponds to @rhombus(<..), @rhombus(Range.from_exclusive_to), and
+ @rhombus(Range.from_exclusive).
+
+}
+
+@doc(
+  ~nonterminal:
+    start_expr: block expr
+    end_expr: block expr
+    start_repet: block repet
+    end_repet: block repet
+  expr.macro '$start_expr >..= $end_expr'
+  repet.macro '$start_repet >..= $end_repet'
+  fun DescendingRange.from_exclusive_to_inclusive(start :: Int,
+                                                  end :: Int)
+    :: DescendingRange
+){
+
+ Corresponds to @rhombus(<..=) and
+ @rhombus(Range.from_exclusive_to_inclusive).
+
+}
+
+
+@doc(
+  method (rge :: ListRange).descending() :: DescendingRange
+){
+
+ Returns a @rhombus(DescendingRange, ~annot) object that has the same
+ integers as @rhombus(rge), by swapping the upper and lower bounds.
+
+ When invoked as @rhombus(rge.descending()) in an
+ @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
+ optimized, in cooperation with the optimization in @rhombus(..),
+ @rhombus(..=), @rhombus(<..), or @rhombus(<..=).
+
+@examples(
+  for List (i in (0..5).descending()):
+    i
+  for List (i in (0..5).descending().step_by(-2)):
+    i
+  for List (i in (0 <..= 10).descending().step_by(-3)):
+    i
+)
+
+}
+
+
+@doc(
+  method (rge :: DescendingRange).to_sequence()
+    :: Sequence.expect_of(Int)
+){
+
+ Implements @rhombus(Sequenceable, ~class) by returning a
+ @tech{sequence} of integers in @rhombus(rge) in descending order. The
+ sequence is infinite when @rhombus(rge) lacks an ending point.
+
+@examples(
+  :
+    for List (i in 5 >=.. 0): // optimizing
+      i
+  :
+    for List (i in (5 >=.. 0).to_sequence()): // non-optimizing
+      i
+)
+
+}
+
+@doc(
+  method (rge :: DescendingRange).step_by(step :: NegInt)
+    :: Sequence.expect_of(Int)
+){
+
+ Returns a @tech{sequence} of integers in @rhombus(rge) in descending
+ order, stepping by the given @rhombus(step) size. The sequence is
+ infinite when @rhombus(rge) lacks an ending point.
+
+ When invoked as @rhombus(rge.step_by(step)) in an
+ @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
+ optimized, in cooperation with the optimization in @rhombus(..),
+ @rhombus(..=), @rhombus(<..), @rhombus(<..=), or
+ @rhombus(ListRange.descending).
+
+@examples(
+  for List (i in (5 >=.. 0).step_by(-2)):
+    i
+  for List (i in (10 >..= 0).step_by(-3)):
+    i
+)
 
 }

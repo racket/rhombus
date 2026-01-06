@@ -48,11 +48,32 @@ integer is excluded.
     println(i)
 )
 
+You can also create ``descending ranges'' with operators that start
+with @litchar{>}, namely @rhombus(>=..), @rhombus(>=..=),
+@rhombus(>..), and @rhombus(>..=), or with the
+@rhombus(ListRange.descending) method.
+
+@examples(
+  for (i in 4 >=.. 1):
+    println(i)
+  for (i in 4 >=..= 1):
+    println(i)
+  for (i in 4 >.. 1):
+    println(i)
+  for (i in 4 >..= 1):
+    println(i)
+  for (i in (0..4).descending()):
+    println(i)
+)
+
 In addition, the step size can be specified with the
-@rhombus(SequenceRange.step_by) method.
+@rhombus(SequenceRange.step_by) or @rhombus(DescendingRange.step_by)
+methods.
 
 @examples(
   for (i in (1..10).step_by(2)):
+    println(i)
+  for (i in (10 >=.. 1).step_by(-2)):
     println(i)
 )
 

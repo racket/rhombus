@@ -39,7 +39,9 @@
                    #:defaults ([instance-static-infos #'()]))
         (~and creation (~or* #:new #:existing))
         (~optional (~and actual-class (~or* #:class)))
-        (~and mode (~or* #:transparent #:translucent #:just-annot #:just-binding #:opaque))
+        (~and mode (~or* #:transparent #:translucent
+                         #:just-annot #:just-constructor+binding #:just-constructor
+                         #:opaque))
         (~optional (~and no-primitive #:no-primitive))
         (~optional (~seq #:parent Parent parent)
                    #:defaults ([parent #'#f]
@@ -117,7 +119,8 @@
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))
            (define just-annot? (eq? '#:just-annot (syntax-e #'mode)))
-           (define just-binding? (eq? '#:just-binding (syntax-e #'mode)))
+           (define just-constructor+binding? (eq? '#:just-constructor+binding (syntax-e #'mode)))
+           (define just-constructor? (eq? '#:just-constructor (syntax-e #'mode)))
            (define new? (eq? '#:new (syntax-e #'creation)))]
      #:with name? (datum->syntax #'name/rkt (string->symbol (format "~a?" (syntax-e #'name/rkt))))
      #:with (~var struct:name) (datum->syntax #'name/rkt (string->symbol (format "struct:~a" (syntax-e #'name/rkt))))
@@ -251,19 +254,15 @@
                 (list
                  #'(void (set-primitive-contract! 'name? Name-str)))
                 '())
-         #,@(if (or transparent? translucent? just-annot?)
+         #,@(if (or transparent? translucent?
+                    just-annot?)
                 (list
                  #'(define-annotation-syntax Name
                      (identifier-annotation name? #,(get-name-static-infos))))
                 '())
-         #,@(if (or transparent? translucent? just-binding?)
+         #,@(if (or transparent? translucent?
+                    just-constructor+binding?)
                 (list
-                 #`(define-syntax Name
-                     (expression-repeatable-transformer
-                      (lambda (stx)
-                        (syntax-parse stx
-                          [(head . tail)
-                           (values (relocate-id #'head (quote-syntax name/rkt)) #'tail)]))))
                  #`(define-binding-syntax Name
                      (binding-transformer
                       (lambda (tail)
@@ -279,6 +278,16 @@
                                                              (~? #`field-static-infos #'())
                                                              ...)
                                                        #:static-infos (get-name-static-infos))))))
+                '())
+         #,@(if (or transparent? translucent?
+                    just-constructor+binding? just-constructor?)
+                (list
+                 #`(define-syntax Name
+                     (expression-repeatable-transformer
+                      (lambda (stx)
+                        (syntax-parse stx
+                          [(head . tail)
+                           (values (relocate-id #'head (quote-syntax name/rkt)) #'tail)])))))
                 '())
 
          (define-name-root Name

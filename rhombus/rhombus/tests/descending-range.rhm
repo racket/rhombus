@@ -1,0 +1,792 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    DescendingRange.from_to(start, end)
+    DescendingRange.from_to_inclusive(start, end)
+    DescendingRange.from(start)
+    DescendingRange.from_exclusive_to(start, end)
+    DescendingRange.from_exclusive_to_inclusive(start, end)
+    DescendingRange.from_exclusive(start)
+    ListRange.descending(rge) ~method
+    DescendingRange.to_sequence(rge) ~method
+    DescendingRange.step_by(rge, step) ~method
+
+// basic sanity checks
+check:
+  5 >=.. 0 ~is DescendingRange.from_to(5, 0)
+  5 >=..= 0 ~is DescendingRange.from_to_inclusive(5, 0)
+  5 >=.. ~is DescendingRange.from(5)
+  5 >.. 0 ~is DescendingRange.from_exclusive_to(5, 0)
+  5 >..= 0 ~is DescendingRange.from_exclusive_to_inclusive(5, 0)
+  5 >.. ~is DescendingRange.from_exclusive(5)
+
+check:
+  (0..5).descending() ~is 5 >..= 0
+  (0..=5).descending() ~is 5 >=..= 0
+  (0 <.. 5).descending() ~is 5 >.. 0
+  (0 <..= 5).descending() ~is 5 >=.. 0
+
+// invariants in constructors
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks $variant $op $side':
+    ~op_stx self
+    let throws = '~throws'.relocate(self)
+    let is = '~is'.relocate(self)
+    let op_who = op +& ": "
+    let range_who = "DescendingRange." +& variant +& ": "
+    match side.unwrap()
+    | #'~left:
+        'check:
+           "oops" $op $throws values(
+             #%literal $op_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           5 $op $is 5 $op
+           0 $op $is 0 $op
+           DescendingRange . $variant("oops") $throws values(
+             #%literal $range_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           DescendingRange . $variant(5) $is 5 $op
+           DescendingRange . $variant(0) $is 0 $op'
+    | #'~both:
+        let invariant_msg = "starting point must be greater than or equal to ending point"
+        'check:
+           "oops" $op 0 $throws values(
+             #%literal $op_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           5 $op "oops" $throws values(
+             #%literal $op_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           5 $op 5 $is 5 $op 5
+           5 $op 0 $is 5 $op 0
+           0 $op 5 $throws values(
+             #%literal $op_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+           0 $op 0 $is 0 $op 0
+           DescendingRange . $variant("oops", 0) $throws values(
+             #%literal $range_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           DescendingRange . $variant(5, "oops") $throws values(
+             #%literal $range_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           DescendingRange . $variant(5, 5) $is 5 $op 5
+           DescendingRange . $variant(5, 0) $is 5 $op 0
+           DescendingRange . $variant(0, 5) $throws values(
+             #%literal $range_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+           DescendingRange . $variant(0, 0) $is 0 $op 0'
+    | #'~both_not_equal:
+        let invariant_msg = "starting point must be greater than ending point"
+        'check:
+           "oops" $op 0 $throws values(
+             #%literal $op_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           5 $op "oops" $throws values(
+             #%literal $op_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           5 $op 5 $throws values(
+             #%literal $op_who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 5",
+           )
+           5 $op 0 $is 5 $op 0
+           0 $op 5 $throws values(
+             #%literal $op_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+           0 $op 0 $throws values(
+             #%literal $op_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 0",
+           )
+           DescendingRange . $variant("oops", 0) $throws values(
+             #%literal $range_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           DescendingRange . $variant(5, "oops") $throws values(
+             #%literal $range_who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+           DescendingRange . $variant(5, 5) $throws values(
+             #%literal $range_who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 5",
+           )
+           DescendingRange . $variant(5, 0) $is 5 $op 0
+           DescendingRange . $variant(0, 5) $throws values(
+             #%literal $range_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+           DescendingRange . $variant(0, 0) $throws values(
+             #%literal $range_who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 0",
+           )'
+  generate_checks from_to >=.. ~both
+  generate_checks from_to_inclusive >=..= ~both
+  generate_checks from >=.. ~left
+  generate_checks from_exclusive_to >.. ~both_not_equal
+  generate_checks from_exclusive_to_inclusive >..= ~both
+  generate_checks from_exclusive >.. ~left
+
+// sequences
+check:
+  5 >=.. 0 ~is_a Sequence
+  5 >=..= 0 ~is_a Sequence
+  5 >=.. ~is_a Sequence
+  5 >.. 0 ~is_a Sequence
+  5 >..= 0 ~is_a Sequence
+  5 >.. ~is_a Sequence
+
+check:
+  (0..5).descending() ~is_a Sequence
+  (0..=5).descending() ~is_a Sequence
+  (0 <.. 5).descending() ~is_a Sequence
+  (0 <..= 5).descending() ~is_a Sequence
+
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks:
+                $(('~desc_range' || '~desc_list_range' || '~list_range') && tag): $rge
+                ~seq: $seq
+                ~step_seq: $step_seq':
+    ~op_stx self
+    let check_id = 'check'.relocate(self)
+    let is_desc_list_range = tag.unwrap() matches (#'~desc_list_range || #'~list_range)
+    let is_list_range = tag.unwrap() == #'~list_range
+    let rge:
+      if is_list_range
+      | '($rge).descending()'
+      | rge
+    fun make_for(rge, seq):
+      if is_desc_list_range
+      | '$check_id:
+           for List (x in $rge):
+             x
+           ~is $seq'
+      | '$check_id:
+           for List (x in $rge,
+                     _ in 0..5):
+             x
+           ~is $seq'
+    'block:
+       block:
+         use_static
+         $(make_for(rge, seq))
+         $(make_for('($rge).to_sequence()', seq))
+         $(make_for('($rge).step_by(-2)', step_seq))
+         block:
+           def rge = $rge
+           $(make_for('rge', seq))
+           $(make_for('dynamic(rge) :~ DescendingRange', seq))
+           $(make_for('rge.to_sequence()', seq))
+           $(make_for('DescendingRange.to_sequence(rge)', seq))
+           $(make_for('rge.step_by(-2)', step_seq))
+           $(make_for('DescendingRange.step_by(rge, -2)', step_seq))
+       block:
+         $(make_for('dynamic($rge)', seq))
+         $(make_for('dynamic($rge).to_sequence()', seq))
+         $(make_for('dynamic($rge).step_by(-2)', step_seq))
+         block:
+           def rge = dynamic($rge)
+           $(make_for('rge', seq))
+           $(make_for('rge.to_sequence()', seq))
+           $(make_for('DescendingRange.to_sequence(rge)', seq))
+           $(make_for('rge.step_by(-2)', step_seq))
+           $(make_for('DescendingRange.step_by(rge, -2)', step_seq))'
+  generate_checks:
+    ~desc_list_range: 5 >=.. 0
+    ~seq: [5, 4, 3, 2, 1]
+    ~step_seq: [5, 3, 1]
+  generate_checks:
+    ~desc_list_range: 5 >=..= 0
+    ~seq: [5, 4, 3, 2, 1, 0]
+    ~step_seq: [5, 3, 1]
+  generate_checks:
+    ~desc_range: 5 >=..
+    ~seq: [5, 4, 3, 2, 1]
+    ~step_seq: [5, 3, 1, -1, -3]
+  generate_checks:
+    ~desc_list_range: 5 >.. 0
+    ~seq: [4, 3, 2, 1]
+    ~step_seq: [4, 2]
+  generate_checks:
+    ~desc_list_range: 5 >..= 0
+    ~seq: [4, 3, 2, 1, 0]
+    ~step_seq: [4, 2, 0]
+  generate_checks:
+    ~desc_range: 5 >..
+    ~seq: [4, 3, 2, 1, 0]
+    ~step_seq: [4, 2, 0, -2, -4]
+  generate_checks:
+    ~list_range: 0..5
+    ~seq: [4, 3, 2, 1, 0]
+    ~step_seq: [4, 2, 0]
+  generate_checks:
+    ~list_range: 0..=5
+    ~seq: [5, 4, 3, 2, 1, 0]
+    ~step_seq: [5, 3, 1]
+  generate_checks:
+    ~list_range: 0 <.. 5
+    ~seq: [4, 3, 2, 1]
+    ~step_seq: [4, 2]
+  generate_checks:
+    ~list_range: 0 <..= 5
+    ~seq: [5, 4, 3, 2, 1]
+    ~step_seq: [5, 3, 1]
+
+block:
+  use_static
+  check:
+    for List (x in 5 >=.. 0):
+      x > dynamic(4)
+    ~is [#true, #false, #false, #false, #false]
+  check:
+    for List (x in (5 >=.. 0).to_sequence()):
+      x > dynamic(4)
+    ~is [#true, #false, #false, #false, #false]
+  check:
+    for List (x in (5 >=.. 0).step_by(-2)):
+      x > dynamic(4)
+    ~is [#true, #false, #false]
+  block:
+    def rge = 5 >=.. 0
+    check:
+      for List (x in rge):
+        x > dynamic(4)
+      ~is [#true, #false, #false, #false, #false]
+    check:
+      for List (x in rge.to_sequence()):
+        x > dynamic(4)
+      ~is [#true, #false, #false, #false, #false]
+    check:
+      for List (x in rge.step_by(-2)):
+        x > dynamic(4)
+      ~is [#true, #false, #false]
+
+// errors
+block:
+  check:
+    DescendingRange.to_sequence("oops")
+    ~throws values(
+      "DescendingRange.to_sequence: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    ("oops" :~ DescendingRange).to_sequence()
+    ~throws values(
+      "DescendingRange.to_sequence: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    DescendingRange.step_by("oops", -2)
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    ("oops" :~ DescendingRange).step_by(-2)
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    DescendingRange.step_by(5 >=.. 0, "oops")
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("NegInt").msg,
+      error.val("oops").msg,
+    )
+  check:
+    (dynamic(5 >=.. 0) :~ DescendingRange).step_by("oops")
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("NegInt").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in "oops" :~ DescendingRange):
+      x
+    ~throws values(
+      "DescendingRange.to_sequence: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in DescendingRange.to_sequence("oops")):
+      x
+    ~throws values(
+      "DescendingRange.to_sequence: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in ("oops" :~ DescendingRange).to_sequence()):
+      x
+    ~throws values(
+      "DescendingRange.to_sequence: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in DescendingRange.step_by("oops", -2)):
+      x
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in ("oops" :~ DescendingRange).step_by(-2)):
+      x
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("DescendingRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in DescendingRange.step_by(5 >=.. 0, "oops")):
+      x
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("NegInt").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in (dynamic(5 >=.. 0) :~ DescendingRange).step_by("oops")):
+      x
+    ~throws values(
+      "DescendingRange.step_by: " ++ error.annot_msg(),
+      error.annot("NegInt").msg,
+      error.val("oops").msg,
+    )
+
+block:
+  check:
+    ListRange.descending("oops")
+    ~throws values(
+      "ListRange.descending: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    ("oops" :~ ListRange).descending()
+    ~throws values(
+      "ListRange.descending: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in ListRange.descending("oops")):
+      x
+    ~throws values(
+      "ListRange.descending: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
+    )
+  check:
+    for List (x in ("oops" :~ ListRange).descending()):
+      x
+    ~throws values(
+      "ListRange.descending: " ++ error.annot_msg(),
+      error.annot("ListRange").msg,
+      error.val("oops").msg,
+    )
+
+// errors in optimized cases
+block:
+  import rhombus/meta open
+  expr.macro
+  | 'generate_checks $(('~both' || '~both_not_equal') && tag) $op':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      let who = op +& ": "
+      let step_by_who = "DescendingRange.step_by: "
+      let must_not_equal = tag.unwrap() == #'~both_not_equal
+      let invariant_msg:
+        if !must_not_equal
+        | "starting point must be greater than or equal to ending point"
+        | "starting point must be greater than ending point"
+      'block:
+         $check_id:
+           for List (i in "oops" $op 5):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in 0 $op "oops"):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in 0 $op 5):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in 5 $op 5):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )
+                $check_id:
+                  for List (i in 0 $op 0):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )'
+           | '')
+         $check_id:
+           for List (i in ("oops" $op 0).step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (5 $op "oops").step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (0 $op 5).step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 0",
+             "ending point: 5",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in (5 $op 5).step_by(-2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )
+                $check_id:
+                  for List (i in (0 $op 0).step_by(-2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )'
+           | '')
+         $check_id:
+           for List (i in (5 $op 0).step_by("oops")):
+             i
+           ~throws values(
+             #%literal $step_by_who ++ error.annot_msg(),
+             error.annot("NegInt").msg,
+             error.val("oops").msg,
+           )'
+  | 'generate_checks ~left $op':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      let who = op +& ": "
+      let step_by_who = "DescendingRange.step_by: "
+      'block:
+         $check_id:
+           for List (i in "oops" $op):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in ("oops" $op).step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (5 $op).step_by("oops")):
+             i
+           ~throws values(
+             #%literal $step_by_who ++ error.annot_msg(),
+             error.annot("NegInt").msg,
+             error.val("oops").msg,
+           )'
+  generate_checks ~both >=..
+  generate_checks ~both >=..=
+  generate_checks ~left >=..
+  generate_checks ~both_not_equal >..
+  generate_checks ~both >..=
+  generate_checks ~left >..
+
+block:
+  import rhombus/meta open
+  expr.macro
+  | 'generate_checks $(('~both' || '~both_not_equal') && tag) $op':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      let who = op +& ": "
+      let step_by_who = "DescendingRange.step_by: "
+      let must_not_equal = tag.unwrap() == #'~both_not_equal
+      let invariant_msg:
+        if !must_not_equal
+        | "starting point must be less than or equal to ending point"
+        | "starting point must be less than ending point"
+      'block:
+         $check_id:
+           for List (i in ("oops" $op 5).descending()):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (0 $op "oops").descending()):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (5 $op 0).descending()):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 0",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in (0 $op 0).descending()):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )
+                $check_id:
+                  for List (i in (5 $op 5).descending()):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )'
+           | '')
+         $check_id:
+           for List (i in ("oops" $op 5).descending().step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (0 $op "oops").descending().step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ error.annot_msg(),
+             error.annot("Int").msg,
+             error.val("oops").msg,
+           )
+         $check_id:
+           for List (i in (5 $op 0).descending().step_by(-2)):
+             i
+           ~throws values(
+             #%literal $who ++ #%literal $invariant_msg,
+             "starting point: 5",
+             "ending point: 0",
+           )
+         $(if must_not_equal
+           | 'block:
+                $check_id:
+                  for List (i in (0 $op 0).descending().step_by(-2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 0",
+                    "ending point: 0",
+                  )
+                $check_id:
+                  for List (i in (5 $op 5).descending().step_by(-2)):
+                    i
+                  ~throws values(
+                    #%literal $who ++ #%literal $invariant_msg,
+                    "starting point: 5",
+                    "ending point: 5",
+                  )'
+           | '')
+         $check_id:
+           for List (i in (0 $op 5).descending().step_by("oops")):
+             i
+           ~throws values(
+             #%literal $step_by_who ++ error.annot_msg(),
+             error.annot("NegInt").msg,
+             error.val("oops").msg,
+           )'
+  generate_checks ~both ..
+  generate_checks ~both ..=
+  generate_checks ~both_not_equal <..
+  generate_checks ~both <..=
+
+// non-unsafe for non-fixnums
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks $(power :: Int)':
+    ~op_stx self
+    let check_id = 'check'.relocate(self)
+    let power = power.unwrap() - 1
+    let most_positive = 2**power - 1
+    let most_positive_from = most_positive + 5
+    let most_negative = -(2**power)
+    let most_negative_to = most_negative - 5
+    let most_negative_step = most_negative - 1
+    fun make_checks(op):
+      fun make_check(make_seq):
+        fun make_for(make_lit):
+          'for List (i in $(make_seq(make_lit))):
+             i'
+        '$check_id:
+           $(make_for(fun (x): '(#%literal $x)'))
+           ~is $(make_for(fun (x): 'Function.black_box(#%literal $x)'))'
+      'block:
+         $(make_check(fun (make_lit):
+                        '$(make_lit(most_positive_from)) $op $(make_lit(most_positive))'))
+         $(make_check(fun (make_lit):
+                        '$(make_lit(most_negative)) $op $(make_lit(most_negative_to))'))
+         $(make_check(fun (make_lit):
+                        '($(make_lit(most_positive_from)) $op $(make_lit(most_positive))).step_by(-2)'))
+         $(make_check(fun (make_lit):
+                        '($(make_lit(most_negative)) $op $(make_lit(most_negative_to))).step_by(-2)'))
+         $(make_check(fun (make_lit):
+                        '(5 $op 0).step_by($(make_lit(most_negative_step)))'))'
+    make_checks('>=..')
+    make_checks('>=..=')
+    make_checks('>..')
+    make_checks('>..=')
+  generate_checks 29
+  generate_checks 30
+  generate_checks 31
+  generate_checks 60
+  generate_checks 61
+  generate_checks 62
+  generate_checks 63
+
+// raw text of operator forms
+block:
+  import:
+    rhombus/meta open
+  expr.macro 'source $expr':
+    ~weaker_than: ~other
+    '#%literal $(expr.to_source_string())'
+  check source 1 >=.. ~is "1 >=.."
+  check source 1 >=.. 2 ~is "1 >=.. 2"
+  check source 1 >=..= 2 ~is "1 >=..= 2"
+  check source 1 >.. ~is "1 >.."
+  check source 1 >.. 2 ~is "1 >.. 2"
+  check source 1 >..= 2 ~is "1 >..= 2"
+
+// repetitions
+block:
+  use_static
+  let [x, ...] = [1, 2, 3, 4, 5]
+  let [y, ...] = [x-1, ...]
+  check:
+    [x >=.. y, ...] ~is [1 >=.. 0, 2 >=.. 1, 3 >=.. 2, 4 >=.. 3, 5 >=.. 4]
+    [x >=.., ...] ~is [1 >=.., 2 >=.., 3 >=.., 4 >=.., 5 >=..]
+    [x >=..= y, ...] ~is [1 >=..= 0, 2 >=..= 1, 3 >=..= 2, 4 >=..= 3, 5 >=..= 4]
+    [x >.. y, ...] ~is [1 >.. 0, 2 >.. 1, 3 >.. 2, 4 >.. 3, 5 >.. 4]
+    [x >.., ...] ~is [1 >.., 2 >.., 3 >.., 4 >.., 5 >..]
+    [x >..= y, ...] ~is [1 >..= 0, 2 >..= 1, 3 >..= 2, 4 >..= 3, 5 >..= 4]
+  fun sequence_to_list(xs :: Sequence):
+    for List (x in xs):
+      x
+  check:
+    [sequence_to_list((x >=.. y).to_sequence()), ...] ~is [[1], [2], [3], [4], [5]]
+    [sequence_to_list((x >=..= y).to_sequence()), ...] ~is [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4]]
+    [sequence_to_list((x >.. y).to_sequence()), ...] ~is [[], [], [], [], []]
+    [sequence_to_list((x >..= y).to_sequence()), ...] ~is [[0], [1], [2], [3], [4]]
+  fun sequence_take(xs :: Sequence, num :: Nat):
+    for List (x in xs,
+              _ in 0..num):
+      x
+  check:
+    [sequence_take((x >=..).to_sequence(), 1), ...] ~is [[1], [2], [3], [4], [5]]
+    [sequence_take((x >=..).to_sequence(), 2), ...] ~is [[1, 0], [2, 1], [3, 2], [4, 3], [5, 4]]
+    [sequence_take((x >..).to_sequence(), 1), ...] ~is [[0], [1], [2], [3], [4]]
+    [sequence_take((x >..).to_sequence(), 2), ...] ~is [[0, -1], [1, 0], [2, 1], [3, 2], [4, 3]]
+
+// `Range.canonicalize` + `ListRange.descending`
+block:
+  import rhombus/meta open
+  expr.macro
+  | 'generate_checks $rge ...':
+      ~op_stx self
+      let check_id = 'check'.relocate(self)
+      fun make_for_check(make_seq):
+        '$check_id:
+           for List (i in $(make_seq('rge.descending()'))):
+             i
+           ~is (for List (i in $(make_seq('rge.canonicalize().descending()'))):
+                  i)'
+      'block:
+         def rge = $rge ...
+         $(make_for_check(fun (rge): rge))
+         $(make_for_check(fun (rge): '$(rge).step_by(-2)'))'
+  generate_checks 0..5
+  generate_checks 0..=5
+  generate_checks 0 <.. 5
+  generate_checks 0 <..= 5
