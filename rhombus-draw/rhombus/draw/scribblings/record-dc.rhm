@@ -1,0 +1,21 @@
+#lang rhombus/static
+import:
+  draw open
+
+def dc = RecordDC([20.0, 10.0])
+
+check:
+  dc.width ~is 20.0
+  dc.height ~is 10.0
+
+dc.pen := Pen(~color: "blue")
+dc.rectangle([[1, 1], [18, 8]])
+dc.text("Hello", ~dx: 10, ~dy: 10)
+
+def bm1 = Bitmap([20, 10])
+def bm2 = Bitmap([20, 10])
+
+dc.get_draw()(bm1.make_dc())
+RecordDC.record_to_draw(dc.get_record())(bm2.make_dc())
+
+check bm1.argb_pixels() ~is_now bm2.argb_pixels()

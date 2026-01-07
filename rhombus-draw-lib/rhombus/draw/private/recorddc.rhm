@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "size.rhm".SizeLike.to_size as SizeLike
+  "dc.rhm".DC
+  "dc.rhm"!internal.SomeDC
+
+export:
+  RecordDC
+
+class RecordDC():
+  extends SomeDC
+
+  constructor (size :: SizeLike):
+    let hand = rkt.make_object(rkt.#{record-dc%},
+                               size.width,
+                               size.height)
+    super(hand)()
+
+  method get_record():
+    rkt.send handle.#{get-recorded-datum}()
+
+  method get_draw() :~ Function.of_arity(1):
+    let proc = rkt.send handle.#{get-recorded-procedure}()
+    fun (dc :: DC):
+      ~name: draw
+      proc(dc.handle)
+
+  export:
+    record_to_draw
+
+  fun record_to_draw(v :: Any) :~ Function.of_arity(1):
+    let proc = rkt.#{recorded-datum->procedure}(v)
+    fun (dc :: DC):
+      ~name: draw
+      proc(dc.handle)

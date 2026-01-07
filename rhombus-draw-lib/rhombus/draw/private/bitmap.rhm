@@ -82,7 +82,9 @@ class Bitmap():
     rkt.send handle.#{ok?}()
 
   method make_dc() :: BitmapDC:
-    ABitmapDC(rkt.send handle.#{make-dc}())
+    let dc = ABitmapDC(rkt.send handle.#{make-dc}())
+    dc.smoothing := #'smoothed
+    dc
 
   method argb_pixels(~x: x :: Nat = 0,
                      ~y: y :: Nat = 0,
@@ -135,7 +137,7 @@ class Bitmap():
             ~exn: Exn.Fail.Annot,
             "not a bitmap handle",
             error.val(handle))
-    _Bitmap(handle)
+    _Bitmap(handle)()
 
 annot.delayed_complete intf.BitmapForward: Bitmap
 
@@ -147,3 +149,5 @@ fun make_platform(size :: SizeLike,
   _Bitmap(rkt.#{make-platform-bitmap}(size.width,
                                       size.height,
                                       ~#{backing-scale}: backing_scale))
+
+intf.set_bitmap_from_handle(Bitmap.from_handle)

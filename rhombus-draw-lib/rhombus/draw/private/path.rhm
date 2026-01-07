@@ -76,19 +76,24 @@ class Path(private _handle):
              ~clockwise = #false):
     rkt.send handle.#{arc}(r.x, r.y, r.width, r.height, start_radians, end_radians, !clockwise)
 
-  method lines([[pt :: PointLike], ...],
+  method lines([pt :: PointLike, ...],
                ~dpt: dpt :: PointLike = Point.zero,
                ~dx: dx :: Real = 0,
                ~dy: dy :: Real = 0):
     rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
 
-  method polygon([[pt :: PointLike], ...],
+  method polygon([pt :: PointLike, ...],
                  ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0,
                  ~dy: dy :: Real = 0):
     rkt.send handle.#{close}()
-    rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
-    rkt.send handle.#{close}()
+    match [pt, ...]
+    | [pt0, pt, ...]:
+        rkt.send handle.#{move-to}(pt0.x, pt0.y)
+        rkt.send handle.#{lines}(PairList[Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
+        rkt.send handle.#{close}()
+    | []:
+        #void
 
   method text_outline(str :: String,
                       ~dpt: dpt :: Point = Point.zero,

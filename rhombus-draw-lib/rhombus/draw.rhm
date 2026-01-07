@@ -15,6 +15,7 @@ import:
   "draw/private/psdc.rhm"
   "draw/private/pdfdc.rhm"
   "draw/private/svgdc.rhm"
+  "draw/private/recorddc.rhm"
   "draw/private/bitmap.rhm"
 
 export:
@@ -33,4 +34,5 @@ export:
   all_from(.psdc)
   all_from(.pdfdc)
   all_from(.svgdc)
+  all_from(.recorddc)
   bitmap.Bitmap

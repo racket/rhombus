@@ -1,0 +1,130 @@
+#lang rhombus/static
+import:
+  draw open
+
+def mono_bm = Bitmap([10, 10], ~has_color: #false)
+block:
+  def dc0 = mono_bm.make_dc()
+  dc0.line([0, 0], [10, 10])
+  dc0.line([10, 0], [0, 10])
+
+check:
+  Color(1, 2, 3) ~is Color(1, 2, 3, 1.0)
+  Color("red") ~is Color("red")
+  Color("red") == (Color("red") with (alpha = 1.0)) ~is #true
+  Color("red") == (Color("red") with (alpha = 0.5)) ~is #false
+  Color("black") ~is Color(0, 0, 0)
+  Color(1, 2, 3, 0.5) == Color(1, 2, 3, 1.0) ~is #false
+  { Color(1, 2, 3), Color(1, 2, 3) }.length() ~is 1
+
+  Color("gray").scale(0.5).red < Color("gray").red ~is #true
+  Color("gray").scale(1.5).red > Color("gray").red ~is #true
+  Color("gray").scale(0.5).alpha == Color("gray").alpha ~is #true
+
+  Color("gray").blend(Color("gray")) == Color("gray") ~is #true
+  Color(0, 0, 0, 0.25).blend(Color(200, 200, 200, 0.75)) ~is Color(150, 150, 150, 0.5)
+
+  Color.from_handle(Color("gray").handle) ~is Color("gray")
+
+check:
+  Pen().color ~is Color("Black")
+  Pen(~width: 2.5).width ~is 2.5
+  Pen(~cap: Pen.Cap.round).cap ~is #'round
+  Pen(~cap: Pen.Cap.projecting).cap ~is #'projecting
+  Pen(~cap: Pen.Cap.butt).cap ~is #'butt
+  Pen(~join: Pen.Join.bevel).join ~is #'bevel
+  Pen(~join: Pen.Join.round).join ~is #'round
+  Pen(~join: Pen.Join.miter).join ~is #'miter
+  Pen(~style: Pen.Style.transparent).style ~is #'transparent
+  Pen(~style: Pen.Style.solid).style ~is #'solid
+  Pen(~style: Pen.Style.dot).style ~is #'dot
+  Pen(~style: Pen.Style.xor_long_dot).style ~is #'xor_long_dot
+  Pen.none.style ~is #'transparent
+  Pen(~stipple: #false).stipple ~is #false
+  Pen(~stipple: mono_bm).stipple!!.size ~is mono_bm.size
+  Pen.from_handle(Pen(~color: "gray").handle).color ~is Color("gray")
+
+check:
+  Brush().color ~is Color("Black")
+  Brush(~style: Brush.Style.transparent).style ~is #'transparent
+  Brush(~style: Brush.Style.solid).style ~is #'solid
+  Brush(~style: Brush.Style.opaque).style ~is #'opaque
+  Brush(~style: Brush.Style.vertical_hatch).style ~is #'vertical_hatch
+  Brush(~stipple: #false).stipple ~is #false
+  Brush(~stipple: mono_bm).stipple!!.size ~is mono_bm.size
+  Brush(~gradient: #false).gradient ~is #false
+  Brush(~gradient: LinearGradient([0, 0], [100, 100], [])).gradient ~is_a LinearGradient
+  Brush(~gradient: RadialGradient([[0, 0], 10], [[100, 100], 20], [])).gradient ~is_a RadialGradient
+  Brush.from_handle(Brush(~color: "gray").handle).color ~is Color("gray")
+
+check:
+  Font().kind ~is #'default
+  Font(~kind: Font.Kind.roman).kind ~is #'roman
+  Font(~size: 10).size ~is 10.0
+  Font(~in_pixels: #'yes).in_pixels ~is #true
+  Font(~style: Font.Style.slant).style ~is #'slant
+  Font(~weight: Font.Weight.bold).weight ~is #'bold
+  Font(~has_underline: #'yes).has_underline ~is #true
+  Font(~smoothing: Font.Smoothing.smoothed).smoothing ~is #'smoothed
+  Font(~hinting: Font.Hinting.unaligned).hinting ~is #'unaligned
+  Font().features ~is Map.by(is_now){}
+  Font(~features: { "aaax": 100 }).features ~is Map.by(is_now){ "aaax": 100 }
+  Font.get_names() ~is_a List.of(String)
+  Font.get_names(~kind: Font.NameListKind.mono) ~is_a List.of(String)
+  Font.get_names(~detail: Font.NameListDetail.font) ~is_a List.of(String)
+  Font.kind_to_name(#'default) ~is_a String
+  Font.from_handle(Font(~size: 10).handle).size ~is 10.0
+
+def rgn = Region()
+
+check:
+  Region().is_empty() ~is #true
+  Region().contains([0, 0]) ~is #false
+  Region().dc ~is #false
+  Region(mono_bm.make_dc()).dc ~is_a DC
+  rgn.polygon([[0, 0], [0, 10], [10, 0]]) ~is #void
+  rgn.contains([3, 3]) ~is #true
+  rgn.contains([8, 8]) ~is #false
+  rgn.rectangle([[0, 0], [10, 10]]) ~is #void
+  rgn.contains([8, 8]) ~is #true
+  rgn.rounded_rectangle([[0, 0], [10, 10]], -0.4) ~is #void
+  rgn.ellipse([[0, 0], [10, 10]]) ~is #void
+  rgn.arc([[0, 0], [10, 10]], 0, math.pi) ~is #void
+  rgn.path(Path(), ~dx: 0, ~dy: 0) ~is #void
+  rgn.union(Region()) ~is #void
+  rgn.intersect(Region()) ~is #void
+  rgn.subtract(Region()) ~is #void
+  rgn.xor(Region()) ~is #void
+  Region().is_empty() ~is #true
+  Region.from_handle(Region().handle).is_empty() ~is #true
+
+def p = Path()
+
+check:
+  Path().bounding_box() ~is [[0.0, 0.0], [0.0, 0.0]] :: RectLike.to_rect
+  p.close() ~is #void
+  p.is_open() ~is #false
+  p.move_to([0, 0]) ~is #void
+  p.is_open() ~is #true
+  p.reset() ~is #void
+  p.is_open() ~is #false
+  p.move_to([0, 0]) ~is #void
+  p.line_to([10, 10]) ~is #void
+  p.curve_to([10, 10], [10, 10], [10, 10]) ~is #void
+  p.lines([[10, 10], [10, 10], [10, 10]]) ~is #void
+  p.polygon([]) ~is #void
+  p.polygon([[10, 10], [10, 10], [10, 10]]) ~is #void
+  p.rectangle([[10, 10], [10, 10]]) ~is #void
+  p.rounded_rectangle([[10, 10], [10, 10]], -0.25) ~is #void
+  p.ellipse([[10, 10], [10, 10]]) ~is #void
+  p.arc([[10, 10], [10, 10]], 0, math.pi) ~is #void
+  p.text_outline("Hello") ~is #void
+  p.text_outline("Hello", ~font: Font(~kind: #'modern)) ~is #void
+  p.scale(1) ~is #void
+  p.scale(1, 2) ~is #void
+  p.rotate(math.pi/2) ~is #void
+  p.translate(0, 0) ~is #void
+  p.transform(Transformation(1, 0, 0, 1, 0, 0)) ~is #void
+  p.append(Path()) ~is #void
+  p.reverse() ~is #void
+  Path.from_handle(p.handle).close() ~is #void

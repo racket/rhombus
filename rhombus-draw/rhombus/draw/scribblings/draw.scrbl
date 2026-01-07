@@ -123,7 +123,8 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
  used as the proportion of the smallest dimension of the rectangle.
 
  If @rhombus(radius) is less than -0.5 or more than half of the width or
- height of @rhombus(r), an exception is thrown.
+ height (respectively) of @rhombus(r), then half of the width or
+ height (respectively) of @rhombus(r) is used, instead.
 
  In @rhombus(#'unsmoothed) or @rhombus(#'aligned)
  @rhombuslink(DC.smoothing){smoothing mode}, the path for the outline is
@@ -377,15 +378,5 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
  tight. Some undefined number of pixels on the left, right, top, and
  bottom of the drawn string may be ``whitespace,'' depending on the whims
  of the font designer and the platform-specific font-scaling mechanism.
-
-}
-
-@doc(
-  method (dc :: draw.DC).font_metrics_key() :: Any
-){
-
- Returns a value that changes according to @rhombus(===) when the
- @rhombuslink(DC.font){current font} is changed to one with different
- metrics.
 
 }

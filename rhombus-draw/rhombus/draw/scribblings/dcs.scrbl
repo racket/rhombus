@@ -15,3 +15,4 @@ output via @rhombus(PDFCS), @rhombus(PSDC), or @rhombus(SVGDC).
 @include_section("dc.scrbl")
 @include_section("bitmap.scrbl")
 @include_section("pageddc.scrbl")
+@include_section("recorddc.scrbl")

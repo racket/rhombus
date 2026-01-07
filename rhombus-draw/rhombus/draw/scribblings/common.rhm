@@ -13,3 +13,6 @@ export:
     all_from(rhombus)
     all_from(rhombus/draw)
     draw
+  ref_doc
+
+def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'

@@ -152,8 +152,8 @@ its current pen, brush, and other state.
 
 @doc(
   property
-  | (dc :: draw.DC).smoothing :: Smoothing
-  | (dc :: draw.DC).smoothing := (s :: Smoothing)
+  | (dc :: draw.DC).smoothing :: DC.Smoothing
+  | (dc :: draw.DC).smoothing := (s :: DC.Smoothing)
 
   property
   | (dc :: draw.DC).alignment_scale :: PosReal

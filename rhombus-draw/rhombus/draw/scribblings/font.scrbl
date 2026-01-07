@@ -235,7 +235,7 @@
   ) :: String
 ){
 
- Returns the font name on he current system that is used whenever the
+ Returns the font name on the current system that is used whenever the
  given @rhombus(kind) is specified.
 
 }

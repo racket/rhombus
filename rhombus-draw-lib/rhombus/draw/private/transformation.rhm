@@ -22,8 +22,8 @@ class Transformation(xx :: Real, yx :: Real,
     Transformation(sx*xx, sy*yx, sx*xy, sy*yy, sx*x0, sy*y0)
 
   method rotate(a :: Real) :~ Transformation:
-    let c = math.cos(a)
-    let s = math.sin(a)
+    let c = math.cos(-a)
+    let s = math.sin(-a)
     Transformation(c*xx + (-s)*yx,
                    s*xx + c*yx,
                    c*xy + (-s)*yy,

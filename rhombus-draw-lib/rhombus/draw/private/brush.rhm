@@ -11,6 +11,7 @@ import:
       symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
   "bitmap-interface.rhm".Bitmap as _Bitmap
+  "bitmap-interface.rhm".bitmap_from_handle
 
 export:
   Brush
@@ -87,7 +88,7 @@ class Brush(private _handle):
 
   property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
-    bm && _Bitmap(bm)
+    bm && bitmap_from_handle(bm)
 
   property gradient :: maybe(LinearGradient || RadialGradient):
     let g = rkt.send handle.#{get-gradient}()

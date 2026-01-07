@@ -10,6 +10,7 @@ import:
       symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
   "bitmap-interface.rhm".Bitmap as _Bitmap
+  "bitmap-interface.rhm".bitmap_from_handle
 
 export:
   Pen
@@ -43,7 +44,7 @@ class Pen(private _handle):
   property join: rkt.send handle.#{get-join}()
   property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
-    bm && _Bitmap(bm)
+    bm && bitmap_from_handle(bm)
 
   reconstructor_fields:
     color: this.color

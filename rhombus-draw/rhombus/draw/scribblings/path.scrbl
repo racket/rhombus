@@ -125,8 +125,9 @@ the time that the path is drawn or used to set a region.
  rounded corner. If @rhombus(radius) is negative, the absolute value is
  used as the proportion of the smallest dimension of the rectangle.
 
- If @rhombus(radius) is less than @rhombus(-0.5) or more than half of
- the width or height of @rhombus(r), an exception is thrown.
+ If @rhombus(radius) is less than -0.5 or more than half of the width or
+ height (respectively) of @rhombus(r), then half of the width or
+ height (respectively) of @rhombus(r) is used, instead.
 
 }
 

@@ -1,0 +1,92 @@
+#lang rhombus/static
+import:
+  draw open
+
+def bm = Bitmap([100, 100])
+def dc = bm.make_dc()
+
+check:
+ dc.pen.color ~is Color(0, 0, 0)
+ dc.pen := Brush() ~throws "DC.pen:"
+ dc.pen := Pen(~color: "red", ~width: 2) ~is #void
+ dc.pen.color ~is Color("red")
+ dc.pen.width ~is 2
+
+check:
+  dc.brush := Pen() ~throws "DC.brush:"
+  dc.brush := Brush(~color: "red") ~is #void
+  dc.brush.color ~is Color("red")
+
+check:
+  dc.font := Pen() ~throws "DC.font:"
+  dc.font := Font(~kind: Font.Kind.roman) ~is #void
+  dc.font.kind ~is #'roman
+
+check:
+  dc.text_color := Pen() ~throws "DC.text_color:"
+  dc.text_color := Color("blue") ~is #void
+  dc.text_color ~is Color("blue")
+
+check:
+  dc.clipping_region := Pen() ~throws "DC.clipping_region:"
+  dc.clipping_region ~is #false
+  dc.clipping_region := Pen() ~throws "DC.clipping_region:"
+  dc.save() ~is #void
+  dc.clipping_region := Region() ~is #void
+  dc.restore() ~is #void
+  dc.clipping_region ~is #false
+  dc.clipping_region := #false ~is #void
+
+check:
+  dc.alpha ~is 1.0
+  dc.alpha := Pen() ~throws "DC.alpha:"
+  dc.alpha := 1.1 ~throws "DC.alpha:"
+  dc.alpha := -0.1 ~throws "DC.alpha:"
+  dc.save() ~is #void
+  dc.alpha := 0.7 ~is #void
+  dc.alpha ~is 0.7
+  dc.start_alpha(0.5) ~is #void
+  dc.alpha ~is 1.0
+  dc.end_alpha() ~is #void
+  dc.alpha ~is 0.7
+  (dc.using_alpha(0.5):
+     check dc.alpha ~is 1.0
+     "ok") ~is "ok"
+  dc.alpha ~is 0.7
+  dc.restore() ~is #void
+  dc.alpha ~is 1.0
+
+check:
+  dc.transformation ~is Transformation(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+  dc.transformation := Pen() ~throws "DC.transformation:"
+  dc.save() ~is #void
+  dc.scale(2) ~is #void
+  dc.transformation ~is Transformation(2.0, 0.0, 0.0, 2.0, 0.0, 0.0)
+  dc.transformation ~is Transformation(1.0, 0.0, 0.0, 1.0, 0.0, 0.0).scale(2, 2)
+  dc.scale(2, 1) ~is #void
+  dc.transformation ~is Transformation(4.0, 0.0, 0.0, 2.0, 0.0, 0.0)
+  dc.translate(10, 10) ~is #void
+  dc.transformation ~is Transformation(4.0, 0.0, 0.0, 2.0, 40.0, 20.0)
+  dc.rotate(math.pi) ~is #void
+  dc.transformation ~is (Transformation(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+                           .rotate(math.pi)
+                           .transform(Transformation(4.0, 0.0, 0.0, 2.0, 40.0, 20.0)))
+  dc.restore() ~is #void
+  dc.transformation ~is Transformation(1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
+check:
+  dc.layered_transformation ~is_a LayeredTransformation
+  dc.layered_transformation := dc.layered_transformation ~is #void
+  dc.layered_transformation := Pen() ~throws "DC.layered_transformation:"
+
+check:
+  dc.smoothing ~is #'smoothed
+  dc.smoothing := Pen() ~throws "DC.smoothing:"
+  dc.save() ~is #void
+  dc.smoothing := #'unsmoothed ~is #void
+  dc.smoothing ~is #'unsmoothed
+  dc.smoothing := #'aligned ~is #void
+  dc.smoothing ~is #'aligned
+  dc.restore() ~is #void
+  dc.smoothing ~is #'smoothed
+  DC.Smoothing.smoothed ~is #'smoothed

@@ -90,9 +90,6 @@ interface DC:
   method clear():
     rkt.send handle.erase()
 
-  method font_metrics_key():
-    rkt.send handle.#{cache-font-metrics-key}()
-
   property
   | pen :: Pen:
       _Pen(rkt.send handle.#{get-pen}())
@@ -204,11 +201,11 @@ interface DC:
     rkt.send handle.#{draw-bitmap-section}(b.handle, dpt.x + dx, dpt.y + dy,
                                            source.x, source.y,
                                            source.width, source.height,
-                                           style, color.handle, mask)
+                                           style, color.handle, mask?.handle)
     #void
 
   method text(str :: String,
-              ~dpt: dpt :: Point = Point.zero,
+              ~dpt: dpt :: PointLike = Point.zero,
               ~dx: dx :: Real = 0,
               ~dy: dy :: Real = 0,
               ~combine: combine :: DC.TextCombine = #'kern,
@@ -292,7 +289,7 @@ fun from_handle(handle) :: DC:
   SomeDC(handle)
 
 class DCDump(pen, brush, font, clipping_region, layered_transformation,
-             alpha, text_color,
+             alpha, text_color, smoothing,
              dump)
 
 class SomeDC(private _handle):
@@ -307,7 +304,7 @@ class SomeDC(private _handle):
 
   override method save():
     dump := DCDump(pen, brush, font, clipping_region, layered_transformation,
-                   alpha, text_color,
+                   alpha, text_color, smoothing,
                    dump)
 
   override method restore():
@@ -326,6 +323,7 @@ class SomeDC(private _handle):
       .layered_transformation
       .alpha
       .text_color
+      .smoothing
       .dump
 
   private implements Printable

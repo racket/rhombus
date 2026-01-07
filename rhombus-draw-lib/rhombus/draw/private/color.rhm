@@ -18,7 +18,7 @@ class Color(private _handle):
 
   constructor
   | (name :: String):
-      super(rkt.send (rkt.#{the-color-database}).#{find-color}(name))
+      super((rkt.send (rkt.#{the-color-database}).#{find-color}(name)) || rkt.make_object(rkt.#{color%}, 0, 0, 0, 1.0))
   | (red :: Byte, green :: Byte, blue :: Byte):
       super(rkt.make_object(rkt.#{color%}, red, green, blue, 1.0))
   | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0)):
@@ -40,6 +40,13 @@ class Color(private _handle):
     alpha: this.alpha
   reconstructor(red, green, blue, alpha):
     Color(red, green, blue, alpha)
+
+  private implements Equatable
+  private override equals(other :~ Color, recur):
+    (handle == other.handle)
+      || (other.red == red && other.green == green && other.blue == blue && other.alpha == alpha)
+  private override hash_code(recur):
+    Equatable.hash_code_combine(12579, Equatable.hash(PairList[red, green, blue, alpha]))
 
   method scale(factor :: NonnegReal) :~ Color:
     if factor <= 1

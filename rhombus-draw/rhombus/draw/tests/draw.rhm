@@ -1,0 +1,97 @@
+#lang rhombus/static
+import:
+  draw open
+
+def bm = Bitmap([100, 100], ~backing_scale: 2)
+def dc = bm.make_dc()
+
+def p = Path()
+p.move_to([0, 0])
+p.line_to([10, 0])
+p.curve_to([10, 5],
+           [10, 5],
+           [5, 5])
+
+def p2 = Path()
+p2.append(p)
+p2.close()
+
+def bm0 = Bitmap([10, 10])
+block:
+  def dc0 = bm0.make_dc()
+  dc0.line([0, 0], [10, 10])
+  dc0.line([10, 0], [0, 10])
+
+def mono_bm = Bitmap([10, 10], ~has_color: #false)
+block:
+  def dc0 = mono_bm.make_dc()
+  dc0.line([0, 0], [10, 10])
+  dc0.line([10, 0], [0, 10])
+
+fun go():
+  check:
+    dc.clear() ~is #void
+
+    dc.point([20, 30]) ~is #void
+    dc.point({#'x: 22, #'y: 30}) ~is #void
+    dc.point({#'x: 24, #'y: 30, #'z: "unknown"}) ~is #void
+    dc.point(Point(16, 30)) ~is #void
+
+    dc.line([20, 30], [30, 20]) ~is #void
+    dc.line(Point(22, 30), Point(30, 22)) ~is #void
+
+    dc.lines([[24, 30], Point(30, 24)]) ~is #void
+    dc.lines([[24, 30], Point(30, 24)], ~dpt: [2, 2]) ~is #void
+    dc.lines([[24, 30], Point(30, 24)], ~dx: 4, ~dy: 4) ~is #void
+
+    dc.polygon([[34, 30], Point(30, 34), [30, 30]]) ~is #void
+    dc.polygon([[34, 30], Point(30, 34), [30, 30]], ~dpt: [2, 2]) ~is #void
+    dc.polygon([[34, 30], Point(30, 34), [30, 30]], ~dx: 4, ~dy: 4) ~is #void
+    dc.polygon([[34, 30], Point(30, 34), [30, 30]], ~dpt: [6, 6], ~fill: DC.Fill.winding) ~is #void
+
+    dc.rectangle([[10, 40], [10, 10]]) ~is #void
+
+    dc.rounded_rectangle([[24, 40], [10, 10]]) ~is #void
+    dc.rounded_rectangle([[24, 40], [10, 10]], -0.5) ~is #void
+    dc.rounded_rectangle([[38, 40], [10, 10]], -0.6) ~is #void
+    dc.rounded_rectangle([[50, 40], [10, 10]], 3) ~is #void
+
+    dc.ellipse([[10, 55], [10, 10]]) ~is #void
+
+    dc.arc([[24, 55], [10, 10]], 0, math.pi) ~is #void
+    dc.arc([[38, 55], [10, 10]], math.pi, 0) ~is #void
+
+    dc.path(p) ~is #void
+    dc.path(p, ~dpt: [10, 70]) ~is #void
+    dc.path(p2, ~dx: 24, ~dy: 70) ~is #void
+
+    dc.bitmap(bm0, ~dpt: [50, 0]) ~is #void
+    dc.bitmap(bm0, ~dpt: [50, 10], ~source: [[2, 2], [6, 6]]) ~is #void
+    dc.bitmap(bm0, ~dpt: [50, 20], ~mask: bm0) ~is #void
+    dc.bitmap(mono_bm, ~dpt: [42, 0], ~color: Color("forestgreen"), ~mask: mono_bm) ~is #void
+    dc.bitmap(mono_bm, ~dpt: [35, 0], ~color: Color("forestgreen")) ~is #void
+    dc.bitmap(mono_bm, ~dpt: [29, 0], ~color: Color("forestgreen"), ~style: DC.BitmapOverlay.opaque) ~is #void
+
+    dc.copy([[40, 0], [20, 20]], [0, 80]) ~is #void
+
+    dc.text("Hefio", ~dpt: [65, 4]) ~is #void
+    dc.text("Hefio", ~dx: 70, ~dy: 20, ~angle: -math.pi * 1/8) ~is #void
+    dc.text("Hefio", ~dpt: [65, 40], ~combine: #'grapheme) ~is #void
+    dc.text("Hefio", ~dpt: [65, 55], ~combine: #'char) ~is #void
+
+    (block:
+       let (w, h, a, d) = dc.text_extent("Hefio")
+       dc.save_and_restore:
+         dc.brush := Brush.none
+         dc.rectangle([[64, 3], [w+2, h+2]])
+         "done") ~is "done"
+
+go()
+
+dc.save_and_restore:
+  dc.pen := Pen(~color: "red")
+  dc.brush := Brush(~color: "pink")
+  dc.font := Font(~kind: #'roman)
+  go()
+
+bm

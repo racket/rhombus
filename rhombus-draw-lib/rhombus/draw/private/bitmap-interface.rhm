@@ -5,6 +5,8 @@ import:
 export:
   Bitmap
   BitmapForward
+  bitmap_from_handle
+  set_bitmap_from_handle
 
 class Bitmap(private _handle):
   nonfinal
@@ -18,3 +20,8 @@ class Bitmap(private _handle):
   abstract property size :: Size
 
 annot.delayed_declare BitmapForward
+
+def mutable bitmap_from_handle = fun (n): error("not ready")
+
+fun set_bitmap_from_handle(f):
+  bitmap_from_handle := f
