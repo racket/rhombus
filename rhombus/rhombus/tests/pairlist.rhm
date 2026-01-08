@@ -14,8 +14,8 @@ block:
     PairList.rest(lst)
     PairList.map(lst, proc) ~method
     PairList.for_each(lst, proc) ~method
-    List.filter(lst) ~method
-    List.partition(lst, proc) ~method
+    PairList.filter(lst) ~method
+    PairList.partition(lst, proc) ~method
     PairList.contains(lst, val, [eql]) ~method
     PairList.index(lst, val, [eql]) ~method
     PairList.find(lst, pred) ~method
@@ -758,3 +758,15 @@ block:
     dynamic(PairList[Posn3D(1, 2, 3), Posn(4, 5), Posn(6, 7)])
   check x.z ~is 3
   check [y.y, ...] ~is [5, 7]
+
+// result info for `PairList.iota`
+block:
+  use_static
+  check:
+    PairList.iota(5) ~is PairList[0, 1, 2, 3, 4]
+    PairList.iota(5).length() ~is 5
+    PairList.iota(5)[0] < dynamic(1) ~is #true
+  check:
+    for List (i in PairList.iota(5)):
+      i < dynamic(1)
+    ~is [#true, #false, #false, #false, #false]

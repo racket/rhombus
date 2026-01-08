@@ -1058,3 +1058,15 @@ block:
   let [x, y, ...] :: [Posn3D, Posn, ...] = dynamic([Posn3D(1, 2, 3), Posn(4, 5), Posn(6, 7)])
   check x.z ~is 3
   check [y.y, ...] ~is [5, 7]
+
+// result info for `List.iota`
+block:
+  use_static
+  check:
+    List.iota(5) ~is [0, 1, 2, 3, 4]
+    List.iota(5).length() ~is 5
+    List.iota(5)[0] < dynamic(1) ~is #true
+  check:
+    for List (i in List.iota(5)):
+      i < dynamic(1)
+    ~is [#true, #false, #false, #false, #false]
