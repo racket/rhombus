@@ -204,8 +204,14 @@ internal state, and the state can even be specific to a particular
  An interface that a class can implement (publicly or privately) to make
  instances of the class work with as a sequence for @rhombus(for)---in
  dynamic mode, but see also @rhombus(sequence, ~class_clause) for
- statically optimizing @rhombus(for) expansions. The interface has a
- single abstract method:
+ statically optimizing @rhombus(for) expansions.@margin_note{When a
+ class both implements @rhombus(Sequenceable, ~class) and includes a
+ @rhombus(sequence, ~class_clause) clause, an instance of the class
+ by itself in an @rhombus(each, ~for_clause) clause of @rhombus(for)
+ will be optimized, while an explicit invocation of the
+ @rhombus(to_sequence, ~datum) method will not go through the
+ optimization. This also applies to the primitive sequenceable
+ objects.} The interface has a single abstract method:
 
 @itemlist(
 
