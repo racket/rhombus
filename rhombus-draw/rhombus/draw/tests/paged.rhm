@@ -1,0 +1,72 @@
+#lang rhombus/static
+import:
+  draw open
+  rhombus/rx open
+
+def cfg = PagedDC.Config(~paper: #'a4)
+check:
+  cfg.margin ~is Size(16.0, 16.0)
+  cfg.editor_margin ~is Size(20.0, 20.0)
+  cfg.translate ~is Point(0.0, 0.0)
+  cfg.scale ~is Size(0.8, 0.8)
+  cfg.paper ~is #'a4
+  cfg.orientation ~is #'portrait
+
+def cfg2 = PagedDC.Config(~margin: [3, 4],
+                          ~editor_margin: [5, 6],
+                          ~translate: [1, 2],
+                          ~scale: [1.2, 1.4],
+                          ~orientation: #'landscape)
+
+fun check_cfg2(cfg2 :: PagedDC.Config):
+  check:
+    cfg2.margin ~is Size(3, 4)
+    cfg2.editor_margin ~is Size(5, 6)
+    cfg2.translate ~is Point(1, 2)
+    cfg2.scale ~is Size(1.2, 1.4)
+    cfg2.paper ~is #'letter
+    cfg2.orientation ~is #'landscape
+
+check_cfg2(cfg2)
+check_cfg2(PagedDC.Config.from_handle(cfg2.handle))
+
+block:
+  def pdf_o = Port.Output.open_bytes()
+
+  def pdf_dc = PDFDC(#'paper,
+                     ~output: pdf_o,
+                     ~config: cfg)
+  pdf_dc.start()
+  check pdf_dc.size ~is Size(743.75, 1052.5)
+  pdf_dc.line([0, 0], [100, 100])
+  pdf_dc.end()
+
+  check rx'bof #"%PDF"'.is_match_in(pdf_o.get_bytes()) ~is #true
+
+
+block:
+  def ps_o = Port.Output.open_bytes()
+
+  def ps_dc = PSDC(#'paper,
+                   ~output: ps_o,
+                   ~config: cfg)
+  ps_dc.start()
+  check ps_dc.size ~is Size(743.75, 1052.5)
+  ps_dc.line([0, 0], [100, 100])
+  ps_dc.end()
+
+  check rx'bof #"%!PS-Adobe"'.is_match_in(ps_o.get_bytes()) ~is #true
+
+block:
+  def svg_o = Port.Output.open_bytes()
+
+  def svg_dc = SVGDC([100, 110],
+                     ~output: svg_o)
+  svg_dc.start_doc()
+  svg_dc.start_page()
+  check svg_dc.size ~is Size(100, 110)
+  svg_dc.line([0, 0], [100, 100])
+  svg_dc.end_page()
+  svg_dc.end_doc()
+
+  check rx'bof #"<?xml"'.is_match_in(svg_o.get_bytes()) ~is #true

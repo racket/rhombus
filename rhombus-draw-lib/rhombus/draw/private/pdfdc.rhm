@@ -10,7 +10,6 @@ import:
   "pageddc.rhm":
     expose:
       PagedDC
-      PaperSize
 
 export:
   PDFDC
@@ -19,15 +18,18 @@ class PDFDC():
   extends SomeDC
   implements PagedDC
 
-  constructor (size :: PaperSize,
-               ~output: output :: Path || Port.Output):
+  constructor (size :: PagedDC.PaperSize,
+               ~output: output :: Path || Port.Output,
+               ~config: config :: PagedDC.Config = PagedDC.Config.current()):
     let size = (size != #'paper) && (size :: SizeLike.to_size)
-    let hand = rkt.make_object(rkt.#{pdf-dc%},
-                               #false, // never interactive
-                               #false, // no GUI parent
-                               !size, // use paper bbox if given `size` is #'paper
-                               #true,
-                               size && Size.width(size),
-                               size && Size.height(size),
-                               output)
+    let hand:
+      parameterize { rkt.#{current-ps-setup}: config.handle }:
+        rkt.make_object(rkt.#{pdf-dc%},
+                        #false, // never interactive
+                        #false, // no GUI parent
+                        !size, // use paper bbox if given `size` is #'paper
+                        #true,
+                        size && Size.width(size),
+                        size && Size.height(size),
+                        output)
     super(hand)()

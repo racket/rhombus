@@ -16,16 +16,16 @@
 
 
 @doc(
-  method (dc :: PagedDC).start(message :: String = "Printing")
+  method (dc :: draw.PagedDC).start(msg :: String = "Printing")
     :: Void
-  method (dc :: PagedDC).end() :: Void
+  method (dc :: draw.PagedDC).end() :: Void
 
-  method (dc :: PagedDC).start_doc(message :: String = "Printing")
+  method (dc :: draw.PagedDC).start_doc(msg :: String = "Printing")
     :: Void
-  method (dc :: PagedDC).end_doc() :: Void
+  method (dc :: draw.PagedDC).end_doc() :: Void
 
-  method (dc :: PagedDC).start_page() :: Void
-  method (dc :: PagedDC).end_page() :: Void
+  method (dc :: draw.PagedDC).start_page() :: Void
+  method (dc :: draw.PagedDC).end_page() :: Void
 ){
 
  Use @rhombus(PagedDC.start) and @rhombus(PagedDC.end) to bound all
@@ -44,8 +44,10 @@
   class draw.PDFDC():
     implements PagedDC
     constructor (
-      size :: PaperSize,
-      ~output: output :: Path || Port.Output
+      size :: PagedDC.PaperSize,
+      ~output: output :: Path || Port.Output,
+      ~config: config :: PagedDC.Config
+                 = PagedDC.Config.current()
     )
 ){
 
@@ -59,9 +61,11 @@
   class draw.PSDC():
     implements PagedDC
     constructor (
-      size :: PaperSize,
+      size :: PagedDC.PaperSize,
       ~output: output :: Path || Port.Output,
-      ~as_eps: as_eps = #true
+      ~as_eps: as_eps = #true,
+      ~config: config :: PagedDC.Config
+                 = PagedDC.Config.current()
     )
 ){
 
@@ -87,7 +91,7 @@
 }
 
 @doc(
-  enum PaperSize
+  enum draw.PagedDC.PaperSize
   | ~is_a SizeLike
   | paper
 ){
@@ -95,5 +99,38 @@
  A size specification to be used with @rhombus(PSDC, ~class) and
  @rhombus(PDFDC, ~class), which allows @rhombus(#'paper) to specify the
  size indirectly as the current paper configuration's size.
+
+}
+
+@doc(
+  class draw.PagedDC.Config(
+    ~margin: margin :: SizeLike.to_size = [16.0, 16.0],
+    ~editor_margin: editor_margin :: SizeLike.to_size = [20.0, 20.0],
+    ~translate: translate :: PointLike.to_point = [0.0, 0.0],
+    ~scale: scale :: SizeLike.to_size = [0.8, 0.8],
+    ~orientation: orientation :: PagedDC.Orientation = #'portrait,
+    ~paper: paper :: PagedDC.Paper = #'letter
+  )
+  Parameter.def draw.PagedDC.Config.current
+    :: PagedDC.Config = PagedDC.Config()
+){
+
+ A @rhombus(PagedDC.Config) object describes a page configuration to be
+ used by a @rhombus(PDFDC) or @rhombus(PSDC) drawing context.
+
+ Most fields affect all drawing, but @rhombus(editor_margin) has no
+ direct effect. The @rhombus(editor_margin) field of the current
+ configuration can be checked when printing a text editor's content, for
+ example.
+
+}
+
+@doc(
+  property (config :: draw.PagedDC.Config).handle :: Any
+  fun draw.PagedDC.Config.from_handle(hand :: Any) :: PagedDC.Config
+){
+
+ Converts between page-configuration objects and Racket-level
+ configuration objects.
 
 }

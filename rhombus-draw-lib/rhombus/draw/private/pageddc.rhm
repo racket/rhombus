@@ -1,12 +1,18 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
-  "size.rhm".SizeLike
+  "size.rhm":
+    expose:
+      Size
+      SizeLike
+  "point.rhm":
+    expose:
+      Point
+      PointLike
   "dc-interface.rhm".DC
 
 export:
   PagedDC
-  PaperSize
 
 interface PagedDC:
   extends: DC
@@ -28,6 +34,72 @@ interface PagedDC:
     end_page()
     end_doc()
 
-enum PaperSize
-| ~is_a SizeLike
-| paper
+  export:
+    Config
+    PaperSize
+    Orientation
+    Paper
+
+  enum PaperSize
+  | ~is_a SizeLike
+  | paper
+
+  enum Orientation
+  | portrait
+  | landscape
+
+  enum Paper
+  | a4
+  | a3
+  | letter
+  | legal
+
+class Config(~margin: margin :: SizeLike.to_size = [16.0, 16.0],
+             ~editor_margin: editor_margin :: SizeLike.to_size = [20.0, 20.0],
+             ~translate: translate :: PointLike.to_point = [0.0, 0.0],
+             ~scale: scale :: SizeLike.to_size = [0.8, 0.8],
+             ~orientation: orientation :: PagedDC.Orientation = #'portrait,
+             ~paper: paper :: PagedDC.Paper = #'letter):
+  ~name: PagedDC.Config
+  property handle:
+    let hand = rkt.make_object(rkt.#{ps-setup%})
+    rkt.send hand.#{set-margin}(margin.width, margin.height)
+    rkt.send hand.#{set-editor-margin}(editor_margin.width, editor_margin.height)
+    rkt.send hand.#{set-scaling}(scale.width, scale.height)
+    rkt.send hand.#{set-translation}(translate.x, translate.y)
+    rkt.send hand.#{set-orientation}(orientation)
+    rkt.send hand.#{set-paper-name}(
+      match paper
+      | PagedDC.Paper.a4: "A4 210 x 297 mm"
+      | PagedDC.Paper.a3: "A3 297 x 420 mm"
+      | PagedDC.Paper.letter: "Letter 8 1/2 x 11 in"
+      | PagedDC.Paper.legal: "Legal 8 1/2 x 14 in"
+    )
+    hand
+
+  export:
+    current
+    from_handle
+
+  Parameter.def current :: Config = Config()
+
+  fun from_handle(hand) :~ Config:
+    ~who: who
+    unless hand rkt.is_a rkt.#{ps-setup%}
+    | error(~who: who, "handle is not a Racket-level printing configuration",
+            error.val(~label: "handle", hand))
+    fun mk(f, get):
+      let b1 = Box(0)
+      let b2 = Box(0)
+      get(b1, b2)
+      f(b1.value, b2.value)
+    Config(~margin: mk(Size, fun (x, y): rkt.send hand.#{get-margin}(x, y)),
+           ~editor_margin: mk(Size, fun (x, y): rkt.send hand.#{get-editor-margin}(x, y)),
+           ~translate: mk(Point, fun (x, y): rkt.send hand.#{get-translation}(x, y)),
+           ~scale: mk(Size, fun (x, y): rkt.send hand.#{get-scaling}(x, y)),
+           ~orientation: rkt.send hand.#{get-orientation}(),
+           ~paper: match rkt.send hand.#{get-paper-name}()
+                   | "A4 210 x 297 mm": PagedDC.Paper.a4
+                   | "A3 297 x 420 mm": PagedDC.Paper.a3
+                   | "Letter 8 1/2 x 11 in": PagedDC.Paper.letter
+                   | "Legal 8 1/2 x 14 in": PagedDC.Paper.legal)
