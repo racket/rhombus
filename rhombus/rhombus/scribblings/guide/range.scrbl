@@ -74,8 +74,10 @@ already shown in @secref("for"). Moreover, ranges in the forms
 Note that ``descending ranges'' created with operators that start with
 @litchar{>} or with the @rhombus(ListRange.descending) method satisfy
 @rhombus(DescendingRange, ~annot), but @emph{not}
-@rhombus(Range, ~annot). They only serve to produce range-like
-sequences in descending order, not as general ranges.
+@rhombus(Range, ~annot). They mainly serve to produce range-like
+sequences in descending order, not as general ranges. Among
+@rhombus(DescendingRange, ~annot) objects, those that are the possible
+results of @rhombus(ListRange.descending) are also listable.
 
 
 @(close_eval(range_eval))

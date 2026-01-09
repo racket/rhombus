@@ -2,6 +2,7 @@
 (require racket/treelist
          racket/mutable-treelist
          "range-struct.rkt"
+         (submod "range-struct.rkt" descending)
          "annotation-failure.rkt")
 
 (provide prop:Listable Listable? Listable-ref
@@ -11,14 +12,22 @@
          to-treelist
          maybe-list->treelist
 
-         set-range->list!)
+         set-range->list!
+         set-descending-range->list!)
 
 (define list-range->list (lambda (v) null))
 (define list-range->treelist (lambda (v) empty-treelist))
 
+(define descending-list-range->list (lambda (v) null))
+(define descending-list-range->treelist (lambda (v) empty-treelist))
+
 (define (set-range->list! ->list ->treelist)
   (set! list-range->list ->list)
   (set! list-range->treelist ->treelist))
+
+(define (set-descending-range->list! ->list ->treelist)
+  (set! descending-list-range->list ->list)
+  (set! descending-list-range->treelist ->treelist))
 
 (define-values (prop:Listable Listable? Listable-ref)
   (make-struct-type-property 'Listable))
@@ -29,6 +38,7 @@
       (vector? v)
       (mutable-treelist? v)
       (list-range? v)
+      (descending-list-range? v)
       (Listable? v)))
 
 (define (to-list who v)
@@ -38,6 +48,7 @@
     [(vector? v) (vector->list v)]
     [(mutable-treelist? v) (mutable-treelist->list v)]
     [(list-range? v) (list-range->list v)]
+    [(descending-list-range? v) (descending-list-range->list v)]
     [(general-to-treelist who v) => treelist->list]
     [else #f]))
 
@@ -48,6 +59,7 @@
     [(vector? v) (vector->treelist v)]
     [(mutable-treelist? v) (mutable-treelist-snapshot v)]
     [(list-range? v) (list-range->treelist v)]
+    [(descending-list-range? v) (descending-list-range->treelist v)]
     [else (general-to-treelist who v)]))
 
 (define (general-to-treelist who v)

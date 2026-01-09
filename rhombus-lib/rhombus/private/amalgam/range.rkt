@@ -47,7 +47,8 @@
                      Range
                      SequenceRange
                      ListRange
-                     DescendingRange)
+                     DescendingRange
+                     DescendingListRange)
          (for-spaces (#f
                       rhombus/repet
                       rhombus/bind)
@@ -65,11 +66,6 @@
 (module+ for-container
   (provide range?
            range-contains?))
-
-(module+ for-listable
-  (provide list-range?
-           list-range->list
-           list-range->treelist))
 
 (module+ for-substring
   (provide range-canonical-start+end))
@@ -148,11 +144,14 @@
   (descending
    to_list))
 
+(define-static-info-getter get-any-descending-range-static-infos
+  (#%sequence-constructor DescendingRange.to_sequence/optimize)
+  (#%sequence-element #,(get-int-static-infos)))
+
 (define-primitive-class DescendingRange descending-range
   #:lift-declaration
   #:no-constructor-static-info
-  #:instance-static-info ((#%sequence-constructor DescendingRange.to_sequence/optimize)
-                          (#%sequence-element #,(get-int-static-infos)))
+  #:instance-static-info #,(get-any-descending-range-static-infos)
   #:existing
   #:just-annot #:no-primitive
   #:fields ()
@@ -168,6 +167,21 @@
   #:methods
   (to_sequence
    step_by))
+
+(define-primitive-class DescendingListRange descending-list-range
+  #:lift-declaration
+  #:no-constructor-static-info
+  #:instance-static-info #,(get-any-descending-range-static-infos)
+  #:existing
+  #:just-annot #:no-primitive
+  #:parent #f descending-range
+  #:fields ()
+  #:namespace-fields
+  ()
+  #:properties
+  ()
+  #:methods
+  (to_list))
 
 (define-values-for-syntax (..-expr-prefix ..-repet-prefix)
   (make-expression&repetition-prefix-operator
@@ -408,7 +422,7 @@
         #`(descending-range-from-to/who '>=..
                                         #,(discard-static-infos left)
                                         #,(discard-static-infos right)))
-       (get-descending-range-static-infos))])
+       (get-descending-list-range-static-infos))])
    'none))
 
 (define-syntax >=..
@@ -429,7 +443,7 @@
        #`(descending-range-from-to-inclusive/who '>=..=
                                                  #,(discard-static-infos left)
                                                  #,(discard-static-infos right)))
-      (get-descending-range-static-infos)))
+      (get-descending-list-range-static-infos)))
    'none))
 
 (define-syntax >=..=
@@ -458,7 +472,7 @@
         #`(descending-range-from-exclusive-to/who '>..
                                                   #,(discard-static-infos left)
                                                   #,(discard-static-infos right)))
-       (get-descending-range-static-infos))])
+       (get-descending-list-range-static-infos))])
    'none))
 
 (define-syntax >..
@@ -479,7 +493,7 @@
        #`(descending-range-from-exclusive-to-inclusive/who '>..=
                                                            #,(discard-static-infos left)
                                                            #,(discard-static-infos right)))
-      (get-descending-range-static-infos)))
+      (get-descending-list-range-static-infos)))
    'none))
 
 (define-syntax >..=
@@ -752,7 +766,7 @@
 
 (define-range range range-full Range.full ".." #:none)
 
-(define-range descending-range descending-range-from-to DescendingRange.from_to ">=.." #:both/descending
+(define-range descending-list-range descending-range-from-to DescendingRange.from_to ">=.." #:both/descending
   #:->sequence descending-range-from-to->sequence)
 
 (define (descending-range-from-to->sequence r step)
@@ -762,7 +776,19 @@
     (i . > . end))
   (range-sequence start step cont?))
 
-(define-range descending-range descending-range-from-to-inclusive DescendingRange.from_to_inclusive ">=..=" #:both/descending
+(define (descending-range-from-to->list r)
+  (define start (descending-range-from-to-start r))
+  (define end (descending-range-from-to-end r))
+  (for/list ([i (in-range start end -1)])
+    i))
+
+(define (descending-range-from-to->treelist r)
+  (define start (descending-range-from-to-start r))
+  (define end (descending-range-from-to-end r))
+  (for/treelist ([i (in-range start end -1)])
+    i))
+
+(define-range descending-list-range descending-range-from-to-inclusive DescendingRange.from_to_inclusive ">=..=" #:both/descending
   #:->sequence descending-range-from-to-inclusive->sequence)
 
 (define (descending-range-from-to-inclusive->sequence r step)
@@ -772,6 +798,18 @@
     (i . >= . end))
   (range-sequence start step cont?))
 
+(define (descending-range-from-to-inclusive->list r)
+  (define start (descending-range-from-to-inclusive-start r))
+  (define end (descending-range-from-to-inclusive-end r))
+  (for/list ([i (in-inclusive-range start end -1)])
+    i))
+
+(define (descending-range-from-to-inclusive->treelist r)
+  (define start (descending-range-from-to-inclusive-start r))
+  (define end (descending-range-from-to-inclusive-end r))
+  (for/treelist ([i (in-inclusive-range start end -1)])
+    i))
+
 (define-range descending-range descending-range-from DescendingRange.from ">=.." #:left/descending
   #:->sequence descending-range-from->sequence)
 
@@ -779,7 +817,7 @@
   (define start (descending-range-from-start r))
   (range-sequence start step #f))
 
-(define-range descending-range descending-range-from-exclusive-to DescendingRange.from_exclusive_to ">.." #:both-not-equal/descending
+(define-range descending-list-range descending-range-from-exclusive-to DescendingRange.from_exclusive_to ">.." #:both-not-equal/descending
   #:->sequence descending-range-from-exclusive-to->sequence)
 
 (define (descending-range-from-exclusive-to->sequence r step)
@@ -789,7 +827,19 @@
     (i . > . end))
   (range-sequence start step cont?))
 
-(define-range descending-range descending-range-from-exclusive-to-inclusive DescendingRange.from_exclusive_to_inclusive ">..=" #:both/descending
+(define (descending-range-from-exclusive-to->list r)
+  (define start (sub1 (descending-range-from-exclusive-to-start r)))
+  (define end (descending-range-from-exclusive-to-end r))
+  (for/list ([i (in-range start end -1)])
+    i))
+
+(define (descending-range-from-exclusive-to->treelist r)
+  (define start (sub1 (descending-range-from-exclusive-to-start r)))
+  (define end (descending-range-from-exclusive-to-end r))
+  (for/treelist ([i (in-range start end -1)])
+    i))
+
+(define-range descending-list-range descending-range-from-exclusive-to-inclusive DescendingRange.from_exclusive_to_inclusive ">..=" #:both/descending
   #:->sequence descending-range-from-exclusive-to-inclusive->sequence)
 
 (define (descending-range-from-exclusive-to-inclusive->sequence r step)
@@ -798,6 +848,18 @@
   (define (cont? i)
     (i . >= . end))
   (range-sequence start step cont?))
+
+(define (descending-range-from-exclusive-to-inclusive->list r)
+  (define start (sub1 (descending-range-from-exclusive-to-inclusive-start r)))
+  (define end (descending-range-from-exclusive-to-inclusive-end r))
+  (for/list ([i (in-inclusive-range start end -1)])
+    i))
+
+(define (descending-range-from-exclusive-to-inclusive->treelist r)
+  (define start (sub1 (descending-range-from-exclusive-to-inclusive-start r)))
+  (define end (descending-range-from-exclusive-to-inclusive-end r))
+  (for/treelist ([i (in-inclusive-range start end -1)])
+    i))
 
 (define-range descending-range descending-range-from-exclusive DescendingRange.from_exclusive ">.." #:left/descending
   #:->sequence descending-range-from-exclusive->sequence)
@@ -828,6 +890,10 @@
 (define (check-descending-range who r)
   (unless (descending-range? r)
     (raise-annotation-failure who r "DescendingRange")))
+
+(define (check-descending-list-range who r)
+  (unless (descending-list-range? r)
+    (raise-annotation-failure who r "DescendingListRange")))
 
 (define/method (Range.start r)
   #:static-infos ((#%call-result #,(get-real-static-infos)))
@@ -1318,11 +1384,11 @@
                                       (range-from-exclusive-to-inclusive-start r))]))
 
 (define/arity (ListRange.descending/bounce r)
-  #:static-infos ((#%call-result #,(get-descending-range-static-infos)))
+  #:static-infos ((#%call-result #,(get-descending-list-range-static-infos)))
   (ListRange.descending r))
 
 (define/method #:direct-id ListRange.descending/bounce (ListRange.descending r)
-  #:static-infos ((#%call-result #,(get-descending-range-static-infos)))
+  #:static-infos ((#%call-result #,(get-descending-list-range-static-infos)))
   (check-list-range who r)
   (list-range->descending-range r))
 
@@ -1506,6 +1572,26 @@
                                      #'unsafe-fx> #'>
                                      #'unsafe-fx>= #'>=))
 
+(define (descending-list-range->list r)
+  (cond
+    [(descending-range-from-to? r) (descending-range-from-to->list r)]
+    [(descending-range-from-to-inclusive? r) (descending-range-from-to-inclusive->list r)]
+    [(descending-range-from-exclusive-to? r) (descending-range-from-exclusive-to->list r)]
+    [else (descending-range-from-exclusive-to-inclusive->list r)]))
+
+(define (descending-list-range->treelist r)
+  (cond
+    [(descending-range-from-to? r) (descending-range-from-to->treelist r)]
+    [(descending-range-from-to-inclusive? r) (descending-range-from-to-inclusive->treelist r)]
+    [(descending-range-from-exclusive-to? r) (descending-range-from-exclusive-to->treelist r)]
+    [else (descending-range-from-exclusive-to-inclusive->treelist r)]))
+
+(define/method (DescendingListRange.to_list r)
+  #:static-infos ((#%call-result ((#%index-result #,(get-int-static-infos))
+                                  #,@(indirect-get-treelist-static-infos))))
+  (check-descending-list-range who r)
+  (descending-list-range->treelist r))
+
 (define-for-syntax (do-range-sequence/inline/optimize id who range-expr range-explode/inline range-explode/inline/rev
                                                       check-sequence-range-stx <?-id sequence-range-normalize-stx
                                                       check-start-end-stx check-start-end/not-equal-stx add1-stx do-sub1
@@ -1620,6 +1706,7 @@
              ((+ pos #,(if step-expr #'step #`'#,default-step))))])
 
 (void (set-range->list! list-range->list list-range->treelist))
+(void (set-descending-range->list! descending-list-range->list descending-list-range->treelist))
 
 (begin-for-syntax
   (void (install-range #'range? #'range-contains? range-explode/inline)))

@@ -561,6 +561,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   annot.macro 'DescendingRange'
+  annot.macro 'DescendingListRange'
 ){
 
  The @rhombus(DescendingRange, ~annot) annotation matches a
@@ -578,6 +579,11 @@ operator, which is the same as @rhombus(Range.contains).
  of optimization in @rhombus(SequenceRange, ~annot) forms also applies
  to @rhombus(DescendingRange, ~annot) forms.
 
+ The @rhombus(DescendingListRange, ~annot) matches a
+ @rhombus(DescendingRange, ~annot) object that is also
+ @tech{listable}. These are precisely the possible results of
+ @rhombus(ListRange.descending).
+
 }
 
 
@@ -592,7 +598,7 @@ operator, which is the same as @rhombus(Range.contains).
   expr.macro '$start_expr >=..'
   repet.macro '$start_repet >=..'
   fun DescendingRange.from_to(start :: Int, end :: Int)
-    :: DescendingRange
+    :: DescendingListRange
   fun DescendingRange.from(start :: Int)
     :: DescendingRange
 ){
@@ -611,7 +617,7 @@ operator, which is the same as @rhombus(Range.contains).
   expr.macro '$start_expr >=..= $end_expr'
   repet.macro '$start_repet >=..= $end_repet'
   fun DescendingRange.from_to_inclusive(start :: Int, end :: Int)
-    :: DescendingRange
+    :: DescendingListRange
 ){
 
  Corresponds to @rhombus(..=) and @rhombus(Range.from_to_inclusive).
@@ -629,7 +635,7 @@ operator, which is the same as @rhombus(Range.contains).
   expr.macro '$start_expr >..'
   repet.macro '$start_repet >..'
   fun DescendingRange.from_exclusive_to(start :: Int, end :: Int)
-    :: DescendingRange
+    :: DescendingListRange
   fun DescendingRange.from_exclusive(start :: Int)
     :: DescendingRange
 ){
@@ -649,7 +655,7 @@ operator, which is the same as @rhombus(Range.contains).
   repet.macro '$start_repet >..= $end_repet'
   fun DescendingRange.from_exclusive_to_inclusive(start :: Int,
                                                   end :: Int)
-    :: DescendingRange
+    :: DescendingListRange
 ){
 
  Corresponds to @rhombus(<..=) and
@@ -659,10 +665,10 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
-  method (rge :: ListRange).descending() :: DescendingRange
+  method (rge :: ListRange).descending() :: DescendingListRange
 ){
 
- Returns a @rhombus(DescendingRange, ~annot) object that has the same
+ Returns a @rhombus(DescendingListRange, ~annot) object that has the same
  integers as @rhombus(rge), by swapping the upper and lower bounds.
 
  When invoked as @rhombus(rge.descending()) in an
@@ -677,6 +683,25 @@ operator, which is the same as @rhombus(Range.contains).
     i
   for List (i in (0 <..= 10).descending().step_by(-3)):
     i
+  (0..5).descending().to_list()
+  [& (0..5).descending()]
+  (0 <..= 5).descending().to_list()
+)
+
+}
+
+
+@doc(
+  method (rge :: DescendingListRange).to_list() :: List.of(Int)
+){
+
+ Implements @rhombus(Listable, ~class) by returning a @tech{list} of
+ integers in @rhombus(rge) in descending order.
+
+@examples(
+  (5 >=.. 0).to_list()
+  [& 5 >=.. 0]
+  (5 >..= 0).to_list()
 )
 
 }
