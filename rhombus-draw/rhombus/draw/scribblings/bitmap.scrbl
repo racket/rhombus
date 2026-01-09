@@ -8,25 +8,23 @@
   class draw.Bitmap():
     constructor (
       size :: SizeLike,
-      ~backing_scale: backing_scale :: PosReal = 1,
-      ~has_color: has_color :: Any = #true,
-      ~has_alpha: has_alpha :: Any = #true
+      ~kind: kind :: Bitmap.Kind = #'alpha,
+      ~backing_scale: backing_scale :: PosReal = 1.0
     )
 ){
 
- Creates a bitmap of the given size in drawing units. If
- @rhombus(has_color) is @rhombus(#false), then the result is a monochrome
- bitmap and @rhombus(has_alpha) is ignored. If @rhombus(has_color) and
- @rhombus(has_alpha) are both true, then the bitmap includes an alpha
+ Creates a bitmap of the given size in drawing units. The @rhombus(kind)
+ argument determines whether the bitmap includes color pixels (versus
+ recording only black or white for each pixel) and whether it includes an alpha
  channel to record the opacity of each pixel in the bitmap. The initial
  content of the bitmap is ``empty'': all white, and with zero opacity in
  the case of a bitmap with an alpha channel.
 
- The @rhombus(backsing_scale) argument determines the bitmap's
+ The @rhombus(backing_scale) argument determines the bitmap's
  @deftech{backing scale}, which is the number of pixels that correspond
  to a drawing unit for the bitmap, either when the bitmap is used as a
  target for drawing or when the bitmap is drawn into another context. A
- monochrome bitmap always has a backing scale of @rhombus(1.0).
+ monochrome bitmap must have a backing scale of @rhombus(1.0).
 
  A bitmap is convertible to @rhombus(#'#{png-bytes}) through the
  @racketmodname(file/convertible, ~indirect) protocol.
@@ -51,10 +49,9 @@
   property (bm :: draw.Bitmap).width :: PosInt
   property (bm :: draw.Bitmap).height :: PosInt
   property (bm :: draw.Bitmap).size :: Size
-  property (bm :: draw.Bitmap).backing_scale :: Real.above(0.0)
+  property (bm :: draw.Bitmap).backing_scale :: PosReal
   property (bm :: draw.Bitmap).depth :: Nat
-  property (bm :: draw.Bitmap).has_color :: Boolean
-  property (bm :: draw.Bitmap).has_alpha :: Boolean
+  property (bm :: draw.Bitmap).kind :: Bitmap.Kind
   property (bm :: draw.Bitmap).is_ok :: Boolean
 ){
 
@@ -183,5 +180,18 @@
  corresponds to the bitmap for use directly with
  @racketmodname(racket/draw). The @rhombus(Bitmap.from_handle) function
  creates a @rhombus(Bitmap, ~class) from such a Racket object.
+
+}
+
+@doc(
+  enum draw.Bitmap.Kind
+  | alpha
+  | color
+  | mono
+){
+
+ Represents the color and alpha content of a bitmap, where
+ @rhombus(#'mono) indicates a monochrome bitmap that keeps only black or
+ white for each pixel.
 
 }

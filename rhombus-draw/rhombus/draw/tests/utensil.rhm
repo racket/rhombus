@@ -2,7 +2,7 @@
 import:
   draw open
 
-def mono_bm = Bitmap([10, 10], ~has_color: #false)
+def mono_bm = Bitmap([10, 10], ~kind: #'mono)
 block:
   def dc0 = mono_bm.make_dc()
   dc0.line([0, 0], [10, 10])

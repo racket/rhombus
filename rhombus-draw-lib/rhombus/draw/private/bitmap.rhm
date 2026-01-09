@@ -42,20 +42,25 @@ class Bitmap():
                       @str{draw.Bitmap([@width, @height])})
 
   constructor (size :: SizeLike,
+               ~kind: kind :: Bitmap.Kind = #'alpha,
                ~backing_scale: backing_scale :: Real.above(0.0) = 1,
-               ~has_color = #true,
                ~has_alpha = #true):
+    ~who: who
+    when !(backing_scale .= 1) && (kind == #'mono)
+    | error(~who: who, "monochromoe bitmap must have a backing scale of 1",
+            error.val(~label: "given scale", backing_scale))
     _Bitmap(rkt.make_object(rkt.#{bitmap%},
                             size.width,
                             size.height,
-                            !has_color,
-                            has_alpha,
+                            kind == #'mono,
+                            kind == #'alpha,
                             backing_scale))()
 
   export:
     make_platform
     read
     from_handle
+    Kind
 
   override property width:
     rkt.send handle.#{get-width}()
@@ -72,11 +77,12 @@ class Bitmap():
   property depth:
     rkt.send handle.#{get-depth}()
 
-  property has_color:
-    rkt.send handle.#{is-color?}()
-
-  property has_alpha:
-    rkt.send handle.#{has-alpha-channel?}()
+  property kind:
+    if rkt.send handle.#{is-color?}()
+    | if rkt.send handle.#{has-alpha-channel?}()
+      | #'alpha
+      | #'color
+    | #'mono
 
   property is_ok:
     rkt.send handle.#{ok?}()
@@ -124,10 +130,10 @@ class Bitmap():
             error.text(~label: "destination", dest))
 
   method copy() :: Bitmap:
-    def bm2 = Bitmap(size,
-                     ~backing_scale: backing_scale,
-                     ~has_color: has_color,
-                     ~has_alpha: has_alpha)
+    def bm2:
+      Bitmap(size,
+             ~backing_scale: backing_scale,
+             ~kind: kind)
     bm2.make_dc().bitmap(this)
     bm2
 
@@ -146,8 +152,14 @@ fun read(name :: PathString || Port.Input) :: Bitmap:
 
 fun make_platform(size :: SizeLike,
                   ~backing_scale: backing_scale :: Real.above(0.0) = 1) :~ Bitmap:
+  ~name: Bitmap.make_platform
   _Bitmap(rkt.#{make-platform-bitmap}(size.width,
                                       size.height,
                                       ~#{backing-scale}: backing_scale))
+
+enum Kind
+| alpha
+| color
+| mono
 
 intf.set_bitmap_from_handle(Bitmap.from_handle)
