@@ -18,8 +18,10 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   annot.macro 'Range'
-  annot.macro 'SequenceRange'
-  annot.macro 'ListRange'
+  annot.macro 'SequenceRange':
+    ~method_fallback Range
+  annot.macro 'ListRange':
+    ~method_fallback SequenceRange
 ){
 
  The @rhombus(Range, ~annot) annotation matches any range.
@@ -561,7 +563,8 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   annot.macro 'DescendingRange'
-  annot.macro 'DescendingListRange'
+  annot.macro 'DescendingListRange':
+    ~method_fallback DescendingRange
 ){
 
  The @rhombus(DescendingRange, ~annot) annotation matches a

@@ -777,6 +777,8 @@
        (gather-in-groups (gather-in-term info #'tag) #'(g ...))]
       [((~and tag alts) b ...)
        (gather-in-terms (gather-in-term info #'tag) #'(b ...))]
+      [((~and tag op) name)
+       (gather-in-term (gather-in-term info #'op) #'name)]
       [_
        (define keys (info-tables-keys info))
        (define binds (info-tables-binds info))

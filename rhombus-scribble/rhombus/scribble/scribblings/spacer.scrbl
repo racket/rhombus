@@ -2,6 +2,7 @@
 @(import:
     "common.rhm" open
     meta_label:
+      scribble/spacer
       scribble/spacer open
       scribble/doc_meta open)
 
@@ -36,7 +37,7 @@ identifier @rhombus(length, ~datum) length might have. See
     context_id: block id
     esc_id: block id
     left_id: block id
-  defn.macro 'bridge $name($maybe_left, $self_id, $tail_id, $context_id, $esc_id):
+  defn.macro 'spacer.bridge $name($maybe_left, $self_id, $tail_id, $context_id, $esc_id):
                 ~in: $space ...
                 $body
                 ...'
@@ -101,8 +102,8 @@ identifier @rhombus(length, ~datum) length might have. See
 }
 
 @doc(
-  fun set(stx :: TermSequence, context :: Context) :: Sequence
-  fun set_group(stx :: Group, context :: Context) :: Group
+  fun spacer.set(stx :: TermSequence, context :: Context) :: Sequence
+  fun spacer.set_group(stx :: Group, context :: Context) :: Group
 ){
 
  Returns a syntax object like @rhombus(stx), but with properties to
@@ -112,20 +113,30 @@ identifier @rhombus(length, ~datum) length might have. See
 }
 
 @doc(
-  fun adjust_term(stx :: Term, context :: Context, esc :: Name)
+  fun spacer.adjust_term(stx :: Term,
+                         context :: Context,
+                         esc :: Name)
     :: Syntax
-  fun adjust_group(stx :: Group, context :: Context, esc :: Name)
+  fun spacer.adjust_group(stx :: Group,
+                          context :: Context,
+                          esc :: Name)
     :: Syntax
-  fun adjust_sequence(stx :: TermSequence, context :: Context,
-                      esc :: Name)
+  fun spacer.adjust_sequence(stx :: TermSequence,
+                             context :: Context,
+                             esc :: Name)
     :: Syntax
-  fun adjust_rest_sequence(head :: TermSequence,
-                           stx :: TermSequence, context :: Context,
-                           esc :: Name)
+  fun spacer.adjust_rest_sequence(head :: TermSequence,
+                                  stx :: TermSequence,
+                                  context :: Context,
+                                  esc :: Name)
     :: Syntax
-  fun adjust_multi(stx :: Syntax, context :: Context, esc :: Name)
+  fun spacer.adjust_multi(stx :: Syntax,
+                          context :: Context,
+                          esc :: Name)
     :: Syntax
-  fun adjust_block(stx :: Block, context :: Context, esc :: Name)
+  fun spacer.adjust_block(stx :: Block,
+                          context :: Context,
+                          esc :: Name)
     :: Syntax
 ){
 
@@ -166,52 +177,56 @@ calling @rhombus(to_string). The result annotation for
 cross-reference information stored by the @rhombus(fun, ~doc)
 documentation form as used to document @rhombus(to_string).
 
-The following syntax property keys (see @rhombus(Syntax/property)) are
+The following syntax property keys (see @rhombus(Syntax.property)) are
 recognized; take care to add them as preserved properties:
 
 @itemlist(
 
- @item{@rhombus(#'spacer_key): used by other syntax objects to refer to
+ @item{@rhombus(#'spacer_key): Used by other syntax objects to refer to
  the one with the property. References to spaced terms generally make
  sense only with in a set of syntax objects that are compiled an
  serialized together, so the value of @rhombus(#'spacer_key) can be a
  gensym created by @rhombus(Symbol.gen).}
 
- @item{@rhombus(#'field): on a field identifier to connect it to an
+ @item{@rhombus(#'field): On a field identifier to connect it to an
  annotation-as-namespace that exports the field, typically by referring
  to another term. A @rhombus(#'field) value can have one of several
  recognized shapes:
 
  @itemlist(
 
-   @item{@rhombus(Pair(#'of, #,(@rhombus(key_symbol, ~var)))): refers to
+   @item{@rhombus(Pair(#'of, #,(@rhombus(key_symbol, ~var)))): Refers to
   another term by it's @rhombus(#'spacer_key) value, where that term
   should have an @rhombus(#'annot) property to describe an annotation name
   that is used as namespace name.}
 
   )}
 
- @item{@rhombus(#'annot): on a field identifier to connect it to a
- namespace name that exports the field, typically by referring to another
- term. A @rhombus(#'annot) value can have one of several recognized
- shapes:
+ @item{@rhombus(#'annot): On an expression or field identifier to
+ connect it to an annotation. A @rhombus(#'annot) value can have one of
+ several recognized shapes:
 
  @itemlist(
 
-   @item{@rhombus(Pair(#'as, #,(@rhombus(key_symbol, ~var)))): refers to
+   @item{@rhombus(Pair(#'as, #,(@rhombus(key_symbol, ~var)))): Refers to
   another term by it's @rhombus(#'spacer_key) value, where that term
   should be an identifier that is used as the namespace name.}
 
-   @item{@rhombus(Pair(#'as_export, id)): provides a namespace name
-  directly as @rhombus(id).}
+   @item{@rhombus(Pair(#'as_export, id)): Provides a namespace name
+  directly as @rhombus(id), where @rhombus(id) has a
+  @rhombus(meta_label, ~impo) binding.}
 
-   @item{@rhombus(Pair(#'result, #,(@rhombus(key_symbol, ~var)))): refers to
+   @item{@rhombus(Pair(#'result, #,(@rhombus(key_symbol, ~var)))): Refers to
   another term by it's @rhombus(#'spacer_key) value, where that term
   should be an identifier that is hyperlinked as a function, and the
   function's result annotation (as recorded in documentation) is used as
   the namespace name.}
 
  )}
+
+ @item{@rhombus(#'parens_annot): Like @rhombus(#'annot), but recognized
+ only on the last term of a group to propagate outside of a form such as
+ parentheses.}
 
  @item{@rhombus(#'bind): on an identifier to indicate that it is a
  binding. A @rhombus(#'bind) value can have one of the following
@@ -235,7 +250,7 @@ recognized; take care to add them as preserved properties:
 Some inference steps may require cross-reference information from
 documentation, such as the result annotation of a function. That
 cross-reference information can be provided by a documentation form that
-is bound by @rhombus(doc.bridge), implemented with
+is bound by @rhombus(doc.bridge, ~defn), implemented with
 @rhombus(doc_meta.transformer), and through an
 @rhombus(~extract_spacer_infos) function that produces a map with the
 following recognized keys:

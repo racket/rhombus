@@ -14,6 +14,11 @@ import:
     rhombus.Set
     rhombus.MutableSet
     rhombus.WeakMutableSet
+    rhombus.Range
+    rhombus.ListRange
+    rhombus.SequenceRange
+    rhombus.DescendingListRange
+    rhombus.DescendingRange
 
 export:
   only_space spacer.typeset:
@@ -45,12 +50,21 @@ export:
     :~
     is_a
     #'
+    ..
+    ..=
+    <..
+    <..=
+    >..
+    >..=
+    >=..
+    >=..=
     names:
       .
       #%literal
       #%call
       #%brackets
       #%braces
+      #%parens
     PairList
     MutableList
     rename:
@@ -900,6 +914,28 @@ spacer.bridge MutableList(self, tail, context, esc):
   ~in: ~expr
   adjust_list_constructor('MutableList', self, tail, context, esc)
 
+spacer.bridge #%parens(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(parens && '($(g :: Group))') $tail ...':
+      let g = spacer.adjust_group(g, context, esc)
+      let parens = '($g)'.relocate(parens)
+      let annot:
+        match g
+        | '$_ ... $t':
+            t.property(#'parens_annot) || t.property(#'annot)
+        | ~else: #false
+      let parens:
+        if annot
+        | parens.property(#'annot, annot, #true)
+        | parens
+      '$(self || '') $(spacer.adjust_rest_sequence(parens, '$tail ...', context, esc))'
+  | '$(parens && '($g, ...)') $tail ...':
+      let parens = '($(spacer.adjust_group(g, context, esc)), ...)'.relocate(parens)
+      '$(self || '') $(spacer.adjust_rest_sequence(parens, '$tail ...', context, esc))'
+  | ~else:
+      spacer.adjust_rest_sequence(self, tail, context, esc)
+
 meta:
   fun adjust_set_map_constructor(id, self, tail, context, esc):
     match tail
@@ -1379,3 +1415,56 @@ spacer.bridge enum(self, tail, context, esc):
               ': $new_clause'.relocate(body)
       '$self $e ... $(Syntax.make([#'alts, new_body, ...]))'
   | ~else: '$self $tail'
+
+meta:
+  fun adjust_range(left, self :~ Syntax, tail, context, esc, ~descending = #false):
+    let prefix_id = 'Range'
+    let infix_id = (if descending | 'DescendingListRange' | 'ListRange')
+    let postfix_id = (if descending | 'DescendingRange' | 'SequenceRange')
+    let alone_id = 'Range'
+    match tail
+    | '':
+        let self = self.property(#'annot, Pair(#'as_export, if (left matches '') | alone_id | postfix_id), #true)
+        '$left $self $tail'
+    | '$tail ...':
+        let tail = spacer.adjust_sequence('$tail ...', context, esc)
+        let tail:
+          match tail
+          | '$t0 ... $t':
+              '$t0 ... $(t.property(#'parens_annot, Pair(#'as_export, if (left matches '') | prefix_id | infix_id), #true))'
+          | ~else: tail
+        '$left $self $tail'
+    | ~else:
+        '$left $self $(spacer.adjust_sequence(tail, context, esc))'
+
+spacer.bridge ..(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc)
+
+spacer.bridge ..=(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc)
+
+spacer.bridge <..(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc)
+
+spacer.bridge <..=(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc)
+
+spacer.bridge >..(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc, ~descending: #true)
+
+spacer.bridge >..=(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc, ~descending: #true)
+
+spacer.bridge >=..(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc, ~descending: #true)
+
+spacer.bridge >=..=(~left: left, self, tail, context, esc):
+  ~in: ~expr
+  adjust_range(left, self, tail, context, esc, ~descending: #true)
