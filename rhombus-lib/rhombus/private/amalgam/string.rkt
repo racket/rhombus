@@ -195,11 +195,13 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-ci-static-infos)
-  (make-get-veneer-like-static-infos get-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-string-static-infos
                                      convert-string-ci-compare-static-info))
 
 (define-for-syntax (get-readable-string-ci-static-infos)
-  (make-get-veneer-like-static-infos get-readable-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-readable-string-static-infos
                                      convert-string-ci-compare-static-info))
 
 (define-annotation-syntax MutableString
@@ -223,11 +225,13 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-locale-static-infos)
-  (make-get-veneer-like-static-infos get-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-string-static-infos
                                      convert-string-locale-compare-static-info))
 
 (define-for-syntax (get-readable-string-locale-static-infos)
-  (make-get-veneer-like-static-infos get-readable-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-readable-string-static-infos
                                      convert-string-locale-compare-static-info))
 
 (define-for-syntax (convert-string-locale-ci-compare-static-info static-info)
@@ -243,11 +247,13 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-locale-ci-static-infos)
-  (make-get-veneer-like-static-infos get-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-string-static-infos
                                      convert-string-locale-compare-static-info))
 
 (define-for-syntax (get-readable-string-locale-ci-static-infos)
-  (make-get-veneer-like-static-infos get-readable-string-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-readable-string-static-infos
                                      convert-string-locale-ci-compare-static-info))
 
 (define-annotation-syntax StringLocale

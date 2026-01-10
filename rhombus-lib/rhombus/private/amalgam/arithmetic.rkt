@@ -12,6 +12,7 @@
          "static-info.rkt"
          "flonum-key.rkt"
          "fixnum-key.rkt"
+         "indirect-static-info-key.rkt"
          "static-info.rkt"
          "rhombus-primitive.rkt"
          "order.rkt"
@@ -58,7 +59,7 @@
 (module+ parse-not
   (provide (for-syntax set-parse-not!)))
 
-(define-static-info-getter get-number-static-infos
+(define-static-info-syntax number-static-infos
   ;; comparison actually requires real numbers, but we want to
   ;; propagate a comparison operation from things like `+`, and
   ;; so it's simplest (and good enough in practice) to overapproximate
@@ -70,6 +71,9 @@
               (!= !=/flfx)
               (>= >=/flfx)
               (> >/flfx))))
+
+(define-static-info-getter get-number-static-infos
+  (#%indirect-static-info number-static-infos))
 
 (define-for-syntax (get-real-static-infos)
   (get-number-static-infos))

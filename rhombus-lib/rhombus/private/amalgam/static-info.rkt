@@ -41,6 +41,7 @@
            static-infos-result-or
            static-infos-result-and
            static-infos-remove
+           static-infos-flatten
            get-dependent-result-proc
            get-empty-static-infos
            static-infos-empty?))
@@ -299,6 +300,9 @@
                               null)]
                          [_ (list a)]))])
          e)))
+
+(define-for-syntax (static-infos-flatten as)
+  (flatten-indirects as))
 
 ;; note that `||` at the annotation level feels like "intersection" on statinfo tables
 (define-for-syntax (static-infos-or as bs)

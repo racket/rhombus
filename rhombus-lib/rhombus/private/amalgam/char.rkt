@@ -88,7 +88,8 @@
     [_ static-info]))
 
 (define-for-syntax (get-char-ci-static-infos)
-  (make-get-veneer-like-static-infos get-char-static-infos
+  (make-get-veneer-like-static-infos static-infos-flatten
+                                     get-char-static-infos
                                      convert-char-ci-compare-static-info))
 
 (define-annotation-syntax CharCI

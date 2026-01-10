@@ -16,6 +16,7 @@
          "function-arity-key.rkt"
          "call-result-key.rkt"
          "dot-provider-key.rkt"
+         "indirect-static-info-key.rkt"
          "composite.rkt"
          "class-desc.rkt"
          "define-arity.rkt"
@@ -152,6 +153,7 @@
          ((syntax-local-value
            (datum->syntax #'parent (string->symbol (format "get-~a-field-list" (syntax-e #'parent))))))
          null)
+     #:with name-static-infos (datum->syntax #'name (string->symbol (format "~a-static-infos" (syntax-e #'name))))
      #:with get-name-static-infos (datum->syntax #'name (string->symbol (format "get-~a-static-infos" (syntax-e #'name))))
      #:with Name-str (datum->syntax #'here (symbol->immutable-string (syntax-e #'Name)))
      #:with name-instance (datum->syntax #'here (string->symbol (format "~a-instance" (syntax-e #'name))))
@@ -232,9 +234,12 @@
                                   (get-parent-instances))
                (quote-syntax name-instance)))
 
-         (define-static-info-getter get-name-static-infos
+         (define-static-info-syntax name-static-infos
            #,#'(#%dot-provider #,(get-name-instances))
            . instance-static-infos)
+
+         (define-static-info-getter get-name-static-infos
+           (#%indirect-static-info name-static-infos))
 
          #,@(if (attribute constructor-static-infos)
                 (with-syntax ([arity-mask
