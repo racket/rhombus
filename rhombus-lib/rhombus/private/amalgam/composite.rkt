@@ -6,6 +6,7 @@
                      "keyword-sort.rkt"
                      "maybe-as-original.rkt"
                      "origin.rkt")
+         racket/treelist
          "parse.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -431,7 +432,13 @@
              #`(lambda () #,get-rest))
          #`(get-rest-getters
             '(rest.bind-id ...)
-            (for/list ([x (#,rest-to-repetition #,get-rest)]) x)
+            #,(cond
+                [(free-identifier=? rest-to-repetition #'in-list)
+                 get-rest]
+                [(free-identifier=? rest-to-repetition #'in-treelist)
+                 #`(treelist->list #,get-rest)]
+                [else
+                 #`(for/list ([x (#,rest-to-repetition #,get-rest)]) x)])
             (lambda (arg-id)
               (rest.matcher-id arg-id rest.data
                                if/blocked

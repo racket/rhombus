@@ -340,13 +340,21 @@
 (define-for-syntax (build-for for-form clauses body)
   (syntax-parse clauses
     [([(id) (in-form e)])
-     #:when (and (or (and (free-identifier=? for-form #'for/list)
-                          (free-identifier=? #'in-form #'in-list))
-                     (and (free-identifier=? for-form #'for/treelist)
-                          (free-identifier=? #'in-form #'in-treelist)))
+     #:when (and (or (free-identifier=? for-form #'for/list)
+                     (free-identifier=? for-form #'for/treelist))
+                 (or (free-identifier=? #'in-form #'in-list)
+                     (free-identifier=? #'in-form #'in-treelist))
                  (identifier? body)
                  (free-identifier=? body #'id))
-     #'e]
+     (cond
+       [(free-identifier=? for-form #'for/list)
+        (if (free-identifier=? #'in-form #'in-list)
+            #'e
+            #'(treelist->list e))]
+       [else
+        (if (free-identifier=? #'in-form #'in-treelist)
+            #'e
+            #'(list->treelist e))])]
     [else #`(#,for-form #,clauses #,(discard-static-infos body))]))
 
 (define-for-syntax (raise-wrong-depth expr used-depth-stx want-depth actual-depth
