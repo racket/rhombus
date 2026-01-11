@@ -741,8 +741,8 @@ operator, which is the same as @rhombus(Range.contains).
 
  When invoked as @rhombus(rge.step_by(step)) in an
  @rhombus(each, ~for_clause) clause of @rhombus(for), the sequence is
- optimized, in cooperation with the optimization in @rhombus(..),
- @rhombus(..=), @rhombus(<..), @rhombus(<..=), or
+ optimized, in cooperation with the optimization in @rhombus(>=..),
+ @rhombus(>=..=), @rhombus(>..), @rhombus(>..=), or
  @rhombus(ListRange.descending).
 
 @examples(
