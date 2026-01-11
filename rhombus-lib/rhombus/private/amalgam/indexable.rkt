@@ -9,6 +9,8 @@
          racket/mutability
          racket/treelist
          racket/mutable-treelist
+         (only-in racket/private/for
+                  stream?)
          "provide.rkt"
          "repetition.rkt"
          (submod "annotation.rkt" for-class)
@@ -25,7 +27,8 @@
          "parens.rkt"
          (submod "map-maybe.rkt" for-print)
          (only-in (submod "function-parse.rkt" for-build)
-                  find-call-result-at))
+                  find-call-result-at)
+         (submod "stream.rkt" for-index))
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -62,6 +65,7 @@
       (bytes? v)
       (mutable-treelist? v)
       (map-maybe? v)
+      (stream? v)
       (Indexable? v)))
 
 (define-class-desc-syntax Indexable
@@ -238,6 +242,7 @@
     [(string? indexable) (string-ref indexable index)]
     [(bytes? indexable) (bytes-ref indexable index)]
     [(mutable-treelist? indexable) (mutable-treelist-ref indexable index)]
+    [(stream? indexable) (Stream.get indexable index)]
     [else
      (define ref (indexable-ref indexable #f))
      (unless ref

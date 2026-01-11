@@ -32,7 +32,7 @@ A list is @tech{indexable} using @brackets to access a list
 element by position via
 @rhombus(#%index). A list also works with the @rhombus(++) operator
 to append lists. A list supports @tech{membership tests} using
-the @rhombus(in) operator. A list can be used as @tech{sequence}, in which case
+the @rhombus(in) operator. A list can be used as @tech{stream} or @tech{sequence}, in which case
 it supplies its elements in order.
 
 Two lists are equal by @rhombus(==) if they have the same length and

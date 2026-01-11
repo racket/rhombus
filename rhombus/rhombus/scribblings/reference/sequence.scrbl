@@ -13,7 +13,7 @@ can be defined by calling @rhombus(Sequence.make),
 @rhombus(Sequence.instantiable), or implementing
 @rhombus(Sequenceable, ~class).
 
-A sequence is more general than a list or stream in that it can have
+A sequence is more general than a list or @tech{stream} in that it can have
 internal state, and the state can even be specific to a particular
 @deftech{instantiation} of the sequence for a new iteration.
 
@@ -77,6 +77,22 @@ internal state, and the state can even be specific to a particular
   has_more()
   ~error:
     next()
+)
+
+}
+
+@doc(
+  fun Sequence.to_stream(seq :: Sequence)
+    :: Stream.expect_of(Any.like_element(seq))
+){
+
+ Converts a @tech{sequence} to a @tech{stream} by lazily demanding and
+ caching elements of the sequence.
+
+@examples(
+  def stm = Sequence.to_stream(0 ..)
+  stm.rest.rest.rest.first
+  stm.rest.rest.rest.first
 )
 
 }

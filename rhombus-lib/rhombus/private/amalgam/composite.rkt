@@ -45,6 +45,7 @@
                                                   #:index-result-info? [index-result-info? #f]
                                                   #:sequence-element-info? [sequence-element-info? #f]
                                                   #:list-index-static-infos? [list-index-static-infos? #f]
+                                                  #:stream-element-info? [stream-element-info? #f]
                                                   #:rest-accessor [rest-accessor #f] ; for a list-like "rest"
                                                   #:rest-to-repetition [rest-to-repetition #'in-list] ; to convert "rest" to a sequence
                                                   #:rest-repetition? [rest-repetition? #t] ; #t, #f, or 'pair
@@ -82,7 +83,7 @@
            #,steppers #,accessors #,static-infoss
            (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
            #,(length post-args)
-           #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos?
+           #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos? #,stream-element-info?
            #,(and rest-arg
                   #`(#,rest-accessor
                      #,rest-to-repetition
@@ -103,7 +104,7 @@
                       steppers accessors ((static-info ...) ...)
                       (infoer-id ...) (data ...)
                       num-post
-                      accessor->info? index-result-info? sequence-element-info? list-index-static-infos?
+                      accessor->info? index-result-info? sequence-element-info? list-index-static-infos? stream-element-info?
                       rest-data))
      #:with (arg-static-infos ...) (cond
                                      [(syntax-e #'accessor->info?)
@@ -119,14 +120,21 @@
                                              (extract-index-result si i)))]
                                      [else
                                       (define infos
-                                        (or (and (syntax-e #'index-result-info?)
+                                        (or (and (or (syntax-e #'index-result-info?)
+                                                     (syntax-e #'stream-element-info?))
                                                  (extract-index-uniform-result
                                                   (static-info-lookup #'static-infos #'#%index-result)))
-                                            (and (syntax-e #'sequence-element-info?)
+                                            (and (or (syntax-e #'sequence-element-info?)
+                                                     (syntax-e #'stream-element-info?))
                                                  (static-info-lookup #'static-infos #'#%sequence-element))
                                             #'()))
-                                      (for/list ([accessor (in-list (syntax->list #'accessors))])
-                                        infos)])
+                                      (for/list ([accessor (in-list (syntax->list #'accessors))]
+                                                 [i (in-naturals)])
+                                        (if (and (i . > . 0)
+                                                 (syntax-e #'stream-element-info?)
+                                                 (not (static-infos-empty? infos)))
+                                            #`((#%sequence-element #,infos))
+                                            infos))])
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 

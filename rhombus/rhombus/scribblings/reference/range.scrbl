@@ -7,7 +7,7 @@
 
 A @deftech{range}@intro_note("range", "ranges") represents a contiguous
 set of integers between two points. When the starting point is
-not @rhombus(#neginf), the range can be used as a @tech{sequence}; in addition,
+not @rhombus(#neginf), the range can be used as a @tech{stream} or @tech{sequence}; in addition,
 when the ending point is not @rhombus(#inf), the range is
 @tech{listable}. Generally, the starting point must be less than or
 equal to the ending point, so that the lower bound is ``less than or
@@ -27,7 +27,7 @@ operator, which is the same as @rhombus(Range.contains).
  The @rhombus(Range, ~annot) annotation matches any range.
 
  The @rhombus(SequenceRange, ~annot) annotation matches a range that
- can be used as a @tech{sequence}. Such a range has a
+ can be used as a @tech{stream} or @tech{sequence}. Such a range has a
  non-@rhombus(#neginf) starting point.
 
  The @rhombus(ListRange, ~annot) annotation matches a range that is
@@ -306,15 +306,11 @@ operator, which is the same as @rhombus(Range.contains).
   method (rge :: Range).is_empty() :: Boolean
 ){
 
- Returns @rhombus(#true) if @rhombus(rge) is an @deftech{empty range},
- @rhombus(#false) otherwise. An empty range is empty
- ``by definition,'' meaning that its lower bound is ``equal to'' its
- upper bound, and therefore it cannot have anything at all in the
- range that it represents. By contrast, a range may have no integers
- even if its lower bound is strictly ``less than'' its upper bound
- (but it may well have real numbers, in principle); in such case, use
- @rhombus(rge.canonicalize().is_empty()) to check for its
- ``emptiness.''
+ Returns @rhombus(#true) if @rhombus(rge) has no integers.
+
+ A range can count as empty even if real numbers exist between its
+ bounds, as in @rhombus(3 <.. 4), where the exclusive bounds @rhombus(3)
+ and @rhombus(4) rule out all integers.
 
 @examples(
   (3..4).is_empty()
@@ -322,7 +318,6 @@ operator, which is the same as @rhombus(Range.contains).
   (3..3).is_empty()
   (3 <..= 3).is_empty()
   (3 <.. 4).is_empty()
-  (3 <.. 4).canonicalize().is_empty()
 )
 
 }
@@ -562,6 +557,30 @@ operator, which is the same as @rhombus(Range.contains).
 
 
 @doc(
+  property (rge :: SequenceRange).first :: Int
+  property (rge :: SequenceRange).rest :: SequenceRange
+){
+
+ For a non-empty range, produces the first integer in @rhombus(rge) or a
+ range that is like @rhombus(rge) without its first element.
+
+ The @rhombus(SequenceRange.rest) property produces a range that is
+ inclusive for its start and end points the same as @rhombus(rge), except
+ that a range constructed by @rhombus(..=) or
+ @rhombus(Range.from_to_inclusive) cannot be empty, so the result uses
+ @rhombus(..).
+
+@examples(
+  (10 ..).first
+  (10 ..).rest
+  (0 <..= 10).rest
+  (1 ..= 1).rest
+)
+
+}
+
+
+@doc(
   annot.macro 'DescendingRange'
   annot.macro 'DescendingListRange':
     ~method_fallback DescendingRange
@@ -586,6 +605,8 @@ operator, which is the same as @rhombus(Range.contains).
  @rhombus(DescendingRange, ~annot) object that is also
  @tech{listable}. These are precisely the possible results of
  @rhombus(ListRange.descending).
+
+ A descending range can be used as a @tech{stream} or @tech{sequence}.
 
 }
 
@@ -750,6 +771,33 @@ operator, which is the same as @rhombus(Range.contains).
     i
   for List (i in (10 >..= 0).step_by(-3)):
     i
+)
+
+}
+
+
+@doc(
+  property (rge :: DescendingRange).first :: Int
+  property (rge :: DescendingRange).rest :: DescendingRange
+  method (rge :: DescendingRange).is_empty() :: Boolean
+){
+
+ Produces the first integer in a non-empty @rhombus(rge), produces a
+ descending range that is like a non-empty @rhombus(rge) without its
+ first element, or checks whether @rhombus(rge) is empty.
+
+ The @rhombus(DescendingRange.rest) property produces a descending range
+ that is inclusive for its start and end points the same as
+ @rhombus(rge), except that a range constructed by @rhombus(>=..=) or
+ @rhombus(DescendingRange.from_to_inclusive) cannot be empty, so the
+ result uses @rhombus(>..=).
+
+@examples(
+  (10 >.. 0).first
+  (10 >.. 0).rest
+  (10 >.. 0).is_empty()
+  (1 >=..= 1).rest
+  (1 >=..= 1).rest.is_empty()
 )
 
 }

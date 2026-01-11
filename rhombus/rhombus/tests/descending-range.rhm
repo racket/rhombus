@@ -13,6 +13,9 @@ block:
     DescendingRange.to_sequence(rge) ~method
     DescendingRange.step_by(rge, step) ~method
     DescendingListRange.to_list(rge) ~method
+    DescendingRange.is_empty(rge) ~method
+    DescendingRange.first(rge)
+    DescendingRange.rest(rge)
 
 // basic sanity checks
 check:
@@ -978,3 +981,44 @@ block:
   generate_checks ..=
   generate_checks <..
   generate_checks <..=
+
+def empty_msg = "DescendingRange && !satisying(DescendingRange.is_empty)"
+
+check:
+  (10 >.. 0).first ~is 9
+  (2 >.. 0).first ~is 1
+  (10 >..= 0).first ~is 9
+  (1 >..= 0).first ~is 0
+  (10 >=.. 0).first ~is 10
+  (1 >=.. 0).first ~is 1
+  (10 >=..= 0).first ~is 10
+  (0 >=..= 0).first ~is 0
+  (1 >.. 0).first ~throws empty_msg
+  (0 >..= 0).first ~throws empty_msg
+  (0 >=.. 0).first ~throws empty_msg
+
+check:
+  (10 >.. 0).rest ~is 9 >.. 0
+  (2 >.. 0).rest ~is 1 >.. 0
+  (10 >..= 0).rest ~is 9 >..= 0
+  (1 >..= 0).rest ~is 0 >..= 0
+  (10 >=.. 0).rest ~is 9 >=.. 0
+  (1 >=.. 0).rest ~is 0 >=.. 0
+  (10 >=..= 0).rest ~is 9 >=..= 0
+  (0 >=..= 0).rest ~is -1 >..= -1 // must switch to `>..=`
+  (1 >.. 0).rest ~throws empty_msg
+  (0 >..= 0).rest ~throws empty_msg
+  (0 >=.. 0).rest ~throws empty_msg
+
+check:
+  (10 >.. 0).is_empty() ~is #false
+  (2 >.. 0).is_empty() ~is #false
+  (10 >..= 0).is_empty() ~is #false
+  (1 >..= 0).is_empty() ~is #false
+  (10 >=.. 0).is_empty() ~is #false
+  (1 >=.. 0).is_empty() ~is #false
+  (10 >=..= 0).is_empty() ~is #false
+  (0 >=..= 0).is_empty() ~is #false
+  (1 >.. 0).is_empty() ~is #true
+  (0 >..= 0).is_empty() ~is #true
+  (0 >=.. 0).is_empty() ~is #true

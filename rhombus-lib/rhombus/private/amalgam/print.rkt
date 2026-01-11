@@ -6,6 +6,9 @@
          racket/mutability
          racket/treelist
          racket/mutable-treelist
+         (only-in racket/private/for
+                  stream?
+                  stream-empty?)
          shrubbery/write
          "../version-case.rkt"
          "provide.rkt"
@@ -485,6 +488,13 @@
     [(map-maybe? v)
      (pretty-concat (print (map-maybe-ht v))
                     (pretty-text ".maybe"))]
+    [(stream? v)
+     (if (stream-empty? v)
+         (pretty-text "Stream.empty")
+         (pretty-listlike
+          (pretty-text "Stream.cons(")
+          (list (pretty-text "..."))
+          (pretty-text ")")))]
     [(sequence? v)
      (pretty-listlike
       (pretty-text "Sequence.make(")

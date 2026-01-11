@@ -12,6 +12,8 @@
                   unsafe-fx<=
                   unsafe-fx>
                   unsafe-fx>=)
+         (only-in racket/private/for
+                  prop:stream)
          racket/treelist
          "range-struct.rkt"
          (submod "range-struct.rkt" descending)
@@ -123,7 +125,8 @@
   #:namespace-fields
   ()
   #:properties
-  ()
+  ([first SequenceRange.first  (lambda (s) (get-int-static-infos))]
+   [rest SequenceRange.rest (lambda (s) (get-sequence-range-static-infos))])
   #:methods
   (to_sequence
    step_by))
@@ -163,9 +166,11 @@
    [from_exclusive_to_inclusive DescendingRange.from_exclusive_to_inclusive]
    [from_exclusive DescendingRange.from_exclusive])
   #:properties
-  ()
+  ([first DescendingRange.first  (lambda (s) (get-int-static-infos))]
+   [rest DescendingRange.rest (lambda (s) (get-descending-range-static-infos))])
   #:methods
-  (to_sequence
+  (is_empty
+   to_sequence
    step_by))
 
 (define-primitive-class DescendingListRange descending-list-range
@@ -570,7 +575,8 @@
                                            (~parse end #'end)
                                            (~parse check-start-end #'check-start-end/not-equal/descending)
                                            (~bind [descending? #t])))
-        (~optional (~seq #:->sequence ->sequence)))
+        (~optional (~seq #:->sequence ->sequence))
+        (~optional (~seq #:stream stream-is_empty stream-first stream-rest)))
      #:with range-method-table (datum->syntax
                                 #'range
                                 (string->symbol
@@ -627,7 +633,11 @@
                                      (pretty-text 'op-str)
                                      (~? (~@ (pretty-text " ")
                                              (PrintDesc-doc (recur (name-end v)))))))
-          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r 'default-step))))))
+          (~? (~@ #:property prop:sequence (lambda (r) (->sequence r 'default-step))
+                  #:property prop:stream (vector
+                                          (lambda (s) ((~? stream-is_empty Range.is_empty) s))
+                                          (lambda (s) ((~? stream-first SequenceRange.first) s))
+                                          (lambda (s) ((~? stream-rest SequenceRange.rest) s)))))))
      (syntax-local-lift-module-end-declaration
       #'(define-primitive-class Name name
           #:existing
@@ -759,7 +769,11 @@
 
 (define-range range range-full Range.full ".." #:none)
 
-(define-range descending-list-range descending-range-from-to DescendingRange.from_to ">=.." #:both/descending
+(define-syntax-rule (define-descending-range arg ...)
+  (define-range arg ...
+    #:stream DescendingRange.is_empty DescendingRange.first DescendingRange.rest))
+
+(define-descending-range descending-list-range descending-range-from-to DescendingRange.from_to ">=.." #:both/descending
   #:->sequence descending-range-from-to->sequence)
 
 (define (descending-range-from-to->sequence r step)
@@ -781,7 +795,7 @@
   (for/treelist ([i (in-range start end -1)])
     i))
 
-(define-range descending-list-range descending-range-from-to-inclusive DescendingRange.from_to_inclusive ">=..=" #:both/descending
+(define-descending-range descending-list-range descending-range-from-to-inclusive DescendingRange.from_to_inclusive ">=..=" #:both/descending
   #:->sequence descending-range-from-to-inclusive->sequence)
 
 (define (descending-range-from-to-inclusive->sequence r step)
@@ -803,14 +817,14 @@
   (for/treelist ([i (in-inclusive-range start end -1)])
     i))
 
-(define-range descending-range descending-range-from DescendingRange.from ">=.." #:left/descending
+(define-descending-range descending-range descending-range-from DescendingRange.from ">=.." #:left/descending
   #:->sequence descending-range-from->sequence)
 
 (define (descending-range-from->sequence r step)
   (define start (descending-range-from-start r))
   (range-sequence start step #f))
 
-(define-range descending-list-range descending-range-from-exclusive-to DescendingRange.from_exclusive_to ">.." #:both-not-equal/descending
+(define-descending-range descending-list-range descending-range-from-exclusive-to DescendingRange.from_exclusive_to ">.." #:both-not-equal/descending
   #:->sequence descending-range-from-exclusive-to->sequence)
 
 (define (descending-range-from-exclusive-to->sequence r step)
@@ -832,7 +846,7 @@
   (for/treelist ([i (in-range start end -1)])
     i))
 
-(define-range descending-list-range descending-range-from-exclusive-to-inclusive DescendingRange.from_exclusive_to_inclusive ">..=" #:both/descending
+(define-descending-range descending-list-range descending-range-from-exclusive-to-inclusive DescendingRange.from_exclusive_to_inclusive ">..=" #:both/descending
   #:->sequence descending-range-from-exclusive-to-inclusive->sequence)
 
 (define (descending-range-from-exclusive-to-inclusive->sequence r step)
@@ -854,7 +868,7 @@
   (for/treelist ([i (in-inclusive-range start end -1)])
     i))
 
-(define-range descending-range descending-range-from-exclusive DescendingRange.from_exclusive ">.." #:left/descending
+(define-descending-range descending-range descending-range-from-exclusive DescendingRange.from_exclusive ">.." #:left/descending
   #:->sequence descending-range-from-exclusive->sequence)
 
 (define (descending-range-from-exclusive->sequence r step)
@@ -930,6 +944,9 @@
     [(range-from-to? r)
      (eqv? (range-from-to-start r)
            (range-from-to-end r))]
+    [(range-from-exclusive-to? r)
+     (eqv? (add1 (range-from-exclusive-to-start r))
+           (range-from-exclusive-to-end r))]
     [(range-from-exclusive-to-inclusive? r)
      (eqv? (range-from-exclusive-to-inclusive-start r)
            (range-from-exclusive-to-inclusive-end r))]
@@ -1283,6 +1300,68 @@
   (check-pos-int who step)
   (sequence-range->sequence r step))
 
+(define (sequence-range-stream-op who r next?)
+  (define (wrong)
+    (raise-annotation-failure who r "SequenceRange && !satisying(Range.is_empty)"))
+  (cond
+    [(range-from-to? r)
+     (define start (range-from-to-start r))
+     (define end (range-from-to-end r))
+     (if (start . < . end)
+         (if next?
+             (range-from-to (add1 start) end)
+             start)
+         (wrong))]
+    [(range-from-to-inclusive? r)
+     (define start (range-from-to-inclusive-start r))
+     (define end (range-from-to-inclusive-end r))
+     (if (start . <= . end)
+         (if next?
+             (if (start . = . end)
+                 (range-from-to (add1 start) (add1 start))
+                 (range-from-to-inclusive (add1 start) end))
+             start)
+         (wrong))]
+    [(range-from? r)
+     (define start (range-from-start r))
+     (if next?
+         (range-from (add1 start))
+         start)]
+    [(range-from-exclusive-to? r)
+     (define start+1 (add1 (range-from-exclusive-to-start r)))
+     (define end (range-from-exclusive-to-end r))
+     (if (start+1 . < . end)
+         (if next?
+             (range-from-exclusive-to start+1 end)
+             start+1)
+         (wrong))]
+    [(range-from-exclusive-to-inclusive? r)
+     (define start (range-from-exclusive-to-inclusive-start r))
+     (define end (range-from-exclusive-to-inclusive-end r))
+     (if (start . < . end)
+         (if next?
+             (range-from-exclusive-to-inclusive (add1 start) end)
+             (add1 start))
+         (wrong))]
+    [(range-from-exclusive? r)
+     (define start+1 (add1 (range-from-exclusive-start r)))
+     (if next?
+         (range-from-exclusive start+1)
+         start+1)]
+    [else (wrong)]))
+
+(define/method (SequenceRange.first r)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (define (wrong)
+    (raise-annotation-failure who r "SequenceRange && !satisying(Range.is_empty)"))
+  (sequence-range-stream-op who r #f))
+
+(define/method (SequenceRange.rest r)
+  #:static-infos ((#%call-result #,(get-sequence-range-static-infos)))
+  (define (wrong)
+    (raise-annotation-failure who r "SequenceRange && !satisying(Range.is_empty)"))
+  (sequence-range-stream-op who r #t))
+
 (define-for-syntax (range-explode/inline range-expr)
   (define-values (who-stx start-expr start-type end-expr end-type)
     (syntax-parse range-expr
@@ -1622,6 +1701,68 @@
                                   #,@(indirect-get-treelist-static-infos))))
   (check-descending-list-range who r)
   (descending-list-range->treelist r))
+
+(define (descending-range-stream-op who r next?)
+  (define (wrong)
+    (raise-annotation-failure who r "DescendingRange && !satisying(DescendingRange.is_empty)"))
+  (cond
+    [(descending-range-from-to? r)
+     (define start (descending-range-from-to-start r))
+     (define end (descending-range-from-to-end r))
+     (if (start . > . end)
+         (if next?
+             (descending-range-from-to (sub1 start) end)
+             start)
+         (wrong))]
+    [(descending-range-from-to-inclusive? r)
+     (define start (descending-range-from-to-inclusive-start r))
+     (define end (descending-range-from-to-inclusive-end r))
+     (if (start . >= . end)
+         (if next?
+             (if (start . = . end)
+                 (descending-range-from-exclusive-to-inclusive (sub1 start) (sub1 start))
+                 (descending-range-from-to-inclusive (sub1 start) end))
+             start)
+         (wrong))]
+    [(descending-range-from-exclusive-to? r)
+     (define start-1 (sub1 (descending-range-from-exclusive-to-start r)))
+     (define end (descending-range-from-exclusive-to-end r))
+     (if (start-1 . > . end)
+         (if next?
+             (descending-range-from-exclusive-to start-1 end)
+             start-1)
+         (wrong))]
+    [(descending-range-from-exclusive-to-inclusive? r)
+     (define start (descending-range-from-exclusive-to-inclusive-start r))
+     (define end (descending-range-from-exclusive-to-inclusive-end r))
+     (if (start . > . end)
+         (if next?
+             (descending-range-from-exclusive-to-inclusive (sub1 start) end)
+             (sub1 start))
+         (wrong))]
+    [else (wrong)]))
+
+(define/method (DescendingRange.first r)
+  (descending-range-stream-op who r #f))
+
+(define/method (DescendingRange.rest r)
+  (descending-range-stream-op who r #t))
+
+(define/method (DescendingRange.is_empty r)
+  (cond
+    [(descending-range-from-to? r)
+     (= (descending-range-from-to-start r)
+        (descending-range-from-to-end r))]
+    [(descending-range-from-to-inclusive? r)
+     #f]
+    [(descending-range-from-exclusive-to? r)
+     (= (sub1 (descending-range-from-exclusive-to-start r))
+        (descending-range-from-exclusive-to-end r))]
+    [(descending-range-from-exclusive-to-inclusive? r)
+     (= (descending-range-from-exclusive-to-inclusive-start r)
+        (descending-range-from-exclusive-to-inclusive-end r))]
+    [else
+     (raise-annotation-failure who r "DescendingRange")]))
 
 (define-for-syntax (do-range-sequence/inline/optimize id who range-expr
                                                       check-sequence-range-stx <?-id sequence-range-normalize-stx
