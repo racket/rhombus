@@ -20,6 +20,7 @@ namespace Sequence:
     make
     instantiable
     instantiate
+    generate
     expect_of
   annot.macro 'expect_of($(ann :: Group), ...)':
     ~all_stx: stx
@@ -49,6 +50,7 @@ fun make(~initial_position: init_pos,
          ~position_to_element: pos_to_element,
          ~continue_after_position_and_value: continue_at_pos_val = #false,
          ~position_to_next: next_pos) :~ Sequence:
+  ~name: Sequence.make
   base.#{make-do-sequence}(
     fun ():
       values(pos_to_element,
@@ -61,6 +63,7 @@ fun make(~initial_position: init_pos,
   )
 
 fun instantiable(thunk) :~ Sequence:
+  ~name: Sequence.instantiable
   base.#{make-do-sequence}(thunk)
 
 fun instantiate(~initial_position: init_pos,
@@ -70,6 +73,7 @@ fun instantiate(~initial_position: init_pos,
                 ~position_to_element: pos_to_element,
                 ~continue_after_position_and_value: continue_at_pos_val = #false,
                 ~position_to_next: next_pos):
+  ~name: Sequence.instantiate
   values(pos_to_element,
          early_next_pos,
          next_pos,
@@ -77,3 +81,7 @@ fun instantiate(~initial_position: init_pos,
          continue_at_pos,
          continue_at_val,
          continue_at_pos_val)
+
+fun generate(seq :: Sequence) :~ values(Function.of_arity(0), Function.of_arity(0)):
+  ~name: Sequence.instantiate
+  base.#{sequence-generate}(seq)

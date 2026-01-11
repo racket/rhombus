@@ -485,6 +485,11 @@
     [(map-maybe? v)
      (pretty-concat (print (map-maybe-ht v))
                     (pretty-text ".maybe"))]
+    [(sequence? v)
+     (pretty-listlike
+      (pretty-text "Sequence.make(")
+      (list (pretty-text "..."))
+      (pretty-text ")"))]
     [else
      (cond
        [(display?)

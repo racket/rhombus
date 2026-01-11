@@ -39,6 +39,48 @@ internal state, and the state can even be specific to a particular
 
 }
 
+@doc(
+  fun Sequence.generate(seq :: Sequence)
+    :: values(() -> Boolean,
+              () -> ~any)
+){
+
+ To support cases where @rhombus(for) is not convenient for extracting
+ elements from a sequence, @rhombus(Sequence.generate)
+ @tech(~key: "instantiation"){instantiates} a sequence and returns two
+ stateful functions:
+
+@itemlist(
+
+ @item{@rhombus(#,(@rhombus(has_more, ~var)) :: () -> Boolean): Reports
+  whether @rhombus(next, ~var) has an element to return.}
+
+ @item{@rhombus(#,(@rhombus(next, ~var)) :: () -> ~any): Returns the
+  next element of the sequence. Note that an element may consist of
+  multiple values, such as for a sequence produced by
+  @rhombus(Map.to_sequence).}
+
+)
+
+ The @rhombus(has_more, ~var) function does not have to be called before
+ each use of @rhombus(next, ~var), but @rhombus(next, ~var) throws an
+ exception at a point where @rhombus(has_more, ~var) would return
+ @rhombus(#false).
+
+@examples(
+  def (has_more, next) = Sequence.generate((0 .. 3).to_sequence())
+  has_more()
+  next()
+  has_more()
+  next()
+  next()
+  has_more()
+  ~error:
+    next()
+)
+
+}
+
 
 @doc(
   fun Sequence.make(

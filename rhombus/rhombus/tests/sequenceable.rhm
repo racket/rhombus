@@ -323,3 +323,21 @@ check:
   for math.sum((k, v) in seq):
     k+v
   ~is 10
+
+block:
+  let (done, next) = Sequence.generate((0 .. 3).to_sequence())
+  check done() ~is #true
+  check next() ~is 0
+  check done() ~is #true
+  check next() ~is 1
+  check done() ~is #true
+  check next() ~is 2
+  check done() ~is #false
+  check next() ~throws "no more values"
+
+block:
+  let (done, next) = Sequence.generate({#'a: 1}.to_sequence())
+  check done() ~is #true
+  check next() ~is values(#'a, 1)
+  check done() ~is #false
+  check next() ~throws "no more values"
