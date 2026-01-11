@@ -21,6 +21,7 @@ namespace Sequence:
     instantiable
     instantiate
     generate
+    to_stream
     expect_of
   annot.macro 'expect_of($(ann :: Group), ...)':
     ~all_stx: stx
@@ -85,3 +86,6 @@ fun instantiate(~initial_position: init_pos,
 fun generate(seq :: Sequence) :~ values(Function.of_arity(0), Function.of_arity(0)):
   ~name: Sequence.instantiate
   base.#{sequence-generate}(seq)
+
+fun to_stream(seq :: Sequence) :~ Stream.expect_of(Any.like_element(seq)):
+  base.#{sequence->stream}(seq)

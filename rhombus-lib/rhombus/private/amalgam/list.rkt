@@ -127,6 +127,7 @@
            (add-result-statinfo lhs-si (get-treelist-static-infos)))])
   #:methods
   (length
+   is_empty
    get
    set
    add
@@ -178,6 +179,7 @@
            (add-result-statinfo lhs-si (get-list-static-infos)))])
   #:methods
   (length
+   is_empty
    get
    reverse
    append
@@ -500,6 +502,17 @@
   #:primitive (length)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (length l))
+
+(define/method (List.is_empty l)
+  #:primitive (treelist-empty?)
+  (treelist-empty? l))
+
+(define/method (PairList.is_empty l)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (cond
+    [(null? l) #t]
+    [(list? l) #f]
+    [else (raise-annotation-failure who l "PairList")]))
 
 (define/method (MutableList.length l)
   #:primitive (mutable-treelist-length)

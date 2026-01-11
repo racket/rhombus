@@ -2,6 +2,8 @@
 (require racket/mutability
          racket/treelist
          racket/mutable-treelist
+         (only-in racket/private/for
+                  stream?)
          "pipe-port.rkt"
          "syntax-wrap.rkt"
          (submod "dot.rkt" for-builtin)
@@ -19,7 +21,8 @@
          (submod "path-object.rkt" for-builtin)
          (submod "srcloc-object.rkt" for-builtin)
          (submod "port.rkt" for-builtin)
-         (submod "exn-object.rkt" for-builtin))
+         (submod "exn-object.rkt" for-builtin)
+         (submod "stream.rkt" for-builtin))
 
 (define (merge ht ht2)
   (if ht
@@ -67,6 +70,7 @@
                         (and (file-stream-port? v) file-stream-port-method-table)))]
     [(box? v) box-method-table]
     [(mutable-treelist? v) mutable-treelist-method-table]
+    [(stream? v) stream-method-table]
     [else #f]))
 
 (define (builtin->mutator-ref v)

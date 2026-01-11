@@ -21,7 +21,7 @@ A pair list is @tech{indexable} using @brackets to access a list
 element by position---in @math{O(N)} time---via @rhombus(#%index). A
 pair list also works with the @rhombus(++) operator to append pair
 lists. A pair list supports @tech{membership tests} using the
-@rhombus(in) operator. A pair list can be used as @tech{sequence}, in
+@rhombus(in) operator. A pair list can be used as @tech{stream} or @tech{sequence}, in
 which case it supplies its elements in order.
 
 The empty pair-list value is unique and @rhombus(===) to itself. Two

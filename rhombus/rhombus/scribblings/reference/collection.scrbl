@@ -15,3 +15,4 @@
 @include_section("repetition.scrbl")
 @include_section("for.scrbl")
 @include_section("range.scrbl")
+@include_section("stream.scrbl")

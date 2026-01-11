@@ -1,0 +1,261 @@
+#lang rhombus/static
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Stream.is_empty(strm) ~method
+    Stream.first(strm)
+    Stream.rest(strm)
+
+check:
+  [] ~is_a Stream
+  [1, 2, 3] ~is_a Stream
+  PairList[] ~is_a Stream
+  PairList[1, 2, 3] ~is_a Stream
+  0 .. ~is_a Stream
+  0 <.. ~is_a Stream
+  0 .. 10 ~is_a Stream
+  0 <.. 10 ~is_a Stream
+  0 ..= 10 ~is_a Stream
+  0 <..= 10 ~is_a Stream
+  10 >.. 0 ~is_a Stream
+  10 >..= 0 ~is_a Stream
+  [1, 2, 3].to_sequence() is_a Stream ~is #false
+  Stream.cons(1, []) ~is_a Stream
+  Stream.empty ~is_a Stream
+
+check:
+  Stream.is_empty([]) ~is #true
+  Stream.is_empty([1, 2, 3]) ~is #false
+  Stream.is_empty(PairList[]) ~is #true
+  Stream.is_empty(PairList[1, 2, 3]) ~is #false
+  Stream.is_empty(0 ..) ~is #false
+  Stream.is_empty(0 <..) ~is #false
+  Stream.is_empty(0 .. 10) ~is #false
+  Stream.is_empty(0 <.. 10) ~is #false
+  Stream.is_empty(0 ..= 10) ~is #false
+  Stream.is_empty(0 <..= 10) ~is #false
+  Stream.is_empty(0 .. 0) ~is #true
+  Stream.is_empty(10 >.. 0) ~is #false
+  Stream.is_empty(10 >..= 0) ~is #false
+  Stream.is_empty(1 >.. 0) ~is #true
+  Stream.cons(1, []).is_empty() ~is #false
+  Stream.empty.is_empty() ~is #true
+
+def empty_msg = error.annot("Stream && !satisfying(Stream.is_empty)").msg
+
+check:
+  Stream.first([]) ~throws empty_msg
+  Stream.first([1, 2, 3]) ~is 1
+  Stream.first(PairList[]) ~throws empty_msg
+  Stream.first(PairList[1, 2, 3]) ~is 1
+  Stream.first(0 ..) ~is 0
+  Stream.first(0 <..) ~is 1
+  Stream.first(0 .. 10) ~is 0
+  Stream.first(0 <.. 10) ~is 1
+  Stream.first(0 ..= 10) ~is 0
+  Stream.first(0 <..= 10) ~is 1
+  Stream.first(0 .. 0) ~throws empty_msg
+  Stream.first(10 >.. 0) ~is 9
+  Stream.first(10 >..= 0) ~is 9
+  Stream.first(10 >=.. 0) ~is 10
+  Stream.first(10 >=..= 0) ~is 10
+  Stream.first(1 >.. 0) ~throws empty_msg
+  Stream.cons(1, []).first ~is 1
+  Stream.empty.first ~throws empty_msg
+
+check:
+  Stream.rest([]) ~throws empty_msg
+  Stream.rest([1, 2, 3]) ~is [2, 3]
+  Stream.rest(PairList[]) ~throws empty_msg
+  Stream.rest(PairList[1, 2, 3]) ~is PairList[2, 3]
+  Stream.rest(0 ..) ~is 1 ..
+  Stream.rest(0 <..) ~is 1 <..
+  Stream.rest(0 .. 10) ~is 1 .. 10
+  Stream.rest(0 <.. 10) ~is 1 <.. 10
+  Stream.rest(0 ..= 10) ~is 1 ..= 10
+  Stream.rest(0 <..= 10) ~is 1 <..= 10
+  Stream.rest(0 .. 0) ~throws empty_msg
+  Stream.rest(10 >.. 0) ~is 9 >.. 0
+  Stream.rest(10 >..= 0) ~is 9 >..= 0
+  Stream.rest(10 >=.. 0) ~is 9 >=.. 0
+  Stream.rest(10 >=..= 0) ~is 9 >=..= 0
+  Stream.rest(1 >.. 0) ~throws empty_msg
+  Stream.cons(1, []).rest ~matches Stream.empty
+  Stream.empty.rest ~throws empty_msg
+
+fun naturals_from(i) :~ Stream:
+  Stream.cons(i, naturals_from(i+1))
+
+def naturals = naturals_from(0)
+
+check:
+  naturals.first ~is 0
+  naturals.rest.first ~is 1
+  naturals.first ~is 0
+  naturals.rest.rest.rest.rest.first ~is 4
+  naturals.rest.rest.rest.rest.first ~is 4
+  naturals.rest.rest.rest.rest.is_empty() ~is #false
+
+fun stream_add1(s :: Stream) :~ Stream:
+  match s
+  | Stream.cons(f, r): Stream.cons(f+1, stream_add1(r))
+
+def wholes = stream_add1(naturals)
+
+check:
+  wholes.first ~is 1
+  wholes.rest.first ~is 2
+  wholes.first ~is 1
+  wholes.rest.rest.rest.rest.first ~is 5
+  wholes.rest.rest.rest.rest.first ~is 5
+  wholes.rest.rest.rest.rest.is_empty() ~is #false
+
+block:
+  let mutable x = #false
+  let s = Stream.cons(block:
+                        x := #true
+                        7,
+                      block:
+                        x := #false
+                        [8])
+  check x ~is #false
+  check (match s | Stream.cons(_, _): #'yes) ~is #'yes
+  check x ~is #false
+  check s.first ~is 7
+  check x ~is #true
+  block:
+    use_dynamic
+    check dynamic(s).first ~is 7
+  check (match s | Stream.cons(f, _): f) ~is 7
+  check x ~is #true
+  check s[0] ~is 7
+  block:
+    use_dynamic
+    check dynamic(s)[0] ~is 7
+  check x ~is #true
+  check s.rest.first ~is 8
+  check x ~is #false
+  block:
+    use_dynamic
+    check dynamic(s).rest.first ~is 8
+  check s.first ~is 7
+  check x ~is #false
+  check (match s | Stream.cons(_, s): s.first) ~is 8
+  check x ~is #false
+  block:
+    use_dynamic
+    check dynamic(s).is_empty() ~is #false
+    check dynamic(s).rest.rest.is_empty() ~is #true
+
+block:
+  let mutable x = #false
+  let s = Stream.cons(~eager block:
+                        x := #true
+                        7,
+                      block:
+                        x := #false
+                        [8])
+  check x ~is #true
+  check s.rest.first ~is 8
+  check x ~is #false
+
+block:
+  let mutable x = #'no
+  let s = Stream.cons(block:
+                        x := #true
+                        7,
+                      ~eager block:
+                        x := #false
+                        [8])
+  check x ~is #false
+  check s.rest.first ~is 8
+  check x ~is #false
+  check s.first ~is 7
+  check x ~is #true
+
+block:
+  let mutable x = #'no
+  let s = Stream.cons(~eager block:
+                        x := #true
+                        7,
+                      ~eager block:
+                        x := #false
+                        [8])
+  check x ~is #false
+  check s.rest.first ~is 8
+  check x ~is #false
+  check s.first ~is 7
+  check x ~is #false
+
+check:
+  ~eval
+  Stream.cons(~eager, [])
+  ~throws "missing expression after keyword"
+
+block:
+  let lst = [[1], [2, 3]]
+  let seq = lst.to_sequence()
+  let s = Sequence.to_stream(seq)
+  check s.first.length() ~is 1
+  check s.rest.first.length() ~is 2
+  check Stream.first(s.rest).length() ~is 2
+  check Stream.rest(s).first.length() ~is 2
+  check lst.first.length() ~is 1
+  check lst.rest.first.length() ~is 2
+  check (match s | Stream.cons(f, _): f.length()) ~is 1
+  check (match lst | Stream.cons(f, _): f.length()) ~is 1
+  check (match s | Stream.cons(f, r): r.first.length()) ~is 2
+  check (match lst | Stream.cons(f, r): r.first.length()) ~is 2
+  check Stream.cons("a", ["b"]).first.length() ~is 1
+
+check:
+  ~eval
+  use_static
+  check Stream.cons("a", [5]).first.length() ~is 1
+  ~throws values("no such field or method",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  check Stream.cons(5, ["b"]).first.length() ~is 1
+  ~throws values("no such field or method",
+                 "based on static information")
+
+block:
+  fun f(s :: Stream.expect_of(String)):
+    [s.first.length(), s.is_empty()]
+  check f(["apple"]) ~is [5, #false]
+  check f([]) ~throws empty_msg
+
+block:
+  fun f(s :: Stream):
+    for List (x in s):
+      [x]
+  let lst = [1, 2]
+  let seq = lst.to_sequence()
+  let s = Sequence.to_stream(seq)
+  check f(s) ~is [[1], [2]]
+
+block:
+  use_dynamic
+  fun f(s):
+    for List (x in s):
+      [x]
+  check f(Stream.cons(1, Stream.cons(2, Stream.empty))) ~is [[1], [2]]
+
+block:
+  check Sequence.to_stream({ 1: "a" }).first ~is values(1, "a")
+  check Sequence.to_stream({ 1: "a" }).rest ~matches Stream.empty
+  check Stream.cons(values(1, 2), []).first ~is values(1, 2)
+  check Stream.cons(values(1, 2), []).rest ~matches Stream.empty
+  check Stream.cons(values(1, 2), Stream.cons(values(3, 4), [])).rest.first ~is values(3, 4)
+  block:
+    let (x, y) = Stream.cons(values([1], "a"), [] :: Stream.expect_of(List, String)).first
+    check x.length() ~is 1
+    check y.length() ~is 1
+  block:
+    let (x, y) = Sequence.to_stream({ [1]: "a" }).first
+    check x.length() ~is 1
+    check y.length() ~is 1

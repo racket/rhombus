@@ -333,7 +333,7 @@
        (define unsorted-gs (syntax->list #'(g ...)))
        (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx
                                                  #:make-missing (lambda (kw) #'(group Any))))
-       (unless (eqv? (length gs) sub-n)
+       (unless (or (eq? sub-n 'any) (eqv? (length gs) sub-n))
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
                              (respan new-stx)))

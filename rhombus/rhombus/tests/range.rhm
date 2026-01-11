@@ -27,6 +27,8 @@ block:
     Range.intersect(rge, ...) ~method
     SequenceRange.to_sequence(rge) ~method
     SequenceRange.step_by(rge, step) ~method
+    SequenceRange.first(rge)
+    SequenceRange.rest(rge)
     // `ListRange.descending` is in "descending-range.rhm"
     ListRange.to_list(rge) ~method
 
@@ -1214,14 +1216,6 @@ block:
        check:
          lhs.is_empty() $is #true
          lhs.canonicalize().is_empty() $is #true'
-  expr.macro '$lhs canonicalized_is_empty':
-    ~op_stx self
-    let is = '~is'.relocate(self)
-    'block:
-       def lhs = $lhs
-       check:
-         lhs.is_empty() $is #false
-         lhs.canonicalize().is_empty() $is #true'
   expr.macro '$lhs is_not_empty':
     ~op_stx self
     let is = '~is'.relocate(self)
@@ -1233,7 +1227,7 @@ block:
   (0..0) is_empty
   (0..=0) is_not_empty
   (0..) is_not_empty
-  (0 <.. 1) canonicalized_is_empty
+  (0 <.. 1) is_empty
   (0 <..= 0) is_empty
   (0 <..) is_not_empty
   (..0) is_not_empty
@@ -1871,3 +1865,43 @@ check:
     error.annot("Range").msg,
     error.val("oops").msg,
   )
+
+def empty_msg = "SequenceRange && !satisying(Range.is_empty)"
+
+check:
+  (0 ..).first ~is 0
+  (0 <..).first ~is 1
+  (0 .. 10).first ~is 0
+  (9 .. 10).first ~is 9
+  (0 <.. 10).first ~is 1
+  (8 <.. 10).first ~is 9
+  (0 ..= 10).first ~is 0
+  (10 ..= 10).first ~is 10
+  (0 <..= 10).first ~is 1
+  (9 <..= 10).first ~is 10
+  (0 .. 0).first ~throws empty_msg
+  (9 <.. 10).first ~throws empty_msg
+  (10 <..= 10).first ~throws empty_msg
+
+check:
+  (0 ..).rest ~is 1 ..
+  (0 <..).rest ~is 1 <..
+  (0 .. 10).rest ~is 1 .. 10
+  (9 .. 10).rest ~is 10 .. 10
+  (0 <.. 10).rest ~is 1 <.. 10
+  (8 <.. 10).rest ~is 9 <.. 10
+  (0 ..= 10).rest ~is 1 ..= 10
+  (10 ..= 10).rest ~is 11 .. 11 // must switch to `..`
+  (0 <..= 10).rest ~is 1 <..= 10
+  (9 <..= 10).rest ~is 10 <..= 10
+  (0 .. 0).rest ~throws empty_msg
+  (9 <.. 10).rest ~throws empty_msg
+  (10 <..= 10).rest ~throws empty_msg
+
+// although `is_empty` is already tests above,
+// some extra checks in the context of `.first`
+// and `.rest` to check that things are consistent
+check:
+  (10 .. 10).is_empty() ~is #true
+  (9 <.. 10).is_empty() ~is #true
+  (10 <..= 10).is_empty() ~is #true
