@@ -574,6 +574,12 @@ immutable list.
  Implements @rhombus(Listable, ~class) by returning a list containing
  the elements of @rhombus(mlst).
 
+@examples(
+  MutableList[1, 2, 3].to_list()
+  [& MutableList[1, 2, 3]]
+  MutableList[1, 2, 3].snapshot()
+)
+
 }
 
 
@@ -584,5 +590,14 @@ immutable list.
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(mlst)'s elements in order.
+
+@examples(
+  :
+    for List (v in MutableList[1, 2, 3]): // optimizing
+      v
+  :
+    for List (v in MutableList[1, 2, 3].to_sequence()): // non-optimizing
+      v
+)
 
 }

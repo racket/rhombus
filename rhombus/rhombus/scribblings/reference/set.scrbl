@@ -460,12 +460,18 @@ elements strongly or both weakly, and have the same elements.
 
  Returns the elements of @rhombus(st) in a list. If @rhombus(try_sort)
  is true, then the elements are sorted to the degree that a built-in
- comparison can sort them. Note that sets do @emph{not} implement
+ comparison can sort them, otherwise the order is unspecified. Note
+ that sets do @emph{not} implement
  @rhombus(Listable, ~class), because the order of elements is
  unspecified.
 
 @examples(
   {1, 2, 3}.to_list(#true)
+  {"a", "b", "c"}.to_list(#true)
+  :
+    {"a", "b", "c"}.to_list() // order is unspecified
+  ~error:
+    [& {"a", "b", "c"}]
 )
 
 }
@@ -517,5 +523,17 @@ elements strongly or both weakly, and have the same elements.
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(st)'s elements in an unspecified order.
+
+@examples(
+  :
+    for List (v in {1, 2, 3}): // optimizing
+      v
+  :
+    for List (v in {1, 2, 3}.to_sequence()): // non-optimizing
+      v
+  :
+    for List (v in {"a", "b", "c"}): // order is unspecified
+      v
+)
 
 }

@@ -386,6 +386,11 @@ pairwise equal by @rhombus(==).
  Implements @rhombus(Listable, ~class) by returning a @tech{list}
  with the same elements as @rhombus(arr) in the same order.
 
+@examples(
+  Array(1, 2, 3).to_list()
+  [& Array(1, 2, 3)]
+)
+
 }
 
 
@@ -396,5 +401,14 @@ pairwise equal by @rhombus(==).
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(arr)'s elements in order.
+
+@examples(
+  :
+    for List (v in Array(1, 2, 3)): // optimizing
+      v
+  :
+    for List (v in Array(1, 2, 3).to_sequence()): // non-optimizing
+      v
+)
 
 }

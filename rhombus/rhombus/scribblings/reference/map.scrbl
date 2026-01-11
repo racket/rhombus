@@ -695,6 +695,17 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
  @tech{sequence} of @rhombus(mp)'s keys and values (as two result
  values) in an unspecified order.
 
+@examples(
+  :
+    for List ((k, v) in {1: "a", 2: "b"}): // optimizing
+      k +& ": " +& v
+  :
+    for List ((k, v) in {1: "a", 2: "b"}.to_sequence()): // non-optimizing
+      k +& ": " +& v
+  :
+    for List ((k, v) in {"a": 1, "b": 2}): // order is unspecified
+      k +& ": " +& v
+)
 }
 
 @doc(

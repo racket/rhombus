@@ -624,6 +624,11 @@ pairwise equal by @rhombus(==).
  with the same elements as @rhombus(lst) in the same order. The conversion
  takes @math{O(N)} time.
 
+@examples(
+  PairList[1, 2, 3].to_list()
+  [& PairList[1, 2, 3]]
+)
+
 }
 
 
@@ -634,5 +639,14 @@ pairwise equal by @rhombus(==).
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(lst)'s elements in order.
+
+@examples(
+  :
+    for List (v in PairList[1, 2, 3]): // optimizing
+      v
+  :
+    for List (v in PairList[1, 2, 3].to_sequence()): // non-optimizing
+      v
+)
 
 }

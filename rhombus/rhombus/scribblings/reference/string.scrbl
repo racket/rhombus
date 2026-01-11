@@ -580,6 +580,15 @@ Strings are @tech{comparable}, which means that generic operations like
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(str)'s characters in order.
 
+@examples(
+  :
+    for List (c in "hello"): // optimizing
+      c
+  :
+    for List (c in "hello".to_sequence()): // non-optimizing
+      c
+)
+
 }
 
 @doc(

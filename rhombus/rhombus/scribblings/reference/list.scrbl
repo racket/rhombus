@@ -774,6 +774,11 @@ their elements are pairwise equal by @rhombus(==).
 
  Implements @rhombus(Listable, ~class) by returning @rhombus(lst) unchanged.
 
+@examples(
+  [1, 2, 3].to_list()
+  [& [1, 2, 3]]
+)
+
 }
 
 
@@ -784,5 +789,14 @@ their elements are pairwise equal by @rhombus(==).
 
  Implements @rhombus(Sequenceable, ~class) by returning a
  @tech{sequence} of @rhombus(lst)'s elements in order.
+
+@examples(
+  :
+    for List (v in [1, 2, 3]): // optimizing
+      v
+  :
+    for List (v in [1, 2, 3].to_sequence()): // non-optimizing
+      v
+)
 
 }
