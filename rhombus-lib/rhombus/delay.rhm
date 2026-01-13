@@ -1,0 +1,88 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/promise.rkt"):
+    expose:
+      delay as rkt_delay
+      lazy
+      #{delay/sync}
+      #{delay/thread}
+  rhombus/thread
+
+export:
+  delay
+  Delay
+
+class Delay(_handle):
+  opaque
+  internal _Delay
+  constructor (thunk):
+    delay: thunk()
+  property handle: _handle
+
+  method force() :~ Any.like_result(this):
+    promise.force(_handle)
+  method is_forced() :~ Any.like_result(this):
+    promise.#{promise-forced?}(_handle)
+  method is_running() :~ Any.like_result(this):
+    promise.#{promise-running?}(_handle)
+
+  method evt(~pool: pool :: maybe(thread.Thread.Pool || Any.of(#'own)) = #false) :~ thread.Evt:
+    def th:
+      thread.thread:
+        ~keep: #'results
+        ~pool:  pool
+        force()
+    thread.Evt.wrap(th, ~return: #'tail, fun (_): th.wait())
+
+  private implements Printable
+  private override describe(mode, recur):
+    PrintDesc.list("Delay(",
+                   if is_forced()
+                   | [PrintDesc.block("fun ()", recur(force()))]
+                   | ["..."],
+                   ")")
+
+  export:
+    expect_of
+    from_handle
+
+  annot.macro 'expect_of($(ann :: Group), ...)':
+    ~all_stx: stx
+    ~context: ctx
+    let ['$(a :: annot_meta.Parsed(ctx))', ...] = [ann, ...]
+    let [statinfos, ...]:
+      for List (a in [a, ...]):
+        if annot_meta.is_converter(a)
+        | let (_, _, statinfos) = annot_meta.unpack_converter(a)
+          statinfos
+        | let (_, statinfos) = annot_meta.unpack_predicate(a)
+          statinfos
+    let all_statinfos:
+      let l = [statinfos, ...]
+      if l.length() == 1
+      | l[0]
+      | '(($statinfo_meta.values_key, $(statinfo_meta.pack_group('$statinfos ...'))))'
+    annot_meta.pack_predicate('fun (x): x is_a Delay',
+                              '(($statinfo_meta.call_result_key, $(statinfo_meta.pack(all_statinfos))))',
+                              ~track: [a, ...])
+
+  fun from_handle(handle) :~ Delay:
+    ~who: who
+    unless promise.#{promise?}(handle)
+    | error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "not a delay handle",
+            error.val(handle))
+    _Delay(handle)
+
+expr.macro 'delay:
+              $(group_option_sequence
+                | '$(kind && '~sync')')
+              $body
+              ...':
+  ~all_stx: stx
+  '_Delay($(expr_meta.pack_s_exp([match kind
+                                  | #false: 'rkt_delay'
+                                  | '~sync': '#{delay/sync}',
+                                  expr_meta.pack_expr('block: $body; ...')])
+              .relocate_span([stx])))'

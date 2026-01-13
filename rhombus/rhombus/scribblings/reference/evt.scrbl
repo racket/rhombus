@@ -7,7 +7,7 @@
 
 @title(~tag: "evt"){Synchronizable Events}
 
-A @deftech{synchronizable events} is an object that can be used with
+A @deftech{synchronizable event} is an object that can be used with
 @rhombus(Evt.sync) to wait until it is ready for synchronization.
 Synchronizing a ready event may have a side effect and an associated
 value. For example, synchronizing on a @rhombus(Semaphore) is the same
@@ -75,6 +75,7 @@ count.
 @doc(
   def Evt.always :: Evt
   def Evt.never :: Evt
+  def Evt.system_idle :: Evt
 ){
 
  The @rhombus(Evt.always) @tech{synchronizable event} is always ready
@@ -82,6 +83,13 @@ count.
 
  The @rhombus(Evt.never) @tech{synchronizable event} is never ready for
  synchronization.
+
+ The @rhombus(Evt.system_idle) @tech{synchronizable event} becomes ready
+ when no thread can run otherwise. In other words, all threads must be
+ suspended or blocked on events with timeouts that have not yet expired.
+ Its synchronization result is @rhombus(#void). The
+ @rhombus(Evt.system_idle) event is intended primarily for use in tests
+ where all concurrency is known.
 
 }
 

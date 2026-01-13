@@ -10,3 +10,4 @@
 @include_section("exn.scrbl")
 @include_section("continuation.scrbl")
 @include_section("parameter.scrbl")
+@include_section("delay.scrbl")

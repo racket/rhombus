@@ -1,0 +1,98 @@
+#lang rhombus/static
+import:
+  rhombus/delay open
+  rhombus/thread open
+
+block:
+  let d = delay: 1
+  check d ~is_a Delay
+  check d.is_forced() ~is #false
+  check d.is_running() ~is #false
+  check d.force() ~is 1
+  check d.is_forced() ~is #true
+  check d.is_running() ~is #false
+  check d.force() ~is 1
+  check Delay.from_handle(d.handle) ~is_a Delay
+  check d.handle === Delay.from_handle(d.handle).handle ~is #true
+
+block:
+  def d = delay: d.is_running()
+  check d ~is_a Delay
+  check d.is_running() ~is #false
+  check d.force() ~is #true
+  check d.is_running() ~is #false
+  check d.force() ~is #true
+
+block:
+  let d :: Delay.expect_of(String) = delay: "hello"
+  check d.force().length() ~is 5
+
+block:
+  let d :: Delay.expect_of(String, String) = delay: values("hello", "world!")
+  let (h, w) = d.force()
+  check h.length() ~is 5
+  check w.length() ~is 6
+
+block:
+  let d:
+    delay:
+      ~sync
+      Evt.system_idle.sync()
+      2
+  check d.force() ~is 2
+
+block:
+  let d:
+    delay:
+      Evt.system_idle.sync()
+      2
+  fun th() :~ Thread:
+    thread:
+      ~keep: #'results
+      try:
+        d.force()
+        ~catch x: x
+  let lt1 = th()
+  let lt2 = th()
+  check lt1.wait() ~is_a Exn || Int
+  check lt2.wait() ~is_a Exn || Int
+  check lt1.wait() != lt2.wait() ~is #true
+
+block:
+  let d:
+    delay:
+      ~sync
+      Evt.system_idle.sync()
+      2
+  fun th() :~ Thread:
+    thread:
+      ~keep: #'results
+      d.force()
+  let lt1 = th()
+  let lt2 = th()
+  check lt1.wait() ~is 2
+  check lt2.wait() ~is 2
+
+block:
+  def d1:
+    delay:
+      1
+  def d2:
+    delay:
+      Evt.system_idle.sync()
+      2
+  def e2 = d2.evt()
+  check Evt.sync(d1.evt(), e2) ~is 1
+  check e2.sync() ~is 2
+
+block:
+  def d1:
+    delay:
+      1
+  def d2:
+    delay:
+      Evt.system_idle.sync()
+      2
+  def e2 = d2.evt(~pool: #'own)
+  check Evt.sync(d1.evt(~pool: #'own), e2) ~is 1
+  check e2.sync() ~is 2

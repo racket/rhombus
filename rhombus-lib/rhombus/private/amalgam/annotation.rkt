@@ -1505,9 +1505,10 @@
 
 (define-for-syntax (extract-call-result statinfos)
   (define results (static-info-lookup statinfos #'#%call-result))
-  (and results
-       (find-call-result-at results #f #f #f
-                            (lambda () (annotation-dependencies null #hasheq() #f #f)))))
+  (or (and results
+           (find-call-result-at results #f #f #f
+                                (lambda () (annotation-dependencies null #hasheq() #f #f))))
+      #'()))
 
 (define-annotation-syntax Any.like_result
   (make-like #'like-result-accessor))

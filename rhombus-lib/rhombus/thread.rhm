@@ -170,6 +170,8 @@ class AlwaysEvt():
   opaque
   override property handle: rkt.#{always-evt}
   private override property sync_handle: rkt.#{wrap-evt}(rkt.#{always-evt}, fun (b): this)
+  private implements Printable
+  private override describe(mode, recur): "Evt.always"
 
 class NeverEvt():
   implements evt.Evt
@@ -177,6 +179,17 @@ class NeverEvt():
   opaque
   override property handle: rkt.#{never-evt}
   private override property sync_handle: rkt.#{wrap-evt}(rkt.#{never-evt}, fun (b): this)
+  private implements Printable
+  private override describe(mode, recur): "Evt.never"
+
+class SystemIdleEvt():
+  implements evt.Evt
+  private implements evt._Evt
+  opaque
+  override property handle: rkt.#{system-idle-evt}()
+  private override property sync_handle: rkt.#{system-idle-evt}()
+  private implements Printable
+  private override describe(mode, recur): "Evt.system_idle"
 
 namespace Evt:
   export:
@@ -186,6 +199,8 @@ namespace Evt:
       evt.WrapReturn as WrapReturn
     always
     never
+    system_idle
 
   def always = AlwaysEvt()
   def never = NeverEvt()
+  def system_idle = SystemIdleEvt()

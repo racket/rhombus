@@ -34,7 +34,7 @@ internal state, and the state can even be specific to a particular
  @rhombus(for) have the static information of @rhombus(ann)s (where
  multiple @rhombus(ann)s correspond to multiple values for each element,
  such as the key and value from a @tech{map}). The extracted elements are
- not checked or converted, however, and each @rhombus(ann)s is used only
+ not checked or converted, however, and each @rhombus(ann) is used only
  for its static information.
 
 }
