@@ -1336,6 +1336,7 @@
           start-type
           (and end-expr (discard-static-infos end-expr))
           end-type
+          #f ; rev?
           check-start-end-stx))
 
 (define (sequence-range-normalize r)
@@ -1515,6 +1516,7 @@
           start-type
           (and end-expr (discard-static-infos end-expr))
           end-type
+          #f ; rev?
           check-start-end-stx))
 
 (define-for-syntax (range-explode/inline/rev range-expr)
@@ -1546,12 +1548,12 @@
     (case start-type
       [(inclusive)
        (case end-type
-         [(exclusive inclusive) #'check-start-end/rev]
+         [(exclusive inclusive) #'check-start-end]
          [else (error "cannot happen")])]
       [(exclusive)
        (case end-type
-         [(exclusive) #'check-start-end/not-equal/rev]
-         [(inclusive) #'check-start-end/rev]
+         [(exclusive) #'check-start-end/not-equal]
+         [(inclusive) #'check-start-end]
          [else (error "cannot happen")])]
       [(#f) #f]
       [else (error "cannot happen")]))
@@ -1560,13 +1562,8 @@
           end-type
           (and start-expr (discard-static-infos start-expr))
           start-type
+          #t ; rev?
           check-start-end-stx))
-
-(define (check-start-end/rev who end start)
-  (check-start-end who start end))
-
-(define (check-start-end/not-equal/rev who end start)
-  (check-start-end/not-equal who start end))
 
 (define (descending-range-normalize r)
   (cond
@@ -1634,11 +1631,11 @@
                                                       unsafe-fx<=-stx <=-stx
                                                       range-explode/inlines)
   (define (try-inline range-explode/inline)
-    (define-values (range-who start-expr start-type end-expr end-type check-start-end-stx)
+    (define-values (range-who start-expr start-type end-expr end-type rev? check-start-end-stx)
       (range-explode/inline range-expr))
     (and (or (eq? start-type 'inclusive)
              (eq? start-type 'exclusive))
-         (do-range-sequence/inline id range-who start-expr start-type end-expr end-type
+         (do-range-sequence/inline id range-who start-expr start-type end-expr end-type rev?
                                    check-start-end-stx add1-stx do-sub1
                                    check-step-stx default-step step-who step-expr
                                    unsafe-fx<-stx <-stx
@@ -1648,7 +1645,7 @@
                                   check-sequence-range-stx <?-id sequence-range-normalize-stx
                                   check-step-stx default-step step-who step-expr)))
 
-(define-for-syntax (do-range-sequence/inline id range-who start-expr start-type end-expr end-type
+(define-for-syntax (do-range-sequence/inline id range-who start-expr start-type end-expr end-type rev?
                                              check-start-end-stx add1-stx do-sub1
                                              check-step-stx default-step step-who step-expr
                                              unsafe-fx<-stx <-stx
@@ -1679,22 +1676,42 @@
                                       step))))))
   (define +-stx (if use-unsafe? #'unsafe-fx+ #'+))
   #`[(#,id) (:do-in
-             ([(start) #,start-expr]
-              #,@(if end-expr
-                     (list #`[(end) #,end-expr])
-                     '())
-              #,@(if step-expr
-                     (list #`[(step) #,step-expr])
-                     '()))
+             #,(let ([start-bind #`[(start) #,start-expr]]
+                     [maybe-end-bind (if end-expr
+                                         (list #`[(end) #,end-expr])
+                                         '())]
+                     [maybe-step-bind (if step-expr
+                                          (list #`[(step) #,step-expr])
+                                          '())])
+                 (if (not rev?)
+                     #`(#,start-bind
+                        #,@maybe-end-bind
+                        #,@maybe-step-bind)
+                     #`(#,@maybe-end-bind
+                        #,start-bind
+                        #,@maybe-step-bind)))
              (unless (variable-reference-from-unsafe? (#%variable-reference))
-               (check-int '#,range-who start)
-               #,@(if end-expr
-                      (list #`(check-int '#,range-who end)
-                            #`(#,check-start-end-stx '#,range-who start end))
-                      '())
-               #,@(if step-expr
-                      (list #`(#,check-step-stx '#,step-who step))
-                      '()))
+               #,@(let ([start-check (list #`(check-int '#,range-who start))]
+                        [maybe-end-check (if end-expr
+                                             (list #`(check-int '#,range-who end))
+                                             '())]
+                        [maybe-start-end-check (if end-expr
+                                                   (list (if (not rev?)
+                                                             #`(#,check-start-end-stx '#,range-who start end)
+                                                             #`(#,check-start-end-stx '#,range-who end start)))
+                                                   '())]
+                        [maybe-step-check (if step-expr
+                                              (list #`(#,check-step-stx '#,step-who step))
+                                              '())])
+                    (if (not rev?)
+                        (append start-check
+                                maybe-end-check
+                                maybe-start-end-check
+                                maybe-step-check)
+                        (append maybe-end-check
+                                start-check
+                                maybe-start-end-check
+                                maybe-step-check))))
              ([pos #,(case start-type
                        [(exclusive) #`(#,add1-stx start)]
                        [(inclusive) #'start]

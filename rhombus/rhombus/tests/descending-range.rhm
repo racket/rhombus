@@ -944,3 +944,37 @@ block:
   generate_checks 0..=5
   generate_checks 0 <.. 5
   generate_checks 0 <..= 5
+
+// check evaluation and check order in inlined `rge.descending()`
+block:
+  import rhombus/meta open
+  expr.macro 'generate_checks $(op :: Term)':
+    ~op_stx self
+    let check_id = 'check'.relocate(self)
+    let op_who = op +& ": "
+    fun make_for(seq):
+      'for List (i in $seq):
+         i'
+    fun make_check(make_seq):
+      'block:
+         $check_id:
+           $check_id:
+             $(make_for(make_seq('(block: println("first"); 0) $op (block: println("second"); 5)')))
+             ~is $(make_for(make_seq('0 $op 5')))
+           ~prints "first\nsecond\n"
+         $check_id:
+           $check_id:
+             $(make_for(make_seq('(block: println("first"); "oops1") $op (block: println("second"); "oops2")')))
+             ~throws values(
+               #%literal $op_who ++ error.annot_msg(),
+               error.annot("Int").msg,
+               error.val("oops1").msg,
+             )
+           ~prints "first\nsecond\n"'
+    'block:
+       $(make_check(fun (seq): '($seq).descending()'))
+       $(make_check(fun (seq): '($seq).descending().step_by(-2)'))'
+  generate_checks ..
+  generate_checks ..=
+  generate_checks <..
+  generate_checks <..=

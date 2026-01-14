@@ -1319,10 +1319,12 @@
   (syntax-parse stx
     [(_ form-id pred annot-str e::expression)
      (define unwrapped-e (unwrap-static-infos #'e.parsed))
-     (define-values (range-who lo lo-type hi hi-type check-lo-hi-stx)
+     (define-values (range-who lo lo-type hi hi-type rev? check-lo-hi-stx)
        (explode-range/inline unwrapped-e))
      (cond
        [range-who
+        (when rev?
+          (error "shouldn't get `rev?` ranges"))
         (define (get-comp type)
           (case type
             [(exclusive) #'<]
