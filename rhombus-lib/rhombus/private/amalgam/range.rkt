@@ -193,7 +193,7 @@
       (wrap-static-info*
        (relocate+reraw
         (respan (datum->syntax #f (list self-stx)))
-        #`(range-full))
+        #`(range-full/who '..))
        (get-range-static-infos))]
      [(right self-stx)
       (wrap-static-info*
@@ -579,12 +579,10 @@
                          #'name
                          (string->symbol
                           (format "unsafe-~a" (syntax->datum #'name))))
-     #:attr name/who (and (or (attribute start)
-                              (attribute end))
-                          (datum->syntax
-                           #'name
-                           (string->symbol
-                            (format "~a/who" (syntax->datum #'name)))))
+     #:attr name/who (datum->syntax
+                      #'name
+                      (string->symbol
+                       (format "~a/who" (syntax->datum #'name))))
      #:attr name-start (and (attribute start)
                             (datum->syntax
                              #'name
@@ -642,21 +640,16 @@
           ()
           #:methods
           ()))
-     (if (attribute name/who)
-         #'(begin
-             (define (name/who who (~? start) (~? end))
-               (~? (check-int who start))
-               (~? (check-int who end))
-               (~? (check-start-end who start end))
-               (unsafe-name (~? start) (~? end)))
-             (define name
-               (let ([Name (lambda ((~? start) (~? end))
-                             (name/who 'Name (~? start) (~? end)))])
-                 Name)))
-         #'(define name
-             (let ([Name (lambda ()
-                           (unsafe-name))])
-               Name)))]))
+     #'(begin
+         (define (name/who who (~? start) (~? end))
+           (~? (check-int who start))
+           (~? (check-int who end))
+           (~? (check-start-end who start end))
+           (unsafe-name (~? start) (~? end)))
+         (define name
+           (let ([Name (lambda ((~? start) (~? end))
+                         (name/who 'Name (~? start) (~? end)))])
+             Name)))]))
 
 (define-range list-range range-from-to Range.from_to ".." #:both
   #:->sequence range-from-to->sequence)
@@ -1302,7 +1295,7 @@
                   range-from-exclusive/who
                   range-to/who
                   range-to-inclusive/who
-                  range-full)
+                  range-full/who)
       [(range-from-to/who 'who start-expr end-expr)
        (values #'who #'start-expr 'inclusive #'end-expr 'exclusive)]
       [(range-from-to-inclusive/who 'who start-expr end-expr)
@@ -1319,17 +1312,31 @@
        (values #'who #f 'infinite #'end-expr 'exclusive)]
       [(range-to-inclusive/who 'who end-expr)
        (values #'who #f 'infinite #'end-expr 'inclusive)]
-      [(range-full)
-       (values #'#f #f 'infinite #f 'infinite)]
+      [(range-full/who 'who)
+       (values #'who #f 'infinite #f 'infinite)]
       [_
        (values #f #f #f #f #f)]))
-  (if who-stx
-      (values (syntax-e who-stx)
-              (and start-expr (discard-static-infos start-expr))
-              start-type
-              (and end-expr (discard-static-infos end-expr))
-              end-type)
-      (values #f #f #f #f #f)))
+  (define check-start-end-stx
+    (case start-type
+      [(inclusive)
+       (case end-type
+         [(exclusive inclusive) #'check-start-end]
+         [(infinite) #f]
+         [else (error "cannot happen")])]
+      [(exclusive)
+       (case end-type
+         [(exclusive) #'check-start-end/not-equal]
+         [(inclusive) #'check-start-end]
+         [(infinite) #f]
+         [else (error "cannot happen")])]
+      [(infinite #f) #f]
+      [else (error "cannot happen")]))
+  (values (and who-stx (syntax-e who-stx))
+          (and start-expr (discard-static-infos start-expr))
+          start-type
+          (and end-expr (discard-static-infos end-expr))
+          end-type
+          check-start-end-stx))
 
 (define (sequence-range-normalize r)
   (cond
@@ -1360,13 +1367,13 @@
 
 (define-for-syntax (sequence-range-sequence/inline/optimize id who range-expr
                                                             #:step-expr [step-expr #f])
-  (do-range-sequence/inline/optimize id who range-expr range-explode/inline #f
+  (do-range-sequence/inline/optimize id who range-expr
                                      #'check-sequence-range #'<? #'sequence-range-normalize
-                                     #'check-start-end #'check-start-end/not-equal #'add1 sub1
-                                     #f #f
+                                     #'add1 sub1
                                      #'check-pos-int 1 who step-expr
                                      #'unsafe-fx< #'<
-                                     #'unsafe-fx<= #'<=))
+                                     #'unsafe-fx<= #'<=
+                                     (list range-explode/inline)))
 
 (define (list-range->descending-range r)
   (cond
@@ -1488,13 +1495,27 @@
        (values #'who #'start-expr 'exclusive #f 'infinite)]
       [_
        (values #f #f #f #f #f)]))
-  (if who-stx
-      (values (syntax-e who-stx)
-              (and start-expr (discard-static-infos start-expr))
-              start-type
-              (and end-expr (discard-static-infos end-expr))
-              end-type)
-      (values #f #f #f #f #f)))
+  (define check-start-end-stx
+    (case start-type
+      [(inclusive)
+       (case end-type
+         [(exclusive inclusive) #'check-start-end/descending]
+         [(infinite) #f]
+         [else (error "cannot happen")])]
+      [(exclusive)
+       (case end-type
+         [(exclusive) #'check-start-end/not-equal/descending]
+         [(inclusive) #'check-start-end/descending]
+         [(infinite) #f]
+         [else (error "cannot happen")])]
+      [(#f) #f]
+      [else (error "cannot happen")]))
+  (values (and who-stx (syntax-e who-stx))
+          (and start-expr (discard-static-infos start-expr))
+          start-type
+          (and end-expr (discard-static-infos end-expr))
+          end-type
+          check-start-end-stx))
 
 (define-for-syntax (range-explode/inline/rev range-expr)
   (define inner-range-expr
@@ -1521,13 +1542,25 @@
           [_
            (values #f #f #f #f #f)])
         (values #f #f #f #f #f)))
-  (if who-stx
-      (values (syntax-e who-stx)
-              (and end-expr (discard-static-infos end-expr))
-              end-type
-              (and start-expr (discard-static-infos start-expr))
-              start-type)
-      (values #f #f #f #f #f)))
+  (define check-start-end-stx
+    (case start-type
+      [(inclusive)
+       (case end-type
+         [(exclusive inclusive) #'check-start-end/rev]
+         [else (error "cannot happen")])]
+      [(exclusive)
+       (case end-type
+         [(exclusive) #'check-start-end/not-equal/rev]
+         [(inclusive) #'check-start-end/rev]
+         [else (error "cannot happen")])]
+      [(#f) #f]
+      [else (error "cannot happen")]))
+  (values (and who-stx (syntax-e who-stx))
+          (and end-expr (discard-static-infos end-expr))
+          end-type
+          (and start-expr (discard-static-infos start-expr))
+          start-type
+          check-start-end-stx))
 
 (define (check-start-end/rev who end start)
   (check-start-end who start end))
@@ -1564,13 +1597,14 @@
 
 (define-for-syntax (descending-range-sequence/inline/optimize id who range-expr
                                                               #:step-expr [step-expr #f])
-  (do-range-sequence/inline/optimize id who range-expr descending-range-explode/inline range-explode/inline/rev
+  (do-range-sequence/inline/optimize id who range-expr
                                      #'check-descending-range #'>? #'descending-range-normalize
-                                     #'check-start-end/descending #'check-start-end/not-equal/descending #'sub1 add1
-                                     #'check-start-end/rev #'check-start-end/not-equal/rev
+                                     #'sub1 add1
                                      #'check-neg-int -1 who step-expr
                                      #'unsafe-fx> #'>
-                                     #'unsafe-fx>= #'>=))
+                                     #'unsafe-fx>= #'>=
+                                     (list descending-range-explode/inline
+                                           range-explode/inline/rev)))
 
 (define (descending-list-range->list r)
   (cond
@@ -1592,32 +1626,30 @@
   (check-descending-list-range who r)
   (descending-list-range->treelist r))
 
-(define-for-syntax (do-range-sequence/inline/optimize id who range-expr range-explode/inline range-explode/inline/rev
+(define-for-syntax (do-range-sequence/inline/optimize id who range-expr
                                                       check-sequence-range-stx <?-id sequence-range-normalize-stx
-                                                      check-start-end-stx check-start-end/not-equal-stx add1-stx do-sub1
-                                                      check-start-end-stx/rev check-start-end/not-equal-stx/rev
+                                                      add1-stx do-sub1
                                                       check-step-stx default-step step-who step-expr
                                                       unsafe-fx<-stx <-stx
-                                                      unsafe-fx<=-stx <=-stx)
-  (define (try-inline range-explode/inline check-start-end-stx check-start-end/not-equal-stx)
-    (define-values (range-who start-expr start-type end-expr end-type)
+                                                      unsafe-fx<=-stx <=-stx
+                                                      range-explode/inlines)
+  (define (try-inline range-explode/inline)
+    (define-values (range-who start-expr start-type end-expr end-type check-start-end-stx)
       (range-explode/inline range-expr))
     (and (or (eq? start-type 'inclusive)
              (eq? start-type 'exclusive))
          (do-range-sequence/inline id range-who start-expr start-type end-expr end-type
-                                   check-start-end-stx check-start-end/not-equal-stx add1-stx do-sub1
+                                   check-start-end-stx add1-stx do-sub1
                                    check-step-stx default-step step-who step-expr
                                    unsafe-fx<-stx <-stx
                                    unsafe-fx<=-stx <=-stx)))
-  (or (try-inline range-explode/inline check-start-end-stx check-start-end/not-equal-stx)
-      (and range-explode/inline/rev
-           (try-inline range-explode/inline/rev check-start-end-stx/rev check-start-end/not-equal-stx/rev))
+  (or (ormap try-inline range-explode/inlines)
       (do-range-sequence/optimize id who range-expr
                                   check-sequence-range-stx <?-id sequence-range-normalize-stx
                                   check-step-stx default-step step-who step-expr)))
 
 (define-for-syntax (do-range-sequence/inline id range-who start-expr start-type end-expr end-type
-                                             check-start-end-stx-in check-start-end/not-equal-stx add1-stx do-sub1
+                                             check-start-end-stx add1-stx do-sub1
                                              check-step-stx default-step step-who step-expr
                                              unsafe-fx<-stx <-stx
                                              unsafe-fx<=-stx <=-stx)
@@ -1645,10 +1677,6 @@
                                         [(inclusive) end]
                                         [else (error "cannot happen")])
                                       step))))))
-  (define check-start-end-stx (if (and (eq? start-type 'exclusive)
-                                       (eq? end-type 'exclusive))
-                                  check-start-end/not-equal-stx
-                                  check-start-end-stx-in))
   (define +-stx (if use-unsafe? #'unsafe-fx+ #'+))
   #`[(#,id) (:do-in
              ([(start) #,start-expr]

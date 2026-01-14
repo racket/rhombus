@@ -1247,7 +1247,8 @@
     (set! range-contains?-id range-contains?)
     (set! explode-range/inline explode/inline)))
 
-(define-for-syntax (build-in-predicate check-who pred-stx annot-str lo-e lo-comp hi-e hi-comp)
+(define-for-syntax (build-in-predicate check-who pred-stx annot-str lo-e lo-comp hi-e hi-comp
+                                       #:check-lo-hi-stx [check-lo-hi-stx #f])
   #`(let (#,@(if lo-e
                  (list #`[lo-v #,lo-e])
                  null)
@@ -1261,6 +1262,9 @@
       #,@(if hi-e
              (list #`(unless (#,pred-stx hi-v)
                        (raise-annotation-failure '#,check-who hi-v '#,annot-str)))
+             null)
+      #,@(if check-lo-hi-stx
+             (list #`(#,check-lo-hi-stx '#,check-who lo-v hi-v))
              null)
       (lambda (v)
         (and (#,pred-stx v)
@@ -1315,16 +1319,18 @@
   (syntax-parse stx
     [(_ form-id pred annot-str e::expression)
      (define unwrapped-e (unwrap-static-infos #'e.parsed))
-     (define-values (range-who lo lo-type hi hi-type) (explode-range/inline unwrapped-e))
+     (define-values (range-who lo lo-type hi hi-type check-lo-hi-stx)
+       (explode-range/inline unwrapped-e))
      (cond
-       [(or lo hi)
+       [range-who
         (define (get-comp type)
           (case type
             [(exclusive) #'<]
             [(inclusive) #'<=]
             [(infinite) #f]
             [else (error "cannot happen")]))
-        (build-in-predicate range-who #'pred #'annot-str lo (get-comp lo-type) hi (get-comp hi-type))]
+        (build-in-predicate range-who #'pred #'annot-str lo (get-comp lo-type) hi (get-comp hi-type)
+                            #:check-lo-hi-stx check-lo-hi-stx)]
        [else
         #`(let ([rng #,unwrapped-e])
             (unless (#,is-range?-id rng)

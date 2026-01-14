@@ -101,6 +101,48 @@ check:
 
   1 is_a Int.in("oops") ~throws values("Int.in: " ++ error.annot_msg(), "Range", "\"oops\"")
 
+  1 is_a Int.in(5 .. 0) ~throws values(
+    "..: starting point must be less than or equal to ending point",
+    "starting point: 5",
+    "ending point: 0",
+  )
+  1 is_a Int.in(5 <.. 0) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 5",
+    "ending point: 0",
+  )
+  1 is_a Int.in(0 <.. 0) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 0",
+    "ending point: 0",
+  )
+  1 is_a Int.in(5 <.. 5) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 5",
+    "ending point: 5",
+  )
+
+  1 is_a Int.in(Function.black_box(5 .. 0)) ~throws values(
+    "..: starting point must be less than or equal to ending point",
+    "starting point: 5",
+    "ending point: 0",
+  )
+  1 is_a Int.in(Function.black_box(5 <.. 0)) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 5",
+    "ending point: 0",
+  )
+  1 is_a Int.in(Function.black_box(0 <.. 0)) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 0",
+    "ending point: 0",
+  )
+  1 is_a Int.in(Function.black_box(5 <.. 5)) ~throws values(
+    "<..: starting point must be less than ending point",
+    "starting point: 5",
+    "ending point: 5",
+  )
+
 block:
   fun f(x :: Int, y :: Int.in(x ..= x + 1)):
     [x, y]
