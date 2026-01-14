@@ -547,11 +547,11 @@
      (when progress (raise-arguments-error who "progress evt not supported in wait mode" "wait mode" wait))
      (peek-bytes! bstr skip port start end)]
     [(eq? wait 'some)
-     (peek-bytes-avail! bstr skip progress port start end)]
+     (peek-bytes-avail! bstr skip (and progress (extract-progress-evt who progress)) port start end)]
     [(eq? wait 'none)
-     (peek-bytes-avail!* bstr skip progress port start end)]
+     (peek-bytes-avail!* bstr skip (and progress (extract-progress-evt who progress)) port start end)]
     [(eq? wait 'enable_break)
-     (peek-bytes-avail!* bstr skip progress port start end)]
+     (peek-bytes-avail!* bstr skip (and progress (extract-progress-evt who progress)) port start end)]
     [else (check-wait who wait)]))
 
 (define/method (Port.Input.peek_char port
@@ -679,7 +679,7 @@
   #:primitive (port-commit-peeked)
   (unless (input-progress-port? port)
     (raise-annotation-failure who port "Input.Port.Progress"))
-  (port-commit-peeked amt (extract-progress-evt progress) (extract-commit-evt evt) port))
+  (port-commit-peeked amt (extract-progress-evt who progress) (extract-commit-evt evt) port))
 
 (define/method (Port.Input.Progress.is_evt port evt)
   (unless (input-progress-port? port)

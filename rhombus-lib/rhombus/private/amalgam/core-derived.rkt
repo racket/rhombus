@@ -19,4 +19,5 @@
         "closeable.rhm"
         "filesystem.rhm"
         "system.rhm"
-        "guard.rhm")
+        "guard.rhm"
+        "log.rhm")

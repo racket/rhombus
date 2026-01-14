@@ -1,0 +1,207 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  "error.rhm" open
+  "enum.rhm" open
+  "maybe.rhm" open
+  "recur.rhm" open
+  "evt.rhm" open
+  lib("racket/base.rkt")
+
+use_static
+
+export:
+  Logger
+  LogReceiver
+  log
+
+meta:
+  fun generate_log(self, level, arg, ...):
+    'when base.#{log-level?}(_Logger._handle($self), #' $level)
+     | base.#{log-message}(_Logger._handle($self),
+                           #' $level,
+                           $arg,
+                           ...)'
+
+  fun parse_log(self, head, tail, level):
+    match tail
+    | '($(str :: Group)) $tail ...':
+        values(generate_log(self, level, 'check_str($str, #'$level)'),
+               '$tail ...')
+    | '($str, ~data: $data) $tail ...':
+        values(generate_log(self, level, 'check_str($str, #'$level)', data),
+               '$tail ...')
+    | '(~data: $data, $str) $tail ...':
+        values(generate_log(self, level, 'check_str($str, #'$level)', data),
+               '$tail ...')
+    | '$(args && '($_, ...)') $tail ...':
+        syntax_meta.error("expected a single argument with optional `~data`",
+                          head,
+                          args)
+    | ~else:
+        syntax_meta.error("expected parenthesed arguments afterward",
+                          head)
+
+class Logger(private _handle):
+  internal _Logger
+
+  constructor (~topic: topic :: maybe(Symbol) = #false,
+               ~parent: parent :: maybe(Logger) = Logger.current(),
+               ~propagate: propoagate :: Logger.Level || Map.of(maybe(Symbol), Logger.Level) = #'debug):
+    let propoagate = normalize_topics(propoagate)
+    _Logger(base.#{make-logger}(topic, parent?._handle, & propoagate))
+
+  property topic :~ maybe(String): base.#{logger-name}(_handle)
+  property handle: _handle
+
+  private implements Equatable
+  private override equals(other :~ Logger, recur):
+    other.handle === handle
+  private override hash_code(recur):
+    recur(handle)
+
+  method message(~level: level :: Logger.Level,
+                 ~topic: topic :: maybe(Symbol) = topic,
+                 msg :: String,
+                 ~data: data = #false,
+                 ~add_prefix = #true):
+    base.#{log-message}(handle, level, topic, msg, data, add_prefix)
+
+  method is_at(~level: level :: Logger.Level,
+               ~topic: topic :: maybe(Symbol) = #false):
+    base.#{log-level?}(handle, level, topic)
+
+  method max_at_level(~topic: topic :: maybe(Symbol) = #false) :~ maybe(Symbol):
+    base.#{log-max-level}(handle, topic)
+
+  method all_at_levels() :~ Map.of(maybe(Symbol), Symbol):
+    let all = base.#{log-all-levels}(handle)
+    recur fold(m :~ Map.of(Any, Set) = {}, all :~ PairList = all):
+      match all
+      | PairList[]: m
+      | PairList[level, topic, & rest]:
+          fold(m ++ { topic: level }, rest)
+
+  method level_change_evt() :~ Evt:
+    LoggerChangeEvt(base.#{log-level-evt}(_handle))
+
+  dot '$self . show':
+    ~head_stx head
+    ~tail '$tail ...'
+    match '$tail ...'
+    | '($arg, ...) $tail ...':
+        values(generate_log(self, #'error, 'log_show($arg, ...)'),
+               '$tail ...')
+    | ~else:
+        syntax_meta.error("expected parenthesed arguments afterward",
+                          head)
+  dot '$self . fatal':
+    ~head_stx head
+    ~tail '$tail ...'
+    parse_log(self, head, '$tail ...', #'fatal)
+  dot '$self . error':
+    ~head_stx head
+    ~tail '$tail ...'
+    parse_log(self, head, '$tail ...', #'error)
+  dot '$self . warning':
+    ~head_stx head
+    ~tail '$tail ...'
+    parse_log(self, head, '$tail ...', #'warning)
+  dot '$self . info':
+    ~head_stx head
+    ~tail '$tail ...'
+    parse_log(self, head, '$tail ...', #'info)
+  dot '$self . debug':
+    ~head_stx head
+    ~tail '$tail ...'
+    parse_log(self, head, '$tail ...', #'debug)
+
+  export:
+    current
+    from_handle
+    Level
+    Topics
+
+  def current :~ matching(_ :: Function.all_of(() -> Logger,
+                                               (Logger) -> Void)):
+    base.#{make-derived-parameter}(
+      base.#{current-logger},
+      fun (v :: Logger):
+        ~name: Logger.current
+        v.handle,
+      fun (hand):
+        _Logger(hand),
+      #'#{Logger.current},
+      #'rhombus
+    )
+
+  fun from_handle(handle):
+    ~who: who
+    unless base.#{logger?}(handle)
+    | error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "not a logger handle",
+            error.val(handle))
+    _Logger(handle)
+
+  enum Level
+  | fatal
+  | error
+  | warning
+  | info
+  | debug
+  | none
+  annot.macro 'Topics': 'satisfying(is_topics)'
+
+class LogReceiver(private _handle):
+  internal _LogReceiver
+
+  constructor (~logger: logger :: Logger = Logger.current(),
+               ~receive: receiver :: Logger.Level || Map.of(maybe(Symbol), Logger.Level) = #'debug):
+    let receiver = normalize_topics(receiver)
+    _LogReceiver(base.#{make-log-receiver}(logger.handle, & receiver))
+
+  implements Evt
+  private implements _Evt
+  override property handle: _handle
+  private override property sync_handle: _handle
+
+  export:
+    from_handle
+
+  fun from_handle(handle):
+    ~who: who
+    unless base.#{log-receiver?}(handle)
+    | error(~who: who,
+            ~exn: Exn.Fail.Annot,
+            "not a log receiver handle",
+            error.val(handle))
+    _LogReceiver(handle)
+
+class LoggerChangeEvt(hand):
+  implements Evt
+  private implements _Evt
+  opaque
+  override property handle: hand
+  private override property sync_handle: base.#{wrap-evt}(hand, fun (v): this)
+
+expr.macro 'log': 'Logger.current()'
+
+fun check_str(str, level):
+  unless str is_a String
+  | error(~who: "Logger." +& level,
+          error.annot_msg("argument"),
+          error.val(str),
+          error.annot("String"))
+  str
+
+fun log_show(arg, ...):
+  let o = Port.Output.open_string()
+  show(~out: o, arg, ...)
+  o.get_string()
+
+fun normalize_topics(v):
+  match v
+  | _ :: Logger.Level: [v, #false]
+  | { k: v, ...} :: Map:
+      List.append(& [[v, k], ...])

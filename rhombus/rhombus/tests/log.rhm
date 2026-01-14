@@ -1,0 +1,69 @@
+#lang rhombus/static
+import:
+  "version_guard.rhm"
+
+check log.topic ~is_a maybe(Logger.Level)
+check log.max_at_level() ~is_a Logger.Level
+check log == log ~is #true
+
+def l = Logger(~topic: #'test,
+               ~parent: #false)
+check:
+  l ~is_a Logger
+  l.topic ~is #'test
+  l.max_at_level() ~is #false
+  l.is_at(~level: #'error) ~is #false
+  l.is_at(~level: #'debug) ~is #false
+
+def r = LogReceiver(~logger: l,
+                    ~receive: #'info)
+
+version_guard.at_least "9.1.0.2":
+  check:
+    r ~is_a LogReceiver
+    r.sync(~timeout: 0) ~is #false
+    l.error("oops") ~is #void
+    r.sync() ~is_now Array(#'error, "test: oops", #false, #'test)
+    l.error("oops", ~data: #'yep) ~is #void
+    r.sync() ~is_now Array(#'error, "test: oops", #'yep, #'test)
+    l.message("ok", ~level: #'info, ~topic: #'example) ~is #void
+    r.sync() ~is_now Array(#'info, "example: ok", #false, #'example)
+    l.message("again", ~level: #'warning, ~topic: #'more, ~add_prefix: #false, ~data: [7]) ~is #void
+    r.sync() ~is_now Array(#'warning, "again", [7], #'more)
+    r.sync(~timeout: 0) ~is #false
+    l.max_at_level() ~is #'info
+    l.is_at(~level: #'error) ~is #true
+    l.is_at(~level: #'debug) ~is #false
+    l.all_at_levels() ~is { #false: #'info }
+
+  def l2 = Logger(~parent: l)
+
+  check:
+    l2.error("oops") ~is #void
+    r.sync() ~is_now Array(#'error, "oops", #false, #false)
+
+  check:
+    parameterize { Logger.current: l }:
+      log.error("err")
+    r.sync()
+    ~is_now Array(#'error, "test: err", #false, #'test)
+
+  def levt = l.level_change_evt()
+  check levt.sync(~timeout: 0) ~is #false
+
+  def r2 = LogReceiver(~logger: l,
+                       ~receive: { #'test: #'debug,  #false: #'error, #'other: #'error })
+
+  check:
+    l.all_at_levels() ~is { #false: #'info, #'other: #'info, #'test: #'debug }
+    l.error("oops") ~is #void
+    r.sync() ~is_now Array(#'error, "test: oops", #false, #'test)
+    r2.sync() ~is_now Array(#'error, "test: oops", #false, #'test)
+    l.debug("oops") ~is #void
+    r.sync(~timeout: 0) ~is #false
+    r2.sync() ~is_now Array(#'debug, "test: oops", #false, #'test)
+    l2.debug("oops") ~is #void
+    r.sync(~timeout: 0) ~is #false
+    r2.sync(~timeout: 0) ~is #false
+
+  check levt.sync(~timeout: 0) ~is levt

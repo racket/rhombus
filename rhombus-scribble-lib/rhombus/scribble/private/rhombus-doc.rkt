@@ -792,8 +792,8 @@
   (lambda (stx space-name vars)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)
-      [(group _ (parens (group _ (op ::) . _)) (op |.|) _ . more)
-       (extract-pattern-metavariables #'(group . more) vars)]))
+      [(group _ (parens (group id (op ::) . _)) (op |.|) _ . more)
+       (extract-pattern-metavariables #'(group . more) (add-metavariable vars #'id #f))]))
   (lambda (stx space-name subst)
     (syntax-parse stx
       #:datum-literals (group parens :: |.| op)

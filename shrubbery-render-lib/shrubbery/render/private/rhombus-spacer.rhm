@@ -19,6 +19,7 @@ import:
     rhombus.SequenceRange
     rhombus.DescendingListRange
     rhombus.DescendingRange
+    rhombus.Logger
 
 export:
   only_space spacer.typeset:
@@ -58,6 +59,7 @@ export:
     >..=
     >=..
     >=..=
+    log
     names:
       .
       #%literal
@@ -1468,3 +1470,8 @@ spacer.bridge >=..(~left: left, self, tail, context, esc):
 spacer.bridge >=..=(~left: left, self, tail, context, esc):
   ~in: ~expr
   adjust_range(left, self, tail, context, esc, ~descending: #true)
+
+spacer.bridge log(self, tail, context, esc):
+  ~in: ~expr
+  let new_self = Syntax.property(self, #'annot, Pair(#'as_export, 'Logger'), #true)
+  spacer.adjust_rest_sequence(new_self, tail, context, esc)
