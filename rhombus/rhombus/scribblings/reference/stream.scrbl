@@ -112,7 +112,7 @@ element by position via @rhombus(#%index).
  can be multiple values, in which case the corresponding element of the
  stream consists of multiple values.
 
- If @rhombus(first_expr) ir @rhombus(rest_expr) is prefixed with
+ If @rhombus(first_expr) or @rhombus(rest_expr) is prefixed with
  @rhombus(~eager), then the expression is evaluated at the time the
  stream is constructed, instead of delaying until the result is demanded.
 
