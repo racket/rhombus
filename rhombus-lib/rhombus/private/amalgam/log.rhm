@@ -47,9 +47,9 @@ class Logger(private _handle):
 
   constructor (~topic: topic :: maybe(Symbol) = #false,
                ~parent: parent :: maybe(Logger) = Logger.current(),
-               ~propagate: propoagate :: Logger.Level || Map.of(maybe(Symbol), Logger.Level) = #'debug):
-    let propoagate = normalize_topics(propoagate)
-    _Logger(base.#{make-logger}(topic, parent?._handle, & propoagate))
+               ~propagate: propagate :: Logger.Level || Map.of(maybe(Symbol), Logger.Level) = #'debug):
+    let propagate = normalize_topics(propagate)
+    _Logger(base.#{make-logger}(topic, parent?._handle, & propagate))
 
   property topic :~ maybe(String): base.#{logger-name}(_handle)
   property handle: _handle
