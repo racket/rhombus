@@ -7,10 +7,15 @@ export:
   render
   Renderer
 
-annot.macro 'Renderer':
-  annot_meta.pack_predicate('easy.#{renderer?}',
-                            '()')
+class Renderer(private _handle):
+  internal _Renderer
+  expression ~none
+  property handle: _handle
+  export:
+    from_handle
+  fun from_handle(handle) :~ Renderer:
+    _Renderer(handle)
 
 fun render(view :: WindowView,
            parent :: maybe(Renderer) = #false) :: Renderer:
-  easy.render(view.handle, parent)
+  _Renderer(easy.render(view.handle, parent?.handle))

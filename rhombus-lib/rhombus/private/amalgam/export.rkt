@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      enforest/operator
                      enforest/property
@@ -13,6 +14,7 @@
                      "introducer.rkt"
                      "tag.rkt"
                      "macro-result.rkt"
+                     "id-binding.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "all-spaces-out.rkt"
@@ -21,6 +23,7 @@
          "name-root-space.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
+         "dotted-sequence-parse.rkt"
          (submod "module-path.rkt" for-import-export)
          "space-parse.rkt"
          "parens.rkt"
@@ -374,7 +377,47 @@
                      (raise-syntax-error #f
                                          "unexpected after `.`"
                                          #'name.tail))
-                   form)]
+                   (define name-root-id (extensible-name-root (list #'name.name)))
+                   (cond
+                     [name-root-id
+                      (define extensions
+                        (let ns-loop ([base-ht #hasheq()] [int-id #'name.name] [name-root-id name-root-id] [orig-prefix #f])
+                          ;; look for extensions (in all spaces)
+                          (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))
+                          (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                                     #:do [(define intro (if space-sym
+                                                                             (make-interned-syntax-introducer/add space-sym)
+                                                                             (lambda (x) x)))]
+                                                     [sym (in-list (syntax-bound-symbols (intro int-id)))])
+                            (define str (symbol->immutable-string sym))
+                            (cond
+                              [(and (> (string-length str) (string-length prefix))
+                                    (string=? prefix (substring str 0 (string-length prefix))))
+                               (define id* (datum->syntax int-id sym int-id))
+                               (define id (intro id*))
+                               (cond
+                                 [(or (not (identifier-binding* id))
+                                      (and space-sym
+                                           (not (identifier-distinct-binding* id id*))))
+                                  ht]
+                                 [(identifier-extension-binding? id name-root-id)
+                                  (define key (string->symbol (substring str (string-length (or orig-prefix prefix)))))
+                                  (define new-ht
+                                    (hash-set ht key id*))
+                                  (if (eq? space-sym 'rhombus/namespace)
+                                      (ns-loop new-ht id* id (or orig-prefix prefix))
+                                      new-ht)]
+                                 [else ht])]
+                              [else ht]))))
+                      (cond
+                        [(= 0 (hash-count extensions))
+                         form]
+                        [else
+                         #`(combine-out
+                            #,form
+                            #,@(for/list ([(key id) (in-hash extensions)])
+                                 #`(all-spaces-out [#,id #,key])))])]
+                     [else form]))]
              [else
               (raise-syntax-error #f
                                   "not bound as a name root"

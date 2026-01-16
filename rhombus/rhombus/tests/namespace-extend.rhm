@@ -231,3 +231,24 @@ block:
   class Foo.Bar.X(x)
   check: Foo.Bar.X(1).x
          ~is 1
+
+// check that `all_from` exports extensions
+block:
+  namespace ns
+  def ns.x = 1
+  def ns.y = 2
+
+  namespace ns.sub
+  def ns.sub.z = 3
+
+  namespace ns.sub2:
+    export def w = 4
+
+  namespace ns2:
+    export:
+      all_from(.ns)
+
+  check ns2.x ~is 1
+  check ns2.y ~is 2
+  check ns2.sub.z ~is 3
+  check ns2.sub2.w ~is 4

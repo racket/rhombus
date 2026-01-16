@@ -43,7 +43,6 @@ annot.macro 'View.Alignment':
 annot.macro 'View.Stretch':
   '[Boolean, Boolean]'
 
-
 annot.macro 'View.LabelString':
   'String && LabelStringSized'
 
