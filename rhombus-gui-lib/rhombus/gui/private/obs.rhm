@@ -88,13 +88,12 @@ meta:
                                               | 'Obs') described_as ($stx))'
     annot_meta.pack_converter(b,
                               'block:
-                                 fun cvt(_, $bind described_as ($ann.group)):
+                                 fun cvt($bind described_as ($ann.group)):
                                    ~name: $(Symbol.from_string(Syntax.to_source_string(self)))
                                    $cvt
                                  if o is_a Obs
-                                 | _Obs(easy.#{impersonate-obs}(Obs.handle(o),
-                                                                ~ref: cvt,
-                                                                ~set: cvt))
+                                 | _Obs(Obs.handle(o),
+                                        compose_converters(_Obs._converter(o), cvt))
                                  | o',
                               if can_value
                               | '()'
@@ -119,9 +118,10 @@ annot.macro 'later_of($(ann_g :: Group))':
   let '$(ann :: annot_meta.Parsed(ctx))' = ann_g
   parse_obs_later_of(#false, stx, self, ann)
 
-class Obs(private _handle):
+class Obs(private _handle, private _converter = #false):
   internal _Obs
   property handle: _handle
+  private field _cache :~ maybe(Map) = #false
 
   constructor (v,
                ~name: name :: String = anon_str,
@@ -130,7 +130,26 @@ class Obs(private _handle):
                    ~name: if name === anon_str
                           | #'anon
                           | Symbol.from_string(name),
-                   ~#{derived?}: is_derived))
+                   ~#{derived?}: is_derived),
+          #false)
+
+  private method convert(v):
+    if _converter
+    | _converter(v)
+    | v
+
+  private method wrap_convert(f, ~cache = #false):
+    if _converter
+    | if cache
+      | unless _cache
+        | _cache := Map.by(===){}
+        _cache!!.maybe[f]
+          || block:
+            let new_f = fun (v): f(_converter(v))
+            _cache := _cache!! ++ { f: new_f }
+            new_f
+      | fun (v): f(_converter(v))
+    | f
 
   property
   | value: peek()
@@ -139,20 +158,22 @@ class Obs(private _handle):
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
 
-  method observe(f :: Function.of_arity(1)):
-    easy.#{obs-observe!}(handle, f)
+  method observe(f :: Function.of_arity(1)):    
+    easy.#{obs-observe!}(handle, wrap_convert(f, ~cache: #true))
 
   method unobserve(f :: Function.of_arity(1)):
-    easy.#{obs-unobserve!}(handle, f)
+    easy.#{obs-unobserve!}(handle, wrap_convert(f, ~cache: #true))
 
   method update(f :: Function.of_arity(1)):
-    easy.#{obs-update!}(handle, f)
+    easy.#{obs-update!}(handle, if _converter
+                                | fun (v): _converter(f(_converter(v)))
+                                | f)
 
   method peek() :: like_obs_value(this):
-    easy.#{obs-peek}(handle)
+    convert(easy.#{obs-peek}(handle))
 
   method map(f :: Function.of_arity(1)) :: Obs:
-    _Obs(easy.#{obs-map}(handle, f))
+    _Obs(easy.#{obs-map}(handle, wrap_convert(f)))
 
   method debounce(~duration: duration :: Nat = 200) :: Obs:
     _Obs(easy.#{obs-debounce}(~duration: duration))
@@ -165,6 +186,11 @@ class Obs(private _handle):
     now_of
     later_of
     rename: later_of as of
+
+fun compose_converters(converter, new_converter):
+  if converter
+  | fun (v): new_converter(converter(v))
+  | new_converter
 
 fun
 | combine(f :: Function, obs :: Obs, ...) :: Obs:

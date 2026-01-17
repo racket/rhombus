@@ -3,9 +3,31 @@ import:
   gui open
 
 block:
+  let orig_o = Obs("1")
+  let o :: Obs.later_of(Any.to_boolean) = orig_o
+  check o.value ~is #true
+  check o.value := #false ~is #void
+  check o.value ~is #false
+  check o.value := #'other ~is #void
+  check o.value ~is #true
+  check orig_o.value ~is #true
+  check orig_o.value := #'other ~is #void
+  check o.value ~is #true
+  check orig_o.value ~is #'other
+  let mutable save = #'unknown
+  let save_f = fun (v): save := v
+  check o.observe(save_f) ~is #void
+  check save ~is #'unknown
+  check orig_o.value := #'new ~is #void
+  check save ~is #true
+  check o.unobserve(save_f) ~is #void
+  check o.value := #false ~is #void
+  check save ~is #true
+
+block:
   let orig_o = Obs(["1"])
   let o :: Obs.later_of(List.later_of(Int)) = orig_o
-  check o.update(fun (x :~ List): x[0]) ~throws error.annot_msg("argument")
+  check o.update(fun (x :~ List): x[0]) ~throws error.annot_msg("current element")
   check orig_o.peek() ~is ["1"]
   o.update(fun (x): ["no"])
   let v :~ List = orig_o.peek()
