@@ -1,11 +1,11 @@
 #lang rhombus/static/and_meta
-import:
-  "symbol_map.rhm".symbol_set_annot
 
 export:
   DC
 
 namespace DC:
   export TextCombine
-  symbol_set_annot TextCombine:
-    { kern, grapheme, char }
+  enum TextCombine
+  | kern
+  | grapheme
+  | char

@@ -1,10 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
-  "symbol_map.rhm":
-    expose:
-      symbol_map_annot
-      symbol_set_annot
+  "symbol_map.rhm".symbol_map_annot
   lib("racket/base.rkt") as racket
 
 export:
@@ -77,32 +74,53 @@ class Font(private _handle):
     kind_to_name
     from_handle
 
-  symbol_set_annot Kind:
-    { default, decorative, roman, script, swiss,
-      modern, symbol, system }
+  enum Kind
+  | default
+  | decorative
+  | roman
+  | script
+  | swiss
+  | modern
+  | symbol
+  | system
 
-  symbol_set_annot Style:
-    { normal, italic, slant }
+  enum Style
+  | normal
+  | italic
+  | slant
 
-  symbol_set_annot Weight:
-    ~is_a Int.in(100 ..= 1000)
-    { thin, ultralight, light, semilight, book, normal,
-      medium, semibold, bold, ultrabold, heavy, ultraheavy }
+  enum Weight
+  | ~is_a Int.in(100 ..= 1000)
+  | thin
+  | ultralight
+  | light
+  | semilight
+  | book
+  | normal
+  | medium
+  | semibold
+  | bold
+  | ultrabold
+  | heavy
+  | ultraheavy
 
-  symbol_map_annot Smoothing convert_smoothing unconvert_smoothing:
-    { default: default,
-      partly_smoothed: #{partly-smoothed},
-      smoothed: smoothed,
-      unsmoothed: unsmoothed }
+  symbol_map_annot Smoothing convert_smoothing unconvert_smoothing
+  | default
+  | partly_smoothed = #{partly-smoothed}
+  | smoothed
+  | unsmoothed
 
-  symbol_set_annot Hinting:
-    { aligned, unaligned }
+  enum Hinting
+  | aligned
+  | unaligned
 
-  symbol_set_annot NameListKind:
-    { all, mono }
+  enum NameListKind:
+  | all
+  | mono
 
-  symbol_set_annot  NameListDetail:
-    { face, font }
+  enum  NameListDetail
+  | face
+  | font
 
   annot.macro 'FeatureString':
     annot_meta.pack_predicate('is_feature_string',

@@ -2,10 +2,7 @@
 import:
   lib("racket/gui/easy.rkt")
   lib("racket/gui/base.rkt") as gui
-  rhombus/draw/private/symbol_map:
-    expose:
-      symbol_map_annot
-      symbol_set_annot
+  rhombus/draw/private/symbol_map.symbol_map_annot
   rhombus/draw/private/rkt
 
 export:
@@ -121,25 +118,26 @@ class MouseEvent():
     Down
     Button
 
-  symbol_map_annot Kind convert_kind unconvert_kind:
-    { enter: enter,
-      leave: leave,
-      left_down: #{left-down},
-      left_up: #{left-up},
-      middle_down: #{middle-down},
-      middle_up: #{middle-up},
-      right_down: #{right-down},
-      right_up: #{right-up},
-      motion: motion }
+  symbol_map_annot Kind convert_kind unconvert_kind
+  | enter = enter
+  | leave = leave
+  | left_down = #{left-down}
+  | left_up = #{left-up}
+  | middle_down = #{middle-down}
+  | middle_up = #{middle-up}
+  | right_down = #{right-down}
+  | right_up = #{right-up}
+  | motion
 
-  symbol_set_annot Down:
-    { left, middle, right,
-      shift, control, meta, alt,
-      caps, mod3, mod4, mod5 }
+  enum Down
+  | left
+  | middle
+  | right
+  | shift | control | meta | alt
+  | caps | mod3 | mod4 | mod5
 
-  symbol_set_annot Button:
-    { left, middle, right, any }
-
+  enum Button
+  | left | middle | right | any
 
 class KeyEvent():
   extends KeyMouseEvent
@@ -195,82 +193,82 @@ class KeyEvent():
     Down
     Key
 
-  symbol_map_annot  Key convert_key:
-    { start: start,
-      cancel: cancel,
-      clear: clear,
-      shift: shift,
-      rshift: rshift,
-      control: control,
-      rcontrol: rcontrol,
-      menu: menu,
-      pause: pause,
-      capital: capital,
-      prior: prior,
-      next: next,
-      end: end,
-      home: home,
-      left: left,
-      up: up,
-      right: right,
-      down: down,
-      escape: escape,
-      select: select,
-      print: print,
-      execute: execute,
-      snapshot: snapshot,
-      insert: insert,
-      help: help,
-      numpad0: numpad0,
-      numpad1: numpad1,
-      numpad2: numpad2,
-      numpad3: numpad3,
-      numpad4: numpad4,
-      numpad5: numpad5,
-      numpad6: numpad6,
-      numpad7: numpad7,
-      numpad8: numpad8,
-      numpad9: numpad9,
-      numpad_enter: #{numpad-enter},
-      multiply: multiply,
-      add: add,
-      separator: separator,
-      subtract: subtract,
-      decimal: decimal,
-      divide: divide,
-      f1: f1,
-      f2: f2,
-      f3: f3,
-      f4: f4,
-      f5: f5,
-      f6: f6,
-      f7: f7,
-      f8: f8,
-      f9: f9,
-      f10: f10,
-      f11: f11,
-      f12: f12,
-      f13: f13,
-      f14: f14,
-      f15: f15,
-      f16: f16,
-      f17: f17,
-      f18: f18,
-      f19: f19,
-      f20: f20,
-      f21: f21,
-      f22: f22,
-      f23: f23,
-      f24: f24,
-      numlock: numlock,
-      scroll: scroll,
-      wheel_up: #{wheel-up},
-      wheel_down: #{wheel-down},
-      wheel_left: #{wheel-left},
-      wheel_right: #{wheel-right},
-      release: release,
-      press: press }
+  symbol_map_annot  Key convert_key
+  | start
+  | cancel
+  | clear
+  | shift
+  | rshift
+  | control
+  | rcontrol
+  | menu
+  | pause
+  | capital
+  | prior
+  | next
+  | end
+  | home
+  | left
+  | up
+  | right
+  | down
+  | escape
+  | select
+  | print
+  | execute
+  | snapshot
+  | insert
+  | help
+  | numpad0
+  | numpad1
+  | numpad2
+  | numpad3
+  | numpad4
+  | numpad5
+  | numpad6
+  | numpad7
+  | numpad8
+  | numpad9
+  | numpad_enter = #{numpad-enter}
+  | multiply
+  | add
+  | separator
+  | subtract
+  | decimal
+  | divide
+  | f1
+  | f2
+  | f3
+  | f4
+  | f5
+  | f6
+  | f7
+  | f8
+  | f9
+  | f10
+  | f11
+  | f12
+  | f13
+  | f14
+  | f15
+  | f16
+  | f17
+  | f18
+  | f19
+  | f20
+  | f21
+  | f22
+  | f23
+  | f24
+  | numlock
+  | scroll
+  | wheel_up = #{wheel-up}
+  | wheel_down = #{wheel-down}
+  | wheel_left = #{wheel-left}
+  | wheel_right = #{wheel-right}
+  | release
+  | press
 
-  symbol_set_annot Down:
-    { shift, control, meta, alt,
-      caps, mod3, mod4, mod5 }
+  enum Down
+  | shift | control | meta | alt
+  | caps | mod3 | mod4 | mod5

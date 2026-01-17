@@ -43,13 +43,13 @@ class Window(private _handle):
   export:
     Style
 
-  symbol_map_annot Style convert_style:
-    { no_resize_border: #{no-resize-border},
-      no_caption: #{no-caption},
-      no_system_menu: #{no-system-menu},
-      hide_menu_bar: #{hide-menu-bar},
-      toolbar_button: #{toolbar-button},
-      float: float,
-      metal: metal,
-      fullscreen_button: #{fullscreen-button},
-      fullscreen_aux: #{fullscreen-aux} }
+  symbol_map_annot Style convert_style
+  | no_resize_border = #{no-resize-border}
+  | no_caption = #{no-caption}
+  | no_system_menu = #{no-system-menu}
+  | hide_menu_bar = #{hide-menu-bar}
+  | toolbar_button = #{toolbar-button}
+  | float
+  | metal
+  | fullscreen_button = #{fullscreen-button}
+  | fullscreen_aux = #{fullscreen-aux}

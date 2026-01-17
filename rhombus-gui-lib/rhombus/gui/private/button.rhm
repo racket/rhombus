@@ -38,16 +38,16 @@ class Button(private _handle):
     Style
     LabelPosition
 
-  symbol_map_annot Style convert_style:
-    { border: border,
-      multi_line: #{multi-line},
-      deleted: deleted }
+  symbol_map_annot Style convert_style
+  | border
+  | multi_line = #{multi-line}
+  | deleted
 
-  symbol_map_annot LabelPosition convert_label_pos:
-    { left: left,
-      top: top,
-      right: right,
-      bottom: bottom }
+  symbol_map_annot LabelPosition convert_label_pos
+  | left
+  | top
+  | right
+  | bottom
 
 fun
 | unwrap_bitmap(b :: Bitmap): b.handle

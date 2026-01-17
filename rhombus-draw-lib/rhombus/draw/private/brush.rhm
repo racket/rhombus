@@ -5,10 +5,7 @@ import:
   "color.rhm".Color
   "color.rhm"!private._Color
   "color.rhm"!private.unwrap_color
-  "symbol_map.rhm":
-    expose:
-      symbol_map_annot
-      symbol_set_annot
+  "symbol_map.rhm".symbol_map_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
   "bitmap-interface.rhm".Bitmap as _Bitmap
   "bitmap-interface.rhm".bitmap_from_handle
@@ -109,17 +106,17 @@ class Brush(private _handle):
     Style
     from_handle
 
-  symbol_map_annot Style style_convert style_unconvert:
-    { transparent: transparent,
-      solid: solid,
-      opaque: opaque,
-      hilite: hilite,
-      bdiagonal_hatch: #{bdiagonal-hatch},
-      crossdiag_hatch: #{crossdiag-hatch},
-      fdiagonal_hatch: #{fdiagonal-hatch},
-      cross_hatch: #{cross-hatch},
-      horizontal_hatch: #{horizontal-hatch},
-      vertical_hatch: #{vertical-hatch} }
+  symbol_map_annot Style style_convert style_unconvert
+  | transparent
+  | solid
+  | opaque
+  | hilite
+  | bdiagonal_hatch = #{bdiagonal-hatch}
+  | crossdiag_hatch = #{crossdiag-hatch}
+  | fdiagonal_hatch = #{fdiagonal-hatch}
+  | cross_hatch = #{cross-hatch}
+  | horizontal_hatch = #{horizontal-hatch}
+  | vertical_hatch = #{vertical-hatch}
 
   fun from_handle(handle) :~ Brush:
     unless handle rkt.is_a rkt.#{brush%}

@@ -1,6 +1,5 @@
 #lang rhombus/static/and_meta
 import:
-  rhombus/draw/private/symbol_map.symbol_set_annot
   lib("racket/gui/base.rkt").#{label-string?}
 
 export:

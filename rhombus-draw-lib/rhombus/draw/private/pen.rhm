@@ -4,10 +4,7 @@ import:
   "color.rhm".Color
   "color.rhm"!private._Color
   "color.rhm"!private.unwrap_color
-  "symbol_map.rhm":
-    expose:
-      symbol_map_annot
-      symbol_set_annot
+  "symbol_map.rhm".symbol_map_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
   "bitmap-interface.rhm".Bitmap as _Bitmap
   "bitmap-interface.rhm".bitmap_from_handle
@@ -63,24 +60,28 @@ class Pen(private _handle):
     Join
     from_handle
 
-  symbol_map_annot Style style_convert style_unconvert:
-    { transparent: transparent,
-      solid: solid,
-      hilite: hilite,
-      dot: dot,
-      long_dash: #{long-dash},
-      show_dash: #{short-dash},
-      dot_dash: #{dot-dash},
-      xor_dot: #{xor-dot},
-      xor_long_dot: #{xor-long-dash},
-      xor_short_dot: #{xor-short-dash},
-      xor_dot_dash: #{xor-dot-dash} }
+  symbol_map_annot Style style_convert style_unconvert
+  | transparent
+  | solid
+  | hilite
+  | dot
+  | long_dash = #{long-dash}
+  | show_dash = #{short-dash}
+  | dot_dash = #{dot-dash}
+  | xor_dot = #{xor-dot}
+  | xor_long_dot = #{xor-long-dash}
+  | xor_short_dot = #{xor-short-dash}
+  | xor_dot_dash = #{xor-dot-dash}
 
-  symbol_set_annot Cap:
-    { round, projecting, butt}
+  enum Cap
+  | round
+  | projecting
+  | butt
 
-  symbol_set_annot Join:
-    { round, bevel, miter }
+  enum Join
+  | round
+  | bevel
+  | miter
 
   fun from_handle(handle) :~ Pen:
     unless handle rkt.is_a rkt.#{pen%}

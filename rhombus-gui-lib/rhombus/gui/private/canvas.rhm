@@ -56,18 +56,18 @@ class Canvas(private _handle):
   export:
     Style
 
-  symbol_map_annot Style convert_style:
-    { border: border,
-      control_border: #{control-border},
-      combo: combo,
-      vscroll: vscroll,
-      hscroll: hscroll,
-      resize_corner: #{resize-corner},
-      gl: gl,
-      no_autoclear: #{no-autoclear},
-      transparent: transparent,
-      no_focus: #{no-focus},
-      deleted: deleted }
+  symbol_map_annot Style convert_style
+  | border
+  | control_border = #{control-border}
+  | combo
+  | vscroll
+  | hscroll
+  | resize_corner = #{resize-corner}
+  | gl
+  | no_autoclear = #{no-autoclear}
+  | transparent
+  | no_focus = #{no-focus}
+  | deleted
 
 interface CanvasContext:
   property client_size :~ draw.Size

@@ -57,14 +57,14 @@ class Input(private _handle, private _at_content :: Obs):
     StyleSymbol
     Action
 
-  symbol_map_annot StyleSymbol convert_style:
-    { deleted: deleted,
-      horizontal_label: #{horizontal-label},
-      hscroll: hscroll,
-      multiple: multiple,
-      password: password,
-      single: single,
-      vertical_label: #{vertical-label} }
+  symbol_map_annot StyleSymbol convert_style
+  | deleted
+  | horizontal_label = #{horizontal-label}
+  | hscroll
+  | multiple
+  | password
+  | single
+  | vertical_label = #{vertical-label}
 
   enum Action
   | input

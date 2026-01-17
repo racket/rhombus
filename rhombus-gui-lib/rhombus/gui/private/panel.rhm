@@ -15,15 +15,15 @@ export:
   GroupPanel
   TabsPanel
 
-symbol_map_annot PanelStyle convert_style:
-  { deleted: deleted,
-    border: border,
-    vscroll: vscroll,
-    hscroll: hscroll,
-    auto_vscroll: #{auto-vscroll},
-    auto_hscroll: #{auto-hscroll},
-    hide_vscroll: #{hide-vscroll},
-    hide_hscroll: #{hide-hscroll} }
+symbol_map_annot PanelStyle convert_style
+| deleted
+| border
+| vscroll
+| hscroll
+| auto_vscroll = #{auto-vscroll}
+| auto_hscroll = #{auto-hscroll}
+| hide_vscroll = #{hide-vscroll}
+| hide_hscroll = #{hide-hscroll}
 
 defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
               ~easy: $easy_name
@@ -85,8 +85,8 @@ def_panel GroupPanel(label :: ObsOrValue.of(View.LabelString) => (obs.unwrap)):
   export:
     Style
 
-  symbol_map_annot Style convert_style:
-    { deleted: deleted }
+  symbol_map_annot Style convert_style
+  | deleted
 
 class TabsPanel(private _handle, private _at_selection :: Obs):
   implements View
@@ -136,13 +136,13 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
     Style
     Action
 
-  symbol_map_annot Style convert_style:
-    { no_border: #{no-border},
-      can_reorder: #{can-reorder},
-      can_close: #{can-close},
-      new_button: #{new-button},
-      flat_portable: #{flat-portable},
-      deleted: deleted }
+  symbol_map_annot Style convert_style
+  | no_border = #{no-border}
+  | can_reorder = #{can-reorder}
+  | can_close = #{can-close}
+  | new_button = #{new-button}
+  | flat_portable = #{flat-portable}
+  | deleted
 
   enum Action
   | select

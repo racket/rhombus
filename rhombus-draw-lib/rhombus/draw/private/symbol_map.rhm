@@ -2,48 +2,42 @@
 
 export:
   symbol_map_annot
-  symbol_set_annot
+
+meta:
+  syntax_class SymTranslation
+  | '$(src :: Identifier) = $(dest :: Identifier)'
+  |'$(src :: Identifier)':
+     field dest = src
 
 defn.macro
-| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier) $(unconvert :: Identifier):
-     ~is_a $(annot :: Group)
-     ...
-     { $(src :: Identifier): $(dest :: Identifier), ...}':
+| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier) $(unconvert :: Identifier)
+   | ~is_a $(annot :: Group)
+   | ...
+   | $(sym :: SymTranslation)
+   | ...':
     '«
-       def table = { #'$src: #'$dest, ... }
-       def rev_table = { #'$dest: #'$src, ... }
+       def table = { #'$sym.src: #'$sym.dest, ... }
+       def rev_table = { #'$sym.dest: #'$sym.src, ... }
        fun is_symbol(v): table.has_key(v)
        fun $convert(v): table[v]
        fun $unconvert(v): rev_table[v]
        enum $name
        | ~is_a $annot
        | ...
-       | $src
+       | $sym.src
        | ...
      »'
-| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier):
-     ~is_a $(annot :: Group)
-     ...
-     { $(src :: Identifier): $(dest :: Identifier), ...}':
+| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier)
+   | ~is_a $(annot :: Group)
+   | ...
+   | $(sym :: SymTranslation)
+   | ...':
     '«
-       def table = { #'$src: #'$dest, ... }
+       def table = { #'$sym.src: #'$sym.dest, ... }
        fun $convert(v): table[v]
        enum $name
        | ~is_a $annot
        | ...
-       | $src
+       | $sym.src
        | ...
      »'
-
-defn.macro 'symbol_set_annot $(name :: Identifier):
-              ~is_a $(annot :: Group)
-              ...
-              { $(src :: Identifier), ...}':
-  '«
-     def table = { #'$src, ... }
-     enum $name
-     | ~is_a $annot
-     | ...
-     | $src
-     | ...
-   »'

@@ -6,9 +6,7 @@ import:
   "dc-interface.rhm"._DC
   "region-interface.rhm" as intf
   "path.rhm".Path
-  "symbol_map.rhm":
-    expose:
-      symbol_map_annot
+  "symbol_map.rhm".symbol_map_annot
 
 export:
   Region
@@ -75,9 +73,9 @@ class Region():
   export:
     Fill
 
-  symbol_map_annot Fill fill_convert:
-    { odd_even: #{odd-even},
-      winding: winding }
+  symbol_map_annot Fill fill_convert
+  | odd_even = #{odd-even}
+  | winding
 
   export:
     from_handle

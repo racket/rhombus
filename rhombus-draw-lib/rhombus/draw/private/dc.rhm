@@ -19,10 +19,7 @@ import:
       _Region
       set_wrap_dc
   "path.rhm".Path
-  "symbol_map.rhm":
-    expose:
-      symbol_map_annot
-      symbol_set_annot
+  "symbol_map.rhm".symbol_map_annot
   "bitmap-interface.rhm".Bitmap
   "transformation.rhm" open
   "transformation.rhm"!private open
@@ -262,15 +259,15 @@ interface DC:
   | layered_transformation := a :: LayeredTransformation:
       rkt.send handle.#{set-transformation}(_LayeredTransformation.hand(a))
 
-  symbol_set_annot Smoothing:
-    { unsmoothed, aligned, smoothed }
+  enum Smoothing
+  | unsmoothed | aligned | smoothed
 
-  symbol_set_annot BitmapOverlay:
-    { solid, opaque, xor }
+  enum BitmapOverlay
+  | solid | opaque | xor
 
-  symbol_map_annot Fill fill_convert:
-    { odd_even: #{odd-even},
-      winding: winding }
+  symbol_map_annot Fill fill_convert
+  | odd_even = #{odd-even}
+  | winding
 
   export:
     BitmapOverlay

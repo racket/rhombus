@@ -46,7 +46,7 @@ class Choice(private _handle, private _at_selection :: Obs):
   export:
     Style
 
-  symbol_map_annot Style convert_style:
-    { horizontal_label: #{horizontal-label},
-      vertical_label: #{vertical-label},
-      deleted: deleted }
+  symbol_map_annot Style convert_style
+  | horizontal_label = #{horizontal-label}
+  | vertical_label = #{vertical-label}
+  | deleted

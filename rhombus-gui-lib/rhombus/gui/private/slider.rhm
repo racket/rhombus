@@ -41,13 +41,13 @@ class Slider(private _handle, private _at_value :: Obs):
   export:
     Style
 
-  symbol_map_annot Style convert_style:
-    { horizontal: horizontal,
-      vertical: vertical,
-      plain: plain,
-      vertical_label: #{vertical-label},
-      horizontal_label: #{horizontal-label},
-      deleted: deleted }
+  symbol_map_annot Style convert_style
+  | horizontal
+  | vertical
+  | plain
+  | vertical_label = #{vertical-label}
+  | horizontal_label = #{horizontal-label}
+  | deleted
 
   property at_value :: Obs:
     _at_value.map(values)
