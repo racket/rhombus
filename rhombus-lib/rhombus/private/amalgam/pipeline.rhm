@@ -6,6 +6,7 @@ use_static
 
 export:
   |>
+  <|
   pipeline
 
 module for_maybe:
@@ -47,3 +48,13 @@ expr.macro '$arg |> $tail ...':
   ~order: pipeline
   parse_pipeline_expr(arg, '$self $tail ...',
                       ~as_static: syntax_meta.is_static(self))
+
+expr.macro '$func <| $tail ...':
+  ~op_stx: self
+  ~order: pipeline
+  let call = syntax_meta.dynamic_name('#%call', ~as_static: syntax_meta.is_static(self))
+  match '$tail ...'
+  | '$(args && '($_, ...)') $tail ...':
+      values('$func $call $args', '$tail ...')
+  | '$(arg :: expr_meta.AfterInfixParsed(self))':
+      values('$func $call ($arg)', '$arg.tail ...')

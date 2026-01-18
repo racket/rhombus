@@ -84,3 +84,24 @@ check:
     |> ([0] ++ _ ++ _)
   ~throws values("wrong number of arguments",
                  "based on static information")
+
+check:
+  math.sin <| 0 ~is 0
+  List <| (1, 2, & [3, 4]) ~is [1, 2, 3, 4]
+  math.abs <| 0 - 4 ~is 4
+  math.sin <| 1 |> math.sin ~is math.sin(math.sin(1))
+  math.sin <| (1, 2) ~throws "arity mismatch"
+
+check:
+  ~eval
+  use_static
+  math.sin <| (1, 2)
+  ~throws values("wrong number of arguments",
+                 "based on static information")
+
+check:
+  ~eval
+  use_static
+  List.cons <| 1
+  ~throws values("wrong number of arguments",
+                 "based on static information")

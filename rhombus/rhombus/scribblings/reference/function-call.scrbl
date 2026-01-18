@@ -138,3 +138,39 @@ normally bound to implement @tech{function} calls.
 )
 
 }
+
+@doc(
+  ~nonterminal:
+    arg_expr: block expr
+    fun_expr: block expr
+    arg: #%call arg
+
+  expr.macro '$fun_expr <| ($arg, ...)'
+  expr.macro '$fun_expr <| $arg_expr'
+  operator_order:
+    ~order: pipeline
+){
+
+ When @rhombus(<|) is followed by a parenthesized sequence, it is
+ effectively an alias of @rhombus(#%call). The alias is nevertheless
+ useful because @rhombus(<|) as an operator can continue a group as
+ indented on a new line.
+
+ When @rhombus(<|) is not followed by a parenthesized term, then it is
+ still a function call with the result of @rhombus(arg_expr) after
+ @rhombus(<|) as the argument.
+
+@examples(
+  ~repl:
+    math.abs <| -4
+  ~defn:
+    fun curried_list_build(x, y):
+      fun (z, w):
+        [x, y, z, w]
+  ~repl:
+    curried_list_build
+      <| (1, 2)
+      <| (3, 4)
+)
+
+}
