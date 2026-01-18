@@ -13,16 +13,17 @@ import:
       Obs
       ObsOrValue
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
 
 export:
   Input
 
-class Input(private _handle, private _at_content :: Obs):
-  implements View
-  override property handle: _handle
+class Input(private _at_content :: Obs):
+  extends BaseWindowView
 
   constructor (content :: ObsOrValue.of(Any) = "",
-               ~action: action :: maybe((Input.Action, String) -> ~any) = #false,
+               ~action: callback :: (Input.Action, String) -> ~any = values,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
@@ -31,24 +32,28 @@ class Input(private _handle, private _at_content :: Obs):
                // ~keymap: ... TODO
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-               ~mixin: mixin :: Function = values,
-               ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = fun (a, b): a == b,
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
+               ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values):
     let at_content = obs.to_obs(content)
-    super(easy.input(obs.unwrap(content), action,
-                     ~label: obs.unwrap(label),
-                     ~#{enabled?}: obs.unwrap(is_enabled),
-                     ~#{background-color}: obs.unwrap(bg_color),
-                     ~style: obs.unwrap_list(style, convert_style),
-                     ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
-                     ~margin: obs.unwrap_list(margin, values),
-                     ~#{min-size}: obs.unwrap_list(min_size, values),
-                     ~stretch: obs.unwrap_list(stretch, values),
-                     ~mixin: mixin,
-                     ~#{value=?}: is_equal,
-                     ~#{value->text}: val_to_txt),
-          at_content)
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.input(obs.unwrap(content),
+                         fun (action, str):
+                           callback(unconvert_action(action), to_string(str)),
+                         ~label: obs.unwrap(label),
+                         ~#{enabled?}: obs.unwrap(is_enabled),
+                         ~#{background-color}: obs.unwrap(bg_color),
+                         ~style: obs.unwrap_list(style, convert_style),
+                         ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
+                         ~margin: obs.unwrap_list(margin, values),
+                         ~#{min-size}: obs.unwrap_list(min_size, values),
+                         ~stretch: obs.unwrap_list(stretch, values),
+                         ~mixin: mix,
+                         ~#{value=?}: is_equal,
+                         ~#{value->text}: val_to_txt))
+          <| (at_content)
+    )
 
   property at_content :: Obs:
     _at_content.map(values)
@@ -66,6 +71,8 @@ class Input(private _handle, private _at_content :: Obs):
   | single
   | vertical_label = #{vertical-label}
 
-  enum Action
+  symbol_map_annot Action convert_action unconvert_action
   | input
   | return
+  | focus = #{has-focus}
+  | lost_focus = #{lost-focus}

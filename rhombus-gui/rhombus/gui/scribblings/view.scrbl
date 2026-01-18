@@ -4,17 +4,60 @@
 
 @title{Views}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   interface gui.View
 ){
 
- A @deftech{view} corresponds to @rhombus(#{view<%>}) from
- @racketmodname(racket/gui/easy).
+ A @deftech{view} describes a GUI widget that is created when the view
+ is rendered.
 
  Implementations of @rhombus(View, ~class) include
- @rhombus(Button, ~class) and @rhombus(Canvas, ~class).
+ @rhombus(Window, ~class), @rhombus(Button, ~class),
+ @rhombus(Canvas, ~class), @rhombus(Menu, ~class),
+ and @rhombus(MenuItem, ~class).
+
+}
+
+@doc(
+  interface gui.WindowChildView:
+    extends View
+){
+
+ A @deftech{window-child view} represents a view that can be included
+ within a window.
+
+ Create a @rhombus(WindowView, ~class) using classes like
+ @rhombus(Button, ~class), @rhombus(Canvas, ~class), and
+ @rhombus(VPanel, ~class),
+
+}
+
+@doc(
+  interface gui.WindowView:
+    extends WindowChildView
+){
+
+ A @deftech{window view} creates a window when the view is rendered.
+ It is an instance of @rhombus(WindowChildView, ~annot) because it
+ supports the methods associated with that interface, although a
+ @rhombus(WindowView, ~class) is not rendered with it is incorporated
+ directly in another @rhombus(WindowView, ~class).
+
+ Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class).
+
+}
+
+@doc(
+  interface gui.MenuChildView:
+    extends View
+){
+
+ A @deftech{menu-child view} represents a view that can be added to a
+ menu.
+
+ Create a @rhombus(MenuChildView, ~class) using @rhombus(Menu, ~class),
+ @rhombus(MenuItem, ~class), @rhombus(CheckableMenuItem, ~class), or
+ @rhombus(MenuItemSeparator, ~class).
 
 }
 
@@ -27,15 +70,48 @@
 
 }
 
-
 @doc(
-  interface gui.WindowView:
-    extends View
+  property (v :: gui.View).gui_handle :: Any
+  method (v :: gui.View).get_gui_handle(
+    ~who: who :: maybe(error.Who) = #false
+  ) :: Any
 ){
 
- A @deftech{window view} corresponds to @rhombus(#{window-view<%>}) from
- @racketmodname(racket/gui/easy).
+ The @rhombus(View.gui_handle) property and
+ @rhombus(View.get_gui_handle) method normally return the same value:
+ a Racket-level object for the @racketmodname(racket/gui, ~indirect)
+ library representing the @deftech{most recent rendering} of a view.
 
- Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class).
+ If the view has not been rendered, yet, @rhombus(View.gui_handle)
+ returns @rhombus(#false), while @rhombus(View.get_gui_handle) throws an
+ exception. The @rhombus(who) argument to @rhombus(View.get_gui_handle)
+ is included in the exception message, if any.
+
+ A view might be rendered multiple times because it is nested multiple
+ times within an enclosing view, or because @rhombus(render) is used
+ multiple time on the view or an enclosing view. Only the most recent
+ rendering is accessible, even if it has become hidden an an older
+ rendering is still active.
+
+}
+
+@doc(
+  method (v :: gui.WindowChildView).focus() :: Void
+){
+
+ Moves keyboard focus to the @tech{most recent rendering} of
+ @rhombus(v).
+
+}
+
+@doc(
+  method (v :: gui.WindowChildView).client_to_screen(
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :: values(View.PositionInt, View.PositionInt)
+){
+
+ Maps a position within the @tech{most recent rendering} of
+ @rhombus(v) to a position in screen coordinates.
 
 }

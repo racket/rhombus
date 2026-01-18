@@ -6,18 +6,25 @@ import:
     expose:
       View
       WindowView
-  "view.rhm"!private.to_view
+      WindowChildView
+  "view.rhm"!private:
+    expose:
+      BaseWindowView
+      to_view
   "obs.rhm":
     expose:
       Obs
       ObsOrValue
+  "view-help.rkt"
+  "window-help.rkt".add_window_callbacks
+  "menu.rhm".MenuBar
 
 export:
   Window
 
-class Window(private _handle):
+class Window():
+  extends BaseWindowView
   implements WindowView
-  override property handle: _handle
 
   constructor (~title: title :: ObsOrValue.of(String) = "Untitled",
                ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -25,20 +32,27 @@ class Window(private _handle):
                ~position: position :: ObsOrValue.of(View.Position) = #'center,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
-               ~mixin: mix :: Function = values,
-               child :: ObsOrValue.of(View),
+               ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
+               child :: ObsOrValue.of(WindowChildView),
                ...):
-    super(easy.window(~title: obs.unwrap(title),
-                      ~size: obs.unwrap_list(size, values),
-                      ~alignment: obs.unwrap_list(alignment, values),
-                      ~position: obs.unwrap(position),
-                      ~#{min-size}: obs.unwrap_list(min_size, values),
-                      ~stretch: obs.unwrap_list(stretch, values),
-                      ~style: obs.unwrap_list(style, convert_style),
-                      ~mixin: mix,
-                      to_view(child).handle,
-                      ...))
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.window(~title: obs.unwrap(title),
+                          ~size: obs.unwrap_list(size, values),
+                          ~alignment: obs.unwrap_list(alignment, values),
+                          ~position: obs.unwrap(position),
+                          ~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~style: obs.unwrap_list(style, convert_style),
+                          ~mixin: fun (cls):
+                                    mixin(add_window_callbacks(cls, is_enabled)),
+                          & (if menu_bar | [menu_bar!!.handle] | []),
+                          to_view(child).handle,
+                          ...))
+          <| ()
+    )
 
   export:
     Style

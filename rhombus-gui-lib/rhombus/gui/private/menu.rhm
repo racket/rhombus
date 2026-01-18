@@ -1,0 +1,160 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  lib("racket/gui/base.rkt").#{get-default-shortcut-prefix}
+  "obs.rhm":
+    expose:
+      ObsOrValue
+  "view.rhm":
+    expose:
+      View
+      MenuChildView
+  "view.rhm"!private:
+    expose:
+      BaseView
+      to_view
+  "view-help.rkt"
+  "event.rhm".KeyEvent
+  "event.rhm"!private.convert_key
+
+export:
+  MenuBar
+  Menu
+  MenuItem
+  CheckableMenuItem
+  MenuItemSeparator
+
+class MenuBar():
+  extends BaseView
+  constructor (~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               item :: ObsOrValue.of(Menu),
+               ...):
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{menu-bar}(~#{enabled?}: obs.unwrap(is_enabled),
+                               ~mixin: mix,
+                               to_view(item).handle,
+                               ...))
+          <| ()
+    )
+
+class Menu():
+  extends BaseView
+  implements MenuChildView
+  constructor (label :: ObsOrValue.of(View.LabelString),
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               item :: ObsOrValue.of(MenuChildView),
+               ...):
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{menu}(obs.unwrap(label),
+                           ~#{enabled?}: obs.unwrap(is_enabled),
+                           ~help: obs.unwrap(help_text),
+                           ~mixin: mix,
+                           to_view(item).handle,
+                           ...))
+          <| ()
+    )
+
+class MenuItem():
+  extends BaseView
+  implements MenuChildView
+  constructor (label :: ObsOrValue.of(View.LabelString),
+               ~action: action :: () -> ~any = values,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut)) = #false):
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{menu-item}(obs.unwrap(label),
+                                fun ():
+                                  action()
+                                  #void,
+                                ~#{enabled?}: obs.unwrap(is_enabled),
+                                ~help: obs.unwrap(help_text),
+                                ~shortcut: unwrap_shortcut(shortcut),
+                                ~mixin: mix))
+          <| ()
+    )
+
+  export:
+    default_shortcut_prefix
+    Shortcut
+
+  fun default_shortcut_prefix() :~ List.of(Symbol):
+    [& #{get-default-shortcut-prefix}()]
+
+  annot.macro 'Shortcut':
+    'Char || KeyEvent.Key || satisfying(is_shortcut_list)'
+
+def modifiers = Map.by(===){ #'alt: { #'windows, #'unix },
+                             #'cmd: { #'macosx },
+                             #'meta: { #'unix },
+                             #'ctl: { #'windows, #'unix, #'macosx },
+                             #'shift: { #'windows, #'unix, #'macosx },
+                             #'option: { #'macosx} }
+
+fun unwrap_shortcut(shortcut):
+  fun convert_char(v):
+    match v
+    | #false: v
+    | (v :: Char): v
+    | ~else: if v in modifiers
+             | v
+             | convert_key(v)
+  fun convert_lone_char(v):
+    match v
+    | #false: v
+    | ~else: PairList.append(#{get-default-shortcut-prefix}(),
+                             PairList[convert_char(v)])
+  obs.unwrap_maybe_list(shortcut, convert_char, convert_lone_char)
+
+fun is_shortcut_list(shortcut):
+  match shortcut
+  | [mod, ..., key]:
+      def mods = {mod, ...}
+      all(mod in modifiers, ...)
+        && mods.length() == Function.count(mod, ...)
+        && all(system.type() in modifiers[mod], ...)
+        && !(system.type() == #'unix
+               && #'alt in mods
+               && #'meta in mods)
+        && (key is_a (Char || KeyEvent.Key))
+      #true
+  | ~else:
+      #false
+
+class CheckableMenuItem():
+  extends BaseView
+  implements MenuChildView
+  constructor (label :: ObsOrValue.of(View.LabelString),
+               ~action: action :: (Any) -> ~any = values,
+               ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut)) = #false):
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{checkable-menu-item}(obs.unwrap(label),
+                                          fun (on):
+                                            action(on)
+                                            #void,
+                                          ~#{checked?}: obs.unwrap(is_checked),
+                                          ~#{enabled?}: obs.unwrap(is_enabled),
+                                          ~help: obs.unwrap(help_text),
+                                          ~shortcut: unwrap_shortcut(shortcut),
+                                          ~mixin: mix))
+          <| ()
+    )
+
+
+class MenuItemSeparator():
+  extends BaseView
+  implements MenuChildView
+  constructor ():
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{menu-item-separator}(~mixin: mix))
+          <| ()
+    )

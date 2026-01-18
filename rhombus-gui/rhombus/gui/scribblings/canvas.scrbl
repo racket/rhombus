@@ -6,11 +6,9 @@
 
 @title{Canvases}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class gui.Canvas():
-    implements View
+    implements WindowChildView
     constructor (
       data :: ObsOrValue.of(Any),
       draw :: #,(draw_DC) Any -> ~any,
@@ -21,8 +19,7 @@
       ~styles: styles :: ObsOrValue.of(List.of(Canvas.Style)) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~mixin: mix :: Function = values,
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]
     )
 ){
 

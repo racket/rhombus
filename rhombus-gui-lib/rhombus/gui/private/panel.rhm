@@ -2,8 +2,15 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "view.rhm".View
-  "view.rhm"!private.to_view
+  "view.rhm":
+    expose:
+      View
+      WindowChildView
+  "view.rhm"!private:
+    expose:
+      to_view
+      BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       Obs
@@ -29,9 +36,8 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
               ~easy: $easy_name
               $body
               ...':
-  'class $name(private _handle):
-     implements View
-     override property handle: _handle
+  'class $name():
+     extends BaseWindowView
 
      constructor ($arg :: $arg_annot ..., ...,
                   ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
@@ -41,18 +47,23 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
                   ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                   ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                   ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-                  child :: ObsOrValue.of(View),
+                  child :: ObsOrValue.of(WindowChildView),
                   $'...'):
-       super(easy . $easy_name($convert($arg), ...,
-                               ~alignment: obs.unwrap_list(alignment, values),
-                               ~#{enabled?}: obs.unwrap(is_enabled),
-                               ~style: obs.unwrap_list(style, convert_style),
-                               ~spacing: obs.unwrap(spacing),
-                               ~margin: obs.unwrap_list(margin, values),
-                               ~#{min-size}: obs.unwrap_list(min_size, values),
-                               ~stretch: obs.unwrap_list(stretch, values),
-                               to_view(child).handle,
-                               $'...'))
+       #{view-help}.#{mix-wrap}(
+         fun (mix):
+           super(easy . $easy_name($convert($arg), ...,
+                                   ~alignment: obs.unwrap_list(alignment, values),
+                                   ~#{enabled?}: obs.unwrap(is_enabled),
+                                   ~style: obs.unwrap_list(style, convert_style),
+                                   ~spacing: obs.unwrap(spacing),
+                                   ~margin: obs.unwrap_list(margin, values),
+                                   ~#{min-size}: obs.unwrap_list(min_size, values),
+                                   ~stretch: obs.unwrap_list(stretch, values),
+                                   ~mixin: mix,
+                                   to_view(child).handle,
+                                   $'...'))
+             <| ()
+       )
 
      $body
      ...'
@@ -88,9 +99,8 @@ def_panel GroupPanel(label :: ObsOrValue.of(View.LabelString) => (obs.unwrap)):
   symbol_map_annot Style convert_style
   | deleted
 
-class TabsPanel(private _handle, private _at_selection :: Obs):
-  implements View
-  override property handle: _handle
+class TabsPanel(private _at_selection :: Obs):
+  extends BaseWindowView
 
   constructor (choices :: ObsOrValue.of(List),
                ~choice_to_label: choice_to_label :: Any -> Any = values,
@@ -113,21 +123,24 @@ class TabsPanel(private _handle, private _at_selection :: Obs):
           action(what, [& choices], selected)
       | fun(_, _, selected):
           at_selection.value := selected
-    super(easy.tabs(obs.unwrap_list(choices, values),
-                    action,
-                    ~selection: obs.unwrap(at_selection),
-                    ~#{choice->label}: choice_to_label,
-                    ~#{choice=?}: choice_equal,
-                    ~alignment: obs.unwrap_list(alignment, values),
-                    ~#{enabled?}: obs.unwrap(is_enabled),
-                    ~style: obs.unwrap_list(style, convert_style),
-                    ~spacing: obs.unwrap(spacing),
-                    ~margin: obs.unwrap_list(margin, values),
-                    ~#{min-size}: obs.unwrap_list(min_size, values),
-                    ~stretch: obs.unwrap_list(stretch, values),
-                    to_view(child).handle,
-                    ...),
-          at_selection)
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.tabs(obs.unwrap_list(choices, values),
+                        action,
+                        ~selection: obs.unwrap(at_selection),
+                        ~#{choice->label}: choice_to_label,
+                        ~#{choice=?}: choice_equal,
+                        ~alignment: obs.unwrap_list(alignment, values),
+                        ~#{enabled?}: obs.unwrap(is_enabled),
+                        ~style: obs.unwrap_list(style, convert_style),
+                        ~spacing: obs.unwrap(spacing),
+                        ~margin: obs.unwrap_list(margin, values),
+                        ~#{min-size}: obs.unwrap_list(min_size, values),
+                        ~stretch: obs.unwrap_list(stretch, values),
+                        to_view(child).handle,
+                        ...))
+          <| (at_selection)
+    )
 
   property at_selection :: Obs:
     _at_selection.map(values)

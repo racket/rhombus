@@ -4,11 +4,9 @@
 
 @title{Controls}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class gui.Button():
-    implements View
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString
                                || draw.Bitmap
@@ -31,7 +29,7 @@
 
 @doc(
   class gui.Checkbox():
-    implements View
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
@@ -66,7 +64,7 @@
 
 @doc(
   class gui.Choice():
-    implements View
+    implements WindowChildView
     constructor (
       choices :: ObsOrValue.of(List),
       ~choice_to_label: choice_to_label :: Any -> Any = values,
@@ -115,7 +113,7 @@
 
 @doc(
   class gui.Slider():
-    implements View
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
@@ -156,7 +154,7 @@
 
 @doc(
   class gui.Label():
-    implements View
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
@@ -180,7 +178,7 @@
 
 @doc(
   class gui.Input():
-    implements View
+    implements WindowChildView
     constructor (
       content :: ObsOrValue.of(Any),
       ~action: action :: maybe((Input.Action, String) -> ~any) = #false,
@@ -192,8 +190,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~mixin: mixin :: Function = values,
-      ~is_equal_value: is_equal :: maybe(Function.of_arity(2)) = (fun (a, b): a == b),
+      ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
       ~value_to_text: val_to_txt :: Function = values
     )
 ){
@@ -218,7 +215,7 @@
 
 @doc(
   class gui.Spacer():
-    implements View
+    implements WindowChildView
 ){
 
    Returns a representation of a spacer.  Spacers extend to fill the
@@ -297,6 +294,8 @@
   enum gui.Input.Action
   | input
   | return
+  | focus
+  | lost_focus
 ){
 
  An action provided to the @rhombus(~action) callback function of an

@@ -5,6 +5,7 @@ import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
   rhombus/draw/private/dc!internal.SomeDC
   "event.rhm"!private:
     expose:
@@ -18,14 +19,14 @@ import:
     expose:
       ObsOrValue
   "canvas-help.rkt".add_canvas_callbacks
+  "view-help.rkt"
 
 export:
   Canvas
   CanvasContext
 
-class Canvas(private _handle):
-  implements View
-  override property handle: _handle
+class Canvas():
+  extends BaseWindowView
 
   constructor (data,
                draw :: (draw.DC, Any) -> ~any,
@@ -36,22 +37,25 @@ class Canvas(private _handle):
                ~styles: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-               ~mixin: mix :: Function = values):
-    super(easy.canvas(obs.unwrap(data),
-                      fun (dc, data): draw(SomeDC(dc), data),
-                      ~label: obs.unwrap(label),
-                      ~#{enabled?}: obs.unwrap(is_enabled),
-                      ~style: obs.unwrap_list(style, convert_style),
-                      ~margin: obs.unwrap_list(margin, values),
-                      ~#{min-size}: obs.unwrap_list(min_size, values),
-                      ~stretch: obs.unwrap_list(stretch, values),
-                      ~mixin: fun (c):
-                                mix(add_canvas_callbacks(
-                                      c,
-                                      fun (ev, w_handle): on_key(_KeyEvent(ev)(), _CanvasContext(w_handle)),
-                                      fun (ev, w_handle): on_mouse(_MouseEvent(ev)(), _CanvasContext(w_handle))
-                                    ))))
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.canvas(obs.unwrap(data),
+                          fun (dc, data): draw(SomeDC(dc), data),
+                          ~label: obs.unwrap(label),
+                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~style: obs.unwrap_list(style, convert_style),
+                          ~margin: obs.unwrap_list(margin, values),
+                          ~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~mixin: fun (c):
+                                    mixin(add_canvas_callbacks(
+                                            c,
+                                            fun (ev, w_handle): on_key(_KeyEvent(ev)(), _CanvasContext(w_handle)),
+                                            fun (ev, w_handle): on_mouse(_MouseEvent(ev)(), _CanvasContext(w_handle))
+                                          ))))
+          <| ()
+    )
 
   export:
     Style

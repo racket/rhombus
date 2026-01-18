@@ -3,6 +3,8 @@ import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       Obs
@@ -11,9 +13,8 @@ import:
 export:
   Slider
 
-class Slider(private _handle, private _at_value :: Obs):
-  implements View
-  override property handle: _handle
+class Slider(private _at_value :: Obs):
+  extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
@@ -27,16 +28,20 @@ class Slider(private _handle, private _at_value :: Obs):
     let at_value = obs.to_obs(value)
     let action = action || (fun (val):
                               at_value.value := val)
-    super(easy.slider(obs.unwrap(at_value),
-                      action,
-                      ~label: obs.unwrap(label),
-                      ~#{min-value}: obs.unwrap(min_value),
-                      ~#{max-value}: obs.unwrap(max_value),
-                      ~#{enabled?}: obs.unwrap(is_enabled),
-                      ~#{min-size}: obs.unwrap_list(min_size, values),
-                      ~stretch: obs.unwrap_list(stretch, values),
-                      ~style: PairList[& style].map(convert_style)),
-          at_value)
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.slider(obs.unwrap(at_value),
+                          action,
+                          ~label: obs.unwrap(label),
+                          ~#{min-value}: obs.unwrap(min_value),
+                          ~#{max-value}: obs.unwrap(max_value),
+                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~style: PairList[& style].map(convert_style),
+                          ~mixin: mixin))
+          <| (at_value)
+    )
 
   export:
     Style

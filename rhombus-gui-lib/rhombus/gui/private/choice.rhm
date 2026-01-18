@@ -3,6 +3,8 @@ import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       ObsOrValue
@@ -11,9 +13,8 @@ import:
 export:
   Choice
 
-class Choice(private _handle, private _at_selection :: Obs):
-  implements View
-  override property handle: _handle
+class Choice(private _at_selection :: Obs):
+  extends BaseWindowView
 
   constructor (choices :: ObsOrValue.of(List),
                ~choice_to_label: choice_to_label :: Any -> Any = values,
@@ -28,17 +29,21 @@ class Choice(private _handle, private _at_selection :: Obs):
     let at_selection = obs.to_obs(selection)
     let action = action || (fun (selected):
                               at_selection.value := selected)
-    super(easy.choice(obs.unwrap_list(choices, values),
-                      action,
-                      ~selection: obs.unwrap(at_selection),
-                      ~#{choice->label}: choice_to_label,
-                      ~#{choice=?}: choice_equal,
-                      ~label: obs.unwrap(label),
-                      ~#{enabled?}: obs.unwrap(is_enabled),
-                      ~style: obs.unwrap_list(style, convert_style),
-                      ~#{min-size}: obs.unwrap_list(min_size, values),
-                      ~stretch: obs.unwrap_list(stretch, values)),
-          at_selection)
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.choice(obs.unwrap_list(choices, values),
+                          action,
+                          ~selection: obs.unwrap(at_selection),
+                          ~#{choice->label}: choice_to_label,
+                          ~#{choice=?}: choice_equal,
+                          ~label: obs.unwrap(label),
+                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~style: obs.unwrap_list(style, convert_style),
+                          ~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~mixin: mixin))
+          <| (at_selection)
+    )
 
   property at_selection :: Obs:
     _at_selection.map(values)

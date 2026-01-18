@@ -2,6 +2,8 @@
 import:
   lib("racket/gui/easy.rkt")
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       Obs
@@ -10,9 +12,8 @@ import:
 export:
   Checkbox
 
-class Checkbox(private _handle, private _at_checked :: Obs):
-  implements View
-  override property handle: _handle
+class Checkbox(private _at_checked :: Obs):
+  extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: maybe(Boolean -> ~any) = #false,
@@ -21,11 +22,15 @@ class Checkbox(private _handle, private _at_checked :: Obs):
     let at_checked = obs.to_obs(is_checked)
     let action = action || (fun (on):
                               at_checked.value := on)
-    super(easy.checkbox(action,
-                        ~label: obs.unwrap(label),
-                        ~#{enabled?}: obs.unwrap(is_enabled),
-                        ~#{checked?}: obs.unwrap(at_checked)),
-          at_checked)
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.checkbox(action,
+                            ~label: obs.unwrap(label),
+                            ~#{enabled?}: obs.unwrap(is_enabled),
+                            ~#{checked?}: obs.unwrap(at_checked),
+                            ~mixin: mixin))
+          <| (at_checked)
+    )
 
   property at_is_checked :: Obs:
     _at_checked.map(values)

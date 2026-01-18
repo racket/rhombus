@@ -9,6 +9,8 @@ import:
   rhombus/draw/private/font!private._Font
   rhombus/draw/private/symbol_map.symbol_map_annot
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       Obs
@@ -17,18 +19,21 @@ import:
 export:
   Label
 
-class Label(private _handle, private _at_label :: Obs):
-  implements View
-  override property handle: _handle
+class Label(private _at_label :: Obs):
+  extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
                ~font: font :: Font = normal_control_font):
     let at_label = obs.to_obs(label)
-    super(easy.text(obs.unwrap(at_label),
-                    ~color: obs.unwrap(color),
-                    ~font: obs.unwrap_convert(font, fun (fnt): fnt && (fnt :~ Font).handle)),
-          at_label)
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.text(obs.unwrap(at_label),
+                        ~color: obs.unwrap(color),
+                        ~font: obs.unwrap_convert(font, fun (fnt): fnt && (fnt :~ Font).handle),
+                        ~mixin: mixin))
+          <| (at_label)
+    )
 
   property at_label :: Obs:
     _at_label.map(values)

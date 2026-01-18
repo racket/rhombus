@@ -7,8 +7,9 @@ export:
   ObsOrValue
   _Obs
   unwrap
-  unwrap_list
   unwrap_convert
+  unwrap_list
+  unwrap_maybe_list
   to_obs
   <~
   ~>
@@ -210,6 +211,13 @@ fun
 fun
 | unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun ([e, ...]): PairList[convert(e), ...]))
 | unwrap_list([e, ...], convert :: Function): PairList[convert(e), ...]
+
+fun
+| unwrap_maybe_list(o :: Obs, convert :: Function): unwrap(o.map(fun
+                                                                 | ([e, ...]): PairList[convert(e), ...]
+                                                                 | (v): convert(v)))
+| unwrap_maybe_list([e, ...], convert, convert_lone): PairList[convert(e), ...]
+| unwrap_maybe_list(v, convert, convert_lone): convert_lone(v)
 
 fun
 | to_obs(o :: Obs) :: Obs: o

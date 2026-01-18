@@ -4,8 +4,6 @@
 
 @title{Windows}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class gui.Window():
     implements WindowView
@@ -16,9 +14,10 @@
       ~position: position :: ObsOrValue.of(View.Position) = #'center,
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Window.Style)) = [],
-      ~mixin: mix :: Function = values,
-      child :: ObsOrValue.of(View), ...
+      ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
+      child :: ObsOrValue.of(WindowChildView), ...
     )
 ){
 

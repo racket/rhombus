@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/rkt_obj
   lib("racket/gui/easy.rkt"):
     expose:
       #{if-view}
@@ -12,13 +13,22 @@ import:
 export:
   View
   WindowView
+  WindowChildView
+  MenuChildView
 
 module private:
   export:
+    BaseView
+    BaseWindowView
     to_view
+    set_view_gui_handle
 
 interface View:
   property handle
+  property gui_handle
+
+  method get_gui_handle(who = #false):
+    gui_handle || error(~who: who, "view is not currently rendered")
 
   export:
     if
@@ -51,14 +61,57 @@ interface View:
        | ...
        | ~else: $else'
 
+interface WindowChildView:
+  extends View
+
+  method client_to_screen(
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :~ values(View.PositionInt, View.PositionInt):
+    ~who: who
+    rkt_obj.send get_gui_handle(who).#{client->screen}(x, y)
+
+  method focus():
+    ~who: who
+    rkt_obj.send get_gui_handle(who).#{focus}()
+
 interface WindowView:
+  extends WindowChildView
+
+interface MenuChildView:
   extends View
 
 fun unwrap_view(v :: View): v.handle
 
+class BaseView(private _handle):
+  nonfinal
+  implements View
+  internal _BaseView
+  override property handle: _handle
+
+  constructor (hand):
+    super(hand)
+
+  private field _gui_handle = #false
+  override property gui_handle: _gui_handle
+
+class BaseWindowView():
+  nonfinal
+  extends BaseView
+  implements WindowChildView
+
+  constructor (hand):
+    super(hand)()
+
 class AView(private _handle):
   implements View
+  internal _AView
   override property handle: _handle
+
+  private field _gui_handle = #false
+  override property gui_handle:
+    _gui_handle
+      || error("view is not currently rendered")
 
   constructor (hand):
     super(hand)
@@ -70,3 +123,6 @@ class AView(private _handle):
 fun
 | to_view(v :: View) :: View: v
 | to_view(o :: obs.Obs) :: View: AView(#{observable-view}(o.map(fun (v :: View): v.handle).handle))
+
+fun set_view_gui_handle(v :~ _BaseView, gui_handle):
+  v._gui_handle := gui_handle

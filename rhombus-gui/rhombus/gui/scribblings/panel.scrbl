@@ -4,11 +4,9 @@
 
 @title(~tag: "panels"){Panels and Tabs}
 
-@(~version_at_least "8.14.0.4")
-
 @doc(
   class gui.HPanel():
-    implements View
+    implements WindowChildView
     constructor (
       ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
       ~styles: styles :: ObsOrValue.of(List.of(HPanel.Style)) = [],
@@ -40,7 +38,7 @@
 
 @doc(
   class gui.GroupPanel():
-    implements View
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
@@ -60,7 +58,7 @@
 
 @doc(
   class gui.TabsPanel():
-    implements View
+    implements WindowChildView
     constructor (
       choices :: ObsOrValue.of(List),
       ~selection: selection :: ObsOrValue.of(Any),

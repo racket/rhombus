@@ -4,6 +4,8 @@ import:
   rhombus/draw/private/symbol_map.symbol_map_annot
   rhombus/draw.Bitmap
   "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
   "obs.rhm":
     expose:
       ObsOrValue
@@ -11,9 +13,8 @@ import:
 export:
   Button
 
-class Button(private _handle):
-  implements View
-  override property handle: _handle
+class Button():
+  extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(View.LabelString
                                         || Bitmap
@@ -26,13 +27,18 @@ class Button(private _handle):
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
-    super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
-                      action,
-                      ~#{enabled?}: obs.unwrap(is_enabled),
-                      ~style: obs.unwrap_list(style, convert_style),
-                      ~margin: obs.unwrap_list(margin, values),
-                      ~#{min-size}: obs.unwrap_list(min_size, values),
-                      ~stretch: obs.unwrap_list(stretch, values)))
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
+                          action,
+                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~style: obs.unwrap_list(style, convert_style),
+                          ~margin: obs.unwrap_list(margin, values),
+                          ~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~mixin: mixin))
+          <| ()
+    )
 
   export:
     Style

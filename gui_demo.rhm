@@ -1,7 +1,8 @@
 #lang rhombus/static
 import:
   draw
-  gui
+  gui:
+    expose <~
 
 // ----------------------------------------
 
@@ -45,56 +46,103 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.text(config["keyed"])
 
     // draw ghost dots (showing recent mouse movements)
-    let dot_size = [4, 4]
-    for values(brush :~ draw.Brush:
-                 draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
-      each [x, y] in (config["ghosts"] :: List).reverse()
-      dc.brush := brush
-      let x = x/scale
-      let y = y/scale
-      dc.ellipse([[x-2, y-2], dot_size])
-      brush with (color = brush.color with (alpha = brush.color.alpha * 0.7))
+    when config["track mouse"]
+    | let dot_size = [4, 4]
+      for values(brush :~ draw.Brush:
+                   draw.Brush(~color: draw.Color(0, 0, 0, 0.25))):
+        each [x, y] in (config["ghosts"] :: List).reverse()
+        dc.brush := brush
+        let x = x/scale
+        let y = y/scale
+        dc.ellipse([[x-2, y-2], dot_size])
+        brush with (color = brush.color with (alpha = brush.color.alpha * 0.7))
 
-    // face shape
-    dc.brush := draw.Brush(~color: "orange")
-    let face_rect = [x, y, s, s]
-    match config["shape"]
-    | "Circle": dc.ellipse(face_rect)
-    | "Square": dc.rectangle(face_rect)
-    | "Rounded": dc.rounded_rectangle(face_rect)
+    // Rotated face:
+    dc.save_and_restore:
+      dc.translate(w/2, h/2)
+      dc.rotate(config["rotation"])
+      dc.translate(-w/2, -h/2)
 
-    // mouth
-    dc.pen := draw.Pen(~color: "Black")
-    dc.brush := draw.Brush.none
-    match config["mood"]
-    | "Happy":
-        dc.arc([x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s], π * -3/4, π * -1/4)
-    | "Sad":
-        dc.arc([x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s], π * 1/4, π * 3/4)
+      // face shape
+      dc.brush := draw.Brush(~color: "orange")
+      let face_rect = [x, y, s, s]
+      match config["shape"]
+      | "Circle": dc.ellipse(face_rect)
+      | "Square": dc.rectangle(face_rect)
+      | "Rounded": dc.rounded_rectangle(face_rect)
 
-    // eyes
-    when config["eyes"]
-    | dc.pen := draw.Pen.none
-      dc.brush := draw.Brush(~color: "black")
-      let eye_size = [0.1*s, 0.1*s]
-      dc.ellipse([[x+0.3*s, y+0.3*s], eye_size])
-      dc.ellipse([[x+0.6*s, y+0.3*s], eye_size])
+      // mouth
+      dc.pen := draw.Pen(~color: "Black")
+      dc.brush := draw.Brush.none
+      match config["mood"]
+      | "Happy":
+          dc.arc([x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s], π * -3/4, π * -1/4)
+      | "Sad":
+          dc.arc([x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s], π * 1/4, π * 3/4)
 
-    // moustache
-    when config["moustache"]
-    | let p = draw.Path()
-      p.move_to([0, 0])
-      p.curve_to([20, -10], [80, -10], [100, 0])
-      p.curve_to([120, 10], [180, 0],  [200, -20])
-      p.curve_to([180, 20], [120, 40], [90, 30])
-      p.curve_to([60, 20],  [20, 20],  [0, 0])
-      p.close()
-      p.scale(s/500, s/500)
-      dc.pen := draw.Pen.none
-      dc.brush := draw.Brush(~color: "brown")
-      dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
-      p.scale(-1, 1)
-      dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
+      // eyes
+      when config["eyes"]
+      | dc.pen := draw.Pen.none
+        dc.brush := draw.Brush(~color: "black")
+        let eye_size = [0.1*s, 0.1*s]
+        dc.ellipse([[x+0.3*s, y+0.3*s], eye_size])
+        dc.ellipse([[x+0.6*s, y+0.3*s], eye_size])
+
+      // moustache
+      when config["moustache"]
+      | let p = draw.Path()
+        p.move_to([0, 0])
+        p.curve_to([20, -10], [80, -10], [100, 0])
+        p.curve_to([120, 10], [180, 0],  [200, -20])
+        p.curve_to([180, 20], [120, 40], [90, 30])
+        p.curve_to([60, 20],  [20, 20],  [0, 0])
+        p.close()
+        p.scale(s/500, s/500)
+        dc.pen := draw.Pen.none
+        dc.brush := draw.Brush(~color: "brown")
+        dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
+        p.scale(-1, 1)
+        dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
+
+    let name = config["name"]
+    let (nw, nh, _, _) = dc.text_extent(name)
+    dc.text(name, ~dx: (w - nw) / 2, ~dy: h - nh)
+
+// ----------------------------------------
+
+let track_mouse = gui.Obs(#true)
+let rotation = gui.Obs(0)
+
+def menu_bar:
+  fun rotate_item(label, dir, shortcut):
+    gui.MenuItem(label,
+                 ~action:
+                   fun ():
+                     rotation <~ fun (rot): rot + dir * math.pi/8,
+                 ~shortcut: shortcut)
+  gui.MenuBar(
+    gui.Menu(
+      "Config",
+      gui.CheckableMenuItem("Track Mouse",
+                            ~is_checked: track_mouse,
+                            ~action:
+                              fun (on):
+                                track_mouse <~ fun (_): on),
+      gui.MenuItemSeparator(),
+      rotate_item("Rotate Clockwise", -1, Char"R"),
+      rotate_item("Rotate Counterclockwise", 1, gui.MenuItem.default_shortcut_prefix() ++ [#'shift, Char"R"])
+    )
+  )
+
+// ----------------------------------------
+
+let name = gui.Obs("Smiley")
+
+def name_input:
+  gui.Input(name.value,
+            ~label: "Name",
+            ~action: fun (action, str):
+                       name <~ fun (_): str)
 
 // ----------------------------------------
 
@@ -123,6 +171,9 @@ def tabs:
   fun accum_key(ev :: gui.KeyEvent, area):
     keyed.update(fun (s :: String):
                    match ev.code
+                   | Char"\r":
+                       name_input.focus()
+                       s
                    | Char"\b" || Char"\x7F" /* ASCII delete */:
                        if s.length() == 0 | s | s.substring(0, s.length() - 1)
                    | c :: Char: s ++ to_string(c)
@@ -134,7 +185,10 @@ def tabs:
                             "moustache": stache.at_is_checked,
                             "scale": scale.at_value,
                             "ghosts": ghosts,
-                            "keyed": keyed }
+                            "keyed": keyed,
+                            "name": name,
+                            "track mouse": track_mouse,
+                            "rotation": rotation }
                             |> gui.Obs.combine(_)
                             |> gui.Canvas(_,
                                           draw_face,
@@ -157,9 +211,11 @@ def tabs:
                             | "Sad": gui.HPanel(canvas, happy_button)
                             )))
 
+
 // ----------------------------------------
 
-tabs
-  |> gui.Window(_,
-                ~size: [800, 600])
-  |> gui.render(_)
+def win = gui.Window(name_input,
+                     tabs,
+                     ~menu_bar: menu_bar,
+                     ~size: [800, 600])
+gui.render(win)

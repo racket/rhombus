@@ -1,14 +1,18 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/gui/easy.rkt")
-  "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
 
 export:
   Spacer
 
-class Spacer(private _handle):
-  implements View
-  override property handle: _handle
+class Spacer():
+  extends BaseWindowView
 
   constructor ():
-    super(easy.spacer())
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.spacer(~mixin: mixin))
+          <| ()
+    )

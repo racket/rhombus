@@ -6,6 +6,7 @@ import:
       ObsOrValue
   "gui/private/renderer.rhm"
   "gui/private/view.rhm"
+  "gui/private/menu.rhm"
   "gui/private/window.rhm"
   "gui/private/panel.rhm"
   "gui/private/canvas.rhm"
@@ -22,6 +23,7 @@ export:
   all_from(.obs)
   all_from(.renderer)
   all_from(.view)
+  all_from(.menu)
   all_from(.window)
   all_from(.panel)
   all_from(.canvas)
