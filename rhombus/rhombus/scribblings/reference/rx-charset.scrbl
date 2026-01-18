@@ -107,7 +107,7 @@ bytes to match for a byte-mode @tech{regexp}.
 ){
 
  Assuming that each @rhombus(charset) contains a single character,
- creates a charset that has those two characters and all characters in
+ creates a character set that has those two characters and all characters in
  between (based on @rhombus(Char.to_int) values). An error is reported if
  either @rhombus(charset) has zero or multiple characters.
 
@@ -163,7 +163,7 @@ bytes to match for a byte-mode @tech{regexp}.
 @doc(
   rx_charset.macro '! $charset'
   operator_order:
-    ~weaker_than: ~other
+    ~order: rx_negation
 ){
 
  Inverts @rhombus(charset) by creating a character set that has every

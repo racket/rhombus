@@ -91,7 +91,7 @@ rx_charset.macro '#%literal $(s :: String)':
   rx_charset_meta.pack(cs, s)
 
 rx_charset.macro '! $right':
-  ~weaker_than: ~other
+  ~order: rx_negation
   ~all_stx: stx
   rx_charset_meta.pack(rx_charset_meta.unpack(right).invert(),
                        stx)

@@ -3,12 +3,13 @@ import:
   "core-meta.rkt" open
 
 export:
-  rx_concatenation
   rx_repetition
   rx_subtraction
+  rx_enumeration
   rx_conjunction
   rx_disjunction
-  rx_enumeration
+  rx_negation
+  rx_concatenation
 
 operator_order.def rx_repetition
 
@@ -27,10 +28,14 @@ operator_order.def rx_disjunction:
     rx_repetition
     rx_enumeration
 
+operator_order.def rx_negation:
+  ~weaker_than:
+    ~other
+
 operator_order.def rx_concatenation:
   ~weaker_than:
     ~other
   ~stronger_than:
     rx_conjunction
     rx_disjunction
-
+    rx_negation

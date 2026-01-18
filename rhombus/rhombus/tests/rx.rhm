@@ -576,17 +576,43 @@ block:
   let r2 = rx'["a" ("b") "c"]'
   let r3 = rx'[("a") "b" "c"]'
   check:
-    r1.match("a") ~is r2.match("a")
-    r2.match("a") ~is r3.match("a")
+    r1.is_match("a") ~is #true
+    r2.is_match("a") ~is #true
+    r3.is_match("a") ~is #true
   check:
-    r1.match("b") ~is r2.match("b")
-    r2.match("b") ~is r3.match("b")
+    r1.is_match("b") ~is #true
+    r2.is_match("b") ~is #true
+    r3.is_match("b") ~is #true
   check:
-    r1.match("c") ~is r2.match("c")
-    r2.match("c") ~is r3.match("c")
+    r1.is_match("c") ~is #true
+    r2.is_match("c") ~is #true
+    r3.is_match("c") ~is #true
   check:
-    r1.match("d") ~is r2.match("d")
-    r2.match("d") ~is r3.match("d")
+    r1.is_match("d") ~is #false
+    r2.is_match("d") ~is #false
+    r3.is_match("d") ~is #false
+
+// regression test for precedence between `!` and concatenation
+block:
+  let r1 = rx'[! "a" "b"]'
+  let r2 = rx'[! "a" ("b")]'
+  let r3 = rx'[! "a" || "b"]'
+  check:
+    r1.is_match("a") ~is #false
+    r2.is_match("a") ~is #false
+    r3.is_match("a") ~is #false
+  check:
+    r1.is_match("b") ~is #false
+    r2.is_match("b") ~is #false
+    r3.is_match("b") ~is #false
+  check:
+    r1.is_match("c") ~is #true
+    r2.is_match("c") ~is #true
+    r3.is_match("c") ~is #true
+  check:
+    r1.is_match("d") ~is #true
+    r2.is_match("d") ~is #true
+    r3.is_match("d") ~is #true
 
 check:
   let rx'($offset: .)' = "a"

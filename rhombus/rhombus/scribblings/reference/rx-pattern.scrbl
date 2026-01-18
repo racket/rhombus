@@ -39,8 +39,6 @@ multiplying like the expression @rhombus(*) operator.
 @doc(
   rx.macro '#%literal $string'
   rx.macro '#%literal $bytes'
-  operator_order:
-    ~stronger_than: ~other
 ){
 
  A literal @tech{string} or @tech{byte string} can be used as a pattern.
@@ -483,8 +481,8 @@ multiplying like the expression @rhombus(*) operator.
 @doc(
   rx.macro 'lookahead($pat)'
   rx.macro 'lookbehind($pat)'
-  rx.macro '! lookahead($pat)'
-  rx.macro '! lookbehind($pat)'
+  rx.macro '! #,(@rhombus(lookahead, ~at rhombus/rx))($pat)'
+  rx.macro '! #,(@rhombus(lookbehind, ~at rhombus/rx))($pat)'
 ){
 
  Matches an empty position in the input where the subsequent (for
@@ -525,10 +523,10 @@ multiplying like the expression @rhombus(*) operator.
 
 
 @doc(
-  rx.macro 'if lookahead($pat) | $then_pat | $else_pat'
-  rx.macro 'if lookbehind($pat) | $then_pat | $else_pat'
-  rx.macro 'if ! lookahead($pat) | $then_pat | $else_pat'
-  rx.macro 'if ! lookbehind($pat) | $then_pat | $else_pat'
+  rx.macro 'if #,(@rhombus(lookahead, ~at rhombus/rx))($pat) | $then_pat | $else_pat'
+  rx.macro 'if #,(@rhombus(lookbehind, ~at rhombus/rx))($pat) | $then_pat | $else_pat'
+  rx.macro 'if #,(@rhombus(!, ~at rhombus/rx)) #,(@rhombus(lookahead, ~at rhombus/rx))($pat) | $then_pat | $else_pat'
+  rx.macro 'if #,(@rhombus(!, ~at rhombus/rx)) #,(@rhombus(lookbehind, ~at rhombus/rx))($pat) | $then_pat | $else_pat'
   rx.macro 'if #,(rhombus($, ~at rhombus/rx)) $identifier | $then_pat | $else_pat'
   rx.macro 'if #,(rhombus($, ~at rhombus/rx)) $int | $then_pat | $else_pat'
 ){
@@ -688,12 +686,16 @@ multiplying like the expression @rhombus(*) operator.
       rx_conjunction
       rx_repetition
       rx_enumeration
+  operator_order.def rx_negation:
+    ~weaker_than:
+      ~other
   operator_order.def rx_concatenation:
     ~weaker_than:
       ~other
     ~stronger_than:
       rx_conjunction
       rx_disjunction
+      rx_negation
 ){
 
  @tech(~doc: meta_doc){Operator orders} for @tech{regexp} and @tech{character set}
