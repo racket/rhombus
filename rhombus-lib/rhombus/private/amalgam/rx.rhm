@@ -370,13 +370,21 @@ rx.macro '.? $(g :: Greed) $()':
 
 rx.macro #%comp:
   ~order: rx_repetition
-| '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..')}') $(g :: Greed) $()':
+| '$left #%comp $(self && '{$(min :: Nat) $(bound_as rx_meta.space: '..')}') $(g :: Greed) $()':
     values(unary('repeat($min, #inf, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
-| '$left #%comp $(self && '{$(min :: Int) $(bound_as rx_meta.space: '..=') $(max :: Int)}') $(g :: Greed) $()':
+| '$left #%comp $(self && '{$(rge && '$(min :: Nat) $(bound_as rx_meta.space: '..=') $(max :: Nat)')}') $(g :: Greed) $()':
+    unless min.unwrap() .<= max.unwrap()
+    | syntax_meta.error(
+        "starting point must be less than or equal to ending point"
+          +& "\n  starting point: " +& min.unwrap()
+          +& "\n  ending point: " +& max.unwrap(),
+        self,
+        [rge, min, max]
+      )
     values(unary('repeat($min, $max, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
-| '$left #%comp $(self && '{$(count :: Int)}') $(g :: Greed) $()':
+| '$left #%comp $(self && '{$(count :: Nat)}') $(g :: Greed) $()':
     values(unary('repeat($count, $count, $g.mode, $self)', left, ~track: []),
            '$g.tail ...')
 

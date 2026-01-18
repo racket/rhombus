@@ -447,6 +447,10 @@ check_throws rx'lookbehind(.*)' "pattern must match a bounded sequence"
 check_throws rx'($x: .*) $x *' "repetition operand could match an empty string"
 check_throws rx'($x: .*) lookbehind($x)' "pattern must match a bounded sequence"
 check_throws rx'$"5"' "does not satisfy"
+check_throws rx'any{-1}' "expected literal nonnegative integer"
+check_throws rx'any{-1..}' "expected literal nonnegative integer"
+check_throws rx'any{-1..=0}' "expected literal nonnegative integer"
+check_throws rx'any{5..=0}' "starting point must be less than or equal to ending point"
 
 block:
   let r1 = rx'any ["abc"] any'

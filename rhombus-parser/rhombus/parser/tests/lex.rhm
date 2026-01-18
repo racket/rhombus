@@ -194,3 +194,31 @@ block:
     | any any any: #'any
   let i = Port.Input.open_string("abc")
   check u(i) ~is #'abc
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | any{-1}: lexeme
+  ~throws "expected literal nonnegative integer"
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | any{-1..}: lexeme
+  ~throws "expected literal nonnegative integer"
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | any{-1..=0}: lexeme
+  ~throws "expected literal nonnegative integer"
+
+check:
+  ~eval
+  import parser/lex open
+  lexer
+  | any{5..=0}: lexeme
+  ~throws "starting point must be less than or equal to ending point"

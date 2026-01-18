@@ -251,7 +251,8 @@ multiplying like the expression @rhombus(*) operator.
   starts at @rhombus(#neginf), and the intent of requiring a @rhombus(min) for
   a regexp repetition is to avoid suggesting that negative counts are
   possible.} A @rhombus(count), @rhombus(min), or @rhombus(max) must be a
- literal nonnegative integer.
+ literal nonnegative integer, and @rhombus(min) must be less than or equal
+ to @rhombus(max).
 
 @examples(
   ~eval: rx_eval

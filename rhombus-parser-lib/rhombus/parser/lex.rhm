@@ -148,13 +148,21 @@ lex_pattern.macro '! $right':
 
 lex_pattern.macro #%comp:
   ~order: rx.rx_repetition
-| '$left #%comp {$(min :: Int) $(bound_as lex_pattern_meta.space: '..')}':
+| '$left #%comp {$(min :: Nat) $(bound_as lex_pattern_meta.space: '..')}':
     lex_pattern_meta.pack(['repetition', min, '#inf',
                            lex_pattern_meta.unpack(left)])
-| '$left #%comp {$(min :: Int) $(bound_as lex_pattern_meta.space: '..=') $(max :: Int)}':
+| '$left #%comp $(self && '{$(rge && '$(min :: Nat) $(bound_as lex_pattern_meta.space: '..=') $(max :: Nat)')}')':
+    unless min.unwrap() .<= max.unwrap()
+    | syntax_meta.error(
+        "starting point must be less than or equal to ending point"
+          +& "\n  starting point: " +& min.unwrap()
+          +& "\n  ending point: " +& max.unwrap(),
+        self,
+        [rge, min, max]
+      )
     lex_pattern_meta.pack(['repetition', min, max,
                            lex_pattern_meta.unpack(left)])
-| '$left #%comp {$(count :: Int)}':
+| '$left #%comp {$(count :: Nat)}':
     lex_pattern_meta.pack(['repetition', count, count,
                            lex_pattern_meta.unpack(left)])
 
