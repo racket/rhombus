@@ -24,8 +24,8 @@ check:
   Time.from_seconds(now) ~is Time.from_seconds(now)
   Time.now() >= Time.from_seconds(now) ~is #true
   Time.now() < Time.from_seconds(now) ~is #false
-  Time.now().to_string() ~matches time_rx
-  Time.now().to_string(~time_format: #'nanoseconds) ~matches time_ns_rx
+  Time.now().to_string() |> time_rx.is_match(_) ~is #true
+  Time.now().to_string(~time_format: #'nanoseconds) |> time_ns_rx.is_match(_) ~is #true
   Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string() ~is "01:02:03"
   Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'seconds) ~is "01:02:03"
   Time(~hour: 1, ~minute: 2, ~second: 3, ~nanosecond: 4).to_string(~time_format: #'minutes) ~is "01:02"
