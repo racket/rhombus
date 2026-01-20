@@ -523,7 +523,7 @@
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
-   (lambda () (order-quote logical_conjuction))
+   (lambda () (order-quote logical_conjunction))
    null
    'automatic
    (lambda (form1 form2 stx ctx-kind)
@@ -549,7 +549,7 @@
 
 (define-unquote-binding-syntax \|\|
   (unquote-binding-infix-operator
-   (lambda () (order-quote logical_disjuction))
+   (lambda () (order-quote logical_disjunction))
    null
    'automatic
    (lambda (form1 form2 stx ctx-kind)

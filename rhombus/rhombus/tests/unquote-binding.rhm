@@ -289,3 +289,8 @@ check:
   | ': $('one two $(tail :: Group)')':
       tail
   ~matches 'three four'
+
+// check precedence of boolean operators
+check:
+  '1' matches '$('1' || !'2' && '"1"')' ~is #true
+  '"1"' matches '$('1' || !'2' && '"1"')' ~is #true

@@ -25,7 +25,7 @@
                                             (get-combined-primitive-contract " && " form))))
 (define-annotation-syntax &&
   (annotation-infix-operator
-   (lambda () (order-quote logical_conjuction))
+   (lambda () (order-quote logical_conjunction))
    null
    'automatic
    (lambda (lhs rhs stx ctx)
@@ -113,7 +113,7 @@
                                             (get-combined-primitive-contract " || " form))))
 (define-annotation-syntax \|\|
   (annotation-infix-operator
-   (lambda () (order-quote logical_disjuction))
+   (lambda () (order-quote logical_disjunction))
    null
    'automatic
    (lambda (lhs rhs stx ctx)

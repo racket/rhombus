@@ -25,7 +25,7 @@
 
 (define-binding-syntax &&
   (binding-infix-operator
-   (lambda () (order-quote logical_conjuction))
+   (lambda () (order-quote logical_conjunction))
    null
    'automatic
    (lambda (lhs rhs stx)
@@ -90,7 +90,7 @@
 
 (define-binding-syntax \|\|
   (binding-infix-operator
-   (lambda () (order-quote logical_disjuction))
+   (lambda () (order-quote logical_disjunction))
    null
    'automatic
    (lambda (lhs rhs stx)

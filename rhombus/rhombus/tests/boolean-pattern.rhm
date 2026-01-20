@@ -121,3 +121,8 @@ check: match "x".copy()
        | is_now #"x": "yes"
        | ~else: "no"
        ~is "no"
+
+// check precedence of boolean operators
+check:
+  1 matches (1 || !2 && "1") ~is #true
+  "1" matches (1 || !2 && "1") ~is #true

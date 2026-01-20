@@ -379,3 +379,8 @@ check:
   use_static
   fun (x :: None): x.length()
   ~throws "no such field or method"
+
+// check precedence of boolean operators
+check:
+  1 is_a (PosInt || !NegInt && String) ~is #true
+  "1" is_a (PosInt || !NegInt && String) ~is #true
