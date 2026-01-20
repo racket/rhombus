@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "origin.rkt")
          "binding.rkt"
          "static-info.rkt"
          "literal.rkt"
@@ -29,9 +30,11 @@
    null
    'automatic
    (lambda (lhs rhs stx)
-     (binding-form
-      #'and-infoer
-      #`(#,lhs #,rhs)))
+     (transfer-origins
+      (list lhs rhs)
+      (binding-form
+       #'and-infoer
+       #`(#,lhs #,rhs))))
    'left))
 
 (define-for-syntax (make-and-binding lhs rhs)
@@ -94,18 +97,20 @@
    null
    'automatic
    (lambda (lhs rhs stx)
-     (syntax-parse (list lhs rhs)
-       [(lhs-i::binding-form rhs-i::binding-form)
-        (cond
-          [(and (free-identifier=? #'lhs-i.infoer-id #'literal-infoer)
-                (free-identifier=? #'rhs-i.infoer-id #'literal-infoer))
-           (binding-form
-            #'literal-infoer
-            #`(#,@#'lhs-i.data #,@#'rhs-i.data))]
-          [else
-           (binding-form
-            #'or-infoer
-            #`(#,lhs #,rhs))])]))
+     (transfer-origins
+      (list lhs rhs)
+      (syntax-parse (list lhs rhs)
+        [(lhs-i::binding-form rhs-i::binding-form)
+         (cond
+           [(and (free-identifier=? #'lhs-i.infoer-id #'literal-infoer)
+                 (free-identifier=? #'rhs-i.infoer-id #'literal-infoer))
+            (binding-form
+             #'literal-infoer
+             #`(#,@#'lhs-i.data #,@#'rhs-i.data))]
+           [else
+            (binding-form
+             #'or-infoer
+             #`(#,lhs #,rhs))])])))
    'left))
 
 (define-syntax (or-infoer stx)
@@ -168,7 +173,9 @@
    null
    'automatic
    (lambda (form stx)
-     (binding-form #'not-infoer form))))
+     (transfer-origin
+      form
+      (binding-form #'not-infoer form)))))
 
 (define-syntax (not-infoer stx)
   (syntax-parse stx

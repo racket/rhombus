@@ -36,3 +36,5 @@ operator &&?? :~ Posn
 
 match 1
 | y && x :: Int: #void
+
+1 matches ((_ :: PosInt) || (_ :: NegInt) && !2)

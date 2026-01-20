@@ -16,11 +16,11 @@ runtime_path.def stxclass_rhm: "origin-stxclass.rhm"
 runtime_path.def space_rhm: "origin-space.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
-  Closeable.let in = Port.Input.open_file(o_rhm)
+  Closeable.let inp = Port.Input.open_file(o_rhm)
   let stx:
     modread.#{with-module-reading-parameterization}(
       fun ():
-        base.#{read-syntax}(Port.name(in), in)
+        base.#{read-syntax}(Port.name(inp), inp)
     )
   let exp_stx:
     parameterize { base.#{current-load-relative-directory}:
@@ -32,7 +32,7 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
              | base.#{make-interned-syntax-introducer}(space_sym)
              | fun (x, mode): x
   let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
-  let origins: MutableMap()
+  let origins = MutableMap{}
   fun search_props(v):
     cond
     | v is_a Identifier:
@@ -62,8 +62,7 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
     | ~else:
         #void
   search(exp_stx)
-  for:
-    each (sym, n): expect
+  for ((sym, n) in expect):
     check:
       [sym, origins.maybe[sym]?.length()]
       ~is [sym, n]
@@ -90,18 +89,27 @@ check_origins(annot_rhm,
                 #'OR: 2,
                 #'Array: 1,
                 #'#{->}: 1,
-                #'#{\|\|}: 1,
-                #'Function: 1 })
+                #'#{&&}: 1,
+                #'#{\|\|}: 2,
+                #'#{!}: 1,
+                #'Function: 1,
+                #'PosInt: 1,
+                #'NegInt: 1,
+                #'matching: 1 })
 
 check_origins(bind_rhm,
               #'#{rhombus/annot},
               { #'Posn: 24,
-                #'Int: 1 })
+                #'Int: 1,
+                #'PosInt: 1,
+                #'NegInt: 1 })
 
 check_origins(bind_rhm,
               #'#{rhombus/bind},
-              { #'#{&&}: 1,
-                #'#{::}: 6 })
+              { #'#{&&}: 2,
+                #'#{\|\|}: 1,
+                #'#{!}: 1,
+                #'#{::}: 8 })
 
 check_origins(repet_rhm,
               #'#{rhombus/repet},

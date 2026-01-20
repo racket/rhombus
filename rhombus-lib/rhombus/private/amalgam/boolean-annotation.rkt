@@ -220,22 +220,24 @@
    '()
    'automatic
    (lambda (form stx ctx)
-     (relocate+reraw
-      (datum->syntax #f (list stx form))
-      (syntax-parse form
-        [f::annotation-predicate-form
-         (annotation-predicate-form
-          #'(let ([pred f.predicate])
-              (lambda (v)
-                (not (pred v))))
-          #'())]
-        [f::annotation-binding-form
-         (annotation-binding-form
-          (binding-form
-           #'not-infoer
-           #'[result f.binding])
-          #'result
-          #'())])))))
+     (transfer-origin
+      form
+      (relocate+reraw
+       (datum->syntax #f (list stx form))
+       (syntax-parse form
+         [f::annotation-predicate-form
+          (annotation-predicate-form
+           #'(let ([pred f.predicate])
+               (lambda (v)
+                 (not (pred v))))
+           #'())]
+         [f::annotation-binding-form
+          (annotation-binding-form
+           (binding-form
+            #'not-infoer
+            #'[result f.binding])
+           #'result
+           #'())]))))))
 
 (define-syntax (not-infoer stx)
   (syntax-parse stx

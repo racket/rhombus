@@ -40,3 +40,5 @@ def x :~ Pt = 0
 let x2 :~ Pt = 0
 
 let x3 :~ Function.of_arity(1) = 0
+
+1 is_a (PosInt || NegInt && !matching(2))
