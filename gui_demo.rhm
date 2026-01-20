@@ -2,7 +2,9 @@
 import:
   draw
   gui:
-    expose <~
+    expose:
+      <~
+      ~>
 
 // ----------------------------------------
 
@@ -105,8 +107,17 @@ fun draw_face(dc :: draw.DC, config :: Map):
         dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
 
     let name = config["name"]
+    let [h_pos, v_pos] = config["name pos"]
     let (nw, nh, _, _) = dc.text_extent(name)
-    dc.text(name, ~dx: (w - nw) / 2, ~dy: h - nh)
+    dc.text(name,
+            ~dx: match h_pos
+                 | "Left": 0
+                 | "Center": (w - nw) / 2
+                 | "Right": w - nw,
+            ~dy: match v_pos
+                 | "Top": 0
+                 | "Center": (h - nh) / 2
+                 | "Bottom": h - nh)
 
 // ----------------------------------------
 
@@ -124,10 +135,10 @@ def menu_bar:
     gui.Menu(
       "Config",
       gui.CheckableMenuItem("Track Mouse",
-                            ~is_checked: track_mouse,
+                            ~is_checked: track_mouse.value,
                             ~action:
                               fun (on):
-                                track_mouse <~ fun (_): on),
+                                track_mouse.value := on),
       gui.MenuItemSeparator(),
       rotate_item("Rotate Clockwise", -1, Char"R"),
       rotate_item("Rotate Counterclockwise", 1, gui.MenuItem.default_shortcut_prefix() ++ [#'shift, Char"R"])
@@ -142,11 +153,67 @@ def name_input:
   gui.Input(name.value,
             ~label: "Name",
             ~action: fun (action, str):
-                       name <~ fun (_): str)
+                       name.value := str)
+
+def pos_button:
+  gui.Button("Position...",
+             ~action: fun ():
+                        gui.render(format_dialog,
+                                   renderer))
+
+def summary_button:
+  gui.Button("Summary",
+             ~action: fun ():
+                        gui.render(summary_win))
+
+def top_panel = gui.HPanel(name_input,
+                           gui.Progress(name ~> (fun (s :: String): math.min(10, s.length())),
+                                        ~max_value: 10,
+                                        ~min_size: [80, #false],
+                                        ~stretch: [#false, #false]),
+                           pos_button,
+                           summary_button,
+                           ~stretch: [#true, #false])
 
 // ----------------------------------------
 
-def tabs:
+def name_pos = gui.Obs(["Right", "Bottom"])
+def next_name_pos = gui.Obs(name_pos.value)
+
+def name_pos_v = gui.RadioChoice(["Top", "Center", "Bottom"],
+                                 ~stretch: [#false, #false],
+                                 ~selection: name_pos ~> fun ([h, v]): v,
+                                 ~action: fun (v):
+                                            next_name_pos <~ fun ([h, _]): [h, v])
+
+def name_pos_h = gui.RadioChoice(["Left", "Center", "Right"],
+                                 ~styles: [#'horizontal],
+                                 ~selection: name_pos ~> fun ([h, v]): h,
+                                 ~action: fun (h):
+                                            next_name_pos <~ fun ([_, v]): [h, v])
+
+def format_dialog = gui.Dialog(~title: "Position",
+                               gui.VPanel(
+                                 name_pos_v,
+                                 gui.Spacer(~min_size: [0, 20]),
+                                 name_pos_h
+                               ),
+                               gui.Spacer(~min_size: [0, 20]),
+                               gui.HPanel(
+                                 gui.Button("Ok",
+                                            ~action: fun ():
+                                                       name_pos.value := next_name_pos.value
+                                                       format_dialog.show(#false),
+                                            ~styles: [#'border]),
+                                 gui.Button("Cancel",
+                                            ~action: fun ():
+                                                       next_name_pos.value := name_pos.value
+                                                       format_dialog.show(#false))
+                               ))
+
+// ----------------------------------------
+
+def (tabs, config):
   let at_tab = gui.Obs("Happy")
   let shape = gui.Choice(gui.Obs(["Circle", "Square", "Rounded"]),
                          ~selection: "Circle")
@@ -160,36 +227,52 @@ def tabs:
                          ~styles: [#'plain, #'horizontal])
   let spacer = gui.Spacer()
 
+  let happy_sad_popup:
+    gui.PopupMenu(gui.MenuItem("Be Happy",
+                               ~action: fun ():
+                                          at_tab.value := "Happy"),
+                  gui.MenuItem("Too Sad",
+                               ~action: fun ():
+                                          at_tab.value := "Sad"))
+
   let ghosts = gui.Obs([])
   fun ghost_mouse(ev :: gui.MouseEvent, area):
-    ghosts.update(fun (l :: List):
-                    let keep :~ List:
-                      if l.length() < 10 | l | l.rest
-                    keep ++ [[ev.x, ev.y]])
+    ghosts <~ (fun (l :: List):
+                 let keep :~ List:
+                   if l.length() < 10 | l | l.rest
+                 keep ++ [[ev.x, ev.y]])
+    when ev.kind == gui.MouseEvent.Kind.right_down
+    | canvas.popup(happy_sad_popup,
+                   ev.x,
+                   ev.y)
 
   let keyed = gui.Obs("")
   fun accum_key(ev :: gui.KeyEvent, area):
-    keyed.update(fun (s :: String):
-                   match ev.code
-                   | Char"\r":
-                       name_input.focus()
-                       s
-                   | Char"\b" || Char"\x7F" /* ASCII delete */:
-                       if s.length() == 0 | s | s.substring(0, s.length() - 1)
-                   | c :: Char: s ++ to_string(c)
-                   | ~else: s)
+    keyed <~ (fun (s :: String):
+                match ev.code
+                | Char"\r":
+                    name_input.focus()
+                    s
+                | Char"\b" || Char"\x7F" /* ASCII delete */:
+                    if s.length() == 0 | s | s.substring(0, s.length() - 1)
+                | c :: Char: s ++ to_string(c)
+                | ~else: s)
 
-  let canvas = gui.VPanel({ "mood": at_tab,
-                            "shape": shape.at_selection,
-                            "eyes": eyes.at_is_checked,
-                            "moustache": stache.at_is_checked,
-                            "scale": scale.at_value,
-                            "ghosts": ghosts,
-                            "keyed": keyed,
-                            "name": name,
-                            "track mouse": track_mouse,
-                            "rotation": rotation }
-                            |> gui.Obs.combine(_)
+  def config:
+    { "mood": at_tab,
+      "shape": shape.at_selection,
+      "eyes": eyes.at_is_checked,
+      "moustache": stache.at_is_checked,
+      "scale": scale.at_value,
+      "ghosts": ghosts,
+      "keyed": keyed,
+      "name": name,
+      "name pos": name_pos,
+      "track mouse": track_mouse,
+      "rotation": rotation }
+      |> gui.Obs.combine(_)
+
+  def canvas = gui.VPanel(config
                             |> gui.Canvas(_,
                                           draw_face,
                                           ~mouse: ghost_mouse,
@@ -201,21 +284,49 @@ def tabs:
 
   let happy_button = gui.Button("Be Happy",
                                 ~action: fun ():
-                                           at_tab.update(fun (v): "Happy"),
-                                ~stretch: [#false, #false])
+                                           at_tab.value := "Happy")
 
-  gui.TabsPanel(["Happy", "Sad"],
-                ~selection: at_tab,
-                at_tab.map((match _
-                            | "Happy": canvas
-                            | "Sad": gui.HPanel(canvas, happy_button)
-                            )))
+  let happy_image:
+    let bm = draw.Bitmap([60, 60])
+    draw_face(bm.make_dc(), { "mood": "Happy",
+                              "shape": "Circle",
+                              "eyes": #true,
+                              "moustache": #false,
+                              "scale": 50,
+                              "ghosts": #false,
+                              "keyed": "",
+                              "name": "",
+                              "name pos": ["Center", "Center"],
+                              "track mouse": #false,
+                              "rotation": 0 })
+    gui.Image(bm, ~margin: [10, 10])
 
+  values(
+    gui.TabsPanel(["Happy", "Sad"],
+                  ~selection: at_tab,
+                  at_tab ~> (match _
+                             | "Happy": canvas
+                             | "Sad": gui.HPanel(canvas,
+                                                 gui.VPanel(~stretch: [#false, #true],
+                                                            happy_button,
+                                                            happy_image)))),
+    config
+  )
 
 // ----------------------------------------
 
-def win = gui.Window(name_input,
+def summary_win = gui.Window(
+  gui.Table(["Key", "Value"],
+            config ~> (fun (m :: Map):
+                         for Array (key in m.keys(#true)):
+                           Array(key, to_string(m[key]))),
+            ~min_size: [400, 300])
+)
+
+// ----------------------------------------
+
+def win = gui.Window(top_panel,
                      tabs,
                      ~menu_bar: menu_bar,
                      ~size: [800, 600])
-gui.render(win)
+def renderer = gui.render(win)

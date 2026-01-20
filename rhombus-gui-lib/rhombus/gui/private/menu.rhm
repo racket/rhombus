@@ -9,17 +9,22 @@ import:
     expose:
       View
       MenuChildView
+      WindowChildView
   "view.rhm"!private:
     expose:
       BaseView
+      PopupMenuView
+      MenuChildViewI
       to_view
   "view-help.rkt"
   "event.rhm".KeyEvent
   "event.rhm"!private.convert_key
+  "renderer.rhm".Renderer
 
 export:
   MenuBar
   Menu
+  PopupMenu
   MenuItem
   CheckableMenuItem
   MenuItemSeparator
@@ -40,7 +45,7 @@ class MenuBar():
 
 class Menu():
   extends BaseView
-  implements MenuChildView
+  implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
@@ -57,9 +62,29 @@ class Menu():
           <| ()
     )
 
+class PopupMenu():
+  extends BaseView
+  implements PopupMenuView
+  constructor (item :: ObsOrValue.of(MenuChildView),
+               ...):
+    #{view-help}.#{mix-wrap}(
+      fun (mix):
+        super(easy.#{popup-menu}(~mixin: mix,
+                                 to_view(item).handle,
+                                 ...))
+          <| ()
+    )
+
+  method popup(
+    v :: WindowChildView,
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ):
+    v.popup(this, x, y)
+
 class MenuItem():
   extends BaseView
-  implements MenuChildView
+  implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: () -> ~any = values,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
@@ -127,7 +152,7 @@ fun is_shortcut_list(shortcut):
 
 class CheckableMenuItem():
   extends BaseView
-  implements MenuChildView
+  implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: (Any) -> ~any = values,
                ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
@@ -151,7 +176,7 @@ class CheckableMenuItem():
 
 class MenuItemSeparator():
   extends BaseView
-  implements MenuChildView
+  implements MenuChildViewI
   constructor ():
     #{view-help}.#{mix-wrap}(
       fun (mix):

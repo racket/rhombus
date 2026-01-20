@@ -1,0 +1,46 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  rhombus/draw:
+    expose:
+      Bitmap
+  "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  "view-help.rkt"
+  "obs.rhm":
+    expose:
+      ObsOrValue
+
+export:
+  Image
+
+class Image():
+  extends BaseWindowView
+
+  constructor (content :: ObsOrValue.of(PathString || draw.Bitmap),
+               ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~display: mode :: ObsOrValue.of(Image.DisplayMode) = #'fit,
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        super(easy.image(obs.unwrap_convert(content, fun (content):
+                                                       match content
+                                                       | bm :: draw.Bitmap: bm.handle
+                                                       | ~else: content),
+                         ~size: obs.unwrap_list(size, values),
+                         ~mode: obs.unwrap(mode),
+                         ~margin: obs.unwrap_list(margin, values),
+                         ~#{min-size}: obs.unwrap_list(min_size, values),
+                         ~stretch: obs.unwrap_list(stretch, values),
+                         ~mixin: mixin))
+          <| ()
+    )
+
+  export:
+    DisplayMode
+
+  enum DisplayMode
+  | fit
+  | fill

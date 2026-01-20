@@ -2,10 +2,13 @@
 @(import:
     "common.rhm" open)
 
+@(def unexported: @rhombus(hidden, ~var))
+
 @title{Views}
 
 @doc(
-  interface gui.View
+  interface gui.View:
+    implementable #,(@unexported)
 ){
 
  A @deftech{view} describes a GUI widget that is created when the view
@@ -13,14 +16,18 @@
 
  Implementations of @rhombus(View, ~class) include
  @rhombus(Window, ~class), @rhombus(Button, ~class),
- @rhombus(Canvas, ~class), @rhombus(Menu, ~class),
- and @rhombus(MenuItem, ~class).
+ @rhombus(Canvas, ~class), @rhombus(Menu, ~class), and
+ @rhombus(MenuItem, ~class). Since the
+ @rhombus(implementable, ~interface_clause) name of
+ @rhombus(View, ~class) is kept private, all implementations or
+ @rhombus(View, ~class) are part of the @rhombusmodname(gui) library.
 
 }
 
 @doc(
   interface gui.WindowChildView:
     extends View
+    implementable #,(@unexported)
 ){
 
  A @deftech{window-child view} represents a view that can be included
@@ -35,6 +42,7 @@
 @doc(
   interface gui.WindowView:
     extends WindowChildView
+    implementable #,(@unexported)
 ){
 
  A @deftech{window view} creates a window when the view is rendered.
@@ -43,13 +51,15 @@
  @rhombus(WindowView, ~class) is not rendered with it is incorporated
  directly in another @rhombus(WindowView, ~class).
 
- Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class).
+ Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class)
+ or @rhombus(Dialog, ~class).
 
 }
 
 @doc(
   interface gui.MenuChildView:
     extends View
+    implementable #,(@unexported)
 ){
 
  A @deftech{menu-child view} represents a view that can be added to a
@@ -96,6 +106,14 @@
 }
 
 @doc(
+  method (wv :: gui.WindowView).show(on :: Any.to_boolean) :: Void
+){
+
+ Shows or hides the @tech{most recent rendering} of @rhombus(wv).
+
+}
+
+@doc(
   method (v :: gui.WindowChildView).focus() :: Void
 ){
 
@@ -109,9 +127,26 @@
     x :: View.PositionInt,
     y :: View.PositionInt
   ) :: values(View.PositionInt, View.PositionInt)
+  method (v :: gui.WindowChildView).screen_to_client(
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :: values(View.PositionInt, View.PositionInt)
 ){
 
  Maps a position within the @tech{most recent rendering} of
- @rhombus(v) to a position in screen coordinates.
+ @rhombus(v) to a position in screen coordinates, or vice versa.
+
+}
+
+@doc(
+  method (v :: gui.WindowChildView).popup(
+    menu :: PopupMenu,
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :: Void
+){
+
+ Renders @rhombus(menu) as a poupup menu at the position specified by
+ @rhombus(x) and @rhombus(y) within @rhombus(v).
 
 }

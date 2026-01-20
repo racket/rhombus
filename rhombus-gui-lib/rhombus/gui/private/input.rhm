@@ -23,14 +23,14 @@ class Input(private _at_content :: Obs):
   extends BaseWindowView
 
   constructor (content :: ObsOrValue.of(Any) = "",
-               ~action: callback :: (Input.Action, String) -> ~any = values,
+               ~action: callback :: (Input.Event, String) -> ~any = values,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
                ~style: style :: ObsOrValue.of(List.of(Input.StyleSymbol)) = [#'single],
                ~font : font :: Font = normal_control_font,
                // ~keymap: ... TODO
-               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
@@ -60,7 +60,7 @@ class Input(private _at_content :: Obs):
 
   export:
     StyleSymbol
-    Action
+    Event
 
   symbol_map_annot StyleSymbol convert_style
   | deleted
@@ -71,8 +71,8 @@ class Input(private _at_content :: Obs):
   | single
   | vertical_label = #{vertical-label}
 
-  symbol_map_annot Action convert_action unconvert_action
+  symbol_map_annot Event convert_action unconvert_action
   | input
   | return
-  | focus = #{has-focus}
-  | lost_focus = #{lost-focus}
+  | focus_in = #{has-focus}
+  | focus_out = #{lost-focus}

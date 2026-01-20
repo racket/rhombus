@@ -11,20 +11,20 @@ import:
       Obs
 
 export:
-  Choice
+  RadioChoice
 
-class Choice(private _at_selection :: Obs):
+class RadioChoice(private _at_selection :: Obs):
   extends BaseWindowView
 
-  constructor (choices :: ObsOrValue.of(List),
+  constructor (choices :: List.of(String),
                ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~action: action :: maybe(Any -> ~any) = #false,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~styles: style :: ObsOrValue.of(List.of(Choice.Style)) = [],
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~styles: style :: ObsOrValue.of(List.of(RadioChoice.Style)) = [ #'vertical ],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
     let at_selection = obs.to_obs(selection)
@@ -32,7 +32,7 @@ class Choice(private _at_selection :: Obs):
                               at_selection.value := selected)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
-        super(easy.choice(obs.unwrap_list(choices, values),
+        super(easy.radios(PairList[& choices],
                           action,
                           ~selection: obs.unwrap(at_selection),
                           ~#{choice->label}: choice_to_label,
@@ -54,6 +54,8 @@ class Choice(private _at_selection :: Obs):
     Style
 
   symbol_map_annot Style convert_style
+  | horizontal = #{horizontal}
+  | vertical = #{vertical}
   | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
   | deleted

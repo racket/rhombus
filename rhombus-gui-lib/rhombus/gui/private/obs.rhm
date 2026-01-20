@@ -121,7 +121,10 @@ annot.macro 'later_of($(ann_g :: Group))':
 
 class Obs(private _handle, private _converter = #false):
   internal _Obs
-  property handle: _handle
+  property handle: if _converter
+                   | easy.#{impersonate-obs}(_handle,
+                                             ~ref: fun (_, v): _converter(v))
+                   | _handle
   private field _cache :~ maybe(Map) = #false
 
   constructor (v,
@@ -167,7 +170,7 @@ class Obs(private _handle, private _converter = #false):
 
   method update(f :: Function.of_arity(1)):
     easy.#{obs-update!}(handle, if _converter
-                                | fun (v): _converter(f(_converter(v)))
+                                | fun (v :~ Obs): _converter(f(_converter(v)))
                                 | f)
 
   method peek() :: like_obs_value(this):

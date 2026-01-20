@@ -8,15 +8,20 @@ import:
   "gui/private/view.rhm"
   "gui/private/menu.rhm"
   "gui/private/window.rhm"
+  "gui/private/dialog.rhm"
   "gui/private/panel.rhm"
   "gui/private/canvas.rhm"
   "gui/private/button.rhm"
   "gui/private/checkbox.rhm"
   "gui/private/choice.rhm"
+  "gui/private/radio.rhm"
   "gui/private/slider.rhm"
+  "gui/private/progress.rhm"
   "gui/private/label.rhm"
+  "gui/private/image.rhm"
   "gui/private/event.rhm"
   "gui/private/input.rhm"
+  "gui/private/table.rhm"
   "gui/private/spacer.rhm"
 
 export:
@@ -25,13 +30,18 @@ export:
   all_from(.view)
   all_from(.menu)
   all_from(.window)
+  all_from(.dialog)
   all_from(.panel)
   all_from(.canvas)
   all_from(.button)
   all_from(.checkbox)
   all_from(.choice)
+  all_from(.radio)
   all_from(.slider)
+  all_from(.progress)
   all_from(.label)
+  all_from(.image)
   all_from(.event)
   all_from(.input)
+  all_from(.table)
   all_from(.spacer)

@@ -7,7 +7,6 @@ import:
       Color
       Font
   rhombus/draw/private/font!private._Font
-  rhombus/draw/private/symbol_map.symbol_map_annot
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -24,13 +23,19 @@ class Label(private _at_label :: Obs):
 
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
-               ~font: font :: Font = normal_control_font):
+               ~font: font :: Font = normal_control_font,
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
     let at_label = obs.to_obs(label)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         super(easy.text(obs.unwrap(at_label),
                         ~color: obs.unwrap(color),
                         ~font: obs.unwrap_convert(font, fun (fnt): fnt && (fnt :~ Font).handle),
+                        ~margin: obs.unwrap_list(margin, values),
+                        ~#{min-size}: obs.unwrap_list(min_size, values),
+                        ~stretch: obs.unwrap_list(stretch, values),
                         ~mixin: mixin))
           <| (at_label)
     )

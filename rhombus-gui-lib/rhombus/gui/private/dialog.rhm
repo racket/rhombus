@@ -20,9 +20,9 @@ import:
   "menu.rhm".MenuBar
 
 export:
-  Window
+  Dialog
 
-class Window():
+class Dialog():
   extends BaseWindowView
   implements WindowViewI
 
@@ -33,13 +33,13 @@ class Window():
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
+               ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
                ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
                child :: ObsOrValue.of(WindowChildView),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
-        super(easy.window(~title: obs.unwrap(title),
+        super(easy.dialog(~title: obs.unwrap(title),
                           ~size: obs.unwrap_list(size, values),
                           ~alignment: obs.unwrap_list(alignment, values),
                           ~position: obs.unwrap(position),
@@ -58,12 +58,7 @@ class Window():
     Style
 
   symbol_map_annot Style convert_style
-  | no_resize_border = #{no-resize-border}
   | no_caption = #{no-caption}
-  | no_system_menu = #{no-system-menu}
-  | hide_menu_bar = #{hide-menu-bar}
-  | toolbar_button = #{toolbar-button}
-  | float
-  | metal
-  | fullscreen_button = #{fullscreen-button}
-  | fullscreen_aux = #{fullscreen-aux}
+  | no_sheet = #{no-sheet}
+  | resize_border = #{resize-border}
+  | close_button = #{close-button}

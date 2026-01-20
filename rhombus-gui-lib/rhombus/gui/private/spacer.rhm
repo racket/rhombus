@@ -1,6 +1,10 @@
 #lang rhombus/static/and_meta
 import:
+  "obs.rhm":
+    expose:
+      ObsOrValue
   lib("racket/gui/easy.rkt")
+  "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
 
@@ -10,9 +14,12 @@ export:
 class Spacer():
   extends BaseWindowView
 
-  constructor ():
+  constructor (~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
-        super(easy.spacer(~mixin: mixin))
+        super(easy.hpanel(~#{min-size}: obs.unwrap_list(min_size, values),
+                          ~stretch: obs.unwrap_list(stretch, values),
+                          ~mixin: mixin))
           <| ()
     )

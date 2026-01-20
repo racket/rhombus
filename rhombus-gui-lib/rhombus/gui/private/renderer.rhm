@@ -1,11 +1,11 @@
 #lang rhombus/static/and_meta
-import:
-  lib("racket/gui/easy.rkt")
-  "view.rhm".WindowView
 
 export:
-  render
   Renderer
+
+module private:
+  export:
+    _Renderer
 
 class Renderer(private _handle):
   internal _Renderer
@@ -15,7 +15,3 @@ class Renderer(private _handle):
     from_handle
   fun from_handle(handle) :~ Renderer:
     _Renderer(handle)
-
-fun render(view :: WindowView,
-           parent :: maybe(Renderer) = #false) :: Renderer:
-  _Renderer(easy.render(view.handle, parent?.handle))

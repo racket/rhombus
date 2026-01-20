@@ -31,7 +31,31 @@
     )
 ){
 
- Creates a menu containing menu items and submenus.
+ Creates a menu containing menu items and submenus for inclusion in a
+ @rhombus(MenuBar, ~class), @rhombus(Menu, ~class), or
+ @rhombus(PopupMenu, ~class).
+
+}
+
+@doc(
+  class gui.PopupMenu():
+    constructor (
+      item :: ObsOrValue.of(MenuChildView),
+      ...
+    )
+
+  method (menu :: gui.PopupMenu).popup(
+    view :: WindowChildView,
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :: Void
+){
+
+ Creates a popup menu containing menu items and submenus. Render a popup
+ menu using @rhombus(PopupMenu.popup) or @rhombus(WindowChildView.popup).
+
+ A method call @rhombus(menu.popup(view, x, y)) is equivalent to
+ @rhombus(view.popup(menu, x, y)).
 
 }
 
@@ -40,7 +64,7 @@
     implements MenuChildView
     constructor (
      label :: ObsOrValue.of(View.LabelString),
-     ~action: action :: () -> ~any = values,
+     ~action: action :: Boolean -> ~any = values,
      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
      ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
      ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut))

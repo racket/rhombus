@@ -9,21 +9,29 @@ import:
   lib("racket/base.rkt").else
   "obs.rhm"
   "type.rhm"
+  "renderer.rhm".Renderer
+  "renderer.rhm"!private._Renderer
 
 export:
   View
   WindowView
   WindowChildView
   MenuChildView
+  PopupMenuView
+  render
 
 module private:
   export:
     BaseView
+    WindowViewI
     BaseWindowView
+    PopupMenuView
+    MenuChildViewI
     to_view
     set_view_gui_handle
 
 interface View:
+  implementable ViewI
   property handle
   property gui_handle
 
@@ -61,8 +69,18 @@ interface View:
        | ...
        | ~else: $else'
 
+interface PopupMenuView:
+  extends ViewI
+
 interface WindowChildView:
-  extends View
+  implementable WindowChildViewI
+  extends ViewI
+
+  private method get_renderer_handle(who = #false):
+    let gui_handle = get_gui_handle(who)
+    let root_handle = rkt_obj.send gui_handle.#{get-top-level-window}()
+    let r_handle = root_handle_to_renderer_handle.maybe[root_handle]
+    r_handle || error(~who: who, "view is not currently rendered")
 
   method client_to_screen(
     x :: View.PositionInt,
@@ -71,21 +89,56 @@ interface WindowChildView:
     ~who: who
     rkt_obj.send get_gui_handle(who).#{client->screen}(x, y)
 
+  method screen_to_client(
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ) :~ values(View.PositionInt, View.PositionInt):
+    ~who: who
+    rkt_obj.send get_gui_handle(who).#{screen->client}(x, y)
+
+  method popup(
+    pu :: PopupMenuView described_as PopupMenu,
+    x :: View.PositionInt,
+    y :: View.PositionInt
+  ):
+    ~who: who
+    let r_handle = get_renderer_handle(who)
+    let win_handle = easy.#{renderer-root}(r_handle)
+    let (x, y) = client_to_screen(x, y)
+    let (x, y) = rkt_obj.send win_handle.#{screen->client}(x, y)
+    easy.#{render-popup-menu}(r_handle, pu.handle, x, y)
+
   method focus():
     ~who: who
     rkt_obj.send get_gui_handle(who).#{focus}()
 
 interface WindowView:
-  extends WindowChildView
+  implementable WindowViewI
+  extends WindowChildViewI
+  method show(on):
+    ~who: who
+    rkt_obj.send get_gui_handle(who).#{show}(on)
+
+  method render(parent :: maybe(Renderer) = #false) :: Renderer:
+    let r = _Renderer(easy.render(handle, parent?.handle))
+    root_handle_to_renderer_handle[easy.#{renderer-root}(r.handle)] := r.handle
+    r
+
+def root_handle_to_renderer_handle :~ MutableMap = WeakMutableMap()
+
+fun render(view :: WindowView,
+           parent :: maybe(Renderer) = #false) :: Renderer:
+  view.render(parent)
 
 interface MenuChildView:
-  extends View
+  implementable MenuChildViewI
+  extends ViewI
 
 fun unwrap_view(v :: View): v.handle
 
 class BaseView(private _handle):
   nonfinal
-  implements View
+  implements ViewI
   internal _BaseView
   override property handle: _handle
 
@@ -98,20 +151,18 @@ class BaseView(private _handle):
 class BaseWindowView():
   nonfinal
   extends BaseView
-  implements WindowChildView
+  implements WindowChildViewI
 
   constructor (hand):
     super(hand)()
 
 class AView(private _handle):
-  implements View
+  implements ViewI
   internal _AView
   override property handle: _handle
 
   private field _gui_handle = #false
-  override property gui_handle:
-    _gui_handle
-      || error("view is not currently rendered")
+  override property gui_handle: _gui_handle
 
   constructor (hand):
     super(hand)

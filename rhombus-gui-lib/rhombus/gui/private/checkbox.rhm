@@ -18,7 +18,10 @@ class Checkbox(private _at_checked :: Obs):
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: maybe(Boolean -> ~any) = #false,
                ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true):
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
     let at_checked = obs.to_obs(is_checked)
     let action = action || (fun (on):
                               at_checked.value := on)
@@ -28,6 +31,9 @@ class Checkbox(private _at_checked :: Obs):
                             ~label: obs.unwrap(label),
                             ~#{enabled?}: obs.unwrap(is_enabled),
                             ~#{checked?}: obs.unwrap(at_checked),
+                            ~margin: obs.unwrap_list(margin, values),
+                            ~#{min-size}: obs.unwrap_list(min_size, values),
+                            ~stretch: obs.unwrap_list(stretch, values),
                             ~mixin: mixin))
           <| (at_checked)
     )

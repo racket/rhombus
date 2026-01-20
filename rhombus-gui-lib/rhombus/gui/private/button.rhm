@@ -24,9 +24,9 @@ class Button():
                ~action: action :: () -> ~any = values,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Button.Style)) = [],
-               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
