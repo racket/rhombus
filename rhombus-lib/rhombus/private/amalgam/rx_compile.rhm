@@ -104,7 +104,7 @@ meta:
               values(0, 0, #false)
       | 'or($left, $right)':
           let (lmin, lmax, captures) = check_count(left, captures)
-          let (rmin, rmax, captures) = check_count(left, captures)
+          let (rmin, rmax, captures) = check_count(right, captures)
           values(math.min(lmin, rmin),
                  math.max(lmax, rmax),
                  captures)

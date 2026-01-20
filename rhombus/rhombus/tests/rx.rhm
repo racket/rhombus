@@ -642,3 +642,11 @@ check rx'$(rx'"a"') #"b"' ~throws "cannot splice mixture"
 check rx'"b" $(rx'#"a"')' ~throws "cannot splice mixture"
 check rx'#"b" $(rx'"a"')' ~throws "cannot splice mixture"
 check rx'$(rx'#"b"') $(rx'"a"')' ~throws "cannot splice mixture"
+
+// regression test to check that this doesn't take forever to parse:
+check:
+  rx '"a" || "b" || "c" || "d" || "e" || "f" || "g" || "h" || "i"
+        || "j" || "k" || "l" || "m" || "n" || "o" || "p" || "q" || "r" || "s" || "t" || "u" || "v"
+        || "a" || "b" || "c" || "d" || "e" || "f" || "g" || "h" || "i"
+        || "j" || "k" || "l" || "m" || "n" || "o" || "p" || "q" || "r" || "s" || "t" || "u" || "v"'
+  ~completes
