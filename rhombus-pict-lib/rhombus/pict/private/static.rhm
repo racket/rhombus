@@ -1803,7 +1803,15 @@ fun connect(~on: p :: Pict,
             if find_mode == #'maybe
             | p
             | error(~who: #'connect,
-                    if from_x | "cannot find `~to` pict" | "cannot find `~from pict",
+                    if from_x
+                    | let (to_x, to_y) = to.maybe_in(p, dt, n, ~nth: 0)
+                      if to_x
+                      | "ambigious \"to\" pict"
+                      | "cannot find \"to\" pict"
+                    | let (from_x, from_y) = from.maybe_in(p, dt, n, ~nth: 0)
+                      if from_x
+                      | "ambigious \"from\" pict"
+                      | "cannot find \"from\" pict",
                     error.val(~label: "finder", if from_x | from | to),
                     error.val(~label: "in pict", p))
     | ~else:
