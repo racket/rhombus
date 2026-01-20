@@ -544,7 +544,7 @@ check:
     internal:
       _World
       _Some
-  ~throws "internal: multiple ids not allowed"
+  ~throws "internal: multiple identifiers not allowed"
 
 // Make sure `class_clause.macro` in `class` takes effect
 check:

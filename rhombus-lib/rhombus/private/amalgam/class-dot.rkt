@@ -43,6 +43,7 @@
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
+                     build-interface-implementable-expression
 
                      extract-all-dot-names
                      add-super-dot-providers)
@@ -206,6 +207,9 @@
                                                                       (quote-syntax private-method-id/intf/prop))
                                                                   ...))))))
             null))))))
+
+(define-for-syntax (build-interface-implementable-expression implementable-name)
+  #`(define-syntax #,implementable-name no-constructor-transformer))
 
 (define-for-syntax (extract-private-method-names method-private method-private-inherit final?)
   (for/list ([(sym id/prop) (in-hash method-private)])

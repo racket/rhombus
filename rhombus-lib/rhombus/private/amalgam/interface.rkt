@@ -124,6 +124,8 @@
        (define dot-providers (add-super-dot-providers name-instance-id #f supers))
        (define internal-dot-providers (add-super-dot-providers internal-name-instance-id #f supers))
 
+       (define implementable-name (hash-ref options 'implementable #f))
+
        (define-values (call-statinfo-indirect-id
                        index-statinfo-indirect-id
                        index-set-statinfo-indirect-id
@@ -171,7 +173,9 @@
                      [compare-statinfo-indirect compare-statinfo-indirect-id]
                      [contains-statinfo-indirect contains-statinfo-indirect-id]
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
-                     [dot-providers dot-providers])
+                     [dot-providers dot-providers]
+                     [implementable-name (and implementable-name
+                                              ((make-expose #'scope-stx #'base-stx) implementable-name))])
          (values
           #`(begin
               #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs
@@ -185,6 +189,7 @@
                                              #'(name name-extends tail-name
                                                      name? name-instance
                                                      internal-name? internal-name-instance
+                                                     implementable-name
                                                      all-static-infos internal-all-static-infos))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names #:interface? #t)
               (interface-finish [orig-stx base-stx scope-stx
@@ -247,6 +252,7 @@
                                (and (syntax-e id) id)))
        (define internal-internal-name (and (syntax-e #'internal-internal-name-id)
                                            #'internal-internal-name-id))
+       (define implementable-name (hash-ref options 'implementable #f))
 
        (define given-expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
@@ -301,6 +307,8 @@
                                                 #'name))]
                      [(super-name ...) parent-names]
                      [(export ...) exs]
+                     [implementable-name (and implementable-name
+                                              (expose implementable-name))]
                      [(dot-id ...) (map car dots)]
                      [dot-provider-name (or (and (or (pair? dot-provider-rhss)
                                                      (and (pair? parent-dot-providers)
@@ -354,6 +362,9 @@
                    (build-interface-constructor-static-info given-constructor-rhs
                                                             #'(constructor-name all-static-infos))
                    null)
+               (if (syntax-e #'implementable-name)
+                   (list (build-interface-implementable-expression #'implementable-name))
+                   null)
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private
                                      dots
@@ -362,6 +373,7 @@
                                      primitive-properties
                                      #'(name name-extends prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
+                                             implementable-name
                                              dot-provider-name
                                              instance-static-infos
                                              super-call-statinfo-indirect call-statinfo-indirect))
@@ -409,6 +421,7 @@
   (with-syntax ([(name name-extends tail-name
                        name? name-instance
                        internal-name? internal-name-instance
+                       implementable-name
                        all-static-infos internal-all-static-infos)
                  names])
     (append
@@ -437,7 +450,12 @@
                                          #:extra-args (list #'ctx)
                                          "interface"))]
             [else
-             #`(identifier-annotation name? all-static-infos)])))]))))
+             #`(identifier-annotation name? all-static-infos)])))])
+     (if (syntax-e #'implementable-name)
+         (list
+          #'(define-annotation-syntax implementable-name
+              (identifier-annotation name? all-static-infos)))
+         null))))
 
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private
@@ -448,6 +466,7 @@
                                          names)
   (with-syntax ([(name name-extends prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
+                       implementable-name
                        dot-provider-name
                        instance-static-infos
                        super-call-statinfo-indirect call-statinfo-indirect)
@@ -485,44 +504,56 @@
                                             (quote #,(build-quoted-private-method-list 'method method-private))
                                             (quote #,(build-quoted-private-method-list 'property method-private)))))))
            null)
-       (list
-        (build-syntax-definition/maybe-extension
-         'rhombus/class #'name #'name-extends
-         #`(interface-desc-maker
-            (lambda ()
-              (interface-desc (quote-syntax #,parent-names)
-                              '#,method-shapes
-                              (quote-syntax #,method-vtable)
-                              '#,method-map
-                              #,method-result-expr
-                              '#,(map car dots)
-                              #,(and (syntax-e #'dot-provider-name)
-                                     #'(quote-syntax dot-provider-name))
-                              (#,(quote-syntax quasisyntax) instance-static-infos)
-                              '#,(append
-                                  (if callable? '(call) '())
-                                  (if indexable? '(get) '())
-                                  (if setable? '(set) '())
-                                  (if appendable? '(append) '())
-                                  (if comparable? '(compare) '())
-                                  (if container? '(contains) '()))
-                              ;; ----------------------------------------
-                              (quote-syntax name)
-                              #,(and internal-name
-                                     #`(quote-syntax #,internal-name))
-                              (quote-syntax prop:name)
-                              #,(and (syntax-e #'prop:internal-name)
-                                     #'(quote-syntax prop:internal-name))
-                              (quote-syntax name-ref-or-error)
-                              #,(and (syntax-e #'internal-name-ref)
-                                     #'(quote-syntax internal-name-ref))
-                              #,custom-annotation?
-                              #,(let ([id (if (syntax-e #'call-statinfo-indirect)
-                                              #'call-statinfo-indirect
-                                              #'super-call-statinfo-indirect)])
-                                  (if (and id (syntax-e id))
-                                      #`(quote-syntax #,id)
-                                      #f))
-                              (list #,@(for/list ([pp (in-list primitive-properties)])
-                                         #`(cons (quote-syntax #,(car pp))
-                                                 (quote-syntax #,(cdr pp))))))))))))))
+       (let ([maker
+              #`(interface-desc-maker
+                 (lambda ()
+                   (interface-desc (quote-syntax #,parent-names)
+                                   '#,method-shapes
+                                   (quote-syntax #,method-vtable)
+                                   '#,method-map
+                                   #,method-result-expr
+                                   '#,(map car dots)
+                                   #,(and (syntax-e #'dot-provider-name)
+                                          #'(quote-syntax dot-provider-name))
+                                   (#,(quote-syntax quasisyntax) instance-static-infos)
+                                   '#,(append
+                                       (if callable? '(call) '())
+                                       (if indexable? '(get) '())
+                                       (if setable? '(set) '())
+                                       (if appendable? '(append) '())
+                                       (if comparable? '(compare) '())
+                                       (if container? '(contains) '()))
+                                   ;; ----------------------------------------
+                                   (quote-syntax name)
+                                   #,(and internal-name
+                                          #`(quote-syntax #,internal-name))
+                                   (quote-syntax prop:name)
+                                   #,(and (syntax-e #'prop:internal-name)
+                                          #'(quote-syntax prop:internal-name))
+                                   (quote-syntax name-ref-or-error)
+                                   #,(and (syntax-e #'internal-name-ref)
+                                          #'(quote-syntax internal-name-ref))
+                                   #,custom-annotation?
+                                   #,(let ([id (if (syntax-e #'call-statinfo-indirect)
+                                                   #'call-statinfo-indirect
+                                                   #'super-call-statinfo-indirect)])
+                                       (if (and id (syntax-e id))
+                                           #`(quote-syntax #,id)
+                                           #f))
+                                   (list #,@(for/list ([pp (in-list primitive-properties)])
+                                              #`(cons (quote-syntax #,(car pp))
+                                                      (quote-syntax #,(cdr pp))))))))])
+         (cond
+           [(syntax-e #'implementable-name)
+            (list
+             #`(define-syntax #,(in-class-desc-space #'implementable-name) #,maker)
+             (build-syntax-definition/maybe-extension
+              'rhombus/class #'name #'name-extends
+              #`(interface-desc-maker
+                (lambda ()
+                  (interface-unimplementable-variant (quote-syntax #,(in-class-desc-space #'implementable-name)))))))]
+           [else
+            (list
+             (build-syntax-definition/maybe-extension
+              'rhombus/class #'name #'name-extends
+              maker))]))))))

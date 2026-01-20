@@ -56,7 +56,9 @@
                      abstract
                      primitive_property)
          (for-space rhombus/veneer_clause
-                    converter))
+                    converter)
+         (for-space rhombus/interface_clause
+                    implementable))
 
 (define-for-syntax (parse-multiple-names stx)
   (define lines
@@ -99,25 +101,34 @@
 (define-veneer-clause-syntax implements
   (veneer-clause-transformer parse-class-implements))
 
-(define-for-syntax parse-class-internal
-  (lambda (stx data)
+(define-for-syntax parse-single-name-clause
+  (lambda (stx data kw)
     (syntax-parse stx
       #:datum-literals (group)
       [(_ name:identifier)
-       (wrap-class-clause #'(#:internal name))]
+       (wrap-class-clause #`(#,kw name))]
       [(_ (tag::block (group name:identifier)))
-       (wrap-class-clause #'(#:internal name))]
+       (wrap-class-clause #`(#,kw name))]
       [(_ (~and b (tag::block (group name:identifier) ...)))
        (raise-syntax-error #f
-                           "multiple ids not allowed"
+                           "multiple identifiers not allowed"
                            stx
                            #'b)])))
+
+(define-for-syntax parse-class-internal
+  (lambda (stx data)
+    (parse-single-name-clause stx data '#:internal)))
 
 (define-class-clause-syntax internal
   (class-clause-transformer parse-class-internal))
 
 (define-interface-clause-syntax internal
   (interface-clause-transformer parse-class-internal))
+
+(define-interface-clause-syntax implementable
+  (interface-clause-transformer
+   (lambda (stx data)
+     (parse-single-name-clause stx data '#:implementable))))
 
 (define-class-clause-syntax nonfinal
   (class-clause-transformer

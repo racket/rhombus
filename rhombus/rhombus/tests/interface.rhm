@@ -751,3 +751,38 @@ block:
       error.annot("None").msg,
       error.val("oops", ~label: "result").msg,
     )
+
+block:
+  interface I:
+    implementable I2
+    method m(): "m"
+  class Posn():
+    nonfinal
+    implements I2
+  check Posn() is_a I ~is #true
+  check Posn() is_a I2 ~is #true
+  check Posn().m() ~is "m"
+  check I.m(Posn()) ~is "m"
+  class Posn3D():
+    extends Posn
+    implements I2
+  check Posn3D() is_a I ~is #true
+  check Posn3D() is_a I2 ~is #true
+  check Posn3D().m() ~is "m"
+  check I.m(Posn3D()) ~is "m"
+
+check:
+  ~eval
+  interface I:
+    implementable I2
+  class Posn():
+    implements I
+  ~throws "interface is not implementable"
+
+check:
+  ~eval
+  interface I:
+    implementable I2
+  interface J:
+    extends I
+  ~throws "interface is not implementable"

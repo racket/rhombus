@@ -31,6 +31,7 @@
   | #,(@rhombus(abstract, ~interface_clause)) $method_decl
   | #,(@rhombus(property, ~interface_clause)) $property_impl
   | #,(@rhombus(extends, ~interface_clause)) $extends_decl
+  | #,(@rhombus(implementable, ~interface_clause)) $internal_decl
   | #,(@rhombus(internal, ~interface_clause)) $internal_decl
   | #,(@rhombus(expression, ~interface_clause)) $expression_decl
   | #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
@@ -70,10 +71,23 @@
  also have private helper methods and properties, but they are useful only when an
  interface also has implemented public or protected methods or properties that refer to them.
 
+ When an @rhombus(implementable, ~interface_clause) clause declares an
+ implementable name @rhombus(impl_id, ~var), then @rhombus(impl_id, ~var)
+ is bound as annotation to recognize the same objects as the default
+ @rhombus(id_name) annotation, but only @rhombus(impl_id, ~var) can be
+ used in an @rhombus(implements, ~class_clause) or
+ @rhombus(extends, ~interface_clause) clause. In that case, attempting to
+ use @rhombus(id_name) in an @rhombus(implements, ~class_clause) or
+ @rhombus(extends, ~interface_clause) reports an ``unimplementable
+ interface''' error. Typically, @rhombus(impl_id, ~var) is kept private
+ to limit implementations of the interface, while @rhombus(id_name) is
+ exported for use as an annotation and namespace. Meanwhile, using
+ @rhombus(impl_id, ~var) as an expression reports an error.
+
  When a class implements an interface privately using
  @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)))
-or protectedly using
- or @rhombus(#,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
+ or protectedly using
+ @rhombus(#,(@rhombus(protected, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
  its instances do not satisfy the interface as an annotation. If the
  privately or protectedly implemented interface has an internal name declared with
  @rhombus(internal, ~interface_clause), however, instances satisfy the
@@ -246,12 +260,26 @@ or protectedly using
 }
 
 @doc(
+  interface_clause.macro 'implementable $id'
+  interface_clause.macro 'implementable: $id'
+){
+
+ An @tech{interface clause} recognized by @rhombus(interface) to bind
+ @rhombus(id) to the interface's representation for use with
+ @rhombus(implements, ~class_clause) and
+ @rhombus(extends, ~interface_clause) while disallowing the enclosing
+ interface's name in those contexts. See @rhombus(interface) for more
+ information.
+
+}
+
+@doc(
   interface_clause.macro 'internal $id'
   interface_clause.macro 'internal: $id'
 ){
 
  An @tech{interface clause} recognized by @rhombus(interface) to bind
- @rhombus(id) to the interface's representation. See @rhombus(interface)
+ @rhombus(id) to the interface's internal representation. See @rhombus(interface)
  and the @rhombus(internal, ~class_clause) @tech{class clause} for more
  information.
 

@@ -38,6 +38,10 @@
                (hash-set options 'has-non-final-method? #t)]
               [(#:static-infos expr)
                (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
+              [(#:implementable id)
+               (when (hash-has-key? options 'implementable)
+                 (raise-syntax-error #f "multiple implementable name clauses" orig-stx clause))
+               (hash-set options 'implementable #'id)]
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 
@@ -58,6 +62,8 @@
               [(#:extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]
+              [(#:implementable id) ; checked in `parse-annotation-options`
+               (hash-set options 'implementable #'id)]
               [(#:expression rhs)
                (when (hash-has-key? options 'expression-macro-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))

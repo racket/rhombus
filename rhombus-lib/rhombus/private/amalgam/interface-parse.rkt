@@ -14,6 +14,7 @@
          interface-desc-ref
          interface-names->interfaces
          interface-set-diff
+         interface-unimplementable-variant
          extract-private-protected-interfaces
          close-interfaces-over-superinterfaces
          interface-names->quoted-list
@@ -23,7 +24,7 @@
   ;; `flags` from `objects-desc` can include 'veneer
   (id
    internal-id
-   prop:id
+   prop:id ; can be #f to mean "not implementable"
    prop:internal-internal-id
    ref-id
    internal-ref-id
@@ -42,13 +43,24 @@
                   (set! desc (proc))
                   desc))))))
 
-(define (interface-desc-ref v) (or (and (interface-desc? v) v)
-                                   (and (interface-desc-maker? v)
-                                        ((interface-desc-maker-proc v)))))
+(define (interface-desc-ref v [implementable-only? #f])
+  (or (and (interface-desc? v) v)
+      (and (interface-desc-maker? v)
+           (let ([p ((interface-desc-maker-proc v))])
+             (if (pair? p)
+                 (if implementable-only?
+                     (car p)
+                     (cdr p))
+                 p)))))
 
-(define (interface-noninternal-desc-ref v) (let ([v (interface-desc-ref v)])
-                                             (and (not (interface-internal-desc? v))
-                                                  v)))
+(define (interface-noninternal-desc-ref v)
+  (let ([v (interface-desc-ref v #t)])
+    (and (not (interface-internal-desc? v))
+         v)))
+
+(define (interface-unimplementable-variant id)
+  (define intf (interface-desc-ref (syntax-local-value id)))
+  (cons (struct-copy interface-desc intf [prop:id #f]) intf))
 
 (define (interface-names->interfaces stxes names
                                      #:results [results (lambda (all pruned) pruned)]
@@ -61,6 +73,8 @@
       (when (and for-veneer?
                  (not (memq 'veneer (objects-desc-flags intf))))
         (raise-syntax-error #f "interface cannot be implemented by a veneer" stxes name))
+      (unless (interface-desc-prop:id intf)
+        (raise-syntax-error #f "interface is not implementable" stxes name))
       intf))
   (results
    intfs
