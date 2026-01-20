@@ -12,7 +12,7 @@
   #:property prop:field-name->accessor
   (list* null
          ;; Duplicates the table that is constructed by
-         ;; `define-primitive-class` in "entry-point-adjustment-meta.rkt",
+         ;; `define-primitive-class` in "annot-context-meta.rkt",
          ;; but this module is often used for-syntax, and we don't need
          ;; all of Rhombus's meta support for those uses
          (hasheq 'argument_names (lambda (e) (annotation-context-argument-names e)))

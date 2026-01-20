@@ -122,8 +122,8 @@ class Logger(private _handle):
     Level
     Topics
 
-  def current :~ matching(_ :: Function.all_of(() -> Logger,
-                                               (Logger) -> Void)):
+  def current :~ Function.assume_of(Function.all_of(() -> Logger,
+                                                    (Logger) -> Void)):
     base.#{make-derived-parameter}(
       base.#{current-logger},
       fun (v :: Logger):

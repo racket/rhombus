@@ -317,6 +317,16 @@
     def y :: matching([_, 10]) = [9, 11]
 )
 
+ Note that when @rhombus(bind) involves a conversion (that is not
+ performed), the static information associated with
+ @rhombus(matching(bind), ~annot) corresponds to the conversion input,
+ not its output. For example,
+ @rhombus(matching(_ :: String.to_int), ~annot) will have the static
+ information of @rhombus(String, ~annot), not @rhombus(Int, ~annot).
+ Similarly, @rhombus(matching(_ :: MutableList.later_of(String)), ~annot)
+ will have the static information of @rhombus(MutableList, ~annot), but
+ no information about list elements.
+
 }
 
 @doc(

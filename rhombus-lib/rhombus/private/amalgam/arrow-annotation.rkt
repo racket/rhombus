@@ -35,7 +35,8 @@
                     #%parens))
 
 (module+ for-arrow-annot
-  (provide (for-syntax parse-arrow-all-of)))
+  (provide (for-syntax parse-arrow-all-of
+                       parse-arrow-assume)))
 
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
@@ -273,18 +274,20 @@
      #:with (lhs-name ...) multi-names
      #:with (lhs-opt ...) multi-opts
      #:with who 'function
-     (define static-infos
+     (define immed-static-infos
        #`(#,@(if (eq? rest-name+ann '#:any)
                  null
                  #`((#%function-arity #,arity)))
-          #,@(if res-rest-name+ann
+          #,@(indirect-get-function-static-infos)))
+     (define static-infos
+       #`(#,@(if res-rest-name+ann
                  null
                  #`((#%call-result #,(let ([sis #'(r.static-infos ...)])
                                        (define sis-l (syntax->list sis))
                                        (if (= 1 (length sis-l))
                                            (car sis-l)
                                            #`((#%values #,sis)))))))
-          #,@(indirect-get-function-static-infos)))
+          #,@immed-static-infos))
      (define rest-as
        (syntax-parse rest-name+ann
          [(name a::annotation-binding-form) (list #'a)]
@@ -319,7 +322,8 @@
                           [#:any res-rest-name+ann]
                           [(name a::annotation-binding-form)
                            #`(name a.binding a.body a.static-infos #,res-rest-ann-whole? #,(shrubbery-syntax->string #'a))]))
-                 #,static-infos])
+                 #,static-infos
+                 #,immed-static-infos])
          (if (and (andmap not multi-kws)
                   (andmap not multi-opts)
                   (not rest-name+ann)
@@ -374,17 +378,19 @@
            #:with ([_ arity . _] ...) #'(ab.data ...)
            #:with who 'function
            (define all-arity (and-arity-summaries (syntax->datum #'(arity ...))))
-           (define static-infos
+           (define immed-static-infos
              #`(#,@(if all-arity
                        #`((#%function-arity #,all-arity))
                        null)
-                (#%call-result (#:at_arities
+                #,@(indirect-get-function-static-infos)))
+           (define static-infos
+             #`((#%call-result (#:at_arities
                                 #,(for/list ([sis (syntax->list #'(a.static-infos ...))]
                                              [arity (syntax->list #'(arity ...))])
                                     #:break (not (syntax-e arity))
                                     #`[#,arity
                                        #,(static-info-lookup sis #'#%call-result)])))
-                #,@(indirect-get-function-static-infos)))
+                #,@immed-static-infos))
            (values
             (transfer-origins
              (syntax->list #'(a.parsed ...))
@@ -392,14 +398,41 @@
               loc
               (annotation-binding-form
                (binding-form #'all-of-infoer
-                             #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos))
+                             #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos #,immed-static-infos))
                #'who
                static-infos)))
             #'tail)])])]))
 
+(define-for-syntax (parse-arrow-assume stx ctx)
+  (syntax-parse stx
+    [(form-id (p-tag::parens (~var a (:annotation ctx))) . tail)    
+     (syntax-parse #'a.parsed
+       [a::annotation-binding-form
+        #:with arg-parsed::binding-form #'a.binding
+        #:when (or (free-identifier=? #'arg-parsed.infoer-id #'arrow-infoer)
+                   (free-identifier=? #'arg-parsed.infoer-id #'all-of-infoer))
+        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+        #:with arg-info::binding-info #'arg-impl.info
+        (disallow-binding-as-namespace-extension #'arg-impl.info)
+        (values
+         (relocate+reraw
+          #'a.parsed
+          (annotation-predicate-form
+           #`(let ()
+               (arg-info.oncer-id arg-info.data)
+               (lambda (val-in)
+                 (arg-info.matcher-id val-in
+                                      arg-info.data
+                                      if/blocked
+                                      #t
+                                      #f)))
+           #'a.static-infos))
+         #'tail)]
+       [_ (raise-syntax-error #f "not a function annotation" stx #'a)])]))
+
 (define-syntax (arrow-infoer stx)
   (syntax-parse stx
-    [(_ in-static-infos (result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest static-infos))
+    [(_ in-static-infos (result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest static-infos immed-static-infos))
      (syntax-parse #'rhs
        [([rhs-i::binding-form . rhs-tail] ...)
         #:with (rhs-impl::binding-impl ...) #`((rhs-i.infoer-id () rhs-i.data) ...)
@@ -420,7 +453,7 @@
                                   [_ #'res-rest])])
           (binding-info "function"
                         #'function
-                        #'static-infos
+                        #'immed-static-infos
                         #'((result (0) . static-infos))
                         #'arrow-oncer
                         #'arrow-matcher
@@ -734,10 +767,10 @@
 
 (define-syntax (all-of-infoer stx)
   (syntax-parse stx
-    [(_ in-static-infos (result-id all-arity who-expr cases static-infos))
+    [(_ in-static-infos (result-id all-arity who-expr cases static-infos immed-static-infos))
      (binding-info "function"
                    #'function
-                   #'static-infos
+                   #'immed-static-infos
                    #'((result (0) . static-infos))
                    #'empty-oncer
                    #'all-of-matcher

@@ -72,6 +72,7 @@
   #:namespace-fields
   (of_arity
    all_of
+   assume_of
    [pass Function.pass/optimize]
    [black_box Function.black_box]
    [count Function.count])
@@ -278,6 +279,14 @@
    'macro
    (lambda (stx ctx)
      (parse-arrow-all-of stx ctx))))
+
+(define-annotation-syntax assume_of
+  (annotation-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx ctx)
+     (parse-arrow-assume stx ctx))))
 
 (define (check-nonneg-int who v)
   (unless (exact-nonnegative-integer? v)

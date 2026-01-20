@@ -726,3 +726,19 @@ block:
   check:
     source Function.all_of(String -> String, (~any) -> ~any, ~name: "dropped")
     ~is "Function.all_of(String -> String, (~any) -> ~any)"
+
+check:
+  values is_a Function.assume_of(() -> Int) ~is #true
+  math.sin is_a Function.assume_of(() -> Int) ~is #false
+  math.sin is_a Function.assume_of((String) -> Int) ~is #true
+  1 :: Function.assume_of(() -> Int) ~throws values(error.annot_msg(),
+                                                    error.annot("() -> Int").msg)
+  math.sin is_a Function.assume_of(Function.all_of(() -> Int, (String) -> Int)) ~is #false
+  values is_a Function.assume_of(Function.all_of(() -> Int, (String) -> Int)) ~is #true
+
+check:
+  ~eval
+  use_static
+  (values :: matching(_ :: String -> String))("x").length()
+  ~throws values("no such field or method",
+                 "based on static information")

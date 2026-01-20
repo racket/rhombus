@@ -281,3 +281,43 @@
 )
 
 }
+
+@doc(
+  ~nonterminal:
+    arrow_annot: :: annot
+  annot.macro 'Function.assume_of($arrow_annot)'
+){
+
+ A @tech(~doc: guide_doc){predicate annotation} that is satisfied by a
+ function whose argument count and keyword requirements are consistent
+ with @rhombus(arrow_annot). The full static information of
+ @rhombus(arrow_annot) is propagated, even though the function is not
+ wrapped as part of a conversion to ensure that its argument and result
+ annotations are satisfied. The @rhombus(arrow_annot) must be a function
+ annotation such as one formed with @rhombus(->, ~annot) or
+ @rhombus(Function.all_of, ~annot).
+
+ Unlike an annotation created with just @rhombus(->, ~annot), which is a
+ @tech(~doc: guide_doc){converter annotation}, a
+ @rhombus(Function.assume_of, ~annot) annotation can be used with
+ @rhombus(:~). For example, a combination of @rhombus(:~),
+ @rhombus(Function.assume_of, ~annot), and @rhombus(->, ~annot) can
+ propagate static information about a function's result while avoiding
+ unnecessary extra checks.
+
+@examples(
+  ~defn:
+    fun make_name_generator() :~ Function.assume_of(() -> String):
+      let mutable i = 0
+      fun ():
+        i := i + 1
+        "name" +& i // always returns a String
+  ~repl:
+    def gen = make_name_generator()
+    gen()
+    gen()
+    use_static
+    gen().length()    
+)
+
+}
