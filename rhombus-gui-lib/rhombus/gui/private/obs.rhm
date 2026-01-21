@@ -11,6 +11,7 @@ export:
   unwrap_list
   unwrap_maybe_list
   to_obs
+  reflect_obs
   <~
   ~>
   like_obs_value
@@ -225,6 +226,13 @@ fun
 fun
 | to_obs(o :: Obs) :: Obs: o
 | to_obs(v) :: Obs: Obs(v)
+
+fun
+| reflect_obs(o :: Obs) :~ Obs:
+    let new_o = Obs(o.value)
+    o.observe(fun (v): new_o.value := v)
+    new_o
+| reflect_obs(v) :~ Obs: Obs(v)
 
 operator ((o :: Obs) <~ (f :: Function.of_arity(1))):
   o.update(f)

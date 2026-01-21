@@ -20,16 +20,17 @@ class Choice(private _at_selection :: Obs):
                ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: ObsOrValue.of(Any) = #false,
-               ~action: action :: maybe(Any -> ~any) = #false,
+               ~action: action :: Any -> ~any = values,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~styles: style :: ObsOrValue.of(List.of(Choice.Style)) = [],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
-    let at_selection = obs.to_obs(selection)
-    let action = action || (fun (selected):
-                              at_selection.value := selected)
+    let at_selection = obs.reflect_obs(selection)
+    let action = (fun (selected):
+                    at_selection.value := selected
+                    action(selected))
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         super(easy.choice(obs.unwrap_list(choices, values),

@@ -33,7 +33,7 @@
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
-      ~action: action :: maybe(Boolean -> ~any) = #false,
+      ~action: action :: Boolean -> ~any = values,
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -48,20 +48,10 @@
  checkbox is clicked, where @rhombus(now_checked, ~var) indicates the
  state of the checkbox.
 
- If @rhombus(is_checked) is not an observable, then an observable
- @rhombus(at_is_checked, ~var) is created with initial value
- @rhombus(is_checked). Otherwise, @rhombus(at_is_checked, ~var) is
- @rhombus(is_checked). A observable derived from
- @rhombus(at_is_checked, ~var) can be obtained from the
- @rhombus(Checkbox.at_is_checked) property.
-
- The default @rhombus(set_is_checked, ~var) function for @rhombus(action)
- corresponds to
-
-@rhombusblock(
-  fun (on):
-    #,(@rhombus(at_is_checked, ~var)).value := on
-)
+ The @rhombus(Checkbox.at_is_checked) property returns an observable that
+ is updated whenever the checkbox's state changes through an action (as
+ also reported via @rhombus(action)) or via @rhombus(is_checked) as an
+ observable.
 
 }
 
@@ -73,7 +63,7 @@
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~selection: selection :: ObsOrValue.of(Any) = #false,
-      ~action: action :: maybe(Any -> ~any) = #false,
+      ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: ObsOrValue.of(List.of(Choice.Style)) = [],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
@@ -92,12 +82,10 @@
  selection is changed, where @rhombus(now_selected, ~var) indicates the
  newly selected choice.
 
- If @rhombus(selection) is not an observable, then an observable
- @rhombus(at_selection, ~var) is created with initial value
- @rhombus(selection). Otherwise, @rhombus(at_selection, ~var) is
- @rhombus(selection). A observable derived from
- @rhombus(at_selection, ~var) can be obtained from the
- @rhombus(Choice.at_selection) property.
+ The @rhombus(Choice.at_selection) property returns an observable that
+ is updated whenever the choice popup's state changes through an action
+ (as also reported via @rhombus(action)) or via @rhombus(selection) as an
+ observable.
 
  The @rhombus(choice_to_label) function converts an item in
  @rhombus(choices) to a label to be shown for the control, and
@@ -105,14 +93,6 @@
  default, @rhombus(choices) is expected to be a list of
  @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is the identity
  function.
-
- If @rhombus(action, ~var) is @rhombus(#false), the action taken on a
- selection corresponds to
-
-@rhombusblock(
-  fun (selected):
-    #,(@rhombus(at_selection, ~var)).value := selected
-)
 
 }
 
@@ -124,7 +104,7 @@
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~selection: selection :: ObsOrValue.of(Any) = #false,
-      ~action: action :: maybe(Any -> ~any) = #false,
+      ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: ObsOrValue.of(List.of(RadioChoice.Style))
                  = [#'vertical],
@@ -154,7 +134,7 @@
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~selection: selection :: ObsOrValue.of(Any) = #false,
-      ~action: action :: maybe(Any -> ~any) = #false,
+      ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: ObsOrValue.of(List.of(ListChoice.StyleSymbol)) = [],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
@@ -179,7 +159,7 @@
     constructor (
       columns :: List.of(View.LabelString),
       choices :: ObsOrValue.of(Array),
-      ~action: callback :: (Table.Event, Array, Table.Selection) -> ~any
+      ~action: action :: (Table.Event, Array, Table.Selection) -> ~any
                  = values,
       ~choice_to_row: choice_to_row :: Any -> Array.now_of(View.LabelString)
                         = values,
@@ -210,6 +190,11 @@
  choices at the time of the event, and choice @rhombus(selection, ~var)
  identifies the selected rows.
 
+ The @rhombus(Table.at_selection) property returns an observable that
+ is updated whenever the table's selection state changes through an action
+ (as also reported via @rhombus(action)) or via @rhombus(selection) as an
+ observable.
+
  The @rhombus(choice_to_row) function converts an element of
  @rhombus(choices) to an array of label strings to show in the table.
 
@@ -226,7 +211,7 @@
       ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
       ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
       ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
-      ~action: action :: maybe(View.PositionInt -> ~any) = #false,
+      ~action: action :: View.PositionInt -> ~any = values,
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -242,23 +227,13 @@
  slider is changed, where @rhombus(now_val, ~var) indicates the value of
  the slider.
 
- If @rhombus(value) is not an observable, then an observable
- @rhombus(at_value, ~var) is created with initial value
- @rhombus(value). Otherwise, @rhombus(at_value, ~var) is
- @rhombus(value). A observable derived from
- @rhombus(at_value, ~var) can be obtained from the
- @rhombus(Checkbox.at_value) property.
+ The @rhombus(Slider.at_value) property returns an observable that
+ is updated whenever the slider's value changes through an action
+ (as also reported via @rhombus(action)) or via @rhombus(value) as an
+ observable.
 
  The @rhombus(styles) list must include one of @rhombus(#'horiziontal)
  and @rhombus(#'vertical).
-
- The default @rhombus(set_value, ~var) function for @rhombus(action)
- corresponds to
-
-@rhombusblock(
-  fun (val):
-    #,(@rhombus(at_value, ~var)).value := val
-)
 
 }
 
@@ -286,12 +261,9 @@
  The @rhombus(styles) list must include one of @rhombus(#'horiziontal)
  and @rhombus(#'vertical).
 
- If @rhombus(value) is not an observable, then an observable
- @rhombus(at_value, ~var) is created with initial value
- @rhombus(value). Otherwise, @rhombus(at_value, ~var) is
- @rhombus(value). A observable derived from
- @rhombus(at_value, ~var) can be obtained from the
- @rhombus(Progress.at_value) property.
+ The @rhombus(Progress.at_value) property returns an observable that is
+ updated whenever the progress gauge's state changes through
+ @rhombus(value) as an observable.
 
 }
 
@@ -313,12 +285,9 @@
 
  Creates a text label.
 
- If @rhombus(label) is not an observable, then an observable
- @rhombus(at_label, ~var) is created with initial value
- @rhombus(value). Otherwise, @rhombus(at_label, ~var) is
- @rhombus(value). A observable derived from
- @rhombus(at_value, ~var) can be obtained from the
- @rhombus(Label.at_label) property.
+ The @rhombus(Label.at_label) property returns an observable that is
+ updated whenever the label's state changes through
+ @rhombus(label) as an observable.
 
 }
 
@@ -388,12 +357,10 @@
   to strings. If not provided, value must be either a string? or an observable
   of strings.
 
-  If @rhombus(Content) is not an observable, then an observable
-  @rhombus(at_content, ~var) is created with initial value
-  @rhombus(content). Otherwise, @rhombus(at_content, ~var) is
-  @rhombus(content). A observable derived from
-  @rhombus(at_content, ~var) can be obtained from the
-  @rhombus(Label.at_content) property.
+  The @rhombus(Input.at_content) property returns an observable that
+  is updated whenever the input's value changes through an action
+  (as also reported via @rhombus(action)) or via @rhombus(content) as an
+  observable.
 
 }
 

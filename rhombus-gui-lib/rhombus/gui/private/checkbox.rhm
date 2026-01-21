@@ -16,15 +16,17 @@ class Checkbox(private _at_checked :: Obs):
   extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(View.LabelString),
-               ~action: action :: maybe(Boolean -> ~any) = #false,
+               ~action: action :: Boolean -> ~any = values,
                ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
-    let at_checked = obs.to_obs(is_checked)
-    let action = action || (fun (on):
-                              at_checked.value := on)
+    let at_checked = obs.reflect_obs(is_checked)
+    let action = (fun (on):
+                    at_checked.value := on
+                    action(on)
+                    #void)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         super(easy.checkbox(action,

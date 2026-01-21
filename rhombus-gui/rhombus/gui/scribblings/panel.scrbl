@@ -62,8 +62,7 @@
     constructor (
       choices :: ObsOrValue.of(List),
       ~selection: selection :: ObsOrValue.of(Any),
-      ~action: action :: maybe((TabsPanel.Action, List, maybe(Any)) -> Any)
-                 = #,(@rhombus(set_selection, ~var)),
+      ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> ~any = values,
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
       ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
@@ -83,12 +82,10 @@
  identity of choices, and @rhombus(selection) determines which of the
  tabs is selected.
 
- If @rhombus(selection) is not an observable, then an observable
- @rhombus(at_selection, ~var) is created with initial value
- @rhombus(selection). Otherwise, @rhombus(at_selection, ~var) is
- @rhombus(selection). A observable derived from
- @rhombus(at_selection, ~var) can be obtained from the
- @rhombus(TabsPanel.at_selection) property.
+ The @rhombus(TabsPanel.at_selection) property returns an observable
+ that is updated whenever the panel changes through an action (as also
+ reported via @rhombus(action)) or via @rhombus(selection) as an
+ observable.
 
  The @rhombus(choice_to_label) function converts an item in
  @rhombus(choices) to a label to be shown for the tab, and
@@ -106,12 +103,6 @@
  where @rhombus(what, ~var) describes the action, @rhombus(choices) is
  the list of choices at the time of the action, and
  @rhombus(selected, ~var) is the tab (if any) selected after the action.
- The default @rhombus(set_selection, ~var) function corresponds to
-
-@rhombusblock(
-  fun (_, _, selected):
-    #,(@rhombus(at_selection, ~var)).value := selected
-)
 
  To change the content of a @rhombus(TabsPanel, ~class) based on its
  selection, supply a @rhombus(child) that is an observable derived from

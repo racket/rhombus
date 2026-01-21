@@ -35,12 +35,14 @@ class Input(private _at_content :: Obs):
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values):
-    let at_content = obs.to_obs(content)
+    let at_content = obs.reflect_obs(content)
     #{view-help}.#{mix-wrap}(
       fun (mix):
         super(easy.input(obs.unwrap(content),
                          fun (action, str):
-                           callback(unconvert_action(action), to_string(str)),
+                           at_content.value := str
+                           callback(unconvert_action(action), to_string(str))
+                           #void,
                          ~label: obs.unwrap(label),
                          ~#{enabled?}: obs.unwrap(is_enabled),
                          ~#{background-color}: obs.unwrap(bg_color),

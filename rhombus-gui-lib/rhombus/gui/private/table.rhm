@@ -38,13 +38,16 @@ class Table(private _at_selection :: Obs):
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
                                  = []):
-    let at_selection = obs.to_obs(selection)
+    let at_selection = obs.reflect_obs(selection)
     #{view-help}.#{mix-wrap}(
       fun (mix):
         super(easy.table(obs.unwrap_list(columns, values),
                          obs.unwrap(entries),
                          fun (a, row, sel):
-                           callback(a, row, unconvert_selection(sel)),
+                           let sel = unconvert_selection(sel)
+                           at_selection.value := sel
+                           callback(a, row, sel)
+                           #void,
                          ~#{entry->row}: entry_to_row,
                          ~selection: obs.unwrap_convert(selection, convert_selection),
                          ~label: obs.unwrap(label),
@@ -116,13 +119,16 @@ class ListChoice(private _at_selection :: Obs):
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false]):
-    let at_selection = obs.to_obs(selection)
+    let at_selection = obs.reflect_obs(selection)
     #{view-help}.#{mix-wrap}(
       fun (mix):
         super(easy.table(PairList["value"],
                          obs.unwrap_convert(choices, fun ([v, ...]): Array(v, ...)),
                          fun (a, choices, sel):
-                           callback(#//a, unconvert_selection(choices, sel), #//sel),
+                           let sel = unconvert_selection(choices, sel)
+                           at_selection.value := sel
+                           callback(sel)
+                           #void,
                          ~#{entry->row}: fun (v): Array(choice_to_label(v)),
                          ~selection: obs.unwrap_convert(selection, fun (sel): convert_selection(choices, choice_equal, sel)),
                          ~label: obs.unwrap(label),

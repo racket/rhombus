@@ -20,15 +20,17 @@ class Slider(private _at_value :: Obs):
                ~value: value :: ObsOrValue.of(View.PositionInt) = 0,
                ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
                ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
-               ~action: action :: maybe(View.PositionInt -> ~any) = #false,
+               ~action: action :: View.PositionInt -> ~any = values,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~styles: style :: List.of(Slider.Style) = [#'horizontal]):
-    let at_value = obs.to_obs(value)
-    let action = action || (fun (val):
-                              at_value.value := val)
+    let at_value = obs.reflect_obs(value)
+    let action = (fun (val):
+                    at_value.value := val
+                    action(val)
+                    #void)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         super(easy.slider(obs.unwrap(at_value),
