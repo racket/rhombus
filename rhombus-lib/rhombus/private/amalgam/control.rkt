@@ -92,6 +92,21 @@
             (values rev-gs (hash-set state 'initially #`(rhombus-expression (#,group-tag term ...))))]
            [(group #:initially . _)
             (raise-syntax-error #f "expected block or expression after `~initially`" stx g)]
+           [(group #:result . _)
+            #:when (hash-ref state 'result #f)
+            (raise-syntax-error #f "duplicate `~result` clause" stx g)]
+           [(group #:result . _)
+            #:when (or (hash-ref state 'finally #f)
+                       (hash-ref state 'handler #f))
+            (raise-syntax-error #f "`~result` not allowed after `~catch` or `~finally`" stx g)]
+           [(group #:result (tag::block body ...))
+            (values null (hash-set state 'result (cons (reverse rev-gs)
+                                                       #'(rhombus-body-at tag body ...))))]
+           [(group #:result term ...+)
+            (values null (hash-set state 'result (cons (reverse rev-gs)
+                                                       #`(rhombus-expression (#,group-tag term ...)))))]
+           [(group #:result . _)
+            (raise-syntax-error #f "expected block or expression after `~result`" stx g)]
            [(group #:finally . _)
             #:when (hash-ref state 'finally #f)
             (raise-syntax-error #f "duplicate `~finally` clause" stx g)]
@@ -133,7 +148,22 @@
                       (hash-ref state 'finally #f))
               (raise-syntax-error #f "expression or definition not allowed after `~catch` or `~finally`" stx g))
             (values (cons g rev-gs) state)])))
-     (let* ([body #`(rhombus-body-at tag #,@(reverse rev-gs))]
+     (let* ([before+res (hash-ref state 'result #f)]
+            [body #`(rhombus-body-at tag #,@(reverse (if before+res
+                                                         (cons
+                                                          #'(group (parsed #:rhombus/expr (void)))
+                                                          rev-gs)
+                                                         rev-gs)))]
+            [body (if before+res
+                      #`(rhombus-body-at
+                         tag
+                         #,@(car before+res)
+                         (group
+                          (parsed #:rhombus/expr
+                                  (begin0
+                                    #,(cdr before+res)
+                                    #,body))))
+                      body)]
             [body (let ([handler (hash-ref state 'handler #f)])
                     (if handler
                         #`(with-handlers ([always-true #,handler])

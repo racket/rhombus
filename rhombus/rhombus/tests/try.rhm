@@ -1,0 +1,278 @@
+#lang rhombus
+
+// see also "control.rhm" for interaction with continuations
+
+check:
+  try:
+    1/0
+    ~catch x :: Exn.Fail:
+      "fail"
+  ~is "fail"
+
+check:
+  try:
+    1/0
+    ~catch
+    | x :: Int:
+        "done"
+    | x :: Exn.Fail:
+        "fail"
+  ~is "fail"
+
+check:
+  use_static
+  try:
+    throw "oops"
+    ~catch
+    | s :: String:
+        s.length()
+  ~is 4
+
+block:
+  def mutable n = 0;
+  check:
+    try:
+      ~initially:
+        n := n + 1
+      "ok"
+      ~finally:
+        n := n + 100
+    ~is "ok"
+  check:
+    n ~is 101
+
+block:
+  def mutable n = 0;
+  check:
+    try ~escape_as esc:
+      ~initially:
+        n := n + 1
+      esc(#'no)
+      "ok"
+      ~finally:
+        n := n + 100
+    ~is #'no
+  check:
+    n ~is 101
+
+block:
+  def mutable n = 0;
+  check:
+    try ~escape_as esc:
+      ~initially:
+        n := n + 1      
+      "ok"
+      ~finally:
+        esc(#'no)
+        n := n + 100
+    ~is #'no
+  check:
+    n ~is 1
+
+block:
+  def mutable n = 0;
+  check:
+    try ~escape_as esc:
+      ~initially:
+        esc(#'no)
+        n := n + 1      
+      "ok"
+      ~finally:        
+        n := n + 100
+    ~is #'no
+  check:
+    n ~is 0
+
+check:
+  try:
+    ~result 1
+  ~is 1
+
+check:
+  try:
+    let x = 1
+    ~result:
+      values(x, x+2)
+    let x = 10
+    x
+  ~is values(1, 3)
+
+check:
+  try:
+    let f = fun (): g
+    def g = 1
+    ~result f()
+    def g = 2
+  ~is 1
+
+block:
+  def mutable n = 0
+  check:
+    try:
+      ~initially:
+        n := n + 1
+      n := n + 2
+      ~result:
+        values("x", "y", "z")
+      "ok"
+      ~finally:
+        n := n + 100
+    ~is values("x", "y", "z")
+  check:
+    n ~is 103
+
+check:
+  ~eval
+  try:
+    ~initially: 1
+  ~throws "block has no expressions"
+
+check:
+  ~eval
+  try:
+    ~initially: 1
+    ~finally: 10
+  ~throws "block has no expressions"
+
+check:
+  ~eval
+  try:
+    ~initially: 1
+    ~catch x: x
+    ~finally: 10
+  ~throws "block has no expressions"
+
+check:
+  try:
+    ~initially: 1
+    ~result: 0
+    ~catch x: x
+    ~finally: 10
+  ~is 0
+
+check:
+  try:
+    ~initially: 1
+    0
+    ~catch x: x
+    ~finally: 10
+  ~is 0
+
+check:
+  try ~escape_as esc:
+    fun esc (x):
+      x + 1
+    ~result:
+      esc(0)
+  ~is 1
+
+check:
+  try ~escape_as esc:
+    ~result:
+      esc(0)
+    fun esc (x):
+      x + 1
+  ~is 0
+
+check:
+  ~eval
+  try:
+    ~initially
+  ~throws "xpected block or expression after `~initially`"
+
+check:
+  ~eval
+  try:
+    ~initially: 1
+    ~initially 2
+  ~throws "duplicate `~initially` clause"
+
+check:
+  ~eval
+  try:
+    0
+    ~initially 2
+  ~throws "`~initially` clause must appear at the start of the body"
+
+check:
+  ~eval
+  try:
+    ~result 0
+    ~initially 2
+  ~throws "`~initially` clause must appear at the start of the body"
+
+check:
+  ~eval
+  try:
+    ~finally 10
+    ~initially 2
+  ~throws "`~initially` clause must appear at the start of the body"
+
+check:
+  ~eval
+  try:
+    ~catch x: x
+    ~initially 2
+  ~throws "`~initially` clause must appear at the start of the body"
+
+check:
+  ~eval
+  try:
+    ~finally 1
+    ~result 2
+  ~throws "`~result` not allowed after `~catch` or `~finally`"
+
+check:
+  ~eval
+  try:
+    ~catch x: 1
+    ~result 2
+  ~throws "`~result` not allowed after `~catch` or `~finally`"
+
+check:
+  ~eval
+  try:
+    ~result 2
+    ~result 2
+  ~throws "duplicate `~result` clause"
+
+check:
+  ~eval
+  try:
+    ~result
+  ~throws "expected block or expression after `~result`"
+
+check:
+  ~eval
+  try:
+    0
+    ~catch
+  ~throws "expected alternatives or a binding and block after `~catch`"
+
+check:
+  ~eval
+  try:
+    0
+    ~catch: -1
+  ~throws "expected alternatives or a binding and block after `~catch`"
+
+check:
+  ~eval
+  try ~escape_as:
+    0
+    ~catch: -1
+  ~throws "expected a block, optionally preceded by an `~escape_as` and an identifier"
+
+check:
+  ~eval
+  try ~escape_as 10:
+    0
+    ~catch: -1
+  ~throws "expected a block, optionally preceded by an `~escape_as` and an identifier"
+
+check:
+  ~eval
+  try ~escape_as (x):
+    0
+    ~catch: -1
+  ~throws "expected a block, optionally preceded by an `~escape_as` and an identifier"

@@ -2,6 +2,8 @@
 import:
   "version_guard.rhm"
 
+// see also "try.rhm"
+
 block:
   import "static_arity.rhm"
   static_arity.check:
@@ -9,45 +11,6 @@ block:
     Continuation.escape(val, ...)
     Continuation.PromptTag.make([name])
     Continuation.call_with_immediate_mark(key, fn)
-
-check:
-  try:
-    1/0
-    ~catch x :: Exn.Fail:
-      "fail"
-  ~is "fail"
-
-check:
-  try:
-    1/0
-    ~catch
-    | x :: Int:
-        "done"
-    | x :: Exn.Fail:
-        "fail"
-  ~is "fail"
-
-check:
-  use_static
-  try:
-    throw "oops"
-    ~catch
-    | s :: String:
-        s.length()
-  ~is 4
-
-block:
-  def mutable n = 0;
-  check:
-    try:
-      ~initially:
-        n := n + 1
-      "ok"
-      ~finally:
-        n := n + 100
-    ~is "ok"
-  check:
-    n ~is 101
 
 check:
   Continuation.prompt:

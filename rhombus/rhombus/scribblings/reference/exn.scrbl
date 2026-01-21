@@ -13,6 +13,9 @@
                 $maybe_initially
                 $body
                 ...
+                $maybe_result
+                $body
+                ...
                 $maybe_catch
                 $maybe_finally'
 
@@ -23,6 +26,11 @@
   grammar maybe_initially
   | ~initially: $body; ...
   | ~initially $expr
+  | #,(epsilon)
+
+  grammar maybe_result
+  | ~result: $body; ...
+  | ~result $expr
   | #,(epsilon)
 
   grammar maybe_catch
@@ -39,11 +47,26 @@
 ){
 
 
- Returns the value(s) of the @rhombus(body) sequence, but runs the body or expression of
+ Returns the value(s) of the @rhombus(body) sequence or the @rhombus(~result) body,
+ but runs the body or expression of
  an @rhombus(~initially) clause when entering the @rhombus(try) body
  (whether normally or by a @tech{continuation} jump) and the body or expression of a
  @rhombus(~finally) clause when leaving the @rhombus(try) body (whether
  normally or by a @tech{continuation} jump, including exception throws).
+
+ If a @rhombus(~result) clause is present, it provides the result of the
+ @rhombus(try) form. The @rhombus(body) sequence before or after
+ @rhombus(~result) can be empty. Bindings after @rhombus(~result) are not
+ visible to the @rhombus(~result) body or to @rhombus(body) forms before
+ @rhombus(~result).
+
+@examples(
+  ~repl:
+    try:
+      println("in")
+      ~result: values("ok", "done")
+      println("out")
+)
 
  If an exception is thrown during the the @rhombus(body) sequence, the
  control escapes to the context of the @rhombus(try) @rhombus(body)
@@ -112,7 +135,8 @@
 
  The last @rhombus(body) form of @rhombus(try) is in @tail_position with
  respect to @rhombus(try) only when no
- @rhombus(~escape_as), @rhombus(~initially), @rhombus(~catch), or @rhombus(~finally)
+ @rhombus(~escape_as), @rhombus(~initially), @rhombus(~result),
+ @rhombus(~catch), or @rhombus(~finally)
  is present. If none are present, the @rhombus(try) form is the same as
  @rhombus(block).
 
