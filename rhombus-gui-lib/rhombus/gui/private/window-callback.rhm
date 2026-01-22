@@ -1,0 +1,30 @@
+#lang rhombus/static
+import:
+  "obs.rhm":
+    expose:
+      ObsOrValue
+  "type.rhm" open
+  "event.rhm" open
+  "view.rhm".WindowChildView
+
+namespace gui
+
+export:
+  gui.WindowCallbacks
+
+class gui.WindowCallbacks(
+  ~accepts_drop_file: accepts_drop_file :: ObsOrValue.of(Boolean) = #false,
+  ~drop_file: drop_file :: Path -> ~any = values,
+  ~focus: focus :: Boolean -> ~any = values,
+  ~move: move :: (View.PositionInt, View.PositionInt) -> ~any = values,
+  ~size: size :: (View.SizeInt, View.SizeInt) -> ~any = values,
+  ~sub_key: sub_key :: (WindowChildView, KeyEvent) -> Boolean
+              = fun (v, e): #false,
+  ~sub_mouse: sub_mouse :: (WindowChildView, MouseEvent) -> Boolean
+                = fun (v, e): #false,
+  ~sub_focus: sub_focus :: (WindowChildView, Boolean) -> ~any = values,
+  ~super_activate: super_activate :: Boolean -> ~any = values,
+  ~super_enable: super_enable :: Boolean -> ~any = values,
+  ~super_show: super_show :: Boolean -> ~any = values
+):
+  ~doc

@@ -1,6 +1,8 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/gui/easy.rkt")
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -21,7 +23,8 @@ class Checkbox(private _at_checked :: Obs):
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     let at_checked = obs.reflect_obs(is_checked)
     let action = (fun (on):
                     at_checked.value := on
@@ -29,10 +32,11 @@ class Checkbox(private _at_checked :: Obs):
                     #void)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.checkbox(action,
                             ~label: obs.unwrap(label),
                             ~#{enabled?}: obs.unwrap(is_enabled),
-                            ~#{checked?}: obs.unwrap(at_checked),
+                            ~#{checked?}: obs.unwrap(is_checked),
                             ~margin: obs.unwrap_list(margin, values),
                             ~#{min-size}: obs.unwrap_list(min_size, values),
                             ~stretch: obs.unwrap_list(stretch, values),

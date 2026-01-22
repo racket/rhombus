@@ -15,6 +15,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(View), ...
     )
   class gui.VPanel():
@@ -27,6 +28,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(View), ...
     )
 ){
@@ -48,6 +50,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(View), ...
     )
 ){
@@ -72,6 +75,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(View), ...
     )
 

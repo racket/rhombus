@@ -18,7 +18,8 @@
       ~styles: styles :: ObsOrValue.of(List.of(Button.Style)) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 ){
 
@@ -37,7 +38,8 @@
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (cb :: gui.Checkbox).at_is_checked :: Obs.of(Boolean)
@@ -69,7 +71,8 @@
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (chc :: gui.Choice).at_selection :: Obs
@@ -111,7 +114,8 @@
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (chc :: gui.RadioChoice).at_selection :: Obs
@@ -141,7 +145,8 @@
       ~font : font :: draw.Font = normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (chc :: gui.ListChoice).at_selection :: Obs
@@ -174,7 +179,8 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
       ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
-                        = []
+                        = [],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (chc :: gui.Table).at_selection :: Obs
@@ -216,7 +222,8 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Slider.Style) = [#'horizontal]
+      ~styles: styles :: List.of(Slider.Style) = [#'horizontal],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (sldr :: gui.Slider).at_value :: Obs.of(PositionInt)
@@ -249,7 +256,8 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Progress.Style) = [#'horizontal]
+      ~styles: styles :: List.of(Progress.Style) = [#'horizontal],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (prog :: gui.Progress).at_value :: Obs.of(SizeInt)
@@ -277,7 +285,8 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Progress.Style) = [#'horizontal]
+      ~styles: styles :: List.of(Progress.Style) = [#'horizontal],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (lbl :: gui.Label).at_label :: Obs.of(View.LabelString)
@@ -301,7 +310,8 @@
       ~display: display :: ObsOrValue.of(Image.DisplayMode) = #'fit,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 ){
 
@@ -335,6 +345,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
       ~value_to_text: val_to_txt :: Function = values
     )
@@ -370,7 +381,8 @@
     implements WindowChildView
     constructor (
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 ){
 

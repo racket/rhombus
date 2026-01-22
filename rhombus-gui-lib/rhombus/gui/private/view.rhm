@@ -29,6 +29,7 @@ module private:
     MenuChildViewI
     to_view
     set_view_gui_handle
+    get_gui_handle_view
 
 interface View:
   implementable ViewI
@@ -175,5 +176,14 @@ fun
 | to_view(v :: View) :: View: v
 | to_view(o :: obs.Obs) :: View: AView(#{observable-view}(o.map(fun (v :: View): v.handle).handle))
 
+def gui_handle_to_view = WeakMutableMap()
+
 fun set_view_gui_handle(v :~ _BaseView, gui_handle):
   v._gui_handle := gui_handle
+  gui_handle_to_view[gui_handle] := v
+
+fun get_gui_handle_view(gui_handle):
+  gui_handle_to_view.maybe[gui_handle]
+    || (block:
+          let p = rkt_obj.send gui_handle.#{get-parent}()
+          p && get_gui_handle_view(p))

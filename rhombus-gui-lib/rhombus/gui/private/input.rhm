@@ -8,6 +8,8 @@ import:
   rhombus/draw/private/font!private._Font
   rhombus/draw/private/symbol_map.symbol_map_annot
   "label.rhm".Label.normal_control_font
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "obs.rhm":
     expose:
       Obs
@@ -34,10 +36,12 @@ class Input(private _at_content :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
-               ~value_to_text: val_to_txt :: Function = values):
+               ~value_to_text: val_to_txt :: Function = values,
+               ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()):
     let at_content = obs.reflect_obs(content)
     #{view-help}.#{mix-wrap}(
-      fun (mix):
+      fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.input(obs.unwrap(content),
                          fun (action, str):
                            at_content.value := str
@@ -51,7 +55,7 @@ class Input(private _at_content :: Obs):
                          ~margin: obs.unwrap_list(margin, values),
                          ~#{min-size}: obs.unwrap_list(min_size, values),
                          ~stretch: obs.unwrap_list(stretch, values),
-                         ~mixin: mix,
+                         ~mixin: mixin,
                          ~#{value=?}: is_equal,
                          ~#{value->text}: val_to_txt))
           <| (at_content)

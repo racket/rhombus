@@ -15,6 +15,8 @@ import:
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
 
 export:
   Table
@@ -37,10 +39,12 @@ class Table(private _at_selection :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
-                                 = []):
+                                 = [],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     let at_selection = obs.reflect_obs(selection)
     #{view-help}.#{mix-wrap}(
-      fun (mix):
+      fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.table(obs.unwrap_list(columns, values),
                          obs.unwrap(entries),
                          fun (a, row, sel):
@@ -58,7 +62,7 @@ class Table(private _at_selection :: Obs):
                          ~#{min-size}: obs.unwrap_list(min_size, values),
                          ~stretch: obs.unwrap_list(stretch, values),
                          ~#{column-widths}: obs.unwrap_list(column_widths, fun (v): obs.unwrap_list(v, values)),
-                         ~mixin: mix))
+                         ~mixin: mixin))
           <| (at_selection)
     )
 
@@ -118,10 +122,12 @@ class ListChoice(private _at_selection :: Obs):
                ~font : font :: Font = normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     let at_selection = obs.reflect_obs(selection)
     #{view-help}.#{mix-wrap}(
-      fun (mix):
+      fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.table(PairList["value"],
                          obs.unwrap_convert(choices, fun ([v, ...]): Array(v, ...)),
                          fun (a, choices, sel):
@@ -138,7 +144,7 @@ class ListChoice(private _at_selection :: Obs):
                          ~margin: obs.unwrap_list(margin, values),
                          ~#{min-size}: obs.unwrap_list(min_size, values),
                          ~stretch: obs.unwrap_list(stretch, values),
-                         ~mixin: mix))
+                         ~mixin: mixin))
           <| (at_selection)
     )
 

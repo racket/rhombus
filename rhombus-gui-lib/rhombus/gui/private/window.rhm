@@ -17,6 +17,8 @@ import:
       ObsOrValue
   "view-help.rkt"
   "window-help.rkt".add_window_callbacks
+  "window-child-help.rkt".add_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "menu.rhm".MenuBar
 
 export:
@@ -35,6 +37,7 @@ class Window():
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
                ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(WindowChildView),
                ...):
     #{view-help}.#{mix-wrap}(
@@ -47,7 +50,10 @@ class Window():
                           ~stretch: obs.unwrap_list(stretch, values),
                           ~style: obs.unwrap_list(style, convert_style),
                           ~mixin: fun (cls):
-                                    mixin(add_window_callbacks(cls, is_enabled)),
+                                    mixin(add_window_child_callbacks(
+                                            add_window_callbacks(cls, is_enabled),
+                                            wcb
+                                          )),
                           & (if menu_bar | [menu_bar!!.handle] | []),
                           to_view(child).handle,
                           ...))

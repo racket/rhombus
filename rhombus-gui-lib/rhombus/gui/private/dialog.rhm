@@ -2,6 +2,8 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm":
     expose:
       View
@@ -34,11 +36,13 @@ class Dialog():
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
                child :: ObsOrValue.of(WindowChildView),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.dialog(~title: obs.unwrap(title),
                           ~size: obs.unwrap_list(size, values),
                           ~alignment: obs.unwrap_list(alignment, values),

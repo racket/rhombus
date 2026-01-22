@@ -13,6 +13,4 @@
       [(obs? enabled-obs)
        (obs-observe! enabled-obs (lambda (v) (enable v)))]
       [(not enabled-obs)
-       (log-error "dis")
        (enable #f)])))
-

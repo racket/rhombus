@@ -3,6 +3,8 @@ import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
   rhombus/draw.Bitmap
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -26,9 +28,11 @@ class Button():
                ~styles: style :: ObsOrValue.of(List.of(Button.Style)) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                           action,
                           ~#{enabled?}: obs.unwrap(is_enabled),

@@ -7,6 +7,8 @@ import:
       Color
       Font
   rhombus/draw/private/font!private._Font
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -26,10 +28,12 @@ class Label(private _at_label :: Obs):
                ~font: font :: Font = normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     let at_label = obs.to_obs(label)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.text(obs.unwrap(at_label),
                         ~color: obs.unwrap(color),
                         ~font: obs.unwrap_convert(font, fun (fnt): fnt && (fnt :~ Font).handle),

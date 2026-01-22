@@ -299,17 +299,26 @@ def (tabs, config):
                               "name pos": ["Center", "Center"],
                               "track mouse": #false,
                               "rotation": 0 })
-    gui.Image(bm, ~margin: [10, 10])
+    bm
+
+  let img:
+    let img_src = gui.Obs(happy_image)
+    gui.Image(img_src,
+              ~margin: [10, 10],
+              ~window_callbacks:
+                gui.WindowCallbacks(~accepts_drop_file: #true,
+                                    ~drop_file: fun (path): img_src.value := path))
 
   values(
     gui.TabsPanel(["Happy", "Sad"],
                   ~selection: at_tab,
+                  ~action: fun (_, _, sel): at_tab.value := sel,
                   at_tab ~> (match _
                              | "Happy": canvas
                              | "Sad": gui.HPanel(canvas,
                                                  gui.VPanel(~stretch: [#false, #true],
                                                             happy_button,
-                                                            happy_image)))),
+                                                            img)))),
     config
   )
 

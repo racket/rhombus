@@ -15,6 +15,8 @@ import:
     expose:
       Obs
       ObsOrValue
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
 
 export:
   HPanel
@@ -47,10 +49,12 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
                   ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                   ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                   ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+                  ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                   child :: ObsOrValue.of(WindowChildView),
                   $'...'):
        #{view-help}.#{mix-wrap}(
-         fun (mix):
+         fun (mixin):
+           let mixin = mix_window_child_callbacks(mixin, wcb)
            super(easy . $easy_name($convert($arg), ...,
                                    ~alignment: obs.unwrap_list(alignment, values),
                                    ~#{enabled?}: obs.unwrap(is_enabled),
@@ -59,7 +63,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
                                    ~margin: obs.unwrap_list(margin, values),
                                    ~#{min-size}: obs.unwrap_list(min_size, values),
                                    ~stretch: obs.unwrap_list(stretch, values),
-                                   ~mixin: mix,
+                                   ~mixin: mixin,
                                    to_view(child).handle,
                                    $'...'))
              <| ()
@@ -114,6 +118,7 @@ class TabsPanel(private _at_selection :: Obs):
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(View),
                ...):
     let at_selection = obs.reflect_obs(selection)
@@ -124,9 +129,10 @@ class TabsPanel(private _at_selection :: Obs):
 
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.tabs(obs.unwrap_list(choices, values),
                         action,
-                        ~selection: obs.unwrap(at_selection),
+                        ~selection: obs.unwrap(selection),
                         ~#{choice->label}: choice_to_label,
                         ~#{choice=?}: choice_equal,
                         ~alignment: obs.unwrap_list(alignment, values),
@@ -136,6 +142,7 @@ class TabsPanel(private _at_selection :: Obs):
                         ~margin: obs.unwrap_list(margin, values),
                         ~#{min-size}: obs.unwrap_list(min_size, values),
                         ~stretch: obs.unwrap_list(stretch, values),
+                        ~mixin: mixin,
                         to_view(child).handle,
                         ...))
           <| (at_selection)

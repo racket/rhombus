@@ -4,6 +4,8 @@ import:
   rhombus/draw:
     expose:
       Bitmap
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -22,9 +24,11 @@ class Image():
                ~display: mode :: ObsOrValue.of(Image.DisplayMode) = #'fit,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.image(obs.unwrap_convert(content, fun (content):
                                                        match content
                                                        | bm :: draw.Bitmap: bm.handle

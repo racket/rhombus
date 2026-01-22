@@ -23,6 +23,7 @@ import:
   "gui/private/input.rhm"
   "gui/private/table.rhm"
   "gui/private/spacer.rhm"
+  "gui/private/window-callback.rhm" as win_cb
 
 export:
   all_from(.obs)
@@ -45,3 +46,4 @@ export:
   all_from(.input)
   all_from(.table)
   all_from(.spacer)
+  all_from(.win_cb)

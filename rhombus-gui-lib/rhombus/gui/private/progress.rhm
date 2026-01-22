@@ -2,6 +2,8 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -23,10 +25,12 @@ class Progress(private _at_value :: Obs):
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-               ~styles: style :: List.of(Progress.Style) = [#'horizontal]):
+               ~styles: style :: List.of(Progress.Style) = [#'horizontal],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     let at_value = obs.to_obs(value)
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.progress(obs.unwrap(at_value),
                             ~label: obs.unwrap(label),
                             ~#{range}: obs.unwrap(max_value),

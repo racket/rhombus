@@ -4,6 +4,8 @@ import:
     expose:
       ObsOrValue
   lib("racket/gui/easy.rkt")
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
@@ -15,9 +17,11 @@ class Spacer():
   extends BaseWindowView
 
   constructor (~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]):
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.hpanel(~#{min-size}: obs.unwrap_list(min_size, values),
                           ~stretch: obs.unwrap_list(stretch, values),
                           ~mixin: mixin))
