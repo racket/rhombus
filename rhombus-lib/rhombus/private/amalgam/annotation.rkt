@@ -1596,10 +1596,10 @@
 
 (define-syntax (to_boolean-infoer stx)
   (syntax-parse stx
-    [(_ static-infos val)
-     (binding-info "to_boolean"
+    [(_ up-static-infos val)
+     (binding-info "Any.to_boolean"
                    #'val
-                   #'()
+                   #'up-static-infos
                    #'((val ([#:repet ()])))
                    #'empty-oncer
                    #'to_boolean-matcher

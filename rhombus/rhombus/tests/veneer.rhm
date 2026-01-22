@@ -378,3 +378,103 @@ block:
       error.annot("None").msg,
       error.val("oops", ~label: "result").msg,
     )
+
+// check static info in `matching`
+block:
+  veneer X(this :: Listable):
+    method m(): this
+  check:
+    X([1, 2, 3]).m() ~is [1, 2, 3]
+    X(PairList[1, 2, 3]).m() ~is PairList[1, 2, 3]
+  check:
+    ([1, 2, 3] :: X).m() ~is [1, 2, 3]
+    (PairList[1, 2, 3] :: X).m() ~is PairList[1, 2, 3]
+  check:
+    [1, 2, 3] :: matching(_ :: X) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: X) ~is PairList[1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: X)).m() ~is [1, 2, 3]
+    (PairList[1, 2, 3] :: matching(_ :: X)).m() ~is PairList[1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: X)).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: X)).length() ~is 3
+
+check:
+  ~eval
+  use_static
+  veneer X(this :: Listable):
+    method m(): this
+  (dynamic([1, 2, 3]) :: matching(_ :: X)).to_list()
+  ~throws "no such field or method (based on static information)"
+
+block:
+  veneer X(this :: Listable):
+    converter
+    method m(): this
+  check:
+    X([1, 2, 3]).m() ~is [1, 2, 3]
+    X(PairList[1, 2, 3]).m() ~is PairList[1, 2, 3]
+  check:
+    ([1, 2, 3] :: X).m() ~is [1, 2, 3]
+    (PairList[1, 2, 3] :: X).m() ~is PairList[1, 2, 3]
+  check:
+    [1, 2, 3] :: matching(_ :: X) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: X) ~is PairList[1, 2, 3]
+  check:
+    (dynamic([1, 2, 3]) :: matching(_ :: X)).to_list() ~is [1, 2, 3]
+    (dynamic(PairList[1, 2, 3]) :: matching(_ :: X)).to_list() ~is [1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: X)).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: X)).length() ~is 3
+
+check:
+  ~eval
+  use_static
+  veneer X(this :: Listable):
+    converter
+    method m(): this
+  ([1, 2, 3] :: matching(_ :: X)).m() ~is [1, 2, 3]
+  ~throws "no such field or method (based on static information)"
+
+block:
+  veneer X(this :: Listable.to_list):
+    converter
+    method m(): this
+  check:
+    X([1, 2, 3]).m() ~is [1, 2, 3]
+    X(PairList[1, 2, 3]).m() ~is [1, 2, 3]
+  check:
+    ([1, 2, 3] :: X).m() ~is [1, 2, 3]
+    (PairList[1, 2, 3] :: X).m() ~is [1, 2, 3]
+  check:
+    [1, 2, 3] :: matching(_ :: X) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: X) ~is PairList[1, 2, 3]
+  check:
+    (dynamic([1, 2, 3]) :: matching(_ :: X)).to_list() ~is [1, 2, 3]
+    (dynamic(PairList[1, 2, 3]) :: matching(_ :: X)).to_list() ~is [1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: X)).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: X)).length() ~is 3
+
+check:
+  ~eval
+  use_static
+  veneer X(this :: Listable.to_list):
+    converter
+    method m(): this
+  ([1, 2, 3] :: matching(_ :: X)).m() ~is [1, 2, 3]
+  ~throws "no such field or method (based on static information)"
+
+// regression test: internal identifiers shouldn't be exposed
+check:
+  ~eval
+  veneer X(this :: Any)
+  #{X?}
+  ~throws "X?: undefined"
+
+check:
+  ~eval
+  veneer X(this :: Any.to_boolean):
+    converter
+  #{X-convert}
+  ~throws "X-convert: undefined"

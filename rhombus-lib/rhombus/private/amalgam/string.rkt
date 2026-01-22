@@ -375,49 +375,47 @@
   (string->immutable-string (number->string n)))
 
 (define-annotation-syntax String.to_int
-  (make-identifier-binding-annotation
-   (lambda (stx)
-     (values (binding-form #'from-string-infoer #`(x rhombus-string->int #,(shrubbery-syntax->string stx)))
-             #'x
-             (get-int-static-infos)))))
+  (identifier-binding-annotation #,(binding-form #'from-string-infoer
+                                                 #'(val rhombus-string->int "String.to_int"))
+                                 val
+                                 #,(get-int-static-infos)))
 
 (define-annotation-syntax String.to_number
-  (make-identifier-binding-annotation
-   (lambda (stx)
-     (values (binding-form #'from-string-infoer #`(x rhombus-string->number  #,(shrubbery-syntax->string stx)))
-             #'x
-             (get-real-static-infos)))))
+  (identifier-binding-annotation #,(binding-form #'from-string-infoer
+                                                 #'(val rhombus-string->number "String.to_number"))
+                                 val
+                                 #,(get-real-static-infos)))
 
 (define-syntax (from-string-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (x cvt ann-str))
+    [(_ up-static-infos (val cvt ann-str))
      (binding-info (syntax-e #'ann-str)
-                   #'s
-                   #'()
-                   #'((x (0)))
+                   #'val
+                   (static-infos-and (get-string-static-infos) #'up-static-infos)
+                   #'((val ([#:repet ()])))
                    #'empty-oncer
                    #'from-string-matcher
-                   #'(v)
+                   #'(converted-val)
                    #'from-string-committer
                    #'from-string-binder
-                   #'(x v cvt))]))
+                   #'(val converted-val cvt))]))
 
 (define-syntax (from-string-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (x v cvt) IF success fail)
+    [(_ arg-id (val converted-val cvt) IF success fail)
      #'(begin
-         (define v (and (immutable-string? arg-id) (cvt arg-id)))
-         (IF v success fail))]))
+         (define converted-val (and (immutable-string? arg-id) (cvt arg-id)))
+         (IF converted-val success fail))]))
 
 (define-syntax (from-string-committer stx)
   (syntax-parse stx
-    [(_ arg-id (v) _)
+    [(_ arg-id (converted-val/evidence) (val converted-val cvt))
      #'(begin)]))
 
 (define-syntax (from-string-binder stx)
   (syntax-parse stx
-    [(_ arg-id (v) (x . _))
-     #'(define x v)]))
+    [(_ arg-id (converted-val/evidence) (val converted-val cvt))
+     #'(define val converted-val/evidence)]))
 
 (define/method (String.find s1 s2)
   #:static-infos ((#%call-result ((#%maybe #,(get-int-static-infos)))))

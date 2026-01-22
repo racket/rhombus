@@ -141,3 +141,16 @@ check:
   ~throws values("length",
                  "no such field or method",
                  "based on static information")
+
+// check input static info for `Listable.to_list`
+block:
+  use_static
+  check:
+    [1, 2, 3] :: matching(_ :: Listable.to_list) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: Listable.to_list) ~is PairList[1, 2, 3]
+  check:
+    (dynamic([1, 2, 3]) :: matching(_ :: Listable.to_list)).to_list() ~is [1, 2, 3]
+    (dynamic(PairList[1, 2, 3]) :: matching(_ :: Listable.to_list)).to_list() ~is [1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: Listable.to_list)).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: Listable.to_list)).length() ~is 3

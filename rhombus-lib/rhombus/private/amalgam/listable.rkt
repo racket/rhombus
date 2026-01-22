@@ -102,7 +102,6 @@
            si)]
       [else si])))
 
-;; also see `to-treelist-who` in "list.rkt"
 (define/method (Listable.to_list v)
   #:static-infos ((#%call-result ((#%dependent-result (to-list-static-infos #f)))))
   (to-treelist who v))
@@ -115,11 +114,11 @@
 
 (define-syntax (to_list-infoer stx)
   (syntax-parse stx
-    [(_ static-infos val)
-     (binding-info "to_list"
+    [(_ up-static-infos val)
+     (binding-info "Listable.to_list"
                    #'val
-                   #'()
-                   #'((val (#:repet ())))
+                   (static-infos-and (get-listable-static-infos) #'up-static-infos)
+                   #'((val ([#:repet ()])))
                    #'empty-oncer
                    #'to_list-matcher
                    #'()

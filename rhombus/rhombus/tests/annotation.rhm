@@ -384,3 +384,13 @@ check:
 check:
   1 is_a (PosInt || !NegInt && String) ~is #true
   "1" is_a (PosInt || !NegInt && String) ~is #true
+
+// check input static info for `Any.to_boolean`
+block:
+  use_static
+  check:
+    [1, 2, 3] :: matching(_ :: Any.to_boolean) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: Any.to_boolean) ~is PairList[1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: Any.to_boolean)).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: Any.to_boolean)).length() ~is 3

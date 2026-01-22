@@ -109,7 +109,7 @@
                               (and super
                                    (veneer-desc-convert-id super))))
 
-       (define name-instance-id (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)))
+       (define name-instance-id (intro (datum->syntax #f (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)))
 
        (define dot-providers (add-super-dot-providers name-instance-id super interfaces))
 
@@ -147,11 +147,10 @@
                                          intro))
 
        (with-syntax ([name-instance name-instance-id]
-                     [internal-name-instance #f]
-                     [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
+                     [name? (intro (datum->syntax #f (string->symbol (format "~a?" (syntax-e #'name))) #'name))]
                      [name-convert (and converter?
-                                        (datum->syntax #'name (string->symbol (format "~a-convert" (syntax-e #'name))) #'name))]
-                     [name-of (intro (datum->syntax #'name (string->symbol (format "~a-of" (syntax-e #'name))) #'name))]
+                                        (intro (datum->syntax #f (string->symbol (format "~a-convert" (syntax-e #'name))) #'name)))]
+                     [name-of (intro (datum->syntax #f (string->symbol (format "~a-of" (syntax-e #'name))) #'name))]
                      [call-statinfo-indirect call-statinfo-indirect-id]
                      [index-statinfo-indirect index-statinfo-indirect-id]
                      [index-set-statinfo-indirect index-set-statinfo-indirect-id]
@@ -161,7 +160,11 @@
                      [super-call-statinfo-indirect super-call-statinfo-indirect-id]
                      [all-static-infos all-static-infos]
                      [instance-static-infos instance-static-infos]
-                     [dot-providers dot-providers])
+                     [dot-providers dot-providers]
+                     [ann-input-statinfo-indirect (and converter?
+                                                       (intro (datum->syntax #f
+                                                                             (string->symbol (format "~a-ann-input-indirect" (syntax-e #'name)))
+                                                                             #'name)))])
          (values
           #`(begin
               #,@(top-level-declare #'(name?))
@@ -172,18 +175,18 @@
                                                    internal-dot-static-infos-id internal-dot-static-infos-expr)
               #,@(build-veneer-annotation converter? super interfaces
                                           #'(name name-extends name? name-convert
-                                                  all-static-infos))
+                                                  all-static-infos ann-input-statinfo-indirect))
               (veneer-finish
                [orig-stx base-stx scope-stx
                          reflect-name name name-extends tail-name
-                         name? name-convert check?
+                         name? name-convert name-of check?
                          name-instance dot-providers
                          call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
                          append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                          super-call-statinfo-indirect
                          all-static-infos
                          instance-static-infos
-                         ann-terms ann-op-name]
+                         ann-terms ann-op-name ann-input-statinfo-indirect]
                exports
                [option stx-params] ...))))])))
 
@@ -192,14 +195,14 @@
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
                     reflect-name name name-extends tail-name
-                    name? name-convert check?
+                    name? name-convert name-of check?
                     name-instance dot-providers
                     call-statinfo-indirect index-statinfo-indirect index-set-statinfo-indirect
                     append-statinfo-indirect compare-statinfo-indirect contains-statinfo-indirect
                     super-call-statinfo-indirect
                     all-static-infos
                     instance-static-infos
-                    ann-terms ann-op-name]
+                    ann-terms ann-op-name ann-input-statinfo-indirect]
           exports
           [option stx-params] ...)
        #:with ann::annotation #'(group . ann-terms)
@@ -308,7 +311,7 @@
               (append
                (build-veneer-predicate-or-converter super converter?
                                                     #'(name name? name-convert check?
-                                                            ann.parsed ann-terms ann-op-name))
+                                                            ann.parsed ann-terms ann-op-name ann-input-statinfo-indirect))
                (build-methods #:veneer-vtable method-vtable
                               method-results
                               added-methods method-mindex method-names method-private method-private-inherit
@@ -410,7 +413,7 @@
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert
-                       all-static-infos)
+                       all-static-infos ann-input-statinfo-indirect)
                  names])
     (cond
       [(not converter?)
@@ -425,18 +428,18 @@
         (build-syntax-definition/maybe-extension
          'rhombus/annot #'name #'name-extends
          #`(identifier-binding-annotation #,(binding-form #'converter-binding-infoer
-                                                          #'(name name-convert val))
+                                                          #'(name name-convert val ann-input-statinfo-indirect))
                                           val
                                           all-static-infos
                                           #:static-only)))])))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (name name-convert val))
+    [(_ static-infos (name name-convert val ann-input-statinfo-indirect))
      (binding-info (shrubbery-syntax->string #'name)
                    #'val
-                   #'()
-                   #'((val (~repeat ())))
+                   #'((#%indirect-static-info ann-input-statinfo-indirect))
+                   #'((val ([#:repet ()])))
                    #'empty-oncer
                    #'converter-matcher
                    #'(convert-committer)
@@ -463,7 +466,7 @@
 
 (define-for-syntax (build-veneer-predicate-or-converter super converter? names)
   (with-syntax ([(name name? name-convert check?
-                       ann ann-terms ann-op-name)
+                       ann ann-terms ann-op-name ann-input-statinfo-indirect)
                  names])
     (define ann-str (shrubbery-syntax->string #`(#,group-tag . ann-terms)))
     (define all-ann-str
@@ -478,8 +481,8 @@
                   (not (veneer-desc-convert-id super)))
        (define super? (and super
                            (veneer-desc-predicate-id super)))
-       (list
-        (if converter?
+       (if converter?
+           (list
             #`(define name-convert
                 #,(cond
                     [(syntax-e #'check?)
@@ -502,6 +505,9 @@
                          (if who
                              v
                              (lambda () v)))]))
+            #'(define-static-info-syntax ann-input-statinfo-indirect
+                . ann.static-infos))
+           (list
             #`(define name?
                 #,(cond
                     [(syntax-e #'check?)
@@ -569,7 +575,9 @@
                                               commit))])
                                  (if who
                                      (raise-binding-failure who "argument" v '#,all-ann-str)
-                                     #f))))])))
+                                     #f)))
+        #'(define-static-info-syntax ann-input-statinfo-indirect
+            . arg-info.static-infos))])))
 
 (define-for-syntax (extract-representation-static-infos ann-stx)
   (syntax-parse ann-stx

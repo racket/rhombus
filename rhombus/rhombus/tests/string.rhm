@@ -613,3 +613,27 @@ block:
   check:
     num_str.to_number() < dynamic(2.0) ~is #true
     num_str.maybe_to_number()!! < dynamic(2.0) ~is #true
+
+// check input static info for `String.to_{int,number}`
+block:
+  use_static
+  check:
+    "123" :: matching(_ :: String.to_int) ~is "123"
+    "123" :: matching(_ :: String.to_number) ~is "123"
+  check:
+    (dynamic("123") :: matching(_ :: String.to_int)).length() ~is 3
+    (dynamic("123") :: matching(_ :: String.to_number)).length() ~is 3
+  check:
+    ([1, 2, 3] :~ matching(_ :: String.to_number)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val([1, 2, 3]).msg,
+    )
+    (PairList[1, 2, 3] :~ matching(_ :: String.to_number)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(PairList[1, 2, 3]).msg,
+    )
+  check:
+    ([1, 2, 3] :~ matching(_ :: String.to_number)).first ~is 1
+    (PairList[1, 2, 3] :~ matching(_ :: String.to_number)).first ~is 1

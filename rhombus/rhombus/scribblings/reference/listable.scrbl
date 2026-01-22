@@ -60,7 +60,7 @@ sequence.
 
 
 @doc(
-  fun Listable.to_list(v :: Listable)
+  method Listable.to_list(v :: Listable)
     :: List.of(Any.like_element(v))
 ){
 
@@ -76,13 +76,13 @@ sequence.
 
 
 @doc(
-  annot.macro 'Listable.expect_of(ann)'
+  annot.macro 'Listable.expect_of($annot)'
 ){
 
  An annotation like @rhombus(Listable, ~annot), with static information
- indicating that elements have the static information of @rhombus(ann).
+ indicating that elements have the static information of @rhombus(annot).
  The extracted elements are not checked or converted, however, and
- @rhombus(ann) is used only for its static information.
+ @rhombus(annot) is used only for its static information.
 
 }
 
