@@ -44,6 +44,45 @@
 }
 
 @doc(
+  interface gui.CanvasContext
+  property (ctx :: gui.CanvasContext).client_size :: Size
+){
+
+ A @rhombus(CanvasContext, ~class) represents a canvas instance that
+ receives mouse or keyboard events so that properties of the instance can
+ be accessed, including its size.
+
+}
+
+@doc(
+  class gui.EditorCanvas():
+    implements WindowChildView
+    constructor (
+      editor :: ObsOrValue.of(maybe(EditorCanvasChild)),
+      ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~styles: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
+      ~scrolls_per_page: scrolls_per_page :: Int.in(1..=10000) = 100,
+      ~wheel_step: wheel_step :: ObsOrValue.of(maybe(Int.in(1..=10000))) = #false,
+      ~line_count: line_count ::  ObsOrValue.of(maybe(Int.in(1..=1000))) = #false,
+      ~inset: inset :: ObsOrValue.of(View.Margin) = [5, 5],
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()
+    )
+
+  interface gui.EditorCanvasChild:
+    implementable #,(@rhombus(unexported, ~var))    
+){
+
+ Creates a canvas view to hold an editor. An editor is implemented as an
+ instance of @rhombus(EditorCanvasChild, ~class) by libraries that
+ cooperate with the @rhombusmodname(gui) library.
+
+}
+
+@doc(
   enum gui.Canvas.Style
   | control_border
   | combo
@@ -62,12 +101,21 @@
 }
 
 @doc(
-  interface gui.CanvasContext
-  property (ctx :: gui.CanvasContext).client_size :: Size
+  enum gui.EditorCanvas.Style
+  | no_boder
+  | combo
+  | no_hscroll
+  | auto_hscroll
+  | hide_hscroll
+  | no_vscroll
+  | auto_vscroll
+  | hide_vscroll
+  | resize_corner
+  | transparent
+  | no_focus
+  | deleted
 ){
 
- A @rhombus(CanvasContext, ~class) represents a canvas instance that
- receives mouse or keyboard events so that properties of the instance can
- be accessed, including its size.
+ An editor canvas style symbol.
 
 }

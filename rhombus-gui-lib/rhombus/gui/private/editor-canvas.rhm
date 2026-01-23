@@ -1,0 +1,76 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/draw/private/rkt
+  rhombus/draw
+  lib("racket/gui/easy.rkt")
+  rhombus/draw/private/symbol_map.symbol_map_annot
+  "window-child-help.rkt".mix_window_child_callbacks
+  "window-callback.rhm".WindowCallbacks
+  "view.rhm".View
+  "view.rhm"!private.BaseWindowView
+  rhombus/draw/private/dc!internal.SomeDC
+  "obs.rhm":
+    expose:
+      ObsOrValue
+  "canvas-help.rkt".add_canvas_callbacks
+  "view-help.rkt"
+
+export:
+  EditorCanvas
+  EditorCanvasChild
+
+module private:
+  export:
+    EditorCanvasChildI
+
+interface EditorCanvasChild:
+  implementable EditorCanvasChildI
+
+class EditorCanvas():
+  extends BaseWindowView
+
+  constructor (editor :: ObsOrValue.of(maybe(EditorCanvasChild)),
+               ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~styles: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
+               ~scrolls_per_page: scrolls_per_page :: Int.in(1..=10000) = 100,
+               ~wheel_step: wheel_step :: ObsOrValue.of(maybe(Int.in(1..=10000))) = #false,
+               ~line_count: line_count ::  ObsOrValue.of(maybe(Int.in(1..=1000))) = #false,
+               ~inset: inset :: ObsOrValue.of(View.Margin) = [5, 5],
+               ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
+               ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+               ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()):
+    #{view-help}.#{mix-wrap}(
+      fun (mixin):
+        let mixin = mix_window_child_callbacks(mixin, wcb)
+        super(easy.#{editor-canvas}(obs.unwrap(editor),
+                                    ~label: obs.unwrap(label),
+                                    ~#{enabled?}: obs.unwrap(is_enabled),
+                                    ~style: obs.unwrap_list(style, convert_style),
+                                    ~#{scrolls-per-page}: scrolls_per_page,
+                                    ~#{wheel-step}: obs.unwrap(wheel_step),
+                                    ~#{line-count}: obs.unwrap(line_count),
+                                    ~margin: obs.unwrap_list(margin, values),
+                                    ~#{min-size}: obs.unwrap_list(min_size, values),
+                                    ~stretch: obs.unwrap_list(stretch, values),
+                                    ~mixin: mixin))
+          <| ()
+    )
+
+  export:
+    Style
+
+  symbol_map_annot Style convert_style
+  | no_boder = #{no-border}
+  | combo
+  | no_hscroll = #{no-hscroll}
+  | auto_hscroll = #{auto-hscroll}
+  | hide_hscroll = #{hide-hscroll}
+  | no_vscroll = #{no-vscroll}
+  | auto_vscroll = #{auto-vscroll}
+  | hide_vscroll = #{hide-vscroll}
+  | resize_corner = #{resize-corner}
+  | transparent
+  | no_focus = #{no-focus}
+  | deleted
