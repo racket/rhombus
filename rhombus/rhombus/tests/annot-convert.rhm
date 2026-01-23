@@ -228,3 +228,16 @@ check:
     values([1, 2], [3, 4])
   [x, y, z, w]
   ~is [2, 4, 6, 8]
+
+// check input static info with `matching`
+block:
+  use_static
+  check:
+    [1, 2, 3] :: matching(_ :: converting(fun (_ :: Listable): "not used")) ~is [1, 2, 3]
+    PairList[1, 2, 3] :: matching(_ :: converting(fun (_ :: Listable): "not used")) ~is PairList[1, 2, 3]
+  check:
+    (dynamic([1, 2, 3]) :: matching(_ :: converting(fun (_ :: Listable): "not used"))).to_list() ~is [1, 2, 3]
+    (dynamic(PairList[1, 2, 3]) :: matching(_ :: converting(fun (_ :: Listable): "not used"))).to_list() ~is [1, 2, 3]
+  check:
+    ([1, 2, 3] :: matching(_ :: converting(fun (_ :: Listable): "not used"))).length() ~is 3
+    (PairList[1, 2, 3] :: matching(_ :: converting(fun (_ :: Listable): "not used"))).length() ~is 3

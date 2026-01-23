@@ -142,8 +142,9 @@ block:
     "Hello".copy() ~is_now "Hello"
     "Hello".copy() == "Hello" ~is #false
     "Hello".snapshot() ~is_now "Hello"
-    "Hello".snapshot() == "Hello" ~is_now #true
-    "Hello".copy().snapshot() == "Hello" ~is_now #true
+    "Hello".snapshot() == "Hello" ~is #true
+    "Hello".copy().snapshot() == "Hello" ~is #true
+    "Hello".to_string() ~is "Hello"
 
 check:
   dynamic("hello").length() ~is 5
@@ -206,7 +207,8 @@ check:
   dynamic(" Hello  ").trim() ~is "Hello"
   dynamic("_Hello__").trim("_", ~start: #false) ~is "_Hello_"
   dynamic("Hello").copy() ~is_now "Hello"
-  dynamic("Hello").snapshot() ~is_now "Hello"
+  dynamic("Hello").snapshot() ~is "Hello"
+  dynamic("Hello").to_string() ~is "Hello"
 
 check:
   String.length("hello") ~is 5
@@ -499,6 +501,11 @@ check:
     error.annot("ReadableString").msg,
     error.val(#"oops").msg,
   )
+  ReadableString.to_string(#"oops") ~throws values(
+    "ReadableString.to_string: " ++ error.annot_msg("argument"),
+    error.annot("ReadableString").msg,
+    error.val(~label: "argument", #"oops").msg,
+  )
 
 check:
   (#"oops" :~ ReadableString)[0]
@@ -624,6 +631,17 @@ block:
     (dynamic("123") :: matching(_ :: String.to_int)).length() ~is 3
     (dynamic("123") :: matching(_ :: String.to_number)).length() ~is 3
   check:
+    ([1, 2, 3] :~ matching(_ :: String.to_int)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val([1, 2, 3]).msg,
+    )
+    (PairList[1, 2, 3] :~ matching(_ :: String.to_int)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(PairList[1, 2, 3]).msg,
+    )
+  check:
     ([1, 2, 3] :~ matching(_ :: String.to_number)).length() ~throws values(
       "String.length: " ++ error.annot_msg(),
       error.annot("ReadableString").msg,
@@ -635,5 +653,45 @@ block:
       error.val(PairList[1, 2, 3]).msg,
     )
   check:
+    ([1, 2, 3] :~ matching(_ :: String.to_int)).first ~is 1
+    (PairList[1, 2, 3] :~ matching(_ :: String.to_int)).first ~is 1
+  check:
     ([1, 2, 3] :~ matching(_ :: String.to_number)).first ~is 1
     (PairList[1, 2, 3] :~ matching(_ :: String.to_number)).first ~is 1
+
+// `ReadableString.to_string`
+block:
+  use_static
+  check:
+    ReadableString.to_string("hello") ~is "hello"
+    ReadableString.to_string("hello".copy()) ~is "hello"
+  check:
+    "hello" :: ReadableString.to_string ~is "hello"
+    "hello".copy() :: ReadableString.to_string ~is "hello"
+  check:
+    (dynamic("hello") :: ReadableString.to_string).length() ~is 5
+    (dynamic("hello".copy()) :: ReadableString.to_string).length() ~is 5
+
+block:
+  use_static
+  check:
+    "hello" :: matching(_ :: ReadableString.to_string) ~is "hello"
+    "hello".copy() :: matching(_ :: ReadableString.to_string) ~is_now "hello"
+    ("hello".copy() :: matching(_ :: ReadableString.to_string)) == "hello" ~is #false
+  check:
+    (dynamic("hello") :: matching(_ :: ReadableString.to_string)).length() ~is 5
+    (dynamic("hello".copy()) :: matching(_ :: ReadableString.to_string)).length() ~is 5
+  check:
+    ([1, 2, 3] :~ matching(_ :: ReadableString.to_string)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val([1, 2, 3]).msg,
+    )
+    (PairList[1, 2, 3] :~ matching(_ :: ReadableString.to_string)).length() ~throws values(
+      "String.length: " ++ error.annot_msg(),
+      error.annot("ReadableString").msg,
+      error.val(PairList[1, 2, 3]).msg,
+    )
+  check:
+    ([1, 2, 3] :~ matching(_ :: ReadableString.to_string)).first ~is 1
+    (PairList[1, 2, 3] :~ matching(_ :: ReadableString.to_string)).first ~is 1

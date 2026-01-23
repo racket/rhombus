@@ -35,3 +35,7 @@ check:
   0 ~is_a matching(i :: Int when i mod 3 == 0)
   1 ~is_a matching(i :: Int unless i mod 3 == 0)
   [1, 2, 3] ~is_a matching([x, ...] when math.sum(x, ...) == 6)
+
+check:
+  "this" :: converting(fun (_): "that") ~is "that"
+  "this" :: matching(_ :: converting(fun (_): "that")) ~is "this"
