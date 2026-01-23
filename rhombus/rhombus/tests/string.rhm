@@ -22,6 +22,7 @@ block:
     String.from_int(n)
     String.from_number(n)
     String.substring(str, start, [end]) ~method ReadableString
+    String.slice(str, start, [end]) ~method ReadableString
     String.append(str, ...) ~method ReadableString
     String.replace(str, from, to) ~method ReadableString
     String.trim(str, [sep]) ~method ReadableString
@@ -100,6 +101,9 @@ block:
     "hello".substring(1..) ~is "ello"
     "hello".substring(..3) ~is "hel"
     "hello".substring(..) ~is "hello"
+    "hello".slice(1, 3) ~is "el"
+    "hello".slice(1, -3) ~is "e"
+    "hello".slice(-1) ~is "o"
     "hÉllo".utf8_bytes() ~is #"h\303\211llo"
     "hÉllo".utf8_bytes(#false, 2) ~is #"llo"
     "hÉllo".latin1_bytes() ~is #"h\311llo"
@@ -182,6 +186,7 @@ check:
   dynamic("hello").substring(1..) ~is "ello"
   dynamic("hello").substring(..3) ~is "hel"
   dynamic("hello").substring(..) ~is "hello"
+  dynamic("hello").slice(2, -1) ~is "ll"
   dynamic("hÉllo").utf8_bytes() ~is #"h\303\211llo"
   dynamic("hÉllo").utf8_bytes(#false, 2) ~is #"llo"
   dynamic("hÉllo").latin1_bytes() ~is #"h\311llo"
@@ -256,6 +261,8 @@ check:
   String.substring("hello", 1..) ~is "ello"
   String.substring("hello", ..3) ~is "hel"
   String.substring("hello", ..) ~is "hello"
+  String.slice("hello", 2) ~is "llo"
+  String.slice("hello", 2, -2) ~is "l"
   String.utf8_bytes("hÉllo") ~is #"h\303\211llo"
   String.utf8_bytes("hÉllo", #false, 2) ~is #"llo"
   String.latin1_bytes("hÉllo") ~is #"h\311llo"

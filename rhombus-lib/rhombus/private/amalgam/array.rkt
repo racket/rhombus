@@ -31,6 +31,7 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          "../version-case.rkt"
+         "slice.rkt"
          (submod "list.rkt" for-compound-repetition))
 
 (provide (for-spaces (rhombus/namespace
@@ -73,6 +74,7 @@
    copy
    copy_from
    snapshot
+   slice
    drop
    drop_last
    take
@@ -336,6 +338,12 @@
   #:primitive (vector-drop-right)
   #:static-infos ((#%call-result #,(get-array-static-infos)))
   (vector-drop-right v n))
+
+(define/method (Array.slice v start [end (and (vector? v) (vector-length v))])
+  #:static-infos ((#%call-result #,(get-array-static-infos)))
+  (check-array who v)
+  (define-values (s e) (slice-bounds who "array" v (vector-length v) start end))
+  (vector-copy v s e))
 
 (define/method (Array.set_in_copy v i val)
   #:primitive (vector-set/copy)

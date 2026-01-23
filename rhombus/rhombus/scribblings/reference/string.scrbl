@@ -186,6 +186,26 @@ Strings are @tech{comparable}, which means that generic operations like
 
 }
 
+@doc(
+  method String.slice(str :: ReadableString,
+                      start :: Int,
+                      end :: Int = str.length())
+    :: String
+){
+
+ Similar to @rhombus(String.substring) with integer arguments, but when
+ @rhombus(start) or @rhombus(end) is negative, it is replaced by
+ @rhombus(str.length()+start) or @rhombus(str.length()+end),
+ respectively.
+
+@examples(
+  "hello".slice(1, 3)
+  "hello".slice(1)
+  "hello".slice(1, -2)
+  "hello".slice(-3, 4)
+)
+
+}
 
 @doc(
   method String.find(str :: ReadableString,

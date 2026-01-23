@@ -45,6 +45,7 @@
          "list-last.rkt"
          "maybe-list-tail.rkt"
          (submod "range.rkt" for-substring)
+         "slice.rkt"
          "treelist-statinfo.rkt"
          "tuple-annot.rkt")
 
@@ -140,6 +141,7 @@
    drop
    drop_last
    sublist
+   slice
    contains
    index
    find
@@ -230,6 +232,7 @@
    drop
    drop_last
    sublist
+   slice
    contains
    index
    find
@@ -1249,6 +1252,12 @@
     [(lst r) (treelist-sublist/range who lst r)]
     [(lst start end) (treelist-sublist lst start end)]))
 
+(define/method (List.slice lst start [end (and (treelist? lst) (treelist-length lst))])
+  #:static-infos ((#%call-result ((#%dependent-result (merge-elem (0 #f treelist))))))
+  (check-treelist who lst)
+  (define-values (s e) (slice-bounds who "list" lst (treelist-length lst) start end))
+  (treelist-sublist lst s e))
+
 (define (raise-list-count who what l len n)
   (raise-arguments-error* who rhombus-realm
                           (string-append "list is shorter than the number of elements to "
@@ -1319,6 +1328,7 @@
   (check-mutable-treelist who lst)
   (define-values (start end)
     (range-canonical-start+end who "mutable list" r lst 0 (mutable-treelist-length lst)))
+  ;; this could fail if the mutable list changes size before we take the sublist
   (mutable-treelist-sublist! lst start end))
 
 (define/method MutableList.sublist
@@ -1326,6 +1336,12 @@
   (case-lambda
     [(lst r) (mutable-treelist-sublist!/range who lst r)]
     [(lst start end) (mutable-treelist-sublist! lst start end)]))
+
+(define/method (MutableList.slice lst start [end (and (mutable-treelist? lst) (mutable-treelist-length lst))])
+  (check-mutable-treelist who lst)
+  (define-values (s e) (slice-bounds who "mutable list" lst (mutable-treelist-length lst) start end))
+  ;; this could fail if the mutable list changes size before we take the sublist
+  (mutable-treelist-sublist! lst s e))
 
 (define/method (List.remove l v)
   #:static-infos ((#%call-result ((#%dependent-result (merge-elem (0 #f treelist))))))

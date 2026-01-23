@@ -11,6 +11,7 @@ block:
     Bytes.set(bstr, i, b) ~method
     Bytes.append(bstr, ...) ~method
     Bytes.subbytes(bstr, start, [end]) ~method
+    Bytes.slice(bstr, start, [end]) ~method
     Bytes.copy(bstr) ~method
     Bytes.copy_from(dest_bstr, dest_start, src_bstr, [src_start], [src_end]) ~method
     Bytes.snapshot(bstr) ~method
@@ -50,6 +51,10 @@ block:
     #"hello".subbytes(1..) ~is_now #"ello"
     #"hello".subbytes(..3) ~is_now #"hel"
     #"hello".subbytes(..) ~is_now #"hello"
+    #"hello".slice(1) ~is_now #"ello"
+    #"hello".slice(-1) ~is_now #"o"
+    #"hello".slice(-3, -1) ~is_now #"ll"
+    #"hello".slice(1, 4) ~is_now #"ell"
     #"hello".copy() ~is_now #"hello"
     #"hello".copy() == #"hello" ~is #false
     (block:
@@ -101,6 +106,8 @@ check:
   dynamic(#"hello").subbytes(1..) ~is_now #"ello"
   dynamic(#"hello").subbytes(..3) ~is_now #"hel"
   dynamic(#"hello").subbytes(..) ~is_now #"hello"
+  dynamic(#"hello").slice(-2) ~is_now #"lo"
+  dynamic(#"hello").slice(-2, -1) ~is_now #"l"
   dynamic(#"hello").copy() ~is_now #"hello"
   (block:
      let s = #"hello".copy()
@@ -143,6 +150,8 @@ check:
   Bytes.subbytes(#"hello", 1..) ~is_now #"ello"
   Bytes.subbytes(#"hello", ..3) ~is_now #"hel"
   Bytes.subbytes(#"hello", ..) ~is_now #"hello"
+  Bytes.slice(#"hello", 1) ~is_now #"ello"
+  Bytes.slice(#"hello", 1, -1) ~is_now #"ell"
   Bytes.copy(#"hello") ~is_now #"hello"
   Bytes.utf8_string(#"h\303\211llo") ~is "hÉllo"
   Bytes.utf8_string(#"h\303\211llo", #false, 3) ~is "llo"

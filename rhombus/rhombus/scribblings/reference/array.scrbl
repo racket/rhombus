@@ -303,6 +303,29 @@ pairwise equal by @rhombus(==).
 }
 
 @doc(
+  method (arr :: Array).slice(start :: Int,
+                              end :: Int = lst.length())
+    :: MutableArray
+){
+
+ Similar to @rhombus(Array.copy), but when @rhombus(start) or
+ @rhombus(end) is negative, it is replaced by
+ @rhombus(arr.length()+start) or @rhombus(arr.length()+end),
+ respectively.
+
+@examples(
+  def a = Array("a", "b", "c", "d", "e")
+  a.slice(1, 3)
+  a.slice(1)
+  a.slice(1, -2)
+  a.slice(-3, 4)
+)
+
+}
+
+
+
+@doc(
   method Array.copy_from(dest_arr :: MutableArray,
                          dest_start :: Nat,
                          src_arr :: Array,

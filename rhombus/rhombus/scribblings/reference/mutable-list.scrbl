@@ -400,6 +400,34 @@ immutable list.
 
 
 @doc(
+  method (lst :: MutableList).slice(start :: Int,
+                                    end :: Int = lst.length())
+    :: Void
+){
+
+ Similar to @rhombus(MutableList.sublist) with integer arguments, but
+ when @rhombus(start) or @rhombus(end) is negative, it is replaced by
+ @rhombus(lst.length()+start) or @rhombus(lst.length()+end),
+ respectively.
+
+@examples(
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.slice(1, 3)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.slice(1)
+    l
+  ~repl:
+    def l = MutableList[1, 2, 3, 4, 5]
+    l.slice(1, -2)
+    l
+)
+
+}
+
+@doc(
   method (mlst :: MutableList).contains(v :: Any,
                                         eqls :: Function.of_arity(2) = (_ == _))
     :: Boolean

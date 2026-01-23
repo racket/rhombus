@@ -19,7 +19,8 @@
          "number.rkt"
          "static-info.rkt"
          (submod "range.rkt" for-substring)
-         (submod "char.rkt" for-static-info))
+         (submod "char.rkt" for-static-info)
+         "slice.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -62,6 +63,7 @@
    set
    append
    subbytes
+   slice
    copy
    copy_from
    fill
@@ -125,6 +127,12 @@
   (case-lambda
     [(bstr r) (subbytes/range who bstr r)]
     [(bstr start end) (subbytes bstr start end)]))
+
+(define/method (Bytes.slice bstr start [end (and (bytes? bstr) (bytes-length bstr))])
+  #:static-infos ((#%call-result #,(get-bytes-static-infos)))
+  (check-bytes who bstr)
+  (define-values (s e) (slice-bounds who "byte string" bstr (bytes-length bstr) start end))
+  (subbytes bstr s e))
 
 (define-syntax (define-string stx)
   (syntax-parse stx

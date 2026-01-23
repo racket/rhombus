@@ -32,6 +32,7 @@ block:
     List.take(lst, n) ~method
     List.take_last(lst, n) ~method
     List.sublist(lst, start, [end]) ~method
+    List.slice(lst, start, [end]) ~method
     List.sort(lst, [is_less]) ~method
     List.iota(n)
     List.copy(lst) ~method
@@ -446,6 +447,17 @@ check:
   List.sublist([1, 2, 3, 4, 5, 6], ..4) ~is [1, 2, 3, 4]
   [1, 2, 3, 4, 5, 6].sublist(..) ~is [1, 2, 3, 4, 5, 6]
   List.sublist([1, 2, 3, 4, 5, 6], ..) ~is [1, 2, 3, 4, 5, 6]
+  [1, 2, 3, 4, 5, 6].slice(2) ~is [3, 4, 5, 6]
+  List.slice([1, 2, 3, 4, 5, 6], 2) ~is [3, 4, 5, 6]
+  [1, 2, 3, 4, 5, 6].slice(2, 5) ~is [3, 4, 5]
+  List.slice([1, 2, 3, 4, 5, 6], 2, 5) ~is [3, 4, 5]
+  [1, 2, 3, 4, 5, 6].slice(2, -1) ~is [3, 4, 5]
+  List.slice([1, 2, 3, 4, 5, 6], 2, -1) ~is [3, 4, 5]
+  [1, 2, 3, 4, 5, 6].slice(-4, 5) ~is [3, 4, 5]
+  List.slice([1, 2, 3, 4, 5, 6], -4, 5) ~is [3, 4, 5]
+  [1, 2, 3, 4, 5, 6].slice(2, 1) ~throws "invalid slice bounds"
+  [1, 2, 3, 4, 5, 6].slice(-2, -5) ~throws "invalid slice bounds"
+  [1, 2, 3, 4, 5, 6].slice(-7, 6) ~throws "invalid slice bounds"
 
 check:
   [1, 2, 3].sort() ~is [1, 2, 3]
@@ -962,6 +974,7 @@ block:
   check los.drop_last(1)[0].length() ~is 1
   check los.take_last(1)[0].length() ~is 1
   check los.sublist(0..1)[0].length() ~is 1
+  check los.slice(0, 1)[0].length() ~is 1
   check los.reverse()[0].length() ~is 1
   check los.find((_ == "a")).length() ~is 1
   check los.remove("a")[0].length() ~is 1

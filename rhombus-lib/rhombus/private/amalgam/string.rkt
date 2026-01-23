@@ -36,7 +36,8 @@
          "static-info.rkt"
          "rx-object.rkt"
          "order-primitive.rkt"
-         (submod "range.rkt" for-substring))
+         (submod "range.rkt" for-substring)
+         "slice.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -100,6 +101,7 @@
    [ends_with String.ends_with]
    [append String.append]
    [substring String.substring]
+   [slice String.slice]
    [trim String.trim]
    [split String.split]
    [replace String.replace]
@@ -146,6 +148,7 @@
    [starts_with String.starts_with]
    [ends_with String.ends_with]
    [substring String.substring]
+   [slice String.slice]
    [trim String.trim]
    [split String.split]
    [join String.join]
@@ -553,6 +556,12 @@
   (case-lambda
     [(str r) (string->immutable-string (substring/range who str r))]
     [(str start end) (string->immutable-string (substring str start end))]))
+
+(define/method (String.slice str start [end (and (string? str) (string-length str))])
+  #:static-infos ((#%call-result #,(get-string-static-infos)))
+  (check-readable-string who str)
+  (define-values (s e) (slice-bounds who "string" str (string-length str) start end))
+  (string->immutable-string (substring str s e)))
 
 (define/method String.append
   #:primitive (string-append-immutable)

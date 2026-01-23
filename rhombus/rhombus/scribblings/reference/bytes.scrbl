@@ -142,6 +142,26 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 }
 
 @doc(
+  method (bstr :: Bytes).slice(start :: Int,
+                               end :: Int = bstr.length())
+    :: Bytes
+){
+
+ Similar to @rhombus(Bytes.subbytes) with integer arguments, but when
+ @rhombus(start) or @rhombus(end) is negative, it is replaced by
+ @rhombus(bstr.length()+start) or @rhombus(bstr.length()+end),
+ respectively.
+
+@examples(
+  #"hello".slice(1, 3)
+  #"hello".slice(1)
+  #"hello".slice(1, -2)
+  #"hello".slice(-3, 4)
+)
+
+}
+
+@doc(
   method (bstr :: Bytes).copy() :: MutableBytes
 ){
 

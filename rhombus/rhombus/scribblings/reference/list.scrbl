@@ -589,6 +589,25 @@ their elements are pairwise equal by @rhombus(==).
 
 }
 
+@doc(
+  method (lst :: List).slice(start :: Int,
+                             end :: Int = lst.length())
+    :: List.of(Any.like_element(lst))
+){
+
+ Similar to @rhombus(List.sublist) with integer arguments, but when
+ @rhombus(start) or @rhombus(end) is negative, it is replaced by
+ @rhombus(lst.length()+start) or @rhombus(lst.length()+end),
+ respectively.
+
+@examples(
+  [1, 2, 3, 4, 5].slice(1, 3)
+  [1, 2, 3, 4, 5].slice(1)
+  [1, 2, 3, 4, 5].slice(1, -2)
+  [1, 2, 3, 4, 5].slice(-3, 4)
+)
+
+}
 
 @doc(
   method (lst :: List).contains(v :: Any,
