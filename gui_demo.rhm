@@ -121,12 +121,14 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
 // ----------------------------------------
 
+let at_tab = gui.Obs("Happy")
+
 let track_mouse = gui.Obs(#true)
 let rotation = gui.Obs(0)
 
 def menu_bar:
   fun rotate_item(label, dir, shortcut):
-    gui.MenuItem(label,
+    gui.MenuItem("Rotate " ++ label,
                  ~action:
                    fun ():
                      rotation <~ fun (rot): rot + dir * math.pi/8,
@@ -140,8 +142,8 @@ def menu_bar:
                               fun (on):
                                 track_mouse.value := on),
       gui.MenuItemSeparator(),
-      rotate_item("Rotate Clockwise", -1, Char"R"),
-      rotate_item("Rotate Counterclockwise", 1, gui.MenuItem.default_shortcut_prefix() ++ [#'shift, Char"R"])
+      rotate_item("Clockwise", -1, Char"R"),
+      rotate_item("Counterclockwise", 1, gui.MenuItem.default_shortcut_prefix() ++ [#'shift, Char"R"])
     )
   )
 
@@ -214,7 +216,6 @@ def format_dialog = gui.Dialog(~title: "Position",
 // ----------------------------------------
 
 def (tabs, config):
-  let at_tab = gui.Obs("Happy")
   let shape = gui.Choice(gui.Obs(["Circle", "Square", "Rounded"]),
                          ~selection: "Circle")
   let eyes = gui.Checkbox("Eyes", ~is_checked: #true)

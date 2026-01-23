@@ -36,7 +36,7 @@ class Window():
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
-               ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
+               ~menu_bar: menu_bar :: maybe(ObsOrValue.of(MenuBar)) = #false,
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(WindowChildView),
                ...):
@@ -54,7 +54,7 @@ class Window():
                                             add_window_callbacks(cls, is_enabled),
                                             wcb
                                           )),
-                          & (if menu_bar | [menu_bar!!.handle] | []),
+                          & (if menu_bar | [to_view(menu_bar).handle] | []),
                           to_view(child).handle,
                           ...))
           <| ()
