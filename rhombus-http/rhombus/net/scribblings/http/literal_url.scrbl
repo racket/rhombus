@@ -3,20 +3,22 @@
     meta_label:
       rhombus open
       net/http open
-      net/url)
+      net/url
+      lib("net/http-easy.rkt") as easy)
 
 @title(~tag: "literal_url"){Literal URLs}
 
+@(def url_class = @rhombus(url.URL, ~class))
 @doc(
   class LiteralURL():
     constructor (s :: String):
-      super(easy.#{string->url/literal})
+      super(easy.#{string->url/literal}(s))
 
-  method LiteralURL.to_string() :: String
+  method (url :: LiteralURL).to_string() :: String
 ){
 
  A @rhombus(LiteralURL, ~class) object represents Literal URL string
- that may not conform to the parsing implemented by @rhombus(url.URL).
+ that may not conform to the parsing implemented by @url_class.
  for user, path, query and fragment components. When converting to a
  string, only the components of those components that are not already
  percent encoded are encoded. A component is considered to be percent

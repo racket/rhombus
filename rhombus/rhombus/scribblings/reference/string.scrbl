@@ -477,11 +477,11 @@ Strings are @tech{comparable}, which means that generic operations like
 }
 
 @doc(
-  method String.from_int(
-    n :: Integer,
+  fun String.from_int(
+    n :: Int,
     ~radix: radix :: Int.in(2 ..= 16) = 10
   ) :: String
-  method String.from_number(n :: Number) :: String
+  fun String.from_number(n :: Number) :: String
 ){
 
  Like @rhombus(to_string) on @rhombus(n), but in the case of

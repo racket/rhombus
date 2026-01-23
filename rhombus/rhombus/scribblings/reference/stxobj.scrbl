@@ -539,12 +539,12 @@ or adjusted in any way
 
 )
 
- The @rhombus(match.cut) form can only appear within a term sequence
- pattern. When @rhombus(match.cut) is used within a pattern in a
+ The @rhombus(match.cut, ~unquote_bind) form can only appear within a term sequence
+ pattern. When @rhombus(match.cut, ~unquote_bind) is used within a pattern in a
  @tech{syntax class}, then the syntax class delimits the cut; that is,
  failure implies a non-match of the syntax class, and not necessarily a
  failure of a match context using the syntax class. When
- @rhombus(match.cut) appears within @rhombus(!, ~unquote_bind), the
+ @rhombus(match.cut, ~unquote_bind) appears within @rhombus(!, ~unquote_bind), the
  @rhombus(!, ~unquote_bind) operator delimits the cut, so that failure
  counts as success for the @rhombus(!, ~unquote_bind) form.
 
@@ -1096,8 +1096,7 @@ or adjusted in any way
 
 
 @doc(
-  method Syntax.unwrap_sequence(stx :: Syntax)
-    :: List.of(Group)
+  method (stx :: Syntax).unwrap_sequence() :: List.of(Group)
 ){
 
  Unwraps a multi-group syntax object by one layer. The result is a
@@ -1117,7 +1116,7 @@ or adjusted in any way
 
 
 @doc(
-  method Syntax.unwrap_all(stx :: Syntax) :: Any
+  method (stx :: Syntax).unwrap_all() :: Any
 ){
 
  Unwraps a syntax object recursively, returning a value that does not
@@ -1136,7 +1135,7 @@ or adjusted in any way
 }
 
 @doc(
-  method Syntax.srcloc(stx :: Syntax) :: maybe(Srcloc)
+  method (stx :: Syntax).srcloc() :: maybe(Srcloc)
 ){
 
  Returns the source location, if any, for @rhombus(stx). When
@@ -1161,7 +1160,7 @@ or adjusted in any way
 
 
 @doc(
-  method Syntax.strip_scopes(stx :: Syntax) :: Syntax
+  method (stx :: Syntax).strip_scopes() :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except
@@ -1170,9 +1169,7 @@ or adjusted in any way
 }
 
 @doc(
-  method Syntax.replace_scopes(stx :: Syntax,
-                               like_stx :: Term)
-    :: Syntax
+  method (stx :: Syntax).replace_scopes(like_stx :: Term) :: Syntax
 ){
 
  Returns a syntax object that is the same as @rhombus(stx), except that
@@ -1201,7 +1198,7 @@ or adjusted in any way
 @doc(
   method Syntax.ephemeral_term(stx :: Term) :: Term
   method Syntax.ephemeral_group(stx :: Group) :: Group
-  method Syntax.ephemeral_sequence(stx :: Syntax) :: Syntax
+  method (stx :: Syntax).ephemeral_sequence() :: Syntax
 ){
 
  Coerces a @tech{syntax object} to a specific internal representation,
@@ -1331,12 +1328,11 @@ or adjusted in any way
 }
 
 @doc(
-  method Syntax.ephemeral_property(stx :: Syntax,
-                                   key :: Any)
+  method (stx :: Syntax).ephemeral_property(key :: Any)
     :: Any
-  method Syntax.ephemeral_property(stx :: Syntax,
-                                   key :: Any, val :: Any,
-                                   is_preserved :: Any = #false)
+  method (stx :: Syntax).ephemeral_property(key :: Any, val :: Any,
+                                            is_preserved :: Any
+                                              = #false)
     :: Syntax
 ){
 
@@ -1349,11 +1345,11 @@ or adjusted in any way
 }
 
 @doc(
-  method Syntax.to_source_string(stx :: Syntax,
-                                 ~keep_prefix: keep_prefix = #false,
-                                 ~keep_suffix: keep_suffix = #false,
-                                 ~as_inner: as_inner = #true)
-    :: String
+  method (stx :: Syntax).to_source_string(
+    ~keep_prefix: keep_prefix = #false,
+    ~keep_suffix: keep_suffix = #false,
+    ~as_inner: as_inner = #true
+  ) :: String
 ){
 
  Converts to a string with content similar to @rhombus(print) of

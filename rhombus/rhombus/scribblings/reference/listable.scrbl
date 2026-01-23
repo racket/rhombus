@@ -60,8 +60,7 @@ sequence.
 
 
 @doc(
-  method Listable.to_list(v :: Listable)
-    :: List.of(Any.like_element(v))
+  method (v :: Listable).to_list() :: List.of(Any.like_element(v))
 ){
 
  Converts any @tech{listable} value to a list.

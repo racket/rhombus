@@ -73,7 +73,7 @@ synchronization result is just the thread object itself.
 
 @doc(
   method (th :: Thread).wait(
-    fail_k :: Prcedure.of_arity(0) = Function.pass
+    fail_k :: Function.of_arity(0) = Function.pass
   ) :: Any
 ){
 
@@ -153,7 +153,7 @@ synchronization result is just the thread object itself.
 @doc(
   class Thread.Pool():
     constructor(n :: PosInt = Thread.Pool.processor_count())
-  method Thread.Pool.close() :: Void
+  method (pool :: Thread.Pool).close() :: Void
   def Thread.Pool.own = #'own
 ){
 

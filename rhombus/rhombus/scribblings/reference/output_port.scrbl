@@ -256,10 +256,12 @@ an @deftech{output string port} writes to a @tech{byte string}.
 
 
 @doc(
-  method Port.Output.flush(out :: Port.Output = stdout) :: Void
+  fun Port.Output.flush() :: Void
+  method (out :: Port.Output).flush() :: Void
 ){
 
- Flushes the content of @rhombus(out)'s buffer.
+ Flushes the content of @rhombus(out)'s buffer. When no @rhombus(out)
+ is provided, @rhombus(stdout) is flushed.
 
 }
 
