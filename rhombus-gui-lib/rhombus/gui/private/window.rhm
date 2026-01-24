@@ -51,7 +51,7 @@ class Window():
                           ~style: obs.unwrap_list(style, convert_style),
                           ~mixin: fun (cls):
                                     mixin(add_window_child_callbacks(
-                                            add_window_callbacks(cls, is_enabled),
+                                            add_window_callbacks(cls, obs.unwrap(is_enabled)),
                                             wcb
                                           )),
                           & (if menu_bar | [to_view(menu_bar).handle] | []),

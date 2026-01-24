@@ -11,6 +11,8 @@
     (super-new)
     (cond
       [(obs? enabled-obs)
-       (obs-observe! enabled-obs (lambda (v) (enable v)))]
+       (obs-observe! enabled-obs (lambda (v) (enable v)))
+       (unless (obs-peek enabled-obs)
+         (enable #f))]
       [(not enabled-obs)
        (enable #f)])))

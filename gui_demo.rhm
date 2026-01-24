@@ -23,6 +23,8 @@ fun draw_face(dc :: draw.DC, config :: Map):
   dc.save_and_restore:
 
     dc.scale(scale)
+    unless config["enabled"]
+    | dc.alpha := 0.3
 
     let background:
       match config["mood"]
@@ -122,6 +124,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
 // ----------------------------------------
 
 let at_tab = gui.Obs("Happy")
+let enabled = gui.Obs(#true)
 
 let track_mouse = gui.Obs(#true)
 let rotation = gui.Obs(0)
@@ -136,6 +139,11 @@ def menu_bar:
   gui.MenuBar(
     gui.Menu(
       "Config",
+      gui.CheckableMenuItem("Enabled",
+                            ~is_checked: enabled.value,
+                            ~action:
+                              fun (on):
+                                enabled.value := on),
       gui.CheckableMenuItem("Track Mouse",
                             ~is_checked: track_mouse.value,
                             ~action:
@@ -260,7 +268,8 @@ def (tabs, config):
                 | ~else: s)
 
   def config:
-    { "mood": at_tab,
+    { "enabled": enabled,
+      "mood": at_tab,
       "shape": shape.at_selection,
       "eyes": eyes.at_is_checked,
       "moustache": stache.at_is_checked,
@@ -289,7 +298,8 @@ def (tabs, config):
 
   let happy_image:
     let bm = draw.Bitmap([60, 60])
-    draw_face(bm.make_dc(), { "mood": "Happy",
+    draw_face(bm.make_dc(), { "enabled": #true,
+                              "mood": "Happy",
                               "shape": "Circle",
                               "eyes": #true,
                               "moustache": #false,
@@ -337,6 +347,7 @@ def summary_win = gui.Window(
 
 def win = gui.Window(top_panel,
                      tabs,
+                     ~is_enabled: enabled,
                      ~menu_bar: menu_bar,
                      ~size: [800, 600])
 def renderer = gui.render(win)
