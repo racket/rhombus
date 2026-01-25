@@ -27,6 +27,8 @@ export:
   Canvas
   CanvasContext
 
+def canvas_dcs = WeakMutableMap.by(===)()
+
 class Canvas():
   extends BaseWindowView
 
@@ -45,7 +47,14 @@ class Canvas():
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.canvas(obs.unwrap(data),
-                          fun (dc, data): draw(SomeDC(dc), data),
+                          fun (dc_handle, data):
+                            let dc: canvas_dcs.maybe[dc_handle]
+                                      || (block:
+                                            let dc = SomeDC(dc_handle)
+                                            dc.smoothing := #'smoothed
+                                            canvas_dcs[dc_handle] := dc
+                                            dc)
+                            draw(dc, data),
                           ~label: obs.unwrap(label),
                           ~#{enabled?}: obs.unwrap(is_enabled),
                           ~style: obs.unwrap_list(style, convert_style),
