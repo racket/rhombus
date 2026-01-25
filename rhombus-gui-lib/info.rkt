@@ -7,7 +7,7 @@
     "rhombus-lib"
     "rhombus-draw-lib"
     "draw-lib"
-    ["gui-easy-lib" #:version "0.23"]
+    ["gui-easy-lib" #:version "0.26"]
     "gui-lib"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-gui\"")

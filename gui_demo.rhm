@@ -350,4 +350,5 @@ def win = gui.Window(top_panel,
                      ~is_enabled: enabled,
                      ~menu_bar: menu_bar,
                      ~size: [800, 600])
-def renderer = gui.render(win)
+def renderer = win.render()
+renderer

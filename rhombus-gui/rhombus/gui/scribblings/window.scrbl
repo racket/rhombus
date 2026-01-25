@@ -39,7 +39,6 @@
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Dialog.Style)) = [],
-      ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView), ...
     )

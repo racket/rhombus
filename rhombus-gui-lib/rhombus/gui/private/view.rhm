@@ -121,9 +121,12 @@ interface WindowView:
     rkt_obj.send get_gui_handle(who).#{show}(on)
 
   method render(parent :: maybe(Renderer) = #false) :: Renderer:
-    let r = _Renderer(easy.render(handle, parent?.handle))
+    let r = _Renderer(easy.render(handle, parent?.handle, ~#{wait?}: #false))
     root_handle_to_renderer_handle[easy.#{renderer-root}(r.handle)] := r.handle
     r
+
+  method run(parent :: maybe(Renderer) = #false):
+    easy.render(handle, parent?.handle, ~#{wait?}: #true)
 
 def root_handle_to_renderer_handle :~ MutableMap = WeakMutableMap()
 

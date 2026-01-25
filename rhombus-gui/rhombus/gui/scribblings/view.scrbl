@@ -106,6 +106,26 @@
 }
 
 @doc(
+  method (wv :: gui.WindowView).render(parent :: maybe(Renderer) = #false)
+    :: Renderer
+){
+
+ Renders the view in the same way as @rhombus(gui.render).
+
+}
+
+@doc(
+  method (wv :: gui.WindowView).run(parent :: maybe(Renderer) = #false)
+    :: Void
+){
+
+ Renders the view, waits until the rendered window or dialog is
+ closed, and then destroys the renderer.
+
+}
+
+
+@doc(
   method (wv :: gui.WindowView).show(on :: Any.to_boolean) :: Void
 ){
 

@@ -37,7 +37,6 @@ class Dialog():
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
-               ~menu_bar: menu_bar :: maybe(ObsOrValue.of(MenuBar)) = #false,
                child :: ObsOrValue.of(WindowChildView),
                ...):
     #{view-help}.#{mix-wrap}(
@@ -52,7 +51,6 @@ class Dialog():
                           ~style: obs.unwrap_list(style, convert_style),
                           ~mixin: fun (cls):
                                     mixin(add_window_callbacks(cls, is_enabled)),
-                          & (if menu_bar | [to_view(menu_bar).handle] | []),
                           to_view(child).handle,
                           ...))
           <| ()
