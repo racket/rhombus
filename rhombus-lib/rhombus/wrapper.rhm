@@ -1,0 +1,14 @@
+#lang rhombus/static/and_meta
+
+export:
+  rename:
+    error_not_handle as error
+
+fun error_not_handle(~who: who :: error.Who,
+                     ~what: what :: maybe(String) = #false,
+                     handle) :~ None:
+  ~name: wrapper.error
+  error(~who: who,
+        ~exn: Exn.Fail.Annot,
+        "not a recognized" ++ (if what | " " ++ what | "") ++ " handle",
+        error.val(handle))

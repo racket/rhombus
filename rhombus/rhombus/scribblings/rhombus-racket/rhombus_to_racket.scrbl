@@ -14,3 +14,4 @@ and Rhombus values.
 
 @include_section("racket-expr.scrbl")
 @include_section("rkt_obj.scrbl")
+@include_section("wrapper.scrbl")

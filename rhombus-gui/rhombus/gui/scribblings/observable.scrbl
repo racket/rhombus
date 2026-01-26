@@ -4,17 +4,13 @@
 
 @title{Observables}
 
-An @deftech{observable} holds a value, where the value in an observable
-can be updated, and graphical elements can react automatically to
-update. For example, the label or enable state for a button can be
-supplied as an observable, and if the obervable's value changes, then
-the graphical representation of the button changes automatically to
-match.
-
-An observable corresponds to @rhombus(#{obs?}) from
-@racketmodname(racket/gui/easy).
-
-@(~version_at_least "8.14.0.4")
+An @deftech{observable} holds a value plus a set of subscribers that are
+known as @deftech{observers}. When the value in an observable changes,
+observers are notified. Passing an observable to a view constructor
+causes each rendering of the view to create an observer that reacts to
+changes. For example, the label or enable state for a button view can be
+supplied as an observable, and if the observable's value changes, then
+every visible rendering of the button changes automatically to match.
 
 @doc(
   class gui.Obs():
@@ -58,15 +54,6 @@ An observable corresponds to @rhombus(#{obs?}) from
  @rhombus(ObsOrValue.later_of(annot), ~annot) annotations are aliases for
  @rhombus(Obs.of(annot), ~annot) and
  @rhombus(ObsOrValue.of(annot), ~annot), respectively.
-
-}
-
-@doc(
-  property (obs :: gui.Obs).handle :: Any
-){
-
- Returns a Racket object that corresponds to the observable for use
- directly with @racketmodname(racket/gui/easy).
 
 }
 
@@ -201,5 +188,15 @@ An observable corresponds to @rhombus(#{obs?}) from
  @rhombus(f(obs.value, ...)) or
  @rhombus({key: obs.value, ...}) when the value
  of any @rhombus(obs) changes.
+
+}
+
+@doc(
+  property (obs :: gui.Obs).handle :: Any
+  fun gui.Obs.from_handle(handle) :: Obs
+){
+
+ Converts to and from a Racket object for the observable for use
+ directly with @racketmodname(racket/gui/easy, ~indirect).
 
 }

@@ -415,6 +415,8 @@
   expr.macro '$expr !!'
   bind.macro '$bind !!'
   repet.macro '$repet !!'
+  operator_order:
+    ~order: logical_negation
 ){
 
  An an expression, @rhombus(expr!!) ensures that the result of

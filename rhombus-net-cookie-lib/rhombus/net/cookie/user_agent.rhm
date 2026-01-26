@@ -3,6 +3,7 @@ import:
   rhombus/date
   rhombus/rkt_obj
   rhombus/rx open
+  rhombus/wrapper
   net/url open
   lib("net/cookies/user-agent.rkt") as rkt
   lib("racket/base.rkt")
@@ -52,7 +53,10 @@ class Cookie(name :: cookie.Name,
   export:
     from_handle
 
-  fun from_handle(handle):
+  fun from_handle(handle) :~ Cookie:
+    ~who: who
+    unless rkt.#{ua-cookie?}(handle)
+    | wrapper.error(~who: who, ~what: "cookie", handle)
     _Cookie(rkt.#{ua-cookie-name}(handle),
             rkt.#{ua-cookie-value}(handle),
             ~domain: rkt.#{ua-cookie-domain}(handle),

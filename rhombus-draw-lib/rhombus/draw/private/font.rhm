@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "symbol_map.rhm".symbol_map_annot
   lib("racket/base.rkt") as racket
@@ -143,9 +144,7 @@ class Font(private _handle):
     to_string(rkt.#{get-family-builtin-face}(kind))
 
   fun from_handle(handle) :~ Font:
+    ~who: who
     unless handle rkt.is_a rkt.#{font%}
-    | error(~who: "Font.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a font handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "font", handle)
     _Font(handle)

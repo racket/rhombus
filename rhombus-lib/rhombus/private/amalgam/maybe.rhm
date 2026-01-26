@@ -44,6 +44,7 @@ meta:
     | statinfos
 
 expr.macro '$e !!':
+  ~order: logical_negation
   ~all_stx: stx
   ~op_stx: self
   let statinfos = statinfo_meta.gather(e)
@@ -60,6 +61,7 @@ expr.macro '$e !!. $tail ... ~nonempty':
   values('($e $('!!'.relocate(self)))', '$dot $tail ...')
 
 repet.macro '$e !!':
+  ~order: logical_negation
   ~op_stx: self
   ~all_stx: stx
   let '($_, $expr, $depth, $use_depth, $statinfos)' = repet_meta.unpack_list(e)
@@ -150,6 +152,7 @@ fun check_definitely_at_depth(who, v, depth, srcloc):
   v
 
 bind.macro '$b !!':
+  ~order: logical_negation
   ~op_stx: self
   bind_meta.pack('(definitely_infoer,
                    $b)')

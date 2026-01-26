@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "type.rhm":
     expose:
@@ -138,11 +139,9 @@ class Bitmap():
     bm2
 
   fun from_handle(handle) :~ Bitmap:
+    ~who: who
     unless handle rkt.is_a rkt.#{bitmap%}
-    | error(~who: "Bitmap.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a bitmap handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "bitmap", handle)
     _Bitmap(handle)()
 
 annot.delayed_complete intf.BitmapForward: Bitmap

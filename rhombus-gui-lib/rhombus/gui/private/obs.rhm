@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   lib("racket/gui/easy.rkt")
 
 export:
@@ -191,18 +192,25 @@ class Obs(private _handle, private _converter = #false):
     now_of
     later_of
     rename: later_of as of
+    from_handle
+
+  fun
+  | combine(f :: Function, obs :: Obs, ...) :: Obs:
+      _Obs(easy.#{obs-combine}(f, obs.handle, ...))
+  | combine({ key: obs :: Obs, ... }) :: Obs:
+      _Obs(easy.#{obs-combine}(fun (v, ...): { key: v, ... },
+                               obs.handle, ...))
+
+  fun from_handle(handle) :: Obs:
+    ~who: who
+    unless easy.#{obs?}(handle)
+    | wrapper.error(~who: who, ~what: "observer", handle)
+    _Obs(handle)
 
 fun compose_converters(converter, new_converter):
   if converter
   | fun (v): new_converter(converter(v))
   | new_converter
-
-fun
-| combine(f :: Function, obs :: Obs, ...) :: Obs:
-    _Obs(easy.#{obs-combine}(f, obs.handle, ...))
-| combine({ key: obs :: Obs, ... }) :: Obs:
-    _Obs(easy.#{obs-combine}(fun (v, ...): { key: v, ... },
-                             obs.handle, ...))
 
 fun
 | unwrap(o :: Obs): o.handle

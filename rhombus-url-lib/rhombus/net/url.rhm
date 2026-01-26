@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   lib("net/url-structs.rkt") open
   lib("net/url-string.rkt") open
   lib("net/uri-codec.rkt") open
@@ -72,19 +73,19 @@ class URL(~scheme: scheme :: maybe(String) = #false,
         PairList[Pair(Symbol.from_string(k), v), ...],
         fragment)
 
-fun from_handle(handle) :~ URL:
-  unless #{url?}(handle)
-  | error("not a valid URL handle",
-          error.val(handle))
-  from_url(handle)
+  fun from_handle(handle) :~ URL:
+    ~who: who
+    unless #{url?}(handle)
+    | wrapper.error(~who: who, ~what: "URL", handle)
+    from_url(handle)
 
-fun from_string(s :: String) :~ URL:
-  ~name: URL.from_string
-  from_url(#{string->url}(s))
+  fun from_string(s :: String) :~ URL:
+    ~name: URL.from_string
+    from_url(#{string->url}(s))
 
-fun from_path(p :: PathString || CrossPath) :~ URL:
-  ~name: URL.from_path
-  from_url(#{path->url}(p))
+  fun from_path(p :: PathString || CrossPath) :~ URL:
+    ~name: URL.from_path
+    from_url(#{path->url}(p))
 
 fun from_url(u) :~ URL:
   fun maybe_to_string(s): s && to_string(s)

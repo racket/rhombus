@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "type.rhm" open
   "dc-interface.rhm".DCForward as DC
@@ -81,11 +82,9 @@ class Region():
     from_handle
 
   fun from_handle(handle) :~ Region:
+    ~who: who
     unless handle rkt.is_a rkt.#{region%}
-    | error(~who: "Region.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a region handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "region", handle)
     _Region(handle)()
 
 def mutable wrap_dc = #false

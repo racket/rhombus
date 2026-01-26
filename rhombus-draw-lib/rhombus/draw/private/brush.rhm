@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "type.rhm" open
   "color.rhm".Color
@@ -119,11 +120,9 @@ class Brush(private _handle):
   | vertical_hatch = #{vertical-hatch}
 
   fun from_handle(handle) :~ Brush:
+    ~who: who
     unless handle rkt.is_a rkt.#{brush%}
-    | error(~who: "Brush.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a brush handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "brush", handle)
     _Brush(handle)
 
 def none = _Brush(rkt.send rkt.#{the-brush-list}

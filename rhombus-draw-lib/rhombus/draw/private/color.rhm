@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
 
 export:
@@ -74,13 +75,11 @@ class Color(private _handle):
                     recur(alpha)],
                    ")")
 
-fun from_handle(handle) :~ Color:
-  unless handle rkt.is_a rkt.#{color%}
-  | error(~who: "Color.from_handle",
-          ~exn: Exn.Fail.Annot,
-          "not a color handle",
-          error.val(handle))
-  _Color(handle)
+  fun from_handle(handle) :~ Color:
+    ~who: who
+    unless handle rkt.is_a rkt.#{color%}
+    | wrapper.error(~who: who, ~what: "color", handle)
+    _Color(handle)
 
 fun
 | unwrap_color(c :: Color): c.handle

@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "type.rhm":
     expose:
@@ -107,9 +108,7 @@ class Path(private _handle):
     from_handle
 
   fun from_handle(handle) :~ Path:
+    ~who: who
     unless handle rkt.is_a rkt.#{dc-path%}
-    | error(~who: "Path.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a path handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "path", handle)
     _Path(handle)

@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "type.rhm" open
   "dc-interface.rhm".DC as DCer
@@ -277,13 +278,11 @@ interface DC:
     LayeredTransformation
     Smoothing
 
-fun from_handle(handle) :: DC:
-  unless handle rkt.is_a rkt.#{dc<%>}
-  | error(~who: "DC.from_handle",
-          ~exn: Exn.Fail.Annot,
-          "not a DC handle",
-          error.val(handle))
-  SomeDC(handle)
+  fun from_handle(handle) :: DC:
+    ~who: who
+    unless handle rkt.is_a rkt.#{dc<%>}
+    | wrapper.error(~who: who, ~what: "DC", handle)
+    SomeDC(handle)
 
 class DCDump(pen, brush, font, clipping_region, layered_transformation,
              alpha, text_color, smoothing,

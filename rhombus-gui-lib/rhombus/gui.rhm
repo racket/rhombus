@@ -1,9 +1,11 @@
 #lang rhombus/static/and_meta
 import:
   "gui/private/obs.rhm":
-    expose:
+    only:
       Obs
       ObsOrValue
+      <~
+      ~>
   "gui/private/renderer.rhm"
   "gui/private/view.rhm"
   "gui/private/menu.rhm"

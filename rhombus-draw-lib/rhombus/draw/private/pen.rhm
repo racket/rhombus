@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "color.rhm".Color
   "color.rhm"!private._Color
@@ -84,11 +85,9 @@ class Pen(private _handle):
   | miter
 
   fun from_handle(handle) :~ Pen:
+    ~who: who
     unless handle rkt.is_a rkt.#{pen%}
-    | error(~who: "Pen.from_handle",
-            ~exn: Exn.Fail.Annot,
-            "not a pen handle",
-            error.val(handle))
+    | wrapper.error(~who: who, ~what: "pen", handle)
     _Pen(handle)
 
 

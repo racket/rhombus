@@ -1,5 +1,6 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/wrapper
   "rkt.rhm"
   "size.rhm":
     expose:
@@ -86,8 +87,7 @@ class Config(~margin: margin :: SizeLike.to_size = [16.0, 16.0],
   fun from_handle(hand) :~ Config:
     ~who: who
     unless hand rkt.is_a rkt.#{ps-setup%}
-    | error(~who: who, "handle is not a Racket-level printing configuration",
-            error.val(~label: "handle", hand))
+    | wrapper.error(~who: who, ~what: "printing configuration", hand)
     fun mk(f, get):
       let b1 = Box(0)
       let b2 = Box(0)
