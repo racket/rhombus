@@ -8,10 +8,11 @@ A Rhombus @deftech{pipe} is internal to Rhombus (and Racket), and not
 related to OS-level pipes for communicating between different processes.
 
 @doc(
-  annot.macro 'Port.Pipe'
+  annot.macro 'Port.Pipe':
+    ~method_fallback: Port
 ){
 
- Regonizes pipes created with @rhombus(Port.Pipe.make).
+ Recognizes pipes created with @rhombus(Port.Pipe.make).
 
 }
 

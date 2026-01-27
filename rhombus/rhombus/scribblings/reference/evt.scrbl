@@ -95,8 +95,10 @@ count.
 
 
 @doc(
-  annot.macro 'ProgressEvt'
-  annot.macro 'CommitEvt'
+  annot.macro 'ProgressEvt':
+    ~method_fallback: Evt
+  annot.macro 'CommitEvt':
+    ~method_fallback: Evt
 ){
 
  A @rhombus(ProgressEvt, ~annot) is produced by
@@ -115,7 +117,7 @@ count.
   interface Synchronizable
 ){
  An interface that a class can implement to make instances of the class usable
- as an @rhombus(Evt, ~annot).  When a class that implements
+ as an @rhombus(Evt, ~annot). When a class that implements
  @rhombus(Synchronizable, ~class) is used with @rhombus(Evt.sync), the
  @rhombus(Synchronizable.as_evt) method is called, and the result is used in
  the synchronization.

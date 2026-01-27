@@ -362,17 +362,17 @@ Strings are @tech{comparable}, which means that generic operations like
   method String.utf8_bytes(str :: ReadableString,
                            err_byte :: maybe(Byte) = #false,
                            start :: Nat = 0,
-                           end :: Nat = String.length(str))
+                           end :: Nat = str.length())
     :: Bytes
   method String.latin1_bytes(str :: ReadableString,
                              err_byte :: maybe(Byte) = #false,
                              start :: Nat = 0,
-                             end :: Nat = String.length(str))
+                             end :: Nat = str.length())
     :: Bytes
   method String.locale_bytes(str :: ReadableString,
                              err_byte :: maybe(Byte) = #false,
                              start :: Nat = 0,
-                             end :: Nat = String.length(str))
+                             end :: Nat = str.length())
     :: Bytes
 ){
 
@@ -393,7 +393,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.utf8_length(str :: ReadableString,
                             start :: Nat = 0,
-                            end :: Nat = String.length(str))
+                            end :: Nat = str.length())
     :: Nat
 ){
 
@@ -563,7 +563,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.grapheme_span(str :: ReadableString,
                               start :: Nat = 0,
-                              end :: Nat = String.length(str))
+                              end :: Nat = str.length())
     :: Nat
 ){
 
@@ -581,7 +581,7 @@ Strings are @tech{comparable}, which means that generic operations like
 @doc(
   method String.grapheme_count(str :: ReadableString,
                                start :: Nat = 0,
-                               end :: Nat = String.length(str))
+                               end :: Nat = str.length())
     :: Nat
 ){
 

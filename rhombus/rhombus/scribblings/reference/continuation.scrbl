@@ -10,7 +10,8 @@ Control can ``jump'' into a continuation by delivering values to it,
 or by using it with @rhombus(Continuation.in).
 
 @doc(
-  annot.macro 'Continuation'
+  annot.macro 'Continuation':
+    ~method_fallback: Function
 ){
 
  Recognizes continuations as captured by

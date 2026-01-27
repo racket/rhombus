@@ -5,8 +5,10 @@
 @title{File/Stream Ports}
 
 @doc(
-  annot.macro 'Port.FileStream'
-  annot.macro 'Port.FileStream.Terminal'
+  annot.macro 'Port.FileStream':
+    ~method_fallback: Port
+  annot.macro 'Port.FileStream.Terminal':
+    ~method_fallback: Port
 ){
 
  The @rhombus(Port.FileStream, ~annot) annotation recognizes

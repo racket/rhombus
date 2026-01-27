@@ -39,8 +39,10 @@ pairwise equal by @rhombus(==).
   annot.macro 'Array.of_length($expr)'
   annot.macro 'Array.now_of($annot)'
   annot.macro 'Array.later_of($annot)'
-  annot.macro 'MutableArray'
-  annot.macro 'ImmutableArray'
+  annot.macro 'MutableArray':
+    ~method_fallback: Array
+  annot.macro 'ImmutableArray':
+    ~method_fallback: Array
 ){
 
  The @rhombus(Array, ~annot) annotation (without
@@ -280,7 +282,7 @@ pairwise equal by @rhombus(==).
 
 @doc(
   method (arr :: Array).copy(start :: Nat = 0,
-                             end :: Nat = Array.length(arr))
+                             end :: Nat = arr.length())
     :: MutableArray
 ){
 
@@ -304,7 +306,7 @@ pairwise equal by @rhombus(==).
 
 @doc(
   method (arr :: Array).slice(start :: Int,
-                              end :: Int = lst.length())
+                              end :: Int = arr.length())
     :: MutableArray
 ){
 
@@ -330,7 +332,7 @@ pairwise equal by @rhombus(==).
                          dest_start :: Nat,
                          src_arr :: Array,
                          src_start :: Nat = 0,
-                         src_end :: Nat = Array.length(src_arr))
+                         src_end :: Nat = src_arr.length())
     :: Void
 ){
 
@@ -343,7 +345,7 @@ pairwise equal by @rhombus(==).
 
 @doc(
   method (arr :: Array).snapshot()
-    :: ImmutableArray && Array.always_of(Any.like_element(arr))
+    :: ImmutableArray && Array.later_of(Any.like_element(arr))
 ){
 
  Returns an immutable array as-is or copies a mutable array's content to

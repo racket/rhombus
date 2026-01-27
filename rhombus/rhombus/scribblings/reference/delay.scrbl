@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     meta_label:
       rhombus/delay open
       rhombus/thread open)
@@ -25,7 +26,7 @@ produce the same result.
 
 @doc(
   annot.macro 'Delay'
-  annot.macro 'Delay.expect_of($ann, ...)'
+  annot.macro 'Delay.expect_of($annot, ...)'
   fun Delay(thunk :: () -> ~any) :: Delay
   expr.macro 'delay:
                 $maybe_kind
@@ -36,14 +37,14 @@ produce the same result.
   | #,(epsilon)
 ){
 
- The @rhombus(Delay, ~annot) annotation is satisfired by @tech{delay}
+ The @rhombus(Delay, ~annot) annotation is satisfied by @tech{delay}
  values, which are normally created using the @rhombus(delay) form. The
  @rhombus(Delay.expect_of, ~annot) annotation causes the
  @rhombus(Delay.force) result of an annotated expression to have the
- static information @rhombus(values(ann, ...)) (where multiple
- @rhombus(ann)s correspond to multiple values produced by the delay's
+ static information @rhombus(values(annot, ...)) (where multiple
+ @rhombus(annot)s correspond to multiple values produced by the delay's
  expression). The forced values are not checked or converted, however,
- and each @rhombus(ann) is used only for its static information.
+ and each @rhombus(annot) is used only for its static information.
 
  The @rhombus(Delay) function creates a delay given a function of zero
  arguments to be called on demand to produce the value.
@@ -63,15 +64,13 @@ produce the same result.
     delay:
       println("working")
       1 + 2
-  d.force()  
+  d.force()
   d.force()
 )
 
 }
 
 @doc(
-  ~nonterminal:
-    body: block body
   method (dly :: Delay).force()
 ){
 
@@ -88,7 +87,7 @@ produce the same result.
   def d:
     delay:
       "ok"
-  d.force()  
+  d.force()
   def d2:
     delay:
       d2.force()

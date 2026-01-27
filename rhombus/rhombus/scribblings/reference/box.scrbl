@@ -28,8 +28,10 @@ the same according to @rhombus(is_now).
   annot.macro 'Box'
   annot.macro 'Box.now_of($annot)'
   annot.macro 'Box.later_of($annot)'
-  annot.macro 'MutableBox'
-  annot.macro 'ImmutableBox'
+  annot.macro 'MutableBox':
+    ~method_fallback: Box
+  annot.macro 'ImmutableBox':
+    ~method_fallback: Box
 ){
 
  The @rhombus(Box, ~annot) annotation (without @rhombus(now_of, ~datum) or

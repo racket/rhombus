@@ -39,9 +39,12 @@ elements strongly or both weakly, and have the same elements.
   annot.macro 'Set'
   annot.macro 'Set.of($annot)'
   annot.macro 'Set.later_of($annot)'
-  annot.macro 'ReadableSet'
-  annot.macro 'MutableSet'
-  annot.macro 'WeakMutableSet'
+  annot.macro 'ReadableSet':
+    ~method_fallback: Set
+  annot.macro 'MutableSet':
+    ~method_fallback: Set
+  annot.macro 'WeakMutableSet':
+    ~method_fallback: Set
   annot.macro 'MutableSet.now_of($annot)'
   annot.macro 'MutableSet.later_of($annot)'
   annot.macro 'Set.by($key_comp)'

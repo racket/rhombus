@@ -19,18 +19,18 @@ element by position via @rhombus(#%index).
 
 @doc(
   annot.macro 'Stream'
-  annot.macro 'Stream.expect_of($ann, ...)'
+  annot.macro 'Stream.expect_of($annot, ...)'
 ){
 
  Matches any @tech{stream}.
 
- A @rhombus(Stream.expect_of(ann, ...), ~annot) annotation is the same as
+ A @rhombus(Stream.expect_of(annot, ...), ~annot) annotation is the same as
  @rhombus(Stream, ~annot), but elements drawn from the stream via
- @rhombus(Stream.first) have the static information of  the @rhombus(ann)s
- (where multiple @rhombus(ann)s correspond to multiple values for each
+ @rhombus(Stream.first) have the static information of  the @rhombus(annot)s
+ (where multiple @rhombus(annot)s correspond to multiple values for each
  element, such as the key and value from a @tech{map}). The
  extracted elements are not checked or converted, however, and each
- @rhombus(ann) is used only for its static information.
+ @rhombus(annot) is used only for its static information.
 
  Static information associated by @rhombus(Stream, ~annot) or
  @rhombus(Stream.expect_of, ~annot) makes an expression acceptable as a
@@ -42,7 +42,7 @@ element by position via @rhombus(#%index).
   property (stm :: Stream).first :: Any.like_element(stm)
   property (stm :: Stream).rest
     :: Stream.expect_of(Any.like_element(stm))
-  method (stm :: Stream).is_empty :: Boolean
+  method (stm :: Stream).is_empty() :: Boolean
 ){
 
  The @rhombus(Stream.first) and @rhombus(Stream.rest) properties report
@@ -78,11 +78,11 @@ element by position via @rhombus(#%index).
 
 @doc(
   def Stream.empty :: Stream
-  annot.macro 'Stream.empty'
+  bind.macro 'Stream.empty'
 ){
 
- Returns or matches an empty stream. The emptry stream is not unique, so
- check for an empty stream by matching to @rhombus(Stream.empty, ~annot)
+ Returns or matches an empty stream. The empty stream is not unique, so
+ check for an empty stream by matching to @rhombus(Stream.empty, ~bind)
  or calling @rhombus(Stream.is_empty).
 
 }

@@ -15,7 +15,8 @@ calling the parameter as a function of zero arguments, and set a context
 parameter's value using @rhombus(parameterize).
 
 @doc(
-  annot.macro 'Parameter'
+  annot.macro 'Parameter':
+    ~method_fallback: Function
 ){
 
  Matches @tech{context parameters}.

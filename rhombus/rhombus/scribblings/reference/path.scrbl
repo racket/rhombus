@@ -21,11 +21,16 @@ Paths are @tech{comparable}, which means that generic operations like
   annot.macro 'PathString.to_path'
   annot.macro 'PathString.to_absolute_path'
   annot.macro 'PathString.to_absolute_path(~relative_to: $base_expr)'
-  annot.macro 'Path.Absolute'
-  annot.macro 'Path.Relative'
-  annot.macro 'Path.DriveRelative'
-  annot.macro 'Path.Directory'
-  annot.macro 'Path.Element'
+  annot.macro 'Path.Absolute':
+    ~method_fallback: Path
+  annot.macro 'Path.Relative':
+    ~method_fallback: Path
+  annot.macro 'Path.DriveRelative':
+    ~method_fallback: Path
+  annot.macro 'Path.Directory':
+    ~method_fallback: Path
+  annot.macro 'Path.Element':
+    ~method_fallback: Path
   enum Path.Dot
   | same
   | up

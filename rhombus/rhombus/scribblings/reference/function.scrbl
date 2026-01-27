@@ -579,7 +579,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
     by_pos_mask :: Int,
     required_kws :: List.of(Keyword),
     allowed_kws :: maybe(List.of(Keyword)),
-    ~name: name :: Symbol = Function.name(f),
+    ~name: name :: Symbol = f.name(),
     ~realm: realm :: Symbol = #'rhombus
   ) :: Function
 ){

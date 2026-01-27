@@ -2,7 +2,8 @@
 @(import:
     "common.rhm" open
     "nonterminal.rhm" open
-    lib("racket/treelist.rkt").treelist)
+    meta_label:
+      lib("racket/treelist.rkt").treelist)
 
 @(def dots = @rhombus(..., ~bind))
 @(def dots_expr = @rhombus(...))
@@ -240,7 +241,7 @@ their elements are pairwise equal by @rhombus(==).
  match to @rhombus(#,(@rhombus(&, ~bind)) list_bind) tries first matching
  the longest plausible sequence to @rhombus(list_bind), then backtracks
  as needed by trying smaller sequences. Matching a splice repetition
- combines these strategies: search uses the longer plausible candidiate
+ combines these strategies: search uses the longer plausible candidate
  for a given repetition, and it builds up repetitions until no
  (non-empty) match is found for a repetition.
 
@@ -253,7 +254,8 @@ their elements are pairwise equal by @rhombus(==).
 }
 
 @doc(
-  annot.macro 'NonemptyList'
+  annot.macro 'NonemptyList':
+    ~method_fallback: List
   annot.macro 'NonemptyList.of($annot)'
 ){
 
@@ -442,7 +444,7 @@ their elements are pairwise equal by @rhombus(==).
 
 @doc(
   method (lst :: List).set(n :: Nat, v :: Any)
-    :: List.of(Any.like_element(lst) || Any.like(elemv))
+    :: List.of(Any.like_element(lst) || Any.like(v))
 ){
 
  Returns a list like @rhombus(lst), but with the @rhombus(n)th element

@@ -23,8 +23,10 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 
 @doc(
   annot.macro 'Bytes'
-  annot.macro 'MutableBytes'
-  annot.macro 'ImmutableBytes'
+  annot.macro 'MutableBytes':
+    ~method_fallback: Bytes
+  annot.macro 'ImmutableBytes':
+    ~method_fallback: Bytes
 ){
 
  Matches byte strings, where @rhombus(MutableBytes, ~annot) matches only
@@ -182,7 +184,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
                          dest_start :: Nat,
                          src_bstr :: Bytes,
                          src_start :: Nat = 0,
-                         src_end :: Nat = Bytes.length(src_bstr))
+                         src_end :: Nat = src_bstr.length())
     :: Void
 ){
 
@@ -233,17 +235,17 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
   method (bstr :: Bytes).utf8_string(
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: String
   method (bstr :: Bytes).latin1_string(
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: String
   method (bstr :: Bytes).locale_string(
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: String
 ){
 
@@ -267,19 +269,19 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
   method (bstr :: Bytes).utf8_length(
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: maybe(Nat)
   method (bstr :: Bytes).utf8_ref(
     skip :: Nat,
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: maybe(Char)
   method (bstr :: Bytes).utf8_index(
     skip :: Nat,
     err_char :: maybe(Char) = #false,
     start :: Nat = 0,
-    end :: Nat = Bytes.length(bstr)
+    end :: Nat = bstr.length()
   ) :: maybe(Nat)
 ){
 

@@ -234,7 +234,8 @@ pairwise equal by @rhombus(==).
 }
 
 @doc(
-  annot.macro 'NonemptyPairList'
+  annot.macro 'NonemptyPairList':
+    ~method_fallback: PairList
   annot.macro 'NonemptyPairList.of($annot)'
 ){
 

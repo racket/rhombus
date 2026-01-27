@@ -22,14 +22,22 @@ paths, cross-platform paths, and combinations. Paths with the
   enum CrossPath.Convention
   | unix
   | windows
-  annot.macro 'CrossPath'
-  annot.macro 'CrossPath.Absolute'
-  annot.macro 'CrossPath.Relative'
-  annot.macro 'CrossPath.DriveRelative'
-  annot.macro 'CrossPath.Directory'
-  annot.macro 'CrossPath.Element'
-  annot.macro 'CrossPath.Unix'
-  annot.macro 'CrossPath.Windows'
+  annot.macro 'CrossPath':
+    ~method_fallback: Path
+  annot.macro 'CrossPath.Absolute':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.Relative':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.DriveRelative':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.Directory':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.Element':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.Unix':
+    ~method_fallback: CrossPath
+  annot.macro 'CrossPath.Windows':
+    ~method_fallback: CrossPath
 ){
 
  The @rhombus(CrossPath.Convention, ~annot) enumeration represents the

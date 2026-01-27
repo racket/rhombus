@@ -15,7 +15,7 @@
     ~who: who :: maybe(error.Who) = #false,
     ~realm: realm :: Symbol = #'rhombus,
     msg :: ReadableString,
-    ~details: details :: [List.of(ReadableString)] = [],
+    ~details: details :: List.of(ReadableString) = [],
     clause :: error.Clause,
     ...
   ) :: None
@@ -113,7 +113,7 @@
     ~who: who :: maybe(error.Who) = #false,
     ~realm: realm = #'rhombus,
     msg :: ReadableString,
-    ~details: details :: [List.of(ReadableString)] = [],
+    ~details: details :: List.of(ReadableString) = [],
     clause :: Error.Clause,
     ...
   ) :: String

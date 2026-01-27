@@ -62,11 +62,14 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   annot.macro 'Map'
   annot.macro 'Map.of($key_annot, $val_annot)'
   annot.macro 'Map.later_of($key_annot, $val_annot)'
-  annot.macro 'ReadableMap'
-  annot.macro 'MutableMap'
+  annot.macro 'ReadableMap':
+    ~method_fallback: Map
+  annot.macro 'MutableMap':
+    ~method_fallback: Map
   annot.macro 'MutableMap.now_of($key_annot, $val_annot)'
   annot.macro 'MutableMap.later_of($key_annot, $val_annot)'
-  annot.macro 'WeakMutableMap'
+  annot.macro 'WeakMutableMap':
+    ~method_fallback: Map
   annot.macro 'Map.by($key_comp)'
   annot.macro 'Map.by($key_comp).of($key_annot, $val_annot)'
   annot.macro 'MutableMap.by($key_comp)'
@@ -710,9 +713,9 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
 
 @doc(
   property Map.maybe(mp :: ReadableMap)
-    :: MapMaybe.of(Any.like_element(mp))
+    :: MapMaybe.expect_of(Any.like_element(mp))
   annot.macro 'MapMaybe'
-  annot.macro 'MapMaybe.expect_of($ann)'
+  annot.macro 'MapMaybe.expect_of($annot)'
   method (mm :: MapMaybe).get(key :: Any)
     :: Any.like_element(mm)
 ){

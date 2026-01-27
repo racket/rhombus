@@ -225,7 +225,7 @@ or adjusted in any way
  each of those literally. To match @rhombus($, ~datum) or
  @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
  use @rhombus($, ~bind) to escape to a nested pattern, such as
- @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')). Simialrly,
+ @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')). Similarly,
  to match a literal @rhombus(~nonempty) or @rhombus(~once) after a @dots repetition, use
  @rhombus(#,(@rhombus($, ~bind))('~nonempty')) or @rhombus(#,(@rhombus($, ~bind))('~once')).
 
@@ -244,15 +244,24 @@ or adjusted in any way
 
 @doc(
   annot.macro 'Syntax'
-  annot.macro 'Term'
-  annot.macro 'Group'
-  annot.macro 'Block'
-  annot.macro 'TermSequence'
-  annot.macro 'Identifier'
-  annot.macro 'Operator'
-  annot.macro 'IdentifierOrOperator'
-  annot.macro 'Name'
-  annot.macro 'IdentifierName'
+  annot.macro 'Term':
+    ~method_fallback: Syntax
+  annot.macro 'Group':
+    ~method_fallback: Syntax
+  annot.macro 'Block':
+    ~method_fallback: Syntax
+  annot.macro 'TermSequence':
+    ~method_fallback: Syntax
+  annot.macro 'Identifier':
+    ~method_fallback: Syntax
+  annot.macro 'Operator':
+    ~method_fallback: Syntax
+  annot.macro 'IdentifierOrOperator':
+    ~method_fallback: Syntax
+  annot.macro 'Name':
+    ~method_fallback: Syntax
+  annot.macro 'IdentifierName':
+    ~method_fallback: Syntax
 ){
 
  The @rhombus(Syntax, ~annot) annotation matches any syntax object,

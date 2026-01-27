@@ -60,7 +60,8 @@ synchronization result is the event itself.
 }
 
 @doc(
-  annot.macro 'Channel.PutEvt'
+  annot.macro 'Channel.PutEvt':
+    ~method_fallback: Evt
 ){
 
 An annotation that recognizes a @tech{synchronizable event} created by
