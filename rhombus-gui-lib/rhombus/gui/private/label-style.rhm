@@ -1,0 +1,26 @@
+#lang rhombus/static
+
+export:
+  check_label_styles
+  make_check_orientation_styles
+
+fun check_label_styles(who, styles :~ List):
+  when (#'horizontal_label in styles
+            && #'vertical_label in styles)
+  | error(~who: who,
+          "style list cannot include both `#horizontal_label` and `#vertical_label`",
+          error.val(~label: "style list", styles))
+
+fun make_check_orientation_styles(who):
+  fun (styles :~ List):
+    unless (#'horizontal in styles
+              || #'vertical in styles)
+    | error(~who: who,
+            "style list must include `#horizontal` or `#vertical`",
+            error.val(~label: "style list", styles))
+    when (#'horizontal in styles
+            && #'vertical in styles)
+    | error(~who: who,
+            "style list cannot include both `#horizontal` and `#vertical`",
+            error.val(~label: "style list", styles))
+    check_label_styles(who, styles)

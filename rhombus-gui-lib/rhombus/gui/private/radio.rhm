@@ -11,6 +11,7 @@ import:
     expose:
       ObsOrValue
       Obs
+  "label-style.rhm".make_check_orientation_styles
 
 export:
   RadioChoice
@@ -24,7 +25,7 @@ class RadioChoice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~action: action :: Any -> ~any = values,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~styles: style :: ObsOrValue.of(List.of(RadioChoice.Style)) = [ #'vertical ],
+               ~styles: style :: List.of(RadioChoice.Style) = [#'vertical],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -45,7 +46,7 @@ class RadioChoice(private _at_selection :: Obs):
                           ~#{choice=?}: choice_equal,
                           ~label: obs.unwrap(label),
                           ~#{enabled?}: obs.unwrap(is_enabled),
-                          ~style: obs.unwrap_list(style, convert_style),
+                          ~style: obs.unwrap_list(style, convert_style, make_check_orientation_styles(#'RadioChoice)),
                           ~margin: obs.unwrap_list(margin, values),
                           ~#{min-size}: obs.unwrap_list(min_size, values),
                           ~stretch: obs.unwrap_list(stretch, values),
@@ -64,4 +65,3 @@ class RadioChoice(private _at_selection :: Obs):
   | vertical = #{vertical}
   | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
-  | deleted

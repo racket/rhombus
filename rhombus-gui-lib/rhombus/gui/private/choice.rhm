@@ -11,6 +11,7 @@ import:
     expose:
       ObsOrValue
       Obs
+  "label-style.rhm".check_label_styles
 
 export:
   Choice
@@ -24,7 +25,7 @@ class Choice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~action: action :: Any -> ~any = values,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~styles: style :: ObsOrValue.of(List.of(Choice.Style)) = [],
+               ~styles: style :: List.of(Choice.Style) = [],
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -44,7 +45,7 @@ class Choice(private _at_selection :: Obs):
                           ~#{choice=?}: choice_equal,
                           ~label: obs.unwrap(label),
                           ~#{enabled?}: obs.unwrap(is_enabled),
-                          ~style: obs.unwrap_list(style, convert_style),
+                          ~style: obs.unwrap_list(style, convert_style, make_check_styles(#'Choice)),
                           ~margin: obs.unwrap_list(margin, values),
                           ~#{min-size}: obs.unwrap_list(min_size, values),
                           ~stretch: obs.unwrap_list(stretch, values),
@@ -61,4 +62,7 @@ class Choice(private _at_selection :: Obs):
   symbol_map_annot Style convert_style
   | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
-  | deleted
+
+fun make_check_styles(who):
+  fun (styles :~ List):
+    check_label_styles(who, styles)

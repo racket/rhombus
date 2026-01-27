@@ -5,9 +5,7 @@ import:
     expose:
       Color
       Font
-  rhombus/draw/private/font!private._Font
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "label.rhm".Label.normal_control_font
   "obs.rhm":
     expose:
       Obs
@@ -17,6 +15,7 @@ import:
   "view-help.rkt"
   "window-child-help.rkt".mix_window_child_callbacks
   "window-callback.rhm".WindowCallbacks
+  "label-style.rhm".check_label_styles
 
 export:
   Table
@@ -34,7 +33,7 @@ class Table(private _at_selection :: Obs):
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~style: style :: ObsOrValue.of(List.of(Table.StyleSymbol))
                          = [#'single, #'column_headers, #'clickable_headers, #'reorderable_headers],
-               ~font : font :: Font = normal_control_font,
+               ~font : font :: Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
@@ -56,7 +55,7 @@ class Table(private _at_selection :: Obs):
                          ~selection: obs.unwrap_convert(selection, convert_selection),
                          ~label: obs.unwrap(label),
                          ~#{enabled?}: obs.unwrap(is_enabled),
-                         ~style: obs.unwrap_list(style, convert_style),
+                         ~style: obs.unwrap_list(style, convert_style, make_check_table_styles(#'Table)),
                          ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
                          ~margin: obs.unwrap_list(margin, values),
                          ~#{min-size}: obs.unwrap_list(min_size, values),
@@ -101,7 +100,6 @@ class Table(private _at_selection :: Obs):
   | reorderable_headers = #{reorderable-headers}
   | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
-  | deleted
 
   symbol_map_annot Event convert_action unconvert_action
   | select
@@ -118,8 +116,8 @@ class ListChoice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-               ~style: style :: ObsOrValue.of(List.of(ListChoice.StyleSymbol)) = [],
-               ~font : font :: Font = normal_control_font,
+               ~style: style :: List.of(ListChoice.StyleSymbol) = [],
+               ~font : font :: Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
@@ -139,8 +137,11 @@ class ListChoice(private _at_selection :: Obs):
                          ~selection: obs.unwrap_convert(selection, fun (sel): convert_selection(choices, choice_equal, sel)),
                          ~label: obs.unwrap(label),
                          ~#{enabled?}: obs.unwrap(is_enabled),
-                         ~style: obs.unwrap_convert(style, fun (l): Pair.cons(#'single, obs.unwrap_list(l, convert_style))),
-                         ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
+                         ~style: obs.unwrap_convert(style, fun (l):
+                                                             Pair.cons(#'single,
+                                                                       obs.unwrap_list(l, convert_style,
+                                                                                       make_check_list_styles(#'Table)))),
+                         ~font: font.handle,
                          ~margin: obs.unwrap_list(margin, values),
                          ~#{min-size}: obs.unwrap_list(min_size, values),
                          ~stretch: obs.unwrap_list(stretch, values),
@@ -169,4 +170,23 @@ class ListChoice(private _at_selection :: Obs):
   symbol_map_annot StyleSymbol convert_style
   | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
-  | deleted
+
+fun make_check_table_styles(who):
+  fun (styles :~ List):
+    when 1 != ((if #'single in styles | 1 | 0)
+                 + (if #'multiple in styles | 1 | 0)
+                 + (if #'extended in styles | 1 | 0))
+    | unless (#'single in styles
+                || #'multiple in styles
+                || #'extended in styles)
+      | error(~who: who,
+              "style list must include `#'single`, `#'multiple`, or `#'extended`",
+              error.val(~label: "style list", styles))
+      error(~who: who,
+            "style list must include only 1 of `#'single`, `#'multiple`, or `#'extended`",
+            error.val(~label: "style list", styles))
+    check_label_styles(who, styles)
+
+fun make_check_list_styles(who):
+  fun (styles :~ List):
+    check_label_styles(who, styles)

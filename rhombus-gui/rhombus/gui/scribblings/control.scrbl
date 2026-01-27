@@ -19,7 +19,8 @@
                                    Button.LabelPosition]),
       ~action: action :: () -> ~any = fun (): #void,
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: ObsOrValue.of(List.of(Button.Style)) = [],
+      ~styles: styles :: List.of(Button.Style) = [],
+      ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
@@ -36,7 +37,6 @@
   enum gui.Button.Style
   | border
   | multi_line
-  | deleted
 ){
 
  A button style option.
@@ -98,7 +98,7 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: ObsOrValue.of(List.of(Choice.Style)) = [],
+      ~styles: styles :: List.of(Choice.Style) = [],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
@@ -140,8 +140,7 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: ObsOrValue.of(List.of(RadioChoice.Style))
-                 = [#'vertical],
+      ~styles: styles :: List.of(RadioChoice.Style) = [#'vertical],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
@@ -171,9 +170,9 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: ObsOrValue.of(List.of(ListChoice.StyleSymbol)) = [],
+      ~styles: styles :: List.of(ListChoice.StyleSymbol) = [],
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-      ~font : font :: draw.Font = normal_control_font,
+      ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
@@ -193,7 +192,6 @@
   enum gui.Choice.Style
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A choice control style option.
@@ -207,7 +205,6 @@
   | horizontal
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A @rhombus(RadioChoice, ~class) control style option.
@@ -218,7 +215,6 @@
   enum gui.ListChoice.StyleSymbol
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A @rhombus(ListChoice, ~class) control style option.
@@ -240,10 +236,10 @@
       ~selection: selection :: ObsOrValue.of(Table.Selection) = #false,
       ~label: label :: ObsOrValue.of(View.LabelString) = "",
       ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-      ~style: style :: ObsOrValue.of(List.of(Table.StyleSymbol))
+      ~style: style :: List.of(Table.StyleSymbol)
                 = [#'single, #'column_headers,
                    #'clickable_headers, #'reorderable_headers],
-      ~font : font :: Font = normal_control_font,
+      ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
@@ -289,7 +285,6 @@
   | reorderable_headers
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A @rhombus(Table, ~class) control style option.
@@ -362,7 +357,6 @@
   | vertical
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A slider style option.
@@ -411,10 +405,91 @@
   | plain
   | horizontal_label
   | vertical_label
-  | deleted
 ){
 
  A slider style option.
+
+}
+
+@section(~tag: "input"){Text Input}
+
+@doc(
+  class gui.Input():
+    implements WindowChildView
+    constructor (
+      content :: ObsOrValue.of(Any),
+      ~action: action :: maybe((Input.Event, String) -> ~any) = #false,
+      ~label: label :: ObsOrValue.of(View.LabelString) = "",
+      ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString)))
+                  = #false,
+      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
+      ~styles: styles :: List.of(Input.StyleSymbol) = [#'single],
+      ~font : font :: draw.Font = View.normal_control_font,
+      ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
+      ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
+      ~value_to_text: val_to_txt :: Function = values
+    )
+
+  property (inp :: gui.Input).at_content :: Obs.of(Any)
+){
+
+  Returns a representation of a text field that calls @rhombus(action) on change.
+  The first argument to the @rhombus(action) is the type of event that caused
+  the input to change and the second is the contents of the text field.
+
+  If the @rhombus(~choices) argument is not @rhombus(#false), it provides
+  a list of suggestions via a popup menu. When a user selects an item in
+  the popup menu, it is copied into the text field.
+
+  The @rhombus(~is_equal_value) argument controls when changes to the input data
+  are reflected in the contents of the field. The contents of the input field only
+  change when the new value of the underlying observable is not @rhombus(==) to the
+  previous one. The only exception to this is when the textual value
+  (via @rhombus(~value_to_text)) of the observable is the empty string, in which case
+  the input is cleared regardless of the value of the underlying observable.
+
+  The @rhombus(~value_to_text) argument controls how the input values are rendered
+  to strings. If not provided, value must be either a string? or an observable
+  of strings.
+
+  The @rhombus(Input.at_content) property returns an observable that
+  is updated whenever the input's value changes through an action
+  (as also reported via @rhombus(action)) or via @rhombus(content) as an
+  observable.
+
+}
+
+@doc(
+  enum gui.Input.StyleSymbol
+  | single
+  | multiple
+  | password
+  | horizontal_label
+  | vertical_label
+  | hscroll
+){
+
+ An input style option.
+
+}
+
+@doc(
+  enum gui.Input.Event
+  | input
+  | return
+  | focus_in
+  | focus_out
+){
+
+ An event provided to the @rhombus(~action) callback function of an
+ @rhombus(Input, ~class). The event @rhombus(#'input) corresponds to any
+ change to the input text, while @rhombus(#'return) indicates that the
+ Return or Enter key was pressed. The @rhombus(#'focus_in) and
+ @rhombus(#'focus_out) events report keyboard-focus changes.
 
 }
 
@@ -426,7 +501,7 @@
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
-      ~font: font :: ObsOrValue.of(Font) = Label.normal_control_font,
+      ~font: font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
@@ -482,84 +557,6 @@
 ){
 
  Scaling options for @rhombus(Image).
-
-}
-
-
-@section(~tag: "input"){Text Input}
-
-@doc(
-  class gui.Input():
-    implements WindowChildView
-    constructor (
-      content :: ObsOrValue.of(Any),
-      ~action: action :: maybe((Input.Event, String) -> ~any) = #false,
-      ~label: label :: ObsOrValue.of(View.LabelString) = "",
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-      ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
-      ~styles: styles :: ObsOrValue.of(List.of(Input.Style)) = [#'single],
-      ~font : font :: Font = normal_control_font,
-      ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
-      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
-      ~value_to_text: val_to_txt :: Function = values
-    )
-
-  property (inp :: gui.Input).at_content :: Obs.of(Any)
-){
-
-  Returns a representation of a text field that calls @rhombus(action) on change.
-  The first argument to the @rhombus(action) is the type of event that caused
-  the input to change and the second is the contents of the text field.
-
-  The @rhombus(~is_equal_value) argument controls when changes to the input data
-  are reflected in the contents of the field. The contents of the input field only
-  change when the new value of the underlying observable is not @rhombus(==) to the
-  previous one. The only exception to this is when the textual value
-  (via @rhombus(~value_to_text)) of the observable is the empty string, in which case
-  the input is cleared regardless of the value of the underlying observable.
-
-  The @rhombus(~value_to_text) argument controls how the input values are rendered
-  to strings. If not provided, value must be either a string? or an observable
-  of strings.
-
-  The @rhombus(Input.at_content) property returns an observable that
-  is updated whenever the input's value changes through an action
-  (as also reported via @rhombus(action)) or via @rhombus(content) as an
-  observable.
-
-}
-
-@doc(
-  enum gui.Input.StyleSymbol
-  | deleted
-  | horizontal_label
-  | hscroll
-  | multiple
-  | password
-  | single
-  | vertical_label
-){
-
- An input style option.
-
-}
-
-@doc(
-  enum gui.Input.Event
-  | input
-  | return
-  | focus_in
-  | focus_out
-){
-
- An event provided to the @rhombus(~action) callback function of an
- @rhombus(Input, ~class). The event @rhombus(#'input) corresponds to any
- change to the input text, while @rhombus(#'return) indicates that the
- Return or Enter key was pressed. The @rhombus(#'focus_in) and
- @rhombus(#'focus_out) events report keyboard-focus changes.
 
 }
 

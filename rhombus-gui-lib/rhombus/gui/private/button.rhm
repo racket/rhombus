@@ -2,7 +2,7 @@
 import:
   lib("racket/gui/easy.rkt")
   rhombus/draw/private/symbol_map.symbol_map_annot
-  rhombus/draw.Bitmap
+  rhombus/draw
   "window-child-help.rkt".mix_window_child_callbacks
   "window-callback.rhm".WindowCallbacks
   "view.rhm".View
@@ -19,13 +19,14 @@ class Button():
   extends BaseWindowView
 
   constructor (label :: ObsOrValue.of(View.LabelString
-                                        || Bitmap
-                                        || [Bitmap,
+                                        || draw.Bitmap
+                                        || [draw.Bitmap,
                                             View.LabelString,
                                             Button.LabelPosition]),
                ~action: action :: () -> ~any = values,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: ObsOrValue.of(List.of(Button.Style)) = [],
+               ~styles: style :: List.of(Button.Style) = [],
+               ~font : font :: draw.Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
@@ -37,6 +38,7 @@ class Button():
                           action,
                           ~#{enabled?}: obs.unwrap(is_enabled),
                           ~style: obs.unwrap_list(style, convert_style),
+                          ~font: font.handle,
                           ~margin: obs.unwrap_list(margin, values),
                           ~#{min-size}: obs.unwrap_list(min_size, values),
                           ~stretch: obs.unwrap_list(stretch, values),
@@ -51,7 +53,6 @@ class Button():
   symbol_map_annot Style convert_style
   | border
   | multi_line = #{multi-line}
-  | deleted
 
   symbol_map_annot LabelPosition convert_label_pos
   | left
@@ -60,6 +61,6 @@ class Button():
   | bottom
 
 fun
-| unwrap_bitmap(b :: Bitmap): b.handle
-| unwrap_bitmap([b :: Bitmap, l, pos]): [b.handle, l, pos]
+| unwrap_bitmap(b :: draw.Bitmap): b.handle
+| unwrap_bitmap([b :: draw.Bitmap, l, pos]): [b.handle, l, pos]
 | unwrap_bitmap(v): v

@@ -222,8 +222,15 @@ fun
 | unwrap_convert(v, convert :: Function): convert(v)
 
 fun
-| unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun ([e, ...]): PairList[convert(e), ...]))
-| unwrap_list([e, ...], convert :: Function): PairList[convert(e), ...]
+| unwrap_list(o :: Obs, convert :: Function, check_list :: Function):
+    unwrap(o.map(fun (lst && [e, ...]):
+                   check_list(lst)
+                   PairList[convert(e), ...]))
+| unwrap_list(lst && [e, ...], convert :: Function, check_list :: Function):
+    check_list(lst)
+    PairList[convert(e), ...]
+| unwrap_list(o, convert :: Function):
+    unwrap_list(o, convert, Function.pass)
 
 fun
 | unwrap_maybe_list(o :: Obs, convert :: Function): unwrap(o.map(fun

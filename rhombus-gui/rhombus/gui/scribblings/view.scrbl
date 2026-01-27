@@ -57,3 +57,14 @@
  rendering is still active.
 
 }
+
+@doc(
+  def View.normal_control_font :: draw.Font
+  def View.small_control_font :: draw.Font
+  def View.tiny_control_font :: draw.Font
+  def View.view_control_font :: draw.Font
+){
+
+ Standard fonts for GUI controls.
+
+}

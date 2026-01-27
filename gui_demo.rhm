@@ -162,6 +162,7 @@ let name = gui.Obs("Smiley")
 def name_input:
   gui.Input(name.value,
             ~label: "Name",
+            ~choices: ["Smiley", "Frowny"],
             ~action: fun (action, str):
                        name.value := str)
 
@@ -351,4 +352,3 @@ def win = gui.Window(top_panel,
                      ~menu_bar: menu_bar,
                      ~size: [800, 600])
 def renderer = win.render()
-renderer

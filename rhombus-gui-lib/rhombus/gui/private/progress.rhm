@@ -11,6 +11,7 @@ import:
     expose:
       Obs
       ObsOrValue
+  "label-style.rhm".make_check_orientation_styles
 
 export:
   Progress
@@ -38,7 +39,7 @@ class Progress(private _at_value :: Obs):
                             ~margin: obs.unwrap_list(margin, values),
                             ~#{min-size}: obs.unwrap_list(min_size, values),
                             ~stretch: obs.unwrap_list(stretch, values),
-                            ~style: PairList[& style].map(convert_style),
+                            ~style: obs.unwrap_list(style, convert_style, make_check_orientation_styles(#'Progress)),
                             ~mixin: mixin))
           <| (at_value)
     )
@@ -54,4 +55,3 @@ class Progress(private _at_value :: Obs):
   | vertical
   | vertical_label = #{vertical-label}
   | horizontal_label = #{horizontal-label}
-  | deleted

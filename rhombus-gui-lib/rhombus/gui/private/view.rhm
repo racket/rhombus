@@ -7,6 +7,8 @@ import:
       #{cond-view}
       #{observable-view}
   lib("racket/base.rkt").else
+  lib("racket/gui.rkt") as racket
+  rhombus/draw/private/font!private._Font
   "obs.rhm"
   "type.rhm"
   "renderer.rhm".Renderer
@@ -43,6 +45,10 @@ interface View:
     if
     cond
     all_from(.type.View)
+    normal_control_font
+    small_control_font
+    tiny_control_font
+    view_control_font
 
   expr.macro 'if $test | $then | $else':
     'AView($(expr_meta.pack_s_exp(['#{if-view}',
@@ -69,6 +75,11 @@ interface View:
        | $ques ...: $ans
        | ...
        | ~else: $else'
+
+  def normal_control_font = _Font(racket.#{normal-control-font})
+  def small_control_font = _Font(racket.#{small-control-font})
+  def tiny_control_font = _Font(racket.#{tiny-control-font})
+  def view_control_font = _Font(racket.#{view-control-font})
 
 interface PopupMenuView:
   extends ViewI

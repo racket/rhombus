@@ -5,9 +5,7 @@ import:
     expose:
       Color
       Font
-  rhombus/draw/private/font!private._Font
   rhombus/draw/private/symbol_map.symbol_map_annot
-  "label.rhm".Label.normal_control_font
   "window-child-help.rkt".mix_window_child_callbacks
   "window-callback.rhm".WindowCallbacks
   "obs.rhm":
@@ -17,6 +15,7 @@ import:
   "view.rhm".View
   "view.rhm"!private.BaseWindowView
   "view-help.rkt"
+  "label-style.rhm".check_label_styles
 
 export:
   Input
@@ -27,10 +26,11 @@ class Input(private _at_content :: Obs):
   constructor (content :: ObsOrValue.of(Any) = "",
                ~action: callback :: (Input.Event, String) -> ~any = values,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
+               ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString))) = #false,
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
                ~style: style :: ObsOrValue.of(List.of(Input.StyleSymbol)) = [#'single],
-               ~font : font :: Font = normal_control_font,
+               ~font : font :: Font = View.normal_control_font,
                // ~keymap: ... TODO
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -48,9 +48,10 @@ class Input(private _at_content :: Obs):
                            callback(unconvert_action(action), to_string(str))
                            #void,
                          ~label: obs.unwrap(label),
+                         ~choices: choices && obs.unwrap_list(choices, values),
                          ~#{enabled?}: obs.unwrap(is_enabled),
                          ~#{background-color}: obs.unwrap(bg_color),
-                         ~style: obs.unwrap_list(style, convert_style),
+                         ~style: obs.unwrap_list(style, convert_style, make_check_styles(! !choices)),
                          ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
                          ~margin: obs.unwrap_list(margin, values),
                          ~#{min-size}: obs.unwrap_list(min_size, values),
@@ -69,12 +70,11 @@ class Input(private _at_content :: Obs):
     Event
 
   symbol_map_annot StyleSymbol convert_style
-  | deleted
-  | horizontal_label = #{horizontal-label}
-  | hscroll
+  | single
   | multiple
   | password
-  | single
+  | hscroll
+  | horizontal_label = #{horizontal-label}
   | vertical_label = #{vertical-label}
 
   symbol_map_annot Event convert_action unconvert_action
@@ -82,3 +82,22 @@ class Input(private _at_content :: Obs):
   | return
   | focus_in = #{has-focus}
   | focus_out = #{lost-focus}
+
+fun make_check_styles(has_choices):
+  fun (styles :~ List):
+    let who = #'Input
+    when has_choices && #'multiple in styles
+    | error(~who: who,
+            "style list for an input with choices cannot include `#'multiple`",
+            error.val(~label: "style list", styles))
+    when (#'single in styles
+            && #'multiple in styles)
+    | error(~who: who,
+            "style list for input cannot include both `#'single` and `#'multiple`",
+            error.val(~label: "style list", styles))
+    unless has_choices || (#'single in styles
+                             || #'multiple in styles)
+    | error(~who: who,
+            "style list must include `#'single` or `#'multiple`",
+            error.val(~label: "style list", styles))
+    check_label_styles(who, styles)
