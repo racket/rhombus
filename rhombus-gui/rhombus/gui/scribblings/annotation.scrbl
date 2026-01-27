@@ -2,9 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title{Annotations}
-
-@(~version_at_least "8.14.0.4")
+@title(~tag: "annotation"){Sizes, Positions, and Alignment}
 
 @doc(
   annot.macro 'gui.View.SizeInt'

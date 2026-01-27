@@ -13,6 +13,7 @@ export:
   unwrap_maybe_list
   to_obs
   reflect_obs
+  reflect_obs_first
   <~
   ~>
   like_obs_value
@@ -158,7 +159,7 @@ class Obs(private _handle, private _converter = #false):
     | f
 
   property
-  | value: peek()
+  | value :~ like_obs_value(this): peek()
   | value := v: update(fun (_): v)
 
   method rename(name :: String) :: Obs:
@@ -241,6 +242,19 @@ fun
     o.observe(fun (v): new_o.value := v)
     new_o
 | reflect_obs(v) :~ Obs: Obs(v)
+
+fun reflect_obs_first(v, list_obs) :~ Obs:
+  let o = reflect_obs(v)
+  when !o.value
+  | match list_obs
+    | o :: Obs:
+        let lst :: List = o.value
+        when lst.length() > 0
+        | o.value := lst[0]
+    | [v, _, ...]:
+        o.value := v
+    | ~else: #void
+  o
 
 operator ((o :: Obs) <~ (f :: Function.of_arity(1))):
   o.update(f)

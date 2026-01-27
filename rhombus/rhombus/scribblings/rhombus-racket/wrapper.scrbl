@@ -46,7 +46,7 @@ result annotation @rhombus(:~ Fish).
 
 @doc(
   fun wrapper.error(
-    ~who: who :: error.Who,
+    ~who: who :: maybe(error.Who) = #false,
     ~what: what :: maybe(String) = #false,
     handle
   ) :: None

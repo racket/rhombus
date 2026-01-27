@@ -985,6 +985,17 @@
                                  #`(tag kw (blk (tag2 #,@(subst #'id #:as_meta #t) . r)))])))
                   e ...))]))
 
+(define-for-syntax (implements-extract-spacer-infos stx space-names)
+  (cons
+   (syntax-parse stx
+     #:datum-literals (group block implements extends)
+     [(group _ ... (block _ ... (group (~or implements extends) (~var id (identifier-target 'rhombus/annot))) _ ...))
+      (hash 'method_fallback (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
+     [(group _ ... (block _ ... (group (~or implements extends) (block (group (~var id (identifier-target 'rhombus/annot))))) _ ...))
+      (hash 'method_fallback (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
+     [_ #f])
+   (map (lambda (s) #f) (cdr space-names))))
+
 (define-doc class
   class-extract-descs
   (lambda (stx)
@@ -995,6 +1006,7 @@
      stx
      space-name
      (parens-extract-metavariables stx space-name vars)))
+  #:spacer-infos implements-extract-spacer-infos
   class-extract-typeset)
 
 (define-doc interface
@@ -1003,6 +1015,7 @@
     '(rhombus/class rhombus/annot))
   head-extract-name
   head-extract-metavariables
+  #:spacer-infos implements-extract-spacer-infos
   head-extract-typeset)
 
 (define-doc veneer
@@ -1011,6 +1024,7 @@
     '(rhombus/class rhombus/annot))
   head-extract-name
   head-extract-metavariables
+  #:spacer-infos implements-extract-spacer-infos
   head-extract-typeset)
 
 (begin-for-syntax

@@ -6,7 +6,7 @@
 
 @doc(
   class gui.HPanel():
-    satisfies WindowChildView
+    implements WindowChildView
     constructor (
       ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
       ~styles: styles :: ObsOrValue.of(List.of(HPanel.Style)) = [],
@@ -40,7 +40,7 @@
 
 @doc(
   class gui.GroupPanel():
-    satisfies WindowChildView
+    implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
       ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
@@ -61,7 +61,7 @@
 
 @doc(
   class gui.TabsPanel():
-    satisfies WindowChildView
+    implements WindowChildView
     constructor (
       choices :: ObsOrValue.of(List),
       ~selection: selection :: ObsOrValue.of(Any),

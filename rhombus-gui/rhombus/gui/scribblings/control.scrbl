@@ -2,7 +2,11 @@
 @(import:
     "common.rhm" open)
 
-@title{Controls}
+@title(~tag: "control", ~style: #'toc){Controls}
+
+@local_table_of_contents()
+
+@section(~tag: "button"){Buttons}
 
 @doc(
   class gui.Button():
@@ -27,6 +31,31 @@
  is performed when the button is clicked.
 
 }
+
+@doc(
+  enum gui.Button.Style
+  | border
+  | multi_line
+  | deleted
+){
+
+ A button style option.
+
+}
+
+@doc(
+  enum gui.Button.LabelPosition
+  | left
+  | top
+  | right
+  | bottom
+){
+
+ A button label-position option for text combined with an image.
+
+}
+
+@section(~tag: "checkbox"){Checkboxes}
 
 @doc(
   class gui.Checkbox():
@@ -56,6 +85,8 @@
  observable.
 
 }
+
+@section(~tag: "choice"){Choices and Lists}
 
 @doc(
   class gui.Choice():
@@ -159,6 +190,44 @@
 }
 
 @doc(
+  enum gui.Choice.Style
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A choice control style option.
+
+}
+
+
+@doc(
+  enum gui.RadioChoice.Style
+  | vertical
+  | horizontal
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A @rhombus(RadioChoice, ~class) control style option.
+
+}
+
+@doc(
+  enum gui.ListChoice.StyleSymbol
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A @rhombus(ListChoice, ~class) control style option.
+
+}
+
+@section(~tag: "table"){Tables as Multicolumn Lists}
+
+@doc(
   class gui.Table():
     implements WindowChildView
     constructor (
@@ -210,6 +279,49 @@
 }
 
 @doc(
+  enum gui.Table.StyleSymbol
+  | single
+  | multiple
+  | extended
+  | variable_columns
+  | column_headers
+  | clickable_headers
+  | reorderable_headers
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A @rhombus(Table, ~class) control style option.
+
+}
+
+@doc(
+  enum gui.Table.Event
+  | select
+  | double_click
+  | column
+){
+
+ An event provided to the @rhombus(~action) callback function of an
+ @rhombus(Table, ~class). A @rhombus(#'select) event reports a change in
+ the selection, @rhombus(#'double_click) reports a double click, and
+ @rhombus(#'column) indicates a chagne in column order.
+
+}
+
+@doc(
+  annot.macro 'gui.Table.Selection'
+){
+
+ Equivalent to @rhombus(maybe(Int || List.of(Int)), ~annot) to represent
+ a @rhombus(Table, ~class) selection.
+
+}
+
+@section(~tag: "slider"){Sliders}
+
+@doc(
   class gui.Slider():
     implements WindowChildView
     constructor (
@@ -244,6 +356,20 @@
 
 }
 
+@doc(
+  enum gui.Progress.Style
+  | horizontal
+  | vertical
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A slider style option.
+
+}
+
+@section(~tag: "progress"){Progress Gauges}
 
 @doc(
   class gui.Progress():
@@ -274,6 +400,25 @@
  @rhombus(value) as an observable.
 
 }
+
+
+
+
+@doc(
+  enum gui.Slider.Style
+  | horizontal
+  | vertical
+  | plain
+  | horizontal_label
+  | vertical_label
+  | deleted
+){
+
+ A slider style option.
+
+}
+
+@section(~tag: "label"){Labels and Images}
 
 @doc(
   class gui.Label():
@@ -330,6 +475,18 @@
 
 }
 
+@doc(
+  enum Image.DisplayMode
+  | fit
+  | fill
+){
+
+ Scaling options for @rhombus(Image).
+
+}
+
+
+@section(~tag: "input"){Text Input}
 
 @doc(
   class gui.Input():
@@ -375,155 +532,6 @@
 
 }
 
-
-@doc(
-  class gui.Spacer():
-    implements WindowChildView
-    constructor (
-      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
-    )
-){
-
- Returns a representation of a spacer. By default, spacers extend to
- fill the space of their parents.
-
-}
-
-
-@doc(
-  enum gui.Button.Style
-  | border
-  | multi_line
-  | deleted
-){
-
- A button style option.
-
-}
-
-@doc(
-  enum gui.Button.LabelPosition
-  | left
-  | top
-  | right
-  | bottom
-){
-
- A button label-position option for text combined with an image.
-
-}
-
-
-@doc(
-  enum gui.Choice.Style
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A choice control style option.
-
-}
-
-
-@doc(
-  enum gui.RadioChoice.Style
-  | vertical
-  | horizontal
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A @rhombus(RadioChoice, ~class) control style option.
-
-}
-
-@doc(
-  enum gui.ListChoice.StyleSymbol
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A @rhombus(ListChoice, ~class) control style option.
-
-}
-
-@doc(
-  enum gui.Table.StyleSymbol
-  | single
-  | multiple
-  | extended
-  | variable_columns
-  | column_headers
-  | clickable_headers
-  | reorderable_headers
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A @rhombus(Table, ~class) control style option.
-
-}
-
-
-@doc(
-  enum gui.Table.Event
-  | select
-  | double_click
-  | column
-){
-
- An event provided to the @rhombus(~action) callback function of an
- @rhombus(Table, ~class). A @rhombus(#'select) event reports a change in
- the selection, @rhombus(#'double_click) reports a double click, and
- @rhombus(#'column) indicates a chagne in column order.
-
-}
-
-@doc(
-  annot.macro 'gui.Table.Selection'
-){
-
- Equivalent to @rhombus(maybe(Int || List.of(Int)), ~annot) to represent
- a @rhombus(Table, ~class) selection.
-
-}
-
-
-@doc(
-  enum gui.Slider.Style
-  | horizontal
-  | vertical
-  | plain
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A slider style option.
-
-}
-
-
-@doc(
-  enum gui.Progress.Style
-  | horizontal
-  | vertical
-  | horizontal_label
-  | vertical_label
-  | deleted
-){
-
- A slider style option.
-
-}
-
-
 @doc(
   enum gui.Input.StyleSymbol
   | deleted
@@ -555,12 +563,19 @@
 
 }
 
+@section(~tag: "spacer"){Spacer}
+
 @doc(
-  enum Image.DisplayMode
-  | fit
-  | fill
+  class gui.Spacer():
+    implements WindowChildView
+    constructor (
+      ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
+    )
 ){
 
- Scaling options for @rhombus(Image).
+ Returns a representation of a spacer. By default, spacers extend to
+ fill the space of their parents.
 
 }

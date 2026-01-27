@@ -1,4 +1,6 @@
 #lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
 
 export:
   Renderer
@@ -11,6 +13,10 @@ class Renderer(private _handle):
   internal _Renderer
   expression ~none
   property handle: _handle
+  method destroy():
+    easy.#{renderer-destroy}(_handle)
+  property gui_handle:
+    easy.#{renderer-root}(_handle)
   export:
     from_handle
   fun from_handle(handle) :~ Renderer:

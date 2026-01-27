@@ -29,7 +29,7 @@ class Table(private _at_selection :: Obs):
                entries :: ObsOrValue.of(Array),
                ~action: callback :: (Table.Event, Array, Table.Selection) -> ~any = values,
                ~choice_to_row: entry_to_row :: Any -> Array.now_of(View.LabelString) = values,
-               ~selection: selection :: ObsOrValue.of(Table.Selection) = #false,
+               ~selection: selection :: ObsOrValue.of(maybe(Table.Selection)) = #false,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
                ~style: style :: ObsOrValue.of(List.of(Table.StyleSymbol))

@@ -20,6 +20,7 @@ import:
   "event.rhm".KeyEvent
   "event.rhm"!private.convert_key
   "renderer.rhm".Renderer
+  "renderer.rhm"!private._Renderer
 
 export:
   MenuBar
@@ -42,6 +43,8 @@ class MenuBar():
                                ...))
           <| ()
     )
+  method render() :: Renderer:
+    _Renderer(easy.#{render-menu-bar}(handle))
 
 class Menu():
   extends BaseView

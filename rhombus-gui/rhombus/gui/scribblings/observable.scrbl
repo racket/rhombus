@@ -6,11 +6,16 @@
 
 An @deftech{observable} holds a value plus a set of subscribers that are
 known as @deftech{observers}. When the value in an observable changes,
-observers are notified. Passing an observable to a view constructor
-causes each rendering of the view to create an observer that reacts to
-changes. For example, the label or enable state for a button view can be
-supplied as an observable, and if the observable's value changes, then
-every visible rendering of the button changes automatically to match.
+observers are notified.
+
+Besides registering observers directly, an application can provide an
+observable instead of an immediate value when constructing a
+@tech{view}; each rendering of the view then becomes and observer that
+reacts to changes in the observable's value. For example, the label or
+enable state for a button view can be supplied as an observable, and if
+the observable's value changes from @rhombus(#true) to @rhombus(#false),
+then a button (or, more precisely, a button in a GUI @tech{render}ed
+from the view) becomes disabled.
 
 @doc(
   class gui.Obs():
@@ -63,9 +68,8 @@ every visible rendering of the button changes automatically to match.
   | (obs :: gui.Obs).value := (v :: Any)
 ){
 
- Returns the value via @rhombus(Obs.peek) (which you shouldn't normally
- do) or updates the value via @rhombus(Obs.update) (ignoring the current
- value).
+ Returns the value via @rhombus(Obs.peek) or updates the value via
+ @rhombus(Obs.update) (ignoring the current value).
 
 @examples(
   ~hidden:
@@ -113,7 +117,7 @@ every visible rendering of the button changes automatically to match.
 ){
 
  Changes the value @rhombus(v, ~var) of @rhombus(obs) to
- @rhombus(f(#,(@rhombus(v, ~var)))).  Returns the new value.
+ @rhombus(f(#,(@rhombus(v, ~var)))) and returns the new value.
 
 }
 
@@ -147,10 +151,10 @@ every visible rendering of the button changes automatically to match.
     :: Obs
 ){
 
- Returns an observer whose value changes each time that @rhombus(obs)'s
- value changes, where the new observer's value is changed to
- @rhombus(f(#,(@rhombus(v, ~var)))) when @rhombus(obs) is changed to
- @rhombus(v, ~var).
+ Returns a @deftech{derived observable} whose value changes each time
+ that @rhombus(obs)'s value changes, where the new observer's value is
+ changed to @rhombus(f(#,(@rhombus(v, ~var)))) when @rhombus(obs) is
+ changed to @rhombus(v, ~var).
 
 }
 
@@ -196,7 +200,7 @@ every visible rendering of the button changes automatically to match.
   fun gui.Obs.from_handle(handle) :: Obs
 ){
 
- Converts to and from a Racket object for the observable for use
+ Converts to and from a Racket object for the observable, for use
  directly with @racketmodname(racket/gui/easy, ~indirect).
 
 }

@@ -72,6 +72,18 @@
 }
 
 @doc(
+  method (bm :: draw.Bitmap).copy(
+    ~source: source :: RectLike = Rect(Point.zero, bm.size)
+  ) :: Bitmap
+){
+
+ Creates a new bitmap with the same attributes as @rhombus(bm), but
+ possibly a different size as determined by @rhombus(source). The
+ @rhombus(source) rectangle of @rhombus(bm) is copied to the new bitmap.
+
+}
+
+@doc(
   method (bm :: draw.Bitmap).argb_pixels(
     ~x: x :: Nat = 0,
     ~y: y :: Nat = 0,

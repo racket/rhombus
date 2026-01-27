@@ -2,7 +2,25 @@
 @(import:
     "common.rhm" open)
 
-@title{Menus}
+@(def unexported: @rhombus(hidden, ~var))
+
+@title(~tag: "menu"){Menu Views}
+
+@doc(
+  interface gui.MenuChildView:
+    extends View
+    implementable #,(@unexported)
+){
+
+ A @deftech{menu-child view} represents a view that can be added to a
+ menu.
+
+ Create a @rhombus(MenuChildView, ~class) using @rhombus(Menu, ~class),
+ @rhombus(MenuItem, ~class), @rhombus(CheckableMenuItem, ~class), or
+ @rhombus(MenuItemSeparator, ~class).
+
+}
+
 
 @doc(
   class gui.MenuBar():

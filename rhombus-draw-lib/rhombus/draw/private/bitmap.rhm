@@ -6,6 +6,9 @@ import:
     expose:
       Size
       SizeLike
+      RectLike
+      Rect
+      Point
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
@@ -130,12 +133,13 @@ class Bitmap():
             "error writing bitmap",
             error.text(~label: "destination", dest))
 
-  method copy() :: Bitmap:
-    def bm2:
-      Bitmap(size,
+  method copy(~source: source :: RectLike = Rect(Point.zero, size)) :: Bitmap:
+    let bm2:
+      Bitmap([math.exact(math.ceiling(source.size.width)),
+              math.exact(math.ceiling(source.size.height))],
              ~backing_scale: backing_scale,
              ~kind: kind)
-    bm2.make_dc().bitmap(this)
+    bm2.make_dc().bitmap(this, ~source: source)
     bm2
 
   fun from_handle(handle) :~ Bitmap:

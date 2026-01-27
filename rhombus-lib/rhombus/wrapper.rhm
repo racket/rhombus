@@ -4,7 +4,7 @@ export:
   rename:
     error_not_handle as error
 
-fun error_not_handle(~who: who :: error.Who,
+fun error_not_handle(~who: who :: maybe(error.Who) = #false,
                      ~what: what :: maybe(String) = #false,
                      handle) :~ None:
   ~name: wrapper.error

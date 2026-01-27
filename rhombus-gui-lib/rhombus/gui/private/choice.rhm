@@ -30,7 +30,7 @@ class Choice(private _at_selection :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_selection = obs.reflect_obs(selection)
+    let at_selection = obs.reflect_obs_first(selection, choices)
     let action = (fun (selected):
                     at_selection.value := selected
                     action(selected))
