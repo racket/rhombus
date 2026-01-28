@@ -221,3 +221,17 @@ space.enforest myspace:
 meta:
   check myspace_meta.foo ~is 42
 check myspace.bar ~is 43
+
+module ex_mod1 ~lang rhombus/and_meta:
+  export:
+    all_from(rhombus/and_meta):
+      except:
+        meta:
+          expr_meta
+
+module ex_mod2 ~lang rhombus/and_meta:
+  export:
+    all_from(rhombus/and_meta):
+      except:
+        (meta:
+           expr_meta)

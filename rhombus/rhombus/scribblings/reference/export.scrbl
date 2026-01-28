@@ -33,7 +33,8 @@
   | #,(@rhombus(names, ~expo)) $names_decl
   | #,(@rhombus(all_defined, ~expo)) $all_defined_decl
   | $export_item #,(@rhombus(#%juxtapose, ~expo)) $export_item
-  | $other_export
+  | ($export_clause)
+  | $other_export_item
 
   grammar id_or_op
   | $id_name
@@ -209,6 +210,27 @@
  @see_implicit(@rhombus(#%juxtapose, ~expo), "an export", "export", ~is_infix: #true)
 
 }
+
+@doc(
+  ~nonterminal:
+    export_clause: export ~decl
+    modifier: export ~decl
+  expo.macro '#%parens ($export_clause)'
+  expo.macro '#%parens'
+){
+
+ Equivalent to @rhombus(export_clause), when present, and particularly
+ useful if @rhombus(export_clause) has a block, which would otherwise
+ preclude putting a @rhombus(modifier) afterward.
+
+ If @rhombus(#%parens, ~expo) is not followed by parentheses, then it it
+ treated like @rhombus(names: #,(rhombus(#%parens, ~datum)), ~expo) to
+ export @rhombus(#%parens, ~datum) (in some space).
+
+ @see_implicit(@rhombus(#%parens, ~impo), "a set of parentheses", "export")
+
+}
+
 
 @doc(
   expo.macro 'as'

@@ -68,7 +68,8 @@
                        :import
                        :prefix-op+import+tail
                        :infix-op+import+tail
-                       :import-modifier)
+                       :import-modifier
+                       :modified-import)
            define-import-syntax)
   (begin-for-syntax
     (provide (property-out import-prefix-operator)
@@ -234,8 +235,9 @@
                               "not an import modifier"
                               #'form)])]))
 
-  (define-syntax-class :modified-imports
+  (define-syntax-class :one-modified-imports
     #:datum-literals (group)
+    #:attributes (mod [imp 1])
     (pattern (group mod-id:identifier mod-arg ... (_::block imp ...))
              #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
              #:with mod #`(#,group-tag mod-id mod-arg ...))))
@@ -254,7 +256,7 @@
   ;; transformers that are used for later imports
   (syntax-parse stx
     [(_ _ _) #'(begin)]
-    [(_ orig mods mi::modified-imports . more)
+    [(_ orig mods mi::one-modified-imports . more)
      #`(begin
          (rhombus-import orig (mi.mod . mods) mi.imp)
          ...
@@ -273,6 +275,19 @@
           (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
           (rhombus-import orig mods . more))
       #'r.parsed)]))
+
+(begin-for-syntax
+  ;; for nested contexts where the unrolling that `rhombus-import`
+  ;; does to perform early imports before later ones (even under a
+  ;; common modifier) is not an option
+  (define-syntax-class :modified-import
+    #:datum-literals (group)
+    #:attributes (parsed)
+    (pattern mi::one-modified-imports
+             #:with sub::modified-import #'mi.mod
+             #:attr parsed (apply-modifiers (list #'mi.mod)
+                                            #'sub.parsed))
+    (pattern ::import)))
 
 ;; Uses a continuation form to thread through the module path that
 ;; accessed-via-dots module paths are relative to and to thread
@@ -832,7 +847,7 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(_ (_::parens im::import) . tail)
+       [(_ (_::parens im::modified-import) . tail)
         (values #'im.parsed
                 #'tail)]
        [(_ (~and parens (_::parens im ...)) . tail)

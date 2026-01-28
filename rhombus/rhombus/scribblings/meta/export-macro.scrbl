@@ -104,6 +104,10 @@
     kind: ~group
     fields:
       group
+  syntax_class expo_meta.ParsedAndModified:
+    kind: ~group
+    fields:
+      group
   syntax_class expo_meta.AfterPrefixParsed(op_name):
     kind: ~group
     fields:
@@ -122,9 +126,12 @@
       [tail, ...]
 ){
 
- Analogous to @rhombus(expr_meta.Parsed, ~stxclass),
+ Mostly analogous to @rhombus(expr_meta.Parsed, ~stxclass),
  @rhombus(expr_meta.AfterPrefixParsed, ~stxclass), and
  @rhombus(expr_meta.AfterInfixParsed, ~stxclass), but for exports.
+
+ The @rhombus(expo_meta.ParsedAndModified) supports putting an import
+ modifier before or after an import form.
 
 }
 

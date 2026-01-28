@@ -45,7 +45,8 @@
                     all_from
                     all_defined
                     |.|
-                    #%juxtapose))
+                    #%juxtapose
+                    #%parens))
 
 (module+ for-meta
   (provide (for-syntax export-modifier
@@ -54,7 +55,8 @@
                        :export
                        :export-prefix-op+form+tail
                        :export-infix-op+form+tail
-                       :export-modifier)
+                       :export-modifier
+                       :modified-export)
            define-export-syntax)
   (begin-for-syntax
     (provide (property-out export-prefix-operator)
@@ -250,10 +252,10 @@
   (export-modifier
    (lambda (ex stx)
      (syntax-parse stx
-       [(_ (_::block e::export ...))
+       [(_ (_::block e::modified-export ...))
         #`(except-out #,ex e.parsed ...)]
        [(_ term ...)
-        #:with e::export #'(group term ...)
+        #:with e::modified-export #'(group term ...)
         #`(except-out #,ex e.parsed)]))))
 
 (define-export-syntax meta
@@ -459,6 +461,28 @@
                                e.parsed)
                 #'e.tail)]))
    'left))
+
+(define-export-syntax #%parens
+  (export-prefix-operator
+   #f
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (_::parens ex::modified-export) . tail)
+        (values #'ex.parsed
+                #'tail)]
+       [(_ (~and parens (_::parens ex ...)) . tail)
+        (raise-syntax-error #f
+                            (if (null? (syntax->list #'(ex ...)))
+                                "missing export in parentheses"
+                                "multiple groups in export parentheses")
+                            stx
+                            #'parens)]
+       [(self . tail)
+        ;; not followed by parentheses; as a convenience, treat this is a name export
+        (values (make-identifier-export #'self)
+                #'tail)]))))
 
 (define-export-syntax |.|
   (export-infix-operator

@@ -201,6 +201,27 @@ check:
 
 check:
   import:
+    (lib("rhombus/tests/example-f.rhm"):
+       expose prefix as pfx)
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    (lib("rhombus/tests/example-f.rhm")):
+       expose prefix as pfx
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
+    expose prefix as pfx:
+      lib("rhombus/tests/example-f.rhm")
+  [pfx.original, pfx.added]
+  ~is ["orig", "add"]
+
+check:
+  import:
     lib("rhombus/tests/example-f.rhm").prefix as pfx
   [pfx.original, pfx.added]
   ~is ["orig", "add"]
@@ -338,3 +359,4 @@ check:
   import lib("rhombus/tests/example-i.rhm") as ~none
   check ex_h.counter ~is 3
   ~completes
+

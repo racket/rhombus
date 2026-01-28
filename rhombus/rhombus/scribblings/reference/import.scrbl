@@ -28,7 +28,7 @@
   grammar import_item
   | $module_path
   | #,(@rhombus(namespace, ~impo)) $id: $body; ...
-  | ($import_item)
+  | ($import_clause)
   | $other_import_item
 
   grammar module_path
@@ -473,13 +473,13 @@
 
 @doc(
   ~nonterminal:
-    import_item: import ~defn
+    import_clause: import ~defn
     modifier: import ~defn
-  impo.macro '#%parens ($import_item)'
+  impo.macro '#%parens ($import_clause)'
 ){
 
- Equivalent to @rhombus(import_item), and particularly useful if
- @rhombus(import_item) has a block, which would otherwise preclude
+ Equivalent to @rhombus(import_clause), and particularly useful if
+ @rhombus(import_clause) has a block, which would otherwise preclude
  putting a @rhombus(modifier) afterward.
 
  @see_implicit(@rhombus(#%parens, ~impo), "a set of parentheses", "import")

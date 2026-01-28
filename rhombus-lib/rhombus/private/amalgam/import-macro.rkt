@@ -29,8 +29,9 @@
   (define-name-root impo_meta
     #:fields
     (space
-     ParsedModifier
      Parsed
+     ParsedAndModified
+     ParsedModifier
      AfterPrefixParsed
      AfterInfixParsed
      NameStart)))
@@ -48,7 +49,9 @@
 (begin-for-syntax
   (define-transformer-syntax-class
     ParsedModifier :import-modifier #:rhombus/impo
-    #:arity-mask 2))
+    #:arity-mask 2)
+  (define-transformer-syntax-class
+    ParsedAndModified :modified-import #:rhombus/impo))
 
 (define-for-syntax (extract-modifier form proc req)
   (syntax-parse (if (syntax*? form)
