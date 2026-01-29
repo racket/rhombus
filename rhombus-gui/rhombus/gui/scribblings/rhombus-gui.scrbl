@@ -5,7 +5,7 @@
 @docmodule(~use_sources: lib("rhombus/gui.rhm"),
            gui)
 
-The @rhombusmodname(gui) library provides a reactive framework for
+The Rhombus @rhombusmodname(gui) library provides a reactive framework for
 constructing graphical user interface (GUI) applications.
 
 @table_of_contents()

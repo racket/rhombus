@@ -53,8 +53,8 @@
  A view might be rendered multiple times because it is nested multiple
  times within an enclosing view, or because @rhombus(render) is used
  multiple time on the view or an enclosing view. Only the most recent
- rendering is accessible, even if it has become hidden an an older
- rendering is still active.
+ rendering is accessible, even if it has become hidden and an older
+ rendering is still active. See also @secref("overview-state").
 
 }
 

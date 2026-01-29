@@ -41,7 +41,7 @@ class RadioChoice(private _at_selection :: Obs):
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.radios(PairList[& choices],
                           action,
-                          ~selection: obs.unwrap(selection),
+                          ~selection: obs.unwrap(at_selection),
                           ~#{choice->label}: choice_to_label,
                           ~#{choice=?}: choice_equal,
                           ~label: obs.unwrap(label),

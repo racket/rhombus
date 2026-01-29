@@ -42,7 +42,7 @@ class Input(private _at_content :: Obs):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)
-        super(easy.input(obs.unwrap(content),
+        super(easy.input(obs.unwrap(at_content),
                          fun (action, str):
                            at_content.value := str
                            callback(unconvert_action(action), to_string(str))

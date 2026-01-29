@@ -14,6 +14,8 @@
 @(runtime_path.def example4_pre_png: "example4_pre.png")
 @(runtime_path.def example4_post_png: "example4_post.png")
 @(runtime_path.def example5_png: "example5.png")
+@(runtime_path.def example6_png: "example6.png")
+@(runtime_path.def example7_png: "example7.png")
 
 @(fun refade(p :: pict.Pict):
     let w = p.width
@@ -98,7 +100,7 @@ button an @rhombus(~action) callback.
                           ["Mix",
                            "Drink It All Up"])
 
-  def window:
+  def win:
     gui.Window(
       ~title: "Recipe",
       gui.VPanel(
@@ -110,11 +112,11 @@ button an @rhombus(~action) callback.
         ),
         finish,
         gui.Button("Order Drink",
-                   ~action: fun (): window.close())
+                   ~action: fun (): win.close())
       )
     )
 
-  window.run()
+  win.run()
 
   [lime.at_is_checked.value,
    coconut.at_is_checked.value,
@@ -153,7 +155,7 @@ There are two parts to creating a connection between GUI elements:
 )
 
 Here's a first try at using a @rhombus(message) observable for the label
-of a button. The button's label changes whenever the text in an
+of a button. The button's label changes whenever the text in a
 @rhombus(gui.Input) control is modified by the user.
 
 @rhombusblock(
@@ -174,7 +176,7 @@ of a button. The button's label changes whenever the text in an
 
 Using an observable may seem like the long way around, as opposed to
 just setting the button label imperatively in a callback. Part of the
-awkwardness here is that the choice of button label derived from the
+awkwardness here is that the way a button label is derived from a
 name really belongs to the button, not to the text-input widget. We can
 improve the above implementation by using the @rhombus(~>) operator,
 which creates a @tech{derived observable} whose value changes whenever
@@ -191,7 +193,7 @@ observable's value.
   def at_name = gui.Obs("Harry")
 
   gui.Window(
-    gui.Input(name.value,
+    gui.Input(at_name,
               ~action: fun (_, str): at_name.value := str),
     gui.Button(at_name ~> (fun (str): "Hello, " ++ str ++ "!"))
   ).run()
@@ -219,18 +221,17 @@ case of a @rhombus(gui.Input) view, the property is
 Observables can determine other properties of a control besides its
 label, including whether the control is enabled or the list of available
 choices in a @rhombus(gui.Choice). Even the children of a window or
-panel can be observables. For example, if we want to be able to let a
+panel can be observables. For example, if we want to let a
 user add multiple greeters, we can make the child of a
 @rhombus(gui.Window) be an observable whose value is a
 @rhombus(gui.VPanel).
 
 @rhombusblock(
   fun make_greeter():
-    let at_name = gui.Obs("Harry")
+    let name_input = gui.Input("Harry")
     gui.VPanel(
-      gui.Input(at_name,
-                ~action: fun (_, str): at_name.value := str),
-      gui.Button(at_name ~> (fun (str): "Hello, " ++ str ++ "!"))
+      name_input,
+      gui.Button(name_input.at_content ~> (fun (str): "Hello, " ++ str ++ "!"))
     )
 
   def at_greeters :: gui.Obs.of(List) = gui.Obs([make_greeter()])
@@ -252,12 +253,12 @@ user add multiple greeters, we can make the child of a
 
 @section(~tag: "overview-combine-obs"){Combining Observables}
 
-Often, a GUI includes elements whose rendering depends on multiple other
-controls. The @rhombus(gui.Obs.combine) function is handy when multiple
-observables need to be merged into a single observable. It can convert a
-map with observable values into an observable of a map. For example, the
-values of two sliders can be combined to configure the drawing in a
-canvas.
+Often, a GUI includes elements whose presentation depends on multiple
+other controls. The @rhombus(gui.Obs.combine) function is handy when
+multiple observables need to be merged into a single observable. It can
+convert a map with observable values into an observable of a map. For
+example, the values of two sliders can be combined to configure the
+drawing in a canvas.
 
 @rhombusblock(
   import:
@@ -300,3 +301,70 @@ canvas.
 )
 
 @screenshot(example5_png)
+
+@section(~tag: "overview-state"){Views, State, and Rendered Controls}
+
+Going back to the multiple-greeter example, what would happen if we put
+the result of a single call to @rhombus(make_greeter) multiple times in
+the @rhombus(at_greeters) list? The window will start with two greeters,
+because each use of the view is rendered to a fresh panel, input field,
+and button. The two different renderings are not independent, however.
+Editing either input field adjusts both buttons, as well as the other
+input field.
+
+@rhombusblock(
+  def g1 = make_greeter()
+  def at_greeters :: gui.Obs.of(List) = gui.Obs([g1, g1])
+)
+
+@screenshot(example6_png)
+
+The two greeter renderings are connected because a single
+@rhombus(gui.Input.at_content) observable is created when
+@rhombus(make_greeter) calls @rhombus(gui.Input). Editing either
+rendered input field updates that same observable, so both rendered
+buttons see the change and adapt their labels.
+
+Meanwhile, editing one input field adjusts the other input field because
+a @rhombus(gui.Input) view's observable is reflected back to the input
+field's content. The intent of that reflection is to preserve the view's
+content if the view's rendering is removed and recreated---which is what
+happens when a new greeter is added and the panel of greeters changes.
+When an observable is provided to a constructor like @rhombus(gui.Input)
+for the view's value, it provides the initial value for the view's
+state, and any change to the provided observable's value is treated like
+input from a user to update the state.
+
+In short, a view can be rendered multiple times, either concurrently or
+sequentially and in different windows, but all renderings of the view
+share state that is part of the view. The shared state is always limited
+to an observable like @rhombus(gui.Input.at_content) to hold a control's
+value or selection. Some views, like @rhombus(gui.Button) or
+@rhombus(gui.Window) have no such observables and no internal state.
+Note that a view can have external state that is part of it's input,
+such as an observable for a button's label, but that is not part of the
+view's own state.
+
+Each rendering of a view can have state that is specific to the
+rendering. For example, each rendering of a @rhombus(gui.Button) will
+appear at some location relative to its enclosing window, and it is
+independently in the process of being clicked or not. That
+rendering-specific state is accessible from a view only for the
+@tech{most recent rendering} of the view, and some methods of views use
+the most recent rendering. For example, @rhombus(gui.WindowView.close)
+closes the most recent rendering of a window, which means that the
+following @rhombus(window) view makes sense only for a single rendering
+at a time.
+
+@rhombusblock(
+  def win:
+    gui.Window(
+      gui.Button("Order Drink",
+                 ~action: fun (): win.close())
+    )
+
+  win.run()
+  win.run() // ok to run twice, since it's one at a time
+)
+
+@screenshot(example7_png)

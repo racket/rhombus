@@ -52,7 +52,7 @@ class Table(private _at_selection :: Obs):
                            callback(a, row, sel)
                            #void,
                          ~#{entry->row}: entry_to_row,
-                         ~selection: obs.unwrap_convert(selection, convert_selection),
+                         ~selection: obs.unwrap_convert(at_selection, convert_selection),
                          ~label: obs.unwrap(label),
                          ~#{enabled?}: obs.unwrap(is_enabled),
                          ~style: obs.unwrap_list(style, convert_style, make_check_table_styles(#'Table)),
@@ -134,7 +134,7 @@ class ListChoice(private _at_selection :: Obs):
                            callback(sel)
                            #void,
                          ~#{entry->row}: fun (v): Array(choice_to_label(v)),
-                         ~selection: obs.unwrap_convert(selection, fun (sel): convert_selection(choices, choice_equal, sel)),
+                         ~selection: obs.unwrap_convert(at_selection, fun (sel): convert_selection(choices, choice_equal, sel)),
                          ~label: obs.unwrap(label),
                          ~#{enabled?}: obs.unwrap(is_enabled),
                          ~style: obs.unwrap_convert(style, fun (l):
