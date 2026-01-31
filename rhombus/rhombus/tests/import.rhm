@@ -360,3 +360,101 @@ check:
   check ex_h.counter ~is 3
   ~completes
 
+check:
+  import lib("rhombus/tests/example-c.rhm") open
+  exint
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c.rhm") open:
+    except_space annot
+  exint
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c.rhm") open:
+    except_space annot bind
+  exint
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space defn annot bind
+  exint
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c.rhm") open:
+    except_space expr bind
+  11 :: exint
+  ~is 11
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space expr bind
+  11 :: a_exint
+  ~is 11
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c.rhm") open:
+    except_space bind annot
+    rename exint as exii
+  exii
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space bind annot
+    rename exint as exii
+  exii
+  ~is 10
+
+check:
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space expr bind
+    rename a_exint as exii
+  11 :: exii
+  ~is 11
+
+check:
+  ~eval
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c.rhm") open:
+    except_space expr
+  exint
+  ~throws "exint: undefined"
+
+check:
+  ~eval
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space expr
+  exint
+  ~throws "exint: undefined"
+
+check:
+  ~eval
+  import:
+    rhombus/meta open
+  import lib("rhombus/tests/example-c2.rhm") open:
+    except_space expr bind annot
+  exint
+  ~throws "exint: undefined"
