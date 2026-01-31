@@ -4,7 +4,7 @@
 
 @(def unexported: @rhombus(hidden, ~var))
 
-@title(~tag: "window-view"){Window View Interface}
+@title(~tag: "window-view"){Window View Interfaces}
 
 @doc(
   interface gui.WindowChildView:
@@ -114,5 +114,69 @@
 
  Renders @rhombus(menu) as a poupup menu at the position specified by
  @rhombus(x) and @rhombus(y) within @rhombus(v).
+
+}
+
+@doc(
+  ~include lib("rhombus/gui/private/window-callback.rhm"):
+    gui.WindowCallbacks
+){
+
+ Configuration and callbacks that apply to all
+ @rhombus(WindowChildView, ~class) constructors, but grouped as
+ @rhombus(WindowCallbacks, ~class) because they are less commonly needed.
+
+@itemlist(
+
+ @item{@rhombus(accepts_drop_file): Determines whether the view accepts
+  drag-and-drop files.}
+
+ @item{@rhombus(drop_file): Called when the view receives a drag-and-drop
+  file (when enabled).}
+
+ @item{@rhombus(focus): Called when the view gains or loses the keyboard
+  focus, where the callback argument indicates whether the focus was
+  gained.}
+
+ @item{@rhombus(move): Called when the view changes position relative to
+  its parent. The callback arguments indicate the new horizontal and
+  vertical positions. This callback is mostly useful for
+  @rhombus(Window, ~class) or @rhombus(Dialog, ~class) views.}
+
+ @item{@rhombus(size): Like @rhombus(move), but called when the view
+  changes size. The callback arguments indicate the new horizontal and
+  vertical size.}
+
+ @item{@rhombus(sub_key): Call when a key event is to be delivered
+  to the view or a view that it contains. If the result is a true value,
+  then the event is considered handled and @emph{not} propagated further.
+  The first argument is the view whose (rendered form) is to receive the
+  event if it is propagated.}
+
+ @item{@rhombus(sub_mouse): Call when a mouse event is to be
+  delivered to the view or a view that it contains. If the result is a
+  true value, then the event is considered handled and @emph{not}
+  propagated further. The first argument is the view whose is to receive
+  the event if it is propagated.}
+
+ @item{@rhombus(sub_focus): Call when the view or a view that it
+  contains gains or loses the keyboard focus. The first argument is the
+  view whose changed focus, and the second argument is true if it gained
+  the focus.}
+
+ @item{@rhombus(super_activate): Call when the view's enclosing
+  window has become the active window for keyboard focus or lost that
+  status. The callback argument is true when the window became the active
+  window.}
+
+ @item{@rhombus(super_enable): Called when the enable state of the
+  view or an enclosing view changes. The callback argument indicates the
+  new enable state}
+
+ @item{@rhombus(super_show): Called when the visibility of the view
+  or an enclosing view changes. The callback argument is true when the
+  view becomes shown.}
+
+)
 
 }

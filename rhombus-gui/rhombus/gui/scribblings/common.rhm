@@ -1,6 +1,8 @@
-#lang rhombus/static
+#lang rhombus/static/and_meta
 
 import:
+  rhombus/runtime_path
+  pict
   meta_label:
     rhombus open
     rhombus/gui
@@ -17,3 +19,13 @@ export:
     draw
     all_from(rhombus/gui)
     all_from(lib("racket/gui/easy.rkt"))
+  gallery_file
+  gallery
+
+runtime_path.def gallery_dir: "gallery"
+
+fun gallery_file(name :: String):
+  gallery_dir +/ (name ++ ".png")
+
+fun gallery(name :: String) :~ pict.Pict:
+  pict.bitmap(gallery_file(name)).scale(0.5)

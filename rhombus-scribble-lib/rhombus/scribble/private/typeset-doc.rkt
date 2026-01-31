@@ -3,6 +3,7 @@
                      racket/keyword
                      racket/symbol
                      syntax/parse/pre
+                     rhombus/private/version-case
                      rhombus/private/enforest
                      enforest/name-parse
                      shrubbery/property
@@ -54,8 +55,10 @@
                   paragraph
                   element
                   index-element
+                  toc-target-element
                   toc-target2-element
                   target-element
+                  page-target-element
                   plain
                   style
                   table-cells
@@ -65,13 +68,12 @@
          (only-in scribble/tag
                   intern-taglet)
          (only-in scribble/private/manual-vars
-                  boxed-style)
+                  boxed-style
+                  add-background-label)
          (only-in scribble/private/manual-bind
                   annote-exporting-library
                   id-to-target-maker
                   with-exporting-libraries)
-         (only-in scribble/private/manual-vars
-                  add-background-label)
          "mod-path.rkt"
          "spacer-binding.rkt")
 
@@ -131,7 +133,8 @@
   (syntax-parse stx
     #:datum-literals (parens group brackets block)
     [(_ context
-        (parens (~alt (~optional (group #:literal (block (group literal-id ...) ...)))
+        (parens (~alt (~optional (group (~and whole-page #:page)))
+                      (~optional (group #:literal (block (group literal-id ...) ...)))
                       (~optional (group #:nonterminal_key (block nt-key-g)))
                       (~optional (group #:nonterminal (block
                                                        (group nt-id (block nt-id-key-g))
@@ -382,6 +385,11 @@
                            #t
                            #'redef?)
                      meta?
+                     #,(and (meta-if-version-at-least
+                             "9.1.0.3" ; assuming implies "scribble-lib" version 1.64
+                             (attribute whole-page)
+                             #f)
+                            (null? rev-mk-as-defs))
                      (quote-syntax #,def-id)
                      (quote-syntax #,extra-def-ids)
                      (quote #,raw-prefix-str)
@@ -549,7 +557,7 @@
    (lambda (use-stx)
      #`(parsed #:rhombus/expr (tt "...")))))
 
-(define (make-def-id redef? meta? id extra-ids prefix-str str-id index-str-in kind-str space extra-spaces
+(define (make-def-id redef? meta? whole-page? id extra-ids prefix-str str-id index-str-in kind-str space extra-spaces
                      nonterm-sym immed-space sort-order spacer-infos)
   (define str-id-e (syntax-e str-id))
   (cond
@@ -644,15 +652,15 @@
           (target-maker content
                         (lambda (tag)
                           (define e
-                            (if (or nonterm-sym
-                                    (idx . > . 0))
-                                (begin
-                                  (target-element
-                                   #f
-                                   content
-                                   tag))
-                                (toc-target2-element
-                                 #f
+                            (cond
+                              [(or nonterm-sym
+                                   (idx . > . 0))
+                               (target-element
+                                #f
+                                content
+                                tag)]
+                              [else
+                               (define target-content
                                  (index-element
                                   #f
                                   content
@@ -668,9 +676,17 @@
                                                        'display-from-libs (map module-path->rhombus-module-path libs))])
                                          (if prefix-str
                                              (hash-set ht 'long-key (string-foldcase (content->string content)))
-                                             ht))))))
-                                 tag
-                                 ref-content/no-prefix)))
+                                             ht)))))))
+                               (if whole-page?
+                                   (page-target-element
+                                    #f
+                                    target-content
+                                    tag)
+                                   (toc-target2-element
+                                    #f
+                                    target-content
+                                    tag
+                                    ref-content/no-prefix))]))
                           (cond
                             [spacer-infos/resolved
                              (part-relative-element

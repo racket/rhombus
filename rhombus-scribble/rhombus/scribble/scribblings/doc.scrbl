@@ -87,6 +87,7 @@
       ...
   | ~meta
   | ~also_meta
+  | ~page
   grammar nt_key_ref
   | $op_or_id_name
   | $op_or_id_name $nonterm_id
@@ -198,7 +199,10 @@
   provided @rhombus(meta, ~expo), while @rhombus(~also_meta) indicates
   that the documented bindings are provided both normally and
   @rhombus(meta, ~expo). At most one of @rhombus(~meta) and
-  @rhombus(~also_meta) can be used. }
+  @rhombus(~also_meta) can be used.}
+
+ @item{A @rhombus(~page) form indicates that cross-reference links to
+  the documented binding should go to the top of the enclosing page.}
 
 )
 

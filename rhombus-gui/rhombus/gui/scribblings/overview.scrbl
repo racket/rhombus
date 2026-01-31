@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
+    "screenshot.rhm" open
     rhombus/meta open
     rhombus/runtime_path
     pict
@@ -16,31 +17,6 @@
 @(runtime_path.def example5_png: "example5.png")
 @(runtime_path.def example6_png: "example6.png")
 @(runtime_path.def example7_png: "example7.png")
-
-@(fun refade(p :: pict.Pict):
-    let w = p.width
-    let h = p.height
-    def fade:
-      pict.dc(~width: w,
-              ~height: h,
-              fun (dc :: draw.DC, x, y):
-                dc.brush := draw.Brush(~gradient:
-                                         draw.LinearGradient([x, y],
-                                                             [x, y+h],
-                                                             [[0, draw.Color(255, 255, 255, 0.0)],
-                                                              [0.8, draw.Color(255, 255, 255, 0.0)],
-                                                              [1.0, draw.Color(255, 255, 255, 1.0)]]))
-                dc.pen := draw.Pen.none
-                dc.rectangle([[x - 10, y - 10], [w + 20, h + 20]]))
-    pict.overlay(p.clip(), fade))
-
-@(fun
-  | steps(p): p
-  | steps(a, b): pict.beside(a, radial.arrow(~length: 32, ~fill: "forestgreen"), b))
-
-@(fun screenshot(path, ...):
-    @centered(steps(refade(pict.bitmap(path).pad(-30, ~bottom: -80).scale(0.5)),
-                    ...)))
 
 @title(~tag: "overview"){Overview}
 

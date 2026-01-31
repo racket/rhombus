@@ -1041,7 +1041,8 @@
      (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (cons "enumeration"
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
-               "value")))]))
+               "value")))]
+    [_ (list "enumeration")]))
 
 (define-for-syntax (enum-extract-space-names stx)
   (syntax-parse stx
@@ -1051,7 +1052,8 @@
      (with-syntax ([((sym ...) ...) (enum-extract-syms #'(rhs.clause ...))])
        (cons (list 'rhombus/annot)
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
-               (list #f 'rhombus/bind))))]))
+               (list #f 'rhombus/bind))))]
+    [_ (list (list 'rhombus/annot))]))
 
 (define-for-syntax (enum-extract-names stx space-name)
   (syntax-parse stx
@@ -1063,7 +1065,9 @@
              (for/list ([sym (in-list (syntax->list #'(sym ... ...)))])
                (syntax-parse (append (syntax->list #'id) (list #'(op |.|) sym))
                  [((~var sym (identifier-target #f #:raw (symbol->string (syntax-e sym)))))
-                  (attribute sym.name)]))))]))
+                  (attribute sym.name)]))))]
+    [(group _ (~var id (identifier-target space-name)))
+     (list (attribute id.name))]))
 
 (define-for-syntax (enum-extract-typeset stx space-namess substs)
   (syntax-parse stx
@@ -1103,7 +1107,10 @@
              [((alts-tag (block-tag . _) ...))
               (rb #:at stx
                   #`(group form #,@((car substs) (attribute id.name))
-                           (alts-tag (block-tag new-clause) ...)))]))))]))
+                           (alts-tag (block-tag new-clause) ...)))]))))]
+    [(group form (~var id (identifier-target (car space-namess))))
+     (rb #:at stx
+         #`(group form #,@((car substs) (attribute id.name))))]))
 
 (define-for-syntax (enum-extract-syms clauses)
   (for/list ([clause (in-list (syntax->list clauses))])

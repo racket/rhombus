@@ -6,9 +6,13 @@
 
 @local_table_of_contents()
 
-@section(~tag: "button"){Buttons}
+@// ------------------------------------------------------------
+@section(~tag: "button", ~style: [#'hidden]){@rhombus(Button)}
+
+@centered{@gallery("button")}
 
 @doc(
+  ~page
   class gui.Button():
     implements WindowChildView
     constructor (
@@ -55,9 +59,13 @@
 
 }
 
-@section(~tag: "checkbox"){Checkboxes}
+@// ------------------------------------------------------------
+@section(~tag: "checkbox", ~style: [#'hidden]){@rhombus(Checkbox)}
+
+@centered{@gallery("checkbox")}
 
 @doc(
+  ~page
   class gui.Checkbox():
     implements WindowChildView
     constructor (
@@ -86,9 +94,13 @@
 
 }
 
-@section(~tag: "choice"){Choices and Lists}
+@// ------------------------------------------------------------
+@section(~tag: "choice", ~style: [#'hidden]){@rhombus(Choice)}
+
+@centered{@gallery("choice")}
 
 @doc(
+  ~page
   class gui.Choice():
     implements WindowChildView
     constructor (
@@ -131,6 +143,22 @@
 }
 
 @doc(
+  enum gui.Choice.Style
+  | horizontal_label
+  | vertical_label
+){
+
+ A choice control style option.
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "radio-choice", ~style: [#'hidden]){@rhombus(RadioChoice)}
+
+@centered{@gallery("radio-choice")}
+
+@doc(
+  ~page
   class gui.RadioChoice():
     implements WindowChildView
     constructor (
@@ -161,6 +189,24 @@
 }
 
 @doc(
+  enum gui.RadioChoice.Style
+  | vertical
+  | horizontal
+  | horizontal_label
+  | vertical_label
+){
+
+ A @rhombus(RadioChoice, ~class) control style option.
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "list-choice", ~style: [#'hidden]){@rhombus(ListChoice)}
+
+@centered{@gallery("list-choice")}
+
+@doc(
+  ~page
   class gui.ListChoice():
     implements WindowChildView
     constructor (
@@ -189,29 +235,6 @@
 }
 
 @doc(
-  enum gui.Choice.Style
-  | horizontal_label
-  | vertical_label
-){
-
- A choice control style option.
-
-}
-
-
-@doc(
-  enum gui.RadioChoice.Style
-  | vertical
-  | horizontal
-  | horizontal_label
-  | vertical_label
-){
-
- A @rhombus(RadioChoice, ~class) control style option.
-
-}
-
-@doc(
   enum gui.ListChoice.StyleSymbol
   | horizontal_label
   | vertical_label
@@ -221,9 +244,13 @@
 
 }
 
-@section(~tag: "table"){Tables as Multicolumn Lists}
+@// ------------------------------------------------------------
+@section(~tag: "table", ~style: [#'hidden]){@rhombus(Table)}
+
+@centered{@gallery("table")}
 
 @doc(
+  ~page
   class gui.Table():
     implements WindowChildView
     constructor (
@@ -242,7 +269,7 @@
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
                         = [],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
@@ -314,9 +341,13 @@
 
 }
 
-@section(~tag: "slider"){Sliders}
+@// ------------------------------------------------------------
+@section(~tag: "slider", ~style: [#'hidden]){@rhombus(Slider)}
+
+@centered{@gallery("slider")}
 
 @doc(
+  ~page
   class gui.Slider():
     implements WindowChildView
     constructor (
@@ -352,9 +383,10 @@
 }
 
 @doc(
-  enum gui.Progress.Style
+  enum gui.Slider.Style
   | horizontal
   | vertical
+  | plain
   | horizontal_label
   | vertical_label
 ){
@@ -363,9 +395,13 @@
 
 }
 
-@section(~tag: "progress"){Progress Gauges}
+@// ------------------------------------------------------------
+@section(~tag: "progress", ~style: [#'hidden]){@rhombus(Progress)}
+
+@centered{@gallery("progress")}
 
 @doc(
+  ~page
   class gui.Progress():
     implements WindowChildView
     constructor (
@@ -395,25 +431,27 @@
 
 }
 
-
-
-
 @doc(
-  enum gui.Slider.Style
+  enum gui.Progress.Style
   | horizontal
   | vertical
-  | plain
   | horizontal_label
   | vertical_label
 ){
 
- A slider style option.
+ A progress-gauge style option.
 
 }
 
-@section(~tag: "input"){Text Input}
+@// ------------------------------------------------------------
+@section(~tag: "input", ~style: [#'hidden]){@rhombus(Input)}
+
+@centered{@(gallery("input").pad(~top: -1).clip())
+          @hspace(1)
+          @(gallery("choice-input"))}
 
 @doc(
+  ~page
   class gui.Input():
     implements WindowChildView
     constructor (
@@ -493,9 +531,13 @@
 
 }
 
-@section(~tag: "label"){Labels and Images}
+@// ------------------------------------------------------------
+@section(~tag: "label", ~style: [#'hidden]){@rhombus(Label)}
+
+@centered{@gallery("label")}
 
 @doc(
+  ~page
   class gui.Label():
     implements WindowChildView
     constructor (
@@ -521,7 +563,13 @@
 }
 
 
+@// ------------------------------------------------------------
+@section(~tag: "image", ~style: [#'hidden]){@rhombus(Image)}
+
+@centered{@gallery("image")}
+
 @doc(
+  ~page
   class gui.Image():
     implements WindowChildView
     constructor (
@@ -560,9 +608,11 @@
 
 }
 
-@section(~tag: "spacer"){Spacer}
+@// ------------------------------------------------------------
+@section(~tag: "spacer", ~style: [#'hidden]){@rhombus(Spacer)}
 
 @doc(
+  ~page
   class gui.Spacer():
     implements WindowChildView
     constructor (

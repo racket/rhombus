@@ -4,9 +4,17 @@
 
 @(def draw_DC = @rhombus(draw.DC, ~annot))
 
-@title{Canvases}
+@title(~tag: "all-canvas", ~style: #'toc){Canvases}
+
+@local_table_of_contents()
+
+@// ------------------------------------------------------------
+@section(~tag: "canvas", ~style: [#'hidden]){@rhombus(Canvas)}
+
+@centered(@(gallery("canvas")))
 
 @doc(
+  ~page
   class gui.Canvas():
     implements WindowChildView
     constructor (
@@ -55,6 +63,30 @@
 }
 
 @doc(
+  enum gui.Canvas.Style
+  | control_border
+  | combo
+  | vscroll
+  | hscroll
+  | resize_corner
+  | gl
+  | no_autoclear
+  | transparent
+  | no_focus
+  | deleted
+){
+
+ A canvas style symbol.
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "editor-canvas", ~style: [#'hidden]){@rhombus(EditorCanvas)}
+
+@centered(@(gallery("editor-canvas")))
+
+@doc(
+  ~page
   class gui.EditorCanvas():
     implements WindowChildView
     constructor (
@@ -79,24 +111,6 @@
  Creates a canvas view to hold an editor. An editor is implemented as an
  instance of @rhombus(EditorCanvasChild, ~class) by libraries that
  cooperate with the @rhombusmodname(gui) library.
-
-}
-
-@doc(
-  enum gui.Canvas.Style
-  | control_border
-  | combo
-  | vscroll
-  | hscroll
-  | resize_corner
-  | gl
-  | no_autoclear
-  | transparent
-  | no_focus
-  | deleted
-){
-
- A canvas style symbol.
 
 }
 

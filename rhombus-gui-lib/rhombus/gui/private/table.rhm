@@ -36,7 +36,7 @@ class Table(private _at_selection :: Obs):
                ~font : font :: Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
                                  = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):

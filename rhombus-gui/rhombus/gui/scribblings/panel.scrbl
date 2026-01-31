@@ -2,9 +2,17 @@
 @(import:
     "common.rhm" open)
 
-@title(~tag: "panels"){Panels and Tabs}
+@title(~tag: "panels", ~style: #'toc){Panels}
+
+@local_table_of_contents()
+
+@// ------------------------------------------------------------
+@section(~tag: "hpanel", ~style: [#'hidden]){@rhombus(HPanel)}
+
+@centered{@gallery("hpanel")}
 
 @doc(
+  ~page
   class gui.HPanel():
     implements WindowChildView
     constructor (
@@ -16,8 +24,37 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View), ...
+      child :: ObsOrValue.of(View),
+      ...
     )
+){
+
+ Creates a panel that arranges @rhombus(child) views horizontally.
+
+}
+
+@doc(
+  enum gui.HPanel.Style
+  | border
+  | vscroll
+  | hscroll
+  | auto_vscroll
+  | auto_hscroll
+  | hide_vscroll
+  | hide_hscroll
+){
+
+ A panel style option (the same for horizontal and vertical panels).
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "vpanel", ~style: [#'hidden]){@rhombus(VPanel)}
+
+@centered{@gallery("vpanel")}
+
+@doc(
+  ~page
   class gui.VPanel():
     implements WindowChildView
     constructor (
@@ -29,16 +66,37 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View), ...
+      child :: ObsOrValue.of(View),
+      ...
     )
 ){
 
- Creates a panel that arranges the @rhombus(child) views horizontally or
- vertically, respectively.
+ Creates a panel that arranges @rhombus(child) views vertically.
 
 }
 
 @doc(
+  enum gui.VPanel.Style
+  | border
+  | vscroll
+  | hscroll
+  | auto_vscroll
+  | auto_hscroll
+  | hide_vscroll
+  | hide_hscroll
+){
+
+ A panel style option (the same for horizontal and vertical panels).
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "group-panel", ~style: [#'hidden]){@rhombus(GroupPanel)}
+
+@centered{@gallery("group-panel")}
+
+@doc(
+  ~page
   class gui.GroupPanel():
     implements WindowChildView
     constructor (
@@ -51,7 +109,8 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View), ...
+      child :: ObsOrValue.of(View),
+      ...
     )
 ){
 
@@ -60,6 +119,20 @@
 }
 
 @doc(
+  enum gui.GroupPanel.Style
+){
+
+ A group panel style option No options are supported, currently.
+
+}
+
+@// ------------------------------------------------------------
+@section(~tag: "tabs-panel", ~style: [#'hidden]){@rhombus(TabsPanel)}
+
+@centered{@gallery("tabs-panel") @hspace(1) @(gallery("tabs-panel-no-border").pad(~bottom: 4).drop_baseline(4))}
+
+@doc(
+  ~page
   class gui.TabsPanel():
     implements WindowChildView
     constructor (
@@ -76,7 +149,8 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View), ...
+      child :: ObsOrValue.of(View),
+      ...
     )
 
   property (tabs :: gui.TabsPanel).at_selection :: Obs
@@ -114,46 +188,8 @@
 
 }
 
-
-@doc(
-  enum gui.HPanel.Style
-  | deleted
-  | border
-  | vscroll
-  | hscroll
-  | auto_vscroll
-  | auto_hscroll
-  | hide_vscroll
-  | hide_hscroll
-
-  enum gui.VPanel.Style
-  | deleted
-  | border
-  | vscroll
-  | hscroll
-  | auto_vscroll
-  | auto_hscroll
-  | hide_vscroll
-  | hide_hscroll
-){
-
- A panel style option (the same for horizontal and vertical panels).
-
-}
-
-@doc(
-  enum gui.GroupPanel.Style
-  | deleted
-){
-
- A group panel style option.
-
-}
-
-
 @doc(
   enum gui.TabsPanel.Style
-  | deleted
   | no_border
   | can_reorder
   | can_close

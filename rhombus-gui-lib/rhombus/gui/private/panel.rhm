@@ -25,7 +25,6 @@ export:
   TabsPanel
 
 symbol_map_annot PanelStyle convert_style
-| deleted
 | border
 | vscroll
 | hscroll

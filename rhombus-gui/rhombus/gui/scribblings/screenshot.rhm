@@ -1,0 +1,43 @@
+#lang rhombus
+import:
+  pict
+  pict/radial
+  draw
+  rhombus/scribble.centered
+
+export:
+  screenshot
+  screenshot_content
+  window_trim
+  refade
+
+fun refade(p :: pict.Pict):
+  let w = p.width
+  let h = p.height
+  def fade:
+    pict.dc(~width: w,
+            ~height: h,
+            fun (dc :: draw.DC, x, y):
+              dc.brush := draw.Brush(~gradient:
+                                       draw.LinearGradient([x, y],
+                                                           [x, y+h],
+                                                           [[0, draw.Color(255, 255, 255, 0.0)],
+                                                            [0.8, draw.Color(255, 255, 255, 0.0)],
+                                                            [1.0, draw.Color(255, 255, 255, 1.0)]]))
+              dc.pen := draw.Pen.none
+              dc.rectangle([[x - 10, y - 10], [w + 20, h + 20]]))
+  pict.overlay(p.clip(), fade)
+
+fun
+| steps(p): p
+| steps(a, b): pict.beside(a, radial.arrow(~length: 32, ~fill: "forestgreen"), b)
+
+fun window_trim(p :: pict.Pict) :~ pict.Pict:
+  p.pad(-30, ~bottom: -80)
+
+fun screenshot_content(path, ...):
+  steps(refade(window_trim(pict.bitmap(path)).scale(0.5)),
+        ...)
+
+fun screenshot(path, ...):
+  centered(screenshot_content(path, ...))

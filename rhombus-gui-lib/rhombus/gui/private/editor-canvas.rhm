@@ -25,6 +25,7 @@ module private:
 
 interface EditorCanvasChild:
   implementable EditorCanvasChildI
+  property handle
 
 class EditorCanvas():
   extends BaseWindowView
@@ -44,7 +45,7 @@ class EditorCanvas():
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)
-        super(easy.#{editor-canvas}(obs.unwrap(editor),
+        super(easy.#{editor-canvas}(obs.unwrap_convert(editor, EditorCanvasChild.handle),
                                     ~label: obs.unwrap(label),
                                     ~#{enabled?}: obs.unwrap(is_enabled),
                                     ~style: obs.unwrap_list(style, convert_style),

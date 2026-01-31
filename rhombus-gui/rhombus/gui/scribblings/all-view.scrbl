@@ -4,6 +4,7 @@
 
 @local_table_of_contents()
 
+@include_section("gallery.scrbl")
 @include_section("view.scrbl")
 @include_section("all-window-view.scrbl")
 @include_section("menu.scrbl")
