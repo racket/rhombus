@@ -36,7 +36,7 @@
   class gui.MenuBar():
     implements View
     constructor (
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       item :: ObsOrValue.of(Menu),
       ...
     )
@@ -58,7 +58,7 @@
     implements MenuChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       item :: ObsOrValue.of(MenuChildView),
       ...
@@ -111,7 +111,7 @@
     constructor (
      label :: ObsOrValue.of(View.LabelString),
      ~action: action :: Boolean -> ~any = values,
-     ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+     ~enable: enable :: ObsOrValue.of(Boolean) = #true,
      ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
      ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut))
                   = #false
@@ -177,7 +177,7 @@
      label :: ObsOrValue.of(View.LabelString),
      ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
      ~action: action :: () -> ~any = values,
-     ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+     ~enable: enable :: ObsOrValue.of(Boolean) = #true,
      ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
      ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut))
                   = #false

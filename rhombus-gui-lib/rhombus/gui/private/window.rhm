@@ -30,11 +30,11 @@ class Window():
 
   constructor (~title: title :: ObsOrValue.of(String) = "Untitled",
                ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+               ~align: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
                ~position: position :: ObsOrValue.of(View.Position) = #'center,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
                ~menu_bar: menu_bar :: maybe(ObsOrValue.of(MenuBar)) = #false,
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
@@ -51,7 +51,7 @@ class Window():
                           ~style: obs.unwrap_list(style, convert_style),
                           ~mixin: fun (cls):
                                     mixin(add_window_child_callbacks(
-                                            add_window_callbacks(cls, obs.unwrap(is_enabled)),
+                                            add_window_callbacks(cls, obs.unwrap(enable)),
                                             wcb
                                           )),
                           & (if menu_bar | [to_view(menu_bar).handle] | []),
@@ -65,11 +65,9 @@ class Window():
 
   symbol_map_annot Style convert_style
   | no_resize_border = #{no-resize-border}
-  | no_caption = #{no-caption}
+  | no_title = #{no-caption}
   | no_system_menu = #{no-system-menu}
   | hide_menu_bar = #{hide-menu-bar}
-  | toolbar_button = #{toolbar-button}
   | float
-  | metal
   | fullscreen_button = #{fullscreen-button}
   | fullscreen_aux = #{fullscreen-aux}

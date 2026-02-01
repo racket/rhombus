@@ -16,9 +16,9 @@
   class gui.HPanel():
     implements WindowChildView
     constructor (
-      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~styles: styles :: ObsOrValue.of(List.of(HPanel.Style)) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -44,7 +44,37 @@
   | hide_hscroll
 ){
 
- A panel style option (the same for horizontal and vertical panels).
+ A panel style option (the same for horizontal and vertical panels):
+
+@itemlist(
+
+  @item{@rhombus(#'border): Draw a thin border around the panel (in
+  which case the client size of the panel may be less than its total
+  size).}
+
+  @item{@rhombus(#'hscroll): The panel includes a horizontal scrollbar,
+  and the panel’s own width is not constrained by the widths of its
+  children.}
+
+  @item{@rhombus(#'vscroll): The panel includes a vertical scrollbar,
+  and the panel’s own height is not constrained by the heights of its
+  children.}
+
+  @item{@rhombus(#'auto_hscroll): Like @rhombus(#'hscroll), but the
+  horizontal scrollbar disappears when no horizontal scrolling is needed.}
+
+  @item{@rhombus(#'auto_vscroll): Like @rhombus(#'vscroll), but the
+  horizontal scrollbar disappears when no horizontal scrolling is needed.}
+
+  @item{@rhombus(#'hide_hscroll): Like @rhombus(#'auto_hscroll), but the
+  horizontal scrollbar is not made visible, even when horizontal scrolling
+  is possible.}
+
+  @item{@rhombus(#'hide_vscroll): Like @rhombus(#'auto_vscroll), but the
+  vertical scrollbar is not made visible, even when vertical scrolling is
+  possible.}
+
+)
 
 }
 
@@ -58,9 +88,9 @@
   class gui.VPanel():
     implements WindowChildView
     constructor (
-      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~styles: styles :: ObsOrValue.of(List.of(VPanel.Style)) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -86,7 +116,7 @@
   | hide_hscroll
 ){
 
- A panel style option (the same for horizontal and vertical panels).
+ A panel style option; see @rhombus(gui.HPanel.Style, ~annot).
 
 }
 
@@ -101,9 +131,9 @@
     implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
-      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~styles: styles :: ObsOrValue.of(List.of(GroupPanel.Style)) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -122,7 +152,7 @@
   enum gui.GroupPanel.Style
 ){
 
- A group panel style option No options are supported, currently.
+ A group panel style option. No options are supported, currently.
 
 }
 
@@ -141,9 +171,9 @@
       ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> ~any = values,
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
-      ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~styles: styles :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -199,6 +229,28 @@
 ){
 
  A tab panel style option.
+
+@itemlist(
+
+  @item{@rhombus(#'no_border): No border is drawn around the panel
+  content. A borderless tab panel typically has a different look for its
+  tabs, too.}
+
+  @item{@rhombus(#'can_reorder): Allows the user to reorder tabs by
+  dragging them.}
+
+  @item{@rhombus(#'can_close): Allows the user to close tabs by clicking
+  a close icon on a tab.}
+
+  @item{@rhombus(#'new_button): Include a button to create a new tab, if
+  supported. A tab-creation button is always available with
+  @rhombus(#'flat_portable).}
+
+  @item{@rhombus(#'flat_portable): Use a platform-independent
+  implementation of the tab control, which provides more consistent
+  functionality and style across platforms.}
+
+)
 
 }
 

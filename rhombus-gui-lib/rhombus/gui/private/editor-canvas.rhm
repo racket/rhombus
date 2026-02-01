@@ -32,7 +32,7 @@ class EditorCanvas():
 
   constructor (editor :: ObsOrValue.of(maybe(EditorCanvasChild)),
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
                ~scrolls_per_page: scrolls_per_page :: Int.in(1..=10000) = 100,
                ~wheel_step: wheel_step :: ObsOrValue.of(maybe(Int.in(1..=10000))) = #false,
@@ -47,7 +47,7 @@ class EditorCanvas():
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.#{editor-canvas}(obs.unwrap_convert(editor, EditorCanvasChild.handle),
                                     ~label: obs.unwrap(label),
-                                    ~#{enabled?}: obs.unwrap(is_enabled),
+                                    ~#{enabled?}: obs.unwrap(enable),
                                     ~style: obs.unwrap_list(style, convert_style),
                                     ~#{scrolls-per-page}: scrolls_per_page,
                                     ~#{wheel-step}: obs.unwrap(wheel_step),
@@ -64,7 +64,7 @@ class EditorCanvas():
 
   symbol_map_annot Style convert_style
   | no_boder = #{no-border}
-  | combo
+  | choice = combo
   | no_hscroll = #{no-hscroll}
   | auto_hscroll = #{auto-hscroll}
   | hide_hscroll = #{hide-hscroll}
@@ -74,4 +74,3 @@ class EditorCanvas():
   | resize_corner = #{resize-corner}
   | transparent
   | no_focus = #{no-focus}
-  | deleted

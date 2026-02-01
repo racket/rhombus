@@ -24,7 +24,7 @@ class Button():
                                             View.LabelString,
                                             Button.LabelPosition]),
                ~action: action :: () -> ~any = values,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: List.of(Button.Style) = [],
                ~font : font :: draw.Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
@@ -36,7 +36,7 @@ class Button():
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                           action,
-                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~#{enabled?}: obs.unwrap(enable),
                           ~style: obs.unwrap_list(style, convert_style),
                           ~font: font.handle,
                           ~margin: obs.unwrap_list(margin, values),
@@ -51,7 +51,7 @@ class Button():
     LabelPosition
 
   symbol_map_annot Style convert_style
-  | border
+  | default = border
   | multi_line = #{multi-line}
 
   symbol_map_annot LabelPosition convert_label_pos

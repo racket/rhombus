@@ -23,7 +23,7 @@
       ~mouse: mouse :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
       ~key: key :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = "canvas",
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Canvas.Style)) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -64,8 +64,9 @@
 
 @doc(
   enum gui.Canvas.Style
+  | border
   | control_border
-  | combo
+  | choice
   | vscroll
   | hscroll
   | resize_corner
@@ -73,10 +74,46 @@
   | no_autoclear
   | transparent
   | no_focus
-  | deleted
 ){
 
- A canvas style symbol.
+ A canvas style symbol:
+
+@itemlist(
+
+  @item{@rhombus(#'border): Gives the canvas a thin border.}
+
+  @item{@rhombus(#'control_border): Gives the canvas a thick border like
+  @rhombus(EditorCanvas).}
+
+  @item{@rhombus(#'choice): Gives the canvas a popup button that is like
+  an @rhombus(Input) with a @rhombus(~choices) list. This style is
+  intended for use with @rhombus(#'control_border) and not with
+  @rhombus(#'hscroll) or @rhombus(#'vscroll).}
+
+  @item{@rhombus(#'hscroll): Enables horizontal scrolling (initially
+  visible, but inactive).}
+
+  @item{@rhombus(#'vscroll): Enables vertical scrolling (initially
+  visible, but inactive).}
+
+  @item{@rhombus(#'resize_corner): Leaves room for a resize control at
+  the canvas’s bottom right when only one scrollbar is visible.}
+
+  @item{@rhombus(#'gl): Creates a canvas for OpenGL drawing instead of
+  (or in addition to) normal @rhombus(draw.DC, ~class) drawing. This style
+  is usually combined with @rhombus(#'no_autoclear).}
+
+  @item{@rhombus(#'no_autoclear): Prevents automatic erasing of the
+  canvas by the windowing system.}
+
+  @item{@rhombus(#'transparent): The canvas is ``erased'' by the
+  windowing system by letting its parent show through.}
+
+  @item{@rhombus(#'no_focus): Prevents the canvas from accepting the
+  keyboard focus when the canvas is clicked or when the
+  @rhombus(WindowChildView.focus) method is called.}
+
+)
 
 }
 
@@ -92,7 +129,7 @@
     constructor (
       editor :: ObsOrValue.of(maybe(EditorCanvasChild)),
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~styles: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
       ~scrolls_per_page: scrolls_per_page :: Int.in(1..=10000) = 100,
       ~wheel_step: wheel_step :: ObsOrValue.of(maybe(Int.in(1..=10000))) = #false,
@@ -117,7 +154,7 @@
 @doc(
   enum gui.EditorCanvas.Style
   | no_boder
-  | combo
+  | choice
   | no_hscroll
   | auto_hscroll
   | hide_hscroll
@@ -127,9 +164,47 @@
   | resize_corner
   | transparent
   | no_focus
-  | deleted
 ){
 
- An editor canvas style symbol.
+ An editor canvas style symbol:
+
+@itemlist(
+
+  @item{@rhombus(#'no_border): Omits a border around the editor canvas.}
+
+  @item{@rhombus(#'choice): Gives the editor canvas a popup button that
+  is like an @rhombus(Input) with a @rhombus(~choices) list.}
+
+  @item{@rhombus(#'no_hscroll): Disables horizontal scrolling and hides
+  the horizontal scrollbar.}
+
+  @item{@rhombus(#'auto_hscroll): Automatically hides the horizontal
+  scrollbar when unneeded (unless @rhombus(#'no_hscroll) or
+  @rhombus(#'hide_hscroll) is also specified).}
+
+  @item{@rhombus(#'hide_hscroll): Allows horizontal scrolling, but hides
+  the horizontal scrollbar.}
+
+  @item{@rhombus(#'no_vscroll): Disables vertical scrolling and hides
+  the vertical scrollbar.}
+
+  @item{@rhombus(#'auto_vscroll): Automatically hides the vertical
+  scrollbar when unneeded (unless @rhombus(#'no_vscroll) or
+  @rhombus(#'hide_vscroll) is also specified).}
+
+  @item{@rhombus(#'hide_vscroll): Allows vertical scrolling, but hides
+  the vertical scrollbar.}
+
+  @item{@rhombus(#'resize_corner): Leaves room for a resize control at
+  the editor canvas’s bottom right when only one scrollbar is visible.}
+
+  @item{@rhombus(#'transparent): The editor canvas is ``erased'' by the
+  windowing system by letting its parent show through.}
+
+  @item{@rhombus(#'no_focus): Prevents the editor canvas from accepting
+  the keyboard focus when the canvas is clicked or when the
+  @rhombus(WindowChildView.focus) method is called.}
+
+)
 
 }

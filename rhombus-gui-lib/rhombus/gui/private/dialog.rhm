@@ -30,11 +30,11 @@ class Dialog():
 
   constructor (~title: title :: ObsOrValue.of(String) = "Untitled",
                ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~alignment: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
+               ~align: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
                ~position: position :: ObsOrValue.of(View.Position) = #'center,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(WindowChildView),
@@ -50,7 +50,7 @@ class Dialog():
                           ~stretch: obs.unwrap_list(stretch, values),
                           ~style: obs.unwrap_list(style, convert_style),
                           ~mixin: fun (cls):
-                                    mixin(add_window_callbacks(cls, is_enabled)),
+                                    mixin(add_window_callbacks(cls, enable)),
                           to_view(child).handle,
                           ...))
           <| ()

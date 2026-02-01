@@ -161,7 +161,7 @@ let name = gui.Obs("Smiley")
 
 def name_input:
   gui.Input(name.value,
-            ~label: "Name",
+            ~label: "Name:",
             ~choices: ["Smiley", "Frowny"],
             ~action: fun (action, str):
                        name.value := str)
@@ -215,7 +215,7 @@ def format_dialog = gui.Dialog(~title: "Position",
                                             ~action: fun ():
                                                        name_pos.value := next_name_pos.value
                                                        format_dialog.show(#false),
-                                            ~styles: [#'border]),
+                                            ~styles: [#'default]),
                                  gui.Button("Cancel",
                                             ~action: fun ():
                                                        next_name_pos.value := name_pos.value
@@ -348,7 +348,7 @@ def summary_win = gui.Window(
 
 def win = gui.Window(top_panel,
                      tabs,
-                     ~is_enabled: enabled,
+                     ~enable: enabled,
                      ~menu_bar: menu_bar,
                      ~size: [800, 600])
 def renderer = win.render()

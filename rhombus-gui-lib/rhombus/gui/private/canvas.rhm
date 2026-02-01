@@ -37,7 +37,7 @@ class Canvas():
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~key: on_key :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
                ~mouse: on_mouse :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
@@ -56,7 +56,7 @@ class Canvas():
                                             dc)
                             draw(dc, data),
                           ~label: obs.unwrap(label),
-                          ~#{enabled?}: obs.unwrap(is_enabled),
+                          ~#{enabled?}: obs.unwrap(enable),
                           ~style: obs.unwrap_list(style, convert_style),
                           ~margin: obs.unwrap_list(margin, values),
                           ~#{min-size}: obs.unwrap_list(min_size, values),
@@ -76,7 +76,7 @@ class Canvas():
   symbol_map_annot Style convert_style
   | border
   | control_border = #{control-border}
-  | combo
+  | choice = combo
   | vscroll
   | hscroll
   | resize_corner = #{resize-corner}
@@ -84,7 +84,6 @@ class Canvas():
   | no_autoclear = #{no-autoclear}
   | transparent
   | no_focus = #{no-focus}
-  | deleted
 
 interface CanvasContext:
   property client_size :~ draw.Size

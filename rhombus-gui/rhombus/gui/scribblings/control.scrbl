@@ -22,7 +22,7 @@
                                    View.LabelString,
                                    Button.LabelPosition]),
       ~action: action :: () -> ~any = fun (): #void,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: List.of(Button.Style) = [],
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
@@ -39,11 +39,21 @@
 
 @doc(
   enum gui.Button.Style
-  | border
+  | default
   | multi_line
 ){
 
- A button style option.
+ A button style option:
+
+@itemlist(
+
+ @item{@rhombus(#'default): The button is the default action,
+  especially in a @rhombus(Dialog, ~class) where the Return key
+  automatically has the effect of clicking a default button.}
+
+ @item{@rhombus(#'multi_line): Newline characters in the button's label
+  can create a line break in the button's label.}
+)
 
 }
 
@@ -72,7 +82,8 @@
       label :: ObsOrValue.of(View.LabelString),
       ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
       ~action: action :: Boolean -> ~any = values,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~styles: styles :: List.of(Checkbox.Style) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
@@ -94,6 +105,14 @@
 
 }
 
+@doc(
+  enum gui.Checkbox.Style
+){
+
+ A checkbox style option. No options are supported, currently.
+
+}
+
 @// ------------------------------------------------------------
 @section(~tag: "choice", ~style: [#'hidden]){@rhombus(Choice)}
 
@@ -111,7 +130,7 @@
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: List.of(Choice.Style) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
@@ -148,7 +167,20 @@
   | vertical_label
 ){
 
- A choice control style option.
+ A choice control style option:
+
+@itemlist(
+
+ @item{@rhombus(#'horizontal_label): When the choice control has a
+  label, show it to the left of the control. Horizontal label placement is
+  the default if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+ @item{@rhombus(#'vertical_label): When the choice control has a
+  label, show it above the control.}
+
+)
 
 }
 
@@ -169,7 +201,7 @@
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: List.of(RadioChoice.Style) = [#'vertical],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
@@ -196,7 +228,28 @@
   | vertical_label
 ){
 
- A @rhombus(RadioChoice, ~class) control style option.
+ A radio choice style option:
+
+@itemlist(
+
+ @item{@rhombus(#'vertical): Arrange radio-button choices vertically.
+  Vertical arrangement is the default if @rhombus(#'horzontal) is not
+  specified, and @rhombus(#'vertical) and
+  @rhombus(#'horizontal) are mutually exclusive.}
+
+ @item{@rhombus(#'horizontal): Arrange radio-button choices
+  horizontally.}
+
+ @item{@rhombus(#'horizontal_label): When the radio-choice control has a
+  label, show it to the left of the control. Horizontal label placement is
+  the default if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+ @item{@rhombus(#'vertical_label): When the radio-choice control has a
+  label, show it above the control.}
+
+)
 
 }
 
@@ -217,7 +270,7 @@
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~styles: styles :: List.of(ListChoice.StyleSymbol) = [],
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
@@ -240,7 +293,21 @@
   | vertical_label
 ){
 
- A @rhombus(ListChoice, ~class) control style option.
+ A list choice style option:
+
+@itemlist(
+
+  @item{@rhombus(#'horizontal_label): When the list-choice control has a
+  label, show it to the left of the control. Horizontal label placement is
+  the default if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+  @item{@rhombus(#'vertical_label): When the list-choice control has a
+  label, show it above the control.}
+
+)
+
 
 }
 
@@ -254,7 +321,7 @@
   class gui.Table():
     implements WindowChildView
     constructor (
-      columns :: List.of(View.LabelString),
+      columns :: maybe(List.of(View.LabelString)),
       choices :: ObsOrValue.of(Array),
       ~action: action :: (Table.Event, Array, Table.Selection) -> ~any
                  = values,
@@ -262,7 +329,7 @@
                         = values,
       ~selection: selection :: ObsOrValue.of(Table.Selection) = #false,
       ~label: label :: ObsOrValue.of(View.LabelString) = "",
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~style: style :: List.of(Table.StyleSymbol)
                 = [#'single, #'column_headers,
                    #'clickable_headers, #'reorderable_headers],
@@ -306,15 +373,64 @@
   | single
   | multiple
   | extended
-  | variable_columns
   | column_headers
   | clickable_headers
   | reorderable_headers
+  | variable_columns
   | horizontal_label
   | vertical_label
 ){
 
- A @rhombus(Table, ~class) control style option.
+ A table style option.
+
+@itemlist(
+
+  @item{@rhombus(#'single): Creates a table where at most one row can be
+  selected at a time. On some platforms, the user can deselect the (sole)
+  selected item. The @rhombus(#'single), @rhombus(#'multiple), and
+  @rhombus(#'extended) styles are mutually exclusive, and one of them must
+  be present.}
+
+  @item{@rhombus(#'multiple): Creates a multiple-selection table where a
+  single click deselects other rows and selects a new row. Use this
+  style for a table when single-selection is common, but multiple
+  selections are allowed.}
+
+  @item{@rhombus(#'extended): Creates a multiple-selection table where a
+  single click extends or contracts the selection by toggling the clicked
+  row. Use this style for a table when multiple selections are the rule
+  rather than the exception.
+
+  The @rhombus(#'multiple) and @rhombus(#'extended) styles determine a
+  platform-independent interpretation of unmodified mouse clicks, but
+  dragging, shift-clicking, control-clicking, etc. have platform-standard
+  interpretations. Whatever the platform-specific interface, the user can
+  always select disjoint sets of rows or deselect rows (and leave no items
+  selected).}
+
+  @item{@rhombus(#'column_headers): Shows the table column names.}
+
+  @item{@rhombus(#'clickable_headers): Allows the user to click a table
+  column, where clicks are handled by the table's @rhombus(~action)
+  callback.}
+
+  @item{@rhombus(#'reorderable_headers): Allows the user to reorder
+  table columns, where the table's @rhombus(~action) callback receives a
+  notification of reordering.}
+
+  @item{@rhombus(#'variable_columns): Allows new columns to be added
+  dynamically.}
+
+  @item{@rhombus(#'horizontal_label): When the table has a label, show
+  it to the left of the control. Horizontal label placement is the default
+  if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+  @item{@rhombus(#'vertical_label): When the table has a label, show it
+  above the control.}
+
+)
 
 }
 
@@ -328,7 +444,7 @@
  An event provided to the @rhombus(~action) callback function of an
  @rhombus(Table, ~class). A @rhombus(#'select) event reports a change in
  the selection, @rhombus(#'double_click) reports a double click, and
- @rhombus(#'column) indicates a chagne in column order.
+ @rhombus(#'column) indicates a change in column order.
 
 }
 
@@ -356,7 +472,7 @@
       ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
       ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
       ~action: action :: View.PositionInt -> ~any = values,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
@@ -408,7 +524,7 @@
       value :: ObsOrValue.of(View.SizeInt) = 0,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
       ~max_value: max_value :: ObsOrValue.of(View.PosSizeInt) = 100,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
@@ -460,7 +576,7 @@
       ~label: label :: ObsOrValue.of(View.LabelString) = "",
       ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString)))
                   = #false,
-      ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
       ~styles: styles :: List.of(Input.StyleSymbol) = [#'single],
       ~font : font :: draw.Font = View.normal_control_font,

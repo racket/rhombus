@@ -17,6 +17,7 @@
 @(runtime_path.def example5_png: "example5.png")
 @(runtime_path.def example6_png: "example6.png")
 @(runtime_path.def example7_png: "example7.png")
+@(runtime_path.def example8_png: "example8.png")
 
 @title(~tag: "overview"){Overview}
 
@@ -219,7 +220,7 @@ user add multiple greeters, we can make the child of a
                         fun ():
                           at_greeters.value
                             := at_greeters.value ++ [make_greeter()]),
-      ~alignment: [#'right, #'center],
+      ~align: [#'right, #'center],
       ~stretch: [#true, #false]
     )
   ).run()
@@ -344,3 +345,67 @@ at a time.
 )
 
 @screenshot(example7_png)
+
+@section(~tag: "geometry"){Geometry Management}
+
+The @rhombusmodname(gui) library's geometry management makes it easy to
+design windows that look right on all platforms, despite different
+graphical representations of GUI elements. Geometry management is based
+on containers, where each container arranges its children based on
+simple constraints, such as the current size of a window and the natural
+size of a button.
+
+Containers include horizontal panels via @rhombus(gui.HPanel), which
+align their children in a row, and vertical panels via
+@rhombus(gui.VPanel), which align their children in a column. A
+@rhombus(gui.Window) or @rhombus(gui.Dialog) is also a container that
+acts like a vertical panel. Each container's @deftech{alignment}
+determines whether it's content is aligned horizontally to the left,
+center, or right and whether it is aligned vertically to the top,
+center, or bottom. Finally, each container or contained item can be
+@deftech{stretchable} horizontally, vertically, or both; the
+stretchability of a window determines whether the user can resize it.
+Nesting horizontal and vertical containers, adjusting alignment, and
+adjusting stretchability can achieve most useful layouts.
+
+For example, suppose that we want a window that looks like this one,
+where the window can be made wider by the user to fit a longer
+name---and the buttons should stay centered in that case---but not made
+taller:
+
+@screenshot(example8_png)
+
+This layout can be implemented by putting the two buttons in a
+@rhombus(gui.HPanel) and by making the window itself stretchable only
+horizontally. The window would have a reasonable starting width by
+default, but let's opt to specify that the window should be at least 300
+pixels wide, leaving the height up to the natural sizes of the window
+content.
+
+@rhombusblock(
+  gui.Window(
+    ~title: "Get Name",
+    ~min_size: [300, #false],
+    ~stretch: [#true, #false],
+    gui.Input(~label: "Name:"),
+    gui.HPanel(gui.Button("Cancel"), gui.Button("Ok",
+                                                ~styles: [#'default]))
+  ).run()
+)
+
+As the example demonstrates, a stretchable container grows to fill its
+environment, and it distributes extra space among its stretchable
+children. If no children are stretchable, extra space is used before and
+after children. By default, panels are stretchable in both directions,
+whereas buttons are not stretchable in either direction, but the
+@rhombus(~stretch) argument to a constructor specifies a stretchability.
+The example also relies on @rhombus(#'center) as the default horizontal
+and vertical alignment, but the @rhombus(~stretch) argument to a
+constructor can specify a different alignment.
+
+Spacing between children of a container can be controlled by the
+@rhombus(~spacing) argument to a container constructor like
+@rhombus(gui.HPanel) or @rhombus(gui.VPanel), by the @rhombus(~margin)
+argument to a child constructor like @rhombus(gui.Button) or
+@rhombus(gui.Checkbox), or both. Use @rhombus(gui.Spacer) in a container
+as (potentially) stretchable space between other children.

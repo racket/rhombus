@@ -32,12 +32,12 @@ export:
 
 class MenuBar():
   extends BaseView
-  constructor (~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+  constructor (~enable: enable :: ObsOrValue.of(Boolean) = #true,
                item :: ObsOrValue.of(Menu),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mix):
-        super(easy.#{menu-bar}(~#{enabled?}: obs.unwrap(is_enabled),
+        super(easy.#{menu-bar}(~#{enabled?}: obs.unwrap(enable),
                                ~mixin: mix,
                                to_view(item).handle,
                                ...))
@@ -50,14 +50,14 @@ class Menu():
   extends BaseView
   implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                item :: ObsOrValue.of(MenuChildView),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mix):
         super(easy.#{menu}(obs.unwrap(label),
-                           ~#{enabled?}: obs.unwrap(is_enabled),
+                           ~#{enabled?}: obs.unwrap(enable),
                            ~help: obs.unwrap(help_text),
                            ~mixin: mix,
                            to_view(item).handle,
@@ -90,7 +90,7 @@ class MenuItem():
   implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: () -> ~any = values,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut)) = #false):
     #{view-help}.#{mix-wrap}(
@@ -99,7 +99,7 @@ class MenuItem():
                                 fun ():
                                   action()
                                   #void,
-                                ~#{enabled?}: obs.unwrap(is_enabled),
+                                ~#{enabled?}: obs.unwrap(enable),
                                 ~help: obs.unwrap(help_text),
                                 ~shortcut: unwrap_shortcut(shortcut),
                                 ~mixin: mix))
@@ -159,7 +159,7 @@ class CheckableMenuItem():
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: (Any) -> ~any = values,
                ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut)) = #false):
     #{view-help}.#{mix-wrap}(
@@ -169,7 +169,7 @@ class CheckableMenuItem():
                                             action(on)
                                             #void,
                                           ~#{checked?}: obs.unwrap(is_checked),
-                                          ~#{enabled?}: obs.unwrap(is_enabled),
+                                          ~#{enabled?}: obs.unwrap(enable),
                                           ~help: obs.unwrap(help_text),
                                           ~shortcut: unwrap_shortcut(shortcut),
                                           ~mixin: mix))

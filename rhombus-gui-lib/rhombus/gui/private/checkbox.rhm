@@ -20,7 +20,8 @@ class Checkbox(private _at_checked :: Obs):
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: Boolean -> ~any = values,
                ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
-               ~is_enabled: is_enabled :: ObsOrValue.of(Boolean) = #true,
+               ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+               ~styles: style :: List.of(Checkbox.Style) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
@@ -35,7 +36,7 @@ class Checkbox(private _at_checked :: Obs):
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.checkbox(action,
                             ~label: obs.unwrap(label),
-                            ~#{enabled?}: obs.unwrap(is_enabled),
+                            ~#{enabled?}: obs.unwrap(enable),
                             ~#{checked?}: obs.unwrap(at_checked),
                             ~margin: obs.unwrap_list(margin, values),
                             ~#{min-size}: obs.unwrap_list(min_size, values),
@@ -46,3 +47,8 @@ class Checkbox(private _at_checked :: Obs):
 
   property at_is_checked :: Obs:
     _at_checked.map(values)
+
+  export:
+    Style
+
+  enum Style
