@@ -56,7 +56,7 @@ meta.bridge select_obs_val:
         extract(#false)
 
 namespace ObsOrValue:
-  export:    
+  export:
     now_of
     later_of
     rename: later_of as of
@@ -67,7 +67,7 @@ namespace ObsOrValue:
     ~context ctx
     ~all_stx: stx
     ~op_stx: self
-    let '$(ann :: annot_meta.Parsed(ctx))' = ann_g    
+    let '$(ann :: annot_meta.Parsed(ctx))' = ann_g
     parse_obs_later_of(#true, stx, self, ann)
 
 meta:
@@ -116,7 +116,7 @@ annot.macro 'now_of($(ann :: annot_meta.Parsed))':
   ~all_stx: stx
   parse_obs_now_of(#false, stx, ann)
 annot.macro 'later_of($(ann_g :: Group))':
-  ~context ctx    
+  ~context ctx
   ~all_stx: stx
   ~op_stx: self
   let '$(ann :: annot_meta.Parsed(ctx))' = ann_g
@@ -165,7 +165,7 @@ class Obs(private _handle, private _converter = #false):
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
 
-  method observe(f :: Function.of_arity(1)):    
+  method observe(f :: Function.of_arity(1)):
     easy.#{obs-observe!}(handle, wrap_convert(f, ~cache: #true))
 
   method unobserve(f :: Function.of_arity(1)):
@@ -243,9 +243,18 @@ fun
 | to_obs(o :: Obs) :: Obs: o
 | to_obs(v) :: Obs: Obs(v)
 
+// When reflecting an Observable, take care to keep a reference to
+// it for the lifetime of the reflection. It's common for a derived
+// Observable to be passed directly into a view. In that case, the only
+// reference to the Observable may be reflected by the view. If the view
+// discards that reference, the Observable will eventually be garbage
+// collected and the observation chain will then be broken.
+def reflection_to_reflected :~ MutableMap = WeakMutableMap()
+
 fun
 | reflect_obs(o :: Obs) :~ Obs:
     let new_o = Obs(o.value)
+    reflection_to_reflected[new_o] := o
     o.observe(fun (v): new_o.value := v)
     new_o
 | reflect_obs(v) :~ Obs: Obs(v)
