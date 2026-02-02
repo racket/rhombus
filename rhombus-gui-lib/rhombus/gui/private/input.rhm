@@ -29,12 +29,12 @@ class Input(private _at_content :: Obs):
                ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString))) = #false,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
-               ~style: style :: ObsOrValue.of(List.of(Input.StyleSymbol)) = [#'single],
+               ~styles: style :: List.of(Input.StyleSymbol) = [#'single],
                ~font : font :: Font = View.normal_control_font,
                // ~keymap: ... TODO
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
+               ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #'multiple in style],
                ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values,
                ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()):

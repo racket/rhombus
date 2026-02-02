@@ -24,7 +24,7 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View),
+      child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
@@ -96,7 +96,7 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View),
+      child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
@@ -139,7 +139,7 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View),
+      child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
@@ -179,7 +179,7 @@
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(View),
+      child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 

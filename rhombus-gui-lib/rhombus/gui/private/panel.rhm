@@ -6,6 +6,7 @@ import:
     expose:
       View
       WindowChildView
+      WindowView
   "view.rhm"!private:
     expose:
       to_view
@@ -49,7 +50,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
                   ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                   ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                   ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
-                  child :: ObsOrValue.of(WindowChildView),
+                  child :: ObsOrValue.of(WindowChildView && !WindowView),
                   $'...'):
        #{view-help}.#{mix-wrap}(
          fun (mixin):
@@ -118,7 +119,7 @@ class TabsPanel(private _at_selection :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
-               child :: ObsOrValue.of(View),
+               child :: ObsOrValue.of(WindowChildView && !WindowView),
                ...):
     let at_selection = obs.reflect_obs(selection)
     let action = (fun(what, choices, selected):

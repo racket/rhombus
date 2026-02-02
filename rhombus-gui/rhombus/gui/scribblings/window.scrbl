@@ -27,7 +27,7 @@
       ~styles: styles :: ObsOrValue.of(List.of(Window.Style)) = [],
       ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(WindowChildView), ...
+      child :: ObsOrValue.of(WindowChildView && !WindowView), ...
     )
 ){
 
@@ -98,7 +98,7 @@
       ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~styles: styles :: ObsOrValue.of(List.of(Dialog.Style)) = [],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      child :: ObsOrValue.of(WindowChildView), ...
+      child :: ObsOrValue.of(WindowChildView && !WindowView), ...
     )
 ){
 

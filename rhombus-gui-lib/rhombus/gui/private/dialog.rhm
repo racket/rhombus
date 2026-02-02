@@ -8,6 +8,7 @@ import:
     expose:
       View
       WindowChildView
+      WindowView
   "view.rhm"!private:
     expose:
       BaseWindowView
@@ -37,7 +38,7 @@ class Dialog():
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
-               child :: ObsOrValue.of(WindowChildView),
+               child :: ObsOrValue.of(WindowChildView && !WindowView),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mixin):

@@ -507,7 +507,28 @@
   | vertical_label
 ){
 
- A slider style option.
+ A slider style option:
+
+@itemlist(
+
+ @item{@rhombus(#'horizontal): Creates a horizontal slider, where
+  @rhombus(#'vertical) and @rhombus(#'horizontal) are mutually exclusive.}
+
+ @item{@rhombus(#'vertical): Creates a vertical slider.}
+
+ @item{@rhombus(#'plain): Creates an unadorned slider where the slider's
+  numerical value is not reported to the user.}
+
+ @item{@rhombus(#'horizontal_label): When the slider has a label, show
+  it to the left of the slider. Horizontal label placement is the default
+  if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+ @item{@rhombus(#'vertical_label): When the slider has a label, show it
+  above the control.}
+
+)
 
 }
 
@@ -555,7 +576,26 @@
   | vertical_label
 ){
 
- A progress-gauge style option.
+ A progress-gauge style option:
+
+@itemlist(
+
+ @item{@rhombus(#'horizontal): Creates a horizontal progress gauge,
+  where @rhombus(#'vertical) and @rhombus(#'horizontal) are mutually
+  exclusive.}
+
+ @item{@rhombus(#'vertical): Creates a vertical progress gauge.}
+
+ @item{@rhombus(#'horizontal_label): When the progress gauge has a label, show
+  it to the left of the gauge. Horizontal label placement is the default
+  if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+ @item{@rhombus(#'vertical_label): When the progress gauge has a label,
+  show it above the gauge.}
+
+)
 
 }
 
@@ -582,7 +622,8 @@
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch)
+                  = [#true, #'multiple in styles],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
       ~value_to_text: val_to_txt :: Function = values
@@ -615,6 +656,9 @@
   (as also reported via @rhombus(action)) or via @rhombus(content) as an
   observable.
 
+  The @rhombus(styles) list must contain exactly one of
+  @rhombus(#'single) and @rhombus(#'multiple).
+
 }
 
 @doc(
@@ -627,7 +671,32 @@
   | hscroll
 ){
 
- An input style option.
+ An input style option:
+
+@itemlist(
+
+  @item{@rhombus(#'single): Shows a single line of text input, and
+  treats the Enter or Return key as a special event. The input content is
+  not automatically prevented from containing a newline character in
+  pasted text, however.}
+
+  @item{@rhombus(#'single): Shows multiple lines of text input, and
+  creates a new line of text in response to the Enter or Return key.}
+
+  @item{@rhombus(#'password): Renders characters typed into the input
+  field as bullets.}
+
+  @item{@rhombus(#'horizontal_label): When the input field has a label, show
+  it to the left of the field. Horizontal label placement is the default
+  if @rhombus(#'vertical_label) is not specified, and
+  @rhombus(#'horizontal_label) and @rhombus(#'vertical_label) are mutually
+  exclusive.}
+
+  @item{@rhombus(#'vertical_label): When the progress gauge has a label,
+  show it above the gauge.}
+
+)
+
 
 }
 
@@ -642,8 +711,9 @@
  An event provided to the @rhombus(~action) callback function of an
  @rhombus(Input, ~class). The event @rhombus(#'input) corresponds to any
  change to the input text, while @rhombus(#'return) indicates that the
- Return or Enter key was pressed. The @rhombus(#'focus_in) and
- @rhombus(#'focus_out) events report keyboard-focus changes.
+ Return or Enter key was pressed for an input field using the style
+ @rhombus(#'single). The @rhombus(#'focus_in) and @rhombus(#'focus_out)
+ events report keyboard-focus changes.
 
 }
 

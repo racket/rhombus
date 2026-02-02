@@ -27,11 +27,11 @@
     implementable #,(@unexported)
 ){
 
- A @deftech{window view} creates a window when the view is rendered.
- It is an instance of @rhombus(WindowChildView, ~annot) because it
- supports the methods associated with that interface, although a
- @rhombus(WindowView, ~class) is not rendered with it is incorporated
- directly in another @rhombus(WindowView, ~class).
+ A @deftech{window view} creates a window when the view is rendered. A
+ window view is an instance of @rhombus(WindowChildView, ~annot) because
+ it supports the methods associated with that interface, but a window
+ view cannot be provided as a child of a container view like
+ @rhombus(HPanel, ~class) or @rhombus(TabsPanel, ~class).
 
  Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class)
  or @rhombus(Dialog, ~class).
@@ -43,7 +43,13 @@
     :: Renderer
 ){
 
- Renders the view in the same way as @rhombus(gui.render).
+ Renders the view by creating and showing a window or dialog. The
+ resulting window or dialog might be closed by the user; use
+ @rhombus(WindowView.close) to close it programmatically.
+
+ The result rendered should be destroyed using
+ @rhombus(Renderer.destroy). Otherwise, the underlying GUI objects may be
+ retained, especially via registrations with @tech{observables}.
 
 }
 

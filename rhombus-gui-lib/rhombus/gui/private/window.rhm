@@ -6,6 +6,7 @@ import:
     expose:
       View
       WindowChildView
+      WindowView
   "view.rhm"!private:
     expose:
       BaseWindowView
@@ -38,7 +39,7 @@ class Window():
                ~styles: style :: ObsOrValue.of(List.of(Window.Style)) = [],
                ~menu_bar: menu_bar :: maybe(ObsOrValue.of(MenuBar)) = #false,
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
-               child :: ObsOrValue.of(WindowChildView),
+               child :: ObsOrValue.of(WindowChildView && !WindowView),
                ...):
     #{view-help}.#{mix-wrap}(
       fun (mixin):
