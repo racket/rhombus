@@ -4,6 +4,13 @@
 
 @(def unexported: @rhombus(hidden, ~var))
 
+Menu views appear as part of a @rhombuslink(Window, ~class){window} or
+@rhombuslink(Dialog, ~class){dialog} via its @rhombus(~menu_bar)
+argument as a @rhombus(MenuBar, ~class), which contains
+@rhombus(Menu, ~class)s that can have menu items and other menus. Menu
+views can also appear through a @rhombus(PopupMenu, ~class) that is
+@tech{render}ed via @rhombus(WindowChildView.popup).
+
 @title(~tag: "all-menu", ~style: #'toc){Menu Views}
 
 @local_table_of_contents()
@@ -37,7 +44,7 @@
     implements View
     constructor (
       ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      item :: ObsOrValue.of(Menu),
+      menu :: ObsOrValue.of(Menu),
       ...
     )
 ){
@@ -68,6 +75,11 @@
  Creates a menu containing menu items and submenus for inclusion in a
  @rhombus(MenuBar, ~class), @rhombus(Menu, ~class), or
  @rhombus(PopupMenu, ~class).
+
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in @rhombus(label), which are used on some platforms for
+ navigating menus using the keyboard (and not the same thing as keyboard
+ shortcuts in menu items).
 
 }
 
@@ -110,7 +122,7 @@
     implements MenuChildView
     constructor (
      label :: ObsOrValue.of(View.LabelString),
-     ~action: action :: Boolean -> ~any = values,
+     ~action: action :: () -> ~any = values,
      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
      ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
      ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut))
@@ -118,7 +130,19 @@
     )
 ){
 
- Creates a menu item for including in a menu.
+ Creates a menu item for including in a menu. The @rhombus(~action)
+ function is called when a user selects the menu item.
+
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in @rhombus(label). A mnemonic for navigating among menu items
+ is distinct from a menu item's keyboard shortcut.
+
+ If @rhombus(shortcut) is not @rhombus(#false), the menu item has a
+ shortcut key combination. See @rhombus(MenuItem.Shortcut) for more
+ information.
+
+ If @rhombus(help_test) is not @rhombus(#false), the item has a help
+ string. This string may be used to display help information to the user.
 
 }
 
@@ -175,8 +199,8 @@
     implements MenuChildView
     constructor (
      label :: ObsOrValue.of(View.LabelString),
-     ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
-     ~action: action :: () -> ~any = values,
+     ~checked: checked :: ObsOrValue.of(Boolean) = #false,
+     ~action: action :: Boolean -> ~any = values,
      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
      ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
      ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut))
@@ -185,6 +209,8 @@
 ){
 
  Like @rhombus(MenuItem), but for a menu item that can have a checkmark.
+ The @rhombus(~action) function is called with a newly toggled checkmark
+ state when a user selects the menu item.
 
 }
 
@@ -200,6 +226,7 @@
     constructor ()
 ){
 
- Creates a separator to be used between items in a menu.
+ Creates a separator to be used between items in a menu. The separator
+ is not selectable, so it has no @rhombus(~action) callback.
 
 }

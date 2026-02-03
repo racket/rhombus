@@ -19,14 +19,14 @@ class Checkbox(private _at_checked :: Obs):
 
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: Boolean -> ~any = values,
-               ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+               ~checked: checked :: ObsOrValue.of(Boolean) = #false,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: List.of(Checkbox.Style) = [],
+               ~style: style :: List.of(Checkbox.Style) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_checked = obs.reflect_obs(is_checked)
+    let at_checked = obs.reflect_obs(checked)
     let action = (fun (on):
                     at_checked.value := on
                     action(on)
@@ -45,7 +45,7 @@ class Checkbox(private _at_checked :: Obs):
           <| (at_checked)
     )
 
-  property at_is_checked :: Obs:
+  property at_checked :: Obs:
     _at_checked.map(values)
 
   export:

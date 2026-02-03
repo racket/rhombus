@@ -2,6 +2,7 @@
 
 import:
   rhombus/runtime_path
+  rhombus/scribble/manual
   pict
   meta_label:
     rhombus open
@@ -21,6 +22,7 @@ export:
     all_from(lib("racket/gui/easy.rkt"))
   gallery_file
   gallery
+  window_callbacks
 
 runtime_path.def gallery_dir: "gallery"
 
@@ -29,3 +31,8 @@ fun gallery_file(name :: String):
 
 fun gallery(name :: String) :~ pict.Pict:
   pict.bitmap(gallery_file(name)).scale(0.5)
+
+def window_callbacks:
+ @manual.elem{The @manual.rhombus(~window_callbacks) argument configures
+ callbacks that are common to all @manual.rhombus(WindowChildView, ~annot)s.
+ See @manual.rhombus(WindowCallbacks, ~annot) for more information.}

@@ -5,6 +5,11 @@
 
 @title(~tag: "Windows", ~style: #'toc){Windows}
 
+Use @rhombus(Window, ~annot) for movable windows that do not prevent a
+user from switching to other windows in the application, and use
+@rhombus(Dialog, ~annot) for modal dialogs that must be closed by a user
+to access other windows.
+
 @local_table_of_contents()
 
 @// ------------------------------------------------------------
@@ -18,13 +23,13 @@
     implements WindowView
     constructor (
       ~title: title :: ObsOrValue.of(String) = "Untitled",
+      ~style: style :: ObsOrValue.of(List.of(Window.Style)) = [],
       ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~position: position :: ObsOrValue.of(View.Position) = #'center,
+      ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: ObsOrValue.of(List.of(Window.Style)) = [],
       ~menu_bar: menu_bar :: maybe(MenuBar) = #false,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView), ...
@@ -33,6 +38,28 @@
 
  Creates a top-level window view that can be instantiated with
  @rhombus(render). The @rhombus(child) views supply the window content.
+
+ The @rhombus(~size) argument supplies the window's initial or current
+ size, while @rhombus(~min_size), the window content, and
+ @rhombus(~stretch) constrain the size that a user can choose when
+ resizing the window. The @rhombus(~position) argument similar provides
+ the window's initial or current position, but a user can move the
+ window---depending on window decorations controlled in part by the
+ @rhombus(~style) argument, such as whether a title bar is present. See
+ @secref("geometry") for information about @rhombus(~align),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ A menu bar supplied as the @rhombus(~menu_bar) argument is active when
+ the window is active. Depending on the platform, the menu bar is either
+ within the window or at the top of the screen when the window is
+ frontmost.
+
+ When a window is disabled via @rhombus(~enable), all content within the
+ window is also disabled. Whether the menu bar is disabled along with a
+ window depends on whether it is in the window or at the top of the
+ screen.
+
+ @window_callbacks
 
 }
 
@@ -90,19 +117,23 @@
     implements WindowView
     constructor (
       ~title: title :: ObsOrValue.of(String) = "Untitled",
+      ~style: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
       ~size: size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'top],
       ~position: position :: ObsOrValue.of(View.Position) = #'center,
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: ObsOrValue.of(List.of(Dialog.Style)) = [],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView), ...
     )
 ){
 
- Similar to @rhombus(Window), but creates a modal dialog, instead.
+ Like to @rhombus(Window), but creates a modal dialog, instead, meaning
+ that no other window within the application can be made active as long
+ as the dialog is shown.
+
+ @window_callbacks
 
 }
 

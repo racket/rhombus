@@ -4,6 +4,10 @@
 
 @title(~tag: "control", ~style: #'toc){Controls}
 
+Control views like @rhombus(Button, ~annot) and @rhombus(Input, ~annot)
+represent all of the usual GUI controls that can appear in a window or
+dialog.
+
 @local_table_of_contents()
 
 @// ------------------------------------------------------------
@@ -22,18 +26,28 @@
                                    View.LabelString,
                                    Button.LabelPosition]),
       ~action: action :: () -> ~any = fun (): #void,
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: List.of(Button.Style) = [],
+      ~style: style :: List.of(Button.Style) = [],
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 ){
 
- Creates a button. When rendered, the function call @rhombus(action())
- is performed when the button is clicked.
+ Creates a button. Buttons with bitmap labels (or a combination of
+ bitmap and text) tend to have a different style than buttons with text
+ labels. See @rhombus(View.LabelString, ~annot) for information about
+ keyboard mnemonics in @rhombus(label).
+
+ The @rhombus(action) function is called when the button is clicked by a
+ user.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -80,28 +94,36 @@
     implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
-      ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+      ~checked: checked :: ObsOrValue.of(Boolean) = #false,
       ~action: action :: Boolean -> ~any = values,
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: List.of(Checkbox.Style) = [],
+      ~style: style :: List.of(Checkbox.Style) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
-  property (cb :: gui.Checkbox).at_is_checked :: Obs.of(Boolean)
+  property (cb :: gui.Checkbox).at_checked :: Obs.of(Boolean)
 ){
 
- Creates a checkbox. When rendered, the function call
- @rhombus(action(#,(@rhombus(now_checked, ~var)))) is performed when the
- checkbox is clicked, where @rhombus(now_checked, ~var) indicates the
- state of the checkbox.
+ Creates a checkbox. See @rhombus(View.LabelString, ~annot) for
+ information about keyboard mnemonics in @rhombus(label).
 
- The @rhombus(Checkbox.at_is_checked) property returns an observable that
+ The function call @rhombus(action(#,(@rhombus(now_checked, ~var)))) is
+ performed when the checkbox is clicked by a user, where
+ @rhombus(now_checked, ~var) indicates the newly toggled state of the
+ checkbox.
+
+ The @rhombus(Checkbox.at_checked) property returns an observable that
  is updated whenever the checkbox's state changes through an action (as
- also reported via @rhombus(action)) or via @rhombus(is_checked) as an
+ also reported via @rhombus(action)) or via @rhombus(checked) as an
  observable.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -129,11 +151,11 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: List.of(Choice.Style) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~style: style :: List.of(Choice.Style) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
@@ -142,22 +164,31 @@
 
  Creates a popup choice selector where @rhombus(choices) provides the
  number and identity of choices, and @rhombus(selection) determines which
- of the tabs is selected. When rendered, the function call
- @rhombus(action(#,(@rhombus(now_selected, ~var)))) is performed when the
- selection is changed, where @rhombus(now_selected, ~var) indicates the
- newly selected choice.
+ of the tabs is selected.
+
+ The function call @rhombus(action(#,(@rhombus(now_selected, ~var)))) is
+ performed when the selection is changed by a user, where
+ @rhombus(now_selected, ~var) indicates the newly selected choice.
 
  The @rhombus(Choice.at_selection) property returns an observable that
  is updated whenever the choice popup's state changes through an action
  (as also reported via @rhombus(action)) or via @rhombus(selection) as an
  observable.
 
- The @rhombus(choice_to_label) function converts an item in
- @rhombus(choices) to a label to be shown for the control, and
- @rhombus(choice_equal) defines equality for choice identities. By
- default, @rhombus(choices) is expected to be a list of
- @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is the identity
- function.
+ The @rhombus(~choice_to_label) function converts an item in
+ @rhombus(choices) to a label to be shown for the control, and the
+ @rhombus(~choice_equal) argument defines equality for choice identities.
+ By default, @rhombus(choices) is expected to be a list of
+ @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is
+ the identity function.
+
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in @rhombus(label).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -200,11 +231,11 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: List.of(RadioChoice.Style) = [#'vertical],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~style: style :: List.of(RadioChoice.Style) = [#'vertical],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
@@ -215,8 +246,17 @@
  popup menu. Unlike @rhombus(gui.Choice), the @rhombus(choices) list
  cannot be changed.
 
- The @rhombus(styles) list must include either @rhombus(#'vertical) or
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in @rhombus(label) or the labels produced by
+ @rhombus(choice_to_label).
+
+ The @rhombus(style) list must include either @rhombus(#'vertical) or
  @rhombus(#'horizontal).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -269,12 +309,12 @@
       ~selection: selection :: ObsOrValue.of(Any) = #false,
       ~action: action :: Any -> ~any = values,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~styles: styles :: List.of(ListChoice.StyleSymbol) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~style: style :: List.of(ListChoice.StyleSymbol) = [],
       ~font : font :: draw.Font = View.normal_control_font,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
@@ -284,6 +324,15 @@
  Like @rhombus(gui.Choice), but presented as a list box instead of a
  popup menu. The @rhombus(ListChoice) view is a simplified version of
  the @rhombus(Table, ~class) view.
+
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in @rhombus(label) or the labels produced by
+ @rhombus(choice_to_label).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -329,7 +378,6 @@
                         = values,
       ~selection: selection :: ObsOrValue.of(Table.Selection) = #false,
       ~label: label :: ObsOrValue.of(View.LabelString) = "",
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~style: style :: List.of(Table.StyleSymbol)
                 = [#'single, #'column_headers,
                    #'clickable_headers, #'reorderable_headers],
@@ -339,21 +387,25 @@
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
       ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
                         = [],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (chc :: gui.Table).at_selection :: Obs
 ){
 
- Creates a list-row selector where @rhombus(choices) provides column
- labels (and, implicitly, the column column), @rhombus(choices) provides
+ Creates a list-row selector where @rhombus(columns) provides column
+ labels (and, implicitly, the column count), @rhombus(choices) provides
  the number and identity of rows, and @rhombus(selection) determines
- which of the lines are selected. When rendered, the function call
+ which of the lines are selected. Column labels are shown only when @rhombus(styles)
+ includes @rhombus(#'column_headers).
+
+ The function call
  @rhombus(action(#,(@rhombus(event, ~var)), #,(@rhombus(choices, ~var)), #,(@rhombus(selection, ~var))))
- is performed when the table is changed, where @rhombus(event, ~var)
- indicates the kind of action, @rhombus(choices, ~var) indicates the
- choices at the time of the event, and choice @rhombus(selection, ~var)
- identifies the selected rows.
+ is performed when the table seelct is changed by the user, where
+ @rhombus(event, ~var) indicates the kind of action,
+ @rhombus(choices, ~var) indicates the choices at the time of the event,
+ and choice @rhombus(selection, ~var) identifies the selected rows.
 
  The @rhombus(Table.at_selection) property returns an observable that
  is updated whenever the table's selection state changes through an action
@@ -365,6 +417,21 @@
 
  The @rhombus(style) list must contain exactly one of @rhombus(single),
  @rhombus(#'multiple), and @rhombus(#'extended).
+
+ See @rhombus(View.LabelString) for information about keyboard mnemonics
+ in @rhombus(label).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ The @rhombus(~column_widths) argument controls the widths of the
+ columns. Column width can be specified either as a list of the column
+ index (starting from @rhombus(0)) and the default width or a list of the
+ column index, the column width, the minimum width, and the maximum
+ width. If the @rhombus(~column_widths) lacks an entry for a column in
+ the table, a width is determined automatically.
+
+ @window_callbacks
 
 }
 
@@ -412,7 +479,8 @@
 
   @item{@rhombus(#'clickable_headers): Allows the user to click a table
   column, where clicks are handled by the table's @rhombus(~action)
-  callback.}
+  callback. For historical reasons, @rhombus(#'clickable_headers) has no
+  effect on Windows, and header clicks are always reported.}
 
   @item{@rhombus(#'reorderable_headers): Allows the user to reorder
   table columns, where the table's @rhombus(~action) callback receives a
@@ -457,6 +525,20 @@
 
 }
 
+@doc(
+  annot.macro 'gui.Table.CellWidth'
+){
+
+ Equivalent to
+
+@rhombusblock([Int, View.SizeInt] || [Int, View.SizeInt, View.SizeInt, View.SizeInt])
+
+ for specifying the width of the column indicated by the leading
+ @rhombus(Int, ~annot) in the list (counting from @rhombus(0)).
+
+}
+
+
 @// ------------------------------------------------------------
 @section(~tag: "slider", ~style: [#'hidden]){@rhombus(Slider)}
 
@@ -472,29 +554,40 @@
       ~min_value: min_value :: ObsOrValue.of(View.PositionInt) = 0,
       ~max_value: max_value :: ObsOrValue.of(View.PositionInt) = 100,
       ~action: action :: View.PositionInt -> ~any = values,
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~style: style :: List.of(Slider.Style) = [#'horizontal],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Slider.Style) = [#'horizontal],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (sldr :: gui.Slider).at_value :: Obs.of(PositionInt)
 ){
 
- Creates a slider. When rendered, the function call
- @rhombus(action(#,(@rhombus(now_val, ~var)))) is performed when the
- slider is changed, where @rhombus(now_val, ~var) indicates the value of
- the slider.
+ Creates a slider. See @rhombus(View.LabelString, ~annot) for
+ information about keyboard mnemonics in the @rhombus(~label) argument.
+
+ The @rhombus(~value) argument sets the slider's initial or current
+ value, with @rhombus(~min_value) and @rhombus(~max_value) determined the
+ allowed range (inclusive) of the value.
+
+ The function call @rhombus(action(#,(@rhombus(now_val, ~var)))) is
+ performed when the slider is changed by the user, where
+ @rhombus(now_val, ~var) indicates the value of the slider.
 
  The @rhombus(Slider.at_value) property returns an observable that
  is updated whenever the slider's value changes through an action
  (as also reported via @rhombus(action)) or via @rhombus(value) as an
  observable.
 
- The @rhombus(styles) list must include one of @rhombus(#'horiziontal)
+ The @rhombus(style) list must include one of @rhombus(#'horiziontal)
  and @rhombus(#'vertical).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -549,7 +642,7 @@
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Progress.Style) = [#'horizontal],
+      ~style: style :: List.of(Progress.Style) = [#'horizontal],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
@@ -557,14 +650,22 @@
 ){
 
  Creates a read-only (from the user's perspective) progress gauge that
- show @rhombus(value) out of @rhombus(max_value) progress.
+ shows @rhombus(value) out of @rhombus(max_value) progress. See
+ @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in the @rhombus(~label) argument.
 
- The @rhombus(styles) list must include one of @rhombus(#'horiziontal)
+ The @rhombus(style) list must include one of @rhombus(#'horiziontal)
  and @rhombus(#'vertical).
 
  The @rhombus(Progress.at_value) property returns an observable that is
  updated whenever the progress gauge's state changes through
  @rhombus(value) as an observable.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
+
 
 }
 
@@ -612,52 +713,62 @@
     implements WindowChildView
     constructor (
       content :: ObsOrValue.of(Any),
+      ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
+      ~value_to_text: val_to_txt :: Function = values,
       ~action: action :: maybe((Input.Event, String) -> ~any) = #false,
       ~label: label :: ObsOrValue.of(View.LabelString) = "",
       ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString)))
                   = #false,
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
-      ~styles: styles :: List.of(Input.StyleSymbol) = [#'single],
       ~font : font :: draw.Font = View.normal_control_font,
+      ~style: style :: List.of(Input.StyleSymbol) = [#'single],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch)
-                  = [#true, #'multiple in styles],
-      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
-      ~is_equal_value: is_equal :: Function.of_arity(2) = (_ == _),
-      ~value_to_text: val_to_txt :: Function = values
+                  = [#true, #'multiple in style],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (inp :: gui.Input).at_content :: Obs.of(Any)
 ){
 
-  Returns a representation of a text field that calls @rhombus(action) on change.
-  The first argument to the @rhombus(action) is the type of event that caused
-  the input to change and the second is the contents of the text field.
+ Returns a representation of a text field that calls @rhombus(action) on
+ a change by the user. The first argument to the @rhombus(action) is the
+ type of event that caused the input to change and the second is the
+ contents of the text field.
 
-  If the @rhombus(~choices) argument is not @rhombus(#false), it provides
-  a list of suggestions via a popup menu. When a user selects an item in
-  the popup menu, it is copied into the text field.
+ The @rhombus(~is_equal_value) argument controls when changes to the
+ input data are reflected in the contents of the field. The contents of
+ the input field only change when the new value of the underlying
+ observable is not @rhombus(==) to the previous one. The only exception
+ to this is when the textual value (via @rhombus(~value_to_text)) of the
+ observable is the empty string, in which case the input is cleared
+ regardless of the value of the underlying observable.
 
-  The @rhombus(~is_equal_value) argument controls when changes to the input data
-  are reflected in the contents of the field. The contents of the input field only
-  change when the new value of the underlying observable is not @rhombus(==) to the
-  previous one. The only exception to this is when the textual value
-  (via @rhombus(~value_to_text)) of the observable is the empty string, in which case
-  the input is cleared regardless of the value of the underlying observable.
+ The @rhombus(~value_to_text) argument controls how the input values are
+ rendered to strings. If not provided, value must be either a string? or
+ an observable of strings.
 
-  The @rhombus(~value_to_text) argument controls how the input values are rendered
-  to strings. If not provided, value must be either a string? or an observable
-  of strings.
+ The @rhombus(Input.at_content) property returns an observable that is
+ updated whenever the input's value changes through an action (as also
+ reported via @rhombus(action)) or via @rhombus(content) as an
+ observable.
 
-  The @rhombus(Input.at_content) property returns an observable that
-  is updated whenever the input's value changes through an action
-  (as also reported via @rhombus(action)) or via @rhombus(content) as an
-  observable.
+ See @rhombus(View.LabelString, ~annot) for information about keyboard
+ mnemonics in the @rhombus(~label) argument.
 
-  The @rhombus(styles) list must contain exactly one of
-  @rhombus(#'single) and @rhombus(#'multiple).
+ If the @rhombus(~choices) argument is not @rhombus(#false), it provides
+ a list of suggestions via a popup menu. When a user selects an item in
+ the popup menu, it is copied into the text field.
+
+ The @rhombus(~style) list must contain exactly one of @rhombus(#'single)
+ and @rhombus(#'multiple).
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -730,21 +841,27 @@
       label :: ObsOrValue.of(View.LabelString),
       ~color: color :: ObsOrValue.of(maybe(Color)) = #false,
       ~font: font :: draw.Font = View.normal_control_font,
+      ~style: style :: List.of(Progress.Style) = [#'horizontal],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
-      ~styles: styles :: List.of(Progress.Style) = [#'horizontal],
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 
   property (lbl :: gui.Label).at_label :: Obs.of(View.LabelString)
 ){
 
- Creates a text label.
+ Creates a text label. See @rhombus(View.LabelString, ~annot) for
+ information about keyboard mnemonics in the @rhombus(label) argument.
 
  The @rhombus(Label.at_label) property returns an observable that is
  updated whenever the label's state changes through
  @rhombus(label) as an observable.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -782,6 +899,11 @@
  If the image view has a different size based on @rhombus(min_size) and
  @rhombus(stretch), then the image is centered within the view's area.
 
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
+
 }
 
 @doc(
@@ -810,5 +932,10 @@
 
  Returns a representation of a spacer. By default, spacers extend to
  fill the space of their parents.
+
+ See @secref("geometry") for information about @rhombus(~min_size) and
+ @rhombus(~stretch).
+
+ @window_callbacks
 
 }

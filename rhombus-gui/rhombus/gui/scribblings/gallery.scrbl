@@ -39,7 +39,7 @@
     entry("image", gui.Image),
     entry("canvas", gui.Canvas)],
    [entry("group-panel", gui.GroupPanel),
-    entry("tabs-panel", gui.TabsPanel),
+    entry("tab-panel", gui.TabPanel),
     entry("editor-canvas", gui.EditorCanvas)],
    [entry("vpanel", gui.VPanel),
     entry("hpanel", gui.HPanel),

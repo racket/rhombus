@@ -36,7 +36,7 @@ class Dialog():
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
+               ~style: style :: ObsOrValue.of(List.of(Dialog.Style)) = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(WindowChildView && !WindowView),
                ...):

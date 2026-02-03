@@ -83,6 +83,23 @@
   annot.macro 'gui.View.LabelString'
 ){
 
-  Satisfied by a string whose length is less than 200 characters.
+ Satisfied by a string whose length is less than 200 characters.
+
+ In many contexts, when @litchar{&} occurs in a label string, it is
+ specially parsed. On Windows and Unix, the character following
+ @litchar{&} is underlined in the displayed control to indicate a
+ keyboard mnemonic. (On Mac OS, mnemonic underlines are not shown.) The
+ underlined mnemonic character must be a letter or a digit. The user can
+ effectively click the button by typing the mnemonic when the control's
+ enclosing window contains the keyboard focus. The user must also hold
+ down the Meta or Alt key if the keyboard focus is currently in a control
+ that handles normal alphanumeric input. The @litchar{&} itself is
+ removed from label before it is displayed for the control; a
+ @litchar{&&} in label is converted to @litchar{&} (with no mnemonic
+ underlining). On Mac OS, a parenthesized mnemonic character is removed
+ (along with any surrounding space) before the label is displayed, since
+ a parenthesized mnemonic is often used for non-Roman languages. Finally,
+ for historical reasons, any text after a tab character is removed on all
+ platforms.
 
 }

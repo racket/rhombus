@@ -25,7 +25,7 @@ class RadioChoice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~action: action :: Any -> ~any = values,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~styles: style :: List.of(RadioChoice.Style) = [#'vertical],
+               ~style: style :: List.of(RadioChoice.Style) = [#'vertical],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],

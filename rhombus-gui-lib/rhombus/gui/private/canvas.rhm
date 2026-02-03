@@ -38,7 +38,7 @@ class Canvas():
                ~key: on_key :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
                ~mouse: on_mouse :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
+               ~style: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],

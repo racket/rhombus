@@ -29,7 +29,7 @@ class Input(private _at_content :: Obs):
                ~choices: choices :: maybe(ObsOrValue.of(List.of(View.LabelString))) = #false,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~background_color: bg_color :: ObsOrValue.of(maybe(Color)) = #false,
-               ~styles: style :: List.of(Input.StyleSymbol) = [#'single],
+               ~style: style :: List.of(Input.StyleSymbol) = [#'single],
                ~font : font :: Font = View.normal_control_font,
                // ~keymap: ... TODO
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],

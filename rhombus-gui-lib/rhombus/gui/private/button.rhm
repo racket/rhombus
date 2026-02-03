@@ -25,7 +25,7 @@ class Button():
                                             Button.LabelPosition]),
                ~action: action :: () -> ~any = values,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: List.of(Button.Style) = [],
+               ~style: style :: List.of(Button.Style) = [],
                ~font : font :: draw.Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],

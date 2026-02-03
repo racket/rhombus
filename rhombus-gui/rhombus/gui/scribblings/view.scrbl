@@ -11,15 +11,14 @@
     implementable #,(@unexported)
 ){
 
- A @deftech{view} describes a GUI window, control, or menu that is
- created when the view is @tech{render}ed.
+ Every @tech{view} implements the @rhombus(View, ~class) interface.
 
  Implementations of @rhombus(View, ~class) include
  @rhombus(Window, ~class), @rhombus(Button, ~class),
  @rhombus(Canvas, ~class), @rhombus(Menu, ~class), and
  @rhombus(MenuItem, ~class). Since the
  @rhombus(implementable, ~interface_clause) name of
- @rhombus(View, ~class) is kept private, all implementations or
+ @rhombus(View, ~class) is kept private, all implementations of
  @rhombus(View, ~class) are part of the @rhombusmodname(gui) library.
 
 }
@@ -45,7 +44,7 @@
  a Racket-level object for the @racketmodname(racket/gui, ~indirect)
  library representing the @deftech{most recent rendering} of a view.
 
- If the view has not been rendered, yet, @rhombus(View.gui_handle)
+ If the view has not been @tech{render}ed, yet, @rhombus(View.gui_handle)
  returns @rhombus(#false), while @rhombus(View.get_gui_handle) throws an
  exception. The @rhombus(who) argument to @rhombus(View.get_gui_handle)
  is included in the exception message, if any.

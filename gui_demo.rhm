@@ -140,12 +140,12 @@ def menu_bar:
     gui.Menu(
       "Config",
       gui.CheckableMenuItem("Enabled",
-                            ~is_checked: enabled.value,
+                            ~checked: enabled.value,
                             ~action:
                               fun (on):
                                 enabled.value := on),
       gui.CheckableMenuItem("Track Mouse",
-                            ~is_checked: track_mouse.value,
+                            ~checked: track_mouse.value,
                             ~action:
                               fun (on):
                                 track_mouse.value := on),
@@ -198,7 +198,7 @@ def name_pos_v = gui.RadioChoice(["Top", "Center", "Bottom"],
                                             next_name_pos <~ fun ([h, _]): [h, v])
 
 def name_pos_h = gui.RadioChoice(["Left", "Center", "Right"],
-                                 ~styles: [#'horizontal],
+                                 ~style: [#'horizontal],
                                  ~selection: name_pos ~> fun ([h, v]): h,
                                  ~action: fun (h):
                                             next_name_pos <~ fun ([_, v]): [h, v])
@@ -215,7 +215,7 @@ def format_dialog = gui.Dialog(~title: "Position",
                                             ~action: fun ():
                                                        name_pos.value := next_name_pos.value
                                                        format_dialog.show(#false),
-                                            ~styles: [#'default]),
+                                            ~style: [#'default]),
                                  gui.Button("Cancel",
                                             ~action: fun ():
                                                        next_name_pos.value := name_pos.value
@@ -227,14 +227,14 @@ def format_dialog = gui.Dialog(~title: "Position",
 def (tabs, config):
   let shape = gui.Choice(gui.Obs(["Circle", "Square", "Rounded"]),
                          ~selection: "Circle")
-  let eyes = gui.Checkbox("Eyes", ~is_checked: #true)
-  let stache = gui.Checkbox("Moustache", ~is_checked: #false)
+  let eyes = gui.Checkbox("Eyes", ~checked: #true)
+  let stache = gui.Checkbox("Moustache", ~checked: #false)
   let scale = gui.Slider(~value: 50,
                          ~min_value: 1,
                          ~max_value: 100,
                          // Could write `gui.Slider.Style.plain`,
                          // etc., but we write symbols for convenience:
-                         ~styles: [#'plain, #'horizontal])
+                         ~style: [#'plain, #'horizontal])
   let spacer = gui.Spacer()
 
   let happy_sad_popup:
@@ -272,8 +272,8 @@ def (tabs, config):
     { "enabled": enabled,
       "mood": at_tab,
       "shape": shape.at_selection,
-      "eyes": eyes.at_is_checked,
-      "moustache": stache.at_is_checked,
+      "eyes": eyes.at_checked,
+      "moustache": stache.at_checked,
       "scale": scale.at_value,
       "ghosts": ghosts,
       "keyed": keyed,
@@ -322,15 +322,15 @@ def (tabs, config):
                                     ~drop_file: fun (path): img_src.value := path))
 
   values(
-    gui.TabsPanel(["Happy", "Sad"],
-                  ~selection: at_tab,
-                  ~action: fun (_, _, sel): at_tab.value := sel,
-                  at_tab ~> (match _
-                             | "Happy": canvas
-                             | "Sad": gui.HPanel(canvas,
-                                                 gui.VPanel(~stretch: [#false, #true],
-                                                            happy_button,
-                                                            img)))),
+    gui.TabPanel(["Happy", "Sad"],
+                 ~selection: at_tab,
+                 ~action: fun (_, _, sel): at_tab.value := sel,
+                 at_tab ~> (match _
+                            | "Happy": canvas
+                            | "Sad": gui.HPanel(canvas,
+                                                gui.VPanel(~stretch: [#false, #true],
+                                                           happy_button,
+                                                           img)))),
     config
   )
 

@@ -4,7 +4,12 @@
 
 @title{Events}
 
-@(~version_at_least "8.14.0.4")
+Keyboard and mouse events are reported to a @rhombus(Canvas, ~class)
+through its @rhombus(~key) and @rhombus(~mouse) callbacks, or to a
+@rhombus(WindowChildView, ~class) in general through a
+@rhombus(~sub_key) or @rhombus(~sub_mouse) callback in a
+@rhombus(WindowCallbacks) (that is provided to the view's constructor as
+a @rhombus(~window_callbacks) argument).
 
 @doc(
   class gui.MouseEvent():

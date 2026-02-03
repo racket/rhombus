@@ -158,7 +158,7 @@ class CheckableMenuItem():
   implements MenuChildViewI
   constructor (label :: ObsOrValue.of(View.LabelString),
                ~action: action :: (Any) -> ~any = values,
-               ~is_checked: is_checked :: ObsOrValue.of(Boolean) = #false,
+               ~checked: checked :: ObsOrValue.of(Boolean) = #false,
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~help: help_text :: ObsOrValue.of(maybe(View.LabelString)) = #false,
                ~shortcut: shortcut :: ObsOrValue.of(maybe(MenuItem.Shortcut)) = #false):
@@ -168,7 +168,7 @@ class CheckableMenuItem():
                                           fun (on):
                                             action(on)
                                             #void,
-                                          ~#{checked?}: obs.unwrap(is_checked),
+                                          ~#{checked?}: obs.unwrap(checked),
                                           ~#{enabled?}: obs.unwrap(enable),
                                           ~help: obs.unwrap(help_text),
                                           ~shortcut: unwrap_shortcut(shortcut),

@@ -4,6 +4,12 @@
 
 @title(~tag: "panels", ~style: #'toc){Panels}
 
+The @rhombus(HPanel, ~annot) and @rhombus(VPanel, ~annot) classes are
+for @seclink("geometry"){geometry management},
+@rhombus(GroupPanel, ~annot) is for visibly grouping controls, and
+@rhombus(TabPanel, ~annot) is for allowing a user to switch between
+groups of controls.
+
 @local_table_of_contents()
 
 @// ------------------------------------------------------------
@@ -16,20 +22,28 @@
   class gui.HPanel():
     implements WindowChildView
     constructor (
+      ~style: style :: ObsOrValue.of(List.of(HPanel.Style)) = [],
       ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-      ~styles: styles :: ObsOrValue.of(List.of(HPanel.Style)) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
 
- Creates a panel that arranges @rhombus(child) views horizontally.
+ Creates a panel that arranges @rhombus(child) views horizontally. See
+ @secref("geometry") for information about @rhombus(~align),
+ @rhombus(~spacing), @rhombus(~margin), @rhombus(~min_size), and
+ @rhombus(~stretch).
+
+ When a panel is disabled via @rhombus(~enable), all content within the
+ panel is also disabled.
+
+ @window_callbacks
 
 }
 
@@ -89,19 +103,27 @@
     implements WindowChildView
     constructor (
       ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-      ~styles: styles :: ObsOrValue.of(List.of(VPanel.Style)) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~style: style :: ObsOrValue.of(List.of(VPanel.Style)) = [],
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
 
- Creates a panel that arranges @rhombus(child) views vertically.
+ Creates a panel that arranges @rhombus(child) views vertically. See
+ @secref("geometry") for information about @rhombus(~align),
+ @rhombus(~spacing), @rhombus(~margin), @rhombus(~min_size), and
+ @rhombus(~stretch).
+
+ When a panel is disabled via @rhombus(~enable), all content within the
+ panel is also disabled.
+
+ @window_callbacks
 
 }
 
@@ -131,20 +153,28 @@
     implements WindowChildView
     constructor (
       label :: ObsOrValue.of(View.LabelString),
+      ~style: style :: ObsOrValue.of(List.of(GroupPanel.Style)) = [],
       ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-      ~styles: styles :: ObsOrValue.of(List.of(GroupPanel.Style)) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 ){
 
- Creates a vertical panel that shows grouping under @rhombus(label).
+ Creates a vertical panel that shows grouping under @rhombus(label). See
+ @secref("geometry") for information about @rhombus(~align),
+ @rhombus(~spacing), @rhombus(~margin), @rhombus(~min_size), and
+ @rhombus(~stretch).
+
+ When a panel is disabled via @rhombus(~enable), all content within the
+ panel is also disabled.
+
+ @window_callbacks
 
 }
 
@@ -157,43 +187,38 @@
 }
 
 @// ------------------------------------------------------------
-@section(~tag: "tabs-panel", ~style: [#'hidden]){@rhombus(TabsPanel)}
+@section(~tag: "tab-panel", ~style: [#'hidden]){@rhombus(TabPanel)}
 
-@centered{@gallery("tabs-panel") @hspace(1) @(gallery("tabs-panel-no-border").pad(~bottom: 4).drop_baseline(4))}
+@centered{@gallery("tab-panel") @hspace(1) @(gallery("tab-panel-no-border").pad(~bottom: 4).drop_baseline(4))}
 
 @doc(
   ~page
-  class gui.TabsPanel():
+  class gui.TabPanel():
     implements WindowChildView
     constructor (
       choices :: ObsOrValue.of(List),
       ~selection: selection :: ObsOrValue.of(Any),
-      ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> ~any = values,
+      ~action: action :: (TabPanel.Action, List, maybe(Any)) -> ~any = values,
       ~choice_to_label: choice_to_label :: Any -> Any = values,
       ~choice_equal: choice_equal :: Function.of_arity(2) = (_ == _),
+      ~style: style :: ObsOrValue.of(List.of(TabPanel.Style)) = [],
       ~align: align :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-      ~styles: styles :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false,
       child :: ObsOrValue.of(WindowChildView && !WindowView),
       ...
     )
 
-  property (tabs :: gui.TabsPanel).at_selection :: Obs
+  property (tabs :: gui.TabPanel).at_selection :: Obs
 ){
 
  Creates a tab panel where @rhombus(choices) provides the number and
  identity of choices, and @rhombus(selection) determines which of the
  tabs is selected.
-
- The @rhombus(TabsPanel.at_selection) property returns an observable
- that is updated whenever the panel changes through an action (as also
- reported via @rhombus(action)) or via @rhombus(selection) as an
- observable.
 
  The @rhombus(choice_to_label) function converts an item in
  @rhombus(choices) to a label to be shown for the tab, and
@@ -201,6 +226,13 @@
  default, @rhombus(choices) is expected to be a list of
  @rhombus(View.LabelString, ~annot), since @rhombus(choice_to_label) is the identity
  function.
+
+ The @rhombus(TabPanel.at_selection) property returns an observable
+ that is updated whenever the panel changes through an action (as also
+ reported via @rhombus(action)) or via @rhombus(selection) as an
+ observable. To change the content of a @rhombus(TabPanel, ~class) based
+ on its selection, supply a @rhombus(child) that is an observable derived
+ from the @rhombus(TabPanel.at_selection) property.
 
  When the tab selection changes, @rhombus(action) is called as
 
@@ -212,14 +244,20 @@
  the list of choices at the time of the action, and
  @rhombus(selected, ~var) is the tab (if any) selected after the action.
 
- To change the content of a @rhombus(TabsPanel, ~class) based on its
- selection, supply a @rhombus(child) that is an observable derived from
- one supplied as @rhombus(selection).
+
+ See @secref("geometry") for information about @rhombus(~align),
+ @rhombus(~spacing), @rhombus(~margin), @rhombus(~min_size), and
+ @rhombus(~stretch).
+
+ When a panel is disabled via @rhombus(~enable), all content within the
+ panel is also disabled.
+
+ @window_callbacks
 
 }
 
 @doc(
-  enum gui.TabsPanel.Style
+  enum gui.TabPanel.Style
   | no_border
   | can_reorder
   | can_close
@@ -255,7 +293,7 @@
 }
 
 @doc(
-  enum gui.TabsPanel.Action
+  enum gui.TabPanel.Action
   | select
   | new
   | close

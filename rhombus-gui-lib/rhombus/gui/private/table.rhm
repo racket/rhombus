@@ -31,7 +31,7 @@ class Table(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(maybe(Table.Selection)) = #false,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: List.of(Table.StyleSymbol)
+               ~style: style :: List.of(Table.StyleSymbol)
                           = [#'single, #'column_headers, #'clickable_headers, #'reorderable_headers],
                ~font : font :: Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
@@ -116,7 +116,7 @@ class ListChoice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~label: label :: ObsOrValue.of(View.LabelString) = "",
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-               ~styles: style :: List.of(ListChoice.StyleSymbol) = [],
+               ~style: style :: List.of(ListChoice.StyleSymbol) = [],
                ~font : font :: Font = View.normal_control_font,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],

@@ -25,7 +25,7 @@ class Choice(private _at_selection :: Obs):
                ~selection: selection :: ObsOrValue.of(Any) = #false,
                ~action: action :: Any -> ~any = values,
                ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-               ~styles: style :: List.of(Choice.Style) = [],
+               ~style: style :: List.of(Choice.Style) = [],
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [2, 2],
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],

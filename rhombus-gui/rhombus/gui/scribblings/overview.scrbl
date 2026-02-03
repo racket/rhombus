@@ -95,8 +95,8 @@ button an @rhombus(~action) callback.
 
   win.run()
 
-  [lime.at_is_checked.value,
-   coconut.at_is_checked.value,
+  [lime.at_checked.value,
+   coconut.at_checked.value,
    finish.at_selection.value]
 )
 
@@ -179,8 +179,8 @@ observable's value.
 Since it's so common for a control's action to update an observable,
 most control views provide an observable automatically. In fact, we used
 those observables at the end of @secref("overview-callback") to get
-final control states via @rhombus(lime.at_is_checked.value),
-@rhombus(coconut.at_is_checked.value), and
+final control states via @rhombus(lime.at_checked.value),
+@rhombus(coconut.at_checked.value), and
 @rhombus(finish.at_selection.value). By convention, an automatic
 observable is a property whose name starts with @litchar{at_}. In the
 case of a @rhombus(gui.Input) view, the property is
@@ -389,7 +389,7 @@ content.
     ~stretch: [#true, #false],
     gui.Input(~label: "Name:"),
     gui.HPanel(gui.Button("Cancel"), gui.Button("Ok",
-                                                ~styles: [#'default]))
+                                                ~style: [#'default]))
   ).run()
 )
 
@@ -402,6 +402,14 @@ whereas buttons are not stretchable in either direction, but the
 The example also relies on @rhombus(#'center) as the default horizontal
 and vertical alignment, but the @rhombus(~stretch) argument to a
 constructor can specify a different alignment.
+
+A view has a @deftech{graphical minimum size} that is determined by its
+graphical representation and, often, the label associated with the view.
+In the case of containers, the minimum size also depends on its content.
+A view's minimum size can be increased through a @rhombus(~min_size)
+argument to the view's constructor. If @rhombus(~min_size) indicates a
+size smaller than the graphical minimum size in a dimension, the
+graphical minimum is used.
 
 Spacing between children of a container can be controlled by the
 @rhombus(~spacing) argument to a container constructor like

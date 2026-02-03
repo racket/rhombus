@@ -10,7 +10,7 @@ observers are notified.
 
 Besides registering observers directly, an application can provide an
 observable instead of an immediate value when constructing a
-@tech{view}; each rendering of the view then becomes and observer that
+@tech{view}. Each rendering of the view then becomes and observer that
 reacts to changes in the observable's value. For example, the label or
 enable state for a button view can be supplied as an observable, and if
 the observable's value changes from @rhombus(#true) to @rhombus(#false),

@@ -4,6 +4,11 @@
 
 @(def draw_DC = @rhombus(draw.DC, ~annot))
 
+A @rhombus(Canvas, ~annot) provides a place for arbitrary drawing using
+the @rhombusmodname(draw) library. An @rhombus(EditorCanvas, ~annot) is
+backed by the same drawing library, but it cooperates with additional
+text-editing libraries.
+
 @title(~tag: "all-canvas", ~style: #'toc){Canvases}
 
 @local_table_of_contents()
@@ -23,11 +28,12 @@
       ~mouse: mouse :: (KeyEvent, CanvasContext) -> ~any = Function.pass,
       ~key: key :: (MouseEvent, CanvasContext) -> ~any = Function.pass,
       ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = "canvas",
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: styles :: ObsOrValue.of(List.of(Canvas.Style)) = [],
+      ~style: style :: ObsOrValue.of(List.of(Canvas.Style)) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
-      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true]
+      ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
+      ~window_callbacks: window_callbacks :: maybe(WindowCallbacks) = #false
     )
 ){
 
@@ -48,6 +54,14 @@
  @rhombus(mouse) or @rhombus(key) function is called with a
  @rhombus(MouseEvent, ~class) or @rhombus(KeyEvent, ~class),
  respectively, and a @rhombus(CanvasContext, ~class).
+
+ A canvas's @rhombus(~label) string is not shown, but it is included for
+ consistency with other @rhombus(WindowchildView)s.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 
 }
 
@@ -128,16 +142,16 @@
     implements WindowChildView
     constructor (
       editor :: ObsOrValue.of(maybe(EditorCanvasChild)),
-      ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
-      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
-      ~styles: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
       ~scrolls_per_page: scrolls_per_page :: Int.in(1..=10000) = 100,
       ~wheel_step: wheel_step :: ObsOrValue.of(maybe(Int.in(1..=10000))) = #false,
       ~line_count: line_count ::  ObsOrValue.of(maybe(Int.in(1..=1000))) = #false,
       ~inset: inset :: ObsOrValue.of(View.Margin) = [5, 5],
+      ~label: label :: ObsOrValue.of(maybe(View.LabelString)) = #false,
+      ~style: style :: ObsOrValue.of(List.of(EditorCanvas.Style)) = [],
       ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
       ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
       ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
+      ~enable: enable :: ObsOrValue.of(Boolean) = #true,
       ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()
     )
 
@@ -149,6 +163,28 @@
  instance of @rhombus(EditorCanvasChild, ~class) by libraries that
  cooperate with the @rhombusmodname(gui) library.
 
+ The @rhombus(~scrolls_per_page) and @rhombus(~wheel_step) arguments
+ control how the editor responds to mouse- or trackpad-based scrolling.
+
+ The @rhombus(~line_count) argument sets the canvas’s graphical minimum
+ height to display a particular number of lines of text. The line height
+ is determined by measuring the difference between the top and bottom of
+ a displayed editor's first line. The minimum height is not changed until
+ the canvas gets an editor, and when the canvas's editor is changed, the
+ minimum height is recalculated. If the line count is set to
+ @rhombus(#false), then the canvas’s graphical minimum height is restored
+ to its original value.
+
+ The @rhombus(~inset) argument control how much an editor is inset
+ within the editor canvas.
+
+ An editor canvas's @rhombus(~label) string is not shown, but it is
+ included for consistency with other @rhombus(WindowchildView)s.
+
+ See @secref("geometry") for information about @rhombus(~margin),
+ @rhombus(~min_size), and @rhombus(~stretch).
+
+ @window_callbacks
 }
 
 @doc(

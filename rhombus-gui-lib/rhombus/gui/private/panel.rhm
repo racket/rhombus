@@ -23,7 +23,7 @@ export:
   HPanel
   VPanel
   GroupPanel
-  TabsPanel
+  TabPanel
 
 symbol_map_annot PanelStyle convert_style
 | border
@@ -43,7 +43,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
 
      constructor ($arg :: $arg_annot ..., ...,
                   ~align: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-                  ~styles: style :: ObsOrValue.of(List.of($(name).Style)) = [],
+                  ~style: style :: ObsOrValue.of(List.of($(name).Style)) = [],
                   ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                   ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
                   ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],
@@ -103,16 +103,16 @@ def_panel GroupPanel(label :: ObsOrValue.of(View.LabelString) => (obs.unwrap)):
   symbol_map_annot Style convert_style
   | deleted
 
-class TabsPanel(private _at_selection :: Obs):
+class TabPanel(private _at_selection :: Obs):
   extends BaseWindowView
 
   constructor (choices :: ObsOrValue.of(List),
                ~choice_to_label: choice_to_label :: Any -> Any = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~selection: selection :: ObsOrValue.of(Any) = #false,
-               ~action: action :: (TabsPanel.Action, List, maybe(Any)) -> ~any = values,
+               ~action: action :: (TabPanel.Action, List, maybe(Any)) -> ~any = values,
                ~align: alignment :: ObsOrValue.of(View.Alignment) = [#'center, #'center],
-               ~styles: style :: ObsOrValue.of(List.of(TabsPanel.Style)) = [],
+               ~style: style :: ObsOrValue.of(List.of(TabPanel.Style)) = [],
                ~enable: enable :: ObsOrValue.of(Boolean) = #true,
                ~spacing: spacing :: ObsOrValue.of(View.SpacingInt) = 0,
                ~margin: margin :: ObsOrValue.of(View.Margin) = [0, 0],

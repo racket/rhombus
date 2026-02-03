@@ -7,55 +7,47 @@
 @title(~tag: "window-view"){Window View Interfaces}
 
 @doc(
-  interface gui.WindowChildView:
-    extends View
-    implementable #,(@unexported)
-){
-
- A @deftech{window-child view} represents a view that can be included
- within a window.
-
- Create a @rhombus(WindowView, ~class) using classes like
- @rhombus(Button, ~class), @rhombus(Canvas, ~class), and
- @rhombus(VPanel, ~class),
-
-}
-
-@doc(
   interface gui.WindowView:
     extends WindowChildView
     implementable #,(@unexported)
 ){
 
- A @deftech{window view} creates a window when the view is rendered. A
- window view is an instance of @rhombus(WindowChildView, ~annot) because
- it supports the methods associated with that interface, but a window
- view cannot be provided as a child of a container view like
- @rhombus(HPanel, ~class) or @rhombus(TabsPanel, ~class).
+ A @deftech{window view} creates a window when the view is rendered.
 
  Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class)
  or @rhombus(Dialog, ~class).
 
+ A window view is an instance of @rhombus(WindowChildView, ~annot)
+ because it supports the methods associated with that interface, but a
+ window view cannot be provided as a child of a container view like
+ @rhombus(HPanel, ~class), @rhombus(TabPanel, ~class), or another
+ @rhombus(Window, ~class) or , @rhombus(Dialog, ~class). To make a window
+ or dialog a child of another window (which can affect how the window or
+ dialog is seen by a user), supply the parent's renderer to
+ @rhombus(WindowView.render) or @rhombus(WindowView.run).
+
 }
 
 @doc(
-  method (wv :: gui.WindowView).render(parent :: maybe(Renderer) = #false)
-    :: Renderer
+  method (wv :: gui.WindowView).render(
+    parent :: maybe(Renderer) = #false
+  ) :: Renderer
 ){
 
  Renders the view by creating and showing a window or dialog. The
  resulting window or dialog might be closed by the user; use
  @rhombus(WindowView.close) to close it programmatically.
 
- The result rendered should be destroyed using
+ The result renderer should be destroyed using
  @rhombus(Renderer.destroy). Otherwise, the underlying GUI objects may be
  retained, especially via registrations with @tech{observables}.
 
 }
 
 @doc(
-  method (wv :: gui.WindowView).run(parent :: maybe(Renderer) = #false)
-    :: Void
+  method (wv :: gui.WindowView).run(
+    parent :: maybe(Renderer) = #false
+  ) :: Void
 ){
 
  Renders the view, waits until the rendered window or dialog is
@@ -72,7 +64,8 @@
 
  If a window is being shown via @rhombus(wv.run()), then hiding the
  window with @rhombus(wv.show(#false)) will not cause @rhombus(wv.run())
- to complete. Use @rhombus(wv.close()) to close the window.
+ to complete. Use @rhombus(wv.close()) to close the window instead of
+ merely hiding it.
 
 }
 
@@ -91,6 +84,21 @@
 
  Moves keyboard focus to the @tech{most recent rendering} of
  @rhombus(v).
+
+}
+
+@doc(
+  interface gui.WindowChildView:
+    extends View
+    implementable #,(@unexported)
+){
+
+ A @deftech{window-child view} represents a view that can be included
+ within a window or dialog.
+
+ Create a @rhombus(WindowView, ~class) using classes like
+ @rhombus(Button, ~class), @rhombus(Canvas, ~class), and
+ @rhombus(VPanel, ~class),
 
 }
 
