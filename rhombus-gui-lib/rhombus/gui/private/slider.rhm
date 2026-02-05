@@ -30,7 +30,7 @@ class Slider(private _at_value :: Obs):
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #true],
                ~style: style :: List.of(Slider.Style) = [#'horizontal],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_value = obs.reflect_obs(value)
+    let at_value = obs.reflect_obs(value, "at_value")
     let action = (fun (val):
                     at_value.value := val
                     action(val)

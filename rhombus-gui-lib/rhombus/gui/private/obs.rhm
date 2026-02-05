@@ -140,6 +140,15 @@ class Obs(private _handle, private _converter = #false):
                    ~#{derived?}: is_derived),
           #false)
 
+  private implements Printable
+  private override describe(mode, recur):
+    let name = easy.#{obs-name}(_handle)
+    PrintDesc.list("Obs(",
+                   if name == #'anon
+                   | []
+                   | ["~name: " +& repr(to_string(name))],
+                   ")")
+
   private method convert(v):
     if _converter
     | _converter(v)
@@ -161,6 +170,8 @@ class Obs(private _handle, private _converter = #false):
   property
   | value :~ like_obs_value(this): peek()
   | value := v: update(fun (_): v)
+
+  property name: to_string(easy.#{obs-name}(_handle))
 
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
@@ -194,6 +205,9 @@ class Obs(private _handle, private _converter = #false):
     later_of
     rename: later_of as of
     from_handle
+    rename:
+      obs_def as def
+      obs_let as let
 
   fun
   | combine(f :: Function, obs :: Obs, ...) :: Obs:
@@ -207,6 +221,18 @@ class Obs(private _handle, private _converter = #false):
     unless easy.#{obs?}(handle)
     | wrapper.error(~who: who, ~what: "observer", handle)
     _Obs(handle)
+
+  defn.macro
+  | 'obs_def $(name :: IdentifierName) = $rhs ...':
+      'def $name = Obs($rhs ..., ~name:  $(name.to_source_string()))'
+  | 'obs_def $(name :: IdentifierName): $block':
+      'def $name = Obs(block: $block, ~name: $(name.to_source_string()))'
+
+  defn.macro
+  | 'obs_let $(name :: IdentifierName) = $rhs ...':
+      'let $name = Obs($rhs ..., ~name:  $(name.to_source_string()))'
+  | 'obs_let $(name :: IdentifierName): $block':
+      'let $name = Obs(block: $block, ~name: $(name.to_source_string()))'
 
 fun compose_converters(converter, new_converter):
   if converter
@@ -244,14 +270,14 @@ fun
 | to_obs(v) :: Obs: Obs(v)
 
 fun
-| reflect_obs(o :: Obs) :~ Obs:
-    let new_o = Obs(o.value)
+| reflect_obs(o :: Obs, name) :~ Obs:
+    let new_o = Obs(o.value, ~name: name)
     o.observe(fun (v): new_o.value := v)
     new_o
-| reflect_obs(v) :~ Obs: Obs(v)
+| reflect_obs(v, name) :~ Obs: Obs(v, ~name: name)
 
-fun reflect_obs_first(v, list_obs) :~ Obs:
-  let o = reflect_obs(v)
+fun reflect_obs_first(v, list_obs, name) :~ Obs:
+  let o = reflect_obs(v, name)
   when !o.value
   | match list_obs
     | o :: Obs:

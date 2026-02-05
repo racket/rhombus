@@ -137,10 +137,28 @@ from the view) becomes disabled.
 }
 
 @doc(
+  property (obs :: gui.Obs).name :: String
+  defn.macro 'gui.Obs.def $id_name = $expr'
+  defn.macro 'gui.Obs.def $id_name: $body; ...'
+  defn.macro 'gui.Obs.let $id_name = $expr'
+  defn.macro 'gui.Obs.let $id_name: $body; ...'
   method (obs :: gui.Obs).rename(name :: String) :: Obs
 ){
 
- Returns an observer like @rhombus(obs), but named as @rhombus(name).
+ The @rhombus(Obs.name) property returns an observer's name as assigned
+ by passing a @rhombus(~name) argument to the @rhombus(Obs) constructor
+ or by using @rhombus(Obs.def) or @rhombus(Obs.let).
+
+ The @rhombus(Obs.def) and @rhombus(Obs.let) forms are like
+ @rhombus(def) and @rhombus(let), but the result of the right-hand
+ @rhombus(expr) or @rhombus(body) sequence is wrapped with a call to the
+ @rhombus(Obs) constructor and using the string form of the defined
+ @rhombus(id_name) as the @rhombus(~name) argument.
+
+ The @rhombus(Obs.rename) method returns an observer that behaves the
+ same as @rhombus(obs), but named as @rhombus(name). In particular,
+ changng the value of the returned observer is the same as changing the
+ value of @rhombus(obs).
 
 }
 

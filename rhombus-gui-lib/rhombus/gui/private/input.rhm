@@ -38,7 +38,7 @@ class Input(private _at_content :: Obs):
                ~is_equal_value: is_equal :: Function.of_arity(2) = fun (a, b): a == b,
                ~value_to_text: val_to_txt :: Function = values,
                ~window_callbacks: wcb :: WindowCallbacks = WindowCallbacks()):
-    let at_content = obs.reflect_obs(content)
+    let at_content = obs.reflect_obs(content, "at_content")
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)

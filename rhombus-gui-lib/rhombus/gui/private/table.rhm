@@ -40,7 +40,7 @@ class Table(private _at_selection :: Obs):
                ~column_widths: column_widths :: ObsOrValue.of(List.of(Table.CellWidth))
                                  = [],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_selection = obs.reflect_obs(selection)
+    let at_selection = obs.reflect_obs(selection, "at_selection")
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)
@@ -122,7 +122,7 @@ class ListChoice(private _at_selection :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#true, #false],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_selection = obs.reflect_obs(selection)
+    let at_selection = obs.reflect_obs(selection, "at_selection")
     #{view-help}.#{mix-wrap}(
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)

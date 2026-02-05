@@ -26,7 +26,7 @@ class Checkbox(private _at_checked :: Obs):
                ~min_size: min_size :: ObsOrValue.of(View.Size) = [#false, #false],
                ~stretch: stretch :: ObsOrValue.of(View.Stretch) = [#false, #false],
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false):
-    let at_checked = obs.reflect_obs(checked)
+    let at_checked = obs.reflect_obs(checked, "at_checked")
     let action = (fun (on):
                     at_checked.value := on
                     action(on)

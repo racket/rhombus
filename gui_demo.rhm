@@ -123,11 +123,11 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
 // ----------------------------------------
 
-let at_tab = gui.Obs("Happy")
-let enabled = gui.Obs(#true)
+gui.Obs.def at_tab = "Happy"
+gui.Obs.def enabled = #true
 
-let track_mouse = gui.Obs(#true)
-let rotation = gui.Obs(0)
+gui.Obs.def track_mouse = #true
+gui.Obs.def rotation = 0
 
 def menu_bar:
   fun rotate_item(label, dir, shortcut):
@@ -157,7 +157,7 @@ def menu_bar:
 
 // ----------------------------------------
 
-let name = gui.Obs("Smiley")
+gui.Obs.def name = "Smiley"
 
 def name_input:
   gui.Input(name.value,
@@ -188,8 +188,8 @@ def top_panel = gui.HPanel(name_input,
 
 // ----------------------------------------
 
-def name_pos = gui.Obs(["Right", "Bottom"])
-def next_name_pos = gui.Obs(name_pos.value)
+gui.Obs.def name_pos = ["Right", "Bottom"]
+gui.Obs.def next_name_pos = name_pos.value
 
 def name_pos_v = gui.RadioChoice(["Top", "Center", "Bottom"],
                                  ~stretch: [#false, #false],
@@ -245,7 +245,7 @@ def (tabs, config):
                                ~action: fun ():
                                           at_tab.value := "Sad"))
 
-  let ghosts = gui.Obs([])
+  gui.Obs.let ghosts = []
   fun ghost_mouse(ev :: gui.MouseEvent, area):
     ghosts <~ (fun (l :: List):
                  let keep :~ List:
@@ -256,7 +256,7 @@ def (tabs, config):
                    ev.x,
                    ev.y)
 
-  let keyed = gui.Obs("")
+  gui.Obs.let keyed = ""
   fun accum_key(ev :: gui.KeyEvent, area):
     keyed <~ (fun (s :: String):
                 match ev.code
@@ -282,6 +282,7 @@ def (tabs, config):
       "track mouse": track_mouse,
       "rotation": rotation }
       |> gui.Obs.combine(_)
+      |> (_.rename("comfig"))
 
   def canvas = gui.VPanel(config
                             |> gui.Canvas(_,

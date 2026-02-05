@@ -121,7 +121,7 @@ class TabPanel(private _at_selection :: Obs):
                ~window_callbacks: wcb :: maybe(WindowCallbacks) = #false,
                child :: ObsOrValue.of(WindowChildView && !WindowView),
                ...):
-    let at_selection = obs.reflect_obs(selection)
+    let at_selection = obs.reflect_obs(selection, "at_selection")
     let action = (fun(what, choices, selected):
                     at_selection.value := selected
                     action(what, [& choices], selected)
