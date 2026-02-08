@@ -311,15 +311,20 @@ check:
   5 is_a Sequence ~is #false
 
 check:
+  ~eval
+  [] :: Sequence.assume_of(ReadableString.to_string)
+  ~throws "converter annotation not supported for elements"
+
+check:
   use_static
-  let seq :: Sequence.expect_of(String) = dynamic(["a", "b"].to_sequence())
+  let seq :: Sequence.assume_of(String) = dynamic(["a", "b"].to_sequence())
   for math.sum (s in seq):
     s.length()
   ~is 2
 
 check:
   use_static
-  def seq :: Sequence.expect_of(Int, Int) = dynamic({ 1: 2, 3: 4 })
+  def seq :: Sequence.assume_of(Int, Int) = dynamic({ 1: 2, 3: 4 })
   for math.sum((k, v) in seq):
     k+v
   ~is 10

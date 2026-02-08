@@ -23,12 +23,18 @@ block:
   check d.is_running() ~is #false
   check d.force() ~is #true
 
+check:
+  ~eval
+  import rhombus/delay open
+  10 :: Delay.assume_of(ReadableString.to_string)
+  ~throws "converter annotation not supported for result"
+
 block:
-  let d :: Delay.expect_of(String) = delay: "hello"
+  let d :: Delay.assume_of(String) = delay: "hello"
   check d.force().length() ~is 5
 
 block:
-  let d :: Delay.expect_of(String, String) = delay: values("hello", "world!")
+  let d :: Delay.assume_of(String, String) = delay: values("hello", "world!")
   let (h, w) = d.force()
   check h.length() ~is 5
   check w.length() ~is 6

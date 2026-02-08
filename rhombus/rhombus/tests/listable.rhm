@@ -102,9 +102,14 @@ check:
   [& "oops"] ~throws "not a listable for splicing into a list"
   PairList[& "oops"] ~throws "not a listable for splicing into a pair list"
 
+check:
+  ~eval
+  [] :: Listable.assume_of(ReadableString.to_string)
+  ~throws "converter annotation not supported for elements"
+
 block:
   use_static
-  let x :: Listable.expect_of(String) = dynamic(["a"])
+  let x :: Listable.assume_of(String) = dynamic(["a"])
   check Listable.to_list(x)[0].length() ~is 1
   check x.to_list()[0].length() ~is 1
 
@@ -116,7 +121,7 @@ block:
 
 block:
   use_static
-  let x :: (Listable.expect_of(List.of(String)) || Listable.expect_of(List.of(Int))) = dynamic([["a"]])
+  let x :: (Listable.assume_of(List.of(String)) || Listable.assume_of(List.of(Int))) = dynamic([["a"]])
   check Listable.to_list(x)[0].length() ~is 1
   check x.to_list()[0].length() ~is 1
 
@@ -129,14 +134,14 @@ block:
     extends A
   class B2():
     extends A
-  let x :: (Listable.expect_of(B1) || Listable.expect_of(B2)) = dynamic([B1()])
+  let x :: (Listable.assume_of(B1) || Listable.assume_of(B2)) = dynamic([B1()])
   check Listable.to_list(x)[0].a() ~is 1
   check x.to_list()[0].a() ~is 1
 
 check:
   ~eval
   use_static
-  def x :: (Listable.expect_of(String) || Listable.expect_of(Int)) = dynamic(["a"])
+  def x :: (Listable.assume_of(String) || Listable.assume_of(Int)) = dynamic(["a"])
   Listable.to_list(x)[0].length()
   ~throws values("length",
                  "no such field or method",

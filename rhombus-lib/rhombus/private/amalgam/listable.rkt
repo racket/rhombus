@@ -64,17 +64,15 @@
 (define-syntax (listable-of-static-infoss data static-infoss)
   #`((#%index-result #,(car static-infoss))))
 
-(define-syntax (listable-build-convert arg-id build-convert-stxs kws data)
-  arg-id)
-
-(define-annotation-constructor (Listable Listable.expect_of)
+(define-annotation-constructor (Listable Listable.assume_of)
   ()
   #'listable? #,(get-listable-static-infos)
   1
   #f
   listable-expect-of-predicate
   #'listable-of-static-infoss #f
-  #'listable-build-convert #f)
+  "converter annotation not supported for elements"
+  #'())
 
 (define-dot-provider-syntax listable-instance
   (dot-provider
@@ -87,7 +85,8 @@
 (define-name-root Listable
   #:fields
   ([to_list Listable.to_list]
-   [expect_of Listable.expect_of]))
+   [assume_of Listable.assume_of]
+   [expect_of Listable.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"]))
 
 (define-syntax to-list-static-infos
   (lambda (data deps)

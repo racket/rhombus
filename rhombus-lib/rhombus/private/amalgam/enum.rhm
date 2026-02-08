@@ -1,8 +1,6 @@
 #lang rhombus/private/amalgam/core
 import:
   "core-meta.rkt" open
-  meta:
-    lib("enforest/deprecated.rkt")
 
 use_static
 
@@ -14,27 +12,6 @@ meta class Parsed.Symbol(mutable syms :~ List)
 meta class Parsed.Annot(mutable anns :~ List)
 
 meta:
-  syntax_class EnumBody:
-    kind: ~multi
-    fields:
-      [clause, ...]
-      doc
-  | '$(all && '~doc
-               $(clause_0 :: Group)
-               $clause_1
-               ...')':
-      def '$(kw_g :: Group); $_; ...' = all
-      field doc = '$(clause_0.group_property(#'#{raw-prefix}, kw_g.group_property(#'#{raw-prefix}), #true))
-                   $clause_1
-                   ...'
-      field [clause, ...]: [clause_0, clause_1, ...]
-  | '~doc':
-      field doc = ''
-      field [clause, ...] = []
-  | '$clause
-     ...':
-     field doc = #false
-
   syntax_class EnumCases:
     kind: ~sequence
     fields:
@@ -56,26 +33,12 @@ meta:
       field [clause, ...] = []
 
 defn.macro
-| 'enum $(name :: IdentifierName):
-     $(body :: EnumBody)':
-    ~op_stx: self
-    ~all_stx: stx
-    when body.doc
-    | syntax_meta.error(#false,
-                        "`~doc` allowed only in a module declaration context",
-                        stx)
-    parse_enum(self, stx, name, #false, [body.clause, ...], #true)
 | 'enum $(name :: IdentifierName) $(body :: EnumCases)':
     ~op_stx: self
     ~all_stx: stx
     parse_enum(self, stx, name, #false, [body.clause, ...], #false)
 
 decl.macro
-| 'enum $(name :: IdentifierName):
-     $(body :: EnumBody)':
-    ~op_stx: self
-    ~all_stx: stx
-    parse_enum(self, stx, name, body.doc, [body.clause, ...], #true)
 | 'enum $(name :: IdentifierName) $(body :: EnumCases)':
     ~op_stx: self
     ~all_stx: stx
@@ -83,8 +46,6 @@ decl.macro
 
 meta:
   fun parse_enum(self, stx, name, doc, [clause, ...], allow_multiple):
-    when allow_multiple && [clause, ...] != []
-    | deprecated.#{warn-deprecated!}(#'#{enum-block-instead-of-alts}, "15-JAN-2026")
     fun parse_annot(ann):
       let '$(ann :: annot_meta.Parsed)' = ann
       ann

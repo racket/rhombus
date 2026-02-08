@@ -289,7 +289,7 @@
 ){
 
  A @tech(~doc: guide_doc){predicate annotation} that is satisfied by a
- function whose argument count and keyword requirements are consistent
+ function whose argument count and keyword requirements are checked to be consistent
  with @rhombus(arrow_annot). The full static information of
  @rhombus(arrow_annot) is propagated, even though the function is not
  wrapped as part of a conversion to ensure that its argument and result

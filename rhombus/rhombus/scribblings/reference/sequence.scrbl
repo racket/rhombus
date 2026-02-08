@@ -19,7 +19,7 @@ internal state, and the state can even be specific to a particular
 
 @doc(
   annot.macro 'Sequence'
-  annot.macro 'Sequence.expect_of($annot, ...)'
+  annot.macro 'Sequence.assume_of($annot, ...)'
 ){
 
  Matches any @tech{sequence}.
@@ -29,13 +29,14 @@ internal state, and the state can even be specific to a particular
  it is suitable when a more specialized annotation (such as
  @rhombus(List) or @rhombus(Array)) is not available.
 
- A @rhombus(Sequence.expect_of(annot, ...), ~annot) annotation is the same
+ A @rhombus(Sequence.assume_of(annot, ...), ~annot) annotation is the same
  as @rhombus(Sequence, ~annot), but elements drawn from the sequence via
  @rhombus(for) have the static information of @rhombus(annot)s (where
  multiple @rhombus(annot)s correspond to multiple values for each element,
  such as the key and value from a @tech{map}). The extracted elements are
- not checked or converted, however, and each @rhombus(annot) is used only
- for its static information.
+ not checked, however; each @rhombus(annot) is used only
+ for its static information, and each @rhombus(annot) must be a
+ @tech(~doc: guide_doc){predicate annotation}.
 
 }
 
@@ -83,7 +84,7 @@ internal state, and the state can even be specific to a particular
 
 @doc(
   fun Sequence.to_stream(seq :: Sequence)
-    :: Stream.expect_of(Any.like_element(seq))
+    :: Stream.assume_of(Any.like_element(seq))
 ){
 
  Converts a @tech{sequence} to a @tech{stream} by lazily demanding and

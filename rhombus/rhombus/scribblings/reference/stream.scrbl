@@ -19,21 +19,22 @@ element by position via @rhombus(#%index).
 
 @doc(
   annot.macro 'Stream'
-  annot.macro 'Stream.expect_of($annot, ...)'
+  annot.macro 'Stream.assume_of($annot, ...)'
 ){
 
  Matches any @tech{stream}.
 
- A @rhombus(Stream.expect_of(annot, ...), ~annot) annotation is the same as
+ A @rhombus(Stream.assume_of(annot, ...), ~annot) annotation is the same as
  @rhombus(Stream, ~annot), but elements drawn from the stream via
  @rhombus(Stream.first) have the static information of  the @rhombus(annot)s
  (where multiple @rhombus(annot)s correspond to multiple values for each
  element, such as the key and value from a @tech{map}). The
- extracted elements are not checked or converted, however, and each
- @rhombus(annot) is used only for its static information.
+ extracted elements are not checked, however; each
+ @rhombus(annot) is used only for its static information, and
+ each @rhombus(annot) must be a @tech(~doc: guide_doc){predicate annotation}.
 
  Static information associated by @rhombus(Stream, ~annot) or
- @rhombus(Stream.expect_of, ~annot) makes an expression acceptable as a
+ @rhombus(Stream.assume_of, ~annot) makes an expression acceptable as a
  sequence to @rhombus(for) in static mode.
 
 }
@@ -41,7 +42,7 @@ element by position via @rhombus(#%index).
 @doc(
   property (stm :: Stream).first :: Any.like_element(stm)
   property (stm :: Stream).rest
-    :: Stream.expect_of(Any.like_element(stm))
+    :: Stream.assume_of(Any.like_element(stm))
   method (stm :: Stream).is_empty() :: Boolean
 ){
 

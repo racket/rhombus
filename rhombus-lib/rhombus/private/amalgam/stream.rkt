@@ -58,7 +58,8 @@
   #:fields
   ()
   #:namespace-fields
-  ([expect_of Stream.expect_of]
+  ([assume_of Stream.assume_of]
+   [expect_of Stream.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"]
    [empty Stream.empty]
    [cons Stream.cons])
   #:properties
@@ -87,17 +88,15 @@
                                (car static-infoss)
                                #`((#%values #,static-infoss))))))
 
-(define-syntax (stream-build-convert arg-id build-convert-stxs kws data)
-  arg-id)
-
-(define-annotation-constructor (StreamAgain Stream.expect_of)
+(define-annotation-constructor (StreamAgain Stream.assume_of)
   ()
   #'stream? #,(get-stream-static-infos)
   'any ;; allow any number of annotations in `expect_of`
   #f
   (lambda (predicate-stxs) #`(lambda (arg) #t))
   #'stream-of-static-infos #f
-  #'stream-build-convert #'())
+  "converter annotation not supported for elements"
+  #'())
 
 (define Stream.empty
   empty-stream)

@@ -113,9 +113,6 @@
    ephemeral_term
    ephemeral_group
    ephemeral_sequence
-   [track_origin Syntax.track_origin #:deprecate "15-Dec-2025"]
-   [track_group_origin Syntax.track_group_origin #:deprecate "15-Dec-2025"]
-   [track_ephemeral_origin Syntax.track_ephemeral_origin #:deprecate "15-Dec-2025"]
    property
    group_property
    ephemeral_property

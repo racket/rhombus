@@ -691,7 +691,7 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
 
 @doc(
   method Map.to_sequence(mp :: ReadableMap)
-    :: Sequence.expect_of(Any.like_key(mp), Any.like_value(mp))
+    :: Sequence.assume_of(Any.like_key(mp), Any.like_value(mp))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -713,9 +713,9 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
 
 @doc(
   property Map.maybe(mp :: ReadableMap)
-    :: MapMaybe.expect_of(Any.like_element(mp))
+    :: MapMaybe.assume_of(Any.like_element(mp))
   annot.macro 'MapMaybe'
-  annot.macro 'MapMaybe.expect_of($annot)'
+  annot.macro 'MapMaybe.assume_of($annot)'
   method (mm :: MapMaybe).get(key :: Any)
     :: Any.like_element(mm)
 ){
@@ -746,10 +746,11 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
     m.maybe is_a MapMaybe
 )
 
- A @rhombus(MapMaybe.expect_of(ann), ~annot) annotation is like
+ A @rhombus(MapMaybe.assume_of(ann), ~annot) annotation is like
  @rhombus(MapMaybe, ~annot), but with static information indicating that
  elements have the static information of @rhombus(maybe(ann), ~annot).
- The extracted elements are not checked or converted, however, and
- @rhombus(ann) is used only for its static information.
+ The extracted elements are not checked, however;
+ @rhombus(ann) is used only for its static information,
+ and it must be a @tech(~doc: guide_doc){predicate annotation}.
 
 }

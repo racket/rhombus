@@ -303,10 +303,10 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
 @doc(
   method (in :: Port.Input).bytes_lines(
     ~mode: mode :: Port.Input.ReadLineMode = #'any
-  ) :: Sequence.expect_of(Bytes) && Listable.expect_of(Bytes)
+  ) :: Sequence.assume_of(Bytes) && Listable.assume_of(Bytes)
   method (in :: Port.Input).lines(
     ~mode: mode :: Port.Input.ReadLineMode = #'any
-  ) :: Sequence.expect_of(String) && Listable.expect_of(String)
+  ) :: Sequence.assume_of(String) && Listable.assume_of(String)
 ){
 
  Returns a @tech{listable} @tech{sequence} that reads lines from

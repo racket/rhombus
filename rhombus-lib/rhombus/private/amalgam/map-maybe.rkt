@@ -46,7 +46,8 @@
   #:just-annot
   #:fields ()
   #:namespace-fields
-  ([expect_of MapMaybe.expect_of])
+  ([assume_of MapMaybe.assume_of]
+   [expect_of MapMaybe.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"])
   #:properties
   ()
   #:methods
@@ -55,7 +56,7 @@
 (define-syntax (map-maybe-of-static-infos data static-infoss)
   #`((#%index-result ((#%maybe #,(cadr static-infoss))))))
 
-(define-annotation-constructor (MapMaybe/again MapMaybe.expect_of)
+(define-annotation-constructor (MapMaybe/again MapMaybe.assume_of)
   ()
   #'map-maybe? #,(get-map-maybe-static-infos)
   1
@@ -66,7 +67,8 @@
           (for/and ([e (in-hash (map-maybe-ht arg))])
             (pred e)))))
   #'map-maybe-of-static-infos #f
-  #'map-maybe-build-convert #'())
+  "converter annotation not supported for elements"
+  #'())
 
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
   arg-id)

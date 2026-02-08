@@ -5,7 +5,7 @@
 class Posn(x, y)
 
 when #false
-| 10 :: Sequence.expect_of(Posn)
+| 10 :: Sequence.assume_of(Posn)
 
 when #false
 | 10 :: maybe(Posn)

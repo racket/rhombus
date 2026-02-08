@@ -43,18 +43,17 @@ class Delay(_handle):
                    ")")
 
   export:
-    expect_of
+    assume_of
     from_handle
 
-  annot.macro 'expect_of($(ann :: Group), ...)':
+  annot.macro 'assume_of($(ann :: Group), ...)':
     ~all_stx: stx
     ~context: ctx
     let ['$(a :: annot_meta.Parsed(ctx))', ...] = [ann, ...]
     let [statinfos, ...]:
       for List (a in [a, ...]):
         if annot_meta.is_converter(a)
-        | let (_, _, statinfos) = annot_meta.unpack_converter(a)
-          statinfos
+        | syntax_meta.error("converter annotation not supported for result", stx, a)
         | let (_, statinfos) = annot_meta.unpack_predicate(a)
           statinfos
     let all_statinfos:

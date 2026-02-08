@@ -2,6 +2,8 @@
 import:
   "core-meta.rkt" open
   lib("racket/base.rkt")
+  meta:
+    lib("enforest/deprecated.rkt")
 
 use_static
 
@@ -22,16 +24,19 @@ namespace Sequence:
     instantiate
     generate
     to_stream
+    assume_of
     expect_of
   annot.macro 'expect_of($(ann :: Group), ...)':
+    deprecated.#{warn-deprecated!}(#'#{Sequence.expect_of}, "15-MAR-2026")
+    'assume_of($ann, ...)'
+  annot.macro 'assume_of($(ann :: Group), ...)':
     ~all_stx: stx
     ~context: ctx
     let ['$(a :: annot_meta.Parsed(ctx))', ...] = [ann, ...]
     let [statinfos, ...]:
       for List (a in [a, ...]):
         if annot_meta.is_converter(a)
-        | let (_, _, statinfos) = annot_meta.unpack_converter(a)
-          statinfos
+        | syntax_meta.error("converter annotation not supported for elements", stx, a)
         | let (_, statinfos) = annot_meta.unpack_predicate(a)
           statinfos
     let all_statinfos:
@@ -87,5 +92,5 @@ fun generate(seq :: Sequence) :~ values(Function.of_arity(0), Function.of_arity(
   ~name: Sequence.instantiate
   base.#{sequence-generate}(seq)
 
-fun to_stream(seq :: Sequence) :~ Stream.expect_of(Any.like_element(seq)):
+fun to_stream(seq :: Sequence) :~ Stream.assume_of(Any.like_element(seq)):
   base.#{sequence->stream}(seq)

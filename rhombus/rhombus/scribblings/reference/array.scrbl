@@ -421,7 +421,7 @@ pairwise equal by @rhombus(==).
 
 @doc(
   method (arr :: Array).to_sequence()
-    :: Sequence.expect_of(Any.like_element(arr))
+    :: Sequence.assume_of(Any.like_element(arr))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

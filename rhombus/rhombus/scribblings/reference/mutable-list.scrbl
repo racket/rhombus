@@ -613,7 +613,7 @@ immutable list.
 
 @doc(
   method (mlst :: MutableList).to_sequence()
-    :: Sequence.expect_of(Any.like_element(mlst))
+    :: Sequence.assume_of(Any.like_element(mlst))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

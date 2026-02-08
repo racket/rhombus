@@ -75,13 +75,14 @@ sequence.
 
 
 @doc(
-  annot.macro 'Listable.expect_of($annot)'
+  annot.macro 'Listable.assume_of($annot)'
 ){
 
  An annotation like @rhombus(Listable, ~annot), with static information
  indicating that elements have the static information of @rhombus(annot).
- The extracted elements are not checked or converted, however, and
- @rhombus(annot) is used only for its static information.
+ The extracted elements are not checked, however;
+ @rhombus(annot) is used only for its static information, and it
+ must be a @tech(~doc: guide_doc){predicate annotation}.
 
 }
 

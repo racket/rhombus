@@ -26,7 +26,7 @@ produce the same result.
 
 @doc(
   annot.macro 'Delay'
-  annot.macro 'Delay.expect_of($annot, ...)'
+  annot.macro 'Delay.assume_of($annot, ...)'
   fun Delay(thunk :: () -> ~any) :: Delay
   expr.macro 'delay:
                 $maybe_kind
@@ -39,12 +39,13 @@ produce the same result.
 
  The @rhombus(Delay, ~annot) annotation is satisfied by @tech{delay}
  values, which are normally created using the @rhombus(delay) form. The
- @rhombus(Delay.expect_of, ~annot) annotation causes the
+ @rhombus(Delay.assume_of, ~annot) annotation causes the
  @rhombus(Delay.force) result of an annotated expression to have the
- static information @rhombus(values(annot, ...)) (where multiple
+ static information of @rhombus(values(annot, ...)) (where multiple
  @rhombus(annot)s correspond to multiple values produced by the delay's
- expression). The forced values are not checked or converted, however,
- and each @rhombus(annot) is used only for its static information.
+ expression). The forced values are not checked, however;
+ each @rhombus(annot) is used only for its static information,
+ an each @rhombus(annot) must be a @tech(~doc: guide_doc){predicate annotation}.
 
  The @rhombus(Delay) function creates a delay given a function of zero
  arguments to be called on demand to produce the value.

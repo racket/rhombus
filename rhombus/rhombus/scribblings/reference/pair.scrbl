@@ -635,7 +635,7 @@ pairwise equal by @rhombus(==).
 
 @doc(
   method (lst :: PairList).to_sequence()
-    :: Sequence.expect_of(Any.like_element(lst))
+    :: Sequence.assume_of(Any.like_element(lst))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

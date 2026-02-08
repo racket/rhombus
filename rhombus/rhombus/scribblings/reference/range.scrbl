@@ -514,7 +514,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   method (rge :: SequenceRange).to_sequence()
-    :: Sequence.expect_of(Int)
+    :: Sequence.assume_of(Int)
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -534,7 +534,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   method (rge :: SequenceRange).step_by(step :: PosInt)
-    :: Sequence.expect_of(Int)
+    :: Sequence.assume_of(Int)
 ){
 
  Returns a @tech{sequence} of integers in @rhombus(rge) in ascending
@@ -733,7 +733,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   method (rge :: DescendingRange).to_sequence()
-    :: Sequence.expect_of(Int)
+    :: Sequence.assume_of(Int)
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a
@@ -753,7 +753,7 @@ operator, which is the same as @rhombus(Range.contains).
 
 @doc(
   method (rge :: DescendingRange).step_by(step :: NegInt)
-    :: Sequence.expect_of(Int)
+    :: Sequence.assume_of(Int)
 ){
 
  Returns a @tech{sequence} of integers in @rhombus(rge) in descending

@@ -521,7 +521,7 @@ elements strongly or both weakly, and have the same elements.
 
 @doc(
   method Set.to_sequence(st :: ReadableSet)
-    :: Sequence.expect_of(Any.like_element(st))
+    :: Sequence.assume_of(Any.like_element(st))
 ){
 
  Implements @rhombus(Sequenceable, ~class) by returning a

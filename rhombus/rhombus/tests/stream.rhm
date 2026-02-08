@@ -223,8 +223,13 @@ check:
   ~throws values("no such field or method",
                  "based on static information")
 
+check:
+  ~eval
+  Stream.empty :: Stream.assume_of(ReadableString.to_string)
+  ~throws "converter annotation not supported for elements"
+
 block:
-  fun f(s :: Stream.expect_of(String)):
+  fun f(s :: Stream.assume_of(String)):
     [s.first.length(), s.is_empty()]
   check f(["apple"]) ~is [5, #false]
   check f([]) ~throws empty_msg
@@ -252,7 +257,7 @@ block:
   check Stream.cons(values(1, 2), []).rest ~matches Stream.empty
   check Stream.cons(values(1, 2), Stream.cons(values(3, 4), [])).rest.first ~is values(3, 4)
   block:
-    let (x, y) = Stream.cons(values([1], "a"), [] :: Stream.expect_of(List, String)).first
+    let (x, y) = Stream.cons(values([1], "a"), [] :: Stream.assume_of(List, String)).first
     check x.length() ~is 1
     check y.length() ~is 1
   block:
