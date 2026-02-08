@@ -350,7 +350,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  intended to produce the same result as the case's main @rhombus(body)
  sequence, but it may skip annotation checks. Annotation on the function
  arguments are not checked (and no conversions are applied) for unsafe
- calls, even when the annotation is accoated with an argument via
+ calls, even when the annotation is associated with an argument via
  @rhombus(::, ~bind) as opposed to @rhombus(:~). The
  @rhombus(unsafe_body) sequence itself is in unsafe mode. Argument
  bindings are restricted when a @rhombus(~unsafe) option is present: the

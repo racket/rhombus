@@ -5,12 +5,18 @@
 
 @(def bind_eval = macro.make_macro_eval())
 
-@title(~tag: "bind-macro-protocol"){Binding Low-Level Protocol}
+@title(~tag: "bind-macro-protocol"){Bindings and Low-Level Protocol}
 
 A @deftech{binding form} extends the syntax allowed for binding
 positions like the left-hand side of a @rhombus(def) form, a pattern in
 a @rhombus(match) form, or the formal arguments in a @rhombus(fun) form.
 New binding forms can be defined with @rhombus(bind.macro).
+
+Similar to the way that a @tech{annotation} can be ab
+@tech{always-satisfied annotation}, a binding can be an @deftech{immediate
+ binding} that matches any value and performs no conversion or other work
+on a value supplied to the binding. The @rhombus(_, ~bind) binding form
+and a name as a binding by itself are both immediate binding forms.
 
 Binding macros are typically written by expansion to existing forms as
 described in @secref(~doc: guide_doc, "bind-macro"), but @rhombus(bind.macro) form also

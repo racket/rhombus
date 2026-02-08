@@ -40,7 +40,7 @@ Strings are @tech{comparable}, which means that generic operations like
  Matches strings. The @rhombus(ReadableString, ~annot) annotation allows mutable
  Racket strings as well as immutable Rhombus strings, while @rhombus(MutableString, ~annot)
  matches only mutable strings.
- The @rhombus(ReadableString.to_string, ~annot) @tech(~doc: guide_doc){converter annotation}
+ The @rhombus(ReadableString.to_string, ~annot) @tech(~doc: model_doc){converter annotation}
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string, like
  @rhombus(String.snapshot).
@@ -441,7 +441,7 @@ Strings are @tech{comparable}, which means that generic operations like
   "100".to_int(~radix: 16)
 )
 
- The @rhombus(String.to_int, ~annot) @tech(~doc: guide_doc){converter annotation} is
+ The @rhombus(String.to_int, ~annot) @tech(~doc: model_doc){converter annotation} is
  satisfied by an immutable string that can be converted to an integer via
  @rhombus(String.to_int), and it converts to that integer.
 
@@ -485,7 +485,7 @@ Strings are @tech{comparable}, which means that generic operations like
   String.to_number("42.0", ~radix: 16)
 )
 
- The @rhombus(String.to_number, ~annot) @tech(~doc: guide_doc){converter annotation} is
+ The @rhombus(String.to_number, ~annot) @tech(~doc: model_doc){converter annotation} is
  satisfied by an immutable string that can be converted to a number via
  @rhombus(String.to_number), and it converts to that number.
 

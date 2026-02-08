@@ -45,7 +45,7 @@ produce the same result.
  @rhombus(annot)s correspond to multiple values produced by the delay's
  expression). The forced values are not checked, however;
  each @rhombus(annot) is used only for its static information,
- an each @rhombus(annot) must be a @tech(~doc: guide_doc){predicate annotation}.
+ an each @rhombus(annot) must be a @tech(~doc: model_doc){predicate annotation}.
 
  The @rhombus(Delay) function creates a delay given a function of zero
  arguments to be called on demand to produce the value.

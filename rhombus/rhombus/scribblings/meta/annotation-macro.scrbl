@@ -89,7 +89,7 @@
 ){
 
  The @rhombus(annot_meta.is_predicate) function determines whether a
- syntax object represents a parsed @tech(~doc: guide_doc){predicate annotation}.  This
+ syntax object represents a parsed @tech(~doc: model_doc){predicate annotation}.  This
  function and @rhombus(annot_meta.unpack_predicate) are potentially
  useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
 
@@ -128,13 +128,13 @@
 ){
 
  The @rhombus(annot_meta.is_converter) function determines whether a
- syntax object represents a parsed @tech(~doc: guide_doc){converter annotation}. This
+ syntax object represents a parsed @tech(~doc: model_doc){converter annotation}. This
  function and @rhombus(annot_meta.unpack_converter) are potentially
  useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
 
  The @rhombus(annot_meta.pack_converter) function packs
  a binding, a body expression (that can refer to
- bindings), and static information into a @tech(~doc: guide_doc){converter annotation}
+ bindings), and static information into a @tech(~doc: model_doc){converter annotation}
  form as a syntax object. When the resulting annotation is applied to a
  value, it uses the binding to determine whether the value satisfies the
  predicate, and if so (and if the converted result is needed), the
@@ -149,7 +149,7 @@
  the inverse of @rhombus(annot_meta.pack_converter), returning three
  values: a binding, an expression, and unpacked static information.
  The @rhombus(annot_meta.unpack_converter) function will also unpack
- a @tech(~doc: guide_doc){predicate annotation}, automatically generalizing it to
+ a @tech(~doc: model_doc){predicate annotation}, automatically generalizing it to
  a converter annotation.
 
  See @secref(~doc: guide_doc, "annotation-convert") for more explanation.
@@ -164,6 +164,21 @@
 
  A convenience function that parses @rhombus(stx) as an annotation and
  returns just its static-information component in packed form.
+
+}
+
+@doc(
+  ~meta
+  fun annot_meta.is_always_satisfied(stx :: Syntax) :: Boolean
+){
+
+ Determines whether a syntax object represents a parsed
+ @tech(~doc: model_doc){always-satisfied annotation}, which is a
+ special case of a @tech(~doc: model_doc){predicate annotation}.
+
+ Whether a predicate annotation is always satisfied depends only on the
+ predicate component of the annotation, and not its static-information
+ component.
 
 }
 

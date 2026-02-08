@@ -106,7 +106,7 @@ and @rhombus(#false). For most contexts, such as the test position in
  that @rhombus(None, ~annot) is treated specially).
 
  The annotations are checked in other. Either or both of
- @rhombus(left_annot) and @rhombus(right_annot) can be a @tech(~doc: guide_doc){converter
+ @rhombus(left_annot) and @rhombus(right_annot) can be a @tech(~doc: model_doc){converter
   annotation}, in which case the conversion result of the first satisfied
  annotation is used.
 
@@ -225,14 +225,14 @@ and @rhombus(#false). For most contexts, such as the test position in
  @rhombus(left_annot) and @rhombus(right_annot).
 
  When @rhombus(left_annot) and @rhombus(right_annot) are
- @tech(~doc: guide_doc){predicate annotations}, the static information
+ @tech(~doc: model_doc){predicate annotations}, the static information
  implied by the annotation is the @rhombus(statinfo_meta.and) of information for
  @rhombus(left_annot) and @rhombus(right_annot), where information
  from @rhombus(right_annot) takes precedence in cases where both
  supply values for the same static-information key.
 
  If @rhombus(left_annot) or @rhombus(right_annot) is a
- @tech(~doc: guide_doc){converter annotation}, the @rhombus(left_annot) conversion
+ @tech(~doc: model_doc){converter annotation}, the @rhombus(left_annot) conversion
  is applied first, and its result is the input to @rhombus(right_annot),
  and the result of @rhombus(right_annot) is the result for the
  for the overall annotation created by @rhombus(&&, ~annot).

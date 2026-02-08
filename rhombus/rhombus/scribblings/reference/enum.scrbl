@@ -22,7 +22,7 @@
   | #,(epsilon)
 ){
 
- Defines @rhombus(id_name) as a @tech(~doc: guide_doc){predicate annotation} and as a
+ Defines @rhombus(id_name) as a @tech(~doc: model_doc){predicate annotation} and as a
  namespace, where the namespace exports each @rhombus(id) as the symbol
  @rhombus(#'id) and as a binding form that matches the symbol
  @rhombus(#'id). The annotation is satisfied by each symbol
@@ -34,7 +34,7 @@
 
  The @rhombus(id)s and @rhombus(annot)s are tried in sequence, even
  when they are interleaved. Like @rhombus(is_a), the converting part
- of any @tech(~doc: guide_doc){converter annotation} @rhombus(annot) will not be used.
+ of any @tech(~doc: model_doc){converter annotation} @rhombus(annot) will not be used.
 
  In a declaration context, @rhombus(~doc) can be specified before
  clauses to generate documentation information for @rhombus(id_name) in a

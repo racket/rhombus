@@ -67,14 +67,17 @@ elements strongly or both weakly, and have the same elements.
  case of @rhombus(MutableSet.now_of), no static information is associated
  with value access using @brackets.
 
- The @rhombus(later_of) annotation variants create a @tech(~doc: guide_doc){converter
+ The @rhombus(later_of) annotation variants create a @tech(~doc: model_doc){converter
   annotation} given an annotations for elements; satisfaction of those
  annotations is confirmed only on demand, both for elements that are
  extracted from the set and for elements added or appended to the set.
  For @rhombus(Set.later_of, ~annot), the key and value annotations must be
- @tech(~doc: guide_doc){predicate annotations}. Since an element annotation is checked on
+ @tech(~doc: model_doc){predicate annotations}. Since an element annotation is checked on
  every access, its static information is associated with access using
- @brackets.
+ @brackets. If @rhombus(annot) is an
+ @tech(~doc: model_doc){always-satisfied annotation}, then the @rhombus(later_of)
+ variants produce @tech(~doc: model_doc){predicate annotations}, because
+ no conversion is needed.
 
  Note that @rhombus(Any.like_element, ~annot) will not find any static
  information for elements from an expression with an

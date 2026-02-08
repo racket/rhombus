@@ -11,10 +11,10 @@
       rhombus/meta open
 )
 
-@title(~tag: "annotation-macro"){Annotation Low-Level Protocol}
+@title(~tag: "annotation-macro"){Annotations and Low-Level Protocol}
 
 An @deftech{annotation} pairs a run-time predicate or converter with
-static information. For example, the annotation @rhombus(Int)
+static information. For example, the annotation @rhombus(Int, ~annot)
 encapsulates a run-time predicate that can be applied using
 @rhombus(is_a) or @rhombus(::), and it provides static information about
 @rhombus(<) ordering. Annotations are recognized by various expression
@@ -22,6 +22,17 @@ and binding forms, such as the @rhombus(::) expression form,
 @rhombus(::, ~bind) binding form, or @rhombus(fun) expression form (with
 its optional result accnotation); those forms extract the components of
 an annotation to apply in their expansions.
+
+A @deftech{predicate annotation} has a predicate that accepts or rejects
+values as satisfying the annotation. As a special case, an
+@deftech{always-satisfied annotation} such as @rhombus(Any, ~annot) is
+one where the predicate always returns true. A @deftech{converter
+ annotation} includes a predicate that may reject some values, but also a
+conversion function that potentially replaces a given value with a
+converted value. A converter annotation's static information applies to
+converted values, but a converter annotation may also include static
+information that applies to any input (before conversion) that satisfies
+the annotation's predicate.
 
 New annotations can be defined as macros with @rhombus(annot.macro).
 With annotation constructors such as @rhombus(&&, ~annot),
@@ -172,13 +183,21 @@ identifier or operator, not a more function-like pattern, because it's
 mean to define a constant association between a name and static
 information.
 
-An annotation macro can create a convert annotation directly using
-@rhombus(annot_meta.pack_converter). When a macro parses annotations, it
-can use @rhombus(annot_meta.unpack_converter) to handle all forms of
+An annotation macro can create a converter annotation directly using
+@rhombus(annot_meta.pack_converter). Converter annotations build on the
+binding protocol (see @secref("bind-macro-protocol")), which includes a
+predicate, a conversion function, and static information implied for any
+input value that succeeds for the binding, and the annotation itself
+provides static information for the result.
+
+When a macro parses annotations, it can use
+@rhombus(annot_meta.unpack_converter) to handle all forms of
 annotations, since predicate annotations can be automatically
 generalized to converter form. A converter annotation will not unpack
 with @rhombus(annot_meta.unpack_predicate). Use
 @rhombus(annot_meta.is_predicate) and @rhombus(annot_meta.is_converter)
-to detect annotation shapes and specialize transformations.
+to detect annotation shapes and specialize transformations. Use
+@rhombus(annot_meta.is_always_satisfied) to detect an
+@tech{always-satisfied annotation}.
 
 @(close_eval(ann_eval))

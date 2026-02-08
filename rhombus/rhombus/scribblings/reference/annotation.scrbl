@@ -14,7 +14,7 @@
  and returns the value if so. The @rhombus(expr) is @emph{not} in
  @tail_position with respect to the @rhombus(::) expression.
 
- If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation},
+ If @rhombus(annot) is a @tech(~doc: model_doc){converter annotation},
  the converted value is returned.
 
 @examples(
@@ -28,10 +28,13 @@
   bind.macro '$bind :: $annot'
 ){
 
- Binds the same as @rhombus(bind), but first checks that the value to
- be bound satisfies @rhombus(annot).
+ Binds the same as @rhombus(bind), but first checks that the value to be
+ bound satisfies @rhombus(annot). If @rhombus(bind) is an
+ @tech(~doc: model_doc){immediate binding} and @rhombus(annot) is a
+ @tech(~doc:model_doc){always-satisfied annotation}, then
+ @rhombus(bind :: annot, ~bind) is also an immediate binding.
 
- If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}, the conversion is
+ If @rhombus(annot) is a @tech(~doc: model_doc){converter annotation}, the conversion is
  applied before matching the converted value against @rhombus(bind). This
  dependency implies that the conversion in @rhombus(annot) cannot be
  delayed, and must be performed as part of the matching process (before
@@ -51,7 +54,7 @@
 
  Associates static information to the overall expression the same as
  @rhombus(::), but performs no run-time check on the value of
- @rhombus(expr). The @rhombus(annot) must specify a @tech(~doc: guide_doc){predicate
+ @rhombus(expr). The @rhombus(annot) must specify a @tech(~doc: model_doc){predicate
   annotation}. The @rhombus(expr) is in @tail_position with respect to
  the @rhombus(::) expression.
 
@@ -68,7 +71,10 @@
 
  Associates static information to @rhombus(bind) the same as
  @rhombus(::, ~bind), but performs no run-time check. The @rhombus(annot)
- must specify a @tech(~doc: guide_doc){predicate annotation}.
+ must specify a @tech(~doc: model_doc){predicate annotation}. If
+ @rhombus(bind) is an @tech(~doc: model_doc){immediate binding}, then
+ @rhombus(bind :~ annot, ~bind) is also an immediate binding.
+ See also @rhombus(assuming, ~annot).
 
 @examples(
   def x :~ List = [1, 2, 3]
@@ -84,7 +90,8 @@
   annot.macro 'None'
 ){
 
- The @rhombus(Any, ~annot) annotation matches any value. An
+ The @rhombus(Any, ~annot) annotation matches any value, so it
+ is a @tech(~doc: model_doc){always-satisfied annotation}. An
  @rhombus(Any.of, ~annot) annotation matches any value that is equal (in
  the sense of @rhombus(==)) to one of the @rhombus(expr) results. The
  @rhombus(Any.to_boolean, ~annot) annotation matches any value and
@@ -269,7 +276,7 @@
  The operator combination @rhombus(!is_a) inverts the test. Either
  form works as a @tech{repetition} given a repetition to test.
 
- If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}, only the matching
+ If @rhombus(annot) is a @tech(~doc: model_doc){converter annotation}, only the matching
  component of the annotation is used, and the converting part is not
  used. See also @secref(~doc: guide_doc, "annotation-convert").
 
@@ -327,6 +334,10 @@
  will have the static information of @rhombus(MutableList, ~annot), but
  no information about list elements.
 
+ When @rhombus(bind) is an @tech(~doc: model_doc){immediate binding},
+ then @rhombus(matching(bind), ~annot) is an
+ @tech(~doc:model_doc){always-satisfied annotation}.
+
 }
 
 @doc(
@@ -335,7 +346,7 @@
   annot.macro 'satisfying(pred_expr)'
 ){
 
- Produces a @tech(~doc: guide_doc){predicate annotation} using the resulting function
+ Produces a @tech(~doc: model_doc){predicate annotation} using the resulting function
  from @rhombus(pred_expr).
 
  See @secref(~doc: guide_doc, "annotation-satisfying") for information
@@ -373,7 +384,7 @@
   | #,(epsilon)
 ){
 
- Produces a @tech(~doc: guide_doc){converter annotation} by pairing @rhombus(bind) with
+ Produces a @tech(~doc: model_doc){converter annotation} by pairing @rhombus(bind) with
  @rhombus(body). The annotation matches when @rhombus(bind) matches, but
  the value produced by the annotation is determined by the @rhombus(body)
  sequence, which can refer to variables bound by @rhombus(bind).
@@ -394,12 +405,31 @@
 }
 
 @doc(
+  annot.macro 'assuming($annot)'
+){
+
+ An @tech(~doc: model_doc){always-satisfied annotation} with the same
+ static information as @rhombus(annot), which must be a
+ @tech(~doc: model_doc){predicate annotation}. This form is equivalent to
+ @rhombus(matching(_ :~ annot), ~annot).
+
+@examples(
+  use_static
+  def strs :: assuming(List.of(String)) = ["a", #'oops, "bcde"]
+  strs[2].length()
+  ~error:
+    strs[1].length()
+)
+
+}
+
+@doc(
   annot.macro 'maybe($annot)'
 ){
 
  Equivalent to @rhombus(#,(@rhombus(False, ~annot)) #,(@rhombus(||, ~annot)) annot), which is an annotation that is
  satisfied by either @rhombus(#false) or a value that satisfies
- @rhombus(annot). If @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation},
+ @rhombus(annot). If @rhombus(annot) is a @tech(~doc: model_doc){converter annotation},
  its conversion applies to a non-@rhombus(#false) value.
 
 @examples(

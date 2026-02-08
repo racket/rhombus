@@ -40,7 +40,7 @@ Paths are @tech{comparable}, which means that generic operations like
  Matches a path value. The @rhombus(PathString, ~annot) annotation
  allows @rhombus(ReadableString, ~annot) as well as
  @rhombus(Path, ~annot) values. The @rhombus(PathString.to_path, ~annot)
- @tech(~doc: guide_doc){converter annotation} allows
+ @tech(~doc: model_doc){converter annotation} allows
  @rhombus(PathString, ~annot) values, but converts
  @rhombus(ReadableString, ~annot) values to @rhombus(Path) values.
  Similarly @rhombus(PathString.to_absolute_path, ~annot) is a converter

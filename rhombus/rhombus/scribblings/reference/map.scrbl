@@ -91,14 +91,17 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
  @rhombus(MutableMap.now_of, ~annot), no static information is associated with
  value access using @brackets.
 
- The @rhombus(later_of) annotation variants create a @tech(~doc: guide_doc){converter
+ The @rhombus(later_of) annotation variants normally create a @tech(~doc: model_doc){converter
   annotation} given annotations for keys and values; satisfaction of those
  annotations is confirmed only on demand, both for keys and values that
  are extracted from the map and for keys and values added or appended to
  the map. For @rhombus(Map.later_of), the key and value annotations must
- be @tech(~doc: guide_doc){predicate annotations}. Since a value annotation is checked on
+ be @tech(~doc: model_doc){predicate annotations}. Since a value annotation is checked on
  every access, its static information is associated with access using
- @brackets.
+ @brackets. If @rhombus(key_annot) and @rhombus(val_annot) are
+ @tech(~doc: model_doc){always-satisfied annotations}, then the @rhombus(later_of)
+ variants produce @tech(~doc: model_doc){predicate annotations}, because
+ no conversion is needed.
 
  Note that @rhombus(Any.like_element, ~annot) will not find any static
  information for elements from an expression with an
@@ -751,6 +754,6 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
  elements have the static information of @rhombus(maybe(ann), ~annot).
  The extracted elements are not checked, however;
  @rhombus(ann) is used only for its static information,
- and it must be a @tech(~doc: guide_doc){predicate annotation}.
+ and it must be a @tech(~doc: model_doc){predicate annotation}.
 
 }

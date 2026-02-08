@@ -486,8 +486,8 @@
   (i.e., any number of results is expected).}
 
   @item{The @rhombus(is_predicate) field is @rhombus(#true) if all
-  annotations are @tech(~doc: guide_doc){predicate annotations}, or @rhombus(#false)
-  if at least one of them is a @tech(~doc: guide_doc){converter annotation}.}
+  annotations are @tech(~doc: model_doc){predicate annotations}, or @rhombus(#false)
+  if at least one of them is a @tech(~doc: model_doc){converter annotation}.}
 
   @item{The @rhombus(maybe_converter) field is @rhombus(#false) if no
   annotation is declared or if it is unchecked, otherwise it is a syntax

@@ -115,6 +115,8 @@
              parse-annotation-of
              parse-annotation-of/chaperone
 
+             always-satisfied-annotation?
+
              annotation-relative-precedence
              build-annotated-expression
              raise-unchecked-disallowed
@@ -356,6 +358,18 @@
       (parse-annotation-of/one stx ctx sub-n kws))
     (values
      (cond
+       [(andmap always-satisfied-annotation? c-parseds)
+        (syntax-parse c-parseds
+          [(c::annotation-predicate-form ...)
+           (define c-static-infoss (syntax->list #'(c.static-infos ...)))
+           (transfer-origins
+            c-parseds
+            (relocate+reraw
+             loc
+             (annotation-predicate-form predicate-stx
+                                        #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                                                     c-static-infoss)
+                                           . #,static-infos))))])]
        [(and predicate-maker
              (syntax-parse c-parseds
                [(c::annotation-predicate-form ...)
@@ -401,7 +415,9 @@
 
   ;; This one is for converters that produce chaperones/impersonators.
   ;; The predicate case also produces a converter, because it has to
-  ;; chaperone the original value.  Also, the makers receive the raw
+  ;; chaperone the original value, unless all the field annotations
+  ;; are always-satsfied predicate annotations.
+  ;; Also, the makers receive the raw
   ;; text of subannotations so that they can compose a better error
   ;; message.
   (define (parse-annotation-of/chaperone stx ctx predicate-stx static-infos
@@ -416,23 +432,34 @@
        [(c::annotation-predicate-form ...)
         (define c-predicates (syntax->list #'(c.predicate ...)))
         (define c-static-infoss (syntax->list #'(c.static-infos ...)))
-        (transfer-origins
-         c-parseds
-         (relocate+reraw
-          loc
-          (annotation-binding-form
-           (binding-form #'annotation-of-infoer/chaperone
-                         #`[#,(shrubbery-tail->string new-stx)
-                            (let ([immed-pred #,predicate-stx]
-                                  [pred #,(predicate-maker c-predicates annot-strs)])
-                              (lambda (val-in)
-                                (and (immed-pred val-in)
-                                     (pred val-in))))
-                            #,static-infos
-                            result])
-           #'result
-           #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
-              . #,static-infos))))]
+        (cond
+          [(andmap always-satisfied-annotation? c-parseds)
+           (transfer-origins
+            c-parseds
+            (relocate+reraw
+             loc
+             (annotation-predicate-form predicate-stx
+                                        #`(#,@(compound-static-infos info-maker-id info-maker-data
+                                                                     c-static-infoss)
+                                           . #,static-infos))))]
+          [else
+           (transfer-origins
+            c-parseds
+            (relocate+reraw
+             loc
+             (annotation-binding-form
+              (binding-form #'annotation-of-infoer/chaperone
+                            #`[#,(shrubbery-tail->string new-stx)
+                               (let ([immed-pred #,predicate-stx]
+                                     [pred #,(predicate-maker c-predicates annot-strs)])
+                                 (lambda (val-in)
+                                   (and (immed-pred val-in)
+                                        (pred val-in))))
+                               #,static-infos
+                               result])
+              #'result
+              #`(#,@(compound-static-infos info-maker-id info-maker-data c-static-infoss)
+                 . #,static-infos))))])]
        [(c::annotation-binding-form ...)
         (unless (identifier? binding-maker-id)
           (raise-syntax-error #f
@@ -751,7 +778,11 @@
                        #'left.static-infos ; presumably includes `implied-static-infos` as passed to `left-infoer-id`
                        #'left.bind-infos
                        #'left-oncer
-                       #'check-predicate-matcher
+                       (if (and (identifier? #'predicate)
+                                (free-identifier=? #'predicate #'always-satisfied)
+                                (free-identifier=? #'always-succeed #'left.matcher-id))
+                           #'always-succeed
+                           #'check-predicate-matcher)
                        #'left.evidence-ids
                        #'commit-nothing-new
                        #'bind-nothing-new
@@ -1012,13 +1043,10 @@
                    all-static-infos
                    #`((arg ([#:repet ()]) . #,all-static-infos))
                    #'empty-oncer
-                   (syntax-parse #'predicate
-                     [(lam (_) #t) ;; matches `Any` and maybe more
-                      #:when (or (free-identifier=? #'lam #'lambda)
-                                 (free-identifier=? #'lam #'#%plain-lambda))
-                      #'always-succeed]
-                     [else
-                      #'predicate-binding-matcher])
+                   (if (and (identifier? #'predicate)
+                            (free-identifier=? #'predicate #'always-satisfied))
+                       #'always-succeed
+                       #'predicate-binding-matcher)
                    #'()
                    #'predicate-binding-committer
                    #'predicate-binding-binder
@@ -1053,6 +1081,8 @@
 (define (inexact-number? n) (and (number? n) (inexact? n)))
 (define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
 
+(define always-satisfied (lambda (x) #t))
+
 (void (set-primitive-contract! 'exact-integer? "Int"))
 (void (set-primitive-contract! 'exact-nonnegative-integer? "Nat"))
 (void (set-primitive-contract! 'number? "Number"))
@@ -1060,7 +1090,7 @@
 (void (set-primitive-contract! 'real? "Real"))
 (void (set-primitive-contract! 'flonum? "Flonum"))
 (void (set-primitive-contract! 'fixnum? "Fixnum"))
-(define-annotation-syntax Any (identifier-annotation (lambda (x) #t) ()))
+(define-annotation-syntax Any (identifier-annotation always-satisfied ()))
 (define-annotation-syntax None (identifier-annotation (lambda (x) #f) ((#%none #t))))
 (define-annotation-syntax Boolean (identifier-annotation boolean? ()))
 (define-annotation-syntax Int (identifier-annotation exact-integer? #,(get-int-static-infos)))
@@ -1082,6 +1112,13 @@
 (define-annotation-syntax Void (identifier-annotation void? ()))
 (define-annotation-syntax False (identifier-annotation not ()))
 (define-annotation-syntax True (identifier-annotation (lambda (x) (and x #t)) ()))
+
+(define-for-syntax (always-satisfied-annotation? c-parsed)
+  (syntax-parse c-parsed
+    [c::annotation-predicate-form
+     (and (identifier? #'c.predicate)
+          (free-identifier=? #'c.predicate #'always-satisfied))]
+    [else #f]))
 
 (define-name-root Any
   #:fields
@@ -1148,14 +1185,16 @@
          (relocate+reraw
           (datum->syntax #f (list #'form-id #'args))
           (annotation-predicate-form
-           #`(let ()
-               (arg-info.oncer-id arg-info.data)
-               (lambda (val-in)
-                 (arg-info.matcher-id val-in
-                                      arg-info.data
-                                      if/blocked
-                                      #t
-                                      #f)))
+           (if (free-identifier=? #'arg-info.matcher-id #'always-succeed)
+               #'always-satisfied
+               #`(let ()
+                   (arg-info.oncer-id arg-info.data)
+                   (lambda (val-in)
+                     (arg-info.matcher-id val-in
+                                          arg-info.data
+                                          if/blocked
+                                          #t
+                                          #f))))
            #'arg-info.static-infos))
          #'tail)]))))
 

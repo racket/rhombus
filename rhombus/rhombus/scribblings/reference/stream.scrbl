@@ -31,7 +31,7 @@ element by position via @rhombus(#%index).
  element, such as the key and value from a @tech{map}). The
  extracted elements are not checked, however; each
  @rhombus(annot) is used only for its static information, and
- each @rhombus(annot) must be a @tech(~doc: guide_doc){predicate annotation}.
+ each @rhombus(annot) must be a @tech(~doc: model_doc){predicate annotation}.
 
  Static information associated by @rhombus(Stream, ~annot) or
  @rhombus(Stream.assume_of, ~annot) makes an expression acceptable as a

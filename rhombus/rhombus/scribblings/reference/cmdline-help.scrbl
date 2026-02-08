@@ -43,7 +43,7 @@
   annot.macro 'cmdline.String.to_lib_module_path'
 ){
 
- A @tech(~doc: guide_doc){converter annotation} that recognizes strings
+ A @tech(~doc: model_doc){converter annotation} that recognizes strings
  that are suitable for a @rhombus(lib, ~modpath) module-path form. Unlike
  a string used directly with @rhombus(lib, ~modpath), the string is
  allowed to contain @litchar{!} separating non-empty submodule names, and

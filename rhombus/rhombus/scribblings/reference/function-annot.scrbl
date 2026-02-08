@@ -93,7 +93,7 @@
   | #,(dots)
 ){
 
- A @tech(~doc: guide_doc){converter annotation} that is immediately satisfied by a
+ A @tech(~doc: model_doc){converter annotation} that is immediately satisfied by a
  function that has a compatible argument count and keyword arguments.
  When a function converted by the annotation is called, then the argument
  annotations are applied to the actual arguments, and the result
@@ -288,7 +288,7 @@
   annot.macro 'Function.assume_of($arrow_annot)'
 ){
 
- A @tech(~doc: guide_doc){predicate annotation} that is satisfied by a
+ A @tech(~doc: model_doc){predicate annotation} that is satisfied by a
  function whose argument count and keyword requirements are checked to be consistent
  with @rhombus(arrow_annot). The full static information of
  @rhombus(arrow_annot) is propagated, even though the function is not
@@ -298,7 +298,7 @@
  @rhombus(Function.all_of, ~annot).
 
  Unlike an annotation created with just @rhombus(->, ~annot), which is a
- @tech(~doc: guide_doc){converter annotation}, a
+ @tech(~doc: model_doc){converter annotation}, a
  @rhombus(Function.assume_of, ~annot) annotation can be used with
  @rhombus(:~). For example, a combination of @rhombus(:~),
  @rhombus(Function.assume_of, ~annot), and @rhombus(->, ~annot) can

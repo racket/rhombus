@@ -65,10 +65,10 @@ their elements are pairwise equal by @rhombus(==).
  additional elements must match the last @rhombus(annot). For example,
  @rhombus(List.tuple_of[String, ...], ~annot) is the same as
  @rhombus(List.of(String), ~annot). If any @rhombus(annot) is a
- @tech(~doc: guide_doc){converter annotation}, then the
+ @tech(~doc: model_doc){converter annotation}, then the
  @rhombus(List.tuple_of, ~annot) annotation is also a converter
  annotation where a converted list has converted elements. When all
- @rhombus(annot)s are @tech(~doc: guide_doc){predicate annotations}, then
+ @rhombus(annot)s are @tech(~doc: model_doc){predicate annotations}, then
  @rhombus(List.tuple_of[annot, ...], ~annot) is equivalent to
  @rhombus(matching(List[_ :: annot, ...]), ~annot).
 

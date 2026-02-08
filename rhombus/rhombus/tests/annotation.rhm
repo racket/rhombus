@@ -1,4 +1,4 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 check:
   1 is_a Int ~is #true
@@ -394,3 +394,14 @@ block:
   check:
     ([1, 2, 3] :: matching(_ :: Any.to_boolean)).length() ~is 3
     (PairList[1, 2, 3] :: matching(_ :: Any.to_boolean)).length() ~is 3
+
+expr.macro 'is_always_satisfied $(ann :: annot_meta.Parsed) $()':
+  '$(annot_meta.is_always_satisfied(ann))'
+
+check:
+  is_always_satisfied Any ~is #true
+  is_always_satisfied matching(_) ~is #true
+  is_always_satisfied matching(x) ~is #true
+  is_always_satisfied matching(_ :~ Int) ~is #true
+  is_always_satisfied assuming(Int) ~is #true
+  is_always_satisfied assuming(List.of(Int)) ~is #true

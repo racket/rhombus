@@ -46,7 +46,7 @@ immutable list.
  or @rhombus(later_of, ~datum).
 
  The @rhombus(MutableList.now_of, ~annot) form constructs a
- @tech(~doc: guide_doc){predicate annotation} that matches a mutable list whose elements
+ @tech(~doc: model_doc){predicate annotation} that matches a mutable list whose elements
  all currently satisfy @rhombus(annot), but it does not ensure in any way
  that future values installed into the mutable list will satisfy
  @rhombus(annot). The given @rhombus(annot) must not be a converting
@@ -54,8 +54,8 @@ immutable list.
  accesses of the mutable list, since there's no guarantee that the value
  will still satisfy the annotation.
 
- The @rhombus(MutableList.later_of, ~annot) form constructs a
- @tech(~doc: guide_doc){converter annotation} that immediately matches a mutable list
+ The @rhombus(MutableList.later_of, ~annot) form normally constructs a
+ @tech(~doc: model_doc){converter annotation} that immediately matches a mutable list
  without checking that its elements currently satisfy @rhombus(annot).
  The conversion result of the annotation is a view of the original
  mutable list, but one where @rhombus(annot) is checked against a value
@@ -64,7 +64,10 @@ immutable list.
  mutable list might change an element to one that does not satisfy
  @rhombus(annot).) Static information from @rhombus(annot) is propagated
  to accesses of the mutable list. Note that a converter @rhombus(annot) is
- applied for each access or update.
+ applied for each access or update. If @rhombus(annot) is an
+ @tech(~doc: model_doc){always-satisfied annotation}, then @rhombus(MutableList.later_of, ~annot)
+ produces a @tech(~doc: model_doc){predicate annotation}, because no
+ conversion is needed.
 
  Note that @rhombus(Any.like_element, ~annot) will not find any static
  information for elements from an expression with an

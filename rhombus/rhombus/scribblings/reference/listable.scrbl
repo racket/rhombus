@@ -82,7 +82,7 @@ sequence.
  indicating that elements have the static information of @rhombus(annot).
  The extracted elements are not checked, however;
  @rhombus(annot) is used only for its static information, and it
- must be a @tech(~doc: guide_doc){predicate annotation}.
+ must be a @tech(~doc: model_doc){predicate annotation}.
 
 }
 
@@ -91,7 +91,7 @@ sequence.
   annot.macro 'Listable.to_list'
 ){
 
- A @tech(~doc: guide_doc){converter annotation} that is satisfied by any @tech{listable}
+ A @tech(~doc: model_doc){converter annotation} that is satisfied by any @tech{listable}
  value and converts it to a @rhombus(List).
 
 @examples(

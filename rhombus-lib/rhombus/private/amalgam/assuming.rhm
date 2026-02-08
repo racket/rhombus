@@ -1,0 +1,21 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+
+use_static
+
+export:
+  assuming
+
+annot.macro 'assuming($(ann :: Group))':
+  ~all_stx: stx
+  ~context: ctx
+  let '$(ann :: annot_meta.Parsed(ctx))' = ann
+  let '$(any_ann :: annot_meta.Parsed)' = 'Any'
+  unless annot_meta.is_predicate(ann)
+  | syntax_meta.error("cannot assume a converter annotation",
+                      stx,
+                      ann.group)
+  let (_, statinfos) = annot_meta.unpack_predicate(ann)
+  let (pred, _) = annot_meta.unpack_predicate(any_ann)
+  annot_meta.pack_predicate(pred, statinfos, ~track: [ann])

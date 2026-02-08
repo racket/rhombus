@@ -20,7 +20,7 @@
  If an @rhombus(annot) is present using @rhombus(::, ~bind), then the
  value of every assignment to @rhombus(id) must satisfy the annotation,
  and the value installed into @rhombus(id) is the converted value if
- @rhombus(annot) is a @tech(~doc: guide_doc){converter annotation}. Static information
+ @rhombus(annot) is a @tech(~doc: model_doc){converter annotation}. Static information
  from @rhombus(annot) is associated with uses of @rhombus(id) whether
  attached by @rhombus(::, ~bind) or @rhombus(:~, ~bind).
 

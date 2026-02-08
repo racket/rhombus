@@ -51,7 +51,7 @@ pairwise equal by @rhombus(==).
  @rhombus(Array.of_length, ~annot) annotation matches arrays of a
  given length.
 
- The @rhombus(Array.now_of, ~annot) form constructs a @tech(~doc: guide_doc){predicate
+ The @rhombus(Array.now_of, ~annot) form constructs a @tech(~doc: model_doc){predicate
   annotation} that matches an array whose elements all currently satisfy
  @rhombus(annot), but it does not ensure in any way that future
  values installed into the array will satisfy @rhombus(annot). The given
@@ -60,7 +60,7 @@ pairwise equal by @rhombus(==).
  the array, since there's no guarantee that the value will still satisfy
  the annotation.
 
- The @rhombus(Array.later_of, ~annot) form constructs a @tech(~doc: guide_doc){converter
+ The @rhombus(Array.later_of, ~annot) form normally constructs a @tech(~doc: model_doc){converter
   annotation} that immediately matches an array without checking
   that its elements currently satisfy @rhombus(annot). The conversion
  result of the annotation is a view of the original array, but one where
@@ -70,6 +70,10 @@ pairwise equal by @rhombus(==).
  does not satisfy @rhombus(annot).) Static information from
  @rhombus(annot) is propagated to accesses of the array. Note that a
  converter @rhombus(annot) is applied for each access or update.
+ If @rhombus(annot) is an @tech(~doc: model_doc){always-satisfied annotation}, then
+ @rhombus(Array.later_of, ~annot) produces a
+ @tech(~doc: model_doc){predicate annotation}, because no conversion is
+ needed.
 
  Note that @rhombus(Any.like_element, ~annot) will not find any static
  information for elements from an expression with an

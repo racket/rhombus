@@ -574,7 +574,7 @@
  implementation as well as overriding implementations in subclasses; a
  result annotation within a case or within an @tech{entry point}, in contrast, does not
  apply to subclasses. A non-empty @rhombus(maybe_res_annot) can specify a
- @tech(~doc: guide_doc){converter annotation} only if the method is @rhombus(final, ~class_clause)
+ @tech(~doc: model_doc){converter annotation} only if the method is @rhombus(final, ~class_clause)
  or the enclosing class is @tech{final}; the conversion applies
  before inherited result annotations for the method are checked.
  If a final method or method in a final class does not have a non-empty @rhombus(maybe_res_annot)
@@ -910,7 +910,7 @@
  @rhombus(id_name) as a reference to the constructor. When
  @rhombus(expression, ~class_clause) is present, then the default
  @rhombus(id_name#,(@rhombus(.of, ~datum))) annotation constructor accepts only
- @tech(~doc: guide_doc){predicate annotations}.
+ @tech(~doc: model_doc){predicate annotations}.
 
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
  then a use of the new class's @rhombus(id_name) as a

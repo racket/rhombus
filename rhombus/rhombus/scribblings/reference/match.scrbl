@@ -210,7 +210,8 @@
   bind.macro '_'
 ){
 
- Matches any value without binding any identifiers.
+ An @tech(~doc: model_doc){immediate binding} that matches any value
+ without binding any identifiers.
 
 @examples(
   match 1+2

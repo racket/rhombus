@@ -250,3 +250,16 @@ check:
   bind.macro 'bad': 666
   def bad = 1
   ~throws "expected: single-group syntax object for binding"
+
+expr.macro 'is_immediate $(bind :: bind_meta.Parsed) $()':
+  let info = bind_meta.get_info(bind, '()')
+  '$(bind_meta.is_immediate(info))'
+
+check:
+  is_immediate _ ~is #true
+  is_immediate (_) ~is #true
+  is_immediate x :: Any ~is #true
+  is_immediate (_ :: Any) :: Any ~is #true
+  is_immediate x :~ Int ~is #true
+  is_immediate x :~ Set.later_of(Any) ~is #true
+  is_immediate x :: assuming(Set) ~is #true

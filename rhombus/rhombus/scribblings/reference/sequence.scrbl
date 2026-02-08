@@ -36,7 +36,7 @@ internal state, and the state can even be specific to a particular
  such as the key and value from a @tech{map}). The extracted elements are
  not checked, however; each @rhombus(annot) is used only
  for its static information, and each @rhombus(annot) must be a
- @tech(~doc: guide_doc){predicate annotation}.
+ @tech(~doc: model_doc){predicate annotation}.
 
 }
 

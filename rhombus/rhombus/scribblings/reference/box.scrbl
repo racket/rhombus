@@ -37,7 +37,7 @@ the same according to @rhombus(is_now).
  The @rhombus(Box, ~annot) annotation (without @rhombus(now_of, ~datum) or
  @rhombus(later_of, ~datum)) matches any box.
 
- The @rhombus(Box.now_of, ~annot) form constructs a @tech(~doc: guide_doc){predicate
+ The @rhombus(Box.now_of, ~annot) form constructs a @tech(~doc: model_doc){predicate
   annotation} that matches a box whose values satisfies
  @rhombus(annotation), but it does not ensure in any way that future
  values installed into the box will satisfy @rhombus(annot). The
@@ -46,7 +46,7 @@ the same according to @rhombus(is_now).
  the box's values, since there's no guarantee that the value will still
  satisfy the annotation.
 
- The @rhombus(Box.later_of, ~annot) form constructs a @tech(~doc: guide_doc){converter
+ The @rhombus(Box.later_of, ~annot) form constructs a @tech(~doc: model_doc){converter
   annotation} that immediately matches a box without checking
   that its value currently satisfies @rhombus(annot). The conversion
  result of the annotation is a view on the original box, but one where
@@ -56,6 +56,10 @@ the same according to @rhombus(is_now).
  @rhombus(annot).) Static information from @rhombus(annot) is propagated
  to accesses of the box's value. Note that a converter @rhombus(annot)
  is applied for each access or update.
+ If @rhombus(annot) is an @tech(~doc: model_doc){always-satisfied annotation}, then
+ @rhombus(Box.later_of, ~annot) produces a
+ @tech(~doc: model_doc){predicate annotation}, because no conversion is
+ needed.
 
  @rhombus(MutableBox, ~annot) matches only mutable boxes, and
  @rhombus(ImmutableBox, ~annot) matches only immutable boxes (that may

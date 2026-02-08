@@ -14,6 +14,7 @@
         "class_together.rhm"
         "enum.rhm"
         "pipeline.rhm"
+        "assuming.rhm"
         "compose.rhm"
         "str.rhm"
         "closeable.rhm"

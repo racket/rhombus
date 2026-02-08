@@ -47,6 +47,7 @@
   (define-name-root annot_meta
     #:fields
     (space
+     [is_always_satisfied annot_meta.is_always_satisfied]
      [is_predicate annot_meta.is_predicate]
      [pack_predicate annot_meta.pack_predicate]
      [unpack_predicate annot_meta.unpack_predicate]
@@ -161,6 +162,13 @@
 (begin-for-syntax
   (define/arity (annot_meta.is_predicate stx)
     (eq? (annotation-kind stx who) 'predicate))
+
+  (define/arity (annot_meta.is_always_satisfied stx)
+    (and (eq? (annotation-kind stx who) 'predicate)
+         (syntax-parse stx
+           [(parsed #:rhombus/annot a::annotation-predicate-form)
+            (always-satisfied-annotation? #'a)]
+           [_ #f])))
 
   (define/arity (annot_meta.pack_predicate predicate [static-infos #'(parens)]
                                            #:track [components-in null])

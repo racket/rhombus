@@ -97,7 +97,7 @@
  using @rhombus(.) after an expression that has the veneer's static
  information or when using a function like
  @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(method, ~var))). An
- @rhombus(annot) can be a @tech(~doc: guide_doc){converter annotation} only if the
+ @rhombus(annot) can be a @tech(~doc: model_doc){converter annotation} only if the
  @rhombus(converter, ~veneer_clause) veneer clause is specified, in which
  case the veneer is also a converter annotation.
 
@@ -112,7 +112,7 @@
  @rhombus(converter, ~veneer_clause) veneer clause is implicit. In the
  case of a converter subveneer, the subveneer's conversion applies before
  the superveneer's conversion (or predicate). In the case of a
- @tech(~doc: guide_doc){predicate annotation} subveneer, the superveneer's predicate is
+ @tech(~doc: model_doc){predicate annotation} subveneer, the superveneer's predicate is
  tried first.
 
  A veneer can implement only specific interfaces that serve as bridges
@@ -187,7 +187,7 @@
 ){
 
  A @tech{veneer clause} that is recognized by @rhombus(veneer) so that
- the new veneer is a @tech(~doc: guide_doc){converter annotation}. See @rhombus(veneer).
+ the new veneer is a @tech(~doc: model_doc){converter annotation}. See @rhombus(veneer).
 
 }
 
