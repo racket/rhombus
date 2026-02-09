@@ -415,7 +415,10 @@
   @e{match 1
      | x: x
      ^ ^  ^ ^//
-            + 2}
+     + 2}
+
+  @e{[1, 2, 3].map(_) <| fun(x): x
+                                 ^x}
  )
 
 (when failed?

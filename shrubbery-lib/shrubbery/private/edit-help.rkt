@@ -114,7 +114,7 @@
             [(not r)
              (define start (line-start t pos))
              (loop (sub1 s) (col-of s start) at-start)]
-            [(zero? r) (list 0)]
+            [(zero? r) 0]
             [else
              (define start (line-start t r))
              (loop (sub1 r) (col-of r start) start)])]
