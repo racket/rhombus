@@ -9,7 +9,7 @@
     class Posn(x, y)
 )
 
-@title(~tag: "more-arguments"){More Function Arguments}
+@title(~tag: "more-arguments"){Lists of Function Arguments}
 
 As we saw in @secref("functions_optional"), by using optional arguments
 and @vbar clauses, you can define a function that accepts a
