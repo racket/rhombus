@@ -38,7 +38,8 @@ all time before and after its time box. A static pict's rendering
 outside of its time box is a ghosted version of the static pict (in the
 sense of @rhombus(Pict.ghost)).
 
-Using the static rectangle pict @rhombus(rect) from before, the
+Using a static rectangle pict created by
+@rhombus(rectangle(~width: 40, ~height: 20, ~fill: "lightblue")), the
 following diagram shows its rendering at four different points on a
 timeline, where @math{t} is relative to the pict's time box, and the
 time box is shown in pink on the timeline. Nothing is drawn under
@@ -94,6 +95,7 @@ combining them with @rhombus(stack) makes a composite pict
 @examples(
   ~eval: pict_eval
   ~defn:
+    def circ = circle(~size: 40, ~fill: "lightgreen")
     def early_circ = circ.time_pad(~after: 1)
     def ping_pong = stack(early_circ, late_rect)
 )
