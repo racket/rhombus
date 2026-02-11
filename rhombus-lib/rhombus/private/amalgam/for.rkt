@@ -128,9 +128,9 @@
         [(_ orig static? [finish (~optional pre-clause-form)] . bodys)
          ;; initialize state
          #`(#:splice (for-clause-step orig static?
-                                      [finish () () (void) (~? pre-clause-form (void)) #hasheq()]
+                                      [finish () () (void) (~? pre-clause-form (void)) (~? pre-clause-form (void)) #hasheq()]
                                       . bodys))]
-        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher binder stx-params])
+        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher init-binder binder stx-params])
          (when (null? (syntax-e #'rev-bodys))
            (raise-syntax-error #f
                                "empty body (after any clauses such as `each`)"
@@ -143,7 +143,7 @@
                    (with-syntax-parameters stx-params
                      (rhombus-body
                       . #,(reverse (syntax->list #'rev-bodys)))))])]
-        [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher binder stx-params])
+        [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher init-binder binder stx-params])
             body0
             . bodys)
          #:when (for-clause? #'body0)
@@ -154,7 +154,7 @@
                #:do [matcher
                      binder]
                #:splice (for-clause-step orig static?
-                                         [finish () rev-bodys (void) (void) stx-params]
+                                         [finish () rev-bodys (void) init-binder init-binder stx-params]
                                          body0 . bodys))]
            [(pair? (syntax-e #'rev-bodys)) ; assert: empty rev-clauses
             ;; emit accumulated body with forward-sequence expansion
@@ -171,13 +171,13 @@
                   ;; `expand-forwarding-sequence-continue`
                   ;; and eventually get back to `for-clause-step` mode:
                   #:splice (for-clause-forwarding-step
-                            orig static? finish
+                            orig static? finish init-binder
                             #,state)))
              ;; continue when no more exprs and defns:
              (lambda (exprs+defns bodys stx-params)
                #`(#:do (#,@exprs+defns)
                   #:splice (for-clause-step orig static?
-                                            [finish () () (void) (void) #,stx-params]
+                                            [finish () () (void) init-binder init-binder #,stx-params]
                                             . #,bodys))))]
            [else
             (define parsed
@@ -208,7 +208,7 @@
                   #:splice (for-clause-step orig static? state . bodys))]
               [(#:splice new ...)
                #`(#:splice (for-clause-step orig static? state new ... . bodys))])])]
-        [(_ orig static? [finish rev-clauses rev-bodys matcher binder stx-params]
+        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params]
             body0
             . bodys)
          #`(#:splice (for-clause-step
@@ -217,6 +217,7 @@
                        rev-clauses
                        (body0 . rev-bodys)
                        matcher
+                       init-binder
                        binder
                        stx-params]
                       . bodys))]))))
@@ -227,7 +228,7 @@
   (lambda (stx)
     (with-syntax-error-respan
       (syntax-parse stx
-        [(_ orig static? finish state)
+        [(_ orig static? finish init-binder state)
          (expand-forwarding-sequence-continue
           #'state
           syntax-local-splicing-for-clause-introduce
@@ -235,13 +236,13 @@
           (lambda (exprs+defns state)
             #`(#:do (#,@exprs+defns)
                #:splice (for-clause-forwarding-step
-                         orig static? finish
+                         orig static? finish init-binder
                          #,state)))
           ;; continue when no more exprs and defns:
           (lambda (exprs+defns bodys stx-params)
             #`(#:do (#,@exprs+defns)
                #:splice (for-clause-step orig static?
-                                         [finish () () (void) (void) #,stx-params]
+                                         [finish () () (void) init-binder init-binder #,stx-params]
                                          . #,bodys))))]))))
 
 (define-for-syntax (build-binding-clause orig-stx
@@ -250,7 +251,7 @@
                                          rhs-blk-stx
                                          static?)
   (syntax-parse state-stx
-    [[finish rev-clauses rev-bodys matcher binder stx-params]
+    [[finish rev-clauses rev-bodys matcher init-binder binder stx-params]
      #:do [(define lhs-parsed-stxes (for/list ([bind-g (in-list (syntax->list bind-gs-stx))])
                                       (syntax-parse bind-g
                                         [lhs::binding #'lhs.parsed]
@@ -310,6 +311,7 @@
                             (begin)
                             (rhs-binding-failure 'form-id tmp-id 'lhs-i.annotation-str))
           ...)
+        init-binder
         (begin
           binder
           (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
