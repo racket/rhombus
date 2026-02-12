@@ -1,6 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "common.rhm" open)
+    "common.rhm" open
+    meta_label:
+      rhombus/unsafe.use_unsafe)
 
 @title(~style: #'toc, ~tag: "static-info"){Type Model}
 
@@ -13,8 +15,8 @@ object's class. The main distinction between this capability and a
 statically typed language, at least in the usual sense, is that Rhombus
 offers only limited guarantees that static predictions about values will
 be correct. Rhombus is a safe language,@margin_note{Although Rhombus is
- safe by default, unsafe facilities or the use of
- @rhombus(pragma ~unsafe, ~decl) can opt into unsafe mode.} because
+ safe by default, unsafe facilities or the use of an
+ @rhombus(use_unsafe) declaration can opt into unsafe mode.} because
 run-time checks will enforce predictions where the compiler cannot prove
 that they will hold, but limited guarantees mean that the checks can
 fail.

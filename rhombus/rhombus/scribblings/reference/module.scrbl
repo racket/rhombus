@@ -101,35 +101,6 @@ different than the enclosing (sub)module.
 }
 
 @doc(
-  ~nonterminal:
-    module_path: import ~defn
-
-  decl.macro 'pragma $decl'
-  decl.macro 'pragma:
-                $decl ...
-                ...'
-
-  grammar decl
-  | ~unsafe
-  | ~empty_evaluator
-){
-
- Controls properties of a module's compilation:
-
-@itemlist(
-
- @item{@as_indexed{@rhombus(~unsafe)} compiles the module in unsafe mode,
-  where annotation failures trigger unspecified behavior.}
-
- @item{@as_indexed{@rhombus(~empty_evaluator)} disables the use of the
-  module's content for interactive evaluation, which can avoid overhead
-  for the module.}
-
-)
-
-}
-
-@doc(
   decl.macro '#%module_block:
                 $body
                 ...'
