@@ -24,7 +24,7 @@
 @docmodule(pict/balloon)
 
 @doc(
-  fun pin(
+  fun balloon.pin(
     content :: Pict,
     ~on: base :: Pict,
     ~at: finder :: Find,
@@ -79,8 +79,8 @@
 }
 
 @doc(
-  fun spike_to_dx(spike :: CompassDirection) :: Real
-  fun spike_to_dy(spike :: CompassDirection) :: Real
+  fun balloon.spike_to_dx(spike :: CompassDirection) :: Real
+  fun balloon.spike_to_dy(spike :: CompassDirection) :: Real
 ){
 
  Reports the default spike offset for a given direction. The offset is
@@ -90,9 +90,9 @@
 }
 
 @doc(
-  Parameter.def current_color :: Color || String
-  Parameter.def current_horiz_margin :: Real
-  Parameter.def current_vert_margin :: Real
+  Parameter.def balloon.current_color :: Color || String
+  Parameter.def balloon.current_horiz_margin :: Real
+  Parameter.def balloon.current_vert_margin :: Real
 ){
 
  Context parameters for argument defaults in @rhombus(pin).
@@ -100,7 +100,7 @@
 }
 
 @doc(
-  annot.macro 'CompassDirection'
+  annot.macro 'balloon.CompassDirection'
 ){
 
  Matches a symbol for a compass direction, one of @rhombus(#'n),

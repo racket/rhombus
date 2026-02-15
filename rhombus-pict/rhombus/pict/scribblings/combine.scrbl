@@ -149,7 +149,7 @@
     ~on: on_pict :: Pict,
     ~at: finder :: Find,
     ~find: find_mode :: FindMode = #'always,
-    ~pinhole: pinhole_finder :: Find = Find.left_top(q),
+    ~pinhole: pinhole_finder :: Find = Find.left_top(pict),
     ~order: order :: OverlayOrder = #'front,
     ~duration: duration_align :: DurationAlignment = #'sustain,
     ~time: time_align :: TimeAlignment = #'start,

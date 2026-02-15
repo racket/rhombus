@@ -276,7 +276,7 @@
 }
 
 @doc(
-  fun dc(draw :: (draw.DC, Real, Real) -> ~any,
+  fun dc(#,(@rhombus(draw, ~var)) :: (draw.DC, Real, Real) -> ~any,
          ~width: width :: Real,
          ~height: height :: Real,
          ~ascent: ascent :: Real = height,
@@ -284,7 +284,7 @@
 ){
 
  Creates a @tech{pict} with an arbitrary drawing context. The
- @rhombus(draw) function receives a @rhombus(draw.DC), an x-offset, and
+ @rhombus(draw, ~var) function receives a @rhombus(draw.DC, ~class), an x-offset, and
  a y-offset.
 
 @examples(
