@@ -44,14 +44,19 @@ class Barrier():
     "slide.barrier"
 def sync = Barrier()
 
-class Alts(alts :~ List.of(List)):
+class Alts(horiz, vert, alts :~ List.of(List), width):
   implements Printable
   override describe(mode, recur):
     PrintDesc.list("slide.alts(", alts.map(recur), ")")
 
-fun alts(contents, ...):
-  Alts([flatten_slide_content(#'alts, contents),
-        ...])
+fun alts(~horiz: horiz :: pict.HorizAlignment  = #'center,
+         ~vert: vert :: pict.VertAlignment = #'top,
+         contents, ...):
+  Alts(horiz,
+       vert,
+       [flatten_slide_content(#'alts, contents),
+        ...],
+       #false)
 
 class Align(sep, horiz, cs :: List, width)
 class Horiz(sep, horiz, cs :: List)
@@ -100,8 +105,8 @@ fun flatten_slide_content(who, c) :~ List:
   | p :: Pict: [p]
   | p :: Next: [p]
   | p :: Barrier: [p]
-  | Alts([]): []
-  | Alts([alt]): alt
+  | Alts(_, _, [], _): []
+  | Alts(_, _, [alt], _): alt
   | p :: Alts: [p]
   | p :: Horiz: [p]
   | p :: Align: [p]
@@ -136,10 +141,11 @@ fun next_to_anim(sep, contents) :~ Pict:
                    | pict.switch(post.snapshot().sustain(pre.duration-2),
                                  post)
                    | post)
-    | [Alts([alt, ...]), & contents]:
+    | [Alts(horiz, vert, [alt, ...], _), & contents]:
         let none = []
         let alts = [loop(sep, alt, none), ...]
-        let p = pict.overlay(~vert: #'top,
+        let p = pict.overlay(~horiz: horiz,
+                             ~vert: vert,
                              ~duration: #'pad,
                              & pict.sequential(& alts))
         let pre = pict.stack(~sep: sep, & accum)
@@ -168,11 +174,14 @@ fun align_content(sep, horiz, contents):
                               accum.add(p))
           | next :: Next: values(max_w, accum.add(next))
           | next :: Barrier: values(max_w, accum.add(next))
-          | Alts([alt, ...]):
+          | Alts(horiz, vert, [], _):
+              values(max_w, Alts(horiz, vert, [], 0))
+          | Alts(horiz, vert, [alt, ...], _):
               let [[w, alt], ...]:
                 [gather_widths(alt), ...]
-              values(math.max(max_w, w, ...),
-                     accum.add(Alts([alt, ...])))
+              let w = math.max(w, ...)
+              values(math.max(max_w, w),
+                     accum.add(Alts(horiz, vert, [alt, ...], w)))
           | Horiz(sep, horiz, cs):
               let [w, recorded] = gather_widths(cs)
               values(math.max(max_w, w),
@@ -197,8 +206,9 @@ fun align_content(sep, horiz, contents):
             [widener(p)]
         | next :: Next: [next]
         | next :: Barrier: [next]
-        | Alts([alt, ...]):
-            [Alts([widen(w, sep, alt, widener), ...])]
+        | Alts(horiz, vert, [alt, ...], w):
+            let widener = make_widener(w, horiz, widener)
+            [Alts(horiz, vert, [widen(w, sep, alt, widener), ...], w)]
         | Horiz(h_sep, horiz, cs):
             let mid = widen(w, if h_sep == #'inherit | sep | h_sep, cs,
                             make_widener(w, horiz, widener))

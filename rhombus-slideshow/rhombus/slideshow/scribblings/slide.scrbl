@@ -77,7 +77,8 @@
   and then combined with @rhombus(overlay). (That's similar to using
   @rhombus(switch), but the bounding boxes for all alternatives are
   preserved for the combined duration.) The @rhombus(overlay) combination
-  uses @rhombus(#'top) alignment. A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
+  uses the alignments provided to @rhombus(slide.alts).
+  A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
   any alternative, and @rhombus(slide.alts) can be nested; in either of
   those cases, the corresponding alternative will itself be a multi-epoch
   pict.}
@@ -127,7 +128,9 @@
 @doc(
   def slide.next
   def slide.sync
-  fun slide.alts([content :: SlideContent, ...], ...)
+  fun slide.alts(~horiz: horiz :: pict.HorizAlignment  = #'center,
+                 ~vert: vert :: pict.VertAlignment = #'top,
+                 [content :: SlideContent, ...], ...)
   fun slide.align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
                   ~horiz: horiz :: pict.HorizAlignment = #'left,
                   content :: SlideContent, ...)
