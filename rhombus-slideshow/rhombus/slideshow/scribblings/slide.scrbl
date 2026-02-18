@@ -13,8 +13,8 @@
 ){
 
  Satisfied by allowed arguments to @rhombus(slide): a @rhombus(Pict, ~annot),
- @rhombus(slide.next), @rhombus(slide.sync), a value produced by @rhombus(slide.alts),
- @rhombus(slide.align), or @rhombus(slide.horiz), or a list of values
+ @rhombus(slide.next), @rhombus(slide.sync), a value produced by @rhombus(slide.alts)
+ or @rhombus(slide.align), or a list of values
  that satisfy @rhombus(SlideContent, ~annot).
 
 }
@@ -44,8 +44,8 @@
 
  Besides immediate picts, the @rhombus(content) values can produce
  descriptions of slides to construct using lists, @rhombus(slide.next), @rhombus(slide.sync),
- @rhombus(slide.alts), @rhombus(slide.align), and @rhombus(slide.horiz)
- (or one of its shorthands: @rhombus(slide.left), @rhombus(slide.center),
+ and @rhombus(slide.alts)
+ (or one of its shorthands: @rhombus(slide.horiz), @rhombus(slide.left), @rhombus(slide.center),
  or @rhombus(slide.right)):
 
  @margin_note{See @secref("overview") for an introduction to this
@@ -76,9 +76,18 @@
   each argument to @rhombus(slide.alts), and the picts are sequentialized
   and then combined with @rhombus(overlay). (That's similar to using
   @rhombus(switch), but the bounding boxes for all alternatives are
-  preserved for the combined duration.) The @rhombus(overlay) combination
-  uses @rhombus(#'top) alignment. A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
-  any alternative, and @rhombus(slide.alts) can be nested; in either of
+  preserved for the combined duration.)
+
+  The @rhombus(overlay) combination
+  uses the vertical alignment that is supplied to @rhombus(slide.alts), while
+  its horizontal alignment and vertical spacing depends on an enclosing @rhombus(slide.align)
+  (or one of the @rhombus(slide.left), @rhombus(slide.horiz),
+  @rhombus(slide.center), or @rhombus(slide.right) aliases). Spacing and alignment
+  default to @rhombus(slide.gap) and @rhombus(#'center), respectively, if
+  @rhombus(slide.align) or @rhombus(slide.horiz) is enclosing.
+
+  A @rhombus(slide.next) or @rhombus(slide.sync) can be used in
+  any alternative with @rhombus(slide.alts), and @rhombus(slide.alts) can be nested. In either of
   those cases, the corresponding alternative will itself be a multi-epoch
   pict.}
 
@@ -86,14 +95,18 @@
   arguments to @rhombus(slide.align) to get the same width by padding on
   the left, right, or both. This padding applies to picts in nested
   @rhombus(slide.alts) alternatives as well as nested
-  @rhombus(slide.horiz) constructions---but not nested
-  @rhombus(slide.align) constructions, which perform their own nested
-  alignments. The @rhombus(~horiz) argument to @rhombus(slide.align)
-  determines how padding is added by default to contained elements, but
-  nested @rhombus(slide.horiz) constructions can change alignment.}
+  @rhombus(slide.horiz) constructions---but for nested
+  @rhombus(slide.align) constructions with local alignment (which is the
+  case unless @rhombus(~local: #false) is provided), padding applies only
+  after the nested @rhombus(slide.align) applies it own
+  padding.
 
- @item{A value produced by @rhombus(slide.horiz) changes alignment and
-  potentially vertical spacing for its arguments.}
+  The @rhombus(~horiz) argument to @rhombus(slide.align)
+  determines how padding is added by default to contained elements, but
+  nested @rhombus(slide.align) constructions can change alignment. Supplying
+  @rhombus(#'inherit) for the @rhombus(~sep) or @rhombus(~horiz) argument to @rhombus(slide.align)
+  means that vertical spacing and alignment are determined by an enclosing @rhombus(slide.align) or
+  @rhombus(slide.horiz), defaulting to @rhombus(slide.gap) and @rhombus(#'left) is none is enclosing.}
 
 )
 
@@ -127,28 +140,44 @@
 @doc(
   def slide.next
   def slide.sync
-  fun slide.alts([content :: SlideContent, ...], ...)
-  fun slide.align(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-                  ~horiz: horiz :: pict.HorizAlignment = #'left,
+  fun slide.alts(~vert: vert :: pict.VertAlignment = #'top,
+                 [content :: SlideContent, ...], ...)
+  fun slide.align(~sep: sep :: slide.Sep = #'inherit,
+                  ~horiz: horiz :: slide.HorizAlignment = #'left,
+                  ~local: local :: Any.to_boolean = #true,
                   content :: SlideContent, ...)
-  fun slide.horiz(~sep: sep :: Real || matching(#'inherit) = #'inherit,
-                  ~horiz: horiz :: pict.HorizAlignment = #'left,
+  fun slide.horiz(~sep: sep :: slide.Sep = #'inherit,
+                  ~horiz: horiz :: slide.HorizAlignment = #'left,
                   content :: SlideContent, ...)
-  fun slide.left(~sep: sep :: Real || matching(#'inherit) = #'inherit,
+  fun slide.left(~sep: sep :: slide.Sep = #'inherit,
+                 ~local: local :: Any.to_boolean = #false,
                  content :: SlideContent, ...)
-  fun slide.center(~sep: sep :: Real || matching(#'inherit) = #'inherit,
+  fun slide.center(~sep: sep :: slide.Sep = #'inherit,
+                   ~local: local :: Any.to_boolean = #false,
                    content, ...)
-  fun slide.right(~sep: sep :: Real || matching(#'inherit) = #'inherit,
+  fun slide.right(~sep: sep :: slide.Sep = #'inherit,
+                  ~local: local :: Any.to_boolean = #false,
                   content :: SlideContent, ...)
+
+  enum slide.Sep
+  | ~is_a Real
+  | inherit
+  enum slide.HorizAlignment
+  | ~is_a pict.HorizAlignment
+  | inherit
 ){
 
  Constructors for slide descriptions that are recognized by
  @rhombus(slide) and @rhombus(slide_pict). See @rhombus(slide) for
  more information.
 
+ The @rhombus(slide.horiz) functions is a shorthand for
+ @rhombus(slide.align) with @rhombus(~local: #false).
+
  The @rhombus(slide.left), @rhombus(slide.center), and
- @rhombus(slide.right) functions are shorthands for @rhombus(slide.horiz)
- with a specific @rhombus(~horiz) argument.
+ @rhombus(slide.right) functions are shorthands for @rhombus(slide.pict)
+ with a specific @rhombus(~horiz) argument and with the @rhombus(~local)
+ argument defaulting to @rhombus(#false) instead of @rhombus(#true).
 
 }
 

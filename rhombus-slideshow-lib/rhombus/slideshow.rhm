@@ -58,6 +58,9 @@ namespace slide:
     left
     horiz
 
+    Sep
+    HorizAlignment
+
 // ----------------------------------------
 
 Parameter.def current_title_font :: draw.Font:
