@@ -126,7 +126,7 @@
  @tech{findable children}) that has the same identity as @rhombus(orig), or
  returns @rhombus(#false) no such pict can be found.
 
- See @rhombus("identity") for more information about pict identity and
+ See @secref("identity") for more information about pict identity and
  rebuilt picts.
 
 }
