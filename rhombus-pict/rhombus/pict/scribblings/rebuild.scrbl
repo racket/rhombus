@@ -15,8 +15,8 @@
   method (pict :: Pict).rebuild(
     ~pre: pre_adjust :: Function.of_arity(1),
     ~post: post_adjust :: Function.of_arity(1),
-    ~configure: config_adjust :: Function.of_arity(1)
-                  = fun(config): config
+    ~config: config_adjust :: Function.of_arity(1)
+               = fun(config): config
   ) :: Pict
 ){
 
@@ -99,7 +99,7 @@
 }
 
 @doc(
-  method (pict :: Pict).configure(key :: Any, vall :: Any) :: Pict
+  method (pict :: Pict).configure(key :: Any, val :: Any) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but replays
@@ -109,7 +109,7 @@
  This operation is equivalent to a use of @rhombus(Pict.rebuild):
 
 @rhombusblock(
-  pict.rebuild(~configure:
+  pict.rebuild(~config:
                  fun (config :: Map):
                    if config.has_key(key)
                    | config ++ { key: val }
