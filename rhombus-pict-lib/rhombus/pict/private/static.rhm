@@ -580,13 +580,13 @@ namespace StaticPict_public:
 
 annot.delayed_complete SnapshotPict: StaticPict
 
-fun static_pict(handle, children, instances, rebuild = #false,
+fun static_pict(handle, children, instances :~ List, rebuild = #false,
                 ~dependencies: dependencies = #false,
                 ~config: config = #false,
                 ~metadata: metadata = {},
                 ~desc: desc = match children | s :: _StaticPict: s._identity_f | ~else: #false,
                 ~identity: identity = genident(desc)) :~ StaticPict:
-  _StaticPict()(handle, identity, children, dependencies, config, instances, rebuild, metadata)
+  _StaticPict()(handle, identity, children, dependencies, config, instances.add(Pair(identity, handle)), rebuild, metadata)
 
 def mutable do_convert = (fun (_, ...): error("convert not ready"))
 fun convert(p :~ List.of(Pict), epoch, duration, combine, non_sustain_combine = combine,
