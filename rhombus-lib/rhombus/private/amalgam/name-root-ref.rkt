@@ -356,19 +356,21 @@
            (syntax-local-value* (in-name-root-space id) (lambda (v)
                                                           (and (portal-syntax? v)
                                                                v)))))
-    (and v
-         (cond
-           [(null? (cdr ids))
-            ;; must be `map` portal syntax to allow extension:
-            (syntax-parse (portal-syntax-content v)
-              #:datum-literals (nspace)
-              [(nspace . _) #t]
-              [_ #f])]
-           [else
-            (or (loop (cdr ids) (portal-syntax-content v) id)
-                (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who))])
-         (in-name-root-space id))))
-
+    (or (and v
+             (cond
+               [(null? (cdr ids))
+                ;; must be `map` portal syntax to allow extension:
+                (syntax-parse (portal-syntax-content v)
+                  #:datum-literals (nspace)
+                  [(nspace . _) #t]
+                  [_ #f])]
+               [else
+                (or (loop (cdr ids) (portal-syntax-content v) id)
+                    (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who))])
+             (in-name-root-space id))
+        (and (pair? (cdr ids))
+             (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who)))))
+  
 ;; Similar to a `make-name-root-ref` search, but more direct where
 ;; all identifiers in a sequence must be used, and also similar to
 ;; `extensible-name-root`, but looking for the binding in a namespace

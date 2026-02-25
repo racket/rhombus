@@ -252,3 +252,13 @@ block:
   check ns2.y ~is 2
   check ns2.sub.z ~is 3
   check ns2.sub2.w ~is 4
+
+check:
+  namespace a:
+    export namespace b
+  // extension of extension of namespace
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.d.x = 1
+  a.b.c.d.x
+  ~is 1
