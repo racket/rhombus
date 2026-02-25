@@ -175,7 +175,8 @@
                                                    internal-dot-static-infos-id internal-dot-static-infos-expr)
               #,@(build-veneer-annotation converter? super interfaces
                                           #'(name name-extends name? name-convert
-                                                  all-static-infos ann-input-statinfo-indirect))
+                                                  all-static-infos ann-input-statinfo-indirect
+                                                  orig-stx))
               (veneer-finish
                [orig-stx base-stx scope-stx
                          reflect-name name name-extends tail-name
@@ -413,7 +414,8 @@
 
 (define-for-syntax (build-veneer-annotation converter? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert
-                       all-static-infos ann-input-statinfo-indirect)
+                       all-static-infos ann-input-statinfo-indirect
+                       orig-stx)
                  names])
     (cond
       [(not converter?)
@@ -422,7 +424,8 @@
          'rhombus/annot #'name #'name-extends
          #`(identifier-annotation name?
                                   all-static-infos
-                                  #:static-only)))]
+                                  #:static-only)
+         #:form #'orig-stx))]
       [else
        (list
         (build-syntax-definition/maybe-extension
@@ -431,7 +434,8 @@
                                                           #'(name name-convert val ann-input-statinfo-indirect))
                                           val
                                           all-static-infos
-                                          #:static-only)))])))
+                                          #:static-only)
+         #:form #'orig-stx))])))
 
 (define-syntax (converter-binding-infoer stx)
   (syntax-parse stx

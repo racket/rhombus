@@ -1,9 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/property
                      enforest/syntax-local
                      "dotted-sequence.rkt"
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "srcloc.rkt")
          "name-root-ref.rkt")
 
 (begin-for-syntax
@@ -89,39 +91,65 @@
      (list
       #`(define #,name #,rhs))]))
 
-(define-for-syntax (build-syntax-definition/maybe-extension space-sym name-in extends rhs)
+(define-for-syntax (build-syntax-definition/maybe-extension space-sym name-in extends rhs
+                                                            #:form [form-stx-or-string "def"])
   (define intro (space->introducer space-sym))
   (define name (intro name-in))
-  (cond
-    [(syntax-e extends)
-     (define tmp (intro (car (generate-temporaries (list name)))))
-     #`(begin
-         (define-syntax #,tmp (let ([#,name #,rhs])
-                                #,name))
-         (define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
-                                                             (quote-syntax #,extends))))]
-    [else
-     #`(define-syntax #,name #,rhs)]))
+  (with-syntax ([define-syntaxes (syntax-raw-property #'define-syntaxes (extract-form-name form-stx-or-string))])
+    (cond
+      [(syntax-e extends)
+       (define tmp (intro (car (generate-temporaries (list name)))))
+       #`(begin
+           #,((make-relocate-to-form form-stx-or-string)
+              #`(define-syntaxes (#,tmp) (let ([#,name #,rhs])
+                                           #,name)))
+           #,((make-relocate-to-form form-stx-or-string)
+              #`(define-syntaxes (#,name) (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
+                                                                        (quote-syntax #,extends)))))]
+      [else
+       ((make-relocate-to-form form-stx-or-string)
+        #`(define-syntaxes (#,name) #,rhs))])))
 
 (define-for-syntax (build-syntax-definitions/maybe-extension space-syms name-in extends rhs
-                                                             #:extra-names [extra-names null])
+                                                             #:extra-names [extra-names null]
+                                                             #:form [form-stx-or-string "def"])
   (define names (for/list ([space-sym (in-list space-syms)])
                   ((space->introducer space-sym) name-in)))
+  (with-syntax ([define-syntaxes (syntax-raw-property #'define-syntaxes (extract-form-name form-stx-or-string))])
+    (cond
+      [(syntax-e extends)
+       (define tmps (for/list ([space-sym (in-list space-syms)])
+                      ((space->introducer space-sym) (car (generate-temporaries (list name-in))))))
+       (map
+        (make-relocate-to-form form-stx-or-string)
+        (cons
+         #`(define-syntaxes (#,@tmps #,@extra-names)
+             (let-values ([(#,@names #,@extra-names) #,rhs])
+               (values #,@names #,@extra-names)))
+         (for/list ([name (in-list names)]
+                    [tmp (in-list tmps)])
+           #`(define-syntaxes (#,name) (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
+                                                                     (quote-syntax #,extends))))))]
+      [else
+       (list
+        ((make-relocate-to-form form-stx-or-string)
+         #`(define-syntaxes (#,@names #,@extra-names) #,rhs)))])))
+
+(define-for-syntax (extract-form-name form-name)
   (cond
-    [(syntax-e extends)
-     (define tmps (for/list ([space-sym (in-list space-syms)])
-                    ((space->introducer space-sym) (car (generate-temporaries (list name-in))))))
-     (cons
-      #`(define-syntaxes (#,@tmps #,@extra-names)
-          (let-values ([(#,@names #,@extra-names) #,rhs])
-            (values #,@names #,@extra-names)))
-      (for/list ([name (in-list names)]
-                 [tmp (in-list tmps)])
-        #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,(id-as-ext-target tmp))
-                                                              (quote-syntax #,extends)))))]
+    [(string? form-name) form-name]
+    [(identifier? form-name) (or (syntax-raw-property form-name)
+                                 (format "~a" (syntax-e form-name)))]
     [else
-     (list
-      #`(define-syntaxes (#,@names #,@extra-names) #,rhs))]))
+     (syntax-parse form-name
+       [(name:id . _) (extract-form-name #'name)]
+       [_ "def"])]))
+
+(define-for-syntax (make-relocate-to-form form-stx-or-string)
+  (if (syntax? form-stx-or-string)
+      (lambda (stx)
+        (relocate+reraw form-stx-or-string stx))
+      values))
 
 (define-for-syntax (identifier-extension-binding? id prefix)
   (syntax-local-value* id (lambda (v)

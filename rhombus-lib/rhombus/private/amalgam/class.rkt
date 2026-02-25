@@ -286,7 +286,8 @@
                                                       [super-name-field ...] [super-public-name-field ...]
                                                       [super-name-field-mutable? ...] [super-public-name-field-mutable? ...]
                                                       constructor-field-keywords [constructor-public-field-keyword ...]
-                                                      [super-field-keyword ...] [super-public-field-keyword ...]))
+                                                      [super-field-keyword ...] [super-public-field-keyword ...]
+                                                      orig-stx))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx

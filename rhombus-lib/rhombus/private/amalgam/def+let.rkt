@@ -12,7 +12,8 @@
          (submod "values.rkt" for-parse)
          (submod "equal.rkt" for-parse)
          "parens.rkt"
-         "if-blocked.rkt")
+         "if-blocked.rkt"
+         "rhombus-primitive.rkt")
 
 (provide (for-space rhombus/defn
                     def
@@ -41,20 +42,23 @@
          (build-values-definitions #'form-id
                                    #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition
-                                   #:check-bind-uses check-bind-uses)]
+                                   #:check-bind-uses check-bind-uses
+                                   #:stx stx)]
         [(form-id any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
          (build-value-definitions #'form-id
                                   (no-srcloc #`(#,group-tag any ...))
                                   #`(#,group-tag rhs ...)
                                   wrap-definition
-                                  #:check-bind-uses check-bind-uses)]
+                                  #:check-bind-uses check-bind-uses
+                                  #:stx stx)]
         [(form-id any ...+ (~and rhs (_::block body ...)))
          (build-value-definitions #'form-id
                                   (no-srcloc #`(#,group-tag any ...))
                                   #'rhs
                                   wrap-definition
-                                  #:check-bind-uses check-bind-uses)]
+                                  #:check-bind-uses check-bind-uses
+                                  #:stx stx)]
         [(_ ... (a::alts (b::block . _) . _))
          (raise-syntax-error #f
                              "alternatives are not supported here"
@@ -87,7 +91,8 @@
                                                       form)))))
 
 (define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition
-                                            #:check-bind-uses [check-bind-uses void])
+                                            #:check-bind-uses [check-bind-uses void]
+                                            #:stx [stx form-id])
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
@@ -119,13 +124,14 @@
          (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data))
       (wrap-definition
        #`(begin
-           (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
+           #,(relocate+reraw stx #`(lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data))
            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
            ...
            #,@(maybe-end-def))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
-                                             #:check-bind-uses [check-bind-uses void])
+                                             #:check-bind-uses [check-bind-uses void]
+                                             #:stx [stx form-id])
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
@@ -170,8 +176,11 @@
          ...)
       (wrap-definition
        #`(begin
-           (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-           ...
+           #,@(map
+               (lambda (b) (relocate+reraw stx b))
+               (syntax->list
+                #`((lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
+                   ...)))
            (define-static-info-syntax/maybe/maybe-extension lhs-i.bind-id lhs-extends lhs-i.bind-static-info ...)
            ... ...
            #,@(maybe-end-def))))]))

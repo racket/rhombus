@@ -190,7 +190,8 @@
                                                      name? name-instance
                                                      internal-name? internal-name-instance
                                                      implementable-name
-                                                     all-static-infos internal-all-static-infos))
+                                                     all-static-infos internal-all-static-infos
+                                                     orig-stx))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names #:interface? #t)
               (interface-finish [orig-stx base-stx scope-stx
                                           reflect-name name name-extends tail-name
@@ -422,7 +423,8 @@
                        name? name-instance
                        internal-name? internal-name-instance
                        implementable-name
-                       all-static-infos internal-all-static-infos)
+                       all-static-infos internal-all-static-infos
+                       orig-stx)
                  names])
     (append
      (if internal-name
@@ -450,7 +452,8 @@
                                          #:extra-args (list #'ctx)
                                          "interface"))]
             [else
-             #`(identifier-annotation name? all-static-infos)])))])
+             #`(identifier-annotation name? all-static-infos)])
+          #:form #'orig-stx))])
      (if (syntax-e #'implementable-name)
          (list
           #'(define-annotation-syntax implementable-name

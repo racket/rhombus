@@ -1,11 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/property
                      "annotation-string.rkt"
                      "tag.rkt"
                      "keyword-sort.rkt"
                      "maybe-as-original.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "srcloc.rkt")
          racket/treelist
          "parse.rkt"
          "binding.rkt"
@@ -393,22 +395,26 @@
                                              rest-data))
      #:with ((tmp-id/evidence ...) evidence-ids ... (rest-tmp-id/evidence rest-evidence-ids)) #'all-evidence-ids
      #`(begin
-         (binder-id tmp-id/evidence evidence-ids data)
-         ...
-         #,@(syntax-parse #'rest-data
-              [#f #'()]
-              [(rest-tmp-id rest-accessor
-                            rest-to-repetition no-rest-map?
-                            rest-repetition? rest-info rest-seq-tmp-ids)
-               #:with rest::binding-info #'rest-info
-               (if (syntax-e #'rest-repetition?)
-                   (make-repetition-bind #'(rest.bind-uses ...)
-                                         #'(rest.bind-id ...)
-                                         #'((rest.bind-static-info ...) ...)
-                                         #'rest-seq-tmp-ids
-                                         (syntax-e #'no-rest-map?)
-                                         #'rest-to-repetition)
-                   #'((rest.binder-id rest-tmp-id/evidence rest-evidence-ids rest.data)))]))]))
+         #,@(map
+             (lambda (b)
+               (relocate+reraw stx b))
+             (syntax->list
+              #`((binder-id tmp-id/evidence evidence-ids data)
+                 ...
+                 #,@(syntax-parse #'rest-data
+                      [#f #'()]
+                      [(rest-tmp-id rest-accessor
+                                    rest-to-repetition no-rest-map?
+                                    rest-repetition? rest-info rest-seq-tmp-ids)
+                       #:with rest::binding-info #'rest-info
+                       (if (syntax-e #'rest-repetition?)
+                           (make-repetition-bind #'(rest.bind-uses ...)
+                                                 #'(rest.bind-id ...)
+                                                 #'((rest.bind-static-info ...) ...)
+                                                 #'rest-seq-tmp-ids
+                                                 (syntax-e #'no-rest-map?)
+                                                 #'rest-to-repetition)
+                           #'((rest.binder-id rest-tmp-id/evidence rest-evidence-ids rest.data)))])))))]))
 
 ;; ------------------------------------------------------------
 
@@ -537,7 +543,8 @@
                               ...)
                              ([(elem-tmp-id/copy) (sequencer elem-tmp-id/copy)])
                              ...)
-                            ...))])
+                            ...))]
+                      [define-syntaxes (syntax-raw-property #'define-syntaxes "def")])
           #'((define-syntaxes (rest-bind-id rep-bind-id)
                (make-expression+repetition (quote-syntax rest-seq-tmp-id-as-rep)
                                            (quote-syntax elem-tmp-id)

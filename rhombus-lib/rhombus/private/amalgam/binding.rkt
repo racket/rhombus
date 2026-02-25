@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     shrubbery/property
                      enforest/operator
                      enforest/transformer
                      enforest/property
@@ -202,7 +203,7 @@
          (car l)
          #`(begin #,@l))]
     [(_ arg-id () bind-id)
-     #'(define bind-id arg-id)]))
+     #`(#,(syntax-raw-property #'define-values "def") (bind-id) arg-id)]))
 
 (define-syntax (define-binding-syntax stx)
   (syntax-parse stx

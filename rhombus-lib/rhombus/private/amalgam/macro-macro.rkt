@@ -453,7 +453,8 @@
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym op
                                                (pre-parsed-extends p)
-                                               #`(#,compiletime-id #:single #,stx #,p))
+                                               #`(#,compiletime-id #:single #,stx #,p)
+                                               #:form stx)
       p))
 
 ;; multi-case macro definition:
@@ -474,7 +475,8 @@
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym (or main-name (pre-parsed-name (car ps)))
                                                (or main-extends (pre-parsed-extends (car ps)))
-                                               #`(#,compiletime-id #:multi #,stx #,@ps))
+                                               #`(#,compiletime-id #:multi #,stx #,@ps)
+                                               #:form stx)
       ps))
 
 ;; An operator definition transformer involves a phase-0 binding for

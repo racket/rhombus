@@ -553,13 +553,15 @@
         (~optional (~seq #:parse-of parse-annotation-of-id)
                    #:defaults ([parse-annotation-of-id #'parse-annotation-of]))
         (~optional (~seq #:extends name-extends)
-                   #:defaults ([name-extends #'#f])))
+                   #:defaults ([name-extends #'#f]))
+        (~optional (~seq #:stx orig-stx)))
      #:with annot-name (in-annotation-space #'name)
      (define extra-names (list #'of-name))
      (define defs
        ;; usually `(define-syntaxes (annot-name of-name) ....)`:
        (build-syntax-definitions/maybe-extension
         (list 'rhombus/annot) #'name #:extra-names extra-names #'name-extends
+        #:form (if (attribute orig-stx) (syntax orig-stx) "annot.macro")
         #'(let binds
               (annotation-constructor predicate-stx (lambda () #`static-infos)
                                       sub-n 'kws

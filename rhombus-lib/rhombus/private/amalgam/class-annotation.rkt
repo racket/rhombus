@@ -30,7 +30,8 @@
                        constructor-name-field-mutable?s constructor-public-name-field-mutable?s
                        super-name-fields super-public-name-fields
                        super-name-field-mutable?s super-public-name-field-mutable?s
-                       field-keywords public-field-keywords super-field-keywords super-public-field-keywords)
+                       field-keywords public-field-keywords super-field-keywords super-public-field-keywords
+                       orig-stx)
                  names])
     (define (make-ann-defs id of-id no-super?
                            name-fields keywords field-mutable?s
@@ -79,7 +80,8 @@
                                   #'(super-name-field ...
                                      constructor-name-field ...)
                                   #'()))
-              #:extends name-extends))
+              #:extends name-extends
+              #:stx orig-stx))
          (if name-build-convert
              (list
               #`(define-syntax #,name-build-convert
@@ -109,7 +111,8 @@
                                          (intro annotation-rhs)
                                          #'make-annotation-prefix-operator
                                          #:extra-args (list #'ctx)
-                                         "class"))))])]
+                                         "class"))
+             #:form #'orig-stx))])]
        [else
         (make-ann-defs #'name #'name-of #f
                        #'constructor-public-name-fields #'public-field-keywords #'constructor-public-name-field-mutable?s
