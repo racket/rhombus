@@ -15,7 +15,9 @@
                      expose-spaces
                      expose-spaces-with-rule
                      find-identifer-in-spaces
-                     close-over-extensions))
+                     close-over-extensions
+                     make-extension-renamer
+                     make-extension-matcher))
 
 (begin-for-syntax
   ;; inputs:
@@ -30,7 +32,10 @@
   ;;   - exposed-ht: sym -> id, where `id` is the identifier to bind (without a prefix)
   ;;   - new-covered-ht: updated coverage (when `accum?` is true)
   ;;   - as-is?: true means `ht` is as given, and `exposed-ht` is empty
-  (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok? only-space-sym for-singleton?)
+  (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok? only-space-sym for-singleton?
+                                          #:get-matches [get-matches (lambda (ht id) (list id))]
+                                          #:get-renames [get-renames (lambda (ht old-id new-id)
+                                                                       (values (list old-id) (list new-id)))])
     (define included-str (if for-singleton? "nested within the imported name" "included"))
     (let extract ([r r] [ht ht] [step 0])
       (define (root) (values ht #hasheq() covered-ht #t))
@@ -45,20 +50,23 @@
            (for/fold ([renames #hasheq()]
                       [rename-bind-ids #hasheq()])
                      ([orig-s (in-list (syntax->list #'(orig ...)))]
-                      [bind-s (in-list (syntax->list #'(bind ...)))])
-               (define orig (syntax-e orig-s))
-               (define bind (syntax-e bind-s))
-               (cond
-                 [(hash-ref new-ht orig #f)
-                  (when (hash-ref renames orig #f)
-                    (raise-syntax-error 'import "duplicate rename for identifier" orig-s))
-                  (values (hash-set renames orig bind)
-                          (hash-set rename-bind-ids bind bind-s))]
-                 [(or accum? (covered? covered-ht orig step))
-                  (values renames
-                          rename-bind-ids)]
-                 [else
-                  (raise-syntax-error 'import (string-append "identifier to rename is not " included-str) orig-s)])))
+                      [bind-s (in-list (syntax->list #'(bind ...)))]
+                      #:do [(define-values (all-orig all-bind) (get-renames new-ht orig-s bind-s))]
+                      [orig-s (in-list all-orig)]
+                      [bind-s (in-list all-bind)])
+             (define orig (syntax-e orig-s))
+             (define bind (syntax-e bind-s))
+             (cond
+               [(hash-ref new-ht orig #f)
+                (when (hash-ref renames orig #f)
+                  (raise-syntax-error 'import "duplicate rename for identifier" orig-s))
+                (values (hash-set renames orig bind)
+                        (hash-set rename-bind-ids bind bind-s))]
+               [(or accum? (covered? covered-ht orig step))
+                (values renames
+                        rename-bind-ids)]
+               [else
+                (raise-syntax-error 'import (string-append "identifier to rename is not " included-str) orig-s)])))
          (define-values (pruned-ht pruned-expose-ht)
            (for/fold ([ht new-ht] [expose-ht new-expose-ht])
                      ([(orig bind) (in-hash renames)])
@@ -78,7 +86,9 @@
                     [expose-ht #hasheq()]
                     [covered-ht covered-ht]
                     #:result (values ht expose-ht covered-ht #f))
-                   ([id-s (in-list (syntax->list #'(id ...)))])
+                   ([id-s (in-list (syntax->list #'(id ...)))]
+                    #:do [(define all-ids (get-matches new-ht id-s))]
+                    [id-s (in-list all-ids)])
            (define id (syntax-e id-s))
            (cond
              [(hash-ref new-ht id #f)
@@ -99,7 +109,9 @@
                     [expose-ht new-expose-ht]
                     [covered-ht covered-ht]
                     #:result (values ht expose-ht covered-ht #f))
-                   ([id-s (in-list (syntax->list #'(id ...)))])
+                   ([id-s (in-list (syntax->list #'(id ...)))]
+                    #:do [(define all-ids (get-matches new-ht id-s))]
+                    [id-s (in-list all-ids)])
            (define id (syntax-e id-s))
            (cond
              [(hash-ref new-ht id #f) (values (hash-remove ht id)
@@ -114,7 +126,9 @@
          (define-values (exposed-expose-ht exposed-covered-ht)
            (for/fold ([expose-ht new-expose-ht]
                       [covered-ht covered-ht])
-                     ([id-s (in-list (syntax->list #'(id ...)))])
+                     ([id-s (in-list (syntax->list #'(id ...)))]
+                      #:do [(define all-ids (get-matches new-ht id-s))]
+                      [id-s (in-list all-ids)])
              (define id (syntax-e id-s))
              (cond
                [(hash-ref new-ht id #f)
@@ -283,3 +297,36 @@
                                                  (string-append str (substring k-str len)))))
                        (cdr ks))]
               [else (loop expose-ht (cdr expose-ks) ks)])]))])))
+
+
+(define-for-syntax (make-extension-matcher no-match?)
+  (lambda (ht id)
+    (if no-match?
+        (list id)
+        (let ([start (string-append (symbol->immutable-string (syntax-e id)) ".")])
+          (cons id
+                (for/list ([ext-sym (in-hash-keys ht)]
+                           #:do [(define str (symbol->immutable-string ext-sym))]
+                           #:when (and (> (string-length str) (string-length start))
+                                       (string=? start (substring str 0 (string-length start)))))
+                  (datum->syntax id ext-sym id)))))))
+
+(define-for-syntax (make-extension-renamer no-match?)
+  (lambda (ht old-id new-id)
+    (if no-match?
+        (values (list old-id) (list new-id))
+        (let ([old-start (string-append (symbol->immutable-string (syntax-e old-id)) ".")])
+          (for/fold ([old-ids (list old-id)]
+                     [new-ids (list new-id)])
+                    ([ext-sym (in-hash-keys ht)]
+                     #:do [(define str (symbol->immutable-string ext-sym))]
+                     #:when (and (> (string-length str) (string-length old-start))
+                                 (string=? old-start (substring str 0 (string-length old-start)))))
+            (define new-sym (string->symbol
+                             (string-append (symbol->immutable-string (syntax-e new-id))
+                                            "."
+                                            (substring str (string-length old-start)))))
+            (values (cons (datum->syntax old-id ext-sym old-id)
+                          old-ids)
+                    (cons (datum->syntax new-id new-sym new-id)
+                          new-ids)))))))

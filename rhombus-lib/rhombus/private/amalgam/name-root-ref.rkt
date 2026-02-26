@@ -39,7 +39,10 @@
                     field-id
                     field-id)
      'origin
-     (syntax-local-introduce (in-name-root-space prefix)))))
+     (syntax-local-introduce (in-name-root-space prefix))))
+
+  (struct search-step (get prefix extends)
+    #:authentic))
 
 ;; * `binding-ref` as non-#f means that we're parsing a binding, so we
 ;;    want to follow namespaces, but a tail non-bound name is one to
@@ -49,7 +52,7 @@
 ;;    a "dotted" form
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f] ;; see above
                                        #:non-portal-ref [non-portal-ref #f] ;; see above
-                                       #:binding-extension-combine [binding-extension-combine (lambda (prefix field-id id) id)]
+                                       #:binding-extension-combine [binding-extension-combine (lambda (prefix prefixes field-id id) id)]
                                        #:dot-name-construction [dot-name-construction (lambda (names id) id)]
                                        #:quiet-fail? [quiet-fail? #f]
                                        #:fallback-to-expr? [fallback-to-expr? #f])
@@ -65,12 +68,13 @@
            (syntax-parse stxes
              [(form-id . _) #'form-id]))
          (let loop ([stxes stxes]
-                    [gets
-                     ;; reverse order search path: (cons get prefix)
+                    [steps
+                     ;; reverse order search path:
                      (list
-                      (cons get #f)
-                      (cons #f head))]
-                    [rev-dot-names (list head)])
+                      (search-step get #f null)
+                      (search-step #f head (list head)))]
+                    [rev-dot-names (list head)]
+                    [extends null])
            (define (next form-id field-id field-op-parens what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -78,9 +82,9 @@
                                          [((op |.|) . _) #f]
                                          [_ #t])))
              (define (get-id in-id-space ns? fail-ok?)
-               (or (for/or ([get+prefix (in-list (reverse gets))])
-                     (define get (car get+prefix))
-                     (define prefix (cdr get+prefix))
+               (or (for/or ([step (in-list (reverse steps))])
+                     (define get (search-step-get step))
+                     (define prefix (search-step-prefix step))
                      (cond
                        [(not get)
                         (define name (build-name prefix field-id))
@@ -104,19 +108,22 @@
                      [fail-ok? #f]
                      [(or binding-end?
                           quiet-fail?)
-                      (let ([prefix (cdar (reverse gets))])
-                        (dot-name-construction
-                         (reverse (cons field-id rev-dot-names))
-                         (binding-extension-combine
-                          (in-name-root-space prefix)
-                          field-id
-                          (relocate-field form-id
-                                          field-id
-                                          (build-name prefix field-id #:ctx field-id)
-                                          field-op-parens))))]
+                      (define last-step (car (reverse steps)))
+                      (define prefix (search-step-prefix last-step))
+                      (define extends (search-step-extends last-step))
+                      (dot-name-construction
+                       (reverse (cons field-id rev-dot-names))
+                       (binding-extension-combine
+                        (in-name-root-space prefix)
+                        (map in-name-root-space extends)
+                        field-id
+                        (relocate-field form-id
+                                        field-id
+                                        (build-name prefix field-id #:ctx field-id)
+                                        field-op-parens)))]
                      [else
                       ;; try again with the shallowest to report an error
-                      (let ([get (caar gets)])
+                      (let ([get (search-step-get (car steps))])
                         (get form-id what field-id in-id-space fallback-to-expr?))])))
              ;; keep looking at dots?
              (define more-dots?
@@ -135,16 +142,22 @@
                 (portal-syntax->lookup (portal-syntax-content v)
                                        (lambda (self-id next-get)
                                          (if more-dots?
-                                             (loop (cons ns-id tail)
-                                                   (cons
-                                                    (cons next-get #f)
-                                                    (for/list ([get+prefix (in-list gets)])
-                                                      (define get (car get+prefix))
-                                                      (define prefix (cdr get+prefix))
-                                                      (cons get (if prefix
-                                                                    (build-name prefix field-id)
-                                                                    field-id))))
-                                                   (cons field-id rev-dot-names))
+                                             (let ([extends (cons field-id extends)])
+                                               (loop (cons ns-id tail)
+                                                     (cons
+                                                      (search-step next-get #f extends)
+                                                      (for/list ([step (in-list steps)])
+                                                        (define get (search-step-get step))
+                                                        (define prefix (search-step-prefix step))
+                                                        (define extends (search-step-extends step))
+                                                        (search-step get
+                                                                     (if prefix
+                                                                         (build-name prefix field-id)
+                                                                         field-id)
+                                                                     (cons ns-id
+                                                                           extends))))
+                                                     (cons field-id rev-dot-names)
+                                                     extends))
                                              (values self-id tail))))]
                [non-portal-ref
                 (non-portal-ref form-id field-id tail)]
@@ -338,10 +351,10 @@
      portal-stx]
     [_ #f]))
 
-;; returns the id of an extension root, the first one found from the
-;; possibilities in `ids`
+;; returns #f of a list of ids for extension roots
 (define-for-syntax (extensible-name-root ids)
-  (let loop ([ids ids] [portal-stx #f] [prev-who #f])
+  (define founds (hasheqv))
+  (let loop ([ids ids] [portal-stx #f] [prev-who #f] [root-ids null])
     (define id
       (cond
         [(not portal-stx) (car ids)]
@@ -356,21 +369,27 @@
            (syntax-local-value* (in-name-root-space id) (lambda (v)
                                                           (and (portal-syntax? v)
                                                                v)))))
-    (or (and v
-             (cond
-               [(null? (cdr ids))
-                ;; must be `map` portal syntax to allow extension:
-                (syntax-parse (portal-syntax-content v)
-                  #:datum-literals (nspace)
-                  [(nspace . _) #t]
-                  [_ #f])]
-               [else
-                (or (loop (cdr ids) (portal-syntax-content v) id)
-                    (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who))])
-             (in-name-root-space id))
-        (and (pair? (cdr ids))
-             (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who)))))
-  
+    (cond
+      [v
+       (set! founds (hash-set founds (length ids) id))
+       (cond
+         [(null? (cdr ids))
+          ;; must be `map` portal syntax to allow extension:
+          (syntax-parse (portal-syntax-content v)
+            #:datum-literals (nspace)
+            [(nspace . _) (cons (in-name-root-space id) root-ids)]
+            [_ #f])]
+         [else
+          (define new-root-ids (cons (in-name-root-space id) root-ids))
+          (or (loop (cdr ids) (portal-syntax-content v) id new-root-ids)
+              (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who new-root-ids))])]
+      [else
+       (define found-id (hash-ref founds (length ids) #f))
+       (and found-id
+            (pair? (cdr ids))
+            (loop (cons (build-name (car ids) (cadr ids)) (cddr ids)) portal-stx prev-who
+                  (cons (in-name-root-space found-id) root-ids)))])))
+
 ;; Similar to a `make-name-root-ref` search, but more direct where
 ;; all identifiers in a sequence must be used, and also similar to
 ;; `extensible-name-root`, but looking for the binding in a namespace

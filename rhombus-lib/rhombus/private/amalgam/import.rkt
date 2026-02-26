@@ -441,7 +441,9 @@
 (define-syntax (rhombus-import-dotted-one stx)
   (syntax-parse stx
     [(_ wrt dotted lookup-id id as-ns? r k)
-     #`(rhombus-import-one wrt dotted #,(bound-identifier-as-import stx #'lookup-id #'id #t (syntax-e #'as-ns?)) r k)]))
+     (define-values (new-id new-dotted)
+       (bound-identifier-as-import stx #'lookup-id #'id #'dotted #t (syntax-e #'as-ns?)))
+     #`(rhombus-import-one wrt #,new-dotted #,new-id r k)]))
 
 (define-for-syntax (maybe-convert-dotted-to-expose mod-path id r convert-k fail-k)
   (syntax-parse mod-path
@@ -498,53 +500,72 @@
          (convert-k mod-path #`(rhombus-prefix-in #,new-r #:none #f))
          (fail-k))]))
 
-(define-for-syntax (bound-identifier-as-import stx lookup-id id as-field? as-ns?)
-  (define space+maps
-    (for/list ([space-sym (in-list (if as-ns?
-                                       (list 'rhombus/namespace)
-                                       (cons #f (syntax-local-module-interned-scope-symbols))))]
-               #:do[(define intro (if space-sym
-                                      (make-interned-syntax-introducer/add space-sym)
-                                      (lambda (id) id)))
-                    (define space-id (intro lookup-id))
-                    (define i (and (or (not as-field?)
-                                       (identifier-distinct-binding* space-id (intro id)))
-                                   (or (not space-sym)
-                                       (identifier-distinct-binding* space-id lookup-id))
-                                   (or (syntax-local-value* space-id import-root-ref)
-                                       (and (identifier-distinct-binding* space-id (if as-field? (intro id) lookup-id))
-                                            'other))))]
-               #:when i)
+(define-for-syntax (bound-identifier-as-import stx lookup-id id dotted as-field? as-ns?)
+  (define (search id lookup-id fail-ok? explicitly-dotted?)
+    (define space+maps
+      (for/list ([space-sym (in-list (if as-ns?
+                                         (list 'rhombus/namespace)
+                                         (cons #f (syntax-local-module-interned-scope-symbols))))]
+                 #:do[(define intro (if space-sym
+                                        (make-interned-syntax-introducer/add space-sym)
+                                        (lambda (id) id)))
+                      (define space-id (intro lookup-id))
+                      (define i (and (or (not as-field?)
+                                         explicitly-dotted?
+                                         (identifier-distinct-binding* space-id (intro id)))
+                                     (or (not space-sym)
+                                         (identifier-distinct-binding* space-id lookup-id))
+                                     (or (syntax-local-value* space-id import-root-ref)
+                                         (and (identifier-distinct-binding* space-id (if as-field? (intro id) lookup-id))
+                                              'other))))]
+                 #:when i)
+        (cond
+          [(eq? i 'other)
+           (list space-sym
+                 #`(singleton #,space-id #,(if as-ns? id (intro id))))]
+          [else
+           (unless (eq? space-sym 'rhombus/namespace)
+             (error "internal error: namespace or import at strange space" space-sym))
+           (list '#:all
+                 (syntax-parse i
+                   #:datum-literals (parsed nspace)
+                   [(parsed mod-path parsed-r)
+                    (define-values (mp r no-lifted-nss) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
+                    #`(reimport #,id #,(datum->syntax id (syntax-e mp)) #,r)]
+                   [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
+    (cond
+      [(null? space+maps)
+       (and (not fail-ok?)
+            (cond
+              [as-field?
+               (raise-syntax-error #f
+                                   (if as-ns?
+                                       "not provided as a namespace"
+                                       "not provided")
+                                   id)]
+              [else
+               (raise-syntax-error #f
+                                   "not bound as a namespace"
+                                   stx
+                                   id)]))]
+      [else
+       #`(import-spaces #,id #,@space+maps)]))
+  (if dotted
       (cond
-        [(eq? i 'other)
-         (list space-sym
-               #`(singleton #,space-id #,(if as-ns? id (intro id))))]
+        [(search id lookup-id #t #f)
+         => (lambda (new-id)
+              (values new-id dotted))]
         [else
-         (unless (eq? space-sym 'rhombus/namespace)
-           (error "internal error: namespace or import at strange space" space-sym))
-         (list '#:all
-               (syntax-parse i
-                 #:datum-literals (parsed nspace)
-                 [(parsed mod-path parsed-r)
-                  (define-values (mp r no-lifted-nss) (import-invert (syntax-local-introduce #'parsed-r) #f #f))
-                  #`(reimport #,id #,(datum->syntax id (syntax-e mp)) #,r)]
-                 [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
-  (cond
-    [(null? space+maps)
-     (cond
-       [as-field?
-        (raise-syntax-error #f
-                            (if as-ns?
-                                "not provided as a namespace"
-                                "not provided")
-                            id)]
-       [else
-        (raise-syntax-error #f
-                            "not bound as a namespace"
-                            stx
-                            id)])]
-    [else
-     #`(import-spaces #,id #,@space+maps)]))
+         (define name (string->symbol
+                       (string-append (symbol->immutable-string (syntax-e dotted))
+                                      "."
+                                      (symbol->immutable-string (syntax-e id)))))
+         (values (search (datum->syntax id name id id)
+                         (datum->syntax lookup-id name lookup-id lookup-id)
+                         #f
+                         #t)
+                 #f)])
+      (search id lookup-id #f #f)))
 
 (define-for-syntax (intro-mod-path mod-path intro)
   ;; avoid introducing a `map` that is stored in an `import-root` module path
@@ -595,7 +616,7 @@
   (syntax-parse im
     #:datum-literals (import-root nspace)
     [(import-root id ns-id #:delay)
-     (syntax-parse (bound-identifier-as-import #'ns-id #'ns-id #'id #f #t)
+     (syntax-parse (bound-identifier-as-import #'ns-id #'ns-id #'id #f #f #t)
        #:datum-literals (import-spaces)
        [(import-spaces _ (#:all im))
         (imports-from-namespace #'im r-parsed covered-ht accum? dotted-id only-space-sym)])]
@@ -654,6 +675,8 @@
                                                   #:unless (hash-ref to-replace (cdr id+space) #f))
                                          id+space)])))
             (hash-set ht k (append val-id+spaces id+spaces))))
+        #:get-matches (make-extension-matcher (zero? (hash-count extension-ht)))
+        #:get-renames (make-extension-renamer (zero? (hash-count extension-ht)))
         covered-ht
         accum?
         #f
@@ -760,7 +783,7 @@
                  #`(define-syntax #,new-id
                      (make-rename-transformer (quote-syntax #,space-v-id)))))
           ;; exposed extensions from outside the namespace
-          #,@(for*/list ([key (in-hash-keys (if (syntax-e prefix) expose-ht ht))]
+          #,@(for*/list ([key (in-hash-keys (if (identifier? prefix) expose-ht ht))]
                          #:do [(define id+keep-spaces
                                  (and (syntax-e prefix)
                                       (hash-ref ht key)))
@@ -907,7 +930,7 @@
     (lambda (stx)
       (syntax-parse stx
         [(_ id:identifier . tail)
-         (values (bound-identifier-as-import stx #'id #'id #f #t)
+         (values (bound-identifier-as-import stx #'id #'id #f #f #t)
                  #'tail)]
         [_
          (raise-syntax-error #f

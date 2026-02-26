@@ -52,7 +52,8 @@
         (cond
           [(and (eq? space 'rhombus/namespace)
                 (extensible-name-root (list int-id)))
-           => (lambda (name-root-id)
+           => (lambda (list-name-root-id)
+                (define name-root-id (car list-name-root-id))
                 ;; also export any extensions
                 (define out-int-id (out-of-name-root-space int-id))
                 (let ns-loop ([int-id int-id] [name-root-id name-root-id])

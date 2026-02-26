@@ -379,9 +379,10 @@
                      (raise-syntax-error #f
                                          "unexpected after `.`"
                                          #'name.tail))
-                   (define name-root-id (extensible-name-root (list #'name.name)))
+                   (define list-name-root-id (extensible-name-root (list #'name.name)))
                    (cond
-                     [name-root-id
+                     [list-name-root-id
+                      (define name-root-id (car list-name-root-id))
                       (define extensions
                         (let ns-loop ([base-ht #hasheq()] [int-id #'name.name] [name-root-id name-root-id] [orig-prefix #f])
                           ;; look for extensions (in all spaces)

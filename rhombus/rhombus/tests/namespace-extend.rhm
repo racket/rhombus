@@ -262,3 +262,128 @@ check:
   def a.b.c.d.x = 1
   a.b.c.d.x
   ~is 1
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a.b.c open
+  [y, d.x]
+  ~is ["y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a.b.c.d
+  d.x
+  ~is "x"
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  // extension of extension of namespace
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a as aa
+  import:
+    .aa.b.c open
+  [y, d.x]
+  ~is ["y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a as aa
+  import:
+    .aa.b.c.d
+  [d.x, a.b.z, aa.b.c.y]
+  ~is ["x", 5, "y"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a.b.c
+  [c.y, c.d.x]
+  ~is ["y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a as aa
+  import:
+    .aa.b.c
+  [c.y, c.d.x]
+  ~is ["y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a.b
+  [b.z, b.c.y, b.c.d.x]
+  ~is [5, "y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a.b as bbb
+  [bbb.z, bbb.c.y, bbb.c.d.x]
+  ~is [5, "y", "x"]
+
+check:
+  namespace a:
+    export namespace b:
+      export def z = 5
+  namespace a.b.c
+  namespace a.b.c.d
+  def a.b.c.y = "y"
+  def a.b.c.d.x = "x"
+  import:
+    .a as also_a:
+      expose b
+  [b.z, b.c.y, b.c.d.x]
+  ~is [5, "y", "x"]

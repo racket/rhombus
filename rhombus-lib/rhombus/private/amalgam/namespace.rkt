@@ -142,9 +142,10 @@
                                       ext-id
                                       (hash-ref ht ext-sym #f)
                                       (make-ext+int+rule ext-id int-id spaces-mode spaces))))
-           (define name-root-id (extensible-name-root (list int-id)))
+           (define list-name-root-id (extensible-name-root (list int-id)))
            (cond
-             [name-root-id
+             [list-name-root-id
+              (define name-root-id (car list-name-root-id))
               (let ns-loop ([base-ht base-ht] [int-id int-id] [name-root-id name-root-id])
                 ;; look for extensions (in all spaces)
                 (define prefix (string-append (symbol->immutable-string (syntax-e int-id)) "."))

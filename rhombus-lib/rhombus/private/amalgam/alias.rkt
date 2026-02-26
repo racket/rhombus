@@ -20,6 +20,10 @@
 (provide (for-space rhombus/defn
                     alias))
 
+(begin-for-syntax
+  (struct alias-defn (space-sym id extends rhs)
+    #:authentic))
+
 (define-defn-syntax alias
   (definition-transformer
    (lambda (stx name-prefix effect-id)
@@ -70,14 +74,17 @@
                 (cons
                  (build-syntax-definition/maybe-extension
                   space-sym #'new-name.name #'new-name.extends
-                  #`(make-rename-transformer (quote-syntax #,old-id-in-space)))
+                  #`(make-rename-transformer (quote-syntax #,old-id-in-space))
+                  #:form stx)
                  (cond
                    [(and (eq? space-sym 'rhombus/namespace)
                          (extensible-name-root (list old-id-in-space)))
-                    => (lambda (name-root-id)
+                    => (lambda (list-name-root-id)
+                         (define name-root-id (car list-name-root-id))
                          ;; also alias any extensions
                          (define out-int-id (out-of-name-root-space old-id))
-                         (define defs
+                         (define done-root-ids null)
+                         (define aliases
                            (let ns-loop ([out-int-id out-int-id] [name-root-id name-root-id])
                              (define prefix (string-append (symbol->immutable-string (syntax-e old-id))
                                                            "."))
@@ -101,21 +108,24 @@
                                                                  "."
                                                                  (substring (symbol->immutable-string sym) (string-length prefix)))))
                                 (cons
-                                 (build-syntax-definition/maybe-extension
+                                 ;; aliases can turn a tree of namespaces into a DAG,
+                                 ;; so gather all relevant "extends" for a given binding
+                                 ;; by making an `alias-defn` and then using `aliases->defs`
+                                 (alias-defn
                                   space (datum->syntax #'new-name.name ext-sym #'new-name.name)
-                                  ((make-interned-syntax-introducer 'rhombus/namespace) #'new-name.name)
+                                  (list ((make-interned-syntax-introducer 'rhombus/namespace) #'new-name.name))
                                   #`(make-rename-transformer (quote-syntax #,id)))
                                  (if (eq? space 'rhombus/namespace)
                                      (ns-loop id* id)
                                      null))))))
-                         (if (and (pair? defs))
+                         (if (pair? aliases)
                              ;; in case this `alias` form is after `export`, fon't export individual
                              ;; extensions, because that would use the last component of the extension's
-                             ;; name; insteda, leave export of extensions up to exporting the namespace
+                             ;; name; instead, leave export of extensions up to exporting the namespace
                              (append (list #'(rhombus-forward #:suspend-export))
-                                     defs
+                                     (aliases->defs aliases stx)
                                      (list #'(rhombus-forward #:resume-export)))
-                             defs))]
+                             null))]
                    [else
                     null]))]
                [else
@@ -145,3 +155,29 @@
                          "expected space names"
                          stx
                          spaces-stx)]))
+
+(define-for-syntax (aliases->defs aliases stx)
+  ;; merge `extends` lists for multiple bindingings of the same identifier
+  (define ht
+    (for/fold ([ht (hash)]) ([a (in-list aliases)])
+      (define key (cons (alias-defn-space-sym a)
+                        (syntax-e (alias-defn-id a))))
+      (define l (hash-ref ht key null))
+      (define new-l
+        (let loop ([l l])
+          (cond
+            [(null? l) (list a)]
+            [(bound-identifier=? (alias-defn-id a) (alias-defn-id (car l)))
+             (cons (struct-copy alias-defn (car l)
+                                [extends (append (alias-defn-extends a)
+                                                 (alias-defn-extends (car l)))])
+                   (cdr l))]
+            [else (cons (car l) (loop (cdr l)))])))
+      (hash-set ht key new-l)))
+  (for*/list ([l (in-hash-values ht)]
+              [a (in-list l)])
+    (build-syntax-definition/maybe-extension
+     (alias-defn-space-sym a) (alias-defn-id a)
+     (datum->syntax #f (alias-defn-extends a))
+     (alias-defn-rhs a)
+     #:form stx)))

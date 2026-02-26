@@ -102,7 +102,7 @@
      #:with lhs-i::binding-info #'lhs-impl.info
      #:with (lhs-extends ...) (for/list ([bind-uses (syntax->list #'(lhs-i.bind-uses ...))])
                                 (syntax-parse bind-uses
-                                  [(_ ... [#:extends extends:identifier] . _) #'extends]
+                                  [(_ ... [#:extends extends] . _) #'extends]
                                   [_ #'#f]))
      (for ([id (in-list (syntax->list #'(lhs-i.bind-id ...)))]
            [uses (in-list (syntax->list #'(lhs-i.bind-uses ...)))])
@@ -144,7 +144,7 @@
      #:with ((lhs-extends ...) ...) (for/list ([bind-usess (syntax->list #'((lhs-i.bind-uses ...) ...))])
                                       (for/list ([bind-uses (syntax->list bind-usess)])
                                         (syntax-parse bind-uses
-                                          [(_ ... [#:extends extends:identifier] . _) #'extends]
+                                          [(_ ... [#:extends extends] . _) #'extends]
                                           [_ #'#f])))
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      #:with (pos ...) (for/list ([lhs (in-list (syntax->list #'(lhs ...)))]

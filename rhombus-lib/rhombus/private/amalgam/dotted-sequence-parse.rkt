@@ -29,12 +29,12 @@
     (cond
       [(null? head-ids) (values tail-id #'#f tail-id)]
       [(extensible-name-root head-ids)
-       => (lambda (extends-id)
+       => (lambda (extends-ids)
             (values (datum->syntax tail-id
                                    (build-dot-symbol (append head-ids (list tail-id)))
                                    tail-id
                                    tail-id)
-                    extends-id
+                    extends-ids
                     tail-id))]
       [else (raise-syntax-error (build-dot-symbol head-ids)
                                 "not defined as a namespace"
@@ -64,7 +64,7 @@
     (pattern ::dotted-identifier)))
 
 (begin-for-syntax
-  (struct extension-rename-transformer (id extends-id)
+  (struct extension-rename-transformer (id extends-ids)
     #:property prop:rename-transformer 0)
   (define (id-as-ext-target tmp)
     (syntax-property tmp 'not-free-identifier=? #t)))
@@ -158,18 +158,21 @@
                                ;; note that a chain of extension rename transformers is possible,
                                ;; so that's why we have this check inside `syntax-local-value*`
                                ;; instead of outside
-                               (free-identifier=? prefix (extension-rename-transformer-extends-id v))]
+                               (for/or ([extends-id (in-list (or (syntax->list (extension-rename-transformer-extends-ids v))
+                                                                 null))])
+                                 (free-identifier=? prefix extends-id))]
                               [(portal-syntax? v)
                                (define extends (portal-syntax->extends (portal-syntax-content v)))
-                               (and (identifier? extends)
-                                    (free-identifier=? prefix extends))]
+                               (and (syntax? extends)
+                                    (for/or ([extends-id (in-list (or (syntax->list extends) null))])
+                                      (free-identifier=? prefix extends-id)))]
                               [else #f]))))
 
 (define-for-syntax (identifier-extension-binding-tail-name id)
   (define-values (v next-id) (syntax-local-value/immediate id (lambda () (values #f #f))))
   (cond
     [(extension-rename-transformer? v)
-     ;; This is a little hacky. Currently, `build-definitions/maybe-extension` take a
+     ;; This is a little hacky. Currently, `build-definitions/maybe-extension` takes a
      ;; binding name and a namespace name, but not the "tail" name that is written
      ;; after the last dot. We know that the name for the binding is constructed by
      ;; adding a `.` to the the namespace name, so we recover the "tail" name by string
@@ -177,7 +180,7 @@
      ;; only using this operation for `export` prefixing a definition, and we're interested
      ;; in the immediate definition.
      (define prefix (string-append
-                     (symbol->string (syntax-e (extension-rename-transformer-extends-id v)))
+                     (symbol->string (syntax-e (car (syntax-e (extension-rename-transformer-extends-ids v)))))
                      "."))
      (define full (symbol->string (syntax-e id)))
      (cond

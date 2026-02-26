@@ -136,8 +136,8 @@
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/bind) #'id))]))
 
   (define extension-syntax-property-key (gensym 'extension))
-  (define (binding-extension-combine prefix field-id id)
-    (syntax-property id extension-syntax-property-key prefix))
+  (define (binding-extension-combine prefix extends field-id id)
+    (syntax-property id extension-syntax-property-key extends))
 
   (define (disallow-binding-as-namespace-extension b-info)
     (syntax-parse b-info
