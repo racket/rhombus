@@ -33,6 +33,7 @@ namespace Closeable:
     let rhs = rhs.e
     let [bind, ...]:
       match '$bind_seq ...'
+      | '$(bound_as bind_meta.space: 'values') ($bind, ...)': [bind, ...]
       | '($bind, ...)': [bind, ...]
       | ~else: ['$bind_seq ...']
     let rhs_statinfo = statinfo_meta.gather(rhs)

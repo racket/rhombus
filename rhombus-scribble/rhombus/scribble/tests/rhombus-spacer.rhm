@@ -721,6 +721,18 @@ check_spacer:
   ) = $datum
 
 check_spacer:
+  let (x :: Int) described_as An Integer:
+    "oops"
+  $(defn.full) ($bind $(bind.full) $annot) $(bind.full) $none $none:
+    $datum
+
+check_spacer:
+  Closeable.let x described_as A Closeable Object:
+    "oops"
+  $(defn.full) . $(defn.full) $bind $(bind.full) $none $none $none:
+    $datum
+
+check_spacer:
   syntax_class NTerms
   | '~one $a':
       field b = '0'

@@ -58,6 +58,20 @@ block:
     println("go")
     ~prints "bye\ngo\nbye\n"
 
+  class Another():
+    implements Closeable
+    override method close(): println("bye too")
+
+  check:
+    Closeable.let (c1, c2) = values(Thing(), Another())
+    println("go")
+    ~prints "go\nbye\nbye too\n"
+
+  check:
+    Closeable.let values(c1, c2) = values(Thing(), Another())
+    println("go")
+    ~prints "go\nbye\nbye too\n"
+
 block:
   use_static
   class Weird():

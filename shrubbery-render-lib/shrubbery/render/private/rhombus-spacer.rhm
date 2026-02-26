@@ -107,6 +107,7 @@ export:
     MutableSet
     WeakMutableSet
     Parameter
+    Closeable
     operator_order
     space
 
@@ -171,6 +172,10 @@ spacer.bridge def(self, tail, context, esc):
   '$self $(adjust_def(tail, esc))'
 
 spacer.bridge let(self, tail, context, esc):
+  ~in: ~defn
+  '$self $(adjust_def(tail, esc))'
+
+spacer.bridge Closeable.let(self, tail, context, esc):
   ~in: ~defn
   '$self $(adjust_def(tail, esc))'
 
