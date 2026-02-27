@@ -628,11 +628,10 @@ meta:
   fun adjust_property(property, esc):
     fun adjust_assign(assign) :~ Syntax:
       match assign
-      | '$(name :: Name(esc)) $(op && ':=') $bind ...
-           $(pattern:
-               kind ~sequence
-             | ': $(body :: Block)'
-             | '': field body = #false)':
+      | (pattern:
+           kind ~group
+         | '$(name :: Name(esc)) $(op && ':=') $bind ...: $(body :: Block)'
+         | '$(name :: Name(esc)) $(op && ':=') $bind ...': field body = #false):
           let new_op = spacer.set(op, #'~expr)
           let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
           let new_body = if body | spacer.adjust_term(body, body_spaces, esc) | ''

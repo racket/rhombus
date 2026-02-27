@@ -660,11 +660,11 @@
                   #:improve-repetition-constraints
                   (lambda (ps gs)
                     ;; The first pattern in `ps` is followed by `...`.
-                    ;; If there's more in the remaining pattern `gs`, then we
+                    ;; If the last pattern in `gs` matches `block` or `alts`, then we
                     ;; may know that repetition matches can't be `block` or `alts`
                     ;; terms, and specifying that constraint up front can avoid
                     ;; "expected more terms" messages where more terms are not
-                    ;; possible. For example, when matching, '$a ...: 1' a block
+                    ;; possible. For example, when matching '$a ...: 1', a block
                     ;; that isn't ': 1' should not be treated as an '$a' match.
                     ;; The analysis here is approximate, but should cover useful
                     ;; cases.
@@ -681,10 +681,9 @@
                         [() (no-wrap)]
                         [((_::block . _) . _) (wrap-non-block-non-alts)]
                         [((_::alts . _) . _) (wrap-non-alts)]
-                        [(_::$-bind _ _::...-bind . gs) (loop #'gs)]
-                        [(_::$-bind . gs) (loop #'gs)]
-                        [(_ _::...-bind . gs) (loop #'gs)]
-                        [_ (wrap-non-block-non-alts)])))))
+                        [(_ . gs) (loop #'gs)]
+                        ;; the last pattern may match 0 terms, so be conservative
+                        [_ (no-wrap)])))))
 
 (define-unquote-binding-syntax #%quotes
   (unquote-binding-prefix-operator

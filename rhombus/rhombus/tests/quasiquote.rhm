@@ -330,8 +330,20 @@ check:
   | '$_ ... 1 ...: a': "ok"
   ~throws "unexpected term" // not "expected more terms"
 check:
+  match '1 2: a b'
+  | '$_ ... | a': "ok"
+  ~throws "expected more terms" // block can be followed by alts
+check:
   match '1 2 | a b'
   | '$_ ... | a': "ok"
+  ~throws "unexpected term" // not "expected more terms"
+check:
+  match '1 2 | a b'
+  | '$_ ... $_ ... | a': "ok"
+  ~throws "unexpected term" // not "expected more terms"
+check:
+  match '1 2 | a b'
+  | '$_ ... 1 ... | a': "ok"
   ~throws "unexpected term" // not "expected more terms"
 check:
   match '1 2 | a b'
@@ -615,3 +627,68 @@ check:
   ~eval
   def '$() $()' = 1
   ~throws "incompatible with this context"
+
+// repetition constraint should be conservative
+block:
+  check:
+    match 'a: b'
+    | '$t ... $(b && ': $_')':
+        values('$t ...', b)
+    ~matches values('a', ': b')
+
+  check:
+    match 'a | c'
+    | '$t ... $(a && '| $_')':
+        values('$t ...', a)
+    ~matches values('a', '| c')
+
+  check:
+    match 'a:« b » | c'
+    | '$t ...  $(b && ': $_') $(a && '| $_')':
+        values('$t ...', b, a)
+    ~matches values('a', ': b', '| c')
+
+  check:
+    match 'a:« b » | c'
+    | '$t ... $(a && '| $_')':
+        values('$t ...', a)
+    ~matches values('a: b', '| c')
+
+  check:
+    match 'a: b'
+    | '$t ... $('$b ...'
+                  && (pattern
+                      | ': $_'
+                      | ''))':
+        values('$t ...', '$b ...')
+    ~matches values('a: b', '')
+
+  check:
+    match 'a | c'
+    | '$t ... $('$a ...'
+                  && (pattern
+                      | '| $_'
+                      | ''))':
+        values('$t ...', '$a ...')
+    ~matches values('a | c', '')
+
+  check:
+    match 'a:« b » | c'
+    | '$t ...
+         $('$b ...' && (pattern
+                        | ': $_'
+                        | ''))
+         $('$a ...' && (pattern
+                        | '| $_'
+                        | ''))':
+        values('$t ...', '$b ...', '$a ...')
+    ~matches values('a:« b » | c', '', '')
+
+  check:
+    match 'a:« b » | c'
+    | '$t ... $('$a ...'
+                  && (pattern
+                      | '| $_'
+                      | ''))':
+        values('$t ...', '$a ...')
+    ~matches values('a:« b » | c', '')
