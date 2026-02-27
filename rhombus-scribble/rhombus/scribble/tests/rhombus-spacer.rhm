@@ -727,9 +727,31 @@ check_spacer:
     $datum
 
 check_spacer:
-  Closeable.let x described_as A Closeable Object:
+  Closeable.let x :: Port = "oops"
+  $(defn.full) . $(defn.full) $bind $(bind.full) $annot $expr $datum
+
+check_spacer:
+  Closeable.let x described_as A Port:
     "oops"
-  $(defn.full) . $(defn.full) $bind $(bind.full) $none $none $none:
+  $(defn.full) . $(defn.full) $bind $(bind.full) $none $none:
+    $datum
+
+check_spacer:
+  guard.let x :: Int = "oops"
+  | println("wrong")
+    1
+  $(defn.full) . $(defn.full) $bind $(bind.full) $annot $expr $datum
+  | $body($datum)
+    $datum
+
+check_spacer:
+  guard.let x described_as An Integer:
+    "oops"
+  | println("wrong")
+    1
+  $(defn.full) . $(defn.full) $bind $(bind.full) $none $none:
+    $datum
+  | $body($datum)
     $datum
 
 check_spacer:

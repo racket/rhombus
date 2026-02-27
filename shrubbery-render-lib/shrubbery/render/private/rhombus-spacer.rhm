@@ -108,6 +108,7 @@ export:
     WeakMutableSet
     Parameter
     Closeable
+    guard
     operator_order
     space
 
@@ -178,6 +179,18 @@ spacer.bridge let(self, tail, context, esc):
 spacer.bridge Closeable.let(self, tail, context, esc):
   ~in: ~defn
   '$self $(adjust_def(tail, esc))'
+
+spacer.bridge guard.let(self, tail, context, esc):
+  ~in: ~defn
+  match tail
+  | '$mid ... $(a && '| $(b :: Block)' && '| $g; ...')':
+      let new_mids = adjust_def('$mid ...', esc)
+      let new_a:
+        let [new_g, ...] = [spacer.adjust_group(g, body_spaces, esc), ...]
+        Syntax.make([#'alts, ': $new_g; ...'.relocate(b)]).relocate(a)
+      '$self $new_mids $new_a'
+  | ~else:
+      '$self $tail'
 
 meta:
   syntax_class Args:
