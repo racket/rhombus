@@ -39,6 +39,7 @@ block:
     syntax_meta.equal_binding(stx1, stx2, [in_space], [phase1], [phase2])
     syntax_meta.equal_name_and_scopes(stx1, stx2, [phase])
     syntax_meta.flip_introduce(stx)
+    syntax_meta.space_introduce(stx, sp)
     syntax_meta.track_origin(stx, [from_stxs])
     syntax_meta.track_group_origin(stx, [from_stxs])
     syntax_meta.track_ephemeral_origin(stx, [from_stxs])
@@ -350,6 +351,23 @@ check:
        9,
        7,
        7]
+
+meta:
+  check:
+    syntax_meta.space_introduce('a', annot_meta.space) ~matches 'a'
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space), 'a') ~is #false
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'flip), 'a') ~is #false
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'remove), 'a') ~is #true
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce(
+                                        syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'flip),
+                                        annot_meta.space,
+                                        ~mode: #'flip),
+                                      'a') ~is #true
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce(
+                                        syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'flip),
+                                        bind_meta.space,
+                                        ~mode: #'flip),
+                                      'a') ~is #false
 
 meta:
   check:

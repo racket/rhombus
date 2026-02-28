@@ -50,6 +50,7 @@
      [error syntax_meta.error]
      [value syntax_meta.value]
      [flip_introduce syntax_meta.flip_introduce]
+     [space_introduce syntax_meta.space_introduce]
      [track_origin syntax_meta.track_origin]
      [track_group_origin syntax_meta.track_group_origin]
      [track_ephemeral_origin syntax_meta.track_ephemeral_origin]
@@ -189,6 +190,13 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
     (syntax-local-introduce (syntax-unwrap stx)))
+
+  (define/arity (syntax_meta.space_introduce stx sp #:mode [mode 'add])
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
+    (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
+    (unless (memq mode '(add remove flip)) (raise-annotation-failure who mode "Any.of(#'add, 'remove, #'flip)"))
+    ((make-interned-syntax-introducer (space-name-symbol sp)) (syntax-unwrap stx) mode))
 
   (define (unpack-ids who id-stx-in sp)
     (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))

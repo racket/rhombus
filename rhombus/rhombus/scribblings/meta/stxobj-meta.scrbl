@@ -134,6 +134,19 @@
 
 }
 
+@doc(
+  ~meta
+  fun syntax_meta.space_introduce(
+    stx :: Syntax,
+    in_space :: SpaceMeta = expr_meta.space,
+    ~mode: mode :: Any.of(#'add, #'remove, #'flip) = #'add
+  ) :: Syntax
+){
+
+ Returns a syntax object like @rhombus(stx), but adds, removes, or flips
+ the scope corresponding to @rhombus(space).
+
+}
 
 @doc(
   fun syntax_meta.track_origin(
