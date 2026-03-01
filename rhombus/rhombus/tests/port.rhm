@@ -474,3 +474,40 @@ check:
     ~exists: error("exists")
     #void
   ~throws "file"
+
+// error reporting in `Port.{Input,Output}.using`
+check:
+  Port.Input.using "oops":
+    #void
+  ~throws values(
+    "Port.Input.using: " ++ error.annot_msg(),
+    error.annot("Port.Input").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Port.Input.using ~file #'oops:
+    #void
+  ~throws values(
+    "Port.Input.using: " ++ error.annot_msg(),
+    error.annot("PathString").msg,
+    error.val(#'oops).msg,
+  )
+
+check:
+  Port.Output.using "oops":
+    #void
+  ~throws values(
+    "Port.Output.using: " ++ error.annot_msg(),
+    error.annot("Port.Output").msg,
+    error.val("oops").msg,
+  )
+
+check:
+  Port.Output.using ~file #'oops:
+    #void
+  ~throws values(
+    "Port.Output.using: " ++ error.annot_msg(),
+    error.annot("PathString").msg,
+    error.val(#'oops).msg,
+  )

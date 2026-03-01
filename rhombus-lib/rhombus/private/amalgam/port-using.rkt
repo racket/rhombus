@@ -30,7 +30,7 @@
                 (set! p #,(make-e pre-ids))
                 #,@(if port?
                        (list #`(unless (#,port? p)
-                                 (raise-annotation-failure '#,who '#,what p)))
+                                 (raise-annotation-failure '#,who p '#,what)))
                        '()))
               (lambda ()
                 (parameterize ([#,param p])
@@ -108,5 +108,5 @@
     (open-input-file p)))
 
 (define (open-output-file* p exists)
-  (with-error-adjust-primitive ([open-input-file Port.Output.using])
+  (with-error-adjust-primitive ([open-output-file Port.Output.using])
     (open-output-file p #:exists exists)))
