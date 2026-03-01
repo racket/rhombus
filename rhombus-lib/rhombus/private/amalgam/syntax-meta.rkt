@@ -191,12 +191,16 @@
     (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
     (syntax-local-introduce (syntax-unwrap stx)))
 
-  (define/arity (syntax_meta.space_introduce stx sp #:mode [mode 'add])
+  (define/arity (syntax_meta.space_introduce stx-in sp #:mode [mode 'add])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (unless (syntax*? stx) (raise-annotation-failure who stx "Syntax"))
+    (unless (syntax*? stx-in) (raise-annotation-failure who stx-in "Syntax"))
     (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
     (unless (memq mode '(add remove flip)) (raise-annotation-failure who mode "Any.of(#'add, 'remove, #'flip)"))
-    ((make-interned-syntax-introducer (space-name-symbol sp)) (syntax-unwrap stx) mode))
+    (define stx (syntax-unwrap stx-in))
+    (define space-sym (space-name-symbol sp))
+    (if space-sym
+        ((make-interned-syntax-introducer space-sym) stx mode)
+        stx))
 
   (define (unpack-ids who id-stx-in sp)
     (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
@@ -209,7 +213,7 @@
                                            #:build-dotted? #t))
                   (and id
                        (cons id ids))))
-    (if ids        
+    (if ids
         (reverse ids)
         (raise-annotation-failure who id-stx-in "Name || (Listable.to_list && List.of(Name))")))
 

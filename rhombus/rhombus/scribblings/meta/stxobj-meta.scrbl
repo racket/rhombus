@@ -138,7 +138,7 @@
   ~meta
   fun syntax_meta.space_introduce(
     stx :: Syntax,
-    in_space :: SpaceMeta = expr_meta.space,
+    space :: SpaceMeta,
     ~mode: mode :: Any.of(#'add, #'remove, #'flip) = #'add
   ) :: Syntax
 ){

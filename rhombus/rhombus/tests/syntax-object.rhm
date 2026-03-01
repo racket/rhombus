@@ -356,6 +356,7 @@ meta:
   check:
     syntax_meta.space_introduce('a', annot_meta.space) ~matches 'a'
     syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space), 'a') ~is #false
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'add), 'a') ~is #false
     syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'flip), 'a') ~is #false
     syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', annot_meta.space, ~mode: #'remove), 'a') ~is #true
     syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce(
@@ -368,6 +369,12 @@ meta:
                                         bind_meta.space,
                                         ~mode: #'flip),
                                       'a') ~is #false
+  check:
+    syntax_meta.space_introduce('a', expr_meta.space) ~matches 'a'
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', expr_meta.space), 'a') ~is #true
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', expr_meta.space, ~mode: #'add), 'a') ~is #true
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', expr_meta.space, ~mode: #'flip), 'a') ~is #true
+    syntax_meta.equal_name_and_scopes(syntax_meta.space_introduce('a', expr_meta.space, ~mode: #'remove), 'a') ~is #true
 
 meta:
   check:
