@@ -428,6 +428,7 @@ block:
   check in.read_bytes(10) ~is Port.eof
   check in.position(0) ~is #void
   check in.read_bytes(3) ~is_now #"abc"
+  check in.identity() ~is out.identity()
 
 block:
   check Port.Input.open_nowhere() ~is_a Port.Input

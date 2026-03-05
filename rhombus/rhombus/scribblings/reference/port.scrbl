@@ -155,7 +155,8 @@ output; it is possible for an object to be both an input and output port.
     ~mode: mode :: Port.Mode = #'binary,
     ~permissions: permissions :: Int.in(0 ..= 65535) = 0o666,
     ~replace_permissions: replace_permissions = #false
-  ) :: values(Port.Input, Port.Output)
+  ) :: values(Port.Input && Port.FileStream,
+              Port.Output && Port.FileStream)
 ){
 
  Like @rhombus(Port.Output.open_file), but returns both input and output

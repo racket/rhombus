@@ -399,8 +399,12 @@
                                            #:permissions [permissions #o666]
                                            #:replace_permissions [replace-permissions? #f])
   #:primitive (open-input-output-file)
-  #:static-infos ((#%call-result ((#%values (#,(get-input-port-static-infos)
-                                             #,(get-output-port-static-infos))))))
+  #:static-infos ((#%call-result ((#%values (#,(static-infos-and
+                                                (get-input-port-static-infos)
+                                                (get-file-stream-port-static-infos))
+                                             #,(static-infos-and
+                                                (get-output-port-static-infos)
+                                                (get-file-stream-port-static-infos)))))))
   (define exists (->ExistsMode exists-in))
   (unless exists
     (raise-annotation-failure who exists-in "Port.Output.ExistsMode"))
