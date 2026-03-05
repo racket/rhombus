@@ -539,3 +539,29 @@ block:
       error.annot("Port.Output.ExistsMode").msg,
       error.val(#'oops).msg,
     )
+
+// paths should be checked before modes
+block:
+  check:
+    Port.Output.using ~file #'not_path:
+      ~exists: #'wrong_flag
+      #void
+    ~throws values(
+      "Port.Output.using: " ++ error.annot_msg(),
+      error.annot("PathString").msg,
+      error.val(#'not_path).msg,
+    )
+  check:
+    Port.Output.open_file(#'not_path, ~exists: #'wrong_flag)
+    ~throws values(
+      "Port.Output.open_file: " ++ error.annot_msg(),
+      error.annot("PathString").msg,
+      error.val(#'not_path).msg,
+    )
+  check:
+    Port.open_input_output_file(#'not_path, ~exists: #'wrong_flag)
+    ~throws values(
+      "Port.open_input_output_file: " ++ error.annot_msg(),
+      error.annot("PathString").msg,
+      error.val(#'not_path).msg,
+    )
