@@ -373,7 +373,9 @@
                                     (get-file-stream-port-static-infos))))
   (define exists (->ExistsMode exists-in))
   (unless exists
-    (raise-annotation-failure who exists-in "Port.Output.ExistsMode"))
+    (if (path-string? path)
+        (raise-annotation-failure who exists-in "Port.Output.ExistsMode")
+        (raise-annotation-failure who path "PathString")))
   (open-output-file path
                     #:exists exists
                     #:mode mode
@@ -819,3 +821,5 @@
              #'tail)]))
 
 (void (set-primitive-contract! '(or/c 'binary 'text) "Port.Mode"))
+
+(void (install-ExistsMode! ->ExistsMode))

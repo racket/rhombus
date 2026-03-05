@@ -511,3 +511,30 @@ check:
     error.annot("PathString").msg,
     error.val(#'oops).msg,
   )
+
+block:
+  Closeable.let tmp = filesystem.make_temporary()
+  check:
+    Port.Output.using ~file tmp.path:
+      ~exists: #'must_truncate
+      #void
+    ~completes
+  check:
+    Port.Output.using ~file tmp.path:
+      ~exists: #'truncate_replace
+      #void
+    ~completes
+  check:
+    Port.Output.using ~file tmp.path:
+      ~exists: #'can_update
+      #void
+    ~completes
+  check:
+    Port.Output.using ~file tmp.path:
+      ~exists: #'oops
+      #void
+    ~throws values(
+      "Port.Output.using: " ++ error.annot_msg(),
+      error.annot("Port.Output.ExistsMode").msg,
+      error.val(#'oops).msg,
+    )

@@ -9,7 +9,8 @@
          "error-adjust.rkt")
 
 (provide Port.Input.using
-         Port.Output.using)
+         Port.Output.using
+         install-ExistsMode!)
 
 (define-for-syntax (build-using who what
                                 port? close param
@@ -107,6 +108,16 @@
   (with-error-adjust-primitive ([open-input-file Port.Input.using])
     (open-input-file p)))
 
-(define (open-output-file* p exists)
+(define ->ExistsMode (lambda (mode) mode))
+(define (install-ExistsMode! ->)
+  (set! ->ExistsMode ->))
+
+(define (open-output-file* p exists-in)
+  (define who 'Port.Output.using)
+  (define exists (->ExistsMode exists-in))
+  (unless exists
+    (if (path-string? p)
+        (raise-annotation-failure who exists-in "Port.Output.ExistsMode")
+        (raise-annotation-failure who p "PathString")))
   (with-error-adjust-primitive ([open-output-file Port.Output.using])
     (open-output-file p #:exists exists)))
