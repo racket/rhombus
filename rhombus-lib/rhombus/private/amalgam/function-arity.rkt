@@ -22,7 +22,7 @@
   (define (make-arity bit mask allowed-kws required-kws)
     (define a (bitwise-ior mask
                            (if rest?
-                               (bitwise-xor -1 (sub1 bit))
+                               (bitwise-not (sub1 bit))
                                bit)))
     (cond
       [kw-rest? (list a (sort required-kws keyword<?) #f)]

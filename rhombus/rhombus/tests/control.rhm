@@ -347,3 +347,12 @@ check:
            Continuation.escape(~tag: tag, k.map([1, 2, 3, 4, 5])))
     ~catch v: v
   ~is [2, 3, 4, 5, 6]
+
+// regression test: 0-arity in `Continuation.escape`
+check:
+  use_static
+  def tag = Continuation.PromptTag.make()
+  Continuation.prompt tag:
+    Continuation.escape(~tag: tag)
+    ~catch (): 42
+  ~is 42

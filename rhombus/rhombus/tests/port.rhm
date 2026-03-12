@@ -565,3 +565,14 @@ block:
       error.annot("PathString").msg,
       error.val(#'not_path).msg,
     )
+
+// regression test: 0-arity in Port.Output.{print,show}(ln)
+check:
+  stdout.print() ~prints ""
+  stdout.println() ~prints "\n"
+  stdout.show() ~prints ""
+  stdout.showln() ~prints "\n"
+  Port.Output.print(stdout) ~prints ""
+  Port.Output.println(stdout) ~prints "\n"
+  Port.Output.show(stdout) ~prints ""
+  Port.Output.showln(stdout) ~prints "\n"

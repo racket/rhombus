@@ -227,3 +227,10 @@ check:
     error.annot("Nat").msg,
     error.val("oops").msg,
   )
+
+// regression test: 0-arity in {print,show}(ln)
+check:
+  print() ~prints ""
+  println() ~prints "\n"
+  show() ~prints ""
+  showln() ~prints "\n"
