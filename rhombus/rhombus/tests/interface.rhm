@@ -903,3 +903,21 @@ block:
     override method am2(): "am2"
     override property ap: "ap"
   check C().get() ~is ["am", "am2", "ap"]
+
+// regression test: `this` in interface body
+block:
+  interface I:
+    method m(): "m"
+    property p: "p"
+    private method pm(): "pm"
+    private property pp: "pp"
+    protected method prm(): "prm"
+    protected property prp: "prp"
+    method get_names():
+      [this.m(), this.p, this.pm(), this.pp, this.prm(), this.prp]
+    property names:
+      this.get_names()
+  class C():
+    implements I
+  check C().get_names() ~is ["m", "p", "pm", "pp", "prm", "prp"]
+  check C().names ~is ["m", "p", "pm", "pp", "prm", "prp"]

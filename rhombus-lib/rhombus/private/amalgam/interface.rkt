@@ -333,7 +333,7 @@
                               #hasheq() #hasheq()
                               #'(name reflect-name internal-name? #f #f #f
                                       internal-name-ref
-                                      ()
+                                      internal-all-static-infos
                                       []
                                       []
                                       []
