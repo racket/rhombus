@@ -22,10 +22,14 @@
    (list (cons prop:equal+hash (lambda (_) bounced-equal+hash-implementation)))))
 
 (define (bounce-to-equal-mode-proc this other recur mode)
-  (equal-recur-internal-method this other recur))
+  (if mode
+      (equal-now-recur-internal-method this other recur)
+      (equal-recur-internal-method this other recur)))
 
 (define (bounce-to-hash-mode-proc this recur mode)
-  (hash-recur-internal-method this recur))
+  (if mode
+      (hash-now-recur-internal-method this recur)
+      (hash-recur-internal-method this recur)))
 
 (define bounced-equal+hash-implementation
   (list bounce-to-equal-mode-proc bounce-to-hash-mode-proc))
@@ -34,12 +38,19 @@
   (interface-desc-maker
    (lambda ()
      (interface-desc #'()
-                     '#(#&equals #&hash_code)
-                     #'#(#:abstract #:abstract)
+                     '#(#&equals #&hash_code #&now_equals #&now_hash_code)
+                     #'#(#:abstract
+                         #:abstract
+                         Equatable.now_equals
+                         Equatable.now_hash_code)
                      (hasheq 'equals 0
-                             'hash_code 1)
+                             'hash_code 1
+                             'now_equals 2
+                             'now_hash_code 3)
                      (hasheq 'equals #'equals-result
-                             'hash_code #'hash-code-result)
+                             'hash_code #'hash-code-result
+                             'now_equals #'equals-result
+                             'now_hash_code #'hash-code-result)
                      '()
                      #f
                      #'()
@@ -65,15 +76,28 @@
    (lambda ()
      (method-result #'exact-integer? #t 1 "Int" (get-int-static-infos) 4))))
 
+(define (Equatable.now_equals this other recur)
+  (equal-recur-internal-method this other recur))
+
+(define (Equatable.now_hash_code this recur)
+  (hash-recur-internal-method this recur))
+
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))
 
 (define (hash-recur-internal-method this recur)
   ((vector-ref (Equatable-ref this) 1) this recur))
 
+(define (equal-now-recur-internal-method this other recur)
+  ((vector-ref (Equatable-ref this) 2) this other recur))
+
+(define (hash-now-recur-internal-method this recur)
+  ((vector-ref (Equatable-ref this) 3) this recur))
+
 (define-name-root Equatable
   #:fields
   ([hash Equatable.hash]
+   [now_hash Equatable.now_hash]
    identity_hash
    hash_code_combine
    hash_code_combine_unordered))
@@ -81,6 +105,10 @@
 (define/arity (Equatable.hash v)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
   (equal-always-hash-code v))
+
+(define/arity (Equatable.now_hash v)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
+  (equal-hash-code v))
 
 (define/arity (identity_hash v)
   (eq-hash-code v))
