@@ -995,11 +995,12 @@
   @rhombus(opaque, ~class_clause) or @rhombus(authentic, ~class_clause).}
 
  @item{When a field is declared with a @rhombus(field_spec) that has a
-  @rhombus(::, ~annot) annotation, a field value is checked against the
-  annotation only when an instance is created through a constructor from
-  the @rhombus(class) declaration, and not when the field is accessed. The
-  field access is effectively treated as having a @rhombus(:~, ~annot)
-  annotation.}
+  @rhombus(::, ~bind) annotation, a field value is checked against the
+  annotation only when an instance is created through a constructor
+  or when the field is assigned through an accessor (including using
+  @rhombus(:=)) from the @rhombus(class) declaration, and not when the
+  field is accessed. The field access is effectively treated as having
+  a @rhombus(:~, ~bind) annotation.}
 
 )
 
