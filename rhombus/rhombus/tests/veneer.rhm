@@ -478,3 +478,54 @@ check:
     converter
   #{X-convert}
   ~throws "X-convert: undefined"
+
+// regression test: parsing of method clauses
+block:
+  veneer V(this :: Any):
+    method m(): "m"
+    property p: "p"
+    method get():
+      [m(), p]
+  check V(#false).get() ~is ["m", "p"]
+
+block:
+  veneer V(this :: Any):
+    final m(): "m"
+    final method m2(): "m2"
+    final property p: "p"
+    method get():
+      [m(), m2(), p]
+  check V(#false).get() ~is ["m", "m2", "p"]
+
+block:
+  veneer V(this :: Any):
+    implements Indexable
+    override get(i):
+      "get"
+    implements Appendable
+    override method append(other):
+      "append"
+  check V(#false)[#false] ~is "get"
+  check V(#false) ++ V(#false) ~is "append"
+
+block:
+  veneer V(this :: Any):
+    private implements Indexable
+    private override get(i):
+      "get"
+    private implements Appendable
+    private override method append(other):
+      "append"
+  check V(#false)[#false] ~is "get"
+  check V(#false) ++ V(#false) ~is "append"
+
+block:
+  veneer V(this :: Any):
+    protected implements Indexable
+    final override get(i):
+      "get"
+    protected implements Appendable
+    final override method append(other):
+      "append"
+  check V(#false)[#false] ~is "get"
+  check V(#false) ++ V(#false) ~is "append"

@@ -32,8 +32,8 @@
   | #,(@rhombus(property, ~veneer_clause)) $property_impl
   | #,(@rhombus(extends, ~veneer_clause)) $id_name
   | #,(@rhombus(implements, ~veneer_clause)) $implements_decl
-  | #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
-  | #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+  | #,(@rhombus(private, ~veneer_clause)) #,(@rhombus(implements, ~veneer_clause)) $implements_decl
+  | #,(@rhombus(protected, ~veneer_clause)) #,(@rhombus(implements, ~veneer_clause)) $implements_decl
   | #,(@rhombus(constructor, ~veneer_clause)) $constructor_decl
   | #,(@rhombus(expression, ~veneer_clause)) $expression_decl
   | #,(@rhombus(dot, ~veneer_clause)) $dot_decl
@@ -82,7 +82,7 @@
   @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(property, ~var))),
   and a syntactic form
   @rhombus(id_name#,(rhombus(., ~datum))#,(@rhombus(dot, ~var))) for each
-  non-@rhombus(private, ~class_clause)/@rhombus(protected, ~class_clause) method, property, and dot syntax in the veneer
+  non-@rhombus(private, ~veneer_clause)/@rhombus(protected, ~veneer_clause) method, property, and dot syntax in the veneer
   (including inherited methods, properties, and dot syntax), respectively; and}
 
  @item{in the @rhombus(class, ~space) space, a representation of the
@@ -197,11 +197,11 @@
     property_impl: method ~class_clause
 
   veneer_clause.macro 'final $method_impl'
-  veneer_clause.macro 'final #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'final #,(@rhombus(override, ~class_clause)) $method_impl'
-  veneer_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'final #,(@rhombus(property, ~class_clause)) $property_impl'
-  veneer_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
+  veneer_clause.macro 'final #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'final #,(@rhombus(override, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'final #,(@rhombus(override, ~veneer_clause)) #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'final #,(@rhombus(property, ~veneer_clause)) $property_impl'
+  veneer_clause.macro 'final #,(@rhombus(override, ~veneer_clause)) #,(@rhombus(property, ~veneer_clause)) $property_impl'
 ){
 
  Like @rhombus(final, ~class_clause), but as a @tech{veneer clause} to
@@ -220,8 +220,8 @@
   veneer_clause.macro 'method $method_impl'
   veneer_clause.macro 'property $property_impl'
   veneer_clause.macro 'override $method_impl'
-  veneer_clause.macro 'override #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
+  veneer_clause.macro 'override #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'override #,(@rhombus(property, ~veneer_clause)) $property_impl'
 ){
 
  Like @rhombus(method, ~class_clause) and other class clauses, but as
@@ -234,14 +234,14 @@
     method_impl: method ~class_clause
     property_impl: method ~class_clause
 
-  veneer_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_name ...'
-  veneer_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
+  veneer_clause.macro 'private #,(@rhombus(implements, ~veneer_clause)) $id_name ...'
+  veneer_clause.macro 'private #,(@rhombus(implements, ~veneer_clause)): $id_name ...; ...'
   veneer_clause.macro 'private $method_impl'
-  veneer_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'private #,(@rhombus(property, ~class_clause)) $property_impl'
-  veneer_clause.macro 'private #,(@rhombus(override, ~class_clause)) $method_impl'
-  veneer_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
+  veneer_clause.macro 'private #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'private #,(@rhombus(property, ~veneer_clause)) $property_impl'
+  veneer_clause.macro 'private #,(@rhombus(override, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'private #,(@rhombus(override, ~veneer_clause)) #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'private #,(@rhombus(override, ~veneer_clause)) #,(@rhombus(property, ~veneer_clause)) $property_impl'
 ){
 
  Like @rhombus(private, ~class_clause) as a class clause, but as a
@@ -255,11 +255,11 @@
     method_impl: method ~class_clause
     property_impl: method ~class_clause
 
-  veneer_clause.macro 'protected #,(@rhombus(implements, ~class_clause)) $id_name ...'
-  veneer_clause.macro 'protected #,(@rhombus(implements, ~class_clause)): $id_name ...; ...'
+  veneer_clause.macro 'protected #,(@rhombus(implements, ~veneer_clause)) $id_name ...'
+  veneer_clause.macro 'protected #,(@rhombus(implements, ~veneer_clause)): $id_name ...; ...'
   veneer_clause.macro 'protected $method_impl'
-  veneer_clause.macro 'protected #,(@rhombus(method, ~class_clause)) $method_impl'
-  veneer_clause.macro 'protected #,(@rhombus(property, ~class_clause)) $property_impl'
+  veneer_clause.macro 'protected #,(@rhombus(method, ~veneer_clause)) $method_impl'
+  veneer_clause.macro 'protected #,(@rhombus(property, ~veneer_clause)) $property_impl'
 ){
 
  Like @rhombus(protected, ~class_clause) as a class clause, but as a

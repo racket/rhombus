@@ -1348,7 +1348,7 @@ check:
   class Posn3D(z):
     extends Posn
     internal _Posn3D
-  _Posn3D(1)(3) 
+  _Posn3D(1)(3)
   ~throws "wrong number of arguments in function call"
 
 check:
@@ -1359,7 +1359,7 @@ check:
   class Posn3D(z):
     extends Posn
     internal _Posn3D
-  _Posn3D(1, 2)() 
+  _Posn3D(1, 2)()
   ~throws "wrong number of arguments in function call"
 
 check:
@@ -1370,7 +1370,7 @@ check:
   class Posn3D(z):
     extends Posn
     internal _Posn3D
-  _Posn3D(1, 2)(3) 
+  _Posn3D(1, 2)(3)
   ~throws "wrong number of arguments in function call"
 
 check:
@@ -1381,7 +1381,7 @@ check:
   class Posn3D(~z):
     extends Posn
     internal _Posn3D
-  _Posn3D(~x: 1, 2)(3) 
+  _Posn3D(~x: 1, 2)(3)
   ~throws "wrong number of arguments in function call"
 
 check:
@@ -1394,7 +1394,7 @@ check:
   class Posn3D(z):
     extends Posn
     internal _Posn3D
-  _Posn3D(~x: 1, 2)(3) 
+  _Posn3D(~x: 1, 2)(3)
   ~throws "keyword argument not recognized by called function"
 
 check:
@@ -1519,3 +1519,147 @@ block:
   check Function.name(Foo.f) ~is #'#{Foo.f}
   check Foo.f() ~is "yes"
   check use_z ~is "no"
+
+// regression test: parsing of field clauses
+block:
+  class C():
+    field f1 = "f1"
+    immutable f2 = "f2"
+    immutable field f3 = "f3"
+    method get():
+      [f1, f2, f3]
+  check C().get() ~is ["f1", "f2", "f3"]
+
+block:
+  class C():
+    private field f1 = "f1"
+    private immutable f2 = "f2"
+    private immutable field f3 = "f3"
+    method get():
+      [f1, f2, f3]
+  check C().get() ~is ["f1", "f2", "f3"]
+
+block:
+  class C():
+    protected field f1 = "f1"
+    protected immutable f2 = "f2"
+    protected immutable field f3 = "f3"
+    method get():
+      [f1, f2, f3]
+  check C().get() ~is ["f1", "f2", "f3"]
+
+// regression test: parsing of method clauses
+block:
+  class C():
+    method m(): "m"
+    property p: "p"
+    method get():
+      [m(), p]
+  check C().get() ~is ["m", "p"]
+
+block:
+  class C():
+    nonfinal
+    abstract am()
+    abstract method am2()
+    abstract property ap
+    method get():
+      [am(), am2(), ap]
+  class C2():
+    extends C
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C2().get() ~is ["am", "am2", "ap"]
+
+block:
+  class C():
+    final m(): "m"
+    final method m2(): "m2"
+    final property p: "p"
+    method get():
+      [m(), m2(), p]
+  check C().get() ~is ["m", "m2", "p"]
+
+block:
+  class C():
+    private m(): "m"
+    private method m2(): "m2"
+    private property p: "p"
+    method get():
+      [m(), m2(), p]
+  check C().get() ~is ["m", "m2", "p"]
+
+block:
+  class C():
+    protected m(): "m"
+    protected method m2(): "m2"
+    protected property p: "p"
+    method get():
+      [m(), m2(), p]
+  check C().get() ~is ["m", "m2", "p"]
+
+block:
+  class C():
+    nonfinal
+    abstract protected am()
+    abstract protected method am2()
+    abstract protected property ap
+    method get():
+      [am(), am2(), ap]
+  class C2():
+    extends C
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C2().get() ~is ["am", "am2", "ap"]
+
+block:
+  interface I:
+    internal _I
+    method am()
+    method am2()
+    property ap
+    method get():
+      [am(), am2(), ap]
+  class C():
+    private implements I
+    private override am(): "am"
+    private override method am2(): "am2"
+    private override property ap: "ap"
+  check (C() :: _I).get() ~is ["am", "am2", "ap"]
+
+block:
+  interface I:
+    method am()
+    method am2()
+    property ap
+    method get():
+      [am(), am2(), ap]
+  class C():
+    protected implements I
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check (C() :: I).get() ~is ["am", "am2", "ap"]
+
+block:
+  class C():
+    nonfinal
+    abstract am()
+    abstract method am2()
+    abstract property ap
+    method get():
+      [am(), am2(), ap]
+  class C2():
+    nonfinal
+    extends C
+    abstract override am()
+    abstract override method am2()
+    abstract override property ap
+  class C3():
+    extends C2
+    final override am(): "am"
+    final override method am2(): "am2"
+    final override property ap: "ap"
+  check C3().get() ~is ["am", "am2", "ap"]

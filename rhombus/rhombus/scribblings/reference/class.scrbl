@@ -469,7 +469,7 @@
     maybe_annot: class ~defn
   class_clause.macro 'field $field_impl'
   class_clause.macro 'immutable $field_impl'
-  class_clause.macro 'immutable field $field_impl'
+  class_clause.macro 'immutable #,(@rhombus(field, ~class_clause)) $field_impl'
 
   grammar field_impl
   | $id $maybe_annot = $expr
@@ -696,6 +696,7 @@
   class_clause.macro 'abstract $method_decl'
   class_clause.macro 'abstract #,(@rhombus(method, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) $method_decl'
+  class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(property, ~class_clause)) $property_decl'
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
   class_clause.macro 'abstract #,(@rhombus(protected, ~class_clause)) $method_decl'

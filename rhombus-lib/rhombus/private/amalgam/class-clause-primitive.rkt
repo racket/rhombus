@@ -12,7 +12,9 @@
          "class-clause-tag.rkt"
          (submod "class-clause.rkt" for-class)
          "interface-clause.rkt"
+         (submod "interface-clause.rkt" for-interface)
          "veneer-clause.rkt"
+         (submod "veneer-clause.rkt" for-class)
          (submod "annotation.rkt" for-class)
          "parse.rkt"
          "parens.rkt"
@@ -23,8 +25,7 @@
          (submod "function.rkt" for-method)
          (submod "values.rkt" for-parse)
          "op-literal.rkt"
-         "not-block.rkt"
-         "realm.rkt")
+         "not-block.rkt")
 
 (provide (for-space rhombus/class_clause
                     nonfinal
@@ -66,7 +67,7 @@
       #:datum-literals (group)
       [(_ (tag::block (group form ...) ...))
        (syntax->list #'((form ...) ...))]
-      [(_ form ...)
+      [(_ form ...+)
        (list #'(form ...))]))
   (apply append
          (for/list ([line (in-list lines)])
@@ -165,7 +166,7 @@
                                                tmp-id ann-seq d.default form-id
                                                #,mode))))
 
-  (define-syntax-rule (define-clause-form-syntax-class id form-id desc)
+  (define-syntax-rule (define-class-clause-form-syntax-class id form-id desc)
     (define-syntax-class id
       #:attributes (name)
       #:description desc
@@ -173,13 +174,40 @@
       (pattern ::name
                #:when (free-identifier=? (in-class-clause-space #'name)
                                          (class-clause-quote form-id)))))
-  (define-clause-form-syntax-class :field field "the literal `field`")
-  (define-clause-form-syntax-class :immutable immutable "the literal `immutable`")
-  (define-clause-form-syntax-class :method method "the literal `method`")
-  (define-clause-form-syntax-class :property property "the literal `property`")
-  (define-clause-form-syntax-class :override override "the literal `override`")
-  (define-clause-form-syntax-class :protected protected "the literal `protected`")
-  (define-clause-form-syntax-class :implements implements "the literal `implements`"))
+  (define-class-clause-form-syntax-class :field/c field "the literal `field`")
+  (define-class-clause-form-syntax-class :immutable/c immutable "the literal `immutable`")
+  (define-class-clause-form-syntax-class :method/c method "the literal `method`")
+  (define-class-clause-form-syntax-class :property/c property "the literal `property`")
+  (define-class-clause-form-syntax-class :override/c override "the literal `override`")
+  (define-class-clause-form-syntax-class :protected/c protected "the literal `protected`")
+  (define-class-clause-form-syntax-class :implements/c implements "the literal `implements`")
+
+  (define-syntax-rule (define-interface-clause-form-syntax-class id form-id desc)
+    (define-syntax-class id
+      #:attributes (name)
+      #:description desc
+      #:opaque
+      (pattern ::name
+               #:when (free-identifier=? (in-interface-clause-space #'name)
+                                         (interface-clause-quote form-id)))))
+  (define-interface-clause-form-syntax-class :method/i method "the literal `method`")
+  (define-interface-clause-form-syntax-class :property/i property "the literal `property`")
+  (define-interface-clause-form-syntax-class :override/i override "the literal `override`")
+  (define-interface-clause-form-syntax-class :protected/i protected "the literal `protected`")
+
+  (define-syntax-rule (define-veneer-clause-form-syntax-class id form-id desc)
+    (define-syntax-class id
+      #:attributes (name)
+      #:description desc
+      #:opaque
+      (pattern ::name
+               #:when (free-identifier=? (in-veneer-clause-space #'name)
+                                         (veneer-clause-quote form-id)))))
+  (define-veneer-clause-form-syntax-class :method/v method "the literal `method`")
+  (define-veneer-clause-form-syntax-class :property/v property "the literal `property`")
+  (define-veneer-clause-form-syntax-class :override/v override "the literal `override`")
+  (define-veneer-clause-form-syntax-class :protected/v protected "the literal `protected`")
+  (define-veneer-clause-form-syntax-class :implements/v implements "the literal `implements`"))
 
 (define-class-clause-syntax field
   (class-clause-transformer
@@ -192,7 +220,7 @@
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'public 'immutable)))) #'f.form]
+       [(_ (~and (~seq _::field/c _ ...) (~var f (:field-spec 'public 'immutable)))) #'f.form]
        [((~var f (:field-spec 'public 'immutable)))
         #'f.form]))))
 
@@ -578,28 +606,51 @@
         (wrap-class-clause
          #`(#:serializable form-id version s-rhs d-rhs ds-rhs df-rhs))]))))
 
-(define-for-syntax (parse-final stx data)
-  (syntax-parse stx
-    [(_ _::override _::method (~var m (:method-impl stx #'#:final-override))) #'m.form]
-    [(_ _::method (~var m (:method-impl stx #'#:final))) #'m.form]
-    [(_ _::protected (~var m (:method-impl stx #'#:final-protected))) #'m.form]
-    [(_ _::protected _::method (~var m (:method-impl stx #'#:final-protected))) #'m.form]
-    [(_ _::override _::property (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
-    [(_ _::property (~var m (:property-impl stx #'#:final-property))) #'m.form]
-    [(_ _::override (~var m (:method-impl stx #'#:final-override))) #'m.form]
-    [(_ _::override _::property (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
-    [(_ _::protected _::property (~var m (:property-impl stx #'#:final-protected-property))) #'m.form]
-    [(_ (~var m (:method-impl stx #'#:final))) #'m.form]))
-
 (define-class-clause-syntax final
-  (class-clause-transformer parse-final))
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::override/c _::method/c (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::method/c (~var m (:method-impl stx #'#:final))) #'m.form]
+       [(_ _::protected/c (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::protected/c _::method/c (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::override/c _::property/c (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::property/c (~var m (:property-impl stx #'#:final-property))) #'m.form]
+       [(_ _::override/c (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::override/c _::property/c (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::protected/c _::property/c (~var m (:property-impl stx #'#:final-protected-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:final))) #'m.form]))))
 
 (define-interface-clause-syntax final
-  (interface-clause-transformer parse-final))
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::override/i _::method/i (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::method/i (~var m (:method-impl stx #'#:final))) #'m.form]
+       [(_ _::protected/i (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::protected/i _::method/i (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::override/i _::property/i (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::property/i (~var m (:property-impl stx #'#:final-property))) #'m.form]
+       [(_ _::override/i (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::override/i _::property/i (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::protected/i _::property/i (~var m (:property-impl stx #'#:final-protected-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:final))) #'m.form]))))
 
 ;; redundant, but allowed:
 (define-veneer-clause-syntax final
-  (veneer-clause-transformer parse-final))
+  (veneer-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::override/v _::method/v (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::method/v (~var m (:method-impl stx #'#:final))) #'m.form]
+       [(_ _::protected/v (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::protected/v _::method/v (~var m (:method-impl stx #'#:final-protected))) #'m.form]
+       [(_ _::override/v _::property/v (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::property/v (~var m (:property-impl stx #'#:final-property))) #'m.form]
+       [(_ _::override/v (~var m (:method-impl stx #'#:final-override))) #'m.form]
+       [(_ _::override/v _::property/v (~var m (:property-impl stx #'#:final-override-property))) #'m.form]
+       [(_ _::protected/v _::property/v (~var m (:property-impl stx #'#:final-protected-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:final))) #'m.form]))))
 
 (define-veneer-clause-syntax converter
   (veneer-clause-transformer
@@ -620,7 +671,8 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method-impl stx #'#:method))) #'m.form]
-       [(_ (~var decl (:method-decl stx #'#:method))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
+       [(_ (~var decl (:method-decl stx #'#:method)))
+        (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax method
   (veneer-clause-transformer parse-class-method))
@@ -638,107 +690,164 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:property-impl stx #'#:property))) #'m.form]
-       [(_ (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]))))
+       [(_ (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax property
   (veneer-clause-transformer parse-class-property))
 
-(define-for-syntax parse-class-override
-  (lambda (stx data)
-    (syntax-parse stx
-      [(_ _::method (~var m (:method-impl stx #'#:override))) #'m.form]
-      [(_ _::property (~var m (:property-impl stx #'#:override-property))) #'m.form]
-      [(_ (~var m (:method-impl stx #'#:override))) #'m.form])))
-
 (define-class-clause-syntax override
-  (class-clause-transformer parse-class-override))
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method/c (~var m (:method-impl stx #'#:override))) #'m.form]
+       [(_ _::property/c (~var m (:property-impl stx #'#:override-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:override))) #'m.form]))))
 
 (define-interface-clause-syntax override
   (interface-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_ _::method (~var m (:method-impl stx #'#:override))) #'m.form]
-       [(_ _::method (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-       [(_ _::property (~var m (:property-impl stx #'#:override-property))) #'m.form]
-       [(_ _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ _::method/i (~var m (:method-impl stx #'#:override))) #'m.form]
+       [(_ _::method/i (~var decl (:method-decl stx #'#:override)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::property/i (~var m (:property-impl stx #'#:override-property))) #'m.form]
+       [(_ _::property/i (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
        [(_ (~var m (:method-impl stx #'#:override))) #'m.form]
-       [(_ (~var decl (:method-decl stx #'#:override))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
+       [(_ (~var decl (:method-decl stx #'#:override)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax override
-  (veneer-clause-transformer parse-class-override))
-
-(define-for-syntax parse-class-private
-  (lambda (stx data)
-    (syntax-parse stx
-      [(_ tag::implements form ...)
-       (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
-      [(_ _::method (~var m (:method-impl stx #'#:private))) #'m.form]
-      [(_ _::override _::property (~var m (:property-impl stx #'#:private-override-property))) #'m.form]
-      [(_ _::override (~var m (:method-impl stx #'#:private-override))) #'m.form]
-      [(_ _::override _::method (~var m (:method-impl stx #'#:private-override))) #'m.form]
-      [(_ _::property (~var m (:property-impl stx #'#:private-property))) #'m.form]
-      [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
-      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
-      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'private 'mutable)))) #'f.form]
-      [(_ (~var m (:method-impl stx #'#:private))) #'m.form])))
+  (veneer-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method/v (~var m (:method-impl stx #'#:override))) #'m.form]
+       [(_ _::property/v (~var m (:property-impl stx #'#:override-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:override))) #'m.form]))))
 
 (define-class-clause-syntax private
-  (class-clause-transformer parse-class-private))
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ tag::implements/c form ...)
+        (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
+       [(_ _::method/c (~var m (:method-impl stx #'#:private))) #'m.form]
+       [(_ _::override/c _::property/c (~var m (:property-impl stx #'#:private-override-property))) #'m.form]
+       [(_ _::override/c (~var m (:method-impl stx #'#:private-override))) #'m.form]
+       [(_ _::override/c _::method/c (~var m (:method-impl stx #'#:private-override))) #'m.form]
+       [(_ _::property/c (~var m (:property-impl stx #'#:private-property))) #'m.form]
+       [(_ _::immutable/c (~and (~seq _::field/c _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
+       [(_ (~and (~seq _::immutable/c _ ...) (~var f (:field-spec 'private 'immutable)))) #'f.form]
+       [(_ (~and (~seq _::field/c _ ...) (~var f (:field-spec 'private 'mutable)))) #'f.form]
+       [(_ (~var m (:method-impl stx #'#:private))) #'m.form]))))
 
 (define-interface-clause-syntax private
   (interface-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_ _::method (~var m (:method-impl stx #'#:private))) #'m.form]
+       [(_ _::method/i (~var m (:method-impl stx #'#:private))) #'m.form]
+       [(_ _::property/i (~var m (:property-impl stx #'#:private-property))) #'m.form]
        [(_ (~var m (:method-impl stx #'#:private))) #'m.form]))))
 
 (define-veneer-clause-syntax private
-  (veneer-clause-transformer parse-class-private))
-
-(define-for-syntax parse-class-protected
-  (lambda (stx data)
-    (syntax-parse stx
-      [(_ tag::implements form ...)
-       (wrap-class-clause #`(#:protected-implements . #,(parse-multiple-names #'(tag form ...))))]
-      [(_ _::method (~var m (:method-impl stx #'#:protected))) #'m.form]
-      [(_ _::property (~var m (:property-impl stx #'#:protected-property))) #'m.form]
-      [(_ _::immutable (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
-      [(_ (~and (~seq _::field _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
-      [(_ (~and (~seq _::immutable _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]
-      [(_ (~var m (:method-impl stx #'#:protected))) #'m.form])))
+  (veneer-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ tag::implements/v form ...)
+        (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
+       [(_ _::method/v (~var m (:method-impl stx #'#:private))) #'m.form]
+       [(_ _::override/v _::property/v (~var m (:property-impl stx #'#:private-override-property))) #'m.form]
+       [(_ _::override/v (~var m (:method-impl stx #'#:private-override))) #'m.form]
+       [(_ _::override/v _::method/v (~var m (:method-impl stx #'#:private-override))) #'m.form]
+       [(_ _::property/v (~var m (:property-impl stx #'#:private-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:private))) #'m.form]))))
 
 (define-class-clause-syntax protected
-  (class-clause-transformer parse-class-protected))
-
-(define-for-syntax parse-protected
-  (lambda (stx data)
-    (syntax-parse stx
-      [(_ _::method (~var m (:method-impl stx #'#:protected))) #'m.form]
-      [(_ _::property (~var m (:property-impl stx #'#:protected-property))) #'m.form]
-      [(_ (~var m (:method-impl stx #'#:protected))) #'m.form])))
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ tag::implements/c form ...)
+        (wrap-class-clause #`(#:protected-implements . #,(parse-multiple-names #'(tag form ...))))]
+       [(_ _::method/c (~var m (:method-impl stx #'#:protected))) #'m.form]
+       [(_ _::property/c (~var m (:property-impl stx #'#:protected-property))) #'m.form]
+       [(_ _::immutable/c (~and (~seq _::field/c _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]
+       [(_ (~and (~seq _::immutable/c _ ...) (~var f (:field-spec 'protected 'immutable)))) #'f.form]
+       [(_ (~and (~seq _::field/c _ ...) (~var f (:field-spec 'protected 'mutable)))) #'f.form]
+       [(_ (~var m (:method-impl stx #'#:protected))) #'m.form]))))
 
 (define-interface-clause-syntax protected
-  (interface-clause-transformer parse-protected))
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method/i (~var m (:method-impl stx #'#:protected)))
+        #'m.form]
+       [(_ _::method/i (~var decl (:method-decl stx #'#:protected)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::property/i (~var m (:property-impl stx #'#:protected-property)))
+        #'m.form]
+       [(_ _::property/i (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ (~var m (:method-impl stx #'#:protected)))
+        #'m.form]
+       [(_ (~var decl (:method-decl stx #'#:protected)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-veneer-clause-syntax protected
-  (veneer-clause-transformer parse-protected))
-
-(define-for-syntax (parse-abstract-clause stx data)
-  (syntax-parse stx
-    [(_ _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-    [(_ _::protected (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-    [(_ _::protected _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-    [(_ _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
-    [(_ _::override (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-    [(_ _::override _::method (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
-    [(_ _::override _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
-    [(_ _::protected _::property (~var decl (:property-decl stx))) (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
-    [(_ (~var decl (:method-decl stx #'#:abstract))) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))
+  (veneer-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ tag::implements/v form ...)
+        (wrap-class-clause #`(#:protected-implements . #,(parse-multiple-names #'(tag form ...))))]
+       [(_ _::method/v (~var m (:method-impl stx #'#:protected))) #'m.form]
+       [(_ _::property/v (~var m (:property-impl stx #'#:protected-property))) #'m.form]
+       [(_ (~var m (:method-impl stx #'#:protected))) #'m.form]))))
 
 (define-class-clause-syntax abstract
-  (class-clause-transformer parse-abstract-clause))
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method/c (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::protected/c (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::protected/c _::method/c (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::property/c (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ _::override/c (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::override/c _::method/c (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::override/c _::property/c (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ _::protected/c _::property/c (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
+
 (define-interface-clause-syntax abstract
-  (interface-clause-transformer parse-abstract-clause))
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method/i (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::protected/i (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::protected/i _::method/i (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-protected decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::property/i (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ _::override/i (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::override/i _::method/i (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]
+       [(_ _::override/i _::property/i (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ _::protected/i _::property/i (~var decl (:property-decl stx)))
+        (wrap-class-clause #'(#:abstract-protected-property decl.id decl.rhs #f decl.maybe-ret decl.doc))]
+       [(_ (~var decl (:method-decl stx #'#:abstract)))
+        (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.forwards decl.maybe-ret decl.doc))]))))
 
 (define-for-syntax parse-class-primitive-property
   (lambda (stx data)

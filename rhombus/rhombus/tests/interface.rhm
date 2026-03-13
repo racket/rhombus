@@ -786,3 +786,120 @@ check:
   interface J:
     extends I
   ~throws "interface is not implementable"
+
+// regression test: parsing of method clauses
+block:
+  interface I:
+    method m(): "m"
+    property p: "p"
+    method am()
+    property ap
+    method get():
+      [m(), p, am(), ap]
+  class C():
+    implements I
+    override method am(): "am"
+    override property ap: "ap"
+  check C().get() ~is ["m", "p", "am", "ap"]
+
+block:
+  interface I:
+    abstract am()
+    abstract method am2()
+    abstract property ap
+    method get():
+      [am(), am2(), ap]
+  class C():
+    implements I
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C().get() ~is ["am", "am2", "ap"]
+
+block:
+  interface I:
+    final m(): "m"
+    final method m2(): "m2"
+    final property p: "p"
+    method get():
+      [m(), m2(), p]
+  class C():
+    implements I
+  check C().get() ~is ["m", "m2", "p"]
+
+block:
+  interface I:
+    private m(): "m"
+    private method m2(): "m2"
+    private property p: "p"
+    method get():
+      [m(), m2(), p]
+  class C():
+    implements I
+  check C().get() ~is ["m", "m2", "p"]
+
+block:
+  interface I:
+    protected m(): "m"
+    protected method m2(): "m2"
+    protected property p: "p"
+    protected am()
+    protected method am2()
+    protected property ap
+    method get():
+      [m(), m2(), p, am(), am2(), ap]
+  class C():
+    implements I
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C().get() ~is ["m", "m2", "p", "am", "am2", "ap"]
+
+block:
+  interface I:
+    abstract protected am()
+    abstract protected method am2()
+    abstract protected property ap
+    method get():
+      [am(), am2(), ap]
+  class C():
+    implements I
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C().get() ~is ["am", "am2", "ap"]
+
+block:
+  interface I:
+    method am()
+    method am2()
+    property ap
+    method get():
+      [am(), am2(), ap]
+  interface I2:
+    extends I
+    final override am(): "am"
+    final override method am2(): "am2"
+    final override property ap: "ap"
+  class C():
+    implements I2
+  check C().get() ~is ["am", "am2", "ap"]
+
+block:
+  interface I:
+    abstract am()
+    abstract method am2()
+    abstract property ap
+    method get():
+      [am(), am2(), ap]
+  interface I2:
+    extends I
+    abstract override am()
+    abstract override method am2()
+    abstract override property ap
+  class C():
+    implements I2
+    override am(): "am"
+    override method am2(): "am2"
+    override property ap: "ap"
+  check C().get() ~is ["am", "am2", "ap"]

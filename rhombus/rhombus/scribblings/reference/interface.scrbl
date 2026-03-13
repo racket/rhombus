@@ -116,7 +116,7 @@
 }
 
 @doc(
-  interface_clause.macro 'extends $id_name'
+  interface_clause.macro 'extends $id_name ...'
   interface_clause.macro 'extends: $id_name ...; ...'
 ){
 
@@ -135,7 +135,6 @@
   interface_clause.macro 'final $method_impl'
   interface_clause.macro 'final #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'final #,(@rhombus(property, ~interface_clause)) $property_impl'
   interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
@@ -197,22 +196,17 @@
   ~nonterminal:
     method_impl: method ~class_clause
     property_impl: method ~class_clause
-    field_impl: field ~class_clause
 
   interface_clause.macro 'private $method_impl'
   interface_clause.macro 'private #,(@rhombus(method, ~interface_clause)) $method_impl'
   interface_clause.macro 'private #,(@rhombus(property, ~interface_clause)) $property_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
  An @tech{interface clause} that declares a private method or property.
  See @rhombus(interface) and
- @rhombus(method, ~class_clause) for more information on method
+ @rhombus(method, ~interface_clause) for more information on method
  and property declarations. A @rhombus(private, ~interface_clause) without
- @rhombus(method, ~interface_clause),
- @rhombus(override, ~interface_clause), or @rhombus(property, ~interface_clause)
+ @rhombus(method, ~interface_clause) or @rhombus(property, ~interface_clause)
  is equivalent to @rhombus(private, ~interface_clause) followed by
  @rhombus(method, ~interface_clause).
 
@@ -221,11 +215,15 @@
 @doc(
   ~nonterminal:
     method_impl: method ~class_clause
+    method_decl: abstract ~class_clause
     property_impl: method ~class_clause
-    field_impl: field ~class_clause
+    property_decl: abstract ~class_clause
 
+  interface_clause.macro 'protected $method_decl'
   interface_clause.macro 'protected $method_impl'
+  interface_clause.macro 'protected #,(@rhombus(method, ~interface_clause)) $method_decl'
   interface_clause.macro 'protected #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'protected #,(@rhombus(property, ~interface_clause)) $property_decl'
   interface_clause.macro 'protected #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
@@ -244,6 +242,7 @@
   interface_clause.macro 'abstract $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(method, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_decl'
   interface_clause.macro 'abstract #,(@rhombus(property, ~interface_clause)) $property_decl'
   interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_decl'
   interface_clause.macro 'abstract #,(@rhombus(protected, ~interface_clause)) $method_decl'
@@ -298,10 +297,10 @@
 
  There is no default constructor for interfaces, since
  interfaces cannot be instantiated directly, but a
- @rhombus(constructor, ~class_clause) or
+ @rhombus(constructor, ~interface_clause) or
  @rhombus(expression, ~interface_clause) clause can make an interface
  identifier behave like a constructor, perhaps instantiating some default
- class. When @rhombus(constructor, ~class_clause) is declared, its
+ class. When @rhombus(constructor, ~interface_clause) is declared, its
  result is checked to ensure that it is an instance of the interface.
 
  There is no @rhombus(binding, ~class_clause) for interfaces,

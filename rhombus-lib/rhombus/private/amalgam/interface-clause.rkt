@@ -6,13 +6,15 @@
                      enforest/proc-name
                      "introducer.rkt"
                      "macro-result.rkt"
-                     "track-parsed.rkt")
+                     "track-parsed.rkt"
+                     (for-syntax racket/base))
          "enforest.rkt")
 
 (provide define-interface-clause-syntax)
 
 (module+ for-interface
-  (provide (for-syntax in-interface-clause-space)))
+  (provide (for-syntax in-interface-clause-space
+                       interface-clause-quote)))
 
 (begin-for-syntax
   (provide (property-out interface-clause-transformer)
@@ -31,6 +33,9 @@
       [_ (raise-bad-macro-result (proc-name proc) "`class` clause" form)]))
 
   (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface_clause))
+  (define-syntax (interface-clause-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/interface_clause) #'id))]))
 
   (define-rhombus-transform
     #:syntax-class (:interface-clause intf-data)
