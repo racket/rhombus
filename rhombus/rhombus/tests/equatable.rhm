@@ -4,6 +4,7 @@ block:
   import "static_arity.rhm"
   static_arity.check:
     Equatable.hash(v)
+    Equatable.now_hash(v)
     Equatable.identity_hash(v)
     Equatable.hash_code_combine(hc, ...)
     Equatable.hash_code_combine_unordered(hc, ...)
@@ -23,12 +24,31 @@ class Fail():
   private override equals(other, recur): error("failure")
   private override hash_code(recur): 2
 
+class NowFail():
+  private implements Equatable
+  private override equals(other, recur): #false
+  private override hash_code(recur): 0
+  private override now_equals(other, recur): error("failure")
+  private override now_hash_code(recur): error("failure")
+
 class Broken():
   implements Equatable
   override equals(other, recur): values("oops", "wow")
   override hash_code(recur): "oops"
 
+class Sensible(v, mutable name):
+  private implements Equatable
+  private override equals(other :: Sensible, recur):
+    !name && !other.name && recur(v, other.v)
+  private override hash_code(recur):
+    if name | Equatable.identity_hash(this) | recur(v)
+  private override now_equals(other :: Sensible, recur):
+    recur(name, other.name) && recur(v, other.v)
+  private override now_hash_code(recur):
+    Equatable.hash_code_combine(recur(v), recur(name))
+
 check AnythingGoes() == AnythingGoes() ~is #true
+check AnythingGoes() is_now AnythingGoes() ~is #true
 check:
   use_dynamic
   AnythingGoes().equals(AnythingGoes(), fun (& _): #true)
@@ -37,23 +57,58 @@ check:
   use_dynamic
   AnythingGoes().hash_code(fun (_): 0)
   ~throws "hash_code: no such field or method"
+check:
+  use_dynamic
+  AnythingGoes().now_equals(AnythingGoes(), fun (& _): #true)
+  ~throws "now_equals: no such field or method"
+check:
+  use_dynamic
+  AnythingGoes().now_hash_code(fun (_): 0)
+  ~throws "now_hash_code: no such field or method"
 
 check AnythingGoes() == NoGo() ~is #false
 check NoGo() == AnythingGoes()  ~is #false
+check AnythingGoes() is_now NoGo() ~is #false
+check NoGo() is_now AnythingGoes()  ~is #false
 
 check NoGo() == NoGo() ~is #false
+check NoGo() is_now NoGo() ~is #false
 block:
   def ng = NoGo()
   check ng == ng ~is #true
+  check ng is_now ng ~is #true
 
 check AnythingGoes() == Fail() ~is #false
 check Fail() == AnythingGoes() ~is #false
 check NoGo() == Fail() ~is #false
 check Fail() == NoGo() ~is #false
 check Fail() == Fail() ~throws "failure"
+check AnythingGoes() is_now Fail() ~is #false
+check Fail() is_now AnythingGoes() ~is #false
+check NoGo() is_now Fail() ~is #false
+check Fail() is_now NoGo() ~is #false
+check Fail() is_now Fail() ~throws "failure"
 block:
   def f = Fail()
   check f == f ~is #true
+  check f is_now f ~is #true
+
+check AnythingGoes() == NowFail() ~is #false
+check NowFail() == AnythingGoes() ~is #false
+check NoGo() == NowFail() ~is #false
+check NowFail() == NoGo() ~is #false
+check NowFail() == NowFail() ~is #false
+check AnythingGoes() is_now NowFail() ~is #false
+check NowFail() is_now AnythingGoes() ~is #false
+check NoGo() is_now NowFail() ~is #false
+check NowFail() is_now NoGo() ~is #false
+check NowFail() is_now NowFail() ~throws "failure"
+block:
+  def f = NowFail()
+  check f == f ~is #true
+  check f is_now f ~is #true
+  check Equatable.hash(f) ~is 0
+  check Equatable.now_hash(f) ~throws "failure"
 
 check AnythingGoes() == Broken() ~is #false
 check Broken() == AnythingGoes() ~is #false
@@ -64,9 +119,19 @@ check Broken() == Broken() ~throws values(
   "Any",
   "\"oops\"", "\"wow\"",
 )
+check AnythingGoes() is_now Broken() ~is #false
+check Broken() is_now AnythingGoes() ~is #false
+check NoGo() is_now Broken() ~is #false
+check Broken() is_now NoGo() ~is #false
+check Broken() is_now Broken() ~throws values(
+  "results do not satisfy annotation",
+  "Any",
+  "\"oops\"", "\"wow\"",
+)
 block:
   def f = Broken()
   check f == f ~is #true
+  check f is_now f ~is #true
 
 check Equatable.hash(AnythingGoes()) ~is 0
 check Equatable.hash(NoGo()) ~is 1
@@ -89,6 +154,31 @@ check Broken().hash_code(Equatable.hash) ~throws values(
 )
 
 block:
+  let s1 = Sensible(1, #false)
+  let s2 = Sensible(1, #false)
+  let s3 = Sensible(1, "alice")
+  let s4 = Sensible(1, "bob")
+  
+  check s1 == s2 ~is #true
+  check s1 is_now s2 ~is #true
+  check s3 == s4 ~is #false
+  check s3 is_now s4 ~is #false
+
+  check s1 == s3 ~is #false
+  check s1 == s4 ~is #false
+  check s1 is_now s3 ~is #false
+  check s1 is_now s4 ~is #false
+
+  check Equatable.hash(s1) == Equatable.hash(s2) ~is #true
+  check Equatable.now_hash(s3) == Equatable.now_hash(s4) ~is #false
+  check Equatable.hash(s3) == Equatable.hash(s3) ~is #true
+  check Equatable.hash(s4) == Equatable.hash(s4) ~is #true
+
+  s4.name := "alice"
+  check s3 is_now s4 ~is #true
+  check Equatable.now_hash(s3) == Equatable.now_hash(s4) ~is #true
+
+block:
   class AnythingGoesAbstract():
     nonfinal
     implements Equatable
@@ -101,10 +191,13 @@ block:
     override method m(): "ok"
 
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+  check AnythingGoesConcrete(0) is_now AnythingGoesConcrete(1) ~is #true
   check Equatable.hash(AnythingGoesConcrete(2)) ~is 3
+  check Equatable.now_hash(AnythingGoesConcrete(2)) ~is 3
 
   // check for static info on `hash_code` result
   check AnythingGoesConcrete(2).hash_code(values) compares_equal AnythingGoesConcrete(2).hash_code(values) ~is #true
+  check AnythingGoesConcrete(2).now_hash_code(values) compares_equal AnythingGoesConcrete(2).now_hash_code(values) ~is #true
 
 block:
   class AnythingGoesAbstract():
@@ -119,7 +212,33 @@ block:
     override method m(): "ok"
 
   check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+  check AnythingGoesConcrete(0) is_now AnythingGoesConcrete(1) ~is #true
   check Equatable.hash(AnythingGoesConcrete(2)) ~is 4
+  check Equatable.now_hash(AnythingGoesConcrete(2)) ~is 4
 
   // check for static info on `hash` result
   check Equatable.hash(AnythingGoesConcrete(2)) compares_equal Equatable.hash(AnythingGoesConcrete(2)) ~is #true
+  check Equatable.now_hash(AnythingGoesConcrete(2)) compares_equal Equatable.now_hash(AnythingGoesConcrete(2)) ~is #true
+
+block:
+  class AnythingGoesAbstract():
+    nonfinal
+    private implements Equatable
+    private override equals(other, recur): #true
+    private override hash_code(recur): 4
+    private override now_equals(other, recur): #false
+    private override now_hash_code(recur): 6
+    abstract m()
+
+  class AnythingGoesConcrete(n):
+    extends AnythingGoesAbstract
+    override method m(): "ok"
+
+  check AnythingGoesConcrete(0) == AnythingGoesConcrete(1) ~is #true
+  check AnythingGoesConcrete(0) is_now AnythingGoesConcrete(1) ~is #false
+  check Equatable.hash(AnythingGoesConcrete(2)) ~is 4
+  check Equatable.now_hash(AnythingGoesConcrete(2)) ~is 6
+
+  // check for static info on `hash` result
+  check Equatable.hash(AnythingGoesConcrete(2)) compares_equal Equatable.hash(AnythingGoesConcrete(2)) ~is #true
+  check Equatable.now_hash(AnythingGoesConcrete(2)) compares_equal Equatable.now_hash(AnythingGoesConcrete(2)) ~is #true
