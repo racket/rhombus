@@ -290,7 +290,7 @@ pairwise equal by @rhombus(==).
     :: MutableArray
 ){
 
- Returns a fresh array string with the same initial content as in
+ Returns a fresh array with the same initial content as in
  @rhombus(arr) from position @rhombus(start) (inclusive) through
  @rhombus(end) (exclusive).
 
