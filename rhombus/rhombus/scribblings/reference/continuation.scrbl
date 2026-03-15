@@ -107,8 +107,8 @@ or by using it with @rhombus(Continuation.in).
  continuation produced by @rhombus(cont_expr), as opposed to
  delivering values to it. More precisely, the current continuation is
  extended with the captured continuation, and the @rhombus(body)
- sequence is evaluated with that as the continuation and (i.e., in
- @tail_position with respect to to the capture of the continuation).
+ sequence is evaluated with that as the continuation (i.e., in
+ @tail_position with respect to the capture of the continuation).
 
 }
 

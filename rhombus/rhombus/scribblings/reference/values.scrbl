@@ -7,16 +7,17 @@
 
 @doc(
   expr.macro 'values'
-  expr.macro 'values(expr, ...)'
+  expr.macro 'values($expr, ...)'
   repet.macro 'values'
-  repet.macro 'values(repet, ...)'
+  repet.macro 'values($repet, ...)'
 ){
 
  A @rhombus(values) form by itself acts as a function that takes any
  number of values and returns them as
  @tech(~doc: model_doc, ~key: "multiple value"){multiple result values}.
  If only one @rhombus(expr) is provided, the result is the same as just
- @rhombus(expr), except that it is not in @tail_position with respect to
+ @rhombus(expr) (provided that @rhombus(expr) produces a single value),
+ except that it is not in @tail_position with respect to
  the @rhombus(values) form. Any other number of values must be received
  by a context that is expecting multiple values, such as with a
  @rhombus(values, ~bind) binding pattern.
@@ -131,7 +132,7 @@
 
  Use @rhombus(call_with_values) to dispatch on the number of values that
  are produced by an expression. The @rhombus(match) form cannot make that
- distinction, because it always expects a single result value from its
+ distinction, because it always expects a specific number of values from its
  initial subexpression.
 
 @examples(
