@@ -53,7 +53,8 @@
          "realm.rkt"
          (submod "values.rkt" for-parse)
          "rhombus-primitive.rkt"
-         "function-count.rkt")
+         "function-count.rkt"
+         (submod "arithmetic.rkt" static-infos))
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -1426,8 +1427,9 @@
                              ;; but we can at least avoid `apply`
                              (define all-args (append w-extra-rands arg-forms))
                              #`(begin
-                                 #,@(map (lambda (arg) #`(values #,arg)) all-args)
-                                 (+ #,(length all-args) (length #,rest-args)))]
+                                 #,@(map (lambda (arg) #`(void #,arg)) all-args)
+                                 (+ #,(length all-args)
+                                    (length #,(discard-static-infos rest-args))))]
                             [rsts `(,#'apply ,w-rator
                                              ,@w-extra-rands
                                              ,@arg-forms
@@ -1561,13 +1563,15 @@
              (not kwrsts))
         ;; optimize use of `Function.count` to just get the size of a repetition
         (define n (repetition-as-length dots rsts))
-        (cond
-          [(null? args) n]
-          [else
-           #`(begin
-               #,@(for/list ([arg (in-list args)])
-                    #`(void #,(discard-static-infos arg)))
-               (+ #,(length args) #,n))])]
+        (wrap-static-info*
+         (cond
+           [(null? args) n]
+           [else
+            #`(begin
+                #,@(for/list ([arg (in-list args)])
+                     #`(void #,(discard-static-infos arg)))
+                (+ #,(length args) #,n))])
+         (get-int-static-infos))]
        [else
         (define rest-args
           (cond

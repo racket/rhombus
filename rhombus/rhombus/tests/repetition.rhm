@@ -445,7 +445,7 @@ block:
       x + 3
 
   let [num, ...] = [1, 2, 3]
-  check [A1.add1(num), ...] ~is [2, 3, 4]  
+  check [A1.add1(num), ...] ~is [2, 3, 4]
   check [A2.add2(num), ...] ~is [3, 4, 5]
   check [A3.add3(num), ...] ~is [4, 5, 6]
 
@@ -478,6 +478,15 @@ block:
          ~is 0
   check: Function.count(Array(x, y), ...)
          ~is 0
+
+block:
+  use_static
+  let [x, ...] = [1, 2, 3]
+  check:
+    Function.count(x, ...) < dynamic(10) ~is #true
+    Function.count(& [x, ...]) < dynamic(10) ~is #true
+    Function.count(x, ..., x+1, ...) < dynamic(10) ~is #true
+    Function.count(x, ..., & [x+1, ...]) < dynamic(10) ~is #true
 
 check:
   [each #'oops, ...] ~throws values(
