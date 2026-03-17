@@ -388,7 +388,7 @@
 
 (define-syntax Map
   (expression-transformer
-   (lambda (stx) (parse-map stx '() #f #'Map-build #'Map-pair-build #'for/hash))))
+   (lambda (stx) (parse-map stx '() #f #'Map-build #'Map-pair-build #'for/hashalw))))
 
 (define-syntax Map.by
   (expression-transformer
@@ -437,7 +437,7 @@
 
 (define-repetition-syntax Map
   (repetition-transformer
-   (lambda (stx) (parse-map stx '() #t #'Map-build #'Map-pair-build #'for/map))))
+   (lambda (stx) (parse-map stx '() #t #'Map-build #'Map-pair-build #'for/hashalw))))
 
 (define-repetition-syntax Map.by
   (repetition-transformer

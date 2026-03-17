@@ -1630,3 +1630,14 @@ block:
     import .one open
     check Map.by(a.foo)() ~is Map.by(a.foo){}
   #void
+
+// regression test: repetitions in explicit `Map`
+check:
+  let [x, ...] = [1, 2, 3]
+  Map{x: x+1, ...}
+  ~is {1: 2, 2: 3, 3: 4}
+
+check:
+  let [[x, ...], ...] = [[1], [2], [3]]
+  [Map{x: x+1, ...}, ...]
+  ~is [{1: 2}, {2: 3}, {3: 4}]
