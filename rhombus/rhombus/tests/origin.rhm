@@ -14,6 +14,7 @@ runtime_path.def class_rhm: "origin-class.rhm"
 runtime_path.def for_rhm: "origin-for.rhm"
 runtime_path.def stxclass_rhm: "origin-stxclass.rhm"
 runtime_path.def space_rhm: "origin-space.rhm"
+runtime_path.def fun_count_rhm: "origin-fun-count.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let inp = Port.Input.open_file(o_rhm)
@@ -166,3 +167,7 @@ check_origins(space_rhm,
 check_origins(space_rhm,
               #'#{rhombus/example/demo},
               { #'ddef: 2 })
+
+check_origins(fun_count_rhm,
+              #false,
+              { #'Function: 4 })

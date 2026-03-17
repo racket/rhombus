@@ -488,6 +488,24 @@ block:
     Function.count(x, ..., x+1, ...) < dynamic(10) ~is #true
     Function.count(x, ..., & [x+1, ...]) < dynamic(10) ~is #true
 
+block:
+  let [x, ...] = [1, 2, 3]
+  check:
+    check:
+      Function.count(println(x), ...)
+      ~is 3
+    ~prints "1\n2\n3\n"
+  check:
+    check:
+      Function.count(println("pre"), println(x), ...)
+      ~is 4
+    ~prints "pre\n1\n2\n3\n"
+  check:
+    check:
+      Function.count(println("pre"), println(x), ..., println("post"))
+      ~is 5
+    ~prints "pre\n1\n2\n3\npost\n"
+
 check:
   [each #'oops, ...] ~throws values(
     "each: " ++ error.annot_msg(),

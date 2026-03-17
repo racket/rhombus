@@ -1,0 +1,17 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+Function.count(1, 2, 3)
+
+block:
+  let [x, ...] = [1, 2, 3]
+  Function.count(x, ...)
+
+block:
+  let [x, ...] = [1, 2, 3]
+  Function.count("pre", x, ...)
+
+block:
+  let [x, ...] = [1, 2, 3]
+  Function.count("pre", x, ..., "post")

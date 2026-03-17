@@ -210,16 +210,20 @@
      #:with rep-info::repetition-info #'rep.parsed
      (syntax-parse #'rep-info.for-clausess
        [(([(id) (in-form e)]))
-        (cond
-          [(free-identifier=? #'in-form #'in-list)
-           #`(length e)]
-          [(free-identifier=? #'in-form #'in-treelist)
-           #`(treelist-length e)]
-          [(free-identifier=? #'in-form #'in-vector)
-           #`(vector-length e)]
-          [else
-           #`(length #,(repetition-as-list ellipses #'(group (parsed #:rhombus/repet rep.parsed)) 1))])]
-       [else
+        #:do [(define length-id
+                (cond
+                  [(free-identifier=? #'in-form #'in-list) #'length]
+                  [(free-identifier=? #'in-form #'in-treelist) #'treelist-length]
+                  [(free-identifier=? #'in-form #'in-vector) #'vector-length]
+                  [else #f]))]
+        #:when length-id
+        #`(begin
+            #,(if (and (identifier? #'rep-info.body)
+                       (free-identifier=? #'rep-info.body #'id))
+                  (transfer-origin #'rep.parsed #'(void))
+                  (render-repetition/direct #'rep.parsed 1 'checked #'for))
+            (#,length-id e))]
+       [_
         #`(length #,(repetition-as-list ellipses #'(group (parsed #:rhombus/repet rep.parsed)) 1))])]))
 
 (define-for-syntax (render-repetition for-form rep-parsed

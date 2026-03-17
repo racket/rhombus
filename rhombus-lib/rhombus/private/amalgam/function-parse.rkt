@@ -1376,6 +1376,8 @@
   (values
    (syntax-parse rands
      [(rand::kw-argument ...)
+      (define src-stx (or srcloc
+                          (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx)))))
       (handle-repetition
        repetition?
        (if repetition? rator-in (rhombus-local-expand rator-in))
@@ -1383,6 +1385,7 @@
        (syntax->list #'(rand.exp ...))
        rsts amp dots
        kwrsts
+       src-stx
        (lambda (rator extra-rands args rest-args kwrest-args rator-static-info rand-extract-static-infos)
          (define kws (syntax->list #'(rand.kw ...)))
          (when static?
@@ -1406,8 +1409,7 @@
          (define w-extra-rands (for/list ([w0-extra-rand (in-list w0-extra-rands)])
                                  (discard-static-infos w0-extra-rand)))
          (define call-e (relocate+reraw
-                         (or srcloc
-                             (respan (datum->syntax #f (list (or rator-stx rator-in) args-stx))))
+                         src-stx
                          (datum->syntax
                           #'here
                           (cond
@@ -1549,6 +1551,7 @@
                                       rands
                                       rsts amp dots
                                       kwrsts
+                                      src-stx
                                       k)
   (cond
     [(not repetition?)
@@ -1564,13 +1567,15 @@
         ;; optimize use of `Function.count` to just get the size of a repetition
         (define n (repetition-as-length dots rsts))
         (wrap-static-info*
-         (cond
-           [(null? args) n]
-           [else
-            #`(begin
-                #,@(for/list ([arg (in-list args)])
-                     #`(void #,(discard-static-infos arg)))
-                (+ #,(length args) #,n))])
+         (relocate+reraw
+          src-stx
+          (cond
+            [(null? args) n]
+            [else
+             #`(begin
+                 #,@(for/list ([arg (in-list args)])
+                      #`(void #,(discard-static-infos arg)))
+                 (+ #,(length args) #,n))]))
          (get-int-static-infos))]
        [else
         (define rest-args
