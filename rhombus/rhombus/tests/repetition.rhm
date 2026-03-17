@@ -605,3 +605,22 @@ block:
           | '(1, $tl ...)',
           ...]
          ~throws "generated an empty group"
+
+// check repetition as direct conversion
+block:
+  let [x, ...] = [1, 2, 3]
+  check:
+    [x, ...] ~is [1, 2, 3]
+    PairList[x, ...] ~is PairList[1, 2, 3]
+
+block:
+  let PairList[x, ...] = PairList[1, 2, 3]
+  check:
+    [x, ...] ~is [1, 2, 3]
+    PairList[x, ...] ~is PairList[1, 2, 3]
+
+block:
+  let Array(x, ...) = Array(1, 2, 3)
+  check:
+    [x, ...] ~is [1, 2, 3]
+    PairList[x, ...] ~is PairList[1, 2, 3]

@@ -344,22 +344,27 @@
 (define-for-syntax (build-for for-form clauses body)
   (syntax-parse clauses
     [([(id) (in-form e)])
-     #:when (and (or (free-identifier=? for-form #'for/list)
-                     (free-identifier=? for-form #'for/treelist))
-                 (or (free-identifier=? #'in-form #'in-list)
-                     (free-identifier=? #'in-form #'in-treelist))
-                 (identifier? body)
+     #:when (and (identifier? body)
                  (free-identifier=? body #'id))
-     (cond
-       [(free-identifier=? for-form #'for/list)
-        (if (free-identifier=? #'in-form #'in-list)
-            #'e
-            #'(treelist->list e))]
-       [else
-        (if (free-identifier=? #'in-form #'in-treelist)
-            #'e
-            #'(list->treelist e))])]
-    [else #`(#,for-form #,clauses #,(discard-static-infos body))]))
+     #:do [(define to-list-id
+             (cond
+               [(free-identifier=? for-form #'for/list)
+                (cond
+                  [(free-identifier=? #'in-form #'in-list) #'values]
+                  [(free-identifier=? #'in-form #'in-treelist) #'treelist->list]
+                  [(free-identifier=? #'in-form #'in-vector) #'vector->list]
+                  [else #f])]
+               [(free-identifier=? for-form #'for/treelist)
+                (cond
+                  [(free-identifier=? #'in-form #'in-list) #'list->treelist]
+                  [(free-identifier=? #'in-form #'in-treelist) #'values]
+                  [(free-identifier=? #'in-form #'in-vector) #'vector->treelist]
+                  [else #f])]
+               [else #f]))]
+     #:when to-list-id
+     #`(#,to-list-id e)]
+    [_
+     #`(#,for-form #,clauses #,(discard-static-infos body))]))
 
 (define-for-syntax (raise-wrong-depth expr used-depth-stx want-depth actual-depth
                                       #:at-least? [at-least? #f])
