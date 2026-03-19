@@ -1645,7 +1645,7 @@ block:
     match '1'
     | '$(c :: C)':
         c.w
-    ~is 1  
+    ~is 1
   check:
     match '1'
     | '$(pattern:
@@ -1728,3 +1728,45 @@ check:
     ac.y
   ~throws values("y: no such field or method",
                  "(based on static information)")
+
+// pattern shorthand should cooperate with `match` as `syntax-parse`
+check:
+  match 'something more'
+  | 'something 1':
+      "one"
+  | '$(_ :: (syntax_class
+             | 'something 2'
+             | 'something 3'))':
+      "two or three"
+  | '$(pattern
+       | 'something 4'
+       | 'something 5')':
+      "four or five"
+  | (pattern
+     | 'something 6'
+     | 'something 7'):
+      "six or seven"
+  ~throws "expected one of these literals: 1, 2, 3, 4, 5, 6, or 7"
+
+// check annotation string of pattern shorthand
+check:
+  def (pattern | '1' | '3') = '2'
+  #void
+  ~throws "matching(pattern |« '«1»' » |« '«3»' »)"
+
+check:
+  def (pattern | '1 2 3' | '3 4 5') = '2 3 4'
+  #void
+  ~throws "matching(pattern |« '«1 2 3»' » |« '«3 4 5»' »)"
+
+check:
+  def (pattern | '1 2 3; 4 5 6' | '3 4 5; 6 7 8') = '2 3 4; 5 6 7'
+  #void
+  ~throws "matching(pattern |« '«1 2 3; 4 5 6»' » |« '«3 4 5; 6 7 8»' »)"
+
+// FIXME
+#//
+check:
+  def (pattern | '$' | '...') = 'oops'
+  #void
+  ~throws "matching(pattern |« '«$»' » |« '«...»' »)"

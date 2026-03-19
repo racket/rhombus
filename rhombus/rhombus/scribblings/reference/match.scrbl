@@ -93,6 +93,12 @@
   ~error:
     match '1+2'
     | '4': "four"
+  ~error:
+    match '4'
+    | (pattern:
+       | '$x + $y'
+       | '$x - $y'):
+        "arithmetic"
 )
 
  If an initial segment of single-value @rhombus(values_bind) patterns are ``literal-like''

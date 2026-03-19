@@ -7,7 +7,8 @@
                      "srcloc.rkt"
                      "tag.rkt"
                      "name-path-op.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "annotation-string.rkt")
          syntax/parse/pre
          "provide.rkt"
          "parse.rkt"
@@ -55,6 +56,9 @@
 
 (module+ for-match
   (provide (for-syntax handle-syntax-parse-dispatch)))
+
+(module+ for-pattern
+  (provide (for-syntax do-quotes-binding)))
 
 (begin-for-syntax
   (define-splicing-syntax-class (:list-repetition in-space repetition-mode?)
@@ -1144,13 +1148,13 @@
                                               #'args)))
              #'tail)]))
 
-(define-for-syntax ((convert-pattern/generate-match repack-id) e)
+(define-for-syntax ((convert-pattern/generate-match repack-id make-annot-str) e)
   (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern e))
   (with-syntax ([((id id-ref id-statinfo ...) ...) idrs]
                 [(((sid ...) sid-ref sid-statinfo ...) ...) sidrs])
     (binding-form
      #'syntax-infoer
-     #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
+     #`(#,(make-annot-str e)
         #,pattern
         #,repack-id
         (id ...)
@@ -1177,29 +1181,35 @@
      (values (relocate-wrapped q-stx form)
              tail))))
 
+(define-for-syntax (do-quotes-binding stx make-annot-str)
+  (quoted-shape-dispatch stx
+                         in-binding-space
+                         (convert-pattern/generate-match #'repack-as-term make-annot-str)
+                         #f
+                         (convert-pattern/generate-match #'repack-as-multi make-annot-str)
+                         (lambda (e) (binding-form
+                                      #'syntax-infoer
+                                      #`(#,(make-annot-str e)
+                                         #,(syntax-parse e
+                                             [((~datum op) id) #`((~datum op) (~literal id))])
+                                         repack-as-term
+                                         ()
+                                         ()
+                                         ()
+                                         ()
+                                         ()
+                                         ())))))
+
 (define-binding-syntax #%quotes
   (binding-prefix-operator
    #f
    '((default . stronger))
    'macro
    (lambda (stx)
-     (quoted-shape-dispatch stx
-                            in-binding-space
-                            (convert-pattern/generate-match #'repack-as-term)
-                            #f
-                            (convert-pattern/generate-match #'repack-as-multi)
-                            (lambda (e) (binding-form
-                                         #'syntax-infoer
-                                         #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
-                                            #,(syntax-parse e
-                                                [((~datum op) id) #`((~datum op) (~literal id))])
-                                            repack-as-term
-                                            ()
-                                            ()
-                                            ()
-                                            ()
-                                            ()
-                                            ())))))))
+     (do-quotes-binding stx
+                        (lambda (e)
+                          (annotation-string-from-pattern
+                           (string-append "'" (shrubbery-syntax->string e) "'")))))))
 
 (define-repetition-syntax #%quotes
   (repetition-prefix-operator
