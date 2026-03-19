@@ -29,36 +29,37 @@
   (definition-transformer
     (lambda (stx name-prefix effect-id)
       (check-context stx)
+      (define form-id (syntax-parse stx [(form-id . _) #'form-id]))
       (define wrap-definition (make-wrap-definition stx))
+      (define (do-value g rhs)
+        (build-value-definitions form-id
+                                 g rhs
+                                 wrap-definition
+                                 #:check-bind-uses check-bind-uses
+                                 #:stx stx))
+      (define (do-values gs rhs)
+        (build-values-definitions form-id
+                                  gs rhs
+                                  wrap-definition
+                                  #:check-bind-uses check-bind-uses
+                                  #:stx stx))
       (syntax-parse stx
         #:datum-literals (group)
-        [(form-id (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block body ...)))
-         (build-values-definitions #'form-id
-                                   #'(g ...) #'rhs
-                                   wrap-definition
-                                   #:check-bind-uses check-bind-uses)]
-        [(form-id (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
+        [(_ (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block body ...)))
+         (syntax-parse #'(g ...)
+           [(g) (do-value #'g #'rhs)]
+           [gs (do-values #'gs #'rhs)])]
+        [(_ (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
          (check-multiple-equals stx)
-         (build-values-definitions #'form-id
-                                   #'(g ...) #`(#,group-tag rhs ...)
-                                   wrap-definition
-                                   #:check-bind-uses check-bind-uses
-                                   #:stx stx)]
-        [(form-id any ...+ _::equal rhs ...+)
+         (define rhs-g #`(#,group-tag rhs ...))
+         (syntax-parse #'(g ...)
+           [(g) (do-value #'g rhs-g)]
+           [gs (do-values #'gs rhs-g)])]
+        [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
-         (build-value-definitions #'form-id
-                                  (no-srcloc #`(#,group-tag any ...))
-                                  #`(#,group-tag rhs ...)
-                                  wrap-definition
-                                  #:check-bind-uses check-bind-uses
-                                  #:stx stx)]
-        [(form-id any ...+ (~and rhs (_::block body ...)))
-         (build-value-definitions #'form-id
-                                  (no-srcloc #`(#,group-tag any ...))
-                                  #'rhs
-                                  wrap-definition
-                                  #:check-bind-uses check-bind-uses
-                                  #:stx stx)]
+         (do-value (no-srcloc #`(#,group-tag any ...)) #`(#,group-tag rhs ...))]
+        [(_ any ...+ (~and rhs (_::block body ...)))
+         (do-value (no-srcloc #`(#,group-tag any ...)) #'rhs)]
         [(_ ... (a::alts (b::block . _) . _))
          (raise-syntax-error #f
                              "alternatives are not supported here"
