@@ -559,17 +559,27 @@
                                          #:rest-repetition? rest-repetition?
                                          #:rest-repetition-min rest-repetition-min
                                          #:rest-repetition-max rest-repetition-max)
-  (define c-str (syntax-e constructor-str))
-  (define kind (and (list? c-str) (syntax-e (car c-str))))
-  (define-values (mode-desc key-strs default?s)
+  (define kind+c-str (syntax-e constructor-str))
+  (define kind (and (list? kind+c-str) (syntax-e (car kind+c-str))))
+  (define-values (open close c-str key-strs default?s)
     (case kind
-      [(#:set) (values (syntax-e (cadr c-str))
-                       (syntax-e (caddr c-str))
+      [(#:list) (values "[" "]"
+                        (syntax-e (cadr kind+c-str))
+                        #f
+                        #f)]
+      [(#:set) (values "{" "}"
+                       (syntax-e (cadr kind+c-str))
+                       (syntax-e (caddr kind+c-str))
                        #f)]
-      [(#:map) (values (syntax-e (cadr c-str))
-                       (syntax-e (caddr c-str))
-                       (syntax-e (cadddr c-str)))]
-      [else (values #f #f #f)]))
+      [(#:map) (values "{" "}"
+                       (syntax-e (cadr kind+c-str))
+                       (syntax-e (caddr kind+c-str))
+                       (syntax-e (cadddr kind+c-str)))]
+      [(#f) (values "(" ")"
+                    kind+c-str
+                    #f
+                    #f)]
+      [else (error "unrecognized kind")]))
   (define (args-string arg-annotation-strs first?)
     (apply string-append
            (case kind
@@ -597,8 +607,8 @@
                  (annotation-string-to-pattern (syntax-e a-str))))])))
   (annotation-string-from-pattern
    (string-append
-    (if kind mode-desc c-str)
-    (if kind "{" "(")
+    c-str
+    open
     (args-string arg-annotation-strs #t)
     (if rest-annotation-str
         (string-append
@@ -613,13 +623,13 @@
             [else (syntax-e rest-annotation-str)]))
          (if rest-repetition? ", ..." "")
          (cond
-           [(= rest-repetition-min 1) " ~nonempty"]
+           [(eqv? rest-repetition-min 1) " ~nonempty"]
            [(eqv? rest-repetition-max 1) " ~once"]
            [else ""]))
         "")
     (args-string post-arg-annotation-strs (and (null? arg-annotation-strs)
                                                (not rest-annotation-str)))
-    (if kind "}" ")"))))
+    close)))
 
 (define-for-syntax (deepen-repetition bind-infos rest-to-repetition no-rest-map?)
   (with-syntax ([((rest-info-bind-id rest-info-bind-uses rest-info-bind-static-info ...) ...)

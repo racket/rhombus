@@ -192,8 +192,8 @@ pairwise equal by @rhombus(==).
     pair_list_bind: def bind ~defn
     pair_list_repet_bind: def bind ~defn
     repet_bind: def bind ~defn
-  bind.macro 'PairList($bind_or_splice, ...)'
   bind.macro 'PairList[$bind_or_splice, ...]'
+  bind.macro 'PairList($bind_or_splice, ...)'
   grammar bind_or_splice
   | $bind
   | $splice
@@ -211,13 +211,15 @@ pairwise equal by @rhombus(==).
  way that @rhombus(List, ~bind) matches lists.
 
 @examples(
-  def PairList(1, x, y) = PairList[1, 2, 3]
+  def PairList[1, x, y] = PairList[1, 2, 3]
   y
-  def PairList[1, also_x, also_y] = PairList[1, 2, 3]
+  def PairList(1, also_x, also_y) = PairList[1, 2, 3]
   also_y
-  def PairList(1, & xs) = PairList[1, 2, 3]
+  ~error:
+    def PairList[1, x, y] = PairList[1, 3]
+  def PairList[1, & xs] = PairList[1, 2, 3]
   xs
-  def PairList(1, x, ...) = PairList[1, 2, 3]
+  def PairList[1, x, ...] = PairList[1, 2, 3]
   PairList[x, ...]
 )
 

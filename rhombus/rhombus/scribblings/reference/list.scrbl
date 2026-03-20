@@ -131,8 +131,8 @@ their elements are pairwise equal by @rhombus(==).
     list_bind: def bind ~defn
     list_repet_bind: def bind ~defn
     repet_bind: def bind ~defn
-  bind.macro 'List($bind_or_splice, ...)'
   bind.macro 'List[$bind_or_splice, ...]'
+  bind.macro 'List($bind_or_splice, ...)'
   bind.macro '#%brackets [$bind_or_splice, ...]'
   grammar bind_or_splice
   | $bind
@@ -165,23 +165,27 @@ their elements are pairwise equal by @rhombus(==).
  present with @rhombus(&) or @dots (but not both).
 
 @examples(
-  def List(1, x, y) = [1, 2, 3]
+  def List[1, x, y] = [1, 2, 3]
   y
-  def [1, also_x, also_y] = [1, 2, 3]
+  def List(1, also_x, also_y) = [1, 2, 3]
   also_y
-  def List(1, & xs) = [1, 2, 3]
+  def [1, more_x, more_y] = [1, 2, 3]
+  more_y
+  ~error:
+    def List[1, x, y] = [1, 3]
+  def List[1, & xs] = [1, 2, 3]
   xs
-  def List(1, x, ...) = [1, 2, 3]
+  def List[1, x, ...] = [1, 2, 3]
   [x, ...]
-  def List(1, x, ..., 3) = [1, 2, 3]
+  def List[1, x, ..., 3] = [1, 2, 3]
   [x, ...]
-  def List(1, x, ... ~nonempty, 3) = [1, 2, 3]
+  def List[1, x, ... ~nonempty, 3] = [1, 2, 3]
   [x, ...]
   ~error:
-    def List(1, x, ... ~nonempty, 3) = [1, 3]
-  def List(1, x, ... ~once, 3) = [1, 3]
+    def List[1, x, ... ~nonempty, 3] = [1, 3]
+  def List[1, x, ... ~once, 3] = [1, 3]
   ~error:
-    def List(1, x, ... ~once, 3) = [1, 2, 2, 3]
+    def List[1, x, ... ~once, 3] = [1, 2, 2, 3]
 )
 
  If multiple @rhombus(splice)s are present, matching is greedy: the
@@ -190,13 +194,13 @@ their elements are pairwise equal by @rhombus(==).
  elements.
 
 @examples(
-  def List(x, ..., z, ...) = [1, 2, "c", 5]
+  def List[x, ..., z, ...] = [1, 2, "c", 5]
   [[x, ...], [z, ...]]
-  def List(x, ..., z, ... ~nonempty) = [1, 2, "c", 5]
+  def List[x, ..., z, ... ~nonempty] = [1, 2, "c", 5]
   [[x, ...], [z, ...]]
-  def List(x, ..., #'stop, z, ...) = [1, 2, "c", #'stop, 5]
+  def List[x, ..., #'stop, z, ...] = [1, 2, "c", #'stop, 5]
   [[x, ...], [z, ...]]
-  def List(x :: Int, ..., y, z, ...) = [1, 2, "c", "d", 5]
+  def List[x :: Int, ..., y, z, ...] = [1, 2, "c", "d", 5]
   [[x, ...], y, [z, ...]]
 )
 
@@ -206,9 +210,9 @@ their elements are pairwise equal by @rhombus(==).
  non-empty sequence for each repetition of the splice.
 
 @examples(
-  def List(& [x, ...], ...) = [1, 2, 3, 4]
+  def List[& [x, ...], ...] = [1, 2, 3, 4]
   [[x, ...], ...]
-  def List(& [x :: Int, ..., y], ..., z, ...) = [1, 2, "c", 4, "e", 6]
+  def List[& [x :: Int, ..., y], ..., z, ...] = [1, 2, "c", 4, "e", 6]
   [[[x, ...], ...], [y, ...], [z, ...]]
 )
 

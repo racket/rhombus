@@ -235,6 +235,16 @@ check:
   ~completes
 
 check:
+  def PairList[0, x, y] = PairList[0, 1, 2]
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def PairList[0, x, y] = PairList[0, 2]
+  "oops"
+  ~throws "matching(PairList[0, _, _])"
+
+check:
   def PairList[0, _, ...] = PairList[0, 1, 2]
   ~completes
 

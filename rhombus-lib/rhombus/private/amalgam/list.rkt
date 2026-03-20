@@ -1552,7 +1552,7 @@
   (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
                                  #:rest-arg rest-arg
                                  #:post-args after-args
-                                 "List"
+                                 '(#:list "List")
                                  pred
                                  (for/list ([i (in-range len)])
                                    (if (i . < . pre-len)
@@ -1588,7 +1588,7 @@
                                      (and tail (maybe-list-tail tail (- max-len min-len)) #t))]))))))
   (composite-binding-transformer  #`(#,form-id (parens . #,args) . #,tail)
                                   #:rest-arg rest-arg
-                                  "PairList"
+                                  '(#:list "PairList")
                                   pred
                                   #:steppers (if (null? args)
                                                  null

@@ -63,20 +63,20 @@ check:
 
 block:
   check:
-    def List(_) :: List = [1]
+    def [_] :: List = [1]
     ~completes
   check:
-    def List(_, _, _) :: List = [1]
-    #void
+    def [_, _, _] :: List = [1]
+    "oops"
     ~throws values(
       "value does not satisfy annotation",
       "[1]",
-      "List && matching(List(_, _, _))",
+      "List && matching(List[_, _, _])",
     )
 
 check:
-  def List(_, _, _) :: satisfying(fun (_): error("oops")) = [1]
-  #void
+  def [_, _, _] :: satisfying(fun (_): error("oops")) = [1]
+  "oops"
   ~throws "oops"
 
 block:
@@ -86,28 +86,28 @@ block:
     ~all_stx: self
     '(converting(fun ([x]): [x, x]))'.relocate_span([self])
   check:
-    def List(_, _) :: one_to_two = [1]
+    def [_, _] :: one_to_two = [1]
     ~completes
   check:
-    def List(_, _) :: one_to_two = [1, 2]
-    #void
+    def [_, _] :: one_to_two = [1, 2]
+    "oops"
     ~throws values(
       "value does not satisfy annotation",
       "[1, 2]",
-      "one_to_two && matching(List(_, _))",
+      "one_to_two && matching(List[_, _])",
     )
   check:
-    def List(_, _, _) :: one_to_two = [1]
-    #void
+    def [_, _, _] :: one_to_two = [1]
+    "oops"
     ~throws values(
       "value does not satisfy annotation",
       "[1]",
-      "one_to_two && matching(List(_, _, _))",
+      "one_to_two && matching(List[_, _, _])",
     )
 
 check:
-  def List(_, _, _) :: converting(fun (_): error("oops")) = [1]
-  #void
+  def [_, _, _] :: converting(fun (_): error("oops")) = [1]
+  "oops"
   ~throws "oops"
 
 check:

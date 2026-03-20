@@ -721,39 +721,49 @@ check:
   ~is [[2, 3]]
 
 check:
+  def [1, x, y] = [1, 2, 3]
+  [x, y]
+  ~is [2, 3]
+
+check:
+  def [1, x, y] = [1, 3]
+  "oops"
+  ~throws "matching(List[1, _, _])"
+
+check:
   def [1, x, ... ~nonempty, 3] = [5]
   "oops"
-  ~throws "matching(List(1, _, ... ~nonempty, 3))"
+  ~throws "matching(List[1, _, ... ~nonempty, 3])"
 
 check:
   def [1, x, ... ~once, 3] = [5]
   "oops"
-  ~throws "matching(List(1, _, ... ~once, 3))"
+  ~throws "matching(List[1, _, ... ~once, 3])"
 
 check:
   def [1, x, ... ~nonempty, 3, & _] = [5]
   "oops"
-  ~throws "matching(List(1, _, ... ~nonempty, 3, & _))"
+  ~throws "matching(List[1, _, ... ~nonempty, 3, & _])"
 
 check:
   def [1, x, ... ~once, 3, & _] = [5]
   "oops"
-  ~throws "matching(List(1, _, ... ~once, 3, & _))"
+  ~throws "matching(List[1, _, ... ~once, 3, & _])"
 
 check:
   def [1, x, ..., 3] = [5]
   "oops"
-  ~throws "matching(List(1, _, ..., 3))"
+  ~throws "matching(List[1, _, ..., 3])"
 
 check:
   def [1, & x, 3] = [5]
   "oops"
-  ~throws "matching(List(1, & _, 3))"
+  ~throws "matching(List[1, & _, 3])"
 
 check:
   def [1, & x, ..., 3] = [5]
   "oops"
-  ~throws "matching(List(1, & _, ..., 3))"
+  ~throws "matching(List[1, & _, ..., 3])"
 
 check:
   [each [1, 2, 3], ...] ~is [1, 2, 3]
@@ -998,7 +1008,7 @@ block:
 
 block:
   use_static
-  def los = List("a", "b", "c")
+  def los = List["a", "b", "c"]
   check los.get(0).length() ~is 1
 
 check:
