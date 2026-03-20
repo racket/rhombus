@@ -10,7 +10,7 @@
 
 @(def ALPN:
     @hyperlink("https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation"){ALPN})
-@(def RFC2818:    
+@(def RFC2818:
     @hyperlink("http://www.ietf.org/rfc/rfc2818.txt"){RFC 2818})
 
 @(def envvar = tt)
@@ -113,7 +113,7 @@ provided by the operating system.
  not reported to the connection peer.
 
  If an error is encountered during the protocol initialization, then
- @rhombus(exn) is used to construct the exception that is raised.
+ @rhombus(exn) is used to construct the exception that is thrown.
  Supplying @rhombus(Exn.Fail.Network) as @rhombus(exn) might be useful,
  for example.
 
@@ -355,7 +355,7 @@ provided by the operating system.
   fun ssl.Context.Server(
     ~private_key: private_key :: maybe(ssl.Context.PrivateKey) = #false,
     ~certificate_chain: certificate_chain :: maybe(Path) = #false
-  ) :: ssl.Context.Server  
+  ) :: ssl.Context.Server
 ){
 
  A @rhombus(ssl.Context, ~annot) represents a security configuration for
@@ -380,7 +380,7 @@ provided by the operating system.
   )
 
   annot.macro 'ssl.Context.VerifySource'
-  
+
   fun ssl.Context.VerifySource.default()
     :: ssl.Context.VerifySource
   fun ssl.Context.VerifySource.file(path :: PathString)
@@ -392,7 +392,7 @@ provided by the operating system.
   fun ssl.Context.VerifySource.mac_keychain(path :: maybe(PathString))
     :: ssl.Context.VerifySource
 
-  property (vs :: ssl.Context.VerifySource).handle  
+  property (vs :: ssl.Context.VerifySource).handle
 ){
 
  The @rhombus(ssl.Context.load_verify_source) method loads verification
@@ -462,7 +462,7 @@ provided by the operating system.
   )
 
   annot.macro 'ssl.Context.PrivateKey'
-  
+
   fun ssl.Context.PrivateKey.pem(path :: PathString)
     :: ssl.Context.PrivateKey
   fun ssl.Context.PrivateKey.pem_bytes(bstr :: Bytes)
@@ -470,8 +470,8 @@ provided by the operating system.
   fun ssl.Context.PrivateKey.der(path :: PathString)
     :: ssl.Context.PrivateKey
 
-  property (vs :: ssl.Context.PrivateKey).handle  
-  
+  property (vs :: ssl.Context.PrivateKey).handle
+
   enum ssl.Context.KeyKind
   | rsa
   | any

@@ -504,7 +504,7 @@
   @rhombus(statinfo_meta.pack_group)).}
 
   @item{The @rhombus(annotation_string) field describes the annotation,
-  which is useful for raising an exception when conversion fails.}
+  which is useful for throwing an exception when conversion fails.}
 
 )
 

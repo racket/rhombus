@@ -13,7 +13,7 @@ namespace error:
   export:
     Who
 
-    // constructs full message without raising it
+    // constructs full message without throwng it
     message
 
     // builders of main message test
