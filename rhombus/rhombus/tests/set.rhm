@@ -220,6 +220,11 @@ check:
   ~completes
 
 check:
+  def Set{"x", "y"}  = {"x"}
+  "oops"
+  ~throws "matching(Set{\"x\", \"y\"})"
+
+check:
   def {"x", key, ...} = {"x", "y", "z"}
   {key, ...}
   ~is {"y", "z"}

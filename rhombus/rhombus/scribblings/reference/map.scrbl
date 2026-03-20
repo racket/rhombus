@@ -334,6 +334,10 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
 @examples(
   def Map{"x": x, "y": y} = {"x": 1, "y": 2}
   y
+  def Map(["x", also_x], ["y", also_y]) = {"x": 1, "y": 2}
+  also_y
+  ~error:
+    def Map{"x": x, "y": y} = {"x": 1}
   def Map{"a": a, "z": z = 0} = {"a": 1, "b": 2, "c": 3}
   [a, z]
   def Map{"a": _, & rst} = {"a": 1, "b": 2, "c": 3}
@@ -341,6 +345,9 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   def Map{"a": _, key: val, ...} = {"a": 1, "b": 2, "c": 3}
   [key, ...]
   [val, ...]
+  def ReadableMap{"a": a, & rst} = MutableMap{"a": 1, "b": 2, "c": 3}
+  a
+  rst
   match Map.by(===){}
   | Map.by(==){}: "by equal"
   | Map.by(===){}: "by object identity"

@@ -278,7 +278,8 @@
                                                all-annotation-strs
                                                (reverse (list-tail (reverse all-annotation-strs) num-post-strs)))
                                            rest-annotation-str
-                                           (list-tail all-annotation-strs (- (length all-annotation-strs) num-post-strs))
+                                           (and (not (zero? num-post-strs))
+                                                (list-tail all-annotation-strs (- (length all-annotation-strs) num-post-strs)))
                                            #:rest-repetition? rest-repetition?
                                            #:rest-repetition-min rest-repetition-min
                                            #:rest-repetition-max rest-repetition-max)
@@ -627,8 +628,10 @@
            [(eqv? rest-repetition-max 1) " ~once"]
            [else ""]))
         "")
-    (args-string post-arg-annotation-strs (and (null? arg-annotation-strs)
-                                               (not rest-annotation-str)))
+    (if post-arg-annotation-strs
+        (args-string post-arg-annotation-strs (and (null? arg-annotation-strs)
+                                                   (not rest-annotation-str)))
+        "")
     close)))
 
 (define-for-syntax (deepen-repetition bind-infos rest-to-repetition no-rest-map?)

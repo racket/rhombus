@@ -123,7 +123,7 @@ elements strongly or both weakly, and have the same elements.
  @rhombus(#%braces)).
 
  Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
- while @braces does not, since @rhombus({}) produces an empty map
+ while @rhombus({}) does not, since @rhombus({}) produces an empty map
  instead.
 
  The @rhombus(Set.by) variants create a set that uses the equality and
@@ -185,6 +185,7 @@ elements strongly or both weakly, and have the same elements.
 
 @examples(
   def Set{"x", "y"} = {"x", "y"}
+  def Set("x", "y")  = {"x", "y"}
   ~error:
     def Set{"x", "y"} = {"x"}
   def Set{"a"} = {"a", "b"}
@@ -192,6 +193,8 @@ elements strongly or both weakly, and have the same elements.
   rst
   def Set{"a", val, ...} = {"a", "b", "c"}
   [val, ...]
+  def ReadableSet{"a", & rst} = MutableSet{"a", "b", "c"}
+  rst
 )
 
 }
