@@ -209,14 +209,14 @@
    (lambda (stx ctx)
      (syntax-parse stx
        [(form-id (~and args (_::parens g)) . tail)
-        (values (annotation-predicate-form
-                 (relocate+reraw
-                  (datum->syntax #f (list #'form-id #'args))
+        (values (relocate+reraw
+                 (datum->syntax #f (list #'form-id #'args))
+                 (annotation-predicate-form
                   #`(let ([c (path-like-convention 'form-id (rhombus-expression g))])
                       (lambda (v)
                         (and (path-for-some-system? v)
-                             (eq? (path-convention-type v) c)))))
-                 (get-path-for-some-system-static-infos))
+                             (eq? (path-convention-type v) c))))
+                  (get-path-for-some-system-static-infos)))
                 #'tail)]))))
 
 (define (path-like-convention who v)

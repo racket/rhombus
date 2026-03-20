@@ -84,7 +84,8 @@ check_origins(annot_rhm,
                 #'Foo: 2,
                 #'Sequence: 1,
                 #'maybe: 1,
-                #'List: 2,
+                #'List: 3,
+                #'PairList: 1,
                 #'Map: 1,
                 #'False: 1,
                 #'OR: 2,
@@ -94,6 +95,7 @@ check_origins(annot_rhm,
                 #'#{\|\|}: 2,
                 #'#{!}: 1,
                 #'Function: 1,
+                #'Int: 6,
                 #'PosInt: 1,
                 #'NegInt: 1,
                 #'matching: 1 })
@@ -134,13 +136,13 @@ check_origins(defctx_rhm,
 
 check_origins(class_rhm,
               #false,
-              { #'method: 4,
+              { #'method: 5,
                 #'field: 2,
                 #'property: 1 })
 
 check_origins(class_rhm,
               #'#{rhombus/annot},
-              { #'String: 3,
+              { #'String: 4,
                 #'Bytes: 1})
 
 check_origins(for_rhm,

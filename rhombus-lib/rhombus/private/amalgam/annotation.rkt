@@ -1251,15 +1251,17 @@
    'macro
    (lambda (stxes ctx)
      (syntax-parse stxes
-       [(_ (_::parens n-g) . tail)
-        (values (annotation-predicate-form
-                 #`(let ([n (rhombus-expression n-g)])
-                     (unless (real? n)
-                       (raise-annotation-failure '#,id n "Real"))
-                     (lambda (v)
-                       (and (real? v)
-                            (#,comp-stx v n))))
-                 #'())
+       [(form-id (~and p (_::parens n-g)) . tail)
+        (values (relocate+reraw
+                 (datum->syntax #f (list #'form-id #'p))
+                 (annotation-predicate-form
+                  #`(let ([n (rhombus-expression n-g)])
+                      (unless (real? n)
+                        (raise-annotation-failure '#,id n "Real"))
+                      (lambda (v)
+                        (and (real? v)
+                             (#,comp-stx v n))))
+                  #'()))
                 #'tail)]))))
 
 (define-annotation-syntax Real.above (make-unary-real-annotation (annot-quote Real.above) #'>))
@@ -1416,18 +1418,19 @@
    (lambda (stxes ctx)
      (syntax-parse stxes
        #:datum-literals (group)
-       [(_ (_::parens g ...)
-           . tail)
+       [(form-id (~and p (_::parens g ...)) . tail)
         (with-syntax ([(lit ...) (generate-temporaries #'(g ...))])
-          (values (annotation-predicate-form
-                   #'(let ([lit (rhombus-expression g)]
-                           ...)
-                       (lambda (v)
-                         (or (equal-always? lit v)
-                             ...)))
-                   (if (null? (syntax->list #'(lit ...)))
-                       #'((#%none #true))
-                       #'()))
+          (values (relocate+reraw
+                   (datum->syntax #f (list #'form-id #'p))
+                   (annotation-predicate-form
+                    #'(let ([lit (rhombus-expression g)]
+                            ...)
+                        (lambda (v)
+                          (or (equal-always? lit v)
+                              ...)))
+                    (if (null? (syntax->list #'(lit ...)))
+                        #'((#%none #true))
+                        #'())))
                   #'tail))]))))
 
 (define-annotation-syntax Any.to_boolean
@@ -1449,9 +1452,11 @@
                         (respan form)
                         id))
   (define data (if (treelist? v) (treelist->list v) v))
-  (annotation-predicate-form
-   #'(lambda (x) #t)
-   #`((#%dependent-result (#,accessor-id #,(make-data data))))))
+  (relocate+reraw
+   (respan form)
+   (annotation-predicate-form
+    #'(lambda (x) #t)
+    #`((#%dependent-result (#,accessor-id #,(make-data data)))))))
 
 (define-for-syntax (make-like accessor-id)
   (annotation-prefix-operator

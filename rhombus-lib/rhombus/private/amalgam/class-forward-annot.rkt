@@ -1,11 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt"
+                     "origin.rkt")
          "static-info.rkt"
          "annotation.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "define-arity.rkt" for-info)
-         "call-result-key.rkt"
          "values-key.rkt"
          (submod "function-parse.rkt" for-build))
 
@@ -49,16 +49,26 @@
       [c-parsed::annotation-predicate-form
        #`(define-annotation-syntax #,forward-id
            (forwarding-annotation (lambda ()
-                                    (annotation-predicate-form
-                                     (quote-syntax c-parsed.predicate)
-                                     #'()))))]
+                                    (define parsed (quote-syntax c-parsed))
+                                    (transfer-origin
+                                     parsed
+                                     (relocate+reraw
+                                      parsed
+                                      (annotation-predicate-form
+                                       (quote-syntax c-parsed.predicate)
+                                       #'()))))))]
       [c-parsed::annotation-binding-form
        #`(define-annotation-syntax #,forward-id
            (forwarding-annotation (lambda ()
-                                    (annotation-binding-form
-                                     (quote-syntax c-parsed.binding)
-                                     (quote-syntax c-parsed.body)
-                                     #'()))))])))
+                                    (define parsed (quote-syntax c-parsed))
+                                    (transfer-origin
+                                     parsed
+                                     (relocate+reraw
+                                      parsed
+                                      (annotation-binding-form
+                                       (quote-syntax c-parsed.binding)
+                                       (quote-syntax c-parsed.body)
+                                       #'()))))))])))
 
 (define-for-syntax (forwarding-annotation get)
   (annotation-prefix-operator

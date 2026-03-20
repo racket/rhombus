@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      enforest/syntax-local
                      enforest/hier-name-parse
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     "srcloc.rkt")
          "definition.rkt"
          (submod "annotation.rkt" for-class)
          "parens.rkt"
@@ -57,14 +58,17 @@
               (define-syntax #,(in-annotation-space #'name)
                 (letrec ([self (make-delayed-annotation
                                 (lambda (stx ctx)
-                                  (values (annotation-predicate-form
-                                           #'delayed-predicate
-                                           #'((#%indirect-static-info delayed-static-info)))
-                                          (syntax-parse stx
-                                            [(_ . tail) #'tail]
-                                            [_ 'does-not-happen])))
-                                #'set-delayed-predicate!
-                                #'delayed-static-info)])
+                                  (syntax-parse stx
+                                    [(head . tail)
+                                     (values (relocate+reraw
+                                              #'head
+                                              (annotation-predicate-form
+                                               (quote-syntax delayed-predicate)
+                                               (quote-syntax ((#%indirect-static-info delayed-static-info)))))
+                                             #'tail)]
+                                    [_ 'does-not-happen]))
+                                (quote-syntax set-delayed-predicate!)
+                                (quote-syntax delayed-static-info))])
                   self))))]))))
 
 (define-defn-syntax delayed_complete

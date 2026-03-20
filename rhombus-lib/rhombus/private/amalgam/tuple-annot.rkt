@@ -2,18 +2,12 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "tag.rkt"
-                     "annot-context.rkt")
+                     "origin.rkt")
          racket/treelist
-         "binding.rkt"
          "parse.rkt"
          (submod "annotation.rkt" for-class)
          (only-in "annotation.rkt" ::)
-         "static-info.rkt"
-         "index-key.rkt"
-         "call-result-key.rkt"
          "index-result-key.rkt"
-         "parens.rkt"
          (rename-in "ellipsis.rkt"
                     [... rhombus...]))
 
@@ -95,36 +89,38 @@
                                   #'(rhombus-expression (group List (brackets (group arg-id) ... (group last-id) ... last-dots ...)))
                                   #`((#%index-result #,si)
                                      . #,treelist-static-infos))])))
-  (relocate+reraw
-   (datum->syntax #f src-stxes)
-   (cond
-     [last-ann
-      (syntax-parse anns
-        [(ann::annotation-predicate-form ...)
-         #:with last-ann::annotation-predicate-form last-ann
-         (build-predicate-annotation base-pred
-                                     #'(ann.predicate ...)
-                                     #'(ann.static-infos ...)
-                                     #'last-ann.predicate
-                                     #'last-ann.static-infos)]
-        [(ann::annotation-binding-form ...)
-         #:with last-ann::annotation-binding-form last-ann
-         (build-converter-annotation base-pred
-                                     anns
-                                     #'(ann.static-infos ...)
-                                     #'last-ann
-                                     #'last-ann.static-infos)])]
-     [else
-      (syntax-parse anns
-        [(ann::annotation-predicate-form ...)
-         (build-predicate-annotation base-pred
-                                     #'(ann.predicate ...)
-                                     #'(ann.static-infos ...)
-                                     #f
-                                     #f)]
-        [(ann::annotation-binding-form ...)
-         (build-converter-annotation base-pred
-                                     anns
-                                     #'(ann.static-infos ...)
-                                     #f
-                                     #f)])])))
+  (transfer-origins
+   (syntax->list anns)
+   (relocate+reraw
+    (datum->syntax #f src-stxes)
+    (cond
+      [last-ann
+       (syntax-parse anns
+         [(ann::annotation-predicate-form ...)
+          #:with last-ann::annotation-predicate-form last-ann
+          (build-predicate-annotation base-pred
+                                      #'(ann.predicate ...)
+                                      #'(ann.static-infos ...)
+                                      #'last-ann.predicate
+                                      #'last-ann.static-infos)]
+         [(ann::annotation-binding-form ...)
+          #:with last-ann::annotation-binding-form last-ann
+          (build-converter-annotation base-pred
+                                      anns
+                                      #'(ann.static-infos ...)
+                                      #'last-ann
+                                      #'last-ann.static-infos)])]
+      [else
+       (syntax-parse anns
+         [(ann::annotation-predicate-form ...)
+          (build-predicate-annotation base-pred
+                                      #'(ann.predicate ...)
+                                      #'(ann.static-infos ...)
+                                      #f
+                                      #f)]
+         [(ann::annotation-binding-form ...)
+          (build-converter-annotation base-pred
+                                      anns
+                                      #'(ann.static-infos ...)
+                                      #f
+                                      #f)])]))))

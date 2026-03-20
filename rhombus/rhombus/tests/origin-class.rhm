@@ -23,3 +23,8 @@ class Ghost():
       10
   | z := w :: String:
       #void
+
+class Boo():
+  method
+  | m() :: String:
+      "hello"

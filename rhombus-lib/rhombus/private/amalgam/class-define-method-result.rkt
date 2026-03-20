@@ -52,10 +52,13 @@
                          "\n non-final method cannot have a converter annotation")
                         #'id
                         #'ret))
-                     (values (converter-proc cvtr)
+                     (define proc (converter-proc cvtr))
+                     (define count (converter-count cvtr))
+                     (values proc
                              predicate?
-                             (converter-count cvtr)
-                             (attribute ret.annot-str)
+                             count
+                             (and proc
+                                  (attribute ret.annot-str))
                              #'ret.static-infos))]
                [else (values #f #t #f #f #'())]))
            (define super-results

@@ -371,3 +371,21 @@ check:
   fun test(a :: Int.in(-128 ..= 127), b :: Int.in(-128 ..= 127)):
     a > b
   ~completes
+
+check:
+  0 :: Real.above(1) ~throws values(
+    error.annot("Real.above(1)").msg,
+    error.val(0).msg,
+  )
+  0 :: Real.at_least(1) ~throws values(
+    error.annot("Real.at_least(1)").msg,
+    error.val(0).msg,
+  )
+  0 :: Real.below(-1) ~throws values(
+    error.annot("Real.below(-1)").msg,
+    error.val(0).msg,
+  )
+  0 :: Real.at_most(-1) ~throws values(
+    error.annot("Real.at_most(-1)").msg,
+    error.val(0).msg,
+  )

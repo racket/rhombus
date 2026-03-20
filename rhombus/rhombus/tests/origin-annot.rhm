@@ -42,3 +42,6 @@ let x2 :~ Pt = 0
 let x3 :~ Function.of_arity(1) = 0
 
 1 is_a (PosInt || NegInt && !matching(2))
+
+[1, 2, 3] :: List.tuple_of[Int, Int, Int]
+PairList[1, 2, 3] :: PairList.tuple_of[Int, Int, Int]

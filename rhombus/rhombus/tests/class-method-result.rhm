@@ -499,3 +499,32 @@ block:
     Continuation.with_mark #'depth = "ok":
       Posn(1, 2).checked_m(3)
     ~is #false
+
+check:
+  interface I:
+    method m() :: Int
+  class C():
+    implements I
+    override m() :~ PosInt:
+      "oops"
+  C().m()
+  ~throws values(
+    "C.m: " ++ error.annot_msg("result"),
+    error.annot("Int").msg,
+    error.val(~label: "result", "oops").msg,
+  )
+
+check:
+  interface I:
+    method m() :: Int
+  class C():
+    implements I
+    override
+    | m() :: String:
+        "oops"
+  C().m()
+  ~throws values(
+    "C.m: " ++ error.annot_msg("result"),
+    error.annot("Int").msg,
+    error.val(~label: "result", "oops").msg,
+  )

@@ -50,6 +50,16 @@ block:
   check:
     10 :: Forward
     ~is 10
+  check:
+    use_static
+    (dynamic(1) :: Forward) < dynamic(2)
+    ~is #true
+  check:
+    "oops" :: Forward
+    ~throws values(
+      error.annot("Forward").msg,
+      error.val("oops").msg,
+    )
 
 block:
   namespace f:

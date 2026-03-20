@@ -357,3 +357,10 @@ block:
   check Path.Element.string(p) ~is "x"
   check p.bytes() ~is #"x/"
   check Path.Element.bytes(p) ~is #"x"
+
+check:
+  "oops" :: Path.like(Path("/"))
+  ~throws values(
+    error.annot("Path.like(Path(\"/\"))").msg,
+    error.val("oops").msg,
+  )

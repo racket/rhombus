@@ -405,3 +405,10 @@ check:
   is_always_satisfied matching(_ :~ Int) ~is #true
   is_always_satisfied assuming(Int) ~is #true
   is_always_satisfied assuming(List.of(Int)) ~is #true
+
+check:
+  #'oops :: Any.of(#'a, #'b, #'c)
+  ~throws values(
+    error.annot("Any.of(#'a, #'b, #'c)").msg,
+    error.val(#'oops).msg,
+  )
