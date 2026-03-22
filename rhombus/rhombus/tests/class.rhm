@@ -1663,3 +1663,15 @@ block:
     final override method am2(): "am2"
     final override property ap: "ap"
   check C3().get() ~is ["am", "am2", "ap"]
+
+// check annotation strings of generated bindings
+block:
+  class Interleave(x, ~y, z, ~w)
+  check:
+    def Interleave(x :: Int, z :: Int) = Interleave("oops", ~y: "no", "well", ~w: "nah")
+    "oops"
+    ~throws "matching(Interleave(_ :: Int, ~y: _, _ :: Int, ~w: _))"
+  check:
+    def Interleave(~y: y :: Int, x :: Int, z :: Int, ~w: w :: Int) = Interleave("oops", ~y: "no", "well", ~w: "nah")
+    "oops"
+    ~throws "matching(Interleave(_ :: Int, ~y: _ :: Int, _ :: Int, ~w: _ :: Int))"

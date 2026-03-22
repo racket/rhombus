@@ -8,8 +8,6 @@
          annotation-string-convert-pair)
 
 (define annotation-any-string "Any")
-(define annotation-complex-any-string "(_ :: Any)")
-
 (define annotation-none-string "None")
 
 (define (annotation-string-from-pattern p)
@@ -21,7 +19,7 @@
      => (lambda (m) (cadr m))]
     [(equal? s annotation-any-string) "_"]
     [else
-     (string-append "(_ :: " s ")")]))
+     (string-append "_ :: " s)]))
 
 (define (annotation-string-and a b)
   (cond
@@ -63,10 +61,10 @@
                     [(zero? depth)
                      (define spaced? (and ((add1 i) . < . (string-length s))
                                           (char=? #\space (string-ref s (add1 i)))))
-                     (string-append (simplify-any (substring s 0 i))
+                     (string-append (substring s 0 i)
                                     ":"
                                     (if spaced? " " "")
-                                    (simplify-any (substring s (+ i (if spaced? 2 1)))))]
+                                    (substring s (+ i (if spaced? 2 1))))]
                     [else
                      (loop (add1 i) depth)])]
                  [(#\( #\[ #\{)
@@ -76,8 +74,3 @@
                  [else
                   (loop (add1 i) depth)])])))]
     [else s]))
-
-(define (simplify-any s)
-  (if (equal? annotation-complex-any-string s)
-      "_"
-      s))

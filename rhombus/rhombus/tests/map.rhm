@@ -342,7 +342,7 @@ check:
 
 check:
   def {"x": x, "y": y} = {"x": 1}
-  [x, y]
+  "oops"
   ~throws "matching(Map{\"x\": _, \"y\": _})"
 
 check:
@@ -351,9 +351,19 @@ check:
   ~is [1, 2]
 
 check:
+  def {"x": x, "y": y = 2} = {}
+  "oops"
+  ~throws "matching(Map{\"x\": _, \"y\": _ = ....})"
+
+check:
   def {"x": x, "y": y: 2} = {"x": 1}
   [x, y]
   ~is [1, 2]
+
+check:
+  def {"x": x, "y": y: 2} = {}
+  "oops"
+  ~throws "matching(Map{\"x\": _, \"y\": _ = ....})"
 
 check:
   def {"x": x = 1, "y": y = 2} = {}
@@ -521,6 +531,11 @@ check:
   def {"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
   [x, {key, ...}, {val, ...}]
   ~is [1, {"y", "z"}, {2, 3}]
+
+check:
+  def {"x": x, key: val, ...} = {"y": 2, "z": 3}
+  "oops"
+  ~throws "matching(Map{\"x\": _, _: _, ...})"
 
 check:
   def Map{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}

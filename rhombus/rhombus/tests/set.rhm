@@ -230,6 +230,21 @@ check:
   ~is {"y", "z"}
 
 check:
+  def {"x", key, ...} = {"y", "z"}
+  "oops"
+  ~throws "matching(Set{\"x\", _, ...})"
+
+check:
+  def {"x", & rst} = {"x", "y", "z"}
+  rst
+  ~is {"y", "z"}
+
+check:
+  def {"x", & rst} = {"y", "z"}
+  "oops"
+  ~throws "matching(Set{\"x\", & _})"
+
+check:
   def Set{"x", key, ...} = {"x", "y", "z"}
   {key, ...}
   ~is {"y", "z"}

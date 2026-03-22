@@ -208,3 +208,19 @@ block:
   check b.value.length() ~is 1
   check Box.value(b).length() ~is 1
   check Box.snapshot(b).value.length() ~is 1
+
+// check bindings
+check:
+  def Box(x) = Box(1)
+  x
+  ~is 1
+
+check:
+  def Box(x) = Box(1).copy()
+  x
+  ~is 1
+
+check:
+  def Box(s :: String) = Box(1)
+  "oops"
+  ~throws "matching(Box(_ :: String))"

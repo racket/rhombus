@@ -1,11 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/keyword
                      syntax/parse/pre
                      shrubbery/property
                      "annotation-string.rkt"
                      "tag.rkt"
                      "keyword-sort.rkt"
-                     "maybe-as-original.rkt"
                      "origin.rkt"
                      "srcloc.rkt")
          racket/treelist
@@ -35,7 +35,7 @@
                                                   #:rest-arg [rest-arg #f]
                                                   #:post-args [post-args null]
                                                   #:stx-info [stx-in #f]
-                                                  constructor-str ; string name for constructor or map list, used for contract
+                                                  kind+constructor-str ; see `build-annotation-str`
                                                   predicate     ; predicate for the composite value
                                                   accessors     ; one accessor per component
                                                   static-infoss ; one set of static info per component
@@ -80,9 +80,9 @@
        (syntax->list #'(a.parsed ... rest-a.parsed ... post-a.parsed ...))
        (binding-form
         #'composite-infoer
-        #`(#,constructor-str
+        #`(#,kind+constructor-str
            #,predicate #,composite-static-infos #,bounds-key
-           #,steppers #,accessors #,static-infoss
+           #,steppers #,accessors #,static-infoss #,keywords
            (a-parsed.infoer-id ... post-a-parsed.infoer-id ...) (a-parsed.data ... post-a-parsed.data ...)
            #,(length post-args)
            #,accessor->info? #,index-result-info? #,sequence-element-info? #,list-index-static-infos? #,stream-element-info?
@@ -101,9 +101,9 @@
 
 (define-syntax (composite-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (constructor-str
+    [(_ static-infos (kind+constructor-str
                       predicate init-composite-static-infos bounds-key
-                      steppers accessors ((static-info ...) ...)
+                      steppers accessors ((static-info ...) ...) keywords
                       (infoer-id ...) (data ...)
                       num-post
                       accessor->info? index-result-info? sequence-element-info? list-index-static-infos? stream-element-info?
@@ -273,7 +273,8 @@
                                   #'predicate)])
        (define all-annotation-strs (syntax->list #'(a-info.annotation-str ...)))
        (define num-post-strs (syntax-e #'num-post))
-       (binding-info (build-annotation-str #'constructor-str
+       (binding-info (build-annotation-str #'kind+constructor-str
+                                           #'keywords
                                            (if (zero? num-post-strs)
                                                all-annotation-strs
                                                (reverse (list-tail (reverse all-annotation-strs) num-post-strs)))
@@ -553,14 +554,15 @@
                                              (quote-syntax (rest-bind-static-info ...)))))
              ...))))))
 
-(define-for-syntax (build-annotation-str constructor-str
+(define-for-syntax (build-annotation-str kind+c-str-stx
+                                         kw-stxs-stx
                                          arg-annotation-strs
                                          rest-annotation-str
                                          post-arg-annotation-strs
                                          #:rest-repetition? rest-repetition?
                                          #:rest-repetition-min rest-repetition-min
                                          #:rest-repetition-max rest-repetition-max)
-  (define kind+c-str (syntax-e constructor-str))
+  (define kind+c-str (syntax-e kind+c-str-stx))
   (define kind (and (list? kind+c-str) (syntax-e (car kind+c-str))))
   (define-values (open close c-str key-strs default?s)
     (case kind
@@ -601,10 +603,19 @@
                  (annotation-string-to-pattern (syntax-e a-str))
                  (if (syntax-e default?) " = ...." "")))]
              [else
+              (define kw-stxs
+                (or (syntax->list kw-stxs-stx)
+                    (for/list ([a-str (in-list arg-annotation-strs)])
+                      #'#f)))
               (for/list ([a-str (in-list arg-annotation-strs)]
+                         [kw-stx (in-list kw-stxs)]
                          [i (in-naturals (if first? 0 1))])
+                (define kw (syntax-e kw-stx))
                 (string-append
                  (if (zero? i) "" ", ")
+                 (if kw
+                     (string-append "~" (keyword->immutable-string kw) ": ")
+                     "")
                  (annotation-string-to-pattern (syntax-e a-str))))])))
   (annotation-string-from-pattern
    (string-append
@@ -618,10 +629,9 @@
                       (null? key-strs)))
              ""
              ", ")
-         (annotation-string-to-pattern
-          (case rest-repetition?
-            [(pair) (annotation-string-convert-pair (syntax-e rest-annotation-str))]
-            [else (syntax-e rest-annotation-str)]))
+         (case rest-repetition?
+           [(pair) (annotation-string-convert-pair (syntax-e rest-annotation-str))]
+           [else (annotation-string-to-pattern (syntax-e rest-annotation-str))])
          (if rest-repetition? ", ..." "")
          (cond
            [(eqv? rest-repetition-min 1) " ~nonempty"]

@@ -106,8 +106,10 @@ the same according to @rhombus(is_now).
 @examples(
   def Box(x) = Box(1)
   x
+  def Box(also_x) = Box(1).copy()
+  also_x
   ~error:
-    def Box(sv :: String) = Box(1)
+    def Box(s :: String) = Box(1)
 )
 
 }
