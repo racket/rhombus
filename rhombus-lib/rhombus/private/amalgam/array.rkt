@@ -376,7 +376,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (define (build args len pred rest-arg form-id tail)
+     (define (build args len pred rest-arg nonempty? form-id tail)
        (composite-binding-transformer #`(#,form-id (parens . #,args) . #,tail)
                                       #:rest-arg rest-arg
                                       "Array"
@@ -390,23 +390,24 @@
                                       #:index-result-info? #t
                                       #:rest-accessor (and rest-arg #`(lambda (v) (vector-drop v #,len)))
                                       #:rest-to-repetition #'in-vector
-                                      #:rest-repetition? (and rest-arg #t)))
+                                      #:rest-repetition? (and rest-arg #t)
+                                      #:rest-repetition-min (if nonempty? 1 0)))
      (syntax-parse stx
+       #:datum-literals (group)
        [(form-id (tag::parens arg ... rest-arg (group _::...-bind
-                                                      (~or (~seq) (~seq (~and nonempty #:nonempty)))))
+                                                      (~optional (~seq (~and nonempty #:nonempty)))))
                  . tail)
         (define args (syntax->list #'(arg ...)))
         (define len (length args))
+        (define nonempty? (and (attribute nonempty) #t))
         (define pred #`(lambda (v)
                          (and (vector? v)
-                              (>= (vector-length v) #,(+ len (if (attribute nonempty)
-                                                                 1
-                                                                 0))))))
-        (build args len pred #'rest-arg #'form-id #'tail)]
+                              (>= (vector-length v) #,(+ len (if nonempty? 1 0))))))
+        (build args len pred #'rest-arg nonempty? #'form-id #'tail)]
        [(form-id (tag::parens arg ...) . tail)
         (define args (syntax->list #'(arg ...)))
         (define len (length args))
         (define pred #`(lambda (v)
                          (and (vector? v)
                               (= (vector-length v) #,len))))
-        (build args len pred #f #'form-id #'tail)]))))
+        (build args len pred #f #f #'form-id #'tail)]))))

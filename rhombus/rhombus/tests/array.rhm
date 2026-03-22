@@ -196,6 +196,16 @@ check:
   ~completes
 
 check:
+  def Array(0, x, y) = Array(0, 1, 2)
+  [x, y]
+  ~is [1, 2]
+
+check:
+  def Array(0, x, y) = Array(0, 2)
+  "oops"
+  ~throws "matching(Array(0, _, _))"
+
+check:
   def Array(0, _, ...) = Array(0, 1, 2)
   ~completes
 
@@ -204,9 +214,14 @@ check:
   ~completes
 
 check:
+  def Array(0, _, ...) = Array()
+  "oops"
+  ~throws "matching(Array(0, _, ...))"
+
+check:
   def Array(0, _, ... ~nonempty) = Array(0)
-  "ok"
-  ~throws error.annot_msg()
+  "oops"
+  ~throws "matching(Array(0, _, ... ~nonempty))"
 
 check:
   def Array(0, x, ...) = Array(0, 1, 2)
