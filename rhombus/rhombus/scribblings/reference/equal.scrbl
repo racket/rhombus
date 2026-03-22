@@ -135,8 +135,8 @@ See also @secref("Equatables").
 
 @examples(
   ~repl:
-    #"apple" is_now Bytes.copy(#"apple")
-    #"apple" == Bytes.copy(#"apple")
+    #"apple" is_now #"apple".copy()
+    #"apple" == #"apple".copy()
   ~defn:
     class Posn(mutable x, mutable y)
   ~repl:

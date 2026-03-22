@@ -137,15 +137,15 @@ check:
   (#'apple :~ Indexable)[0] ~throws values(
     "Indexable.get: " ++ error.annot_msg(),
     error.annot("Indexable").msg,
-    "#'apple",
+    error.val(#'apple).msg,
   )
   ("apple" :~ MutableIndexable)[0] := Char"b" ~throws values(
     "MutableIndexable.set: " ++ error.annot_msg(),
     error.annot("MutableIndexable").msg,
-    "\"apple\"",
+    error.val("apple").msg,
   )
   ("apple".copy() :~ MutableIndexable)[0] := Char"b" ~throws values(
     "MutableIndexable.set: " ++ error.annot_msg(),
     error.annot("MutableIndexable").msg,
-    "String.copy(\"apple\")",
+    error.val("apple".copy()).msg,
   )

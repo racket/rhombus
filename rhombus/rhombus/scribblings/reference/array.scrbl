@@ -151,6 +151,8 @@ pairwise equal by @rhombus(==).
 @examples(
   def Array(1, x, y) = Array(1, 2, 3)
   y
+  def Array(1, also_x, also_y) = Array(1, 2, 3).snapshot()
+  also_y
   ~error:
     def Array(1, x, y) = Array(1, 3)
   def Array(1, z, ...) = Array(1, 2, 3)

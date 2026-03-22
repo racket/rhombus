@@ -158,6 +158,7 @@ check:
 check:
   to_string(Box(1)) ~is "Box(1)"
   to_string(Box(2)) ~is "Box(2)"
+  to_string(Box(3).snapshot()) ~is "Box(3).snapshot()"
 
 check:
   def b = Box(0)
@@ -186,7 +187,7 @@ check:
   ~throws values(
     "Box.value: " ++ error.annot_msg(),
     error.annot("MutableBox").msg,
-    error.val(Box.snapshot(Box(1))).msg,
+    error.val(Box(1).snapshot()).msg,
   )
 
 block:
@@ -216,7 +217,7 @@ check:
   ~is 1
 
 check:
-  def Box(x) = Box(1).copy()
+  def Box(x) = Box(1).snapshot()
   x
   ~is 1
 

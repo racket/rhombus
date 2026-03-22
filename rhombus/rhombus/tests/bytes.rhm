@@ -162,7 +162,7 @@ check:
   to_string(#"hello") ~is "hello"
   to_string(#"hello".copy()) ~is "hello"
   to_string(#"hello", ~mode: #'expr) ~is "#\"hello\""
-  to_string(#"hello".copy(), ~mode: #'expr) ~is "Bytes.copy(#\"hello\")"
+  to_string(#"hello".copy(), ~mode: #'expr) ~is "#\"hello\".copy()"
 
 block:
   use_static

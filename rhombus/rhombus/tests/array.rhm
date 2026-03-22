@@ -201,6 +201,11 @@ check:
   ~is [1, 2]
 
 check:
+  def Array(0, x, y) = Array(0, 1, 2).snapshot()
+  [x, y]
+  ~is [1, 2]
+
+check:
   def Array(0, x, y) = Array(0, 2)
   "oops"
   ~throws "matching(Array(0, _, _))"
@@ -459,6 +464,7 @@ block:
 check:
   to_string(Array()) ~is "Array()"
   to_string(Array(1, 2, 3)) ~is "Array(1, 2, 3)"
+  to_string(Array(1, 2, 3, 4, 5).snapshot()) ~is "Array(1, 2, 3, 4, 5).snapshot()"
 
 check:
   def a = Array(1, 2, 3)
@@ -503,7 +509,7 @@ check:
   ~throws values(
     "Array.set: " ++ error.annot_msg(),
     error.annot("MutableArray").msg,
-    error.val(Array.snapshot(Array(1, 2, 3))).msg,
+    error.val(Array(1, 2, 3).snapshot()).msg,
   )
 
 check:

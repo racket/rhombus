@@ -279,8 +279,17 @@
 (define (pretty v mode ht)
   (maybe-print-immediate v pretty-display pretty-write pretty-concat pretty-other mode ht))
 
-(define get-exn-name (lambda (v) (object-name v)))
-(define (set-get-exn-name! proc) (set! get-exn-name proc))
+(define (pretty-dot lhs rhs)
+  (define single-line
+    (pretty-concat lhs rhs))
+  (define multi-line
+    (pretty-concat lhs
+                   (pretty-nest 2 (pretty-concat (pretty-newline) rhs))))
+  (cond
+    [(current-print-as-pretty)
+     (pretty-or single-line
+                multi-line)]
+    [else single-line]))
 
 (define (pretty-other v mode ht)
   (define (display?) (eq? mode 'text))
@@ -331,16 +340,13 @@
         (default-struct-print v (lambda (v [mode mode]) (pretty v mode ht)))))]
     ;; (byte) strings at this point are mutable
     ;; refer to `maybe-print-immediate`
-    [(or (and (string? v) "String.copy(")
-         (and (bytes? v) "Bytes.copy("))
-     => (lambda (pre)
-          (fresh-ref
-           v
-           (lambda ()
-             (pretty-listlike
-              (pretty-text pre)
-              (list (pretty-write v))
-              (pretty-text ")")))))]
+    [(or (string? v)
+         (bytes? v))
+     (fresh-ref
+      v
+      (lambda ()
+        (pretty-dot (pretty-write v)
+                    (pretty-text ".copy()"))))]
     [(treelist? v)
      (pretty-listlike
       (pretty-text "[")
@@ -377,10 +383,8 @@
         (pretty-text ")")))
      (if (mutable-vector? v)
          (fresh-ref v print-mutable-array)
-         (pretty-listlike
-          (pretty-text "Array.snapshot(")
-          (list (print-mutable-array))
-          (pretty-text ")")))]
+         (pretty-dot (print-mutable-array)
+                     (pretty-text ".snapshot()")))]
     [(box? v)
      (define (print-mutable-box)
        (pretty-listlike
@@ -389,10 +393,8 @@
         (pretty-text ")")))
      (if (mutable-box? v)
          (fresh-ref v print-mutable-box)
-         (pretty-listlike
-          (pretty-text "Box.snapshot(")
-          (list (print-mutable-box))
-          (pretty-text ")")))]
+         (pretty-dot (print-mutable-box)
+                     (pretty-text ".snapshot()")))]
     [(hash? v)
      (fresh-ref
       #:when (mutable-hash? v)
@@ -486,8 +488,8 @@
             null))
       (pretty-text ")"))]
     [(map-maybe? v)
-     (pretty-concat (print (map-maybe-ht v))
-                    (pretty-text ".maybe"))]
+     (pretty-dot (print (map-maybe-ht v))
+                 (pretty-text ".maybe"))]
     [(stream? v)
      (if (stream-empty? v)
          (pretty-text "Stream.empty")
@@ -512,6 +514,9 @@
         (racket-print (racket-print-redirect v) rop 1)
         (display "}" rop)
         (pretty-text (get-output-bytes rop))])]))
+
+(define get-exn-name (lambda (v) (object-name v)))
+(define (set-get-exn-name! proc) (set! get-exn-name proc))
 
 (define (default-struct-print v recur)
   (define vec (struct->vector v))
