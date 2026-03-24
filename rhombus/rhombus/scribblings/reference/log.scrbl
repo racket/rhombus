@@ -1,6 +1,7 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     scribble/bnf
     meta_label:
       rhombus/thread.Evt)
@@ -126,9 +127,10 @@ would produce a run-time error if evaluated.
       ~topic: topic :: maybe(Symbol) = #false,
       ~parent: parent :: maybe(Logger) = Logger.current(),
       ~propagate: propagate
-                   :: (Logger.Level || Map.of(maybe(Symbol), Logger.Level))
-                   = #'debug
+                    :: Logger.Level || Map.of(maybe(Symbol), Logger.Level)
+                    = #'debug
     )
+  property (lg :: Logger).topic :: maybe(Symbol)
 ){
 
  Creates a @tech{logger} with @rhombus(parent) as an optional
@@ -172,9 +174,10 @@ would produce a run-time error if evaluated.
   ~nonterminal_key:
     Logger
   ~nonterminal:
+     expr: block expr
      str_expr: block expr
 
-  dot (lg :: Logger).debug(message)
+  dot (lg :: Logger).debug($message)
   dot (lg :: Logger).info($message)
   dot (lg :: Logger).warning($message)
   dot (lg :: Logger).error($message)
@@ -182,8 +185,8 @@ would produce a run-time error if evaluated.
 
   grammar message
   | str_expr
-  | str_expr #,(@tt{,}) #,(@rhombus(~data: expr))
-  | #,(@rhombus(~data: expr)) #,(@tt{,}) str_expr
+  | str_expr #,(@litchar{,}) #,(@rhombus(~data: expr))
+  | #,(@rhombus(~data: expr)) #,(@litchar{,}) str_expr
 ){
 
  Registers an event to forward to parents and receivers of @rhombus(lg).
@@ -202,7 +205,7 @@ would produce a run-time error if evaluated.
    ~level: level :: Logger.Level,
    ~topic: topic :: maybe(Symbol) = lg.topic,
    msg :: String,
-   ~data: data = #false,
+   ~data: data :: Any = #false,
    ~add_prefix: add_prefix :: Any.to_boolean = #true
  ) :: Void
 ){
@@ -238,10 +241,10 @@ would produce a run-time error if evaluated.
 
  method (lg :: Logger).max_at_level(
    ~topic: topic :: maybe(Symbol) = #false
- ) :~ maybe(Logger.Level)
+ ) :: maybe(Logger.Level)
 
  method (lg :: Logger).all_at_levels()
-   :~ Map.of(maybe(Symbol), Logger.Level)
+   :: Map.of(maybe(Symbol), Logger.Level)
 
  method (lg :: Logger).level_change_evt() :: Evt
 ){
@@ -272,7 +275,6 @@ would produce a run-time error if evaluated.
 
 @doc(
   class LogReceiver():
-    implements Evt
     constructor (
       ~logger: logger :: Logger = Logger.current(),
       ~receive: receive

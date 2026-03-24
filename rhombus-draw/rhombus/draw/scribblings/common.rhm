@@ -3,6 +3,7 @@
 import:
   meta_label:
     rhombus open
+    rhombus/meta.dot
     rhombus/draw open:
       except:
         Path
@@ -11,6 +12,7 @@ import:
 export:
   meta_label:
     all_from(rhombus)
+    dot
     all_from(rhombus/draw)
     draw
   ref_doc

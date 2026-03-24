@@ -2,8 +2,8 @@
 import:
   "version_guard.rhm"
 
-check log.topic ~is_a maybe(Logger.Level)
-check log.max_at_level() ~is_a Logger.Level
+check log.topic ~is_a maybe(Symbol)
+check log.max_at_level() ~is_a maybe(Logger.Level)
 check log == log ~is #true
 
 def l = Logger(~topic: #'test,
