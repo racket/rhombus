@@ -876,7 +876,7 @@ check_spacer:
     2: 2,
     3: 3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum: $datum,
     $datum: $datum,
     $datum: $datum,
@@ -900,7 +900,7 @@ check_spacer:
     2: 2,
     3: 3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum: $datum,
     $datum: $datum,
     $datum: $datum,
@@ -918,7 +918,7 @@ check_spacer:
     2: 2,
     3: 3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum: $datum,
     $datum: $datum,
     $datum: $datum,
@@ -936,7 +936,7 @@ check_spacer:
     2,
     3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum,
     $datum,
     $datum,
@@ -960,7 +960,7 @@ check_spacer:
     2,
     3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum,
     $datum,
     $datum,
@@ -978,7 +978,7 @@ check_spacer:
     2,
     3,
   }
-  $(expr.full) . $(expr.full) ($key_comp) {
+  $(expr.full) . $(expr.full) ($key_comp){
     $datum,
     $datum,
     $datum,
@@ -989,6 +989,14 @@ check_spacer:
     :: WeakMutableSet.by(===)
   $(expr.full) . $(expr.full) ($key_comp){}
     :: $(annot.full) . $(annot.full) ($key_comp)
+
+check_spacer:
+  Set(1, 2, 3)
+  $(expr.full)($datum, $datum, $datum)
+
+check_spacer:
+  Map([1, "1"], [2, "2"], [3, "3"])
+  $(expr.full)([$datum, $datum], [$datum, $datum], [$datum, $datum])
 
 check_spacer:
   operator_order.def a:
