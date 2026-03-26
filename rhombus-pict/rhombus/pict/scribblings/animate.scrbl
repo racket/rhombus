@@ -18,7 +18,7 @@
       || (Real.in(0, 1), ~deps: List.of(Pict)) -> StaticPict
       || (Real.in(0, 1), ~config: maybe(Map)) -> StaticPict
       || (Real.in(0, 1), ~deps: List.of(Pict), ~config: maybe(Map)) -> StaticPict,
-    ~dependencies: deps :: List.of(Pict) = [],
+    ~deps: deps :: List.of(Pict) = [],
     ~config: config = maybe(Map) = #false,
     ~extent: extent :: NonnegReal = 0.5,
     ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))

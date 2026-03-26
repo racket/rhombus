@@ -16,6 +16,7 @@ export:
   current_paren_color
   current_literal_color
   current_identifier_color
+  current_plain_color
   current_comment_color
   current_result_color
   current_rhombus_tt
@@ -25,6 +26,7 @@ Parameter.def current_rhombus_colorize :: Any.to_boolean = #true
 Parameter.def current_paren_color :: Color || String = "brown"
 Parameter.def current_literal_color :: Color || String = "forestgreen"
 Parameter.def current_identifier_color :: Color || String = "black"
+Parameter.def current_plain_color :: Color || String = "black"
 Parameter.def current_comment_color :: Color || String = "chocolate"
 Parameter.def current_result_color :: Color || String = "darkblue"
 
@@ -57,7 +59,8 @@ def (render_line,
                    match current_rhombus_colorize() && kind
                    | #'value: p.colorize(current_literal_color())
                    | #'result: p.colorize(current_result_color())
-                   | #'identifier || #'plain: p.colorize(current_identifier_color())
+                   | #'identifier: p.colorize(current_identifier_color())
+                   | #'plain: p.colorize(current_plain_color())
                    | #'paren: p.colorize(current_paren_color())
                    | #'comment: p.colorize(current_comment_color())
                    | #'lineno: p.colorize("blue").scale(0.8)

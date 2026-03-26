@@ -168,6 +168,8 @@ form form rendering literal shrubbery forms as a pict.
   Parameter.def current_literal_color :: Color || String:
     "forestgreen"
   Parameter.def current_identifier_color :: Color || String:
+    "navy"
+  Parameter.def current_plain_color :: Color || String:
     "black"
   Parameter.def current_comment_color :: Color || String:
     "chocolate"
