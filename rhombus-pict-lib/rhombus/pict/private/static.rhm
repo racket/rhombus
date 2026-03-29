@@ -1466,6 +1466,14 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
           dt,
           #false)
 
+  method translate(dx :: Real = 0, dy :: Real = 0):
+    _Find(q,
+          fun(p, q, epoch, n, nth):
+            def values(x, y) = find(p, q, epoch, n, nth)
+            values(x + dx, y + dy),
+          t_find_or_dt,
+          is_animated)
+
   method in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
             ~nth: nth :: Nat || matching(#'unique) = #'unique):
     let (x, y) = find(p, q, epoch, n, nth)

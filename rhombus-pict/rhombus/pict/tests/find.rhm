@@ -1,0 +1,14 @@
+#lang rhombus
+import:
+  pict open
+
+let circ = circle(~size: 50)
+let rect = rectangle()
+let circ_rect = stack.left(circ,rect)
+
+check:
+  Find.top_left(circ).in(circ) ~is values(0,0)
+  Find.top_left(circ).in(circ_rect) ~is values(0,0)
+  Find.top_left(rect).in(circ_rect) ~is values(0,50)
+  Find(circ).in(circ) ~is values(circ.width/2, circ.height/2)
+  Find.top_left(circ).translate(2,3).in(circ) ~is values(2,3)
