@@ -152,8 +152,21 @@
 ){
 
  Returns a @tech{finder} that is like @rhombus(finder), but where
- @rhombus(dt) is subtracted from the epoch hat is supplied to
+ @rhombus(dt) is subtracted from the epoch that is supplied to
  @rhombus(Find.in) or @rhombus(Find.maybe_in).
+
+}
+
+@doc(
+  method (finder :: Find).translate(
+    dx :: Real = 0,
+    dy :: Real = 0
+  ) :: Find
+){
+
+ Returns a @tech{finder} that is like @rhombus(finder), but where
+ @rhombus(dx) and @rhombus(dy) are added to the coordinates returned from
+ @rhombus(Find.in) and @rhombus(Find.maybe_in).
 
 }
 
