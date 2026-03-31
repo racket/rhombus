@@ -83,7 +83,7 @@ terminator instead of carriage return plus linefeed (CRLF). The default
  @rhombus(Port.eof) if @rhombus(inp) reports an immediate end-of-file.
  The @rhombus(csv.Reader.read_line) method can read multiple lines of
  input from @rhombus(inp) if the reader is configured to recognize
- comments, and in that case, the result is @rhombus(Port.eof) is an
+ comments, and in that case, the result is @rhombus(Port.eof) if an
  end-of-file is encountered after comment lines.
 
 }
@@ -134,14 +134,19 @@ terminator instead of carriage return plus linefeed (CRLF). The default
 
 @doc(~include rhombus/csv:
        csv.Writer.write
+       csv.Writer.to_string
        csv.Writer.write_line){
 
  The @rhombus(csv.Writer.write) method writes lines of a CSV file. It
  accepts a list where each element is a line, and each line is a list
  that has a string for each field.
 
- The @rhombus(csv.Writer.write_line) method reads a single line of a CSV
- file. It accepts a list for a singe line.
+ The @rhombus(csv.Writer.to_string) method is like
+ @rhombus(csv.Writer.write), but returns the result string instead of
+ writing it.
+
+ The @rhombus(csv.Writer.write_line) method writes a single line of a CSV
+ file. It accepts a list for a single line.
 
 }
 
