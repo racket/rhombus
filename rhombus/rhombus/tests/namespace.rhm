@@ -131,6 +131,38 @@ check:
   ~throws "exported identifier defined later"
 
 block:
+  namespace ns:
+    export def x = 1
+  namespace ~open:
+    export def ns.y = 10
+    export def z = 8
+  check y ~is 10
+  check ns.x ~is 1
+  check z ~is 8
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    namespace ns:
+      export def x = 1
+    def y = 8
+    //operator (a +++ b): a
+    namespace ~open:
+      //export operator (a ns.(+++) b): a
+      export def ns.y = 10
+  ~throws "identifier already defined"
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    namespace ns:
+      export def x = 1
+    operator (a +++ b): a
+    namespace ~open:
+      export operator (a ns.(+++) b): a
+  ~throws "identifier already defined"
+
+block:
   import rhombus/meta open
   namespace A:
     export:

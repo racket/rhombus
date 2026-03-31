@@ -30,7 +30,7 @@
                  (cond
                    [(identifier-extension-binding-tail-name maybe-id-in-space)
                     => (lambda (tail-name)
-                         #`(#,maybe-id #,tail-name))]
+                         #`(#,maybe-id #,(datum->syntax #'ex-id tail-name id)))]
                    [else maybe-id]))
                #`(only-spaces-out (all-spaces-out #,id/rename) #,space-sym)))])))
 

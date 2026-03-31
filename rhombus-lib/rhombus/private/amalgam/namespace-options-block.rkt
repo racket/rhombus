@@ -6,6 +6,7 @@
 (provide :options-block)
 
 (define-splicing-syntax-class :options-block
+  #:description "block that potentially starts with a `~name` declaration"
   #:attributes ([form 1] name)
   #:datum-literals (group)
   (pattern (~seq)
