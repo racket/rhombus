@@ -145,7 +145,8 @@
  Annotation constructors for use in a context where named arguments are
  available---especially in the result annotation position of
  @rhombus(fun, ~defn). Annotations created by @rhombus(Any.like, ~annot)
- and related forms do not imply any run-time checks, but they propagate
+ and related forms are @tech(~doc: model_doc){always-satisfied annotations}
+ that do not imply any run-time checks, but they propagate
  static information from actual argument expressions in a specific
  function call to that specific call's result.
 
@@ -226,7 +227,10 @@
 
  The @rhombus(Any.like_result, ~annot) annotation is
  similar to @rhombus(Any.like_element, ~annot), but for the result of
- a @tech{function}.
+ a @tech{function}. Referencing static information for multiple result
+ values generally makes sense only when the
+ @rhombus(Any.like_element, ~annot) form itself appears as a
+ function-result annotation.
 
 @examples(
   ~defn:

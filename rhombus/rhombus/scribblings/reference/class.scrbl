@@ -573,7 +573,11 @@
  (if any) applies to the immediate method
  implementation as well as overriding implementations in subclasses; a
  result annotation within a case or within an @tech{entry point}, in contrast, does not
- apply to subclasses. A non-empty @rhombus(maybe_res_annot) can specify a
+ apply to subclasses. When @rhombus(maybe_res_annot) for a method and overriding
+ implementations, they must either all use @rhombus(values, ~annot) with the same
+ number of annotations or include none that use @rhombus(values, ~annot) with
+ zero or multiple annotations.
+ A non-empty @rhombus(maybe_res_annot) can specify a
  @tech(~doc: model_doc){converter annotation} only if the method is @rhombus(final, ~class_clause)
  or the enclosing class is @tech{final}; the conversion applies
  before inherited result annotations for the method are checked.

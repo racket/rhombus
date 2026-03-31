@@ -272,6 +272,7 @@
                         (values #'((#%values (c-parsed.static-infos ...)))
                                 (converter
                                  (and (attribute ann-op.check?)
+                                      (not (andmap always-satisfied-annotation? (syntax->list #'(c.parsed ...))))
                                       #'(lambda (arg ... success-k fail-k)
                                           (if (and (c-parsed.predicate arg) ...)
                                               (success-k arg ...)
@@ -327,6 +328,7 @@
                         (values #'c-parsed.static-infos
                                 (converter
                                  (and (attribute ann-op.check?)
+                                      (not (always-satisfied-annotation? #'c-parsed))
                                       #'(lambda (v success-k fail-k)
                                           (if (c-parsed.predicate v)
                                               (success-k v)

@@ -1455,7 +1455,7 @@
   (relocate+reraw
    (respan form)
    (annotation-predicate-form
-    #'(lambda (x) #t)
+    #'always-satisfied
     #`((#%dependent-result (#,accessor-id #,(make-data data)))))))
 
 (define-for-syntax (make-like accessor-id)

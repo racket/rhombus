@@ -261,7 +261,9 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  When @rhombus(maybe_res_annot) is present, it provides an annotation for
  the function's result, but only for the corresponding case if a
  @rhombus(maybe_res_annot) is present in a multi-case function written with
- @(vbar). In the case of a checked annotation using @rhombus(::, ~bind), the
+ @(vbar). In the case of a checked (not
+ @tech(~doc: model_doc, ~key: "always-satisfied annotation"){always satisfied})
+ annotation using @rhombus(::, ~bind), the
  function's body is @emph{not} in @tail_position with respect to a call to
  the function, since a check will be applied to the function's result.
  When @rhombus(maybe_res_annot) is present for a function declared with
@@ -294,7 +296,8 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
       things_to_say("Nachos")
 )
 
- When @rhombus(::, ~bind) is not used for a result declaration, then the
+ When @rhombus(::, ~bind) is not used for a result declaration or if the result
+ annotation is an @tech(~doc: model_doc){always-satisfied annotation}, then the
  @rhombus(body) in a function expression or definition is in
  @tail_position with respect to a call of the function.
 

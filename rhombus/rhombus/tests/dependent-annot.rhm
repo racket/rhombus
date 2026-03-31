@@ -198,6 +198,10 @@ fun
 check apply_2(pick_first, [1, 2], [3, 4])[0] ~is 1
 check apply_2(List.append, [1, 2], [3, 4])[3] ~is 4
 check apply_2(some_list, "a", "b")[0] ~is "a"
+check:
+  let (s1, s2) = apply_2(fun (x, y) :: values(String, String): values(x, y), "aa", "b")
+  [s1.length(), s2.length()]
+  ~is [2, 1]
 
 check:
   ~eval
@@ -212,6 +216,46 @@ check:
   apply_2(some_list, "a", "b")[0].length()
   ~throws values("no such field or method",
                  "based on static information")
+
+check:
+  class C():
+    method apply_2(f, a, b) :: Any.like_result(f):
+      f(a, b)
+  let (s1, s2) = C().apply_2(fun (x, y) :: values(String, String): values(x, y), "aa!", "b!")
+  [s1.length(), s2.length()]
+  ~is [3, 2]
+
+block:
+  class C():
+    nonfinal
+    method apply_2(f, a, b) :: Any.like_result(f):
+      f(a, b)
+  class D():
+    extends C
+    // mixing `Any` and `Any.like_result(f)` doesn't really
+    // make sense when the latter corresponds to multiple values,
+    // but overrding only requires that both use `values` or (or not)
+    // with the same number of annotations, so it can work out
+    override method apply_2(f, a, b) :~ Any:
+      super.apply_2(f, a, b)
+  class D2():
+    extends C
+    // checked `Any` is the same as unchecked
+    override method apply_2(f, a, b) :: Any:
+      super.apply_2(f, a, b)
+  class D3():
+    extends C
+    // syntactically allowed, but will fail the run-time check
+    override method apply_2(f, a, b) :: Int:
+      super.apply_2(f, a, b)
+  let (s1, s2) = C().apply_2(fun (x, y) :: values(String, String): values(x, y), "aa!", "b!")
+  check [s1.length(), s2.length()] ~is [3, 2]
+  let (s1, s2) = D().apply_2(fun (x, y) :: values(String, String): values(x, y), "aa!!", "b!!")
+  check [s1.length(), s2.length()] ~is [4, 3]
+  let (s1, s2) = D2().apply_2(fun (x, y) :: values(String, String): values(x, y), "aa!!", "b!!")
+  check [s1.length(), s2.length()] ~is [4, 3]
+  check: D3().apply_2(fun (x, y) :: values(String, String): values(x, y), "aa!!", "b!!")
+         ~throws "results do not satisfy annotation"
 
 check to_string.map([10, 20, 30])[0].length() ~is 2
 check [10, 20, 30].map(to_string)[1].length() ~is 2
