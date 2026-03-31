@@ -13,7 +13,7 @@
   fun shrubbery.read(in :: Port.Input,
                      ~mode: mode :: shrubbery.ReadMode = #'top,
                      ~start_column: start_column :: Int = 0)
-    :: Syntax || Port.eof
+    :: Syntax || Port.EOF
   enum shrubbery.ReadMode
   | top
   | interactive

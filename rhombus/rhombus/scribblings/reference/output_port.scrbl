@@ -221,7 +221,7 @@ an @deftech{output string port} writes to a @tech{byte string}.
   method (out :: Port.Output).write_string(
     str :: ReadableString,
     ~start: start :: Nat = 0,
-    ~end: end :: Nat = bytes.length()
+    ~end: end :: Nat = str.length()
   ) :: Nat
 ){
 
