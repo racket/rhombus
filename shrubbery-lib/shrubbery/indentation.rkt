@@ -145,7 +145,11 @@
                 [else #f]))
             ;; no change
             '())])]
-       [else (cons '(0 "") changes)])]))
+       [else
+        ;; multi-line selection where leaving things as0is does not
+        ;; look valid: we don't try to move as a group, and line-by line
+        ;; is likely to make a mass, so no change
+        '()])]))
 
 (define (shrubbery-range-indentation/reverse-choices t s e
                                                      #:variant [variant default-variant])
