@@ -357,3 +357,82 @@ block:
       bovine
   check ns.bovine ~is "cow"
   check "cow" :: ns.bovine ~is "cow"
+
+block:
+  namespace ns:
+    export def x = 1
+  namespace ~extend ns:
+    export def y = 2
+    export namespace sub:
+      export def x = 0
+  def plain_z = 3
+  alias 'ns.z': 'plain_z'
+  check [ns.sub.x, ns.x, ns.y, ns.z] ~is [0, 1, 2, 3]
+
+block:
+  namespace ns:
+    export def x = 1
+  namespace ~extend ns:
+    export namespace sub:
+      export def x = 0
+  namespace ~extend ns.sub:
+    export def y = 2
+  check [ns.sub.x, ns.sub.y] ~is [0, 2]
+
+block:
+  namespace ns:
+    export def x = 1
+  namespace ns2:
+    export def y = 2
+  namespace ~extend ns:
+    export import .ns2 open
+  check [ns.x, ns.y] ~is [1, 2]
+
+block:
+  namespace ns:
+    export def x = 1
+  block:
+    namespace ~extend ns:
+      export def y = 2
+    def plain_z = 3
+    alias 'ns.z': 'plain_z'
+    check [ns.x, ns.y, ns.z] ~is [1, 2, 3]  
+  check ns.x ~is 1
+
+block:
+  import rhombus/meta open
+  namespace ns
+  namespace ~extend ns:
+    export annot.macro 'x': 'Int'
+    export def x = 2
+  check ns.x :: ns.x ~is 2
+
+block:
+  import rhombus/meta open
+  namespace ns
+  namespace ~extend ns:
+    export:
+      only_space expr: x
+    annot.macro 'x': 'Int'
+    def x = 2
+  import .ns.x
+  annot.macro 'x': 'Int'
+  check x :: x ~is 2
+
+block:
+  import rhombus/meta open
+  namespace ns
+  namespace ~extend ns:
+    export:
+      except_space annot: x
+    annot.macro 'x': 'Int'
+    def x = 2
+  import .ns.x
+  annot.macro 'x': 'Int'
+  check x :: x ~is 2
+
+check:
+  ~eval
+  namespace ~extend nonesuch:
+    #void
+  ~throws "name to extend is not bound as a namespace"

@@ -39,7 +39,7 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
   ~nonterminal:
     export_clause: export ~decl
   defn.macro 'namespace $id_name'
-  defn.macro 'namespace $id_name:
+  defn.macro 'namespace $maybe_extend $id_name:
                 $option; ...                
                 $nestable_body
                 ...'
@@ -48,6 +48,9 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
                 $nestable_body
                 ...'
 
+  grammar maybe_extend
+  | ~extend
+  | #,(epsilon)
   grammar option
   | ~name $id_name
   | ~name: $id_name
@@ -62,6 +65,12 @@ in other spaces (such as @rhombus(bind, ~space) or @rhombus(annot, ~space)), the
  @rhombus(id_name) also works with @rhombus(import). The @rhombus(id)
  at the end of @rhombus(id_name) is bound in the @rhombus(namespace, ~space)
  @tech(~doc: meta_doc){space}.
+
+ When @rhombus(~extend) is supplied before @rhombus(id_name), then
+ @rhombus(id_name) must be defined already as a namespace, and exports
+ in @rhombus(nestable_body) extend the existing namespace.
+ This extension is analogous to defining dotted names that have
+ @rhombus(id_name) as a prefix.
 
  When @rhombus(~open) is supplied in place of @rhombus(id_name), then
  instead of defining a visible namespace, a private namespace name is

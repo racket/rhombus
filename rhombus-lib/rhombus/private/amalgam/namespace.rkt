@@ -6,16 +6,19 @@
                      "introducer.rkt"
                      "id-binding.rkt"
                      "expose.rkt"
-                     "namespace-options-block.rkt")
+                     "namespace-options-block.rkt"
+                     "dotted-sequence.rkt")
          "definition.rkt"
          "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt"
          "parse.rkt"
          "name-root.rkt"
+         "name-root-space.rkt"
          "name-root-ref.rkt"
          "parens.rkt"
          "export-check.rkt"
-         "name-prefix.rkt")
+         "name-prefix.rkt"
+         "alias-define.rkt")
 
 (provide (for-space rhombus/defn
                     namespace))
@@ -41,22 +44,32 @@
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports [name.name name.extends plain scoped])))]
-       [(form-id name-seq::dotted-identifier-sequence
+            (define-name-root-for-exports [name.name name.extends plain scoped #f])))]
+       [(form-id (~optional (~and extend #:extend)
+                            #:defaults ([extend #'#f]))
+                 name-seq::dotted-identifier-sequence
                  body::options-block)
         #:with name::dotted-identifier #'name-seq
         (define intro (make-syntax-introducer #t))
         (define prefix (or (and (syntax-e #'body.name)
                                 #'body.name)
                            (add-name-prefix name-prefix #'name.name)))
+        (when (syntax-e #'extend)
+          (unless (extensible-name-root (if (syntax-e #'name.extends)
+                                            (append (syntax->list #'name.extends) (list #'name.tail-name))
+                                            (list #'name.tail-name)))
+            (raise-syntax-error #f
+                                "name to extend is not bound as a namespace"
+                                stx
+                                #'name.name)))
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped])
+            (define-name-root-for-exports [name.name name.extends #,(intro #'plain) scoped extend])
             #,(intro
                #`(rhombus-nested #,prefix #,effect-id body.form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx
-    [(_ [name extends base-ctx scoped-ctx]
+    [(_ [name extends base-ctx scoped-ctx extend-kw]
         [#:ctx forward-base-ctx forward-ctx]
         ex ...)
      #:with fields (parse-exports #'(combine-out ex ...)
@@ -65,10 +78,45 @@
                                                 #'base-ctx)
                                                #'scoped-ctx))
      (register-field-check #'(forward-base-ctx forward-ctx . fields))
-     #'(define-name-root name
-         #:extends extends
-         #:fields
-         fields)]))
+     (cond
+       [(syntax-e #'extend-kw)
+        (define full-extends (cons #'name (or (syntax->list #'extends) null)))
+        #`(begin
+            #,@(apply
+                append
+                (for/list ([field (in-list (syntax->list #'fields))])
+                  (syntax-parse field
+                    [(as-id id . rule)
+                     (let loop ([rule #'rule] [id #'id] [only-spaces #f] [except-spaces '()])
+                       (syntax-parse rule
+                         [()
+                          (define new-id
+                            (datum->syntax #'name
+                                           (build-dot-symbol (list #'name #'as-id))
+                                           #'as-id
+                                           #'as-id))
+                          (build-alias-definitions stx
+                                                   (list id)
+                                                   new-id (in-name-root-space (datum->syntax #f full-extends))
+                                                   only-spaces except-spaces)]
+                         [(#:only space ...)
+                          (loop #'() id (syntax->datum #'(space ...)) except-spaces)]
+                         [(#:except space ...)
+                          (loop #'() id only-spaces (syntax->datum #'(space ...)))]
+                         [(#:space ([space val-id] ...) . rule)
+                          (append
+                           (apply
+                            append
+                            (for/list ([space (in-list (syntax->list #'(space ...)))]
+                                       [val-id (in-list (syntax->list #'(val-id ...)))])
+                              (loop #'() #'val-id (list (syntax-e space)) null)))
+                           (loop #'rule id #f (append (syntax->datum #'(space ...))
+                                                      except-spaces)))]))]))))]
+       [else
+        #'(define-name-root name
+            #:extends extends
+            #:fields
+            fields)])]))
 
 (define-syntax (open-exports stx)
   (syntax-parse stx
