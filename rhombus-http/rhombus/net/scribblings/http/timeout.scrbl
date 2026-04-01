@@ -2,13 +2,14 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
 @title(~tag: "timeout"){Timeout Configuration}
 
 @doc(
-  class Timeouts(_handle):
+  class http.Timeouts():
     constructor (
       ~lease: lease :: maybe(PosReal) = 5,
       ~connect: connect :: maybe(PosReal) = 5,

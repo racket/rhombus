@@ -16,7 +16,7 @@
 
 @title(~tag: "delay"){Delayed Evaluation}
 
-@docmodule(rhombus/delay)
+@docmodule(~open, rhombus/delay)
 
 The @rhombusmodname(rhombus/delay) module implements delayed evaluation.
 A @deftech{delay} value contains an expression whose evaluation waits

@@ -4,7 +4,7 @@
 
 @title(~style: #'toc, ~tag: "concurrency"){Threads and Concurrency}
 
-@docmodule(rhombus/thread)
+@docmodule(~open, rhombus/thread)
 
 Most of Rhombus's concurrency facilities are provided by the
 @rhombusmodname(rhombus/thread) module.

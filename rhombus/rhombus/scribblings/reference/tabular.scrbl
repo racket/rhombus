@@ -13,7 +13,7 @@
 
 @title{Table Formatting}
 
-@docmodule(rhombus/tabular)
+@docmodule(~open, rhombus/tabular)
 
 The @rhombusmodname(rhombus/tabular) module extends the
 @rhombus(str) namespace with @rhombus(str.tabular) for

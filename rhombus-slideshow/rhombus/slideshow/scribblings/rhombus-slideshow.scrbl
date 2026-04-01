@@ -8,7 +8,7 @@
 
 @title(~category: #'tool){Slideshow: Presentation Tool}
 
-@docmodule(slideshow, slideshow/content)
+@docmodule(~open, slideshow, slideshow/content)
 
 Slideshow is a library for creating presentation slides. Unlike
 PowerPoint, Slideshow provides no WYSIWYG interface for constructing

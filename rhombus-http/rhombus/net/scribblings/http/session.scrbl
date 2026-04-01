@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url
       net/ssl)
@@ -9,7 +10,7 @@
 @title(~tag: "session"){Sessions}
 
 @doc( 
-  class Session():
+  class http.Session():
     constructor (
       ~pool_config: pool_config :: PoolConfig = PoolConfig(),
       ~ssl_context: context :: maybe(ssl.Context.Client) = ssl.Context.Client(),
@@ -37,7 +38,7 @@
 }
 
 @doc( 
-  method (session :: Session).request(
+  method (session :: http.Session).request(
     uri :: Bytes || String || url.URL || LiteralURL,
     ~method: method :: Method = #'get,
     ~close: close :: Any.to_boolean = #false,
@@ -64,7 +65,7 @@
 }
 
 @doc(
-  Parameter.def Session.current :: Session
+  Parameter.def http.Session.current :: Session
 ){
 
  The default session used by @rhombus(get), @rhombus(post), etc.
@@ -72,7 +73,7 @@
 }
 
 @doc(
-  enum Method
+  enum http.Method
   | get
   | post
   | delete
@@ -88,7 +89,7 @@
 
 
 @doc(
-  annot.macro 'Headers'
+  annot.macro 'http.Headers'
 ){
 
  A shorthand for @rhombus(Map.of(String, Bytes || String), ~annot).

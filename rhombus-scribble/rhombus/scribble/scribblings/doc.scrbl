@@ -13,6 +13,7 @@
   decl.macro 'docmodule($option, ...,
                         $mod_path, ...)'
   grammar option
+  | ~open
   | ~lang
   | ~no_declare
   | ~use_sources:
@@ -24,8 +25,15 @@
  that appear later in the same section or nested subsections. The
  bindings will be documented as exports from all @rhombus(mod_path)s.
 
+ If the @rhombus(~open) option is specified, then the module is
+ documented with the suggestion of importing with @rhombus(open, ~impo).
+ Use @rhombus(~open) when the module's exports are not documented using
+ the module's name as a prefix.
+
  If the @rhombus(~lang) option is specified, then the module is
- documented as a language module for use with @hash_lang().
+ documented as a language module for use with @hash_lang(). A language is
+ implicitly opened, so @rhombus(~open) has no effect in combination with
+ @rhombus(~lang).
 
  If the @rhombus(~no_declare) option is specified, then the module
  declaration is rendered in the document, but it does not set context for

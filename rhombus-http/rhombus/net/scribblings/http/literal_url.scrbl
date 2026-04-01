@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url
       lib("net/http-easy.rkt") as easy)
@@ -10,11 +11,11 @@
 
 @(def url_class = @rhombus(url.URL, ~class))
 @doc(
-  class LiteralURL():
+  class http.LiteralURL():
     constructor (s :: String):
       super(easy.#{string->url/literal}(s))
 
-  method (url :: LiteralURL).to_string() :: String
+  method (url :: http.LiteralURL).to_string() :: String
 ){
 
  A @rhombus(LiteralURL, ~class) object represents Literal URL string

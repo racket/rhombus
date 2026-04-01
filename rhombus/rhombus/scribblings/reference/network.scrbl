@@ -6,7 +6,7 @@
 
 @title(~style: #'toc, ~tag: "network"){Networking}
 
-@docmodule(rhombus/network)
+@docmodule(~open, rhombus/network)
 
 Rhombus's core networking facilities are provided by the
 @rhombusmodname(rhombus/network) module.

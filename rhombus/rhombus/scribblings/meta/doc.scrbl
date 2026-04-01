@@ -7,6 +7,7 @@
 @title{Documentation Metadata}
 
 @docmodule(~use_sources: lib("rhombus/doc.rhm"),
+           ~open,
            rhombus/doc)
 
 The @rhombusmodname(rhombus/doc) module re-exports all of

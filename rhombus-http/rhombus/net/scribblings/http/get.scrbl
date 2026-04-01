@@ -2,13 +2,14 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
 @title(~tag: "get"){Sending Requests}
 
 @doc( 
-  fun get(
+  fun http.get(
     uri :: Bytes || String || url.URL || LiteralURL,
     ~session: session :: Session = Session.current(),
     ~method: method :: Method = #'get,
@@ -23,12 +24,12 @@
     ~max_redirects: max_redirects :: PosInt = 16,
     ~user_agent: user_agent :: Bytes || String = current_user_agent()
   ) :: Response
-  fun post(....) :: Response
-  fun delete(....) :: Response
-  fun head(....) :: Response
-  fun options(....) :: Response
-  fun patch(....) :: Response
-  fun put(....) :: Response
+  fun http.post(....) :: Response
+  fun http.delete(....) :: Response
+  fun http.head(....) :: Response
+  fun http.options(....) :: Response
+  fun http.patch(....) :: Response
+  fun http.put(....) :: Response
 ){
 
  Sends a request using the @rhombus(session) argument's

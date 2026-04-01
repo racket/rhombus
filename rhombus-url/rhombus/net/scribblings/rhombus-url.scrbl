@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/url
       net/url open)
 
 @(def rfc_name = "RFC 3986")
@@ -20,7 +21,7 @@ encoding and decoding.
 @section(~tag: "url"){URL Parsing}
 
 @doc(
-  class URL(
+  class url.URL(
     ~scheme: scheme :: maybe(String) = #false,
     ~user: user :: maybe(String) = #false,
     ~host: host :: maybe(String) = #false,
@@ -30,11 +31,11 @@ encoding and decoding.
     ~query: query :: List.of(KeyValue) = [],
     ~fragment: fragment :: maybe(String) = #false
   )
-  class PathWithParams(
+  class url.PathWithParams(
     path :: String || Path.Dot,
     params :: List.of(String)
   )
-  class KeyValue(
+  class url.KeyValue(
     key :: String,
     value :: maybe(String)
   )
@@ -83,9 +84,9 @@ encoding and decoding.
 }
 
 @doc(
-  fun URL.from_string(s :: String) :: URL
-  fun URL.from_path(p :: PathString || CrossPath) :: URL
-  fun relative_path_to_relative_url_string(
+  fun url.URL.from_string(s :: String) :: URL
+  fun url.URL.from_path(p :: PathString || CrossPath) :: URL
+  fun url.relative_path_to_relative_url_string(
     p :: (PathString.to_path || CrossPath) && CrossPath.Relative
   ) :: String
 ){
@@ -100,8 +101,8 @@ encoding and decoding.
 }
 
 @doc(
-  method (u :: URL).to_string() :: String
-  method (u :: URL).to_path(
+  method (u :: url.URL).to_string() :: String
+  method (u :: url.URL).to_path(
     conv :: CrossPath.Convention = CrossPath.Convention.current()
   ) :: CrossPath
 ){
@@ -116,7 +117,7 @@ encoding and decoding.
 }
 
 @doc(
-  method (u :: URL).add(rel :: String) :: URL
+  method (u :: url.URL).add(rel :: String) :: URL
 ){
 
  Adds a relative URL @rhombus(rel) to @rhombus(u) to produce a new URL.
@@ -124,7 +125,7 @@ encoding and decoding.
 }
 
 @doc(
-  Parameter.def current_encode_mode :: EncodeMode
+  Parameter.def url.current_encode_mode :: EncodeMode
   enum EncodeMode
   | recommended
   | unreserved
@@ -137,8 +138,8 @@ encoding and decoding.
 }
 
 @doc(
-  fun URL.from_handle(handle :: Any) :: URL
-  method (u :: URL).to_handle() :: Any
+  fun url.URL.from_handle(handle :: Any) :: URL
+  method (u :: url.URL).to_handle() :: Any
 ){
 
  Converts between @rhombus(URL, ~class) objects and the URL
@@ -149,13 +150,13 @@ encoding and decoding.
 @section(~tag: "form"){HTML Form Parsing}
 
 @doc(
-  fun form.urlencoded_encode(str :: String) :: String
-  fun form.urlencoded_decode(str :: String) :: String
-  fun form.list_to_urlencoded(kv :: List.of(KeyValue)) :: String
-  fun form.urlencoded_to_list(s :: String) :: List.of(KeyValue)
-  Parameter.def form.current_separator_mode
+  fun url.form.urlencoded_encode(str :: String) :: String
+  fun url.form.urlencoded_decode(str :: String) :: String
+  fun url.form.list_to_urlencoded(kv :: List.of(KeyValue)) :: String
+  fun url.form.urlencoded_to_list(s :: String) :: List.of(KeyValue)
+  Parameter.def url.form.current_separator_mode
     :: AListSeparatorMode
-  enum form.AListSeparatorMode
+  enum url.form.AListSeparatorMode
   | amp
   | semi
   | amp_or_semi
@@ -189,16 +190,18 @@ encoding and decoding.
 @section(~tag: "uri"){URI Component Parsing}
 
 @doc(
-  fun uri.encode(str :: String) :: String
-  fun uri.decode(str :: String) :: String
-  fun uri.path_segment_encode(str :: String) :: String
-  fun uri.path_segment_decode (str :: String) :: String
-  fun uri.userinfo_encode(str :: String) :: String
-  fun uri.userinfo_decode(str :: String) :: String
-  fun uri.unreserved_encode(str :: String) :: String
-  fun uri.unreserved_decode(str :: String) :: String
-  fun uri.path_segment_unreserved_encode(str :: String) :: String
-  fun uri.path_segment_unreserved_decode(str :: String) :: String
+  fun url.uri.encode(str :: String) :: String
+  fun url.uri.decode(str :: String) :: String
+  fun url.uri.path_segment_encode(str :: String) :: String
+  fun url.uri.path_segment_decode (str :: String) :: String
+  fun url.uri.userinfo_encode(str :: String) :: String
+  fun url.uri.userinfo_decode(str :: String) :: String
+  fun url.uri.unreserved_encode(str :: String) :: String
+  fun url.uri.unreserved_decode(str :: String) :: String
+  fun url.uri.path_segment_unreserved_encode(str :: String)
+    :: String
+  fun url.uri.path_segment_unreserved_decode(str :: String)
+    :: String
 ){
 
  Encoding and decoding functions specified by @url_rfc.

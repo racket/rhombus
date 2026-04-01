@@ -13,6 +13,7 @@ import:
     rhombus:
       expose:
         import
+        open
 
 export:
   docmodule
@@ -58,6 +59,10 @@ meta:
                                      ...])]
       field [decl_form, ...] = [form, ...]
       field kw: #'~use_sources
+  | '~open':
+      field [form, ...]: []
+      field [decl_form, ...]: []
+      field kw: #'~open
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ..., ...)':
   let kws = { option.kw, ... }
@@ -87,7 +92,9 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ..., ...)':
              option.decl_form, ..., ...]
         | ~else:
             ['defmodule',
-             '~#{require-form}', expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
+             '~#{require-form}', if #'~open in kws
+                                 | expr_meta.pack_expr('fun (name): @rhombus(import: #,(name) #,(@rhombus(open, ~impo)))')
+                                 | expr_meta.pack_expr('fun (name): @rhombus(import: #,(name))'),
              '~multi', pack_tree([expr_meta.pack_expr('@rhombusmodname($mod ...)'),
                                   ...]),
              '~#{module-paths}', pack_tree([ModulePath('$mod ...').s_exp(), ...]),

@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
@@ -9,7 +10,7 @@
 
 
 @doc( 
-  class PoolConfig():
+  class http.PoolConfig():
     constructor (
       ~max_size: max_size :: PosInt || matching(#inf) = 128,
       ~idle_timeout_seconds: idle_timeout :: maybe(PosReal) = 600

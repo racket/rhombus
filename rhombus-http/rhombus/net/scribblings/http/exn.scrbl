@@ -2,15 +2,16 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
 @title(~tag: "exn"){Exceptions}
 
 @doc(
-  veneer Exn.Fail.HTTP
-  veneer Exn.Fail.HTTP.Timeout
-  property (exn :: Exn.Fail.HTTP.Timeout).kind
+  veneer http.Exn.Fail.HTTP
+  veneer http.Exn.Fail.HTTP.Timeout
+  property (exn :: http.Exn.Fail.HTTP.Timeout).kind
     :: Any.of(#'lease, #'connect, #'request)
 ){
 

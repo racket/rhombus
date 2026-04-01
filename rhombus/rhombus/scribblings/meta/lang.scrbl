@@ -65,7 +65,7 @@ how these functions are useful to define a
 
 @section(~tag: "expand-config"){Expand-Time Configuration}
 
-@docmodule(rhombus/expand_config)
+@docmodule(~open, rhombus/expand_config)
 
 The @rhombusmodname(rhombus/expand_config) library is for configuring an
 expand-time time to behave in Rhombus terms, which as when a syntax

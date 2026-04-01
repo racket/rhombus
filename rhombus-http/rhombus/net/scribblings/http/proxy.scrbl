@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
@@ -9,19 +10,19 @@
 
 
 @doc( 
-  class Proxy():
+  class http.Proxy():
     constructor (
       ~matches: matches :: url.URL -> Boolean,
       ~connect: connect :: (HTTPConn, url.URL, maybe(SSLContext)) -> Void
     )
     
-  fun Proxy.http(
+  fun http.Proxy.http(
     ~proxy_url: proxy_url :: String || Bytes || url.URL,
     ~matches: matches :: url.URL -> Boolean:
                 fun (u :: url.URL): u.scheme == "http"
   ) :: Proxy
   
-  fun Proxy.https(
+  fun http.Proxy.https(
     ~proxy_url: proxy_url :: String || Bytes || url.URL,
     ~matches: matches :: url.URL -> Boolean:
                 = fun (u :: url.URL): u.scheme == "https"

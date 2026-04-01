@@ -8,6 +8,7 @@
 @title(~tag: "doc_meta"){Creating Documentation Forms}
 
 @docmodule(~use_sources: lib("scribble/doc_meta.rhm"),
+           ~open,
            scribble/doc_meta)
 
 @doc(

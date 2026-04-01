@@ -6,7 +6,7 @@
 
 @title(~tag: "custodian"){Custodians}
 
-@docmodule(rhombus/custodian)
+@docmodule(~open, rhombus/custodian)
 
 A @deftech{custodian} manages objects such as threads, file-stream
 ports, network connections, and other custodians. Whenever a thread,

@@ -7,6 +7,7 @@
 @title{Unsafe Mode}
 
 @docmodule(~use_sources: lib("rhombus/unsafe.rhm"),
+           ~open,
            rhombus/unsafe)
 
 @doc(

@@ -99,7 +99,7 @@ serializing and deserializing values.
 
 @section{Serialization and Deserialization}
 
-@docmodule(rhombus/serialize)
+@docmodule(~open, rhombus/serialize)
 
 @doc(
   annot.macro 'Serializable'

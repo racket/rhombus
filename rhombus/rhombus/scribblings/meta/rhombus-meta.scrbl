@@ -21,6 +21,7 @@ This document defines Rhombus's advanced metaprogramming facilities.
 )
 
 @docmodule(~use_sources: lib("rhombus/private/amalgam.rkt")!#{core-meta},
+           ~open,
            rhombus/meta)
 
 @docmodule(~lang, ~no_declare, rhombus/and_meta)

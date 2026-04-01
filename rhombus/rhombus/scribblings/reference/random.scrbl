@@ -3,6 +3,7 @@
     "common.rhm" open
     "nonterminal.rhm" open
     meta_label:
+      rhombus/random
       rhombus/random open)
 
 @title{Random Number Generation}
@@ -10,9 +11,9 @@
 @docmodule(rhombus/random)
 
 @doc(
-  annot.macro 'Random'
-  fun Random() :: Random
-  fun Random(state :: RandomState) :: Random
+  annot.macro 'random.Random'
+  fun random.Random() :: Random
+  fun random.Random(state :: RandomState) :: Random
 ){
 
  Annotation and constructors for a pseudo-random number generator (PRNG).
@@ -20,11 +21,11 @@
 }
 
 @doc(
-  method (prng :: Random).random()
+  method (prng :: random.Random).random()
     :: Real.in(0 ~exclusive, 1 ~exclusive)
-  method (prng :: Random).random(n :: PosInt)
+  method (prng :: random.Random).random(n :: PosInt)
     :: Int.in(0 .. n)
-  method (prng :: Random).random(start :: Int, end :: Int)
+  method (prng :: random.Random).random(start :: Int, end :: Int)
     :: Int.in(start .. end)
 ){
 
@@ -37,8 +38,8 @@
 
 @doc(
   property
-  | (prng :: Random).state :: RandomState
-  | (prng :: Random).state := (s :: RandomState)
+  | (prng :: random.Random).state :: RandomState
+  | (prng :: random.Random).state := (s :: RandomState)
 ){
 
  A property for the state of @rhombus(prng).
@@ -46,7 +47,7 @@
 }
 
 @doc(
-  Parameter.def Random.current :: Random = Random()
+  Parameter.def random.Random.current :: Random = Random()
 ){
 
  A @tech{context parameter} for the pseudo-random number generator that is used by
@@ -55,7 +56,7 @@
 }
 
 @doc(
-  annot.macro 'RandomState'
+  annot.macro 'random.RandomState'
 ){
 
  Satisfied by an array of 6 integers where the first three integers
@@ -67,7 +68,7 @@
 }
 
 @doc(
-  fun shuffle(lst :: List, rnd :: Random = Random.current())
+  fun random.shuffle(lst :: List, rnd :: Random = Random.current())
     :: List
 ){
 
@@ -76,11 +77,11 @@
 
 @examples(
   ~hidden:
-    import rhombus/random open
+    import rhombus/random
     // make result deterministic
-    Random.current(Random(Array(1, 2, 3, 4, 5, 6)))
+    random.Random.current(random.Random(Array(1, 2, 3, 4, 5, 6)))
   ~repl:
-    shuffle([1, 2, 3, 4])
+    random.shuffle([1, 2, 3, 4])
 )
 
 }

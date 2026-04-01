@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url
       json)
@@ -9,7 +10,7 @@
 @title(~tag: "payload"){Payload Data}
 
 @doc(
-  annot.macro 'payload.Function'
+  annot.macro 'http.payload.Function'
 ){
 
  Equivalent to
@@ -24,7 +25,7 @@
 }
 
 @doc(
-  fun payload.buffered(f :: payload.Function) :: payload.Function
+  fun http.payload.buffered(f :: payload.Function) :: payload.Function
 ){
 
  Produces a payload function that buffers the result of @rhombus(f) in
@@ -33,7 +34,7 @@
 }
 
 @doc(
-  fun payload.form(v :: List.of(url.KeyValue)) :: payload.Function
+  fun http.payload.form(v :: List.of(url.KeyValue)) :: payload.Function
 ){
 
  Produces a payload function that encodes @rhombus(v) as form data using the
@@ -42,7 +43,7 @@
 }
 
 @doc(
-  fun payload.json(v :: json.JSON) :: payload.Function
+  fun http.payload.json(v :: json.JSON) :: payload.Function
 ){
 
  Produces a payload function that encodes @rhombus(v) as JSON data.
@@ -51,7 +52,7 @@
 
 
 @doc(
-  fun payload.gzip(f :: payload.Function) :: payload.Function
+  fun http.payload.gzip(f :: payload.Function) :: payload.Function
 ){
 
  Produces a payload function that gzips the output of @rhombus(f).
@@ -59,7 +60,7 @@
 }
 
 @doc(
-  fun payload.pure(inp :: Bytes || String || Port.Input)
+  fun http.payload.pure(inp :: Bytes || String || Port.Input)
     :: payload.Function
 ){
 

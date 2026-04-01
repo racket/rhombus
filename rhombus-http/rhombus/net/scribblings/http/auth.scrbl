@@ -2,13 +2,14 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
 @title(~tag: "auth"){Authentication}
 
 @doc(
-  annot.macro 'auth.Function'
+  annot.macro 'http.auth.Function'
 ){
 
  Equivalent to
@@ -23,7 +24,7 @@
 }
 
 @doc(
-  fun auth.basic(
+  fun http.auth.basic(
     ~username: username :: String || Bytes,
     ~password: password :: String || Bytes
   ) :: auth.Function
@@ -35,7 +36,7 @@
 }
 
 @doc(
-  fun auth.bearer(
+  fun http.auth.bearer(
     ~token: token :: String || Bytes
   ) :: Function
 ){

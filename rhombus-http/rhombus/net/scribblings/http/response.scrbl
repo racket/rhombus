@@ -2,6 +2,7 @@
 @(import:
     meta_label:
       rhombus open
+      net/http
       net/http open
       net/url)
 
@@ -15,7 +16,7 @@
     bstr_list_bind: def bind ~defn
     response_list_bind: def bind ~defn
 
-  class Response():
+  class http.Response():
     expression ~none
     binding 'Response($field, ...)'
 
@@ -79,11 +80,11 @@
 }
 
 @doc(
-  property (resp :: Response).status_line :: Bytes
-  property (resp :: Response).status_code :: StatusCode
-  property (resp :: Response).status_message :: Bytes
-  property (resp :: Response).http_version :: Bytes
-  property (resp :: Response).raw_headers :: List.of(Bytes)
+  property (resp :: http.Response).status_line :: Bytes
+  property (resp :: http.Response).status_code :: StatusCode
+  property (resp :: http.Response).status_message :: Bytes
+  property (resp :: http.Response).http_version :: Bytes
+  property (resp :: http.Response).raw_headers :: List.of(Bytes)
 ){
 
  Accesses the raw immediate data for a request response.
@@ -91,7 +92,7 @@
 }
 
 @doc(
-  method (resp :: Response).headers() :: Map.of(String, Bytes)
+  method (resp :: http.Response).headers() :: Map.of(String, Bytes)
 ){
 
  Returns the same result as @rhombus(Response.raw_headers), but parsed
@@ -100,8 +101,8 @@
 }
 
 @doc(
-  method (resp :: Response).output() :: Port.Input
-  method (resp :: Response).body() :: Bytes
+  method (resp :: http.Response).output() :: Port.Input
+  method (resp :: http.Response).body() :: Bytes
 ){
 
  The @rhombus(Response.output) method returns an output port that
@@ -118,7 +119,7 @@
 }
 
 @doc(
-  method (resp :: Response).history() :: List.of(Response)
+  method (resp :: http.Response).history() :: List.of(Response)
 ){
 
  Reports redirections taken to arrive at the final response. The
@@ -128,8 +129,8 @@
 }
 
 @doc(
-  method (resp :: Response).close() :: Void
-  method (resp :: Response).drain() :: Void
+  method (resp :: http.Response).close() :: Void
+  method (resp :: http.Response).drain() :: Void
 ){
 
  The @rhombus(Response.close) method terminates any communication still
@@ -142,7 +143,7 @@
 }
 
 @doc(
-  annot.macro 'StatusCode'
+  annot.macro 'http.StatusCode'
 ){
 
  Equivalent to @rhombus(Int.in(100 ..= 999) ~annot).
@@ -150,7 +151,7 @@
 }
 
 @doc(
-  Parameter.def current_user_agent :: String
+  Parameter.def http.current_user_agent :: String
 ){
 
  Supplies a default value for the @rhombus(~user_agent) argument of
@@ -160,7 +161,7 @@
 }
 
 @doc(
-  property (resp :: Response).handle
+  property (resp :: http.Response).handle
 ){
 
  Returns a Racket representation of the response.

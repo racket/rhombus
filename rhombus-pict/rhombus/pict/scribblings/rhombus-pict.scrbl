@@ -14,7 +14,7 @@
 
 @title(~category: #'#{gui-library}){Pict: Functional Pictures}
 
-@docmodule(pict)
+@docmodule(~open, pict)
 
 The @rhombusmodname(pict) library for Rhombus supports functional
 construction of 2-D animated pictures. A @deftech{pict} (satisfying

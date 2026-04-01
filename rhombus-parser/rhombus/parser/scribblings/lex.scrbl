@@ -27,7 +27,7 @@
 
 @title(~tag: "lex"){Lexers for Token Parsing}
 
-@docmodule(parser/lex)
+@docmodule(~open, parser/lex)
 
 A @deftech{lexer} tokenizes an input stream using regular expressions.
 The @rhombus(lexer) form creates a lexer based on a set of

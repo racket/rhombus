@@ -16,6 +16,7 @@
 @title(~style: #'toc, ~tag: "regexp"){Regular Expressions}
 
 @docmodule(~use_sources: lib("rhombus/rx.rhm"),
+           ~open,
            rhombus/rx)
 
 @margin_note_block{See also @secref(~doc: guide_doc, "rx-quickref").}

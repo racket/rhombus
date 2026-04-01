@@ -9,7 +9,7 @@
 
 @title(~tag: "cmdline-class"){Command Line Parsing Classes}
 
-@docmodule(rhombus/cmdline!class)
+@docmodule(~open, rhombus/cmdline!class)
 
 @doc(
   class Parser():
