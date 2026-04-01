@@ -169,10 +169,14 @@ When bindings are imported from a module using @rhombus(import), then
 unless the module's exports are exposed via @rhombus(open, ~impo) or
 @rhombus(expose, ~impo), imported names are accessed using a prefix that
 is derived from the module name or made explicit with
-@rhombus(as, ~impo). Modules are impractical to use without
-@rhombus(open, ~impo), often because they provide operators or macros.
+@rhombus(as, ~impo). Some modules are impractical to use without
+@rhombus(open, ~impo), often because they provide operators or sublanguages
+(such as the pattern sublanguage of @rhombusmodname(rhombus/rx)).
 In other cases, documentation can encourage the use of an intended
 prefix by showing it as non-boldface in the documentation entry.
+When the names provided by a module are intended to be used without
+a prefix, the documentation of the module name shows an
+@rhombus(import) form with @rhombus(open, ~impo).
 
 For example, @rhombus(fill) and @rhombus(drain) exports of a module
 named @rhombus(liquid/water, ~modpath) might be documented as follows,
