@@ -19,7 +19,8 @@
          "index-result-key.rkt"
          "indirect-static-info-key.rkt"
          "parse.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "for-single-valued.rkt")
 
 (provide define-repetition-syntax)
 (begin-for-syntax
@@ -221,7 +222,7 @@
             #,(if (and (identifier? #'rep-info.body)
                        (free-identifier=? #'rep-info.body #'id))
                   (transfer-origin #'rep.parsed #'(void))
-                  (render-repetition/direct #'rep.parsed 1 'checked #'for))
+                  (render-repetition/direct #'rep.parsed 1 'checked #'for/single-valued))
             (#,length-id e))]
        [_
         #`(length #,(repetition-as-list ellipses #'(group (parsed #:rhombus/repet rep.parsed)) 1))])]))

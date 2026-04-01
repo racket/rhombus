@@ -506,6 +506,35 @@ block:
       ~is 5
     ~prints "pre\n1\n2\n3\npost\n"
 
+block:
+  fun oops(_):
+    values(1, 2)
+  let [x, ...] = [1, 2, 3]
+  check:
+    Function.count(oops(1))
+    ~throws values(
+      "result arity mismatch",
+      "expected number of values not received",
+      "expected: 1",
+      "received: 2",
+    )
+  check:
+    Function.count(oops(x), ...)
+    ~throws values(
+      "result arity mismatch",
+      "expected number of values not received",
+      "expected: 1",
+      "received: 2",
+    )
+  check:
+    Function.count(oops(x), ..., oops(x+1), ...)
+    ~throws values(
+      "result arity mismatch",
+      "expected number of values not received",
+      "expected: 1",
+      "received: 2",
+    )
+
 check:
   [each #'oops, ...] ~throws values(
     "each: " ++ error.annot_msg(),

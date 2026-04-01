@@ -43,7 +43,8 @@
          (submod "arrow-annotation.rkt" for-arrow-annot)
          "name-prefix.rkt"
          "doc.rkt"
-         "extract-name.rkt")
+         "extract-name.rkt"
+         "for-single-valued.rkt")
 
 (provide (for-spaces (#f
                       rhombus/defn
@@ -738,11 +739,6 @@
    "8.18.0.17"
    (black-box v)
    v))
-
-(define-syntax (for/single-valued stx)
-  (syntax-parse stx
-    [(_ clauses body)
-     #'(for clauses (void body))]))
 
 (define-repetition-syntax Function.pass/optimize
   (repetition-transformer
