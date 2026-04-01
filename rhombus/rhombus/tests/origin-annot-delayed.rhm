@@ -1,0 +1,9 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+annot.delayed_declare Forward
+
+annot.delayed_complete Forward: Int
+
+10 :: Forward

@@ -4,7 +4,8 @@
                      enforest/syntax-local
                      enforest/hier-name-parse
                      "name-path-op.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "definition.rkt"
          (submod "annotation.rkt" for-class)
          "parens.rkt"
@@ -91,9 +92,14 @@
                                #'name.name))
          (syntax-parse #'ap.parsed
            [a::annotation-predicate-form
-            #`((define-syntaxes ()
-                 (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
-               (#,(delayed-annotation-complete!-id dp) a.predicate))]
+            #`(#,(transfer-origins
+                  (list (add-origin (in-annotation-space (syntax-local-introduce #'name.name))
+                                    #'name.name)
+                        #'ap.parsed)
+                  #`(begin
+                      (define-syntaxes ()
+                        (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
+                      (void (#,(delayed-annotation-complete!-id dp) a.predicate)))))]
            [a::annotation-binding-form
             (raise-syntax-error #f
                                 "supported only for predicate-based annotations"
