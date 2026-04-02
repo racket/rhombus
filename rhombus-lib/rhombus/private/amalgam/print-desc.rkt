@@ -100,7 +100,8 @@
                           (cond
                             [(null? elems) null]
                             [(null? (cdr elems)) elems]
-                            [else (list* (pretty-flat (car elems)) ", " (loop (cdr elems)))]))))
+                            [else (list* (pretty-flat (car elems)) (pretty-text ", ")
+                                         (loop (cdr elems)))]))))
                       post))
      (cond
        [(current-print-as-pretty)
@@ -113,7 +114,8 @@
                           (cond
                             [(null? elems) null]
                             [(null? (cdr elems)) elems]
-                            [else (list* (car elems) "," (pretty-newline) (loop (cdr elems)))]))))])
+                            [else (list* (car elems) (pretty-text ",") (pretty-newline)
+                                         (loop (cdr elems)))]))))])
            ;; two multi line options: first element on same line as opener, or newline
            ;; (and possible outdent) for arguments
            (pretty-or (pretty-concat pre elems post)

@@ -282,11 +282,11 @@
 (define (pretty-dot lhs rhs)
   (define single-line
     (pretty-concat lhs rhs))
-  (define multi-line
-    (pretty-concat lhs
-                   (pretty-nest 2 (pretty-concat (pretty-newline) rhs))))
   (cond
     [(current-print-as-pretty)
+     (define multi-line
+       (pretty-concat lhs
+                      (pretty-nest 2 (pretty-concat (pretty-newline) rhs))))
      (pretty-or single-line
                 multi-line)]
     [else single-line]))
