@@ -51,9 +51,9 @@ fun interp(e :: Expr, env :: Map):
       if name in env
       | env[name]
       | error("free variable " +& name)
-  | Plus(left, right):      
+  | Plus(left, right):
       interp(left, env) + interp(right, env)
-  | Equals(left, right):      
+  | Equals(left, right):
       interp(left, env) == interp(right, env)
   | Let(name, rhs, body):
       interp(body, env ++ { name: interp(rhs, env) })
@@ -63,9 +63,9 @@ fun interp(e :: Expr, env :: Map):
       interp(fun, env)(interp(arg, env))
   | Literal(val):
       val
-  | Minus(left, right):      
+  | Minus(left, right):
       interp(left, env) - interp(right, env)
-  | If(tst, thn, els):      
+  | If(tst, thn, els):
       if interp(tst, env)
       | interp(thn, env)
       | interp(els, env)
@@ -92,7 +92,7 @@ check: interp(Id(#'x), {})
 
 check: interp(Minus(Literal(10), Literal(1)), {})
        ~is 9
-       
+
 check: interp(If(Equals(Literal(0), Id(#'x)),
                  Literal(2),
                  Literal(3)),

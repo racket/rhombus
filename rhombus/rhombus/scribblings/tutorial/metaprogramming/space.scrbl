@@ -16,7 +16,7 @@
 
 @title(~tag: "space"){Spaces}
 
-So far, we have seen macros two different @tech{spaces}: definitions and
+So far, we have seen macros in two different @tech{spaces}: definitions and
 expressions, each with its own macro-definition form,
 @rhombus(defn.macro, ~defn) or @rhombus(expr.macro, ~defn). Rhombus
 includes many other such spaces.
@@ -25,7 +25,7 @@ In general, a @deftech{space} is a parsing context that has its own
 bindings. For example, @rhombus(*) in an expression context is the
 multiplication operator, but @rhombus(*, ~at rhombus/rx) in a regular-expression
 context is a Kleene star. Getting from one space to another requires
-a form in one space, such the @rhombus(rx) expression form, that
+a form in one space, such as the @rhombus(rx) expression form, that
 bridges to the other space. Here are some examples showing how
 an asterisk interpretation is context-dependent.
 
@@ -80,7 +80,7 @@ a @rhombus(fun), the binding patterns of a @rhombus(match) form, and more.
 The @rhombus(expr.macro) declaration ensures that, when @rhombus('$a ⊢ $b') appears
 in an expression context,
 the left-hand and right-hand arguments of @rhombus(⊢) will be parsed as
-expressions. The @rhombus(bind.macro) declaration is similar ensuring that
+expressions. The @rhombus(bind.macro) declaration similarly ensures that
 the left-hand and right-hand components of @rhombus(⊢) will
 be parsed as bindings in binding positions.
 
@@ -110,11 +110,11 @@ The @rhombus(rx) form itself is parsed in the expression space, but it
 needs to parse the inside of subsequent @quotes in the regular-expression space.
 Similarly, @rhombus(def), @rhombus(fun), and @rhombus(match) start out
 in definition and expression spaces, but they need to parse portions of
-their input as bindings. As one more example of a space, we will consider 
+their input as bindings. As one more example of a space, we will consider
 @deftech{annotations}, which appear after @rhombus(::, ~bind) in bindings.
 For example, @rhombus(Int, ~annot) is an @tech{annotation}, and the
 @rhombus(::, ~bind) form parses an annotation on its right-hand side to
-impose a constraint on it's left-hand side:
+impose a constraint on its left-hand side:
 
 @examples(
   ~repl:
@@ -125,7 +125,7 @@ impose a constraint on it's left-hand side:
 
 @margin_note_block{The use of @rhombus(::, ~unquote_bind) in a
  syntax-pattern escape to specify a @tech{syntax class} is not quite the
- same as using @rhombus(::, ~bind) in a binding to specific a
+ same as using @rhombus(::, ~bind) in a binding to specify an
  @tech{annotation}, but they're similar enough that Rhombus uses the same
  operator name in those different contexts. In other words,
  @deftech{unquote bindings} and @defterm{syntax classes} are two more
@@ -157,7 +157,7 @@ syntax class triggers annotation parsing, for example.
 )
 
 This @rhombus(identity_at) macro would work about as well if
-@rhombus(ann) had no annotation and were simply spliced into the
+@rhombus(ann) had no specification and were simply spliced into the
 generated @rhombus(fun) form as a group. Specifying the
 @rhombus(annot_meta.Parsed, ~stxclass) syntax class ensures that the
 annotation is parsed early and cannot be accidentally or unexpectedly
@@ -259,7 +259,7 @@ following ways:
           where a @rhombus(tail_pat, ~var) is one that ends with @rhombus(...), a @bnf.nt{block} pattern, or an @bnf.nt{alts} pattern}],
    [hspace(1), @rhombus('#,(@rhombus(name, ~var)) #,(@rhombus(other_pat, ~var))'),
     @para{prefix with greedy match to @rhombus(other_pat, ~var)}],
-   ]   
+   ]
 )
 
 @section(~tag: "ex-meta-parsed"){Exercise}

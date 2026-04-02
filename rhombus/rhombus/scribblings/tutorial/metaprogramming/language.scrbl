@@ -20,7 +20,7 @@ same way as @rhombuslangname(rhombus) requires two steps:
  the language, including @seclink("implicit"){implicit forms}; and}
 
  @item{making the module part of your Racket installation, typically
- through a package, since the name after @hash_lang() is resolved to a
+ through a package, since the name after @hash_lang() is resolved to an
  implementing module through the installation.}
 
 )
@@ -34,7 +34,7 @@ Each Rhombus source file that starts with
 @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))) defines a
 @deftech{module}. A module can export bindings for use in other modules
 using @rhombus(export, ~decl), and other modules reference the exporting
-module using @rhombus(import, ~decl). In the case of modules that are
+module using @rhombus(import, ~defn). In the case of modules that are
 adjacent in the filesystem, they can refer to each other via
 relative-path strings.
 
@@ -93,7 +93,7 @@ start with the solution @local_file("my_operator_soln.rhm") to an
 The @rhombus(my_operator) macro expands to a use of @rhombus(expr.macro),
 which is not directly accessible in @filepath{main.rhm}, since it does
 not import @rhombusmodname(rhombus/meta) or use
-@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/and_meta))). the
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/and_meta))). The
 import @rhombus(my_operator) macro works, anyway, because syntax objects
 retain scope information and enable @deftech{hygienic} macros.
 
@@ -145,7 +145,7 @@ definition of the @rhombus(lc) space @filepath{interp_space.rhm} (about
       fun
       #%call
       #%parens
-      #%literal      
+      #%literal
 )
 
 This example illustrates how Rhombus provides fine-grained control over
@@ -192,11 +192,11 @@ an error message about a missing @tt{#%module-begin} binding. As the
 @litchar{#%} prefix suggests, @tt{#%module-begin} is an implicit that
 wraps a module body. It turns out that @tt{#%module-begin} is from the
 Racket layer of Rhombus, and it works in Racket-native terms. Rhombus
-has its own @rhombus(#%module_block) protocol that works in
-Rhombus-native terms, and Rhombus exports a @tt{#%module-begin} that
-bridges to @rhombus(#%module_block). The Rhombus spelling of the Racket
+has its own @rhombus(#%module_block, ~datum) protocol that works in
+Rhombus-native terms, and Rhombus exports a @rhombuslink(#{#%module-begin}){@tt{#%module-begin}} that
+bridges to @rhombus(#%module_block, ~datum). The Rhombus spelling of the Racket
 @tt{#%module-begin} identifier (which has a hyphen) is
-@rhombus(#{#%module-begin}).
+@rhombus(#{#%module-begin}, ~datum).
 
 So, to make the new @filepath{main.rhm} work, we need to change
 @filepath{interp_space.rhm} to
@@ -206,7 +206,7 @@ So, to make the new @filepath{main.rhm} work, we need to change
  @item{re-export @rhombus(#{#%module-begin}) from
  @rhombuslangname(rhombus); and}
 
- @item{define and export a @rhombus(#%module_block) declaration form
+ @item{define and export a @rhombus(#%module_block, ~datum) declaration form
  that expands to use @rhombus(interp) and @rhombus(prog).}
 
 )

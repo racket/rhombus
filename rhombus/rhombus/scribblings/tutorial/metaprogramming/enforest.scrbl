@@ -15,7 +15,7 @@
 @title(~tag: "enforest"){Enforestation}
 
 For expressions and other contexts that involve infix operators, the
-@tech{parse} process can further divided into two interleaved processes:
+@tech{parse} process can be further divided into two interleaved processes:
 
 @itemlist(
 
@@ -60,7 +60,7 @@ the right-hand side of @rhombus(.) starts with a method name
 @rhombus(remove), not an expression. The @rhombus(.) expander determines
 that @rhombus(remove(2)) should be consumed in order to expand into a method
 call, but it leaves @rhombus(|> println) for further parsing. Accordingly,
-once the @rhombus(.) operator finishes, the expansion and enforestation process
+once the @rhombus(.) operator finishes, the enforestation process
 picks up from there with the @rhombus(|>) operator.
 
 Going forward, we can mostly forget about the internal composition of
@@ -214,7 +214,7 @@ arguments that have side effects.
     fun trace(v):
       showln(v)
       v
-  ~repl:    
+  ~repl:
     trace("apple") <~> trace("banana")
     trace("apple") <~~~> trace("banana")
 )
@@ -239,7 +239,7 @@ recognizes a specific shape as a shorthand for @tech{parsing} left- and
 right-hand expressions first, taking into account the
 @rhombus(~weaker_than) precedence declaration. It completes the pattern
 match only after expressions to the left and right of @rhombus(<~~~>) are
-parsed. Those parsed terms as then passed along to the macro as
+parsed. Those parsed terms are then passed along to the macro as
 single-term representations of already-parsed expressions. We will
 @seclink("macro-patterns"){return later} to the precise rules for patterns and the specific shapes that
 @rhombus(expr.macro, ~defn) recognizes and automatically adjusts.
@@ -288,7 +288,7 @@ The starting code @local_file("my_operator.rhm") solves a few problems for you:
  defining an infix operator with plain identifiers to represent
  the arguments. The @rhombus(Name, ~stxclass) syntax class matches both
  identifiers and operators. Since @rhombus($body) is not only alone
- within its @bnf.nt{group} but also alone within it @bnf.nt{block}, it
+ within its @bnf.nt{group} but also alone within its @bnf.nt{block}, it
  can match a sequence of @bnf.nt{group}s.}
 
  @item{You will need to generate an @rhombus(expr.macro, ~defn) form, which

@@ -6,7 +6,7 @@
 
 (define shrubbery_s_expression_grammar
   (BNF (list @nonterm{document}
-             @racket[(top @#,nonterm{group} ...)])
+             @racket[(multi @#,nonterm{group} ...)])
        (list @nonterm{group}
              @racket[(group @#,nonterm{item} ... @#,nonterm{item})]
              @racket[(group @#,nonterm{item} ... @#,nonterm{block})]
@@ -24,7 +24,3 @@
              @racket[(block @#,nonterm{group} ...)])
        (list @nonterm{alts}
              @racket[(alts @#,nonterm{block} ...)])))
-             
-
-             
-             

@@ -1,5 +1,5 @@
 #lang rhombus/and_meta
- 
+
 defn.macro 'datatype $(name :: Identifier)
             | $(variant :: Identifier)($field :: $type, ...)
             | ...':
@@ -44,9 +44,9 @@ fun interp(e :: Expr, env :: Map):
   match e
   | Id(name):
       lookup(env, name)
-  | Plus(left, right):      
+  | Plus(left, right):
       env => left + right
-  | Equals(left, right):      
+  | Equals(left, right):
       env => left == right
   | Let(name, rhs, body):
       env ++ { name: interp(rhs, env) } => body
@@ -83,7 +83,7 @@ check: interp(Id(#'x), {})
        ~throws "free variable x"
 
 // Make sure you have a memory limit enabled in DrRacket
-// before uncommnting this call to Ω
+// before uncommenting this call to Ω
 #//
 interp(Call(Fun(#'x,
                 Call(Id(#'x), Id(#'x))),

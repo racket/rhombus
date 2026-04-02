@@ -49,7 +49,7 @@
       (out "armored" armored display)
       (error "unarmored is different from input"))))
 
-(check "simple" "a: 1 2" '(top (group a (block (group 1) (group 2)))))
+(check "simple" "a: 1 2" '(multi (group a (block (group 1) (group 2)))))
 (check 1 input1 expected1)
 (check '1a input1a expected1a #:unarmor? #f)
 (check '1b input1a expected1a #:unarmor? #f)

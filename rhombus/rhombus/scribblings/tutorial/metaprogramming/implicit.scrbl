@@ -39,7 +39,7 @@ target to expand. When a literal number or string is found by itself,
 for example, the @rhombus(#%literal) implicit prefix form is tried in the
 appropriate space. When a form is followed by a parenthesized form,
 the @rhombus(#%call) implicit infix form is tried.
-@margin_note{Implicit form names starts with @litchar{#%}, which
+@margin_note{Implicit form names start with @litchar{#%}, which
 is allowed in general at the start of Rhombus identifiers, but intended
 for use by bindings that are not normally seen.}
 
@@ -53,7 +53,7 @@ treat each integer as @rhombus(10) times its normal value:
     block:
       import rhombus.#%literal as orig_literal
       expr.macro '#%literal $(n :: Int)':
-                    'orig_literal $(n.unwrap() * 10)'
+        'orig_literal $(n.unwrap() * 10)'
       2 + 5 - 1
 )
 
@@ -89,7 +89,7 @@ constructor like @rhombus(Id) and @rhombus(Fun). In the end,
 @rhombus(prog) directly uses a parsed result via
 @rhombus(lc_meta.Parsed) as its result expression.
 
-Add a substraction and conditional form this this interpreter and its
+Add a substraction and conditional form to this interpreter and its
 parser, the same as in an @seclink("ex-interp1"){earlier exercise} with
 @local_file("interp1.rhm").
 

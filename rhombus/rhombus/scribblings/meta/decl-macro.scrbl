@@ -39,7 +39,7 @@
 
  Like @rhombus(defn.macro) but for defining a macro in
  @deftech{declaration} positions, which are in
- in a module or interactive position---the same places where
+ a module or interactive position---the same places where
  @rhombus(meta) and @rhombus(module) are allowed, for example.
 
 }

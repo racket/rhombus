@@ -2,7 +2,7 @@
 
 // Exercises:
 //  * Add a subtraction operation
-//  * Change `let` to rewrite to immediately called `fun`
+//  * Change `let` to rewrite to an immediately called `fun`
 //  * Add an `if` (conditional) form
 
 fun interp(e :: Syntax, env :: Map):

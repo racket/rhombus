@@ -20,7 +20,7 @@ decl.macro 'my_module_block:
 
 // ========================================
 // expression datatype
- 
+
 defn.macro 'datatype $(name :: Identifier)
             | $(variant :: Identifier)($(field :: Identifier) :: $(type :: Identifier), ...)
             | ...':
@@ -68,9 +68,9 @@ fun interp(e :: Expr, env :: Map):
   match e
   | Id(name):
       lookup(env, name)
-  | Plus(left, right):      
+  | Plus(left, right):
       env => left + right
-  | Equals(left, right):      
+  | Equals(left, right):
       env => left == right
   | Let(name, rhs, body):
       env ++ { name: interp(rhs, env) } => body
@@ -107,7 +107,7 @@ export:
     #%call
     #%parens
     #%literal
-  
+
 lc.macro '$left + $right':
   ~order: addition
   'Plus($left, $right)'

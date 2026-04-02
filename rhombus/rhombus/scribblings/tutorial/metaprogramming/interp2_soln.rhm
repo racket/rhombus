@@ -45,9 +45,9 @@ fun interp(e :: Expr, env :: Map):
       if name in env
       | env[name]
       | error("free variable " +& name)
-  | Plus(left, right):      
+  | Plus(left, right):
       interp(left, env) + interp(right, env)
-  | Equals(left, right):      
+  | Equals(left, right):
       interp(left, env) == interp(right, env)
   | Let(name, rhs, body):
       interp(body, env ++ { name: interp(rhs, env) })

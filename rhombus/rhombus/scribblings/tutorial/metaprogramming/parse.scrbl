@@ -115,13 +115,13 @@ The pattern has many ellipses:
 
  @item{There's another @rhombus(...) after the @litchar{,} to mean
  repetitions of @rhombus($field ...), which implies that @rhombus(field)
- stands for a comma-separated repetition of repetitions, i.e., 
+ stands for a comma-separated repetition of repetitions, i.e.,
  a repetition of depth 2.}
 
  @item{The @rhombus(...) after @litchar{|} means a @litchar{|}-separated
  repetition of @rhombus($variant($field ..., ...)), so @rhombus(field)
- actually standards for a repetition of depth 3! Meanwhile,
- @rhombus(variant) is a also repetition of depth 1. For any match,
+ actually stands for a repetition of depth 3! Meanwhile,
+ @rhombus(variant) is also a repetition of depth 1. For any match,
  the count associated with the @rhombus(variant) repetition will be the
  same as the count for the outermost repetition count of
  @rhombus(field).}
@@ -198,7 +198,7 @@ Let's check that the pattern and template work as intended:
          nonfinal
        class $variant($field ..., ...):
          extends $name
-       ...'    
+       ...'
 )
 
 @section{Shorthands and Syntax Classes}
@@ -230,14 +230,14 @@ simpler:
        nonfinal
      class $variant($field, ...):
        extends $name
-     ...'    
+     ...'
 )
 
 Note how the @rhombus([[field, ...], ...]) interaction shows that each
 @rhombus(field) in the repetition is a @bnf.nt{group} syntax
 object that contains multiple space-separated @bnf.nt{term}s.
 
-Sometimes these shorthands are not exatly what you want, or sometimes
+Sometimes these shorthands are not exactly what you want, or sometimes
 you want to be more strict about what is allowed at some point to
 match a pattern variable. In those cases, you can annotate the pattern variable
 with a @deftech{syntax class}, which is written by putting the pattern variable
@@ -279,13 +279,13 @@ using the @rhombus(Identifier, ~stxclass) syntax class.
     ~error:
       my_expand('datatype Expr
                  | 1()
-                 | 2()')  
+                 | 2()')
 )
 
 You can @seclink("syntax-classes", ~doc: rhombus_doc){define your own}
 syntax classes to support new syntactic categories that might be important
 for your own constructs, but the built-in set of syntax classes is sufficient
-for our purposes in the tutorial. 
+for our purposes in the tutorial.
 
 @section{Parsing-Time Expressions}
 
@@ -323,7 +323,7 @@ debugging programs involves compiling them twice. If you
  DrRacket.}
 This example module prints ``running'' when it is run, but it has to be
 parsed before it can be run, and so ``parsing'' prints first---even though it
-is later in the module. 
+is later in the module.
 
 If we put @rhombus(my_expand) from the previous example into a
 @rhombus(meta) block, then it can be called at parse time,
@@ -344,7 +344,7 @@ function and registers a connection to the name @rhombus(datatype),
 because @rhombus(datatype) is the head of the pattern after
 @rhombus(defn.macro). When the parser later encounters
 @rhombus(datatype) in a definition position, it matches the
-@rhombus(datatype) use to the pattern, it and evaluates the body of the
+@rhombus(datatype) use to the pattern, and evaluates the body of the
 @rhombus(defn.macro) form to get a replacement set of definitions.
 
 @rhombusblock(
@@ -377,13 +377,13 @@ because @rhombus(datatype) is the head of the pattern after
 
 In the @rhombus(defn.macro) form that defines @rhombus(datatype), the
 template @quotes expression in the body of the definition is a
-parsing-type expression. The code @emph{inside} the @quotes represents a
-run-time definition, since it will be spliced in place of a use of
+parsing-time expression. The code @emph{inside} the @quotes represents a
+set of run-time definitions, since it will be spliced in place of a use of
 @rhombus(datatype) in a run-time definition position.
 
 @section(~tag: "ex-defn-macro"){Exercise}
 
-Start with with program @local_file("interp_defn_macro.rhm"). If you
+Start with the program @local_file("interp_defn_macro.rhm"). If you
 replace @rhombus(Id) in @rhombus(datatype Expr) with @rhombus(7), then
 you get a nice error message from @rhombus(datatype). But if you replace
 @rhombus(name :: Symbol) with @rhombus(7 :: Symbol), then you get an

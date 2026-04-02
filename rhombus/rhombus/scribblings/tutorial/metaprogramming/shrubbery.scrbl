@@ -74,7 +74,7 @@ ways:
 
 @itemlist(
 
- @item{Shrubbery notation is provides most tree
+ @item{Shrubbery notation provides most tree
  structure, but it leaves some tree structure to a second layer of
  parsing, as in @rhombus(1 + x * 3).
 
@@ -132,14 +132,14 @@ abstract structure. Shrubbery notation enables a second layer of syntax to make 
 among forms that used @parens, @brackets, @braces, @litchar{:} or @litchar{|},
 instead of making distinctions only based on a leading identifier.
 Still, the shrubbery abstract
-grammar is still far simpler than the AST of any realistic
+grammar is far simpler than the AST of any realistic
 programming language.
 
 Here's the abstract syntax that a shrubbery form describes:
 
 @nested(~style: #'inset,
         bnf.grammar(
-          [@bnf.nt{document}, [bnf.star(@bnf.nt{group})]],              
+          [@bnf.nt{document}, [bnf.star(@bnf.nt{group})]],
           [@bnf.nt{group}, [annote(bnf.seq(bnf.star(@bnf.nt{item}),
                                            bnf.opt(@bnf.nt{block}),
                                            bnf.opt(@bnf.nt{alts})),
@@ -172,7 +172,7 @@ Why these particular textual elements?
  writes well.}
 
  @item{Using @litchar{|} to generalize @litchar{:} for multi-block forms
- helps highlight alternatives, such the cases of an @rhombus(if),
+ helps highlight alternatives, such as the cases of an @rhombus(if),
  @rhombus(match), or @seclink("patten+template"){algebraic-datatype declaration}.}
 
 )
@@ -221,29 +221,29 @@ The first set of rules are about separators and closers:
  @bnf.nt{group}, but @bnf.nt{group}s in a @bnf.star(@bnf.nt{group})
  sequence are separated either by a comma @litchar{,} or by a newline.
  Specifically, @bnf.nt{group}s in @parens, @brackets, or @braces are
- comma-separated, while @bnf.nt{group}s other places (including in
+ comma-separated, while @bnf.nt{group}s in other places (including in
  @quotes) are separated by newlines.
 
  Examples:
 
  @rhombusblock(
   (group 1, group 2, group 3)
-  
+
   [group 1, group 2, group 3]
-  
+
   {group 1, group 2, group 3}
-  
+
   'group 1
    group 2
    group 3'
-  
+
   : group 1
     group 2
     group 3
-  
+
   | group 1
     group 2
-    group 3  
+    group 3
  )}
 
  @item{Only some of the sequence-combining forms rely on paired
@@ -259,10 +259,10 @@ The first set of rules are about separators and closers:
   [start sequence, sequence end]
 
   {start sequence, sequence end}
-  
+
   'start sequence
    sequence end'
-  
+
   : start sequence: start nested sequence
                     nested sequence end
     sequence end
@@ -281,7 +281,7 @@ The first set of rules are about separators and closers:
  same line as another @litchar{|} ends the preceding @litchar{|}, instead
  of requiring a newline to end the preceding @litchar{|}. This exception
  applies only if the two @litchar{|}s are inside the same @parens,
- @brackets, @braces, and @quotes.
+ @brackets, @braces, or @quotes.
 
  Examples:
 
@@ -309,11 +309,11 @@ places where newlines are optional and allowed:
    group 3)
 
   (group 1,
-   
+
    group 2)
 
   'group 1
-   
+
    group 2'
 )}
 
@@ -322,9 +322,9 @@ places where newlines are optional and allowed:
 
   Examples:
 
-@rhombusblock(  
+@rhombusblock(
   (
-    group 1,   
+    group 1,
     group 2
   )
 
@@ -346,7 +346,7 @@ places where newlines are optional and allowed:
 
   Examples:
 
-@rhombusblock(  
+@rhombusblock(
   group 1
   | alt 1 nested group 1
     alt 1 nested group 2
@@ -384,7 +384,7 @@ ignored.
 
 @subsection{Indentation Rules and Variations}
 
-When a newline is used, either to acts as a separator or when allowed
+When a newline is used, either to act as a separator or when allowed
 between @litchar{,}-separated groups, indentation of the newly formed
 line is constrained:
 
@@ -515,7 +515,7 @@ shrubbery's abstract form using an
 For example,
 
 @rhombusblock(
-  #,(@tt{#lang}) #,(@rhombuslangname(shrubbery))
+  #,(@hash_lang()) #,(@rhombuslangname(shrubbery))
 
   start:
     "hello"
@@ -537,7 +537,7 @@ prints
 where @rhombus(multi, ~datum) is used to combine a top-level sequence of
 @tech{groups} in a module.
 
-Experiment with @rhombus(#,(@tt{#lang}) #,(@rhombuslangname(shrubbery))),
+Experiment with @rhombus(#,(@hash_lang()) #,(@rhombuslangname(shrubbery))),
 then reverse-engineer the following outputs by
 writing a shrubbery form that produces it.@margin_note{Note that if you make
 the DrRacket window narrower, the parenthesized output will contain
