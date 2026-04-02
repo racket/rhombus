@@ -88,3 +88,30 @@ log(use_z)
 
 check: accum
        ~is ["yes", "no"]
+
+block:
+  use_dynamic
+  namespace.interleave:
+    ~name: foo
+    ~is_clause: fun (x, y): #false
+    ~parse_clause: fun (a, b, c): #void
+    ~init ''
+    ~complete: fun (x, y :: Map): namespace_meta.Exports.declaration(y[#'exports], 'ns')
+    export fun f(x): x
+  check ns.f() ~throws "foo.f"
+
+block:
+  namespace ns
+  namespace.interleave:
+    ~name: foo
+    ~is_clause: fun (x, y): #false
+    ~parse_clause: fun (a, b, c): #void
+    ~init: ''
+    ~complete: fun (x, y :: Map):
+                 use_dynamic
+                 y[#'exports].declaration('ns.sub')
+    ~body:
+      export fun f(x): x
+    export def x = 2
+  check ns.sub.f(1) ~is 1
+  check ns.sub.x ~is 2

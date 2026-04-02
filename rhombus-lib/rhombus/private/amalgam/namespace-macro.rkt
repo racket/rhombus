@@ -21,6 +21,7 @@
          "parens.rkt"
          "parse.rkt"
          "name-root.rkt"
+         "dotted-sequence-parse.rkt"
          "definition.rkt"
          "sentinel-declaration.rkt"
          "export-check.rkt"
@@ -62,9 +63,9 @@
              #:with form #'g)
     (pattern (~seq (_::block (group (_::quotes g ...))))
              #:with form #'(multi g ...))
-    (pattern (~seq (group (_::quotes g)))
+    (pattern (~seq (_::quotes g))
              #:with form #'g)
-    (pattern (~seq (group (_::quotes g ...)))
+    (pattern (~seq (_::quotes g ...))
              #:with form #'(multi g ...)))
 
   (define (check-arity e)
@@ -137,7 +138,9 @@
                              (~optional (group (~and defer-tail #:defer_tail) ~!)
                                         #:defaults ([defer-tail #'#f]))
                              (~optional (group (~and no-exports #:no_exports) ~!)
-                                        #:defaults ([no-exports #'#f])))
+                                        #:defaults ([no-exports #'#f]))
+                             (~optional (group #:body ~! (_::block pre-body ...))
+                                        #:defaults ([(pre-body 1) '()])))
                        ...
                        . clauses))
          (unless (attribute predicate)
@@ -145,11 +148,11 @@
          (unless (attribute parse)
            (raise-syntax-error #f "expected a `~parse_clause` clause" stx))
          (unless (attribute init-data)
-           (raise-syntax-error #f "expected a `~data` clause" stx))
+           (raise-syntax-error #f "expected a `~init` clause" stx))
          (unless (attribute complete)
            (raise-syntax-error #f "expected a `~complete` clause" stx))
          (define reflect-name (if (attribute name)
-                                  (build-dot-symbol #'name #:skip-dots? #f)
+                                  (build-dot-symbol (syntax->list #'name) #:skip-dots? #f)
                                   name-prefix))
          (define intro (make-syntax-introducer #t))
          (define data #`[defer-tail no-exports #,reflect-name #,effect-id
@@ -163,7 +166,7 @@
             (define-syntax (complete-clause user-data extras) (call-complete complete.expr user-data extras))
             (rhombus-mixed-nested-forwarding-sequence
              (namespace-finish #,data) rhombus-namespacespace-clause
-             (namespace-body-step [#,data init-data.form] . #,(intro #'clauses))))]))))
+             (namespace-body-step [#,data init-data.form] . #,(intro #'(pre-body ... . clauses)))))]))))
 
 (define-syntax namespace-body-step
   (lambda (stx)
@@ -284,11 +287,14 @@
                                               (loop (merge-export* who exs-ht external-id internal-id include-spaces exclude-spaces)))]
                                            [(declarer)
                                             (lambda (who name)
-                                              (unless (identifier? name)
-                                                (raise-annotation-failure who name "Identifier"))
-                                              (let ([name (syntax-local-introduce name)])
-                                                #`(group (parsed #:rhombus/decl/nestable
-                                                                 ((namespace-export #,name #,(force exs) forward-base-ctx forward-ctx))))))]
+                                              (syntax-parse (unpack-group name #f #f)
+                                                [(_ name-seq::dotted-identifier-sequence)
+                                                 #:with name::dotted-identifier #'name-seq
+                                                 (with-syntax ([name-name (syntax-local-introduce #'name.name)])
+                                                   #`(group (parsed #:rhombus/decl/nestable
+                                                                    ((namespace-export name-name name.extends #,(force exs) forward-base-ctx forward-ctx)))))]
+                                                [_
+                                                 (raise-annotation-failure who name "Name")]))]
                                            [else
                                             (raise-arguments-error 'exports "unregnized request"
                                                                    "request" query)]))))))]
@@ -302,9 +308,10 @@
 
 (define-syntax (namespace-export stx)
   (syntax-parse stx
-    [(_ name fields forward-base-ctx forward-ctx)
+    [(_ name extends fields forward-base-ctx forward-ctx)
      (register-field-check #'(forward-base-ctx forward-ctx . fields))
      #'(define-name-root name
+         #:extends extends
          #:fields
          fields)]))
 

@@ -33,6 +33,9 @@
   | ~name: $id_name
   | ~defer_tail
   | ~no_exports
+  | ~body:
+      $pre_body
+      ...
 ){
 
  Intended as an expansion step for a macro that implements a new
@@ -148,12 +151,23 @@
   @rhombus(parse_clause, ~var) call and delivered in the end to
   @rhombus(complete, ~var).}
 
+ @item{@rhombus(~name): Provides a prefix used for run-time reporting
+  for definitions within the namespace, the same as for
+  @rhombus(namespace).}
+
  @item{@rhombus(~defer_tail): Causes @rhombus(body) expansion to stop at
   a point where only definitions and expressions remain. See
   @rhombus(~complete) for more information.}
 
  @item{@rhombus(~no_exports): Disallows the use of @rhombus(export) (or,
   more generally, a @tech{nestable declaration}) as a @rhombus(body) form.}
+
+ @item{@rhombus(~body): Provides a @rhombus(pre_body) sequence to add
+  before @rhombus(body) forms in the namespace body. A macro might expand
+  to use a use of @rhombus(namespace.interleave) with a @rhombus(~body)
+  block, instead of using the main @rhombus(body) sequence, to avoid
+  having to sanitize an input sequence that could start with
+  @rhombus(option)-like keyword forms.}
 
 )
 
