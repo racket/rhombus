@@ -294,6 +294,8 @@
                         [#,space-reflect-name #,space-reflect-name #:reflection]
                         [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
                         [#,bound-name-start-class-name #,bound-name-start-class-name #:syntax_class_bound_name_start]
+                        [#,pack-id #,pack-id #:parsed_packer]
+                        [#,unpack-id #,unpack-id #:parsed_unpacker]
                         . #,exs)))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
                 (maybe-skip

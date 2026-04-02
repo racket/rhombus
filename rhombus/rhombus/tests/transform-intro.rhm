@@ -14,6 +14,15 @@ space.transform scaled:
   meta_namespace scaled_meta:
     parse_syntax_class Parsed(amt)
 
+space.transform scaled_recur:
+  space_path demo/scaled_recur
+  macro_definer macro:
+    ~amt
+  meta_namespace scaled_recur_meta:
+    parse_syntax_class Parsed(amt)
+    parsed_packer pack
+    parsed_unpacker unpack
+
 meta:
   def mutable saved :~ List = []
 
@@ -65,3 +74,33 @@ check:
   with_scale 2:
     as_scaled 3 + 4
   ~is 14
+
+expr.macro 'as_scaled $e':
+  '["does not recur", $e]'
+scaled.macro 'as_scaled_almost $(x :: expr_meta.Parsed)':
+  ~amt: a
+  'as_scaled $x'
+check:
+  with_scale 2:
+    as_scaled_almost 3 + 4
+  ~is ["does not recur", 7]
+
+scaled_recur.macro 'as_scaled_recur $(x :: expr_meta.Parsed)':
+  ~amt: a
+  scaled_recur_meta.pack('($a * $x)')
+expr.macro 'with_scale_recur $n: $(body :: Group)':
+  match body
+  | '$(s :: scaled_recur_meta.Parsed(n.unwrap()))':
+      s
+check:
+  with_scale_recur 2:
+    as_scaled_recur 3 + 4
+  ~is 14
+
+scaled_recur.macro 'as_scaled_twice $(x :: expr_meta.Parsed)':
+  ~amt: a
+  'as_scaled_recur 2 * $x'
+check:
+  with_scale_recur 2:
+    as_scaled_twice 3 + 4
+  ~is 28
