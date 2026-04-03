@@ -23,12 +23,22 @@
   (struct delayed-annotation annotation-prefix-operator (complete!-id
                                                          static-info-id
                                                          [completed? #:mutable]))
-  (define (make-delayed-annotation proc complete!-id static-info-id)
+  (define (make-delayed-annotation get-ids)
+    (define-values (pred-id complete!-id static-info-id) (get-ids))
     (delayed-annotation
      #f
      '((default . stronger))
      'macro
-     proc
+     (lambda (stx ctx)
+       (syntax-parse stx
+         [(head . tail)
+          (values (relocate+reraw
+                   #'head
+                   (annotation-predicate-form
+                    pred-id
+                    #`((#%indirect-static-info #,static-info-id))))
+                  #'tail)]
+         [_ 'does-not-happen]))
      complete!-id
      static-info-id
      #f))
@@ -37,40 +47,36 @@
 (define (too-early who)
   (raise-arguments-error who "delayed annotation is not yet completed"))
 
-(define-for-syntax (static-info-too-early who)
-  (raise-syntax-error who
-                      "annotation static information needed before completed"))
+(define-for-syntax (make-delayed-static-info who)
+  (let ([static-infos #f])
+    (static-info
+     (case-lambda
+       [()
+        (or static-infos
+            (raise-syntax-error who "annotation static information needed before completed"))]
+       [(si)
+        (set! static-infos si)]))))
 
 (define-defn-syntax delayed_declare
   (definition-transformer
     (lambda (stx name-prefix effect-id)
       (syntax-parse stx
         [(_ name:id)
+         #:do [(define (format-id format-str)
+                 (datum->syntax #'here (string->symbol (format format-str (syntax-e #'name)))))]
+         #:with delayed-predicate (format-id "~a?")
+         #:with set-delayed-predicate! (format-id "set-~a?!")
+         #:with delayed-static-info (format-id "~a-static-info")
          #`((begin
               (define delayed-predicate (lambda (v) (too-early 'name)))
               (define (set-delayed-predicate! proc) (set! delayed-predicate proc))
-              (define-syntax delayed-static-info (static-info
-                                                  (let ([static-infos #f])
-                                                    (case-lambda
-                                                      [()
-                                                       (unless static-infos (static-info-too-early 'name))
-                                                       static-infos]
-                                                      [(si) (set! static-infos si)]))))
+              (define-syntax delayed-static-info (make-delayed-static-info 'name))
               (define-syntax #,(in-annotation-space #'name)
-                (letrec ([self (make-delayed-annotation
-                                (lambda (stx ctx)
-                                  (syntax-parse stx
-                                    [(head . tail)
-                                     (values (relocate+reraw
-                                              #'head
-                                              (annotation-predicate-form
-                                               (quote-syntax delayed-predicate)
-                                               (quote-syntax ((#%indirect-static-info delayed-static-info)))))
-                                             #'tail)]
-                                    [_ 'does-not-happen]))
-                                (quote-syntax set-delayed-predicate!)
-                                (quote-syntax delayed-static-info))])
-                  self))))]))))
+                (make-delayed-annotation
+                 (lambda ()
+                   (values (quote-syntax delayed-predicate)
+                           (quote-syntax set-delayed-predicate!)
+                           (quote-syntax delayed-static-info)))))))]))))
 
 (define-defn-syntax delayed_complete
   (definition-transformer
@@ -98,7 +104,8 @@
                         #'ap.parsed)
                   #`(begin
                       (define-syntaxes ()
-                        (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
+                        (delayed-annotation-complete-compiletime (quote-syntax name.name)
+                                                                 (quote-syntax a.static-infos)))
                       (void (#,(delayed-annotation-complete!-id dp) a.predicate)))))]
            [a::annotation-binding-form
             (raise-syntax-error #f
