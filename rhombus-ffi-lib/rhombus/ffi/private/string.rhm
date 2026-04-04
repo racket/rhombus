@@ -1,0 +1,11 @@
+#lang rhombus/static/and_meta
+import:
+  "base_type.rhm"!string open
+  "define_type.rhm"!foreign open
+
+export:
+  string_t
+
+c_type string_t:
+  ~extends: mutable_string_t
+  ~c_to_rhombus: fun (str) :~ maybe(String): str && to_string(str)

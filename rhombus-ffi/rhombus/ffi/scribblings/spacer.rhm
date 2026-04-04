@@ -1,0 +1,211 @@
+#lang rhombus/static/and_meta
+import:
+  scribble/spacer
+  ffi.foreign
+
+export:
+  struct
+  union
+  mem
+  new
+  cast
+  sizeof
+  only_space namespace:
+    // export namespace extensions
+    foreign
+    // helper for overview examples
+    curses
+
+meta:
+  def type_ctx = #'#{rhombus/ffi/type}
+
+spacer.bridge foreign.type(self, tail, context, esc):
+  ~in: ~defn ~annot
+  cond
+  | context == #'~annot || context == #'#{rhombus/annot}:
+      '$self $(spacer.adjust_sequence(tail, type_ctx, esc))'
+  | ~else:
+      match tail
+      | '$seq ... : $(block :: Block)':
+          let new_block:
+            match block
+            | ':
+                 $(extends && '~extends') $ext ...
+                 $more
+                 ...':
+                let ': $(ext_g :: Group); $_; ...' = block
+                let new_ext = '$extends $(spacer.adjust_sequence('$ext ...', type_ctx, esc))'
+                let new_ext = new_ext.relocate_group(ext_g)
+                let [new_more, ...] = [spacer.adjust_group(more, #false, esc), ...]
+                ':
+                   $new_ext
+                   $new_more
+                   ...'.relocate(block)
+            | ~else:
+                spacer.adjust_term(block, #false, esc)
+          '$self $(spacer.adjust_sequence('$seq ...', type_ctx, esc)) $new_block'
+      | '$seq ... $(eql && '=') $type_seq ...':
+          let new_eql = spacer.adjust_term(eql, #false, esc)
+          let new_type_seq = spacer.adjust_sequence('$type_seq ...', type_ctx, esc)
+          '$self $(spacer.adjust_sequence('$seq ...', type_ctx, esc)) $new_eql $new_type_seq'
+      | ~else:
+          '$self $(spacer.adjust_sequence(tail, type_ctx, esc))'
+
+meta:
+  fun adjust_field_or_arg(field_g, esc) :~ Syntax:
+    match field_g
+    | '$field_id $(bind_op && '::') $field_type ... $(eql_op && '=') $auto_seq ...':
+        let new_bind_op = spacer.adjust_term(bind_op, #'~bind, esc)
+        let new_field_seq = spacer.adjust_sequence('$field_type ...', type_ctx, esc)
+        let new_eql_op = spacer.adjust_term(eql_op, #false, esc)
+        let new_auto_seq = spacer.adjust_sequence('$auto_seq ...', #false, esc)
+        '$field_id $new_bind_op $new_field_seq $new_eql_op $new_auto_seq'.relocate_group(field_g)
+    | '$field_id $(bind_op && '::') $field_type ...':
+        let new_bind_op = spacer.adjust_term(bind_op, #'~bind, esc)
+        let new_field_seq = spacer.adjust_sequence('$field_type ...', type_ctx, esc)
+        '$field_id $new_bind_op $new_field_seq'.relocate_group(field_g)
+    | '$field_type ... $(eql_op && '=') $auto_seq ...':
+        let new_field_seq = spacer.adjust_sequence('$field_type ...', type_ctx, esc)
+        let new_eql_op = spacer.adjust_term(eql_op, #false, esc)
+        let new_auto_seq = spacer.adjust_sequence('$auto_seq ...', #false, esc)
+        '$new_field_seq $new_eql_op $new_auto_seq'.relocate_group(field_g)
+    | '$field_type ...':
+        spacer.adjust_group(field_g, type_ctx, esc)
+
+  fun adjust_compound(self, tail, context, esc):
+    match tail
+    | '$pre ... $(parens && '($field_g, ...)')':
+        let [new_field_g, ...]: [adjust_field_or_arg(field_g, esc), ...]
+        let new_parens = '($new_field_g, ...)'.relocate(parens)
+        '$self $pre ... $new_parens'
+    | ~else:
+        '$self $tail'
+
+spacer.bridge foreign.struct(self, tail, context, esc):
+  ~in: ~defn
+  adjust_compound(self, tail, context, esc)
+
+spacer.bridge struct(self, tail, context, esc):
+  ~in: #{rhombus/ffi/type}
+  adjust_compound(self, tail, context, esc)
+
+spacer.bridge foreign.union(self, tail, context, esc):
+  ~in: ~defn
+  adjust_compound(self, tail, context, esc)
+
+spacer.bridge union(self, tail, context, esc):
+  ~in: #{rhombus/ffi/type}
+  adjust_compound(self, tail, context, esc)
+
+meta:
+  fun adjust_ret(seq, esc):
+    match seq
+    | '($ret ...)':
+        let '($(g :: Group))' = seq
+        '($(adjust_field_or_arg('$ret ...', esc).relocate_group(g)))'.relocate(seq)
+    | ~else:
+        spacer.adjust_sequence(seq, type_ctx, esc)
+  fun adjust_fun(self, tail, context, esc):
+    fun pre_block(tail):
+      match tail
+      | '$pre ... $(parens && '($arg_g, ...)') $(bind_op && '::') $ret_seq ... $(ann_op && ('::' || ':~')) $ret_ann ...':
+          let [new_arg_g, ...]: [adjust_field_or_arg(arg_g, esc), ...]
+          let new_parens = '($new_arg_g, ...)'.relocate(parens)
+          let new_bind_op = spacer.adjust_term(bind_op, #'~bind, esc)
+          let new_ret_seq = adjust_ret('$ret_seq ...', esc)
+          let new_ann_op = spacer.adjust_term(ann_op, #'~bind, esc)
+          let new_ret_ann = spacer.adjust_sequence('$ret_ann ...', #'~annot, esc)
+          '$self $pre ... $new_parens $new_bind_op $new_ret_seq $new_ann_op $new_ret_ann'
+      | '$pre ... $(parens && '($arg_g, ...)') $(bind_op && '::') $ret_seq ...':
+          let [new_arg_g, ...]: [adjust_field_or_arg(arg_g, esc), ...]
+          let new_parens = '($new_arg_g, ...)'.relocate(parens)
+          let new_bind_op = spacer.adjust_term(bind_op, #'~bind, esc)
+          let new_ret_seq = adjust_ret('$ret_seq ...', esc)
+          '$self $pre ... $new_parens $new_bind_op $new_ret_seq'
+      | ~else:
+          '$self $tail'
+    match tail
+    | '$head ... : $(block :: Block)':
+        let new_head = pre_block('$head ...')
+        let new_block = spacer.adjust_term(block, #false, esc)
+        '$new_head $new_block'
+    | ~else:
+        pre_block(tail)
+
+spacer.bridge foreign.fun(self, tail, context, esc):
+  ~in: ~defn
+  adjust_fun(self, tail, context, esc)
+
+namespace curses:
+  export:
+    fun
+  spacer.bridge fun(self, tail, context, esc):
+    ~in: ~defn
+    adjust_fun(spacer.adjust_sequence(self, #'datum, esc), tail, context, esc)
+
+spacer.bridge mem(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(star && '*')$(parens && '($type ...)') $expr ...':
+      let new_star = spacer.adjust_term(star, type_ctx, esc)
+      let new_expr = spacer.adjust_sequence('$expr ...', #false, esc)
+      let new_type = spacer.adjust_sequence('$type ...', type_ctx, esc)
+      let new_parens = '($new_type)'.relocate(parens)
+      '$self $new_star $new_parens $new_expr'
+  | '$(star && '*') $expr ...':
+      let new_star = spacer.adjust_term(star, type_ctx, esc)
+      let new_expr = spacer.adjust_sequence('$expr ...', #false, esc)
+      '$self $new_star $new_expr'
+  | ~else:
+      let new_tail = spacer.adjust_sequence(tail, #false, esc)
+      '$self $new_tail'
+
+spacer.bridge new(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(id :: Identifier)$(parens && '($_)') $tail ...':
+      let new_id = spacer.adjust_term(id, type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$parens $tail ...', #false, esc)
+      '$self $new_id $new_tail'
+  | '$(pre && !'[$_]') ... $(brackets && '[$_]') $tail ...':
+      let new_pre = spacer.adjust_sequence('$pre ...', type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$brackets $tail ...', #false, esc)
+      '$self $new_pre $new_tail'
+  | ~else:
+      let new_tail = spacer.adjust_sequence(tail, type_ctx, esc)
+      '$self $new_tail'
+
+spacer.bridge cast(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(parens && '($_)') $tail ...':
+      let new_parens = spacer.adjust_term(parens, type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$tail ...', #false, esc)
+      '$self $new_parens $new_tail'
+  | '$(to && '~to') $(parens && '($_)') $tail ...':
+      let new_parens = spacer.adjust_term(parens, type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$tail ...', #false, esc)
+      '$self $to $new_parens $new_tail'
+  | '$(from && '~from') $(from_parens && '($_)') $(to && '~to') $(to_parens && '($_)') $tail ...':
+      let new_from_parens = spacer.adjust_term(from_parens, type_ctx, esc)
+      let new_to_parens = spacer.adjust_term(to_parens, type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$tail ...', #false, esc)
+      '$self $from $new_from_parens $to $new_to_parens $new_tail'
+  | '$(from && '~from') $(parens && '($_)') $tail ...':
+      let new_parens = spacer.adjust_term(parens, type_ctx, esc)
+      let new_tail = spacer.adjust_sequence('$tail ...', #false, esc)
+      '$self $from $new_parens $new_tail'
+  | ~else:
+      let new_tail = spacer.adjust_sequence(tail, type_ctx, esc)
+      '$self $new_tail'
+
+spacer.bridge sizeof(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$(parens && '($(type :: Group))') $tail ...':
+      let new_parens = '($(spacer.adjust_group(type, type_ctx, esc)))'.relocate(parens)
+      let new_tail = spacer.adjust_sequence('$tail ...', context, esc)
+      '$self $new_parens $new_tail'
+  | ~else:
+      let new_tail = spacer.adjust_sequence(tail, context, esc)
+      '$self $new_tail'

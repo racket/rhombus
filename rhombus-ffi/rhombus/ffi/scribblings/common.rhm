@@ -1,0 +1,63 @@
+#lang rhombus/static/and_meta
+import:
+  scribble/doc_meta open
+  scribble/rhombus/manual
+  meta_label:
+    ffi open
+    rhombus open
+    rhombus/meta open
+  ffi.foreign
+  "spacer.rhm"
+
+export:
+  meta_label:
+    all_from(ffi)
+    all_from(rhombus)
+    all_from(rhombus/meta)
+  all_from(.spacer)
+  foreign
+  type
+  abi
+  ref_doc
+  rhombus_t
+
+doc.bridge foreign.type:
+  doc_meta.transformer(
+    ~extract_desc: fun (stx): ["foreign type", "annotation"],
+    ~extract_space: fun (stx): [[#'#{rhombus/ffi/type}, #'~annot]],
+    ~extract_name: fun (stx, spaces):
+                     let id = doc_meta.head_extract_name(stx, spaces)
+                     [id, id],
+    ~extract_metavariables: doc_meta.head_extract_metavariables,
+    ~extract_typeset: fun (stx, spaces :~ List, subst :~ List):
+                        doc_meta.head_extract_typeset(stx, spaces[0], subst[0])
+  )
+
+namespace type:
+  export:
+    macro
+  doc.bridge macro:
+    doc_meta.transformer(
+      ~extract_desc: fun (stx): "foreign type",
+      ~extract_space: fun (stx): #'#{rhombus/ffi/type},
+      ~extract_name: doc_meta.operator_macro_extract_name,
+      ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+      ~extract_typeset: doc_meta.operator_macro_extract_typeset
+    )
+
+namespace abi:
+  export:
+    macro
+  doc.bridge macro:
+    doc_meta.transformer(
+      ~extract_desc: fun (stx): "foreign ABI",
+      ~extract_space: fun (stx): #'#{rhombus/ffi/abi},
+      ~extract_name: doc_meta.operator_macro_extract_name,
+      ~extract_metavariables: doc_meta.operator_macro_extract_metavariables,
+      ~extract_typeset: doc_meta.operator_macro_extract_typeset
+    )
+
+def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'
+
+expr.macro 'rhombus_t($form)':
+  'manual.rhombus($form, ~at rhombus/ffi/type)'

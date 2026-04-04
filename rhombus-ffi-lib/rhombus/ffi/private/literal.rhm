@@ -1,0 +1,11 @@
+#lang rhombus/static/and_meta
+
+meta:
+  export syntax_class Colons
+  | '$(bound_as bind_meta.space: '::')'
+
+  export syntax_class Equal
+  | '$(bound_as expr_meta.space: '=')'
+
+  export syntax_class Assign
+  | '$(bound_as expr_meta.space: ':=')'

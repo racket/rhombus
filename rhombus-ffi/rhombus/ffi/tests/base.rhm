@@ -1,0 +1,191 @@
+#lang rhombus/static/and_meta
+import:
+  ffi open
+
+expr.macro 'check_base:
+              $type_t:
+                ~good: $good_val ...
+                ~bad: $bad_val ...
+              ...':
+  'block:
+     block:
+       def p = new $type_t
+       fun is_one(v):
+         v is_a $type_t
+       fun set(v):
+         mem *($type_t *)p := v
+       fun ref():
+         mem *($type_t *)p
+       check:
+         is_one($good_val) ~is #true
+         ...
+         [set($good_val), ref()] ~is [#void, $good_val]
+         ...
+         is_one($bad_val) ~is #false
+         ...
+         set($bad_val) ~throws "value does not match type"
+         ...
+     ...'
+
+check_base:
+  int8_t:
+    ~good: -128 0 127
+    ~bad: -129 255 1.0 "oops"
+  uint8_t:
+    ~good: 0 127 255
+    ~bad: -1 256 1.0 "oops"
+  int16_t:
+    ~good: -0x8000 0 0x7FFF
+    ~bad: -0x8001 0x8000 1.0 "oops"
+  uint16_t:
+    ~good: 0 0x7FFF 0xFFFF
+    ~bad: -1 0x10000 1.0 "oops"
+  int32_t:
+    ~good: -0x80000000 0 0x7FFFFFFF
+    ~bad: -0x80000001 0x80000000 1.0 "oops"
+  uint32_t:
+    ~good: 0 0x7FFFFFFF 0xFFFFFFFF
+    ~bad: -1 0x100000000 1.0 "oops"
+  int64_t:
+    ~good: -0x8000000000000000 0 0x7FFFFFFFFFFFFFFF
+    ~bad: -0x8000000000000001 0x8000000000000000 1.0 "oops"
+  uint64_t:
+    ~good: 0 0x7FFFFFFFFFFFFFFF 0xFFFFFFFFFFFFFFFF
+    ~bad: -1 0x10000000000000000 1.0 "oops"
+  byte_t:
+    ~good: 0 127 255
+    ~bad: -1 256 1.0 "oops"
+  short_t:
+    ~good: -0x8000 0 0x7FFF
+    ~bad: -0x8001 0x8000 1.0 "oops"
+  ushort_t:
+    ~good: 0 0x7FFF 0xFFFF
+    ~bad: -1 0x10000 1.0 "oops"
+  int_t:
+    ~good: -0x80000000 0 0x7FFFFFFF
+    ~bad: -0x80000001 0x80000000 1.0 "oops"
+  uint_t:
+    ~good: 0 0x7FFFFFFF 0xFFFFFFFF
+    ~bad: -1 0x100000000 1.0 "oops"
+  long_t:
+    ~good: -256 0 256
+    ~bad: -0x8000000000000001 0x8000000000000000 1.0 "oops"
+  ulong_t:
+    ~good: 0 256
+    ~bad: -1 0x10000000000000000 1.0 "oops"
+  intptr_t:
+    ~good: -256 0 256
+    ~bad: -0x8000000000000001 0x8000000000000000 1.0 "oops"
+  uintptr_t:
+    ~good: 0 256
+    ~bad: -1 0x10000000000000000 1.0 "oops"
+  size_t:
+    ~good: 0 256
+    ~bad: -1 0x10000000000000000 1.0 "oops"
+  ssize_t:
+    ~good: -256 0 256
+    ~bad: -0x8000000000000001 0x8000000000000000 1.0 "oops"
+  float_t:
+    ~good: -1.0 1.0 #inf
+    ~bad: 1 1/2 "oops"
+  double_t:
+    ~good: -1.0 1.0 #inf
+    ~bad: 1 1/2 "oops"
+  intwchar_t:
+    ~good: 0 255
+    ~bad: -1 1.0 "oops"
+  wchar_t:
+    ~good: (Char"a") (Char"!")
+    ~bad: 65 1.0 "oops"
+  bool_t:
+    ~good: #true #false
+    ~bad:«»
+  boolint_t:
+    ~good: #true #false
+    ~bad:«»
+
+fun copy_content_to_immobile(p :: ptr_t):
+  // simulate a foreign function that keeps a copy of a string
+  let sp = mem *(ptr_t/gcable *)p
+  let bstr = cast (bytes_t)sp
+  when bstr
+  | def len = Bytes.length(bstr)
+    def new_sp = malloc ~immobile ~as byte_t* (len+1)
+    memcpy(new_sp, cast ~from (bytes_ptr_t) ~to (ptr_t) bstr, len)
+    mem new_sp[len] := 0
+    mem *(ptr_t *)p := new_sp
+
+expr.macro 'check_copy_base:
+              $type_t:
+                ~good: $good_val ...
+                ~bad: $bad_val ...
+              ...':
+  'block:
+     block:
+       def p = new ~traced $type_t
+       fun is_one(v):
+         v is_a $type_t
+       fun set(v):
+         mem *($type_t *)p := v
+         copy_content_to_immobile(p)
+       fun ref():
+         mem *($type_t *)p
+       check:
+         is_one($good_val) ~is #true
+         ...
+         [set($good_val), ref()] ~is_now [#void, $good_val]
+         ...
+         is_one($bad_val) ~is #false
+         ...
+         set($bad_val) ~throws "value does not match type"
+         ...
+       Function.black_box(p)
+       #void
+     ...'
+
+check_copy_base:
+  string_t:
+    ~good: "apple" #false
+    ~bad: 1 (#'apple) #"apple"
+  bytes_t:
+    ~good: #"apple" #false
+    ~bad: 1 (#'apple) "apple"
+  bytes_ptr_t:
+    ~good: #false
+    ~bad: 1 (#'apple) "apple"
+  path_t:
+    ~good: #false
+    ~bad: 1 (#'apple) "apple"
+
+check:
+  sizeof(int_t) ~is 4
+  sizeof(float_t) ~is 4
+  sizeof(double_t) ~is 8
+  sizeof(intptr_t) ~is sizeof(ptr_t)
+  sizeof(uintptr_t) ~is sizeof(ptr_t)
+
+block:
+  let  p = malloc(16)
+  mem *(bool_t *)p :=#'ok
+  check mem *(bool_t *)p ~is #true
+  mem *(boolint_t *)p :=#'ok
+  check mem *(boolint_t *)p ~is #true
+
+block:
+  let p = malloc ~traced(16)
+  let path = Path(#"apple")
+  mem *(path_t *)p := path
+  copy_content_to_immobile(p)
+  check mem *(path_t *)p ~is path
+  Function.black_box(p)
+  #void
+
+block:
+  let p  = malloc ~traced(16)
+  let bstr = #"apple\0pie"
+  mem *(bytes_ptr_t *)p := bstr
+  check mem *(bytes_t *)p ~is_now #"apple"
+  let ptr = cast (byte_t*) ~offset (6) mem *(ptr_t/gcable *)p
+  check mem ptr[0] ~is Char"p".to_int()
+  check mem ptr[1] ~is Char"i".to_int()
+  check mem ptr[2] ~is Char"e".to_int()

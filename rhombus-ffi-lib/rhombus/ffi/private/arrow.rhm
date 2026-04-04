@@ -1,0 +1,201 @@
+#lang rhombus/static/and_meta
+import:
+  "type.rhm" open
+  "abi.rhm"!internal.abi_meta
+  "literal.rhm" open
+  lib("ffi2/main.rkt") as ffi2:
+    expose:
+      -> as arrow
+
+export:
+  only_space type:
+    #%parens
+    ->
+
+module class:
+  export:
+    meta:
+      parse_as_arrow
+
+meta syntax_class Argument:
+  kind: ~group
+  fields:
+    t
+    annot
+    arg
+| '$(id :: Identifier) $(_ :: Colons) $t_seq ... $(_ :: Equal) $e_seq ...':
+    def '$(t :: type_meta.Parsed)' = '$t_seq ...'
+    def e = expr_meta.pack_expr('$e_seq ...')
+    field arg: '[~do, [$(defn_meta.pack_defn('def $id = $e'))], [$(type_meta.unpack_type(t)), #{=}, $id]]'
+    field annot = #false
+    field t = #false
+| '$(id :: Identifier) $(_ :: Colons) $(i_t :: type_meta.Parsed)':
+    field arg: '[[$id, #{:}, $(type_meta.unpack_type(i_t))]]'
+    field annot = type_meta.unpack_annot(i_t)
+    field t = #false
+| '$t_seq ... $(_ :: Equal) $e_seq ...':
+    def '$(t :: type_meta.Parsed)' = '$t_seq ...'
+    def e = expr_meta.pack_expr('$e_seq ...')
+    field arg: '[[$(type_meta.unpack_type(t)), #{=}, $e]]'
+    field annot = #false
+    field t = #false
+| '$(t :: type_meta.Parsed)':
+    field arg: '[$(type_meta.unpack_type(t))]'
+    field annot = type_meta.unpack_annot(t)
+
+type.macro
+| '#%parens $(args && '($(a :: Argument))')':
+    if a.t
+    | a.t
+    | type_meta.pack_tuple('($a.arg)', '[$a.annot]').relocate(args)
+| '#%parens $(args && '($arg, ..., ~varargs, $var_arg, ...)')':
+    let '($(a :: Argument), ...)' = '($arg, ...)'
+    let '($(var_a :: Argument), ...)' = '($var_arg, ...)'
+    let tup = '($a.arg, ..., [~varargs], $var_a.arg, ...)'
+    type_meta.pack_tuple(tup, '[$a.annot, ..., $var_a.annot, ...]').relocate(args)
+| '#%parens $(args && '($arg, ...)')':
+    let '($(a :: Argument), ...)' = '($arg, ...)'
+    let tup = '($a.arg, ...)'
+    type_meta.pack_tuple(tup, '[$a.annot, ...]').relocate(args)
+
+meta syntax_class Errno:
+  kind: ~group
+  fields: errno
+| '~errno':
+    field errno = ['~errno']
+| '$(id :: Identifier) :: ~errno':
+    field errno = ['[$id, #{:}, ~errno]']
+| '~get_last_error':
+    field errno = ['~#{get-last-error}']
+| '$(id :: Identifier) $(_ :: Colons) ~get_last_error':
+    field errno = ['[$id, #{:}, ~#{get-last-error}]']
+
+meta syntax_class MaybePost:
+  kind: ~sequence
+  fields:
+    post
+    options
+    tail
+| ': $(group_option_sequence
+       | '$(abi_kw && '~abi'): $(abi :: abi_meta.Parsed)'
+       | '$(atomic && '~atomic')'
+       | '$(collect_safe && '~collect_safe')'
+       | '$(allow_callback_exn && '~allow_callback_exn')'
+       | '$(in_original && '~in_original')')
+     $res
+     ...':
+    field options: (if abi | [abi_kw, abi_meta.unpack(abi)] | [])
+                     ++ (if atomic | [atomic] | [])
+                     ++ (if collect_safe | ['~#{collect-safe}'.relocate(collect_safe)] | [])
+                     ++ (if allow_callback_exn | ['~#{allow-callback-exn}'.relocate(allow_callback_exn)] | [])
+                     ++ (if in_original | ['~#{in-original}'.relocate(in_original)] | [])
+    field post: if [res, ...].length() == 0
+                | []
+                | ['~result', expr_meta.pack_expr('block: $res; ...')]
+    field tail = ''
+| '$tl ...':
+    field options = []
+    field post = []
+    field tail = '$tl ...'
+
+meta syntax_class Result:
+  kind: ~group
+  fields:
+    res
+    annot
+    errno :: List
+| '($(id :: Identifier) $(_ :: Colons) $(t :: type_meta.Parsed))':
+    field res: '[$id, #{:}, $(type_meta.unpack_type(t, ~void_ok: #true))]'
+    field annot: type_meta.unpack_annot(t)
+    field errno: []
+| '($(id :: Identifier) $(_ :: Colons) $(t :: type_meta.Parsed), $(e :: Errno))':
+    field res: '[$id, #{:}, $(type_meta.unpack_type(t, ~void_ok: #true))]'
+    field annot: type_meta.unpack_annot(t)
+    field errno: e.errno
+| '($(t :: type_meta.Parsed), $(e :: Errno))':
+    field res: type_meta.unpack_type(t, ~void_ok: #true)
+    field annot: type_meta.unpack_annot(t)
+    field errno: e.errno
+| '$(t :: type_meta.Parsed)':
+    field res: type_meta.unpack_type(t, ~void_ok: #true)
+    field annot: type_meta.unpack_annot(t)
+    field errno: []
+
+meta syntax_class ConvertedResult:
+  kind: ~group
+  fields:
+    res
+    annot
+    errno :: List
+    options :: List
+    post :: List
+    tail
+| '($(id :: Identifier) $(ann_op :: annot_meta.BindOp) $(t :: type_meta.Parsed)) $tl ...':
+    def '$(p :: MaybePost)' = '$tl ...'
+    field res: '[$id, #{:}, $(type_meta.unpack_type(t, ~void_ok: #true))]'
+    field annot: type_meta.unpack_annot(t)
+    field errno: []
+    field options: p.options
+    field post: p.post
+    field tail: p.tail
+| '($(id :: Identifier) $(ann_op :: annot_meta.BindOp) $(t :: type_meta.Parsed), $(e :: Errno)) $tl ...':
+    def '$(p :: MaybePost)' = '$tl ...'
+    field res: '[$id, #{:}, $(type_meta.unpack_type(t, ~void_ok: #true))]'
+    field annot: type_meta.unpack_annot(t)
+    field errno: e.errno
+    field options: p.options
+    field post: p.post
+    field tail: p.tail
+| '($(t :: type_meta.Parsed), $(e :: Errno)) $tl ...':
+    def '$(p :: MaybePost)' = '$tl ...'
+    field res: type_meta.unpack_type(t, ~void_ok: #true)
+    field annot: type_meta.unpack_annot(t)
+    field errno: e.errno
+    field options: p.options
+    field post: p.post
+    field tail: p.tail
+| '$(t :: type_meta.AfterInfixParsed('->'))':
+    def '$(p :: MaybePost)' = '$t.tail ...'
+    field res: type_meta.unpack_type(t, ~void_ok: #true)
+    field annot: type_meta.unpack_annot(t)
+    field errno: []
+    field options: p.options
+    field post: p.post
+    field tail: p.tail
+
+type.macro '$arg_ts -> $(result :: ConvertedResult) $()':
+  ~all_stx: stx
+  let '([$arg, ...], ...)' = (type_meta.unpack_tuple_args(arg_ts)
+                                || '([$(type_meta.unpack_type(arg_ts))])')
+  let [more, ...] = result.errno ++ result.post ++ result.options
+  values(type_meta.pack_arrow('[arrow, $arg, ..., ..., $result.res, $more, ...]',
+                              '$(arrow_annot(type_meta.unpack_tuple_annots(arg_ts),
+                                             result.annot))')
+           .relocate_span([stx]),
+         result.tail)
+
+meta fun parse_as_arrow(args, res_seq, options, body_seq):
+  let '$(arg_ts :: type_meta.Parsed)' = '#%parens $args'
+  let '$(result :: Result)'  = res_seq
+  let options: match options
+               | '': []
+               | '$(p :: MaybePost)': p.options
+  let '([$arg, ...], ...)' = (type_meta.unpack_tuple_args(arg_ts)
+                                || '([$(type_meta.unpack_type(arg_ts))])')
+  let [more, ...]: result.errno
+                     ++ (match body_seq
+                         | '': []
+                         | ~else: ['~result',
+                                   expr_meta.pack_expr('block: $body_seq')])
+                     ++ options
+  type_meta.pack_arrow('[arrow, $arg, ..., ..., $result.res, $more, ...]',
+                       '$(arrow_annot(type_meta.unpack_tuple_annots(arg_ts),
+                                      result.annot))')
+
+meta fun arrow_annot(arg_annots, result_annot):
+  let '[$arg_annot, ...]' = arg_annots
+  let [arg_ann, ...]:
+    [arg_annot, ...]
+      .filter(~skip: fun (x): x matches '#false')
+      .map(fun (x): 'Any')
+  'Function.assume_of(($arg_ann, ...) -> $result_annot)'

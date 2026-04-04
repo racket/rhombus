@@ -1,0 +1,48 @@
+#lang rhombus/and_meta
+import:
+  lib("ffi2/main.rkt") as ffi2
+  lib("setup/dirs.rkt").#{get-lib-search-dirs}
+  rhombus/custodian open
+  "pointer.rhm" open
+
+export:
+  Lib
+
+class Lib(name :~ maybe(PathString), private _handle):
+  internal _Lib
+  constructor ~error
+  property handle: _handle
+
+  method find(
+    name :: String || Bytes || Symbol,
+    ~fail: fail :: maybe(() -> maybe(ptr_t)) = #false
+  ) :: maybe(ptr_t):
+    ffi2.#{ffi2-lib-ref}(_handle, name, ~fail: fail)
+
+  export:
+    load
+    from_handle
+  fun from_handle(name :: maybe(PathString), handle) :~ Lib:
+    _Lib(name, handle)
+
+fun load(
+  path :: PathString || False,
+  version :: String || List.of(String || False) || False = #false,
+  ~get_lib_dirs: get_lib_dirs :: () -> (Listable.to_list && List.of(Path)) = #{get-lib-search-dirs},
+  ~fail: fail :: maybe(() -> maybe(Lib)) = #false,
+  ~as_global: as_global :: Any.to_boolean = #false,
+  ~custodian: cust :: maybe(Custodian || Any.of(#'place)) = #false,
+) :: maybe(Lib):
+  ~name: Lib.load
+  let handle:
+    ffi2.#{ffi2-lib}(path,
+                     if version is_a List
+                     | PairList(& version)
+                     | version,
+                     ~#{get-lib-dirs}: fun (): PairList[& get_lib_dirs],
+                     ~fail: fail,
+                     ~#{global?}: as_global,
+                     ~custodian: match cust
+                                 | cust :: Custodian: cust.handle
+                                 | ~else: cust)
+  handle && Lib.from_handle(path, handle)

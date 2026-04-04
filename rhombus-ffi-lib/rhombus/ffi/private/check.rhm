@@ -1,0 +1,69 @@
+#lang rhombus/static/and_meta
+import:
+  lib("ffi2/main.rkt"):
+    expose:
+      #{ptr_t?} as ffi2_ptr_t_p
+  lib("racket/base.rkt"):
+    expose:
+      unless as rkt_unless
+      #{variable-reference-from-unsafe?}
+      #{#%variable-reference}
+
+export:
+  meta:
+    wrap_ptr_t_check
+    wrap_index_check
+    wrap_size_check
+
+expr.macro 'unless_unsafe $pred ...
+            | $body':
+  expr_meta.pack_s_exp(['rkt_unless',
+                        ['#{variable-reference-from-unsafe?}', ['#{#%variable-reference}']],
+                        expr_meta.pack_expr('unless $pred ... | $body')])
+
+fun not_a_ptr_t(who, p):
+  error(~who: who,
+        error.annot_msg(),
+        error.annot("Pointer"),
+        error.val(p))
+
+meta fun wrap_ptr_t_check(who, e):
+  expr_meta.pack_expr(
+    'block:
+       let p = $e
+       unless_unsafe ffi2_ptr_t_p(p)
+       | not_a_ptr_t($(to_string(who)), p)
+       p'
+  )
+
+fun not_an_index(who, i, len):
+  error(~who: who,
+        error.annot_msg(),
+        if len
+        | error.annot("Int.in(0 .. " +& len +& ")")
+        | error.annot("Int"),
+        error.val(i))
+
+meta fun wrap_index_check(who, e, len):
+  expr_meta.pack_expr(
+    'block:
+       let i = $e
+       unless_unsafe (i is_a Int && (! $len || (((i :~ Int) >= 0) && (i < $len))))
+       | not_an_index($(to_string(who)), i, $len)
+       i'
+  )
+
+fun not_a_size(who, i):
+  error(~who: who,
+        error.annot_msg(),
+        error.annot("NonnegInt"),
+        error.val(i))
+
+meta fun wrap_size_check(who, e):
+  expr_meta.pack_expr(
+    'block:
+       let i = $e
+       unless_unsafe i is_a NonnegInt
+       | not_a_size($(to_string(who)), i)
+       i'
+  )

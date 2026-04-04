@@ -1,0 +1,361 @@
+#lang rhombus/static/and_meta
+import:
+  "type.rhm" open
+  "base_type.rhm".int_t
+  "base_type.rhm".uintptr_t
+  "check.rhm" open
+  lib("ffi2/main.rkt")!unsafe as ffi2_unsafe:
+    expose:
+      #{unsafe-ffi2-malloc} as ffi2_malloc
+      #{unsafe-ffi2-ref} as #{|mem reference|}
+      #{unsafe-ffi2-set!} as #{|mem assignment|}
+      #{unsafe-ffi2-add} as #{|mem shift|}
+      #{unsafe-ffi2-cast} as ffi2_cast
+  lib("ffi2/main.rkt") as ffi2:
+    expose:
+      ptr_t as ffi2_ptr_t
+      array as ffi2_array
+      gcable as ffi2_gcable
+      #{void_t*} as ffi2_void_t_star
+      #{ffi2-free} as ffi2_free
+      #{ptr_t->uintptr}
+      #{uintptr->ptr_t}
+      #{ptr_t/gcable?}
+
+export:
+  ptr_t
+  only_space type:
+    *
+    **
+    ***
+    /
+    #%index
+  malloc
+  free
+  new
+  mem
+  cast
+  ptr_to_uintptr
+  uintptr_to_ptr
+  GCable_ptr_t
+
+annot.macro
+| 'ptr_t/gcable':
+    annot_meta.pack_predicate('ffi2.#{ptr_t/gcable?}',
+                              '()')
+| 'ptr_t':
+    annot_meta.pack_predicate('ffi2.#{ptr_t?}',
+                              '()')
+
+type.macro '$t *':
+  ~all_stx: stx
+  ~stronger_than: ~other
+  let opaque_ptr_t = type_meta.unpack_opaque_pointer(t)
+  cond
+  | opaque_ptr_t:
+      type_meta.pack_pointable(opaque_ptr_t, 'satisfying(fun (x): x is_a_ffi2 $opaque_ptr_t)')
+        .relocate_span([stx])
+  | type_meta.unpack_void(t):
+      type_meta.pack_generic_pointer('ffi2_void_t_star')
+  | ~else:
+      let in_t = t
+      let ann = type_meta.unpack_annot(t)
+      let t = type_meta.unpack_type(t)
+      type_meta.pack_pointer('[ffi2_array, $t, #{*}]', t,
+                             if (type_meta.unpack_struct_proc_ids(in_t)
+                                   || type_meta.unpack_union_proc_ids(in_t))
+                             | type_meta.unpack_annot(in_t)
+                             | 'PointerOf($ann, $t, #false)')
+        .relocate_span([stx])
+
+type.macro '$t **':
+  ~all_stx: stx
+  ~stronger_than: ~other
+  '$t * *'
+
+type.macro '$t ***':
+  ~all_stx: stx
+  ~stronger_than: ~other
+  '$t * * *'
+
+type.macro '$t /gcable':
+  ~all_stx: stx
+  ~stronger_than: ~other
+  unless type_meta.unpack_pointer_type(#false, t)
+  | syntax_meta.error("expected a pointer type", stx, t)
+  type_meta.repack_type(t, '[ffi2_gcable, $(type_meta.unpack_type(t))]')
+
+type.macro '$t #%index [$n_seq ...]':
+  ~all_stx: stx
+  ~stronger_than: ~other
+  let ann = type_meta.unpack_annot(t)
+  let t = type_meta.unpack_type(t)
+  match '$n_seq ...'
+  | '$(n :: Int)':
+      unless n.unwrap() >= 0
+      | syntax_meta.error("size must be nonnegative", stx, n)
+      type_meta.pack_array('[ffi2_array, $t, $n]', t, 'PointerOf($ann, $t, $n)', n)
+        .relocate_span([stx])
+  | ~else:
+      type_meta.pack_variable_array(t, '$n_seq ...', 'PointerOf($ann, $t, #false)')
+        .relocate_span([stx])
+
+meta:
+  syntax_class MallocMode:
+    kind: ~sequence
+  | '~gcable':
+      field mode = '~gcable'
+  | '~immobile':
+      field mode = '~#{gcable-immobile}'
+  | '~traced':
+      field mode = '~#{gcable-traced}'
+  | '~traced_immobile':
+      field mode = '~#{gcable-traced-immobile}'
+  | '~manual':
+      field mode = '~manual'
+  | '':
+      field mode = '~gcable'
+
+expr.macro
+| 'malloc $(m :: MallocMode) ~as ($(t :: type_meta.Parsed)) ($(e :: expr_meta.Parsed))':
+    ~op_stx: self
+    ~all_stx: stx
+    add_annot(
+      expr_meta.pack_s_exp(['ffi2_malloc', m.mode, wrap_size_check(self, e),
+                            '~as', type_meta.s_exp(type_meta.unpack_pointer_type(stx, t))]),
+      type_meta.unpack_annot(t)
+    )
+| 'malloc $(m :: MallocMode) ~as $t ... ($e ...)':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(t :: type_meta.Parsed)' = '$t ...'
+    let '$(e :: expr_meta.Parsed)' = '$e ...'
+    add_annot(
+      expr_meta.pack_s_exp(['ffi2_malloc', m.mode, wrap_size_check(self, e),
+                            '~as', type_meta.s_exp(type_meta.unpack_pointer_type(stx, t))]),
+      type_meta.unpack_annot(t)
+    )
+| 'malloc $(m :: MallocMode) ($(e :: expr_meta.Parsed))':
+    ~op_stx: self
+    expr_meta.pack_s_exp(['ffi2_malloc', m.mode, wrap_size_check(self, e)])
+
+expr.macro 'new $(m :: MallocMode) $(t :: type_meta.AfterPrefixParsed('int_t')) $()':
+  ~op_stx: self
+  ~all_stx: stx
+  let tail = '$t.tail ...'
+  fun default():
+    let m_e:
+      match type_meta.unpack_variable_array(t)
+      | [elem_t, n_seq]:
+          expr_meta.pack_s_exp(['ffi2_malloc',
+                                m.mode,
+                                type_meta.s_exp(elem_t),
+                                wrap_size_check(self, expr_meta.pack_expr(n_seq))])
+      | ~else:
+          expr_meta.pack_s_exp(['ffi2_malloc',
+                                m.mode,
+                                type_meta.s_exp(type_meta.unpack_type(t))])
+    let m_e:
+      if (type_meta.unpack_pointer_allocation_element(#false, t)
+            || type_meta.unpack_struct_proc_ids(t)
+            || type_meta.unpack_union_proc_ids(t))
+      | add_annot(m_e, type_meta.unpack_annot(t))
+      | add_annot(m_e, 'PointerOf($(type_meta.unpack_annot(t)),
+                                  $(type_meta.unpack_type(t)),
+                                  $(type_meta.unpack_array_length(t)))')
+    values(m_e,
+           tail)
+  match tail
+  | '($(field_id :: Identifier): $e) $tail ...' when type_meta.unpack_union_proc_ids(t):
+      match type_meta.unpack_union_proc_ids(t)
+      | '[$ctr, [$field, ...], $_, ...]':
+          unless field_id.unwrap() in [field.unwrap(), ...]
+          | syntax_meta.error("unrecognized field for union", stx, field_id)
+          add_annot(expr_meta.pack_s_exp([ctr, field_id, m.mode, expr_meta.pack_expr('block: $e')]),
+                    type_meta.unpack_annot(t))
+  | '($e, ...) $tail ...':
+      match type_meta.unpack_struct_proc_ids(t)
+      | '[$ctr, [$field, ...], $_, ...]':
+          unless [field, ...].length() == [e, ...].length()
+          | syntax_meta.error("incorrect constructor argument count", stx)
+          add_annot(expr_meta.pack_s_exp([ctr, m.mode, expr_meta.pack_expr(e), ...]),
+                    type_meta.unpack_annot(t))
+      | ~else:
+          default()
+  | ~else:
+      default()
+
+meta syntax_class NotAssign
+| '$(!':=')'
+meta syntax_class NotBrackets
+| '$(!'[$_]')'
+
+meta fun build_ref_inferred_type(stx, self, e, offset):
+  let elem_u = statinfo_meta.lookup(e, 'elem_type')
+  unless elem_u
+  | syntax_meta.error("pointer element type is not statically known", stx, e)
+  let '[$u_ann, $u_t, $u_len]' = elem_u
+  add_annot(
+    expr_meta.pack_s_exp(['#{|mem reference|}',
+                          wrap_ptr_t_check(self, e),
+                          type_meta.s_exp(u_t),
+                          offset]),
+    u_ann
+  )
+
+meta fun build_assign_inferred_type(stx, self, e, make_offset, e_r):
+  let elem_u = statinfo_meta.lookup(e, 'elem_type')
+  unless elem_u
+  | syntax_meta.error("pointer element type is not statically known", stx, e)
+  let '[$u_ann, $u_t, $u_len]' = elem_u
+  expr_meta.pack_s_exp(['#{|mem assignment|}',
+                        wrap_ptr_t_check(self, e),
+                        type_meta.s_exp(u_t),
+                        make_offset(u_len),
+                        e_r])
+
+
+meta export syntax_class Asterisk
+| '$(bound_as type_meta.space: '*')'
+
+expr.macro
+| 'mem $(_ :: Asterisk)($(maybe_t :: MaybeType)) $(lhs :: NotAssign) ... := $tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(t :: type_meta.Parsed)' = maybe_t
+    let '$(lhs :: expr_meta.Parsed)' = '$lhs ...'
+    let '$(e :: expr_meta.AfterInfixParsed('*'))' = '$tl ...'
+    values(expr_meta.pack_s_exp(['#{|mem assignment|}',
+                                 wrap_ptr_t_check(self, lhs),
+                                 type_meta.s_exp(type_meta.unpack_pointer_element(stx, t)),
+                                 e]),
+           '$e.tail ...')
+| 'mem $(_ :: Asterisk)($(maybe_t :: MaybeType)) $tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(t :: type_meta.Parsed)' = maybe_t
+    let '$(e :: expr_meta.AfterInfixParsed('*'))' = '$tl ...'
+    values(add_annot(
+             expr_meta.pack_s_exp(['#{|mem reference|}',
+                                   wrap_ptr_t_check(self, e),
+                                   type_meta.s_exp(type_meta.unpack_pointer_element(stx, t))]),
+             pointer_element_ann(t)
+           ),
+           '$e.tail ...')
+| 'mem $(_ :: Asterisk)$(lhs :: NotAssign) ... := $tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(e :: expr_meta.Parsed)' = '$lhs ...'
+    let '$(e_r :: expr_meta.Parsed)' = '$tl ...'
+    values(build_assign_inferred_type(stx, self, e,
+                                      fun (u_len): expr_meta.pack_expr('0'),
+                                      e_r),
+           '')
+| 'mem $(_ :: Asterisk)$tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(e :: expr_meta.AfterInfixParsed('*'))' = '$tl ...'
+    values(build_ref_inferred_type(stx, self, e, expr_meta.pack_expr('0')),
+           '$e.tail ...')
+| 'mem & $(e_seq :: NotBrackets) ... [$i_seq ...] $tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(e :: expr_meta.Parsed)' = '$e_seq ...'
+    let '$(e_i :: expr_meta.Parsed)' = '$i_seq ...'
+    let elem_u = statinfo_meta.lookup(e, 'elem_type')
+    unless elem_u
+    | syntax_meta.error("pointer element type is not statically known", stx, e)
+    let '[$ann, $u_t, $len]' = elem_u
+    values(add_annot(
+             expr_meta.pack_s_exp(['#{|mem shift|}',
+                                   wrap_ptr_t_check(self, e),
+                                   type_meta.s_exp(u_t),
+                                   wrap_index_check(self, e_i, len)]),
+             'PointerOf($ann, $u_t, #false)'
+           ),
+           '$tl ...')
+| 'mem $(e_seq :: NotBrackets) ... [$i_seq ...] := $rhs ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(e :: expr_meta.Parsed)' = '$e_seq ...'
+    let '$(e_i :: expr_meta.Parsed)' = '$i_seq ...'
+    let '$(e_r :: expr_meta.Parsed)' = '$rhs ...'
+    values(build_assign_inferred_type(stx, self, e,
+                                      fun (u_len): wrap_index_check(self, e_i, u_len),
+                                      e_r),
+           '')
+| 'mem $e_seq ... [$i_seq ...] $tl ...':
+    ~op_stx: self
+    ~all_stx: stx
+    let '$(e :: expr_meta.Parsed)' = '$e_seq ...'
+    let '$(e_i :: expr_meta.Parsed)' = '$i_seq ...'
+    let elem_u = statinfo_meta.lookup(e, 'elem_type')
+    unless elem_u
+    | syntax_meta.error("pointer element type is not statically known", stx, e)
+    let '[$u_ann, $u_t, $u_len]' = elem_u
+    values(build_ref_inferred_type(stx, self, e, wrap_index_check(self, e_i, u_len)),
+           '$tl ...')
+
+meta syntax_class MaybeOffset:
+  fields:
+    offset_expr
+| '~offset ($offset_expr)'
+| '':
+    field offset_expr = '0'
+
+expr.macro
+| 'cast ~from ($(from_t :: type_meta.Parsed)) ~to ($(t :: type_meta.Parsed))
+     $(offset :: MaybeOffset)
+     $(e :: expr_meta.AfterInfixParsed('*')) $()':
+    ~all_stx: stx
+    values(add_annot(
+             expr_meta.pack_s_exp(['ffi2_cast',
+                                   e,
+                                   '~from',
+                                   type_meta.s_exp(type_meta.unpack_pointer_type(stx, from_t)),
+                                   '~to',
+                                   type_meta.s_exp(type_meta.unpack_pointer_type(stx, t)),
+                                   '~offset',
+                                   expr_meta.pack_expr(offset.offset_expr)]),
+             type_meta.unpack_annot(t)
+           ),
+           '$e.tail ...')
+| 'cast $('~to' || '') ($(t :: type_meta.Parsed))
+     $(offset :: MaybeOffset)
+     $(e :: expr_meta.AfterInfixParsed('*')) $()':
+    ~op_stx: self
+    ~all_stx: stx
+    values(add_annot(
+             expr_meta.pack_s_exp(['ffi2_cast',
+                                   wrap_ptr_t_check(self, e),
+                                   '~to',
+                                   type_meta.s_exp(type_meta.unpack_pointer_type(stx, t)),
+                                   '~offset',
+                                   expr_meta.pack_expr(offset.offset_expr)]),
+             type_meta.unpack_annot(t)
+           ),
+           '$e.tail ...')
+
+fun free(p :: ptr_t):
+  ffi2_free(p)
+
+fun ptr_to_uintptr(p :: ptr_t) :~ Int:
+  #{ptr_t->uintptr}(p)
+
+fun uintptr_to_ptr(i :: uintptr_t):
+  #{uintptr->ptr_t}(i)
+
+annot.macro 'GCable_ptr_t':
+  annot_meta.pack_predicate('#{ptr_t/gcable?}',
+                            '()')
+
+meta fun pointer_element_ann(t):
+  let '$(ann :: annot_meta.Parsed)' = type_meta.unpack_annot(t)
+  let (_, si) = annot_meta.unpack_predicate(ann)
+  let elem_u = statinfo_meta.find(si, 'elem_type')
+  match elem_u
+  | '[$ann, $_, $_]': ann
+  | ~else: 'Any'
+
+meta fun add_annot(e, ann):
+  '$e :~ $ann'

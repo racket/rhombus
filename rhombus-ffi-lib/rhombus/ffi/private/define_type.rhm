@@ -1,0 +1,154 @@
+#lang rhombus/static/and_meta
+import:
+  "type.rhm" open
+  lib("ffi2/main.rkt"):
+    expose:
+      #{define-ffi2-type}
+      ptr_t
+      array
+
+module foreign:
+  export:
+    c_type
+
+meta syntax_class MaybeArgs:
+  fields: args
+| '($(id :: Identifier), ...)':
+    field args = [id, ...]
+| '':
+    field args = #false
+
+meta syntax_class ExtendsRHS:
+  kind: ~group
+  fields: t
+| ': $(t :: type_meta.Parsed)'
+| '$(t :: type_meta.Parsed)'
+
+meta syntax_class TagRHS:
+  kind: ~group
+  fields: name
+| ': $(name :: Identifier)'
+| '$(name :: Identifier)'
+
+defn.macro
+| 'c_type $(name :: IdentifierName)':
+    let '$_ ... $name_tail' = '$name'
+    let ty_name = Syntax.make_id(name_tail +& "*")
+    '«
+       $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
+                               ty_name,
+                               'ptr_t',
+                               '~tag', '$ty_name']))
+       type.macro '$name':
+         ~all_stx: stx
+         type_meta.pack_opaque('$ty_name').relocate(stx)
+       annot.macro '$name':
+         'satisfying(fun (x): x is_a_ffi2 $ty_name)'
+     »'
+| 'c_type $(name :: IdentifierName) $(args :: MaybeArgs):
+     $(group_option_sequence
+       | '~extends $(ex :: ExtendsRHS)'
+       | '~tag $(tag :: TagRHS)'
+       | '~rhombus_to_c: $rhombus_to_c_body'
+       | '~predicate: $predicate_body'
+       | '~release: $release_body'
+       | '~c_to_rhombus: $c_to_rhombus_body')':
+    ~all_stx: stx
+    cond
+    | ex && !args.args
+        && !rhombus_to_c_body && !predicate_body && !release_body && !predicate_body && !c_to_rhombus_body:
+        let '$_ ... $name_tail' = '$name'
+        let ty_name = Syntax.make_id(name_tail +& "*")
+        '«
+           $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
+                                   ty_name,
+                                   type_meta.unpack_opaque_pointer(ex.t)
+                                     || ['array',
+                                         type_meta.s_exp(type_meta.unpack_type(ex.t)),
+                                         '#{*}'],
+                                   & (if tag
+                                      | ['~tag', Syntax.make_id(tag.name +& "*")]
+                                      | [])]))
+           type.macro '$name':
+             ~all_stx: stx
+             type_meta.pack_opaque('$ty_name').relocate(stx)
+           annot.macro '$name':
+             'satisfying(fun (x): x is_a_ffi2 $ty_name)'
+         »'
+    | ~else:
+        unless ex.t
+        | syntax_meta.error("missing an `~extends` clause", stx)
+        when tag
+        | syntax_meta.error("cannot combine `~tag` with other options", stx)
+        let '$_ ... $name_tail' = '$name'
+        let ty_name = Syntax.make_id(to_string(name_tail))
+        let ty_name_or_app = (if args.args
+                              | [ty_name, & args.args]
+                              | ty_name)
+        let ty_name_or_app_form = (match args.args
+                                   | [arg, ...]: '[$ty_name, $('$')(expr_meta.pack_expr($arg)), ...]'
+                                   | ~else: ty_name)
+        let args_pat = (match args.args
+                        | [arg, ...]: '($('$')$arg, ...)'
+                        | ~else: '')
+        fun option(kw, body):
+          if body
+          | [kw, expr_meta.pack_expr('block: $body')]
+          | []
+        let (c_to_rhombus_body, ann):
+          match c_to_rhombus_body
+          | '$(fun_id && (bound_as expr_meta.space: 'fun'))
+               $(args && '($_)')
+               $(ann_op :: annot_meta.BindOp) $ann_seq ...:
+                 $(body :: Block)':
+              let '$(ann :: annot_meta.Parsed)' = '$ann_seq ...'
+              values('$fun_id $args $ann_op $ann $body',
+                     ann)
+          | ~else:
+              values(c_to_rhombus_body, 'Any')
+        let pack_type = (if type_meta.unpack_pointer_type(#false, ex.t) | 'pack_pointable' | 'pack_type')
+        '«
+           $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
+                                   ty_name_or_app,
+                                   type_meta.unpack_type(ex.t),
+                                   & option('~#{racket->c}', rhombus_to_c_body),
+                                   & option('~#{predicate}', predicate_body),
+                                   & option('~#{release}', release_body),
+                                   & option('~#{c->racket}', c_to_rhombus_body)]))
+           type.macro '$name $args_pat':
+             ~all_stx: stx
+             type_meta. $(pack_type)('$ty_name_or_app_form', '$ann').relocate_span([stx])
+           $(if !args.args
+             | '«annot.macro '$name':
+                   'satisfying(fun (x): x is_a_ffi2 $ty_name)'»'
+             | '')
+         »'
+| 'c_type $(name :: IdentifierName) = $(t :: type_meta.Parsed)':
+    let ty_name = Syntax.make_id(to_string(name))
+    let pack = (cond
+                | type_meta.unpack_arrow(t):
+                    'pack_arrow'
+                | type_meta.unpack_pointer_type(#false, t):
+                    'pack_pointable'
+                | ~else:
+                    'pack_type')
+    let ann = type_meta.unpack_annot(t)
+    '«
+       $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
+                               ty_name,
+                               type_meta.s_exp(type_meta.unpack_type(t)),
+                               '~tag', '#false']))
+       type.macro '$name':
+         ~all_stx: stx
+         type_meta . $pack('$ty_name', '$ann').relocate(stx)
+       annot.macro '$name':
+         'satisfying(fun (x): x is_a_ffi2 $ty_name)'
+     »'
+
+type.macro 'none_t':
+  ~weaker_than: ~other
+  error("should not get here")
+
+annot.macro 'c_type $(t :: type_meta.AfterPrefixParsed('none_t')) $()':
+  values(type_meta.unpack_annot(t),
+         '$t.tail ...')

@@ -1,0 +1,26 @@
+#lang rhombus/static
+import:
+  lib("ffi/unsafe/private/finalizer.rkt").#{register-finalizer}
+  lib("ffi/unsafe/alloc.rkt")
+
+export:
+  register_finalizer
+  allocator
+  deallocator
+
+fun register_finalizer(obj,
+                       finalizer :: Function.of_arity(1)):
+  #{register-finalizer}(obj, finalizer)
+
+fun allocator(dealloc :: Function.of_arity(1),
+              ~merely_uninterruptible = #false) :~ Function.assume_of((proc :: maybe(Function)) -> Any.like(proc)):
+  alloc.#{allocator}(dealloc, ~#{merely-uninterruptible?}: merely_uninterruptible)
+
+fun deallocator(get_arg :: Function.of_arity(1) = PairList.first,
+                ~merely_uninterruptible = #false) :~ Function.assume_of((proc :: Function) -> Any.like(proc)):
+  alloc.#{deallocator}(get_arg, ~#{merely-uninterruptible?}: merely_uninterruptible)
+
+fun retainer(release :: Function.of_arity(1),
+             get_arg :: Function.of_arity(1) = PairList.first,
+             ~merely_uninterruptible = #false) :~ Function.assume_of((proc :: Function) -> Any.like(proc)):
+  alloc.#{retainer}(release, get_arg, ~#{merely-uninterruptible?}: merely_uninterruptible)

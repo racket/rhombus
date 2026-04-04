@@ -1,0 +1,103 @@
+#lang rhombus/static
+import:
+  ffi open
+
+foreign.type num_t = short_t
+
+check 10 is_a num_t ~is #true
+
+foreign.type Window_t
+
+check 10 is_a Window_t ~is #false
+check (malloc ~as Window_t*(16)) is_a foreign.type ptr_t ~is #true
+check (malloc ~as Window_t*(16)) is_a foreign.type Window_t* ~is #true
+check to_string(malloc ~as Window_t*(16)) ~is "#<Window_t*/gcable>"
+
+foreign.type Dialog_t:
+  ~extends: Window_t
+
+check 10 is_a Dialog_t ~is #false
+check (malloc ~as Dialog_t*(16)) is_a foreign.type Dialog_t* ~is #true
+check (malloc ~as Dialog_t*(16)) is_a foreign.type Window_t* ~is #true
+check (malloc ~as Window_t*(16)) is_a foreign.type Dialog_t* ~is #false
+check to_string(malloc ~as Dialog_t*(16)) ~is "#<Window_t*:Dialog_t*/gcable>"
+
+foreign.type Frame_t:
+  ~extends Window_t
+  ~tag TopLevel_t
+check 10 is_a Frame_t ~is #false
+check (malloc ~as Frame_t*(16)) is_a foreign.type Frame_t* ~is #true
+check (malloc ~as Frame_t*(16)) is_a foreign.type Window_t* ~is #true
+check (malloc ~as Window_t*(16)) is_a foreign.type Frame_t* ~is #false
+check to_string(malloc ~as Frame_t*(16)) ~is "#<Window_t*:TopLevel_t*/gcable>"
+
+foreign.type TopLevel_t:
+  ~extends Window_t
+check (malloc ~as Frame_t*(16)) is_a foreign.type TopLevel_t* ~is #true
+
+foreign.type Any_t = ptr_t
+check (malloc ~as Window_t*(16)) is_a foreign.type Any_t ~is #true
+
+foreign.type star_string_t:
+  ~extends: string_t
+  ~c_to_rhombus: fun (str :~ maybe(String)) :~ String:
+                   str && ("*" ++ str ++ "*")
+
+check (cast ~from (string_t) ~to (star_string_t) "hello") ++ "!" ~is "*hello*!"
+check sizeof(star_string_t) ~is sizeof(ptr_t)
+check new star_string_t ~is_a ptr_t
+check mem (new ~traced star_string_t)[0] ~is #false
+
+type.macro 'TwoOf($(t :: type_meta.Parsed))':
+  'struct (a :: $t,
+           b :: $t)'
+check sizeof(TwoOf(double_t)) ~is 16
+
+block:
+  foreign.type my_int_t = (system_case type
+                           | macosx || windows || unix: uint_t
+                           | ~else: int_t)
+  let pi = new int_t
+  mem pi[0] := -1
+  check mem *(my_int_t *)pi ~is 0xFFFFFFFF
+  check sizeof(my_int_t) ~is 4
+
+check:
+  ~eval
+  import ffi open
+  foreign.type my_int_t = (system_case type
+                           | macosx: ptr_t
+                           | ~else: int_t)
+  ~throws "expected a scalar type"
+
+check:
+  ~eval
+  import ffi open
+  foreign.type my_int_t = (system_case type
+                           | macosx: int_t
+                           | ~else: ptr_t)
+  ~throws "expected a scalar type"
+
+check:
+  ~eval
+  import ffi open
+  foreign.type my_int_t = (system_case nonesuch
+                           | macosx: int_t
+                           | ~else: uint_t)
+  ~throws "not a recognized system-case key"
+
+check:
+  ~eval
+  import ffi open
+  foreign.type my_int_t = (system_case os
+                           | "macosx": int_t
+                           | ~else: uint_t)
+  ~throws "expected an identifier for case value"
+
+check:
+  ~eval
+  import ffi open
+  foreign.type my_int_t = (system_case word
+                           | macosx: int_t
+                           | ~else: uint_t)
+  ~throws "expected `32` or `64` for `word` case"

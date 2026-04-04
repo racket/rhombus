@@ -1,0 +1,93 @@
+#lang rhombus/static/and_meta
+import:
+  "type.rhm" open
+  "literal.rhm" open
+  lib("ffi2/main.rkt"):
+    expose:
+      #{define-ffi2-type}
+      struct as ffi2_struct
+      union as ffi2_union
+
+export:
+  struct
+  union
+
+module foreign:
+  export:
+    c_struct
+    c_union
+
+meta fun parse_compound(kind, name, [field_id, ...], [field_t, ...]):
+  let '$_ ... $name_tail' = '$name'
+  let ty_name = Syntax.make_id(to_string(name_tail))
+  let ptr_pred_id = Syntax.make_id(name_tail +& "*?")
+  let [field_acc, ...]: [Syntax.make_id(ty_name +& "-" +& field_id, field_id), ...]
+  let [field_mut, ...]: [Syntax.make_id("set-" +& ty_name +& "-" +& field_id +& "!", field_id), ...]
+  let [field_ann, ...]: [type_meta.unpack_annot(field_t), ...]
+  let pack = (match kind
+              | #'struct: 'pack_struct'
+              | #'union: 'pack_union')
+  '«
+     $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
+                             ty_name,
+                             [match kind
+                              | #'struct: 'ffi2_struct'
+                              | #'union: 'ffi2_union',
+                              ty_name,
+                              [field_id,
+                               type_meta.s_exp(type_meta.unpack_type(field_t))],
+                              ...]]))
+     type.macro '$name':
+       ~all_stx: stx
+       type_meta . $pack('$ty_name',
+                         '[$ty_name,
+                           [$field_id, ...]]',
+                         '$name')
+         .relocate(stx)
+     annot.macro '$ty_name': 'satisfying($ptr_pred_id)'
+     veneer $name(this :: $ty_name):
+       allow_dynamic
+       property
+       | $field_id :~ $field_ann:
+           $field_acc(this)
+       | $field_id := val:
+           $field_mut(this, val)
+       ...
+       export fun is_a(v): $ptr_pred_id(v)
+   »'
+
+defn.macro 'c_struct $(name :: IdentifierName)($(field_id :: Identifier) $(_ :: Colons) $(field_t :: type_meta.Parsed),
+                                               ...)':
+  parse_compound(#'struct, name, [field_id, ...], [field_t, ...])
+
+defn.macro 'c_union $(name :: IdentifierName)($(field_id :: Identifier) $(_ :: Colons) $(field_t :: type_meta.Parsed),
+                                              ...)':
+  parse_compound(#'union, name, [field_id, ...], [field_t, ...])
+
+meta syntax_class MaybeName
+| '$(_ :: Name)'
+| ''
+
+meta fun parse_compound_type(kind, name, [field_id, ...], [field_t, ...]):
+  let '$_ ... $name_tail' = '$kind $name'
+  let ty_name = Syntax.make_id(to_string(name_tail))
+  let [tag_name, ...] = (match name
+                         | '': []
+                         | ~else: [name_tail])
+  type_meta.pack_type('[$(match kind
+                          | #'struct: 'ffi2_struct'
+                          | #'union: 'ffi2_union'),
+                        $tag_name, ...,
+                        [$field_id,
+                         $(type_meta.unpack_type(field_t))],
+                        ...]',
+                      'Never')
+
+type.macro 'struct $(name :: MaybeName)($(field_id :: Identifier) $(_ :: Colons) $(field_t :: type_meta.Parsed),
+                                        ...)':
+  parse_compound_type(#'struct, name, [field_id, ...], [field_t, ...])
+
+
+type.macro 'union $(name :: MaybeName)($(field_id :: Identifier) $(_ :: Colons) $(field_t :: type_meta.Parsed),
+                                       ...)':
+  parse_compound_type(#'union, name, [field_id, ...], [field_t, ...])

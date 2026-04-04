@@ -1,0 +1,59 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/measure
+  ffi open
+  lib("ffi2/tests/make-ffi2-lib.rkt").#{build-ffi2-lib}
+
+def (rkt_test_lib, clean_lib): #{build-ffi2-lib}()
+
+def test_lib = Lib.from_handle("ffi2", rkt_test_lib)
+
+def N = 10_000_000
+
+// ----------------------------------------
+
+foreign.fun double_sum(double_t, double_t) :: double_t:
+  ~lib: test_lib
+
+"double-sum"
+measure.time:
+  ~gc
+  recur loop(i :~ Fixnum = N, v :~ Flonum = 0.0):
+    if i .= 0
+    | v + 0.0
+    | loop(i-1, double_sum(0.0, 0.0))
+
+foreign.fun atomic_double_sum(double_t, double_t) :: double_t:
+  ~lib: test_lib
+  ~c_id: double_sum
+  ~atomic
+
+"atomic-double-sum"
+measure.time:
+  ~gc
+  recur loop(i :~ Fixnum = N, v :~ Flonum = 0.0):
+    if i .= 0
+    | v + 0.0
+    | loop(i-1, atomic_double_sum(0.0, 0.0))
+
+// ----------------------------------------
+
+def f = new int8_t[10]
+memset(f, 3, 10)
+
+"read-write"
+measure.time:
+  ~gc
+  recur loop(i :~ Fixnum = N):
+    cond
+    | i .= 0:
+        mem *f
+    | ~else:
+        mem f[1] := mem f[0]
+        mem f[0] := mem f[1]
+        loop(i-1)
+
+// ----------------------------------------
+
+clean_lib()
+

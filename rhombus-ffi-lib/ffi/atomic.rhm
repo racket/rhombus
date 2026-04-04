@@ -1,0 +1,6 @@
+#lang rhombus
+import:
+  rhombus/ffi/atomic
+
+export:
+  all_from(.atomic)

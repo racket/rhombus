@@ -1,0 +1,42 @@
+#lang rhombus/static/and_meta
+import:
+  lib("ffi/unsafe/atomic.rkt")
+
+export:
+  start_atomic
+  end_atomic
+  atomically
+
+  start_uninterruptible
+  end_uninterruptible
+  uninterruptibly
+
+fun start_atomic():
+  atomic.#{start-atomic}()
+
+fun end_atomic():
+  atomic.#{end-atomic}()
+
+expr.macro 'atomically: $body; ...':
+  'try:
+     ~initially:
+       start_atomic()
+     $body
+     ...
+     ~finally:
+       end_atomic()'
+
+fun start_uninterruptible():
+  atomic.#{start-uninterruptible}()
+
+fun end_uninterruptible():
+  atomic.#{end-uninterruptible}()
+
+expr.macro 'uninterruptibly: $body; ...':
+  'try:
+     ~initially:
+       start_uninterruptible()
+     $body
+     ...
+     ~finally:
+       end_uninterruptible()'
