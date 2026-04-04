@@ -163,6 +163,21 @@ check:
   ~throws "identifier already defined"
 
 block:
+  namespace a:
+    export b
+    def b = 164
+  namespace ~open:
+    export a.b
+  check b ~is 164
+
+block:
+  namespace a
+  namespace ~open:
+    export a.b
+    def a.b = 172
+  check b ~is 172
+
+block:
   import rhombus/meta open
   namespace A:
     export:

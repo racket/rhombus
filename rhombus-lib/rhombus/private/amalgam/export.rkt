@@ -88,11 +88,11 @@
     (cond
       [(syntax-property id namespace-syntax-property-key)
        => (lambda (dot-names)
-            #`(all-spaces-dots-out #,id #,@dot-names))]
+            #`(all-spaces-dots-out #,id #,@(map syntax-local-introduce dot-names)))]
       [else #`(all-spaces-out #,id)]))
 
   (define (export-extension-combine dot-names id)
-    (syntax-property id namespace-syntax-property-key dot-names))
+    (syntax-property id namespace-syntax-property-key (map syntax-local-introduce dot-names)))
 
   (define name-root-export-ref
     (make-name-root-ref #:binding-ref (lambda (v)
