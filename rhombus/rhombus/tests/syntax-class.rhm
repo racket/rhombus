@@ -1770,3 +1770,41 @@ check:
   def (pattern | '$' | '...') = 'oops'
   #void
   ~throws "matching(pattern |« '«$»' » |« '«...»' »)"
+
+check:
+  syntax_class TwoTerms:
+    kind: ~group
+  | '$a $b'
+
+  syntax_class MultiTwoTerms
+  | '$(two :: TwoTerms); ...'
+
+  syntax_class Wrapper:
+    kind: ~multi
+  | '$(_ :: MultiTwoTerms: two)':
+      println([two, ...], [two.a, ...], [two.b, ...])
+
+  let '$(_ :: Wrapper)' = 'x y'
+  "done"
+  ~prints "['x y'] ['x'] ['y']\n"
+
+check:
+  syntax_class TwoTerms:
+    kind: ~group
+  | '$a $b'
+
+  syntax_class.together:
+    syntax_class MultiTwoTerms:
+      kind: ~multi
+      fields:
+        [two :~ Syntax.matched_of(TwoTerms), ...]
+    | '$(two :: TwoTerms); ...'
+
+  syntax_class Wrapper:
+    kind: ~multi
+  | '$(_ :: MultiTwoTerms: open)':
+      println([two, ...], [two.a, ...], [two.b, ...])
+
+  let '$(_ :: Wrapper)' = 'x y'
+  "done"
+  ~prints "['x y'] ['x'] ['y']\n"

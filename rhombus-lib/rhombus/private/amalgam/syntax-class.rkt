@@ -214,7 +214,7 @@
                                         (or (syntax-e (declared-field-depth df)) 0)
                                         (if (syntax-e (declared-field-unpack*-id df))
                                             (declared-field-unpack*-id df)
-                                            (quote-syntax unpack-term*))
+                                            (quote-syntax unpack-element*))
                                         (declared-field-static-infos df)))]))
           (values #`((#:delayed-patterns #,stx #,alts #,fields-ht #,swap-root
                       #,(map (lambda (pv)

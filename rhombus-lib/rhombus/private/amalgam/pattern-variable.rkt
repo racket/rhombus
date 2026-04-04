@@ -228,7 +228,7 @@
                 (make-repetition-info (respan (datum->syntax #f (list form1 dot field-id)))
                                       (cond
                                         [(= var-depth 0)
-                                         #'form-rep-info.for-clausess]
+                                         (keep-elem-syntax-wrap #'form-rep-info.for-clausess)]
                                         [else
                                          #`(#,@#'form-rep-info.for-clausess
                                             ([(elem) (in-list #,e)])
@@ -322,3 +322,13 @@
     [(unpack-term* unpack-multi-as-term* unpack-group*)
      (quote-syntax unpack-element*)]
     [else unpack*]))
+
+;; Like `keep-syntax-wrap`, but for the innermost element
+;; of a repetition traversal, because a non-repetition field
+;; is accessed each iteration
+(define-for-syntax (keep-elem-syntax-wrap clauses)
+  (syntax-parse clauses
+    [(clause ... (((elem) (in-list (unpack* . args)))))
+     (with-syntax ([unpack* (keep-syntax-wrap #'unpack*)])
+       #'(clause ... (((elem) (in-list (unpack* . args))))))]
+    [_ clauses]))
