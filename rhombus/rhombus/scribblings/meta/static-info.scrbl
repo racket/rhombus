@@ -285,7 +285,7 @@
  @rhombus(statinfo_stx) arguments have the key, the values associated
  with those keys will be ``and''ed. That combination is true even if
  one of the @rhombus(statinfo_stx) arguments has the static information of
- @rhombus(None, ~annot) as represented by @rhombus(statinfo_meta.none_key).
+ @rhombus(Never, ~annot) as represented by @rhombus(statinfo_meta.never_key).
 
  An ``or'' combination corresponds to the @rhombus(||, ~annot) annotation
  operator. From the perspective of static-information keys and values,
@@ -293,9 +293,9 @@
  @rhombus(statinfo_stx) arguments is included in the result, and the
  value in each @rhombus(statinfo_stx) is ``or''ed for the result.
  However, if a @rhombus(statinfo_stx) argument has the static information of
- @rhombus(None, ~annot), that @rhombus(statinfo_stx) is effectively discarded.
+ @rhombus(Never, ~annot), that @rhombus(statinfo_stx) is effectively discarded.
  If no @rhombus(statinfo_stx) arguments are provided to @rhombus(statinfo_meta.or),
- the result is the same static information as for @rhombus(None, ~annot).
+ the result is the same static information as for @rhombus(Never, ~annot).
 
 }
 
@@ -356,7 +356,7 @@
   def statinfo_meta.fixnum_key :: Identifier
   def statinfo_meta.values_key :: Identifier
   def statinfo_meta.indirect_key :: Identifier
-  def statinfo_meta.none_key :: Identifier
+  def statinfo_meta.never_key :: Identifier
 ){
 
  Values that can be used to associate static information with an
@@ -461,9 +461,9 @@
         static information is lazily spliced in place of this key
         and identifier.}
 
-  @item{@rhombus(statinfo_meta.none_key): Any value, but normally
+  @item{@rhombus(statinfo_meta.never_key): Any value, but normally
         @rhombus(#true), where the presence of this key indicates
-        the static information of @rhombus(None, ~annot): a claim
+        the static information of @rhombus(Never, ~annot): a claim
         that no value is possible at run time.}
 
 )

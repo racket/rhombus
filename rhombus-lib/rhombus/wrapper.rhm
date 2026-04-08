@@ -6,7 +6,7 @@ export:
 
 fun error_not_handle(~who: who :: maybe(error.Who) = #false,
                      ~what: what :: maybe(String) = #false,
-                     handle) :~ None:
+                     handle) :~ Never:
   ~name: wrapper.error
   error(~who: who,
         ~exn: Exn.Fail.Annot,

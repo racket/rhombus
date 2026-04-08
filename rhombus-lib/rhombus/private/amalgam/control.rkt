@@ -203,7 +203,7 @@
    (lambda (form1 op-stx)
      (wrap-static-info
       #`(raise #,(discard-static-infos form1))
-      #'#%none
+      #'#%never
       #'#true))))
 
 (void (set-primitive-who! 'call-with-composable-continuation 'Continuation.capture))
@@ -342,7 +342,7 @@
                #:tag [prompt-tag (default-continuation-prompt-tag)]
                . vals)
   #:primitive (abort-current-continuation)
-  #:static-infos ((#%call-result ((#%none #t))))
+  #:static-infos ((#%call-result ((#%never #t))))
   (apply abort-current-continuation prompt-tag vals))
 
 (define Continuation.PromptTag.default

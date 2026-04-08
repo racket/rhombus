@@ -87,7 +87,7 @@
   annot.macro 'Any'
   annot.macro 'Any.of($expr, ...)'
   annot.macro 'Any.to_boolean'
-  annot.macro 'None'
+  annot.macro 'Never'
 ){
 
  The @rhombus(Any, ~annot) annotation matches any value, so it
@@ -97,19 +97,19 @@
  @rhombus(Any.to_boolean, ~annot) annotation matches any value and
  converts non-@rhombus(#false) value to @rhombus(#true).
 
- The @rhombus(None, ~annot) annotation matches no values, or in other
+ The @rhombus(Never, ~annot) annotation matches no values, or in other
  words, is equivalent to @rhombus(Any.of(), ~annot). It is useful for
  asserting that something never returns, such as a function that always
  throws an exception. The annotation
- @rhombus(None || #,(@rhombus(ann, ~var)), ~annot) is equivalent to
+ @rhombus(Never || #,(@rhombus(ann, ~var)), ~annot) is equivalent to
  @rhombus(ann, ~var), since any value that satisfies the annotation must
- satisfy @rhombus(ann, ~var). In principle, @rhombus(None, ~annot) would
+ satisfy @rhombus(ann, ~var). In principle, @rhombus(Never, ~annot) would
  imply any other annotation and provide all static information; instead,
- as a pratical compromise, @rhombus(None, ~annot) provides no oher static
+ as a pratical compromise, @rhombus(Never, ~annot) provides no other static
  information. As a further practical choice along those lines, the annotation
- @rhombus(None && #,(@rhombus(ann, ~var)), ~annot) implies all the static
+ @rhombus(Never && #,(@rhombus(ann, ~var)), ~annot) implies all the static
  information of @rhombus(ann, ~var), while still behaving like
- @rhombus(None, ~annot) for further combinations via @rhombus(||, ~annot).
+ @rhombus(Never, ~annot) for further combinations via @rhombus(||, ~annot).
 
  See @secref(~doc: guide_doc, "annotation-satisfying") for information
  about the time that @rhombus(expr) is evaluated.
@@ -120,7 +120,7 @@
   "hola" is_a Any.of("hello", "goodbye")
   "hello" :: Any.to_boolean
   #false :: Any.to_boolean
-  "will not match" is_a None
+  "will not match" is_a Never
   "will not match" is_a Any.of()
 )
 

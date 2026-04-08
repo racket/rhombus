@@ -57,7 +57,7 @@
          #%indirect-static-info
          #%values
          #%maybe
-         #%none)
+         #%never)
 
 (begin-for-syntax
   (property static-info (get-stxs))
@@ -211,7 +211,7 @@
                      (lambda (a b)
                        (merge a b static-infos-and)))))
 
-(define-syntax #%none
+(define-syntax #%never
   (static-info-key (lambda (a b) a)
                    (lambda (a b) a)))
 
@@ -345,13 +345,13 @@
                    (syntax-parse a
                      [(a-key . _) (datum->syntax #f (list #'a-key new-val))])))
             #'())))
-       (define (none? as) (and as (static-info-lookup as (quote-syntax #%none))))
-       ;; if one has `None` and the other doesn't, ignore the one with `None`
+       (define (never? as) (and as (static-info-lookup as (quote-syntax #%never))))
+       ;; if one has `Never` and the other doesn't, ignore the one with `Never`
        (cond
-         [(none? as) (if (none? bs)
+         [(never? as) (if (never? bs)
                          (merge)
                          bs)]
-         [(none? bs) as]
+         [(never? bs) as]
          [else (merge)]))]))
 
 ;; note that `&&` at the annotation level feels like "union" on statinfo tables

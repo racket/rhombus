@@ -151,7 +151,7 @@
  @rhombus(Exn, ~class).
 
  Since it does not return a value, a @rhombus(throw) expression has the
- static information of @rhombus(None, ~annot).
+ static information of @rhombus(Never, ~annot).
 
 }
 

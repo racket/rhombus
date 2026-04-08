@@ -112,7 +112,7 @@ literals rely on a escape to S-expression syntax.
 
  Matches @tech{exact} @tech{integers}: all of them, positive integers, negative
  integers, nonnegative integers, or integers in a given range.
- None that a range can omit a lower bound or upper bound, such as
+ Note that a range can omit a lower bound or upper bound, such as
  when @rhombus(..) is used as a prefix or postfix operator. The
  @rhombus(Nat, ~annot) annotation is the preferred alias for
  @rhombus(NonnegInt, ~annot).

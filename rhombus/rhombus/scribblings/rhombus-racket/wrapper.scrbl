@@ -49,7 +49,7 @@ result annotation @rhombus(:~ Fish).
     ~who: who :: maybe(error.Who) = #false,
     ~what: what :: maybe(String) = #false,
     handle
-  ) :: None
+  ) :: Never
 ){
 
  Throws an exception indicating that @rhombus(handle) is not an
