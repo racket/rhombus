@@ -512,13 +512,16 @@
 
 
 @doc(
-  fun bind_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
-                                    left_op :: Name,
-                                    right_infix_op :: Name)
-    :: matching(#'weaker || #'stronger || #false)
-  fun bind_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
-                           left_op :: Name,
-                           tail :: Group) :: Boolean
+  fun bind_meta.relative_precedence(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    right_infix_op :: Name
+  ) :: matching(#'weaker || #'stronger || #false)
+  fun bind_meta.ends_parse(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    tail :: Group
+  ) :: Boolean
 ){
 
  Like @rhombus(expr_meta.relative_precedence) and

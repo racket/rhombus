@@ -1,0 +1,8 @@
+#lang rhombus/and_meta
+
+// exports identifier bound only in annot space
+
+export:
+  IntegerNumber
+
+annot.macro 'IntegerNumber': 'Int'

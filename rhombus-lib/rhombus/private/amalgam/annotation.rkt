@@ -206,8 +206,8 @@
     #:attributes (converter annotation-str static-infos origins)
     (pattern (~seq op::annotate-op ctc ...)
              #:with c::annotation (no-srcloc #`(#,group-tag ctc ...))
-             #:with (~var ca (:annotation-converted (attribute op.check?))) #'c.parsed
-             #:do [(when (and (not (attribute op.check?))
+             #:with (~var ca (:annotation-converted (attribute op.is_checked))) #'c.parsed
+             #:do [(when (and (not (attribute op.is_checked))
                               (syntax-e #'ca.converter))
                      (raise-unchecked-disallowed #'op.name (respan #'(ctc ...))))]
              #:with converter #'ca.converter
@@ -262,17 +262,17 @@
              #:with body #'result))
 
   (define-syntax-class :annotate-op
-    #:attributes (name check?)
-    #:description "an annotation operator"
+    #:attributes (name is_checked)
+    #:description "an annotation binding operator"
     #:opaque
     (pattern ::name
              #:when (free-identifier=? (in-binding-space #'name)
                                        (bind-quote ::))
-             #:attr check? #t)
+             #:attr is_checked #t)
     (pattern ::name
              #:when (free-identifier=? (in-binding-space #'name)
                                        (bind-quote :~))
-             #:attr check? #f))
+             #:attr is_checked #f))
 
   (define (annotation-predicate-form predicate static-infos)
     #`(#:pred #,predicate #,static-infos))

@@ -141,3 +141,21 @@ check ns3.y ~is "y"
 block:
   import .ns3.x
   check x ~is "x"
+
+namespace ns4:
+  import rhombus/meta open
+  namespace ns:
+    export annot.macro 'm': 'Int'
+  export:
+    rename:
+      ns.m as mm
+
+check 10 :: ns4.mm ~is 10
+
+namespace ns5:
+  import "example-j.rhm" as j
+  export:
+    rename:
+      j.IntegerNumber as NumberInt
+
+check 10 :: ns5.NumberInt ~is 10

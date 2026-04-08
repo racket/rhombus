@@ -55,7 +55,7 @@
          ;; and "veneer-meta.rkt"
          (define finish-data #`([orig-stx base-stx #,(intro #'scope-stx)
                                           reflect-name #,effect-id name name-extends tail-name
-                                          #,(attribute ann-op.check?) ann-op.name (ann-term ...)]
+                                          #,(attribute ann-op.is_checked) ann-op.name (ann-term ...)]
                                 ;; data accumulated from parsed clauses:
                                 ()))
          (annotation-to-be-defined! #'name)
@@ -108,6 +108,7 @@
        (define converter? (or (hash-ref options 'converter? #f)
                               (and super
                                    (veneer-desc-convert-id super))))
+       (define allow-dynamic? (hash-ref options 'allow-dynamic? #f))
 
        (define name-instance-id (intro (datum->syntax #f (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)))
 
@@ -173,7 +174,7 @@
                                                    internal-instance-static-infos-id internal-instance-static-infos-expr
                                                    dot-static-infos-id dot-static-infos-expr
                                                    internal-dot-static-infos-id internal-dot-static-infos-expr)
-              #,@(build-veneer-annotation converter? super interfaces
+              #,@(build-veneer-annotation converter? allow-dynamic? super interfaces
                                           #'(name name-extends name? name-convert
                                                   all-static-infos ann-input-statinfo-indirect
                                                   orig-stx))
@@ -412,7 +413,7 @@
                 #,@defns
                 #,@post-forms))))])))
 
-(define-for-syntax (build-veneer-annotation converter? super interfaces names)
+(define-for-syntax (build-veneer-annotation converter? allow-dynamic? super interfaces names)
   (with-syntax ([(name name-extends name? name-convert
                        all-static-infos ann-input-statinfo-indirect
                        orig-stx)
@@ -424,7 +425,7 @@
          'rhombus/annot #'name #'name-extends
          #`(identifier-annotation name?
                                   all-static-infos
-                                  #:static-only)
+                                  #,@(if allow-dynamic? '() '(#:static-only)))
          #:form #'orig-stx))]
       [else
        (list
@@ -434,7 +435,7 @@
                                                           #'(name name-convert val ann-input-statinfo-indirect))
                                           val
                                           all-static-infos
-                                          #:static-only)
+                                          #,@(if allow-dynamic? '() '(#:static-only)))
          #:form #'orig-stx))])))
 
 (define-syntax (converter-binding-infoer stx)

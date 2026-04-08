@@ -742,3 +742,27 @@ check:
   (values :: matching(_ :: String -> String))("x").length()
   ~throws values("no such field or method",
                  "based on static information")
+
+// check propagation of result annotation in some
+// relatively complex call and `||` patterns
+block:
+  use_static
+
+  fun adjust(f) :: Any.like(f): f
+
+  def f0 = (fun () :: String: "x")
+  def f = (fun (x) :: ((~any) -> String):
+             (fun () :: String: "x"))
+  def fx: (fun () :: None: error("no"))
+
+  def h = adjust(f0)
+
+  def g :: maybe(() -> String) = #false
+
+  check f0()[0] ~is Char"x"
+  check (g || f0)()[0] ~is Char"x"
+  check (g || adjust(f0))()[0] ~is Char"x"
+  check (g || h)()[0] ~is Char"x"
+  check (g || f(0))()[0] ~is Char"x"
+  check (g || adjust(f)(0))()[0] ~is Char"x"
+  check (g || fx)()[0] ~throws "no"

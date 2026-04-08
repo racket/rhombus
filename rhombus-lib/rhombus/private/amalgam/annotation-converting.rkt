@@ -50,7 +50,7 @@
              (syntax-parse (respan #`(#,group-tag result-ann ...))
                [res::annotation
                 (build-annotated-expression #'form-id #'res
-                                            (attribute op.check?) plain-body #'() #'res.parsed
+                                            (attribute op.is_checked) plain-body #'() #'res.parsed
                                             (lambda (tmp-id)
                                               #`(raise-annotation-failure
                                                  'form-id

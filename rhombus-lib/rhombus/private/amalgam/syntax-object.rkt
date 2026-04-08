@@ -1010,10 +1010,9 @@
                                      (or (syntax-opaque-raw-property ctx)
                                          (syntax-raw-property ctx))))]
                 [else
-                 (cons (relocate (car stxes)
-                                 zero-width-loc
-                                 null
-                                 "")
+                 (cons (relocate-one (car stxes)
+                                     zero-width-loc
+                                     null)
                        (loop (cdr stxes)))]))))]))
 
 (define/method (Syntax.track_origin stx-in ctx-stx-in)

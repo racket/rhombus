@@ -270,20 +270,36 @@
 
 }
 
-
 @doc(
   ~meta
-  fun annot_meta.relative_precedence(left_mode :: matching(#'prefix || #'infix),
-                                     left_op :: Name,
-                                     right_infix_op :: Name)
-    :: matching(#'weaker || #'stronger || #false)
-  fun annot_meta.ends_parse(left_mode :: matching(#'prefix || #'infix),
-                            left_op :: Name,
-                            tail :: Group) :: Boolean
+  fun annot_meta.relative_precedence(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    right_infix_op :: Name
+  ) :: matching(#'weaker || #'stronger || #false)
+  fun annot_meta.ends_parse(
+    left_mode :: matching(#'prefix || #'infix),
+    left_op :: Name,
+    tail :: Group
+  ) :: Boolean
 ){
 
  Like @rhombus(expr_meta.relative_precedence) and
  @rhombus(expr_meta.ends_parse), but for annotation operators.
+
+}
+
+@doc(
+  syntax_class annot_meta.BindOp:
+    kind: ~term
+    fields:
+      is_checked :: Boolean
+){
+
+ Matches the binding operator @rhombus(::, ~bind) or
+ @rhombus(:~, ~bind). The value of the @rhombus(is_checked) field is
+ @rhombus(#true) when matching @rhombus(::, ~bind) and @rhombus(#false)
+ when matching @rhombus(:~, ~bind).
 
 }
 

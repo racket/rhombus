@@ -7,6 +7,7 @@
                      "pack.rkt"
                      "static-info-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
                      "tail-returner.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
@@ -61,6 +62,7 @@
      AfterPrefixParsed
      AfterInfixParsed
      NameStart
+     BindOp
      [Context annot_meta.Context]
      [Dependencies annot_meta.Dependencies])))
 
@@ -82,6 +84,12 @@
     AfterPrefixParsed :prefix-op+annotation+tail
     AfterInfixParsed :infix-op+annotation+tail
     #:extra-arity-mask 3))
+
+(begin-for-syntax
+  (define-syntax-class-syntax BindOp
+    (make-syntax-class #':annotate-op
+                       #:kind 'term
+                       #:fields #'((is_checked #f is_checked 0 unpack-element* ())))))
 
 (begin-for-syntax
   (struct annotation-prefix+infix-operator (prefix infix)

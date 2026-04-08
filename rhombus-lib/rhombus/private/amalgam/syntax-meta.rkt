@@ -267,7 +267,7 @@
   (define/arity (syntax_meta.dynamic_name name-stx
                                           #:as_static [static? #false]
                                           #:space [sp expr-space-path])
-    (syntax-parse name-stx
+    (syntax-parse (unpack-term name-stx #f #f)
       #:datum-literals (group multi)
       [n::name
        (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))

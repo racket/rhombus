@@ -80,6 +80,10 @@
                ;; needed to define a veneer annotation;
                ;; leave checking to `parse-options'
                (hash-set options 'converter? #t)]
+              [(#:allow_dynamic)
+               ;; needed to define a veneer annotation;
+               ;; leave checking to `parse-options'
+               (hash-set options 'allow-dynamic? #t)]
               [(#:field mutability . _)
                ;; needed for whether to support converting field annotations;
                ;; leave general handling to `parse-options'
@@ -177,6 +181,10 @@
                (when (hash-has-key? options 'converter?)
                  (raise-syntax-error #f "multiple converter clauses" orig-stx clause))
                (hash-set options 'converter? #t)]
+              [(#:allow_dynamic)
+               (when (hash-has-key? options 'allow-dynamic?)
+                 (raise-syntax-error #f "multiple allow-dynamic clauses" orig-stx clause))
+               (hash-set options 'allow-dynamic? #t)]
               [(#:static-infos expr)
                ;; covered in annotation pass
                options]

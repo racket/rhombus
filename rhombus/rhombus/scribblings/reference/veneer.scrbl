@@ -38,7 +38,7 @@
   | #,(@rhombus(expression, ~veneer_clause)) $expression_decl
   | #,(@rhombus(dot, ~veneer_clause)) $dot_decl
   | #,(@rhombus(static_info, ~veneer_clause)) $static_info_decl
-  | #,(@rhombus(converter, ~veneer_clause))
+  | #,(@rhombus(allow_dynamic, ~veneer_clause))
   | $other_veneer_clause
 ){
 
@@ -59,8 +59,9 @@
  A veneer affects only static resolution of operations. To help avoid
  confusing behavior when dynamic resolution is chosen in a dynamic-mode
  context, a veneer can be used as an expression or annotation only in a
- static-mode context (see @rhombus(use_static)). Using a veneer
- annotation in a dynamic-mode context is a syntax error.
+ static-mode context (see @rhombus(use_static)) unless the veneer
+ declaration includes a @rhombus(allow_dynamic, ~veneer_clause) clause.
+ Using a static-only veneer annotation in a dynamic-mode context is a syntax error.
 
  The veneer's @rhombus(id_name) is bound in several @tech(~doc: meta_doc){spaces}:
 
@@ -188,6 +189,16 @@
 
  A @tech{veneer clause} that is recognized by @rhombus(veneer) so that
  the new veneer is a @tech(~doc: model_doc){converter annotation}. See @rhombus(veneer).
+
+}
+
+@doc(
+  veneer_clause.macro 'allow_dynamic'
+){
+
+ A @tech{veneer clause} that is recognized by @rhombus(veneer) so that
+ the new veneer can be referenced in a dynamic context. See @rhombus(veneer)
+ and @rhombus(use_dynamic).
 
 }
 

@@ -71,8 +71,10 @@
               (define id
                 (syntax-parse o
                   [(int-id ext-id) #'int-id]
-                  [_:identifier o]))
-              (check-identifier #'base-ctx #'forward-ctx id))]
+                  [_:identifier o]
+                  [_ #f]))
+              (when id
+                (check-identifier #'base-ctx #'forward-ctx id)))]
            [_
             (void)])))])
   #'(void))

@@ -271,7 +271,7 @@
                        [(c-parsed::annotation-predicate-form ...)
                         (values #'((#%values (c-parsed.static-infos ...)))
                                 (converter
-                                 (and (attribute ann-op.check?)
+                                 (and (attribute ann-op.is_checked)
                                       (not (andmap always-satisfied-annotation? (syntax->list #'(c.parsed ...))))
                                       #'(lambda (arg ... success-k fail-k)
                                           (if (and (c-parsed.predicate arg) ...)
@@ -280,7 +280,7 @@
                                  #t
                                  cnt))]
                        [(c-parsed::annotation-binding-form ...)
-                        #:do [(unless (attribute ann-op.check?)
+                        #:do [(unless (attribute ann-op.is_checked)
                                 (for ([c (in-list (syntax->list #'(c ...)))]
                                       [c-p (in-list (syntax->list #'(c.parsed ...)))])
                                   (syntax-parse c-p
@@ -288,7 +288,9 @@
                                     [_ (raise-unchecked-disallowed #'ann-op.name c)])))]
                         #:with (arg-parsed::binding-form ...) #'(c-parsed.binding ...)
                         #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)
-                        (values #'((#%values (c-parsed.static-infos ...)))
+                        (values (if (= 1 (length (attribute c-parsed)))
+                                    (car (attribute c-parsed.static-infos))
+                                    #'((#%values (c-parsed.static-infos ...))))
                                 (converter
                                  #`(let ()
                                      #,@(for/list ([arg-impl-info (in-list (syntax->list #'(arg-impl.info ...)))])
@@ -327,7 +329,7 @@
                        [c-parsed::annotation-predicate-form
                         (values #'c-parsed.static-infos
                                 (converter
-                                 (and (attribute ann-op.check?)
+                                 (and (attribute ann-op.is_checked)
                                       (not (always-satisfied-annotation? #'c-parsed))
                                       #'(lambda (v success-k fail-k)
                                           (if (c-parsed.predicate v)
@@ -336,7 +338,7 @@
                                  #t
                                  1))]
                        [c-parsed::annotation-binding-form
-                        #:do [(unless (attribute ann-op.check?)
+                        #:do [(unless (attribute ann-op.is_checked)
                                 (raise-unchecked-disallowed #'ann-op.name #'c))]
                         #:with arg-parsed::binding-form #'c-parsed.binding
                         #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)

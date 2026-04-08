@@ -136,3 +136,23 @@ check:
   1 :: bad 1
   ~throws values(error.annot_msg(),
                  error.annot("annot_meta.Context").msg)
+
+block:
+  import:
+    rhombus.(::) as :==
+    rhombus.(:~) as :=~
+  expr.macro 'annop $(a :: annot_meta.BindOp)':
+    '[$a.is_checked]'
+  check annop :: ~is [#true]
+  check annop :~ ~is [#false]
+  check annop :== ~is [#true]
+  check annop :=~ ~is [#false]
+  check annop :~ ++ [0] ~is [#false, 0]
+  expr.macro
+  | 'maybe_annop $(a :: annot_meta.BindOp)':
+      '[$a.is_checked]'
+  | 'maybe_annop $(t :: Term)':
+      '"no"'
+  check maybe_annop :: ~is [#true]
+  check maybe_annop :=~ ~is [#false]
+  check maybe_annop ++ ~is "no"

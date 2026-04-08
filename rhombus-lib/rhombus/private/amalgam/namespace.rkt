@@ -227,6 +227,19 @@
                        [else ht])]
                     [else ht])))]
              [else base-ht])]))
+      (define (parse-all-spaces-dots-out stx ht use-out-id)
+        (syntax-parse stx
+          [(_ combine-id id ...)
+           (define ids (syntax->list #'(id ...)))
+           (define out-id (or use-out-id (car (reverse ids))))
+           (for/fold ([ht ht]) ([space-sym (in-list (if spaces
+                                                        spaces
+                                                        (cons #f (syntax-local-module-interned-scope-symbols))))]
+                                #:when (use-space? space-sym spaces-mode spaces))
+             (define id (dotted-binding-id ids space-sym))
+             (if id
+                 (add-name-at-all-spaces ht out-id id (hasheq space-sym #t) '#:only)
+                 ht))]))
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
                                       only-spaces-out except-spaces-out all-spaces-defined-out
@@ -236,22 +249,18 @@
            (loop ex ht except-ht spaces spaces-mode))]
         [(all-spaces-out o ...)
          (for/fold ([ht ht]) ([o (in-list (syntax->list #'(o ...)))])
-           (define-values (ext-id int-id)
-             (syntax-parse o
-               [(int-id ext-id) (values #'ext-id #'int-id)]
-               [_:identifier (values o o)]))
-           (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode))]
+           (syntax-parse o
+             #:datum-literals (all-spaces-dots-out)
+             [[(~and asdo (all-spaces-dots-out . _)) out-id]
+              (parse-all-spaces-dots-out #'asdo ht #'out-id)]
+             [_
+              (define-values (ext-id int-id)
+                (syntax-parse o
+                  [(int-id ext-id) (values #'ext-id #'int-id)]
+                  [_:identifier (values o o)]))
+              (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode)]))]
         [(all-spaces-dots-out combine-id id ...)
-         (define ids (syntax->list #'(id ...)))
-         (define out-id (car (reverse ids)))
-         (for/fold ([ht ht]) ([space-sym (in-list (if spaces
-                                                      spaces
-                                                      (cons #f (syntax-local-module-interned-scope-symbols))))]
-                              #:when (use-space? space-sym spaces-mode spaces))
-           (define id (dotted-binding-id ids space-sym))
-           (if id
-               (add-name-at-all-spaces ht out-id id (hasheq space-sym #t) '#:only)
-               ht))]
+         (parse-all-spaces-dots-out ex ht #f)]
         [(only-spaces-out ex space ...)
          (define new-spaces
            (for/hasheq ([sp (in-list (syntax->list #'(space ...)))])

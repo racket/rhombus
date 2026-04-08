@@ -15,6 +15,7 @@
                      "tag.rkt"
                      "macro-result.rkt"
                      "id-binding.rkt"
+                     "dotted-sequence.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "all-spaces-out.rkt"
@@ -212,9 +213,12 @@
 
   (define-syntax-class :renaming
     #:datum-literals (group)
-    (pattern (group . (~var int (:hier-name-seq in-name-root-space values name-path-op name-root-ref)))
-             #:with (_::as-id ext::name) #'int.tail
-             #:with int-name #'int.name
+    (pattern (group (~var int-seq :dotted-operator-or-identifier-sequence) . tail)
+             #:with raw-int::raw-dotted-operator-or-identifier #'int-seq
+             #:with int-name (if (null? (syntax-e #'raw-int.prefix))
+                                 #'raw-int.name
+                                 #`(all-spaces-dots-out raw-int.name #,@#'raw-int.prefix raw-int.name))
+             #:with (_::as-id ext::name) #'tail
              #:with ext-name #'ext.name)))
 
 (define-export-syntax as

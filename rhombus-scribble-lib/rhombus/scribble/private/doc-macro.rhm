@@ -54,7 +54,15 @@ meta:
                                          fun (_, [spc, ...]): [100 || spc, ...],
                   ~extract_spacer_infos: extract_spacer_infos :: Function.of_arity(2):
                                            fun (_, [spc, ...]): [{} || spc, ...]):
-    rkt.#{make-doc-transformer}(~#{extract-desc}: extract_desc,
+    rkt.#{make-doc-transformer}(~#{extract-desc}: fun (stx):
+                                                    match extract_desc(stx):
+                                                    | s :: String: s
+                                                    | [s :: String, ...]: PairList[s, ...]
+                                                    | v:
+                                                        error(~who: Function.name(extract_desc),
+                                                              error.annot_msg("result"),
+                                                              error.annot("String || List.of(String)"),
+                                                              error.val(v)),
                                 ~#{extract-space-sym}: fun (stx):
                                                          match extract_space(stx)
                                                          | s :: SpaceName.normalized: s
@@ -68,18 +76,38 @@ meta:
                                 ~#{extract-sort-order}: fun (stx, PairList[PairList[spc, ...], ...]):
                                                            let [order, ...] = extract_sort_order(stx, [[spc, ...], ...])
                                                            PairList[order, ...],
-                                ~#{extract-name}: extract_name,
-                                ~#{extract-metavariables}: extract_metavariables,
+                                ~#{extract-name}: fun (stx, space):
+                                                    match extract_name(stx, space)
+                                                    | id :: Identifier || Map: id
+                                                    | [id :: Identifier || Map, ...]: PairList[id, ...]
+                                                    | v:
+                                                        error(~who: Function.name(extract_name),
+                                                              error.annot_msg("result"),
+                                                              error.annot("Identifier || Map || List.of(Identifier || Map)"),
+                                                              error.val(v)),
+                                ~#{extract-metavariables}: fun (stx, spaces, vars):
+                                                             let spaces: match spaces
+                                                                         | spaces :: PairList: spaces.to_list()
+                                                                         | ~else: spaces
+                                                             extract_metavariables(stx, spaces, vars),
                                 ~#{extract-typeset}: fun (stx, spaces, subst_in):
-                                                       fun subst(id :: Identifier || Map,
-                                                                 ~as_wrap = #true,
-                                                                 ~as_redef = #false,
-                                                                 ~as_meta = #false):
-                                                         subst_in(id,
-                                                                  ~as_wrap: as_wrap,
-                                                                  ~as_redef: as_redef,
-                                                                  ~as_meta: as_meta,
-                                                                  ~as_group: #true)
+                                                       let spaces: match spaces
+                                                                   | spaces :: PairList: spaces.to_list()
+                                                                   | ~else: spaces
+                                                       fun make_subst(subst_in):
+                                                         fun subst(id :: Identifier || Map,
+                                                                   ~as_wrap = #true,
+                                                                   ~as_redef = #false,
+                                                                   ~as_meta = #false):
+                                                           subst_in(id,
+                                                                    ~as_wrap: as_wrap,
+                                                                    ~as_redef: as_redef,
+                                                                    ~as_meta: as_meta,
+                                                                    ~as_group: #true)
+                                                         subst
+                                                       let subst: match subst_in
+                                                                  | PairList[subst_in, ...]: [make_subst(subst_in), ...]
+                                                                  | ~else: make_subst(subst_in)
                                                        #{unwrap-expr}(extract_typeset(stx, spaces, subst), extract_typeset),
                                 ~#{extract-spacer-infos}: fun (stx, PairList[PairList[spc, ...], ...]):
                                                              match extract_spacer_infos(stx, [[spc, ...], ...])

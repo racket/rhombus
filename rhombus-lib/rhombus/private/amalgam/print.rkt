@@ -28,6 +28,11 @@
  (require file/private/convertible)
  (define (convertible? v) #f))
 
+(meta-if-version-at-least
+ "9.1.0.12"
+ (require (only-in '#%foreign ffi2-ptr?))
+ (define (ffi2-ptr? v) #f))
+
 (provide (for-spaces (#f
                       rhombus/statinfo)
                      (rename-out
@@ -502,6 +507,8 @@
       (pretty-text "Sequence.make(")
       (list (pretty-text "..."))
       (pretty-text ")"))]
+    [(ffi2-ptr? v)
+     (pretty-text (format "~s" v))]
     [else
      (cond
        [(display?)
