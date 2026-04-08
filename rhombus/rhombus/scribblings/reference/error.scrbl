@@ -18,7 +18,7 @@
     ~details: details :: List.of(ReadableString) = [],
     clause :: error.Clause,
     ...
-  ) :: None
+  ) :: Never
 ){
 
  Throws the result of @rhombus(exn) as an exception, constructing the

@@ -113,7 +113,7 @@ character.
  @item{titlecase: Unicode general category @UCat{Lt}}
 
  @item{numeric: Unicode ``Numeric_Type'' property other than
-  @litchar{None}}
+  @litchar{Never}}
 
  @item{symbolic: Unicode general category @UCat{Sm}, @UCat{Sc},
   @UCat{Sk}, or @UCat{So}}

@@ -753,7 +753,7 @@ block:
   def f0 = (fun () :: String: "x")
   def f = (fun (x) :: ((~any) -> String):
              (fun () :: String: "x"))
-  def fx: (fun () :: None: error("no"))
+  def fx: (fun () :: Never: error("no"))
 
   def h = adjust(f0)
 

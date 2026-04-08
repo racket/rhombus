@@ -11,16 +11,16 @@
   ~meta
   fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
                         in_stx :: Syntax)
-    :: None
+    :: Never
   fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
                         message :: ReadableString,
                         in_stx :: Syntax)
-    :: None
+    :: Never
   fun syntax_meta.error(~who: who :: maybe(error.Who) = #false,
                         message :: ReadableString,
                         in_stx :: Syntax,
                         at_stx :: Syntax || List.of(Syntax))
-    :: None
+    :: Never
 ){
 
  Throws a syntax-error message concerning @rhombus(in_stx). If

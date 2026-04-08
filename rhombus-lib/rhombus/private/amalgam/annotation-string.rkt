@@ -8,7 +8,7 @@
          annotation-string-convert-pair)
 
 (define annotation-any-string "Any")
-(define annotation-none-string "None")
+(define annotation-never-string "Never")
 
 (define (annotation-string-from-pattern p)
   (string-append "matching(" p ")"))
@@ -24,9 +24,9 @@
 (define (annotation-string-and a b)
   (cond
     [(or (equal? a annotation-any-string)
-         (equal? b annotation-none-string))
+         (equal? b annotation-never-string))
      b]
-    [(or (equal? a annotation-none-string)
+    [(or (equal? a annotation-never-string)
          (equal? b annotation-any-string))
      a]
     [else
@@ -35,9 +35,9 @@
 (define (annotation-string-or a b)
   (cond
     [(or (equal? a annotation-any-string)
-         (equal? b annotation-none-string))
+         (equal? b annotation-never-string))
      a]
-    [(or (equal? a annotation-none-string)
+    [(or (equal? a annotation-never-string)
          (equal? b annotation-any-string))
      b]
     [else

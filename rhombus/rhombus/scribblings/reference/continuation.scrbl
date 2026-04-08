@@ -118,7 +118,7 @@ or by using it with @rhombus(Continuation.in).
     ~tag: tag :: Continuation.PromptTag:
             Continuation.PromptTag.default,
     val :: Any, ...
-  ) :: None
+  ) :: Never
 ){
 
  Escapes to the nearest prompt in the current continuation that has the

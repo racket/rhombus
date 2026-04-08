@@ -735,20 +735,20 @@ block:
     fun whoami():
       ~who: who
       who
-    fun try_input(_ :: None):
+    fun try_input(_ :: Never):
       error("should not get here")
-    fun try_output() :: None:
+    fun try_output() :: Never:
       "oops"
   check:
     A.whoami() ~is #'#{A.whoami}
     A.try_input("oops") ~throws values(
       "A.try_input: " ++ error.annot_msg("argument"),
-      error.annot("None").msg,
+      error.annot("Never").msg,
       error.val("oops", ~label: "argument").msg,
     )
     A.try_output() ~throws values(
       "A.try_output: " ++ error.annot_msg("result"),
-      error.annot("None").msg,
+      error.annot("Never").msg,
       error.val("oops", ~label: "result").msg,
     )
 

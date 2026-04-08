@@ -103,7 +103,7 @@ and @rhombus(#false). For most contexts, such as the test position in
  implied by the annotation is the @rhombus(statinfo_meta.or) of information for
  @rhombus(left_annot) and @rhombus(right_annot), which means that information for a key
  must appear in both for the key to be part of the implied annotation (except
- that @rhombus(None, ~annot) is treated specially).
+ that @rhombus(Never, ~annot) is treated specially).
 
  The annotations are checked in other. Either or both of
  @rhombus(left_annot) and @rhombus(right_annot) can be a @tech(~doc: model_doc){converter

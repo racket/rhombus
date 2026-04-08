@@ -98,7 +98,7 @@
      maybe_key
      values_key
      indirect_key
-     none_key)))
+     never_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space convert-id)
   (definition-transformer
@@ -383,7 +383,7 @@
 
   (define/arity (statinfo_meta.or . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (static-infos-merge who statinfos static-infos-or #'((#%none #t))))
+    (static-infos-merge who statinfos static-infos-or #'((#%never #t))))
 
   (define/arity (statinfo_meta.and . statinfos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -413,4 +413,4 @@
 (define-key fixnum_key #%fixnum)
 (define-key values_key #%values)
 (define-key indirect_key #%indirect-static-info)
-(define-key none_key #%none)
+(define-key never_key #%never)
