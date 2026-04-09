@@ -62,3 +62,47 @@ block:
   check:
     Foo.helper()
     ~is Foo()
+
+block:
+  class.together:
+    interface I:
+      method a() :: I.A:
+        I.A()
+      method b() :: I.B:
+        I.B()
+      method c() :: I.C:
+        I.C()
+    class I.A():
+      implements I
+    class I.B():
+      implements I
+    class I.C():
+      implements I
+  check:
+    I.A.b.name() ~is #'#{I.A.b}
+    I.B.c.name() ~is #'#{I.B.c}
+    I.C.a.name() ~is #'#{I.C.a}
+  check:
+    I.A().b() ~is I.B()
+    I.B().c() ~is I.C()
+    I.C().a() ~is I.A()
+
+block:
+  class.together:
+    class A():
+      method b() :: B:
+        "oops"
+    class B():
+      method c() :: C:
+        "oops"
+    class C():
+      method a() :: A:
+        "oops"
+  check:
+    A.b.name() ~is #'#{A.b}
+    B.c.name() ~is #'#{B.c}
+    C.a.name() ~is #'#{C.a}
+  check:
+    A().b() ~throws "A.b: " ++ error.annot_msg("result")
+    B().c() ~throws "B.c: " ++ error.annot_msg("result")
+    C().a() ~throws "C.a: " ++ error.annot_msg("result")

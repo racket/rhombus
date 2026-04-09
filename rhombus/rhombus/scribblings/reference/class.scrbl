@@ -382,9 +382,9 @@
  interface names can be used as field, method, and property-result
  annotations and in all of the other class and interface declarations.
 
- The @rhombus(class.together) form expands to a combination of
- @rhombus(namespace), @rhombus(annot.delayed_declare), and
- @rhombus(annot.delayed_complete) declarations.
+ Underlyingly, @rhombus(class.together) uses
+ @rhombus(annot.delayed_declare) and @rhombus(annot.delayed_complete)
+ to resolve the mutual dependency.
 
 @examples(
   class.together:
