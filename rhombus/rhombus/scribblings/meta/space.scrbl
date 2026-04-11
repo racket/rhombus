@@ -80,6 +80,8 @@ driver and macro-definitions forms.
   | #,(@rhombus(description, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(operator_description, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(reflection, ~space_meta_clause)) $id
+  | #,(@rhombus(prefix_predicate, ~space_meta_clause)) $id
+  | #,(@rhombus(infix_predicate, ~space_meta_clause)) $id
   | #,(@rhombus(private, ~space_meta_clause)) $meta_clause
   | $nestable_body
 ){
@@ -370,6 +372,14 @@ driver and macro-definitions forms.
   example.
   This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
 
+ @item{@rhombus(prefix_predicate, ~space_meta_clause): Declares an
+  identifier to be bound to a function that recognizes prefix operators for
+  the space as accessed via @rhombus(syntax_meta.value).}
+
+ @item{@rhombus(infix_predicate, ~space_meta_clause): Declares an
+  identifier to be bound to a function that recognizes infix operators for
+  the space as accessed via @rhombus(syntax_meta.value).}
+
 )
 
 }
@@ -391,8 +401,9 @@ driver and macro-definitions forms.
  A @rhombus(space.transform) declaration does not support
  @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause),
  @rhombus(parse_infix_more_syntax_class, ~space_meta_clause),
- @rhombus(identifier_parser, ~space_meta_clause), or
- @rhombus(operator_description, ~space_meta_clause) clauses.
+ @rhombus(identifier_parser, ~space_meta_clause),
+ @rhombus(operator_description, ~space_meta_clause), or
+ @rhombus(infix_predicate, ~space_meta_clause) clauses.
 
 }
 
@@ -433,6 +444,8 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'description $expr'
   space_meta_clause.macro 'operator_description $expr'
   space_meta_clause.macro 'reflection $id'
+  space_meta_clause.macro 'prefix_predicate $id'
+  space_meta_clause.macro 'infix_predicate $id'
 ){
 
  Clause forms for use within a @rhombus(meta_namespace, ~space_clause)
@@ -460,8 +473,10 @@ driver and macro-definitions forms.
  @rhombus(name_start_syntax_class, ~space_meta_clause),
  @rhombus(bound_name_start_syntax_class, ~space_meta_clause),
  @rhombus(parsed_packer, ~space_meta_clause),
- @rhombus(parsed_unpacker, ~space_meta_clause), and
- @rhombus(reflection, ~space_meta_clause).
+ @rhombus(parsed_unpacker, ~space_meta_clause),
+ @rhombus(reflection, ~space_meta_clause),
+ @rhombus(prefix_predicate, ~space_meta_clause), and
+ @rhombus(infix_predicate, ~space_meta_clause).
 
 }
 

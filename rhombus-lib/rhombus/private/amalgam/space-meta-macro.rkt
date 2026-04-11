@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      racket/symbol
                      syntax/parse/pre
-                     "expose.rkt")
+                     "expose.rkt"
+                     "srcloc.rkt")
          racket/symbol
          syntax/parse/pre
          enforest/property
@@ -56,17 +57,17 @@
 (define-syntax (enforest-meta stx)
   (syntax-parse stx
     #:datum-literals (group)
-    [(_  name:identifier base-stx scope-stx names clauses)
+    [(_  name:identifier orig-stx base-stx scope-stx names clauses)
      #`(rhombus-mixed-nested-forwarding-sequence
-        (enforest-meta-finish [#,stx base-stx scope-stx name #t . names]) rhombus-meta-enforest
+        (enforest-meta-finish [orig-stx base-stx scope-stx name #t . names]) rhombus-meta-enforest
         (enforest-meta-body-step . clauses))]))
 
 (define-syntax (transform-meta stx)
   (syntax-parse stx
     #:datum-literals (group)
-    [(_  name:identifier base-stx scope-stx names clauses)
+    [(_  name:identifier orig-stx base-stx scope-stx names clauses)
      #`(rhombus-mixed-nested-forwarding-sequence
-        (enforest-meta-finish [#,stx base-stx scope-stx name #f . names]) rhombus-meta-enforest
+        (enforest-meta-finish [orig-stx base-stx scope-stx name #f . names]) rhombus-meta-enforest
         (enforest-meta-body-step . clauses))]))
 
 (define-syntax enforest-meta-body-step
@@ -133,6 +134,8 @@
        (define name-start-class-name (hash-ref options '#:syntax_class_name_start #'#f))
        (define bound-name-start-class-name (hash-ref options '#:syntax_class_bound_name_start #'#f))
        (define space-reflect-name (hash-ref options '#:reflection #'#f))
+       (define prefix-predicate-name (hash-ref options '#:prefix_predicate #'#f))
+       (define infix-predicate-name (hash-ref options '#:infix_predicate #'#f))
        (define desc (hash-ref options '#:desc #f))
        (define desc-operator (hash-ref options '#:operator_desc #'"operator"))
        (define parsed-tag (string->keyword (symbol->immutable-string (syntax-e #'space-path-name))))
@@ -167,6 +170,7 @@
        (check-distinct-exports (exports->names exs)
                                class-name prefix-more-class-name infix-more-class-name
                                name-start-class-name bound-name-start-class-name
+                               prefix-predicate-name infix-predicate-name
                                #'orig-stx)
        (register-field-check #`(base-ctx scope-ctx . #,exs))
        (define (build-pack-and-unpack)
@@ -217,6 +221,8 @@
                           [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
                           [#,bound-name-start-class-name #,bound-name-start-class-name #:syntax_class_bound_name_start]
                           [#,space-reflect-name #,space-reflect-name #:reflection]
+                          [#,prefix-predicate-name #,prefix-predicate-name #:prefix_predicate]
+                          [#,infix-predicate-name #,infix-predicate-name #:infix_predicate]
                           [#,pack-id #,pack-id #:parsed_packer]
                           [#,unpack-id #,unpack-id #:parsed_unpacker]))
                    . #,exs))
@@ -283,8 +289,22 @@
                 (maybe-skip
                  #,space-reflect-name
                  (define #,space-reflect-name (space-name 'space-path-name)))
+                (maybe-skip
+                 #,prefix-predicate-name
+                 (define #,prefix-predicate-name (lambda (v) (and (new-prefix-operator-ref v) #t))))
+                (maybe-skip
+                 #,infix-predicate-name
+                 (define #,infix-predicate-name (lambda (v) (and (new-infix-operator-ref v) #t))))
                 #,@post-forms)]
            [else
+            (define (disallow v what)
+              (when v
+                (raise-syntax-error #f (format "~a not supported for transformer spaces" what) (maybe-respan #'orig-stx))))
+            (disallow (hash-ref options '#:syntax_class_prefix_more #f) "infix-more syntax class")
+            (disallow (hash-ref options '#:syntax_class_infix_more #f) "infix-more syntax class")
+            (disallow (hash-ref options '#:identifier_transformer #f) "identifier parser expression")
+            (disallow (hash-ref options '#:operator_description #f) "operator description")
+            (disallow (hash-ref options '#:infix_predicate #f) "infix-operator predicate")
             #`(begin
                 (define-name-root #,(expose #'meta-name)
                   #:fields
@@ -292,15 +312,14 @@
                      private-kws
                      #`([#,class-name #,class-name #:syntax_class]
                         [#,space-reflect-name #,space-reflect-name #:reflection]
+                        [#,prefix-predicate-name #,prefix-predicate-name #:prefix_predicate]
                         [#,name-start-class-name #,name-start-class-name #:syntax_class_name_start]
                         [#,bound-name-start-class-name #,bound-name-start-class-name #:syntax_class_bound_name_start]
                         [#,pack-id #,pack-id #:parsed_packer]
                         [#,unpack-id #,unpack-id #:parsed_unpacker]
                         . #,exs)))
                 (define in-new-space (make-interned-syntax-introducer/add 'space-path-name))
-                (maybe-skip
-                 #,class-name
-                 (property new-transformer transformer))
+                (property new-transformer transformer)
                 (maybe-skip
                  #,class-name
                  (define-rhombus-transform
@@ -319,21 +338,22 @@
                                                                              #:arity-mask base-arity-mask)))
                 #,@(build-name-start-syntax-class name-start-class-name #f)
                 #,@(build-name-start-syntax-class bound-name-start-class-name #t)
-                (maybe-skip
-                 #,class-name
-                 (define macro-result (#,make-macro-result
-                                       (quote name)
-                                       (quote #,parsed-tag)
-                                       (lambda (e env)
-                                         (syntax-local-introduce
-                                          (apply parse-group (syntax-local-introduce e) env))))))
-                (maybe-skip
-                 #,class-name
-                 (define make-prefix-operator (make-make-transformer 'name new-transformer macro-result)))
+                (define macro-result (#,make-macro-result
+                                      (quote name)
+                                      (quote #,parsed-tag)
+                                      (lambda (e env)
+                                        #,(if (syntax-e class-name)
+                                              #`(syntax-local-introduce
+                                                 (apply parse-group (syntax-local-introduce e) env))
+                                              #`e))))
+                (define make-prefix-operator (make-make-transformer 'name new-transformer macro-result))
                 #,@(build-pack-and-unpack)
                 (maybe-skip
                  #,space-reflect-name
                  (define #,space-reflect-name (space-name 'space-path-name)))
+                (maybe-skip
+                 #,prefix-predicate-name
+                 (define #,prefix-predicate-name (lambda (v) (and (new-transformer-ref v) #t))))
                 #,@post-forms)]))])))
 
 (define-for-syntax (filter-missing-or-private private-kws flds)
@@ -504,6 +524,7 @@
 (define-for-syntax (check-distinct-exports ex-ht
                                            class-name prefix-more-class-name infix-more-class-name
                                            name-start-class-name bound-name-start-class-name
+                                           prefix-predicate-name infix-predicate-name
                                            orig-stx)
   (define (check id what)
     (when (and (syntax-e id)
@@ -516,7 +537,9 @@
   (check prefix-more-class-name "prefix-more syntax class name")
   (check infix-more-class-name "infix-more syntax class name")
   (check name-start-class-name "name-start syntax class name")
-  (check bound-name-start-class-name "bound-name-start syntax class name"))
+  (check bound-name-start-class-name "bound-name-start syntax class name")
+  (check prefix-predicate-name "prefix-operator predicate name")
+  (check infix-predicate-name "infix-operator predicate name"))
 
 (define (id-syntax-error desc)
   (lambda (id)

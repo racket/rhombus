@@ -108,6 +108,8 @@ space.enforest ident2:
     private parsed_packer pack
     private parsed_unpacker unpack
     private reflection space
+    private prefix_predicate is_prefix
+    private infix_predicate is_infix
 
 // make sure `myspace_meta.Parsed` is bound in the `stxclass` space,
 // so that `alias` works right:
@@ -317,3 +319,29 @@ check:
   expr.macro 'wchk $(b :: widget_meta.Parsed) $()': "ok"
   wchk bad
   ~throws "expected: single-group syntax object for widget"
+
+space.enforest detector_example:
+  space_path my/example/detector
+  macro_definer macro
+  meta_namespace detector_example_meta:
+    name_start_syntax_class NameStart
+    reflection space
+    prefix_predicate is_prefix
+    infix_predicate is_infix
+detector_example.macro 'pre $tail ...':
+  "oops"
+detector_example.macro '+++ $tail ...':
+  "oops"
+detector_example.macro '$t ifx $tail ...':
+  "oops"
+detector_example.macro '$t *** $tail ...':
+  "oops"
+expr.macro 'check_detector($(q :: detector_example_meta.NameStart))':
+  let v = syntax_meta.value(q.name, detector_example_meta.space, fun (): #false)
+  '[$(detector_example_meta.is_prefix(v)), $(detector_example_meta.is_infix(v))]'
+check:
+  check_detector(pre) ~is [#true, #false]
+  check_detector(+++) ~is [#true, #false]
+  check_detector(ifx) ~is [#false, #true]
+  check_detector(***) ~is [#false, #true]
+  check_detector(other) ~is [#false, #false]

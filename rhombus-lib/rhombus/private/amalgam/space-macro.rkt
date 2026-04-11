@@ -159,7 +159,7 @@
              (begin-for-syntax
                (enforest-meta
                 #,(car meta-namespace)
-                base-stx scope-stx
+                orig-stx base-stx scope-stx
                 [name #,space-path-name
                       make-prefix-operator make-infix-operator make-prefix+infix-operator
                       (extra-kw ...)]

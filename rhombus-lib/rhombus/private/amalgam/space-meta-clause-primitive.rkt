@@ -15,6 +15,8 @@
                     name_start_syntax_class
                     bound_name_start_syntax_class
                     reflection
+                    prefix_predicate
+                    infix_predicate
                     description
                     operator_description
                     parse_checker
@@ -63,6 +65,10 @@
   (make-identifier-transformer '#:syntax_class_bound_name_start))
 (define-space-meta-clause-syntax reflection
   (make-identifier-transformer '#:reflection))
+(define-space-meta-clause-syntax prefix_predicate
+  (make-identifier-transformer '#:prefix_predicate))
+(define-space-meta-clause-syntax infix_predicate
+  (make-identifier-transformer '#:infix_predicate))
 (define-space-meta-clause-syntax parsed_packer
   (make-identifier-transformer '#:parsed_packer))
 (define-space-meta-clause-syntax parsed_unpacker
@@ -98,6 +104,8 @@
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax name_start_syntax_class)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax bound_name_start_syntax_class)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax reflection)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax prefix_predicate)))
+                     (free-identifier=? id (in-space-meta-clause-space (quote-syntax infix_predicate)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_packer)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_unpacker)))))
         (syntax-parse #'(group id . rest)
@@ -107,7 +115,7 @@
               (wrap-clause #'(kw id #f . rest))])])]
        [else
         (raise-syntax-error #f
-                            "expected enforest syntax class, reflection, packer, or unpacker clause to make private"
+                            "expected enforest syntax class, reflection, predicate, packer, or unpacker clause to make private"
                             stx)]))))
 
 (define-for-syntax (parse-space-meta-clause-options orig-stx enforest? options-stx)
@@ -160,6 +168,16 @@
        (maybe-private (hash-set options '#:reflection #'id)
                       #'public?
                       '#:reflection)]
+      [(_ (#:prefix_predicate id public?))
+       (check "prefix-operator predicate name")
+       (maybe-private (hash-set options '#:prefix_predicate #'id)
+                      #'public?
+                      '#:prefix_predicate)]
+      [(_ (#:infix_predicate id public?))
+       (check "infix-operator predicate name")
+       (maybe-private (hash-set options '#:infix_predicate #'id)
+                      #'public?
+                      '#:infix_predicate)]
       [(_ (#:desc stx e))
        (check "description string expressions")
        (hash-set options '#:desc #'e)]

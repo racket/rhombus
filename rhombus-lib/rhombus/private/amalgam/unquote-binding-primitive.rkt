@@ -99,7 +99,7 @@
                            stx-class)]
       [else
        (define-values (call empty-tail to-anon-function?)
-         (parse-function-call rator-in '() #`(#,stx-class #,class-args)
+         (parse-function-call rator-in '() #`(#,stx-class #,@(or auto-args null) #,class-args)
                               #:static? #t
                               #:rator-stx stx-class
                               #:rator-kind '|syntax class|

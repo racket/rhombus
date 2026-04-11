@@ -104,3 +104,40 @@ check:
   with_scale_recur 2:
     as_scaled_twice 3 + 4
   ~is 28
+
+space.transform detector_example:
+  space_path my/example/detector/t
+  macro_definer macro
+  meta_namespace detector_example_meta:
+    name_start_syntax_class NameStart
+    reflection space
+    prefix_predicate is_prefix
+detector_example.macro 'pre $tail ...':
+  "oops"
+detector_example.macro '+++ $tail ...':
+  "oops"
+expr.macro 'check_detector($(q :: detector_example_meta.NameStart))':
+  let v = syntax_meta.value(q.name, detector_example_meta.space, fun (): #false)
+  '[$(detector_example_meta.is_prefix(v))]'
+check:
+  check_detector(pre) ~is [#true]
+  check_detector(+++) ~is [#true]
+  check_detector(other) ~is [#false]
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.transform detector_example:
+    space_path my/example/detector/t
+    meta_namespace detector_example_meta:
+      infix_predicate is_prefix
+  ~throws " infix-operator predicate not supported"
+
+check:
+  ~eval
+  import rhombus/meta open
+  space.transform detector_example:
+    space_path my/example/detector/t
+    meta_namespace detector_example_meta:
+      parse_prefix_more_syntax_class PrefixParsed
+  ~throws " infix-more syntax class not supported"
