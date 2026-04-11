@@ -237,7 +237,7 @@
 
 @doc(
   ~meta
-  fun expr_meta.pack_expr(group :: Syntax) :: Syntax
+  fun expr_meta.pack_expr(group :: Group) :: Syntax
 ){
 
  Converts a syntax object, which can be a multi-term syntax object, into
@@ -255,8 +255,8 @@
 
 @doc(
   ~meta
-  fun expr_meta.pack_meta_expr(group :: Syntax) :: Syntax
-  fun expr_meta.pack_and_meta_expr(group :: Syntax) :: Syntax
+  fun expr_meta.pack_meta_expr(group :: Group) :: Syntax
+  fun expr_meta.pack_and_meta_expr(group :: Group) :: Syntax
 ){
 
  Like @rhombus(expr_meta.pack_expr), but for an expression to be used in

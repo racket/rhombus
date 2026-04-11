@@ -14,6 +14,7 @@
        (syntax-parse stx
          #:datum-literals (parsed)
          [(parsed #:rhombus/expr e) #'e]
+         [(parsed #:rhombus/defn e) #'e]
          [_ stx])]
       [(to-list #f s)
        => (lambda (es)

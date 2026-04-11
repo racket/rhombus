@@ -183,7 +183,22 @@
   fun defn_meta.pack_s_exp(tree :: Any) :: Syntax
 ){
 
- Similar to @rhombus(expr_meta.pack_s_exp), but for definitions.
+ Similar to @rhombus(expr_meta.pack_s_exp), but for definitions. Both
+ definitions packed with @rhombus(defn_meta.pack_defn) and expressions
+ that are packed with @rhombus(expr_meta.pack_s_exp) or
+ @rhombus(expr_meta.pack_expr) are suitable for use within
+ @rhombus(tree).
+
+}
+
+
+@doc(
+  ~meta
+  fun defn_meta.pack_defn(group :: Group) :: Syntax
+){
+
+ Similar to @rhombus(expr_meta.pack_s_exp), but for definitions and for
+ use with @rhombus(defn_meta.pack_s_exp).
 
 }
 

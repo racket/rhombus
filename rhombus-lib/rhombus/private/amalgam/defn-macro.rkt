@@ -12,7 +12,8 @@
                      (submod "syntax-object.rkt" for-quasiquote)
                      "call-result-key.rkt"
                      "syntax-wrap.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "srcloc.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "definition.rkt"
@@ -84,7 +85,8 @@
     (space
      Group
      SequenceStartGroup
-     [pack_s_exp defn_meta.pack_s_exp])))
+     [pack_s_exp defn_meta.pack_s_exp]
+     [pack_defn defn_meta.pack_defn])))
 
 (define-for-syntax space
   (space-syntax rhombus/defn))
@@ -114,4 +116,9 @@
     #`(parsed
        #:rhombus/defn
        #,(pack-s-exp who orig-s)))
+
+  (define/arity (defn_meta.pack_defn s)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (define g (maybe-respan (unpack-group s who #f)))
+    (relocate+reraw g #`(parsed #:rhombus/defn (rhombus-definition #,g)) #:prop-stx g))
   )
