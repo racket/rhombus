@@ -39,7 +39,7 @@ fun load(
                      if version is_a List
                      | PairList(& version)
                      | version,
-                     ~#{get-lib-dirs}: fun (): PairList[& get_lib_dirs],
+                     ~#{get-lib-dirs}: fun (): PairList[& get_lib_dirs()],
                      ~fail: fail,
                      ~#{global?}: as_global,
                      ~custodian: match cust
