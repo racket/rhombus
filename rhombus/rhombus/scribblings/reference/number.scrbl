@@ -95,13 +95,14 @@ literals rely on a escape to S-expression syntax.
   ~nonterminal:
     lo_expr: block expr
     hi_expr: block expr
+    range_expr: block expr
   annot.macro 'Int'
   annot.macro 'PosInt'
   annot.macro 'NegInt'
   annot.macro 'NonnegInt'
   annot.macro 'Nat'
 
-  annot.macro 'Int.in($range)'
+  annot.macro 'Int.in($range_expr)'
   annot.macro 'Int.in($lo_expr $inclusivity, $hi_expr $inclusivity)'
 
   grammar inclusivity

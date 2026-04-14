@@ -14,6 +14,8 @@ namespace system:
     os
     arch
     host
+    word
+    so_suffix
     target_machine
     version
     racket_version
@@ -34,6 +36,12 @@ namespace system:
 
   fun host() :~ String:
     String.snapshot(rkt.#{system-type}(#'#{machine}))
+
+  fun word() :~ Int:
+    rkt.#{system-type}(#'#{word})
+
+  fun so_suffix() :~ Bytes:
+    rkt.#{system-type}(#'#{so-suffix})
 
   annot.macro 'TargetMachineSymbol':
     ~op_stx: self

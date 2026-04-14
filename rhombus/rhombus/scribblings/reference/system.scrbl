@@ -66,6 +66,15 @@
 }
 
 @doc(
+  fun system.word() :: Int
+){
+
+ Report the word size in bits for the host platform's architecture.
+ Possible results currently are @rhombus(32) and @rhombus(64).
+
+}
+
+@doc(
   fun system.host() :: String
 ){
 
@@ -105,6 +114,16 @@
 
 }
 
+@doc(
+  fun system.so_suffix() :: Bytes
+){
+
+ Reports a file suffix conventionally used by the host operating system
+ for @defterm{shared objects}, also known as @defterm{dynamically linked
+  libraries}. Possible results include @rhombus(#".so"), @rhombus(#".dll"),
+ and @rhombus(#".dylib").
+
+}
 
 @doc(
   fun system.seconds() :: Int

@@ -16,3 +16,7 @@ check #false is_a system.TargetMachineSymbol ~is #false
 check #'cek is_a system.TargetMachineSymbol ~is #false
 
 check system.path(#'temp_dir) ~is_a Path
+
+check system.word() in [32, 64] ~is #true
+
+check system.so_suffix() ~is_a Bytes
