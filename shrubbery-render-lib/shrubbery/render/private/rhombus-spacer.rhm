@@ -75,6 +75,7 @@ export:
       s_MutableSet as MutableSet
       s_WeakMutableSet as WeakMutableSet
     for
+    while
     each
     keep_let
     import
@@ -1084,6 +1085,16 @@ spacer.bridge for(self, tail, context, esc):
         ': $new_g; ...; $new_gn'.relocate(b)
       '$self $new_reduce $new_b'
   | ~else: '$self $tail'
+
+spacer.bridge while(self, tail, context, esc):
+  ~in: ~expr
+  match tail
+  | '$e ... $(b && ': $g; ...')':
+      let new_e = spacer.adjust_sequence('$e ...', context, esc)
+      let new_b:
+        let [new_g, ...] = [spacer.adjust_group(g, for_spaces, esc), ...]
+        ': $new_g; ...'.relocate(b)
+      '$self $new_e $new_b'
 
 spacer.bridge each(self, tail, context, esc):
   ~in: ~for_clause

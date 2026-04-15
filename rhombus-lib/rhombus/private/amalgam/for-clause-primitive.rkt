@@ -39,12 +39,16 @@
     (pattern (~and (~seq t ...)
                    (~seq (~optional _::values-id-bind) (_::parens bind-g ...) _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
-             #:with blk #`(block (#,group-tag expr ...)))
+             #:with blk (relocate+reraw
+                         #'(t ...)
+                         #`(block (#,group-tag expr ...))))
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
              #:with (bind-g ...) #`((#,group-tag bind ...))
-             #:with blk #`(block (#,group-tag expr ...)))
+             #:with blk (relocate+reraw
+                         #'(t ...)
+                         #`(block (#,group-tag expr ...))))
     (pattern (~seq bind ...+ (~and blk (_::block . _)))
              #:with (bind-g ...) #`((#,group-tag bind ...)))))
 

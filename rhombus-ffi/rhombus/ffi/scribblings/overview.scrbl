@@ -54,6 +54,9 @@ exports of the library, it's simplest to use @rhombus(foreign.linker):
   import:
     ffi open
 
+  when stdin !is_a Port.FileStream.Terminal
+  | error("not in a terminal")
+
   foreign.linker curses:
     ~lib: Lib.load("libcurses")
 )

@@ -3,6 +3,7 @@
                      racket/for-clause
                      syntax/parse/pre
                      enforest/syntax-local
+                     shrubbery/print
                      "tag.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
@@ -83,7 +84,8 @@
           #`(for (#:splice (for-clause-step #,stx
                                             #,static?
                                             [(void-result [])]
-                                            . #,body))
+                                            #,@body
+                                            (group (parsed #:rhombus/expr (void)))))
               (void)))]
         [else
          (syntax-parse red-parsed
@@ -298,7 +300,8 @@
                              [else
                               (syntax-parse orig-stx
                                 [(head . _)
-                                 #`(check-sequence-for-each 'head #,(unwrap-static-infos #'rhs))])])))]
+                                 #`(check-sequence-for-each '#,(string->symbol (shrubbery-syntax->string #'head))
+                                                            #,(unwrap-static-infos #'rhs))])])))]
          . rev-clauses)
         ()
         (begin

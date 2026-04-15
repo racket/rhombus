@@ -1,0 +1,38 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+  "sequence_meta.rhm" open
+
+export:
+  while
+
+class Forever():
+  implements Sequenceable
+  override method to_sequence(): #void
+  sequence ': $self':
+    '(~outer_binds:«»,
+      ~recur_binds:«»,
+      ~head_guard:
+        #true,
+      ~inner_binds:«»,
+      ~recur_args:
+        ())'
+  
+expr.macro 'while $(tst :: expr_meta.Parsed):
+              $body
+              ...':
+  ~op_stx: self
+  ~all_stx: stx
+  let for_id = syntax_meta.dynamic_name('for', ~as_static: syntax_meta.is_static(self))
+  let g:
+    '(() in Forever()):
+       break_when ! $tst
+       $body
+       ...'
+  // fancy source-info transfer to make messages say `while` and show original form
+  let for_id = for_id.relocate(self)
+  let g:
+    Syntax.make_group(Syntax.relocate_split(g.unwrap_group(),
+                                            match stx
+                                            | '$_ $tail ...': '$tail ...'))
+  '$for_id $g'

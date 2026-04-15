@@ -14,8 +14,7 @@ forms of iteration, including list comprehensions and other folds.
 
   expr.macro 'for $maybe_each:
                 $clause_or_body
-                ...
-                $body'
+                ...'
   expr.macro 'for $reducer $maybe_each:
                 $clause_or_body
                 ...
@@ -110,10 +109,12 @@ forms of iteration, including list comprehensions and other folds.
  If a @rhombus(reducer) is specified, either before the block or at the
  end with @rhombus(~into), it determines how each result of the last
  @rhombus(body) is combined to produce a result of the overall
- @rhombus(for) expression, otherwise the result of the last
- @rhombus(body) is ignored and the @rhombus(for) expression's value is
- @rhombus(#void). Example reducers include @rhombus(List, ~reducer),
- @rhombus(Map, ~reducer), and @rhombus(values, ~reducer).
+ @rhombus(for) expression. Example reducers include @rhombus(List, ~reducer),
+ @rhombus(Map, ~reducer), and @rhombus(values, ~reducer). If no
+ @rhombus(reducer) is specified, then @rhombus(#void) is implicitly added
+ to the end of the @rhombus(clause_or_body) sequence (which means that the
+ @rhombus(clause_or_body) sequence can otherwise end in a definition or
+ a clause form like @rhombus(break_when, ~for_clause)).
 
 @examples(
   ~repl:
@@ -211,5 +212,44 @@ forms of iteration, including list comprehensions and other folds.
 ){
 
  The primitive clause forms that are recognized by @rhombus(for).
+
+}
+
+
+@doc(
+  ~nonterminal:
+    test_expr: block expr
+    clause_or_body: for
+
+  expr.macro 'while $test_expr:
+                $clause_or_body
+                ...'
+){
+
+ Equivalent to
+
+@rhombusblock(
+  for (() in #,(@rhombus(forever, ~var))):
+    break_when !test_expr
+    clause_or_body
+    ...
+)
+
+ where @rhombus(forever, ~var) produces an infinite stream of
+ zero-valued elements. Use @rhombus(break_when, ~for_clause) or
+ @rhombus(skip_when, ~for_clause) in the @rhombus(clause_or_body)
+ sequence in a way similar to @tt{break} and @tt{continue} in a language
+ like C.
+
+@examples(
+  def mutable i = 0
+  while i < 3:
+    println(i)
+    i := i + 1
+  while #true:
+    println(i)
+    break_when i >= 4
+    i := i + 1
+)
 
 }

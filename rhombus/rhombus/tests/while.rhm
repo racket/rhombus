@@ -1,0 +1,40 @@
+#lang rhombus/and_meta
+
+check:
+  let mutable i = 0
+  while i < 10:
+    i := i + 1
+  i
+  ~is 10
+
+check:
+  let mutable i = 0
+  while i < 100:
+    i := i + 1
+    break_when i >= 11
+  i
+  ~is 11
+
+check:
+  let mutable i = 0
+  let mutable v = 0
+  while i < 10:
+    i := i + 1
+    each j in 0..4
+    v := v + j
+  [i, v]
+  ~is [10, 60]
+
+check:
+  ~eval
+  while #true:
+    each i in 0
+  ~throws "while: value does not satisfy annotation"
+
+check:
+  ~eval
+  use_static
+  while #true:
+    each i in 0
+  ~throws "while: no specific iteration implementation available (based on static information)"
+

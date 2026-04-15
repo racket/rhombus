@@ -26,6 +26,15 @@ block:
     ~is [11, 10, 11, 10, 1, 0, 1, 0]
 
 check:
+  for (i: 0..2):«»
+  ~is #void
+
+check:
+  for (i: 0..2):
+    let lonely = 1
+  ~is #void
+
+check:
   for List:
     each i in 0..2
     i
