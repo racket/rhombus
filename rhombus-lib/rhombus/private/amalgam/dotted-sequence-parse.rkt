@@ -151,22 +151,29 @@
         (relocate+reraw form-stx-or-string stx))
       values))
 
-(define-for-syntax (identifier-extension-binding? id prefix)
-  (syntax-local-value* id (lambda (v)
-                            (cond
-                              [(extension-rename-transformer? v)
-                               ;; note that a chain of extension rename transformers is possible,
-                               ;; so that's why we have this check inside `syntax-local-value*`
-                               ;; instead of outside
-                               (for/or ([extends-id (in-list (or (syntax->list (extension-rename-transformer-extends-ids v))
-                                                                 null))])
-                                 (free-identifier=? prefix extends-id))]
-                              [(portal-syntax? v)
-                               (define extends (portal-syntax->extends (portal-syntax-content v)))
-                               (and (syntax? extends)
-                                    (for/or ([extends-id (in-list (or (syntax->list extends) null))])
-                                      (free-identifier=? prefix extends-id)))]
-                              [else #f]))))
+(define-for-syntax (identifier-extension-binding? id prefix [phase (syntax-local-phase-level)])
+  (cond
+    [(not (eqv? phase (syntax-local-phase-level)))
+     ;; we can only check afor a rename transformer in `(syntax-local-phase-level)`;
+     ;; for other phases, assume that textual extension implies binding extension,
+     ;; since namespace-name shadowing should not be possible at an export position
+     #t]
+    [else
+     (syntax-local-value* id (lambda (v)
+                               (cond
+                                 [(extension-rename-transformer? v)                                   
+                                  ;; note that a chain of extension rename transformers is possible,
+                                  ;; so that's why we have this check inside `syntax-local-value*`
+                                  ;; instead of outside
+                                  (for/or ([extends-id (in-list (or (syntax->list (extension-rename-transformer-extends-ids v))
+                                                                    null))])
+                                    (free-identifier=? prefix extends-id))]
+                                 [(portal-syntax? v)
+                                  (define extends (portal-syntax->extends (portal-syntax-content v)))
+                                  (and (syntax? extends)
+                                       (for/or ([extends-id (in-list (or (syntax->list extends) null))])
+                                         (free-identifier=? prefix extends-id)))]
+                                 [else #f])))]))
 
 (define-for-syntax (identifier-extension-binding-tail-name id)
   (define-values (v next-id) (syntax-local-value/immediate id (lambda () (values #f #f))))

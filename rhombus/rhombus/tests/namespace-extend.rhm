@@ -387,3 +387,22 @@ check:
       expose b
   [b.z, b.c.y, b.c.d.x]
   ~is [5, "y", "x"]
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    module A ~lang rhombus/and_meta:
+      meta export namespace meta_ns
+    module B ~lang rhombus/and_meta:
+      import:
+        parent!A open
+      export:
+        meta:
+          meta_ns
+      meta def meta_ns.answer = 42
+    module C ~lang rhombus/and_meta:
+      import:
+        parent!B open
+      meta:
+        meta_ns.answer
+  ~completes

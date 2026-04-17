@@ -352,7 +352,7 @@
     [_ #f]))
 
 ;; returns #f of a list of ids for extension roots
-(define-for-syntax (extensible-name-root ids)
+(define-for-syntax (extensible-name-root ids [phase (syntax-local-phase-level)])
   (define founds (hasheqv))
   (let loop ([ids ids] [portal-stx #f] [prev-who #f] [root-ids null])
     (define id
@@ -366,9 +366,13 @@
                                        (relocate-field prev-who (car ids) id #f))))]))
     (define v
       (and id
-           (syntax-local-value* (in-name-root-space id) (lambda (v)
-                                                          (and (portal-syntax? v)
-                                                               v)))))
+           (if (eqv? phase (syntax-local-phase-level))
+               (syntax-local-value* (in-name-root-space id) (lambda (v)
+                                                              (and (portal-syntax? v)
+                                                                   v)))
+               (let ([stx (identifier-binding-portal-syntax (in-name-root-space id) phase)])
+                 (and stx
+                      (make-portal-syntax stx))))))
     (cond
       [v
        (set! founds (hash-set founds (length ids) id))

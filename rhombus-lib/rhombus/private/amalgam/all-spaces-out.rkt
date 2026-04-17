@@ -51,7 +51,7 @@
         (list (make-export* stx phase space int-id (syntax-e out-id)))
         (cond
           [(and (eq? space 'rhombus/namespace)
-                (extensible-name-root (list int-id)))
+                (extensible-name-root (list int-id) abs-phase))
            => (lambda (list-name-root-id)
                 (define name-root-id (car list-name-root-id))
                 ;; also export any extensions
@@ -64,14 +64,14 @@
                               #:do [(define intro (if space
                                                       (make-interned-syntax-introducer/add space)
                                                       (lambda (x) x)))
-                                    (define bound-syms (syntax-bound-symbols (intro out-int-id)))]
+                                    (define bound-syms (syntax-bound-symbols (intro out-int-id) abs-phase))]
                               [sym (in-list bound-syms)]
                               #:do [(define str (symbol->immutable-string sym))]
                               #:when (and (> (string-length str) (string-length prefix))
                                           (string=? prefix (substring str 0 (string-length prefix))))
                               #:do [(define id* (datum->syntax out-int-id sym))
                                     (define id (intro id*))]
-                              #:when (identifier-extension-binding? id name-root-id)
+                              #:when (identifier-extension-binding? id name-root-id abs-phase)
                               #:when (or (not space)
                                          (identifier-distinct-binding* id id* abs-phase)))
                      (cons
@@ -79,7 +79,7 @@
                                     (adjust-prefix sym prefix)
                                     #:filter-space 'rhombus/namespace)
                       (if (eq? space 'rhombus/namespace)
-                          (ns-loop int-id id)
+                          (ns-loop id* id)
                           null))))))]
           [else null]))))))
 
