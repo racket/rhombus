@@ -5,24 +5,30 @@
 
 @title{Weak References}
 
-A @deftech{weak box} is an object with a single value field, which can
-be accessed from a box @rhombus(wb, ~var) as
-@rhombus(#,(@rhombus(wb, ~var)).value), but
-@rhombus(#,(@rhombus(wb, ~var)).value) can asynchronously change to
-@rhombus(#false) if the memory manager determines that the value is not
-otherwise @tech(~doc: model_doc){reachable}.
+@rhombus_using_var(wb :: WeakBox){
 
-An @deftech{ephemeron} is similarly an object with a value field, but
-also a key, where both a key and value are supplied when the ephemeron
-is constructed. The value in an ephemeron @rhombus(eph, ~var) can be
-accessed as @rhombus(#,(@rhombus(eph, ~var)).value), but
-@rhombus(#,(@rhombus(eph, ~var)).value) can asynchronously change to
-@rhombus(#false) if the memory manager determines that the @emph{key}
-(as opposed to the value) is not otherwise
-@tech(~doc: model_doc){reachable}. Crucially, an ephemeron's reference
-to a key does not keep the key reachable, even if that key is reachable
-via the ephemeron's value; that is, the key and value can be
-simultaneously determined to be unreachable.
+ A @deftech{weak box} is an object with a single value field, which can
+ be accessed from a box @rhombus(wb) as @rhombus(wb.value), but
+ @rhombus(wb.value) can asynchronously change to @rhombus(#false) if the
+ memory manager determines that the value is not otherwise
+ @tech(~doc: model_doc){reachable}.
+
+}
+
+@rhombus_using_var(eph :: Ephemeron){
+
+ An @deftech{ephemeron} is similarly an object with a value field, but
+ also a key, where both a key and value are supplied when the ephemeron
+ is constructed. The value in an ephemeron @rhombus(eph) can be accessed
+ as @rhombus(eph.value), but @rhombus(eph.value) can asynchronously
+ change to @rhombus(#false) if the memory manager determines that the
+ @emph{key} (as opposed to the value) is not otherwise
+ @tech(~doc: model_doc){reachable}. Crucially, an ephemeron's reference
+ to a key does not keep the key reachable, even if that key is reachable
+ via the ephemeron's value; that is, the key and value can be
+ simultaneously determined to be unreachable.
+
+}
 
 A @rhombus(WeakMutableMap) or @rhombus(WeakMutableSet) retains elements
 weakly in the same sense as a @tech{weak box}.

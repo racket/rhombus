@@ -5,8 +5,22 @@ import:
 
 export:
   rhombus_typeset
+  rhombus_typeset_replace
 
 defn.macro '«rhombus_typeset '$id':
-               $rhs»':
+               $(group_option_sequence
+                 | '~op_stx: $(stx_id :: Identifier)':
+                     default stx_id = 'stx')
+               $rhs
+               ...»':
   'meta.bridge $(typeset_meta.in_space(id)):
-     typeset_meta.make_Transformer(fun (stx): $rhs)'
+     typeset_meta.make_Transformer(fun ($stx_id): $rhs; ...)'
+
+defn.macro '«rhombus_typeset_replace '$id':
+               $(group_option_sequence
+                 | '~op_stx: $(stx_id :: Identifier)':
+                     default stx_id = 'stx')
+               $rhs
+               ...»':
+  'meta.bridge $(typeset_meta.in_space(id)):
+     typeset_meta.make_Replacer(fun ($stx_id): $rhs; ...)'

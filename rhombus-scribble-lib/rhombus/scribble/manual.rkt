@@ -5,6 +5,7 @@
          (prefix-in manual: scribble/manual)
          "private/rhombus.rhm"
          "private/rhombus_typeset.rhm"
+         "private/rhombus_using_var.rhm"
          "private/doc.rhm"
          "private/docmodule.rhm"
          "private/example.rhm"
@@ -15,6 +16,7 @@
 (provide (all-from-out rhombus/scribble
                        "private/rhombus.rhm"
                        "private/rhombus_typeset.rhm"
+                       "private/rhombus_using_var.rhm"
                        "private/rhombus-doc.rkt"
                        "private/manual-text.rhm")
          (rename-out [rhombus:if if])

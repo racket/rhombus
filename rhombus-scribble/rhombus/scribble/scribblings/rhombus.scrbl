@@ -195,6 +195,19 @@
 
 }
 
+@doc(
+  expr.macro 'rhombus_using_var($id :: $annot_id, $expr, ...)'
+){
+
+ Produces a list of the @rhombus(expr) results, but with @rhombus(id)
+ typeset as a variable whose annotation corresponds to @rhombus(annot_id)
+ (which should have a @rhombus(meta_label, ~impo) binding). Binding
+ @rhombus(id) in this way allows dotted field and method accesses on
+ @rhombus(id) within a @rhombus(rhombus) or @rhombus(rhombusblock) form
+ in the @rhombus(expr)s to hyperlink to the field or method
+ documentation.
+
+}
 
 @doc(
   defn.macro '«rhombus_typeset '$id':
@@ -204,7 +217,19 @@
 
  Binds @rhombus(id) so that when it is used in @rhombus(rhombus) or
  @rhombus(rhombusblock), the use of @rhombus(id) is replaced with the
- result of the @rhombus(body) sequence.
+ expression result of the @rhombus(body) sequence.
+
+}
+
+@doc(
+  defn.macro '«rhombus_typeset_replace '$id':
+                 $body
+                 ...»'
+){
+
+ Like @rhombus(rhombus_typeset), but the result of the @rhombus(body)
+ sequence is an identifier to replace the use of @rhombus(id) as
+ non-escaped (as opposed to an escaped expression).
 
 }
 

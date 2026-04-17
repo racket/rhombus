@@ -1,0 +1,21 @@
+#lang rhombus/and_meta
+import:
+  "rhombus.rhm" open
+  "rhombus_typeset.rhm" open
+
+export:
+  rhombus_using_var
+
+expr.macro 'rhombus_using_var($(id :: Identifier) :: $(name :: Identifier), $content, ... ~nonempty)':
+  '«block:
+      rhombus_typeset_replace '$id':
+        ~op_stx: self
+        'id'
+          .relocate(self)
+          .property(#'#{typeset-space-name},
+                    #'var,
+                    #true)
+          .property(#'annot,
+                    Pair(#'as_export, '$name'),
+                    #true)
+      List($content, ...)»'
