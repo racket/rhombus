@@ -12,6 +12,8 @@
          (submod "list.rkt" for-builtin)
          (submod "array.rkt" for-builtin)
          (submod "box.rkt" for-builtin)
+         (submod "weak-box.rkt" for-builtin)
+         (submod "ephemeron.rkt" for-builtin)
          (submod "syntax-object.rkt" for-builtin)
          (submod "pair.rkt" for-builtin)
          (submod "string.rkt" for-builtin)
@@ -71,6 +73,8 @@
     [(box? v) box-method-table]
     [(mutable-treelist? v) mutable-treelist-method-table]
     [(stream? v) stream-method-table]
+    [(weak-box? v) weak-box-method-table]
+    [(ephemeron? v) ephemeron-method-table]
     [else #f]))
 
 (define (builtin->mutator-ref v)

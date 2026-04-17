@@ -479,6 +479,17 @@
      (pretty-shrubbery qs
                        #:armor? (not pretty?)
                        #:prefer-multiline? pretty?)]
+    [(weak-box? v)
+     (pretty-listlike
+      (pretty-text "WeakBox(")
+      (list (print (weak-box-value v)))
+      (pretty-text ")"))]
+    [(ephemeron? v)
+     (pretty-listlike
+      (pretty-text "Ephemeron(")
+      (list (pretty-text "...")
+            (print (ephemeron-value v)))
+      (pretty-text ")"))]
     [(or (input-port? v)
          (output-port? v))
      (pretty-listlike

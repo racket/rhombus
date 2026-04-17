@@ -36,7 +36,8 @@ A map is normally immutable, but a mutable map can be created by
 operations such as @rhombus(Map.copy). The @rhombus(Map, ~annot)
 annotation is satisfied by only immutable maps. Mutable maps may hold
 their keys weakly, where the entry for a weakly held key can be dropped
-if it is unreachable (where reachability does not consider values in the
+if it is not @tech(~doc: model_doc){reachable} (where reachability does
+not consider values in the
 map that have unreachable keys).
 
 Different maps can use different @tech(~doc: meta_doc){map
@@ -410,7 +411,7 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
 ){
 
  Like @rhombus(MutableMap), but creates a map where a key is removed
- from the map by a garbage collection when the key is reachable only by
+ from the map by a garbage collection when the key is @tech(~doc: model_doc){reachable} only by
  enumerating the map's keys. A key is not considered reachable merely
  because it is reachable through the value mapped from the key.
 

@@ -1,0 +1,42 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    Ephemeron(k, v)
+    Ephemeron.value(eph)
+
+check:
+  Ephemeron(1, 2) is_now Ephemeron(1, 2) ~is #false
+  Ephemeron(1, 2) == Ephemeron(1, 2) ~is #false
+  Ephemeron(1, 2) is_a Ephemeron ~is #true
+  10 is_a Ephemeron ~is #false
+  
+block:
+  use_static
+  let eph = Ephemeron(9, 10)
+  check eph.value ~is 10
+
+block:
+  let eph = Ephemeron(9, 10)
+  check dynamic(eph).value ~is 10
+
+check:
+  10 :: Ephemeron
+  ~throws "does not satisfy annotation"
+
+check:
+  import rhombus/memory
+  def eph = Ephemeron("apple".copy(), 1)
+  memory.gc()
+  eph.value
+  ~is #false
+
+block:
+  import rhombus/memory
+  let key = "apple".copy()
+  def eph = Ephemeron(key, [key])
+  check eph.value ~is_now ["apple"]
+  Function.black_box(key)
+  memory.gc()
+  check eph.value ~is #false

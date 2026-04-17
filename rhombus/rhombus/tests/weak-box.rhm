@@ -1,0 +1,34 @@
+#lang rhombus
+
+block:
+  import "static_arity.rhm"
+  static_arity.check:
+    WeakBox(v)
+    WeakBox.value(bx)
+
+check:
+  WeakBox(1) is_now WeakBox(1) ~is #false
+  WeakBox(1) == WeakBox(1) ~is #false
+  WeakBox(1) is_a WeakBox ~is #true
+  10 is_a WeakBox ~is #false
+  Box(10) is_a WeakBox ~is #false
+  
+block:
+  use_static
+  let bx = WeakBox(10)
+  check bx.value ~is 10
+
+block:
+  let bx = WeakBox(10)
+  check dynamic(bx).value ~is 10
+
+check:
+  10 :: WeakBox
+  ~throws "does not satisfy annotation"
+
+check:
+  import rhombus/memory
+  def wb = WeakBox("apple".copy())
+  memory.gc()
+  wb.value
+  ~is #false

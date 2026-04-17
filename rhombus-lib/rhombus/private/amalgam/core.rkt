@@ -168,7 +168,9 @@
         "callable.rkt"
         "path-object.rkt"
         "srcloc-object.rkt"
-        "stream.rkt")
+        "stream.rkt"
+        "weak-box.rkt"
+        "ephemeron.rkt")
 
 (module reader racket/base
   (require (submod rhombus/private/core reader))

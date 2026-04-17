@@ -252,7 +252,7 @@ elements strongly or both weakly, and have the same elements.
 
  Like @rhombus(MutableSet), but creates a set where an element is
  removed from the set by a garbage collection when the element is
- reachable only by enumerating the set's elements.
+ @tech(~doc: model_doc){reachable} only by enumerating the set's elements.
 
 }
 

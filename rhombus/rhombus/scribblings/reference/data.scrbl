@@ -16,3 +16,4 @@
 @include_section("box.scrbl")
 @include_section("srcloc.scrbl")
 @include_section("void.scrbl")
+@include_section("weak-reference.scrbl")
