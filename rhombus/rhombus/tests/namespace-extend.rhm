@@ -219,9 +219,9 @@ block:
 // make sure `class` uses right context for binding
 block:
   namespace my_ns
-  defn.macro 'def_on_my_ns $(name :: Identifier) $rhs ...':
-    'class my_ns . $name (v $rhs ...)'
-  def_on_my_ns foo = 42
+  defn.macro 'def_foo $(ns_name :: Identifier) $rhs ...':
+    'class $(ns_name).foo (v $rhs ...)'
+  def_foo my_ns = 42
   check my_ns.foo().v ~is 42
 
 // make sure namespace as extension can be extended

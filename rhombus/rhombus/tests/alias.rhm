@@ -302,3 +302,29 @@ module ~early namespace_alias_export ~lang rhombus:
   check C.b2.favorite_number ~is 2
 
 import self!namespace_alias_export
+
+check:
+  namespace a
+  let x = "x"
+  let y = "y"
+  defn.macro 'do $name ...':
+    let b = Syntax.make_temp_id("b", ~keep_name: #true)
+    '«
+       alias '$name ...': 'x'
+       alias 'a . $b': 'y'
+       a . $b
+     »'
+  do a.b
+  ~is "y"
+
+check:
+  namespace a
+  let y = "y"
+  defn.macro 'do':
+    let b = Syntax.make_temp_id("b", ~keep_name: #true)
+    '«
+       alias 'a . $b': 'y'
+       a . $b
+     »'
+  do
+  ~is "y"

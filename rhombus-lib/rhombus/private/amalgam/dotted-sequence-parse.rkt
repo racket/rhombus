@@ -30,7 +30,7 @@
       [(null? head-ids) (values tail-id #'#f tail-id)]
       [(extensible-name-root head-ids)
        => (lambda (extends-ids)
-            (values (datum->syntax tail-id
+            (values (datum->syntax (car head-ids)
                                    (build-dot-symbol (append head-ids (list tail-id)))
                                    tail-id
                                    tail-id)
