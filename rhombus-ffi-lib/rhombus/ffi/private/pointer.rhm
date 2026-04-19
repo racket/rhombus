@@ -14,12 +14,12 @@ import:
   lib("ffi2/main.rkt") as ffi2:
     expose:
       ptr_t as ffi2_ptr_t
-      array as ffi2_array
-      gcable as ffi2_gcable
+      array_t as ffi2_array
+      gcable_t as ffi2_gcable
       #{void_t*} as ffi2_void_t_star
       #{ffi2-free} as ffi2_free
-      #{ptr_t->uintptr}
-      #{uintptr->ptr_t}
+      #{ptr_t->uintptr_t}
+      #{uintptr_t->ptr_t}
       #{ptr_t/gcable?}
 
 export:
@@ -340,10 +340,10 @@ fun free(p :: ptr_t):
   ffi2_free(p)
 
 fun ptr_to_uintptr(p :: ptr_t) :~ Int:
-  #{ptr_t->uintptr}(p)
+  #{ptr_t->uintptr_t}(p)
 
 fun uintptr_to_ptr(i :: uintptr_t):
-  #{uintptr->ptr_t}(i)
+  #{uintptr_t->ptr_t}(i)
 
 annot.macro 'GCable_ptr_t':
   annot_meta.pack_predicate('#{ptr_t/gcable?}',

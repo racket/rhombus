@@ -5,7 +5,7 @@ import:
     expose:
       #{define-ffi2-type}
       ptr_t
-      array
+      array_t
 
 module foreign:
   export:
@@ -63,7 +63,7 @@ defn.macro
            $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
                                    ty_name,
                                    type_meta.unpack_opaque_pointer(ex.t)
-                                     || ['array',
+                                     || ['array_t',
                                          type_meta.s_exp(type_meta.unpack_type(ex.t)),
                                          '#{*}'],
                                    & (if tag

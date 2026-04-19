@@ -5,8 +5,8 @@ import:
   lib("ffi2/main.rkt"):
     expose:
       #{define-ffi2-type}
-      struct as ffi2_struct
-      union as ffi2_union
+      struct_t as ffi2_struct
+      union_t as ffi2_union
 
 export:
   struct
