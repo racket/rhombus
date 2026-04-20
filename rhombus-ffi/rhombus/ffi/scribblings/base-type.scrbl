@@ -153,6 +153,7 @@
 
 @doc(
   foreign.type string_t
+  foreign.type string_utf16_t
   foreign.type bytes_t
   foreign.type bytes_ptr_t
   foreign.type path_t
@@ -164,8 +165,10 @@
  pointer.
 
  For Rhombus to C conversion, the @rhombus_t(string_t) type converts a
- Rhombus string to a null-terminated byte string and passes the address
- of the start of the byte string to the C side. The @rhombus_t(bytes_t)
+ Rhombus string to a null-terminated UTF-8 byte string and passes the address
+ of the start of the byte string to the C side. The @rhombus_t(string_utf16_t)
+ type is similar, but conversion uses UTF-16 and a two-byte null terminator.
+ The @rhombus_t(bytes_t)
  type similarly copies a Rhombus byte string to add a null terminator,
  while @rhombus_t(bytes_ptr_t) passes the start of a Rhombus byte string
  as-is, without adding a terminator (and where mutation of pointer
@@ -177,8 +180,9 @@
  When converting from C to Rhombus, the non-@tt{NULL} pointer received
  from C is treated as a reference to a null-terminated C string, and a
  fresh Racket byte string is created to hold the content up to the null
- terminator. The @rhombus_t(string_t) or @rhombus_t(path_t) types then
- convert that byte string to a string or path, respectively. A @tt{NULL}
+ terminator. The @rhombus_t(string_t), @rhombus_t(string_utf16_t), and
+ @rhombus_t(path_t) types then
+ convert that byte string to a string or path. A @tt{NULL}
  from C is converted to @rhombus(#false) for Rhombus.
 
 @examples(

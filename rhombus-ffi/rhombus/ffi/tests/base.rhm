@@ -165,6 +165,12 @@ check:
   sizeof(uintptr_t) ~is sizeof(ptr_t)
 
 block:
+  check: cast (string_utf16_t)(cast ~from (string_utf16_t) ~to (ptr_t) "howdy")
+         ~is "howdy"
+  check: mem (cast ~from (string_utf16_t) ~to (short_t*) "howdy")[0]
+         ~is Char"h".to_int()
+
+block:
   let  p = malloc(16)
   mem *(bool_t *)p :=#'ok
   check mem *(bool_t *)p ~is #true

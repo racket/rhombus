@@ -81,3 +81,7 @@ module string:
   export type.macro 'mutable_string_t':
     ~all_stx: stx
     type_meta.pack_pointable(ffi2.pack('string_t'), 'String').relocate(stx)
+
+  export type.macro 'mutable_string_utf16_t':
+    ~all_stx: stx
+    type_meta.pack_pointable(ffi2.pack('string_utf16_t'), 'String').relocate(stx)

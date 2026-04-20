@@ -5,7 +5,12 @@ import:
 
 export:
   string_t
+  string_utf16_t
 
 c_type string_t:
   ~extends: mutable_string_t
+  ~c_to_rhombus: fun (str) :~ maybe(String): str && to_string(str)
+
+c_type string_utf16_t:
+  ~extends: mutable_string_utf16_t
   ~c_to_rhombus: fun (str) :~ maybe(String): str && to_string(str)
