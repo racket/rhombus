@@ -11,7 +11,8 @@
     "racket-doc" ; via `hash_lang`
     "rhombus-scribble-lib"
     "racket-test"
-    "ffi2"))
+    "ffi2"
+    "rhombus-draw"))
 
 (define pkg-desc "Rhombus foreign-function interface")
 

@@ -268,10 +268,10 @@
 }
 
 @doc(
-  fun bitmap(path :: Path || String) :: Pict
+  fun bitmap(path_or_bitmap :: Path || String || draw.Bitmap) :: Pict
 ){
 
- Creates a @tech{pict} that draws a bitmap as loaded from @rhombus(path).
+ Creates a @tech{pict} that draws a bitmap as loaded from @rhombus(path_or_bitmap).
 
 }
 

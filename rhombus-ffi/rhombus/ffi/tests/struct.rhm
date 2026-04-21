@@ -15,6 +15,9 @@ check 10 is_a Point_t ~is #false
 check pt is_a Point_t ~is #true
 check pt is_a foreign.type Point_t* ~is #true
 check pt.x < pt.y ~is #false
+check (cast (Point_t *)pt)[0].x ~is pt.x
+check (cast (Point_t *) ~offset (sizeof(Point_t)) pt)[-1].x ~is pt.x
+check (cast (Point_t *)pt)["no"].x ~throws error.annot_msg()
 
 block:
   def alt_pt :: Point_t = dynamic(pt)
@@ -29,6 +32,7 @@ foreign.union Grade_t(score :: double_t,
 def g = new Grade_t(score: 200.0)
 check Grade_t.score(g) ~is 200.0
 check to_string(g) ~is "#<Grade_t*/gcable>"
+check (cast (Grade_t *)g)[0].score ~is 200.0
 
 foreign.struct Rect_t(origin :: struct Point_t(x :: int_t,
                                                y :: int_t),

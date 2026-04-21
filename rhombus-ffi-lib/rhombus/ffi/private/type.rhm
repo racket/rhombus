@@ -23,6 +23,7 @@ export:
   meta:
     type_meta
     MaybeType
+    build_index_statinfo
 
 module api:
   export:
@@ -38,12 +39,10 @@ annot.macro 'PointerOf($ann, $elem_ffi2_ty, $len)':
   let '$(any :: annot_meta.Parsed)' = 'Any'
   let (always, _) = annot_meta.unpack_predicate(any)
   let '$(elem_ann :: annot_meta.Parsed)' = ann
-  let (_, si) = annot_meta.unpack_predicate(elem_ann)  
+  let (_, si) = annot_meta.unpack_predicate(elem_ann)
+  let '($i_si, ...)' = build_index_statinfo(len, elem_ffi2_ty, si)
   annot_meta.pack_predicate('fun (x): x is_a_ffi2 [ffi2_array, $elem_ffi2_ty, #{*}]',
-                            '((elem_type, [$ann, $elem_ffi2_ty, $len]),
-                              ($statinfo_meta.index_get_key, (gen_ref($len, $elem_ffi2_ty))),
-                              ($statinfo_meta.index_set_key, (gen_set($len, $elem_ffi2_ty))),
-                              ($statinfo_meta.index_result_key, $(statinfo_meta.pack(si))))')
+                            '((elem_type, [$ann, $elem_ffi2_ty, $len]), $i_si, ...)')
 
 space.enforest type:
   space_path rhombus/ffi/type
@@ -249,6 +248,11 @@ type.macro 'system_case $(key :: Identifier)
                           [[$vals.t, ...], $(type_meta.unpack_type(thn))],
                           [else, $(type_meta.unpack_type(els))]]',
                         '$(type_meta.unpack_annot(thn)) || $(type_meta.unpack_annot(thn))')
+
+meta fun build_index_statinfo(len, elem_ffi2_ty, si):
+  '(($statinfo_meta.index_get_key, (gen_ref($len, $elem_ffi2_ty))),
+    ($statinfo_meta.index_set_key, (gen_set($len, $elem_ffi2_ty))),
+    ($statinfo_meta.index_result_key, $(statinfo_meta.pack(si))))'
 
 expr.macro 'gen_ref($len, $elem_ffi2_ty)':
   'fun (p, i):

@@ -1,6 +1,6 @@
 #lang rhombus/scribble/manual
 
-@title(~tag: "api", ~style: #'toc){Foreign Types, Pointers, and Functions}
+@title(~tag: "api", ~style: #'toc){Reference}
 
 The core functionality provided by @rhombusmodname(ffi) covers loading
 foreign libraries dynamically, describing foreign types, working with

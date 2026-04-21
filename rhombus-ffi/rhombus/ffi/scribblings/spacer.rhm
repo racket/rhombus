@@ -15,6 +15,7 @@ export:
     foreign
     // helper for overview examples
     curses
+    cairo
 
 meta:
   def type_ctx = #'#{rhombus/ffi/type}
@@ -137,6 +138,13 @@ spacer.bridge foreign.fun(self, tail, context, esc):
   adjust_fun(self, tail, context, esc)
 
 namespace curses:
+  export:
+    fun
+  spacer.bridge fun(self, tail, context, esc):
+    ~in: ~defn
+    adjust_fun(spacer.adjust_sequence(self, #'datum, esc), tail, context, esc)
+
+namespace cairo:
   export:
     fun
   spacer.bridge fun(self, tail, context, esc):

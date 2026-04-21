@@ -20,6 +20,8 @@ import:
       #{ffi2-free} as ffi2_free
       #{ptr_t->uintptr_t}
       #{uintptr_t->ptr_t}
+      #{ptr_t->cpointer}
+      #{cpointer->ptr_t}
       #{ptr_t/gcable?}
 
 export:
@@ -38,6 +40,8 @@ export:
     c_cast as cast
   ptr_to_uintptr
   uintptr_to_ptr
+  ptr_to_cpointer
+  cpointer_to_ptr
   GCable_ptr_t
 
 module mode:
@@ -70,7 +74,15 @@ type.macro '$t *':
       type_meta.pack_pointer('[ffi2_array, $t, #{*}]', t,
                              if (type_meta.unpack_struct_proc_ids(in_t)
                                    || type_meta.unpack_union_proc_ids(in_t))
-                             | type_meta.unpack_annot(in_t)
+                             | let ann = type_meta.unpack_annot(in_t)
+                               let '$(ann :: annot_meta.Parsed)' = ann
+                               let (pred, si) = annot_meta.unpack_predicate(ann)
+                               let '($c_si, ...)' = si
+                               let '($i_si, ...)' = build_index_statinfo(#false, t, si)
+                               annot_meta.pack_predicate(
+                                 pred,
+                                 '($c_si, ..., $i_si, ...)'
+                               )
                              | 'PointerOf($ann, $t, #false)')
         .relocate_span([stx])
 
@@ -366,6 +378,12 @@ fun ptr_to_uintptr(p :: ptr_t) :~ Int:
 
 fun uintptr_to_ptr(i :: uintptr_t):
   #{uintptr_t->ptr_t}(i)
+
+fun ptr_to_cpointer(p :: ptr_t):
+  #{ptr_t->cpointer}(p)
+
+fun cpointer_to_ptr(cp) :~ ptr_t:
+  #{cpointer->ptr_t}(cp)
 
 annot.macro 'GCable_ptr_t':
   annot_meta.pack_predicate('#{ptr_t/gcable?}',

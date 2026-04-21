@@ -1397,8 +1397,12 @@ fun triangle(~around: around :: maybe(Pict) = #false,
                                    line_width,
                                    fill))
 
-fun bitmap(path :: Path || String) :~ Pict:
-  static_pict(rkt.bitmap(path), [], empty_instances)
+fun bitmap(path_or_bitmap :: Path || String || draw.Bitmap) :~ Pict:
+  static_pict(rkt.bitmap(match path_or_bitmap
+                         | bm :: draw.Bitmap: bm.handle
+                         | path: path),
+              [],
+              empty_instances)
 
 fun dc(draw :: Function.of_arity(3) described_as (draw.DC, Real, Real) -> ~any,
        ~desc: desc = "dc",

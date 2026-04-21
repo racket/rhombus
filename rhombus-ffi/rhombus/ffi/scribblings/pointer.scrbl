@@ -466,12 +466,22 @@ garbage collector is independent of its tags.
   fun uintptr_to_ptr(addr :: uintptr_t) :: ptr_t
 ){
 
- Conversions between addresses represented as pointers and addresses
- represented as integers.
+ Conversions between addresses represented as @tech{pointer} objects and
+ addresses represented as integers.
 
  Beware that the integer form of an address managed by Rhombus's garbage
  collector can become immediately invalid, unless an object at the
  address was allocated as immobile.
+
+}
+
+@doc(
+  fun ptr_to_cpointer(ptr :: ptr_t) :: Any
+  fun cpointer_to_ptr(addr :: uintptr_t) :: ptr_t
+){
+
+ Conversions between addresses represented as @tech{pointer} objects and
+ the representation used by @racketmodname(ffi/unsafe, ~indirect).
 
 }
 

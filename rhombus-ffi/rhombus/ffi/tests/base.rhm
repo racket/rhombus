@@ -182,7 +182,7 @@ block:
   let path = Path(#"apple")
   mem *(path_t *)p := path
   copy_content_to_immobile(p)
-  check mem *(path_t *)p ~is path
+  check mem *(path_t *)p ~is path.to_absolute_path()
   Function.black_box(p)
   #void
 

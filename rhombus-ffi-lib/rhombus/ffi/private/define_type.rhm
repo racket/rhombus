@@ -116,7 +116,7 @@ defn.macro
         '«
            $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
                                    ty_name_or_app,
-                                   type_meta.unpack_type(ex.t),
+                                   type_meta.s_exp(type_meta.unpack_type(ex.t)),
                                    & option('~#{racket->c}', rhombus_to_c_body),
                                    & option('~#{predicate}', predicate_body),
                                    & option('~#{release}', release_body),
