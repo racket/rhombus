@@ -28,6 +28,11 @@ block:
   check mem p_is[0] ~is 1234 + (1234 bits.(<<) 16)
   check mem (cast (short_t *) p_is)[0] ~is 1234
 
+  check p_i[0] := 20 + 30 ~is #void
+  check p_i[0] ~is 50
+  check p_is[0] := 1234 + (1234 bits.(<<) 16) ~is #void
+  check p_is[0] ~is 1234 + (1234 bits.(<<) 16)
+
   check mem p_is[1] := 345 ~is #void
   check mem (mem &p_is[1])[0] ~is 345
 
@@ -41,6 +46,11 @@ block:
   check new ~traced int_t[10] ~is_a ptr_t
   check new ~traced_immobile int_t[10] ~is_a ptr_t
 
+  check mem p_i["bad"] ~throws "value does not satisfy annotation"
+  check mem p_i["bad"] := 1 ~throws "value does not satisfy annotation"
+  check p_i["bad"] ~throws "value does not satisfy annotation"
+  check p_i["bad"] := 1 ~throws "value does not satisfy annotation"
+
 block:
   foreign.type whatever_t:
     ~extends: int_t
@@ -49,9 +59,11 @@ block:
   check p1 ~is_a foreign.type int_t*
   check mem *(int_t *)p1 := 11 ~is #void
   check mem *(int_t *)p1 ~is 11
+  check (cast (int_t *)p1)[0] := 110 ~is #void
+  check (cast (int_t *)p1)[0] ~is 110
   check cast ~from (whatever_t*) ~to (ptr_t) p1 ~is_a ptr_t
   check cast ~from (whatever_t*) ~to (ptr_t) (new int_t) ~throws "value does not match type"
-
+  
 block:
   let p = new double_t[3]
   check p ~is_a ptr_t
@@ -61,6 +73,8 @@ block:
   check mem p[0] ~is 10.25
   check mem p[-1] ~throws "does not satisfy annotation"
   check mem p[4] ~throws "does not satisfy annotation"
+  check p[-1] ~throws "does not satisfy annotation"
+  check p[4] ~throws "does not satisfy annotation"
 
 check 10 is_a ptr_t ~is #false
 check new int_t[1] is_a ptr_t ~is #true

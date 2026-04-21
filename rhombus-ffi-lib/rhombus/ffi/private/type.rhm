@@ -9,6 +9,11 @@ import:
       #{ptr_t?}
       array_t as ffi2_array
       #{system-type-case}
+  lib("ffi2/main.rkt")!unsafe as ffi2_unsafe:
+    expose:
+      #{unsafe-ffi2-ref} as ffi2_ref
+      #{unsafe-ffi2-set!} as ffi2_set
+  "check.rhm" open
 
 export:
   type
@@ -32,8 +37,13 @@ statinfo.key elem_type:
 annot.macro 'PointerOf($ann, $elem_ffi2_ty, $len)':
   let '$(any :: annot_meta.Parsed)' = 'Any'
   let (always, _) = annot_meta.unpack_predicate(any)
+  let '$(elem_ann :: annot_meta.Parsed)' = ann
+  let (_, si) = annot_meta.unpack_predicate(elem_ann)  
   annot_meta.pack_predicate('fun (x): x is_a_ffi2 [ffi2_array, $elem_ffi2_ty, #{*}]',
-                            '((elem_type, [$ann, $elem_ffi2_ty, $len]))')
+                            '((elem_type, [$ann, $elem_ffi2_ty, $len]),
+                              ($statinfo_meta.index_get_key, (gen_ref($len, $elem_ffi2_ty))),
+                              ($statinfo_meta.index_set_key, (gen_set($len, $elem_ffi2_ty))),
+                              ($statinfo_meta.index_result_key, $(statinfo_meta.pack(si))))')
 
 space.enforest type:
   space_path rhombus/ffi/type
@@ -239,3 +249,20 @@ type.macro 'system_case $(key :: Identifier)
                           [[$vals.t, ...], $(type_meta.unpack_type(thn))],
                           [else, $(type_meta.unpack_type(els))]]',
                         '$(type_meta.unpack_annot(thn)) || $(type_meta.unpack_annot(thn))')
+
+expr.macro 'gen_ref($len, $elem_ffi2_ty)':
+  'fun (p, i):
+     $(wrap_index_check("foreign ref", 'i', len))
+     $(expr_meta.pack_s_exp(['ffi2_ref',
+                             'p',
+                             type_meta.s_exp(elem_ffi2_ty),
+                             'i']))'
+
+expr.macro 'gen_set($len, $elem_ffi2_ty)':
+  'fun (p, i, v):
+     $(wrap_index_check("foreign assign", 'i', len))
+     $(expr_meta.pack_s_exp(['ffi2_set',
+                             'p',
+                             type_meta.s_exp(elem_ffi2_ty),
+                             'i',
+                             'v']))'

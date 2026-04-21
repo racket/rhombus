@@ -106,7 +106,13 @@ defn.macro
                      ann)
           | ~else:
               values(c_to_rhombus_body, 'Any')
-        let pack_type = (if type_meta.unpack_pointer_type(#false, ex.t) | 'pack_pointable' | 'pack_type')
+        let pack_type = (cond
+                         | type_meta.unpack_pointer_type(#false, ex.t):
+                             'pack_pointable'
+                         | type_meta.unpack_scalar(ex.t):
+                             'pack_scalar'
+                         | ~else:
+                             'pack_type')
         '«
            $(defn_meta.pack_s_exp(['#{define-ffi2-type}',
                                    ty_name_or_app,

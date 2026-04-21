@@ -71,6 +71,14 @@ garbage collector is independent of its tags.
  satisified by any pointer object, since @rhombus_t(ptr_t/gcable) accepts any
  pointer for conversion to C.
 
+ When an expression has the static information of the pointer type, then
+ indexing via @rhombus([]) (i.e., @rhombus(#%index)) or @rhombus(mem)
+ extracts a Rhombus representation for @rhombus(type), and indexing with
+ @rhombus([]) or @rhombus(mem) plus @rhombus(:=) assigns to the pointer
+ by converting a Rhombus representation of @rhombus(type) to a C
+ representation to install. A pointer expression works with
+ @rhombus([]) only via static information.
+
 }
 
 @doc(
@@ -98,12 +106,14 @@ garbage collector is independent of its tags.
  has no name, and the Rhombus-side representation is a generic pointer.
 
  When an expression has the static information of an array type, then
- indexing via @rhombus(mem) extracts a Rhombus representation for an
- element of the array, and indexing with @rhombus(mem) plus @rhombus(:=)
+ indexing via @rhombus([]) (i.e., @rhombus(#%index)) or
+ @rhombus(mem) extracts a Rhombus representation for an
+ element of the array, and indexing with @rhombus([]) or @rhombus(mem) plus @rhombus(:=)
  assigns to the array by converting a Rhombus value to a C representation
  to install into the array. If @rhombus(size_expr) is a literal integer,
  then the bounds checking prevents indexing with positions that are
- negative or not less than the size.
+ negative or not less than the size. An array-pointer expression works with
+ @rhombus([]) only via static information.
 
 @examples(
   ~eval: ffi_eval
@@ -111,10 +121,10 @@ garbage collector is independent of its tags.
     sizeof(double_t[3])
     def p = new double_t[3]
     p
-    mem p[0] := 0.0
-    mem p[1] := 10.0
-    mem p[2] := 20.0
-    mem p[1]
+    p[0] := 0.0
+    p[1] := 10.0
+    p[2] := 20.0
+    p[1]
     ~error:
       mem p[3]
 )
@@ -194,8 +204,8 @@ garbage collector is independent of its tags.
     free(pm)
   ~repl:
     def p3 = new int_t[1+2]
-    mem p3[2] := 20
-    mem p3[2]
+    p3[2] := 20
+    p3[2]
   ~repl:
     def p1_imm = new ~immobile int_t
     def i1_imm = ptr_to_uintptr(p1_imm)
@@ -206,17 +216,17 @@ garbage collector is independent of its tags.
     i1_imm == ptr_to_uintptr(p1_imm)
   ~repl:
     def pp = new ~traced int_t*
-    mem pp[0]
-    mem pp[0] := new int_t
-    mem (mem pp[0])[0] := 5
+    pp[0]
+    pp[0] := new int_t
+    pp[0][0] := 5
     ~fake:
       :
         memory.GC() // probably moves pp[0]
       #void
-    mem (mem pp[0])[0]
+    pp[0][0]
   ~repl:
     def mutable pm = new ~manual int_t
-    mem *pm := 6
+    pm[0] := 6
     def pm_i = ptr_to_uintptr(pm)
     pm := #false
     ~fake:
@@ -224,7 +234,7 @@ garbage collector is independent of its tags.
         memory.GC() // does not affect manual allocation
       #void
     pm := uintptr_to_ptr(pm_i)
-    mem *pm
+    pm[0]
     free(pm)
 )
 
@@ -321,7 +331,11 @@ garbage collector is independent of its tags.
  When the @rhombus(* ptr_expr), @rhombus(ptr_expr[index_expr]), or
  @rhombus(& ptr_expr[delta_expr]) form is used, then @rhombus(ptr_expr)
  must have static information to indicate an element type or
- pointer-referenced type to be used as @rhombus(type).
+ pointer-referenced type to be used as @rhombus(type). The
+ @rhombus(mem ptr_expr[index_expr]) form is equivalent to
+ @rhombus(ptr_expr[index_expr]) without @rhombus(mem), since
+ @rhombus(ptr_expr) must have static information that would also allow it
+ to work with @rhombus([]) via @rhombus(#%index).
 
 @examples(
   ~eval: ffi_eval
@@ -358,16 +372,18 @@ garbage collector is independent of its tags.
 
  Converts the Rhombus representation produced by @rhombus(expr) from one
  type's representation to another. If @rhombus(from_type) or is not
- specified, it defaults to @rhombus_t(ptr_t). The C representation for
- both @rhombus(from_type) and @rhombus(to_type) must be an address, and
- conversions may apply to the Rhombus representation produced by
- @rhombus(expr) (based on @rhombus(from_type)) or the converted result
- (based on @rhombus(to_type)) of the cast address.
+ specified, it defaults to @rhombus_t(ptr_t). The C representations for
+ both @rhombus(from_type) and @rhombus(to_type) must be both addresses or
+ both @tech{scalars}, and conversions may apply to the Rhombus
+ representation produced by @rhombus(expr) (based on @rhombus(from_type))
+ or the converted result (based on @rhombus(to_type)) of the cast
+ address.
 
  If @rhombus(~offset (offset_expr)) is specified, then the
  (pre-conversion) address produced by the cast is @rhombus(offset_expr)
  bytes after the address represented by the converted result of
- @rhombus(expr).
+ @rhombus(expr). A @rhombus(~offset (offset_expr)) is allowed only when
+ @rhombus(to_type) has an address representation.
 
 
 @examples(

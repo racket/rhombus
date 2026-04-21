@@ -10,6 +10,8 @@ import:
   "ffi/private/struct.rhm"
   "ffi/private/memory.rhm"
   "ffi/private/string.rhm"
+  "ffi/private/enum.rhm"
+  "ffi/private/list.rhm"
 
 namespace foreign:
   import:
@@ -24,6 +26,7 @@ namespace foreign:
       fun.c_linker as linker
       struct.c_struct as struct
       struct.c_union as union
+      enum.c_enum as enum
 
 namespace type:
   export:
@@ -50,3 +53,4 @@ export:
   all_from(.struct)
   all_from(.memory)
   all_from(.string)
+  all_from(.list)

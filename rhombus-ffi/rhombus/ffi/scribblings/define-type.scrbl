@@ -275,6 +275,53 @@
 
 @doc(
   ~nonterminal:
+    id: block
+    parent_type: * type ~at rhombus/ffi/type
+  ~literal:
+    =
+  defn.macro 'foreign.enum $name $parent_type
+              | $enum_clause
+              | ...'
+  grammar enum_clause
+  | $id
+  | $id = $literal_int
+){
+
+ Like @rhombus(enum) restricted to @rhombus(id) cases, but also defines
+ @rhombus(name) as a type that extends @rhombus(parent_type), which must
+ be an integer type. The C representation of the new type is the same as
+ @rhombus(parent_type). The Rhombus representation is a symbol---the
+ symbol form of one of the listed @rhombus(id)s---except that conversion
+ from C can produce an integer if it does not match the numeric value
+ associated with one of the @rhombus(id)s.
+
+ The numeric value of a @rhombus(id) can be provided as a
+ @rhombus(literal_int). If @rhombus(literal_int) is not provided for an
+ @rhombus(id), then the integer value is @rhombus(0) if it is the first
+ @rhombus(id), otherwise it is one more than the value for the preceding
+ @rhombus(id).
+
+ When converting from C to Rhombus, if multiple @rhombus(id)s have the
+ same numeric value, the symbol form of the last listed @rhombus(id) is
+ used.
+
+@examples(
+  ~eval: ffi_eval
+  ~repl:
+    foreign.enum shape_t int_t
+    | circle
+    | triangle = 3
+    | square
+    cast ~from (shape_t) ~to (int_t) #'circle
+    cast ~from (shape_t) ~to (int_t) #'triangle
+    cast ~from (shape_t) ~to (int_t) #'square
+    cast ~from (int_t) ~to (shape_t) 3    
+)
+
+}
+
+@doc(
+  ~nonterminal:
     then_type: * type ~at rhombus/ffi/type
     else_type: * type ~at rhombus/ffi/type
   type.macro 'system_case $key

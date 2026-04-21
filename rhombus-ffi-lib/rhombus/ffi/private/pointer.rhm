@@ -10,7 +10,7 @@ import:
       #{unsafe-ffi2-ref} as #{|mem reference|}
       #{unsafe-ffi2-set!} as #{|mem assignment|}
       #{unsafe-ffi2-add} as #{|mem shift|}
-      #{unsafe-ffi2-cast} as ffi2_cast
+      #{unsafe-ffi2-cast} as cast
   lib("ffi2/main.rkt") as ffi2:
     expose:
       ptr_t as ffi2_ptr_t
@@ -34,10 +34,16 @@ export:
   free
   new
   mem
-  cast
+  rename:
+    c_cast as cast
   ptr_to_uintptr
   uintptr_to_ptr
   GCable_ptr_t
+
+module mode:
+  export:
+    meta:
+      MallocMode
 
 annot.macro
 | 'ptr_t/gcable':
@@ -103,6 +109,7 @@ type.macro '$t #%index [$n_seq ...]':
 meta:
   syntax_class MallocMode:
     kind: ~sequence
+    fields: mode
   | '~gcable':
       field mode = '~gcable'
   | '~immobile':
@@ -304,29 +311,44 @@ meta syntax_class MaybeOffset:
     field offset_expr = '0'
 
 expr.macro
-| 'cast ~from ($(from_t :: type_meta.Parsed)) ~to ($(t :: type_meta.Parsed))
+| 'c_cast ~from ($(from_t :: type_meta.Parsed)) ~to ($(t :: type_meta.Parsed))
      $(offset :: MaybeOffset)
      $(e :: expr_meta.AfterInfixParsed('*')) $()':
     ~all_stx: stx
+    let as_ptr = (type_meta.unpack_pointer_type(#false, from_t)
+                    || type_meta.unpack_pointer_type(#false, t))
+    unless as_ptr
+    | unless (type_meta.unpack_scalar(from_t))
+      | syntax_meta.error("expected a scalar type", stx, from_t)
+      unless (type_meta.unpack_scalar(t))
+      | syntax_meta.error("expected a scalar type", stx, t)
+      unless offset matches ''
+      | syntax_meta.error("offset not allowed for a scalar cast", stx, offset)
     values(add_annot(
-             expr_meta.pack_s_exp(['ffi2_cast',
+             expr_meta.pack_s_exp(['cast',
                                    e,
                                    '~from',
-                                   type_meta.s_exp(type_meta.unpack_pointer_type(stx, from_t)),
+                                   type_meta.s_exp(if as_ptr
+                                                   | type_meta.unpack_pointer_type(stx, from_t)
+                                                   | type_meta.unpack_type(from_t)),
                                    '~to',
-                                   type_meta.s_exp(type_meta.unpack_pointer_type(stx, t)),
-                                   '~offset',
-                                   expr_meta.pack_expr(offset.offset_expr)]),
+                                   type_meta.s_exp(if as_ptr
+                                                   | type_meta.unpack_pointer_type(stx, t)
+                                                   | type_meta.unpack_type(t)),
+                                   & (if offset matches ''
+                                      | []
+                                      | ['~offset',
+                                         expr_meta.pack_expr(offset.offset_expr)])]),
              type_meta.unpack_annot(t)
            ),
            '$e.tail ...')
-| 'cast $('~to' || '') ($(t :: type_meta.Parsed))
+| 'c_cast $('~to' || '') ($(t :: type_meta.Parsed))
      $(offset :: MaybeOffset)
      $(e :: expr_meta.AfterInfixParsed('*')) $()':
     ~op_stx: self
     ~all_stx: stx
     values(add_annot(
-             expr_meta.pack_s_exp(['ffi2_cast',
+             expr_meta.pack_s_exp(['cast',
                                    wrap_ptr_t_check(self, e),
                                    '~to',
                                    type_meta.s_exp(type_meta.unpack_pointer_type(stx, t)),

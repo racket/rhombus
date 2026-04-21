@@ -1,0 +1,74 @@
+#lang rhombus/static/and_meta
+import:
+  "base_type.rhm" open
+  "type.rhm" open
+  "define_type.rhm"!foreign open
+  "pointer.rhm"!mode.MallocMode
+  "pointer.rhm" open
+
+export:
+  list_t
+  array_t
+
+type.macro
+| 'list_t $(mode :: MallocMode) ($(elem_t :: type_meta.Parsed)) ~length $len_seq ...':
+    build_compound_t('make_list_t', mode.mode, elem_t, '$len_seq ...')
+| 'list_t $(mode :: MallocMode) ($(elem_t :: type_meta.Parsed))':
+    build_compound_t('make_list_t', mode.mode, elem_t, '0')
+
+type.macro
+| 'array_t $(mode :: MallocMode) ($(elem_t :: type_meta.Parsed)) ~length $len_seq ...':
+    build_compound_t('make_array_t', mode.mode, elem_t, '$len_seq ...')
+| 'array_t $(mode :: MallocMode) ($(elem_t :: type_meta.Parsed))':
+    build_compound_t('make_array_t', mode.mode, elem_t, '0')
+
+meta fun build_compound_t(make_t, mode, elem_t, len):
+  '$(make_t)(
+     block:
+       c_type elem_t = $elem_t
+       [
+         fun (e): e is_a elem_t,
+         fun (n): new $mode elem_t[n],
+         fun (p :~ c_type elem_t*, i): mem p[i],
+         fun (p :~ c_type elem_t*, i, e): mem p[i] := e
+       ],
+     $len
+   )'
+
+c_type make_list_t(procs, len):
+  ~extends: ptr_t
+  ~predicate: fun (v):
+                let [elem_pred, _, _, _] = procs
+                match v
+                | [elem, ...]: all(elem_pred(elem), ...)
+                | ~else: #false
+  ~rhombus_to_c: fun (elems :~ List):
+                   let [_, malloc, _, set] = procs
+                   let p = malloc(elems.length())
+                   for (elem in elems,
+                        i in 0..):
+                     set(p, i, elem)
+                   p
+  ~c_to_rhombus: fun (p):
+                   let [_, _, get, _] = procs
+                   for List (i in 0..len):
+                     get(p, i)
+
+c_type make_array_t(procs, len):
+  ~extends: ptr_t
+  ~predicate: fun (v):
+                let [elem_pred, _, _, _] = procs
+                match v
+                | Array(elem, ...): all(elem_pred(elem), ...)
+                | ~else: #false
+  ~rhombus_to_c: fun (elems :~ Array):
+                   let [_, malloc, _, set] = procs
+                   let p = malloc(elems.length())
+                   for (elem in elems,
+                        i in 0..):
+                     set(p, i, elem)
+                   p
+  ~c_to_rhombus: fun (p):
+                   let [_, _, get, _] = procs
+                   for Array.of_length(len) (i in 0..len):
+                     get(p, i)

@@ -163,6 +163,32 @@
 
 }
 
+@doc(
+  ~nonterminal:
+    elem_type: * type ~at rhombus/ffi/type
+    len_expr: block expr
+    maybe_mode: new
+  type.macro 'list_t $maybe_mode ($elem_type) $maybe_length'
+  type.macro 'array_t $maybe_mode ($elem_type) $maybe_length'
+  grammar maybe_length
+  | ~length $len_expr
+  | ϵ
+){
+
+ Describes a type with a C representation that is the same as
+ @rhombus(elem_type*), but with a Rhombus representation that is a list
+ or array. The elements of the list or array are Rhombus representations
+ for @rhombus(elem_type).
+
+ When converting from Rhombus to C, memory is allocated using
+ @rhombus(new), @rhombus(maybe_mode), and the length of the list or
+ array. A @rhombus(~length) specification is used only when converting
+ from C back to Rhombus, since a @rhombus(elem_type*) does not encode a
+ length. If @rhombus(~length) is not provided, it defaults to
+ @rhombus(0)---which is useless, but safe.
+
+}
+
 
 @doc(
   ~nonterminal:

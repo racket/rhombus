@@ -1,0 +1,41 @@
+#lang rhombus/static/and_meta
+import:
+  "base_type.rhm" open
+  "type.rhm" open
+  "define_type.rhm"!foreign open
+
+export:
+  c_enum
+
+meta syntax_class EnumCase:
+  fields: id int
+| '$(id :: Identifier)':
+    field int = #false
+| '$(id :: Identifier) $(bound_as expr_meta.space: '=') $(int :: Int)'
+
+defn.macro 'c_enum $(name :: Identifier) $(parent_type :: type_meta.Parsed)
+            | $(case :: EnumCase)
+            | ...':
+  let [int, ...]:
+    recur loop (counter = 0, ints :~ List = [case.int, ...]):
+      match ints
+      | []: []
+      | [#false, & ints]: [counter] ++ loop(counter+1, ints)
+      | [int, & ints]: [int] ++ loop(Syntax.unwrap(int)+1, ints)
+  '«
+     enum $name
+     | $case.id
+     | ...
+     def sym_to_int = { #' $case.id: $int, ... }
+     def int_to_sym = { $int: #' $case.id, ... }
+     namespace ~open:
+       export:
+         only_space type:
+           rename:
+             ty as $name
+       c_type ty:
+         ~extends $parent_type
+         ~predicate: (fun (v): v is_a $name)
+         ~rhombus_to_c: (fun (sym): sym_to_int[sym])
+         ~c_to_rhombus: (fun (i): int_to_sym.get(i, i))
+   »'

@@ -1,0 +1,42 @@
+#lang rhombus/static
+import:
+  ffi open
+
+block:
+  foreign.enum shape_t int_t
+  | circle
+  | square
+  | triangle
+
+  check:
+    #'circle ~is_a shape_t
+    shape_t.circle ~is #'circle
+    #'circle ~is_a foreign.type shape_t
+    cast ~from (shape_t) ~to (int_t) #'circle ~is 0
+    cast ~from (shape_t) ~to (int_t) #'square ~is 1
+    cast ~from (shape_t) ~to (int_t) #'triangle ~is 2
+    cast ~from (shape_t) ~to (int_t) #'sphere ~throws "value does not match type"
+    cast ~from (int_t) ~to (shape_t) 0 ~is #'circle
+    cast ~from (int_t) ~to (shape_t) 1 ~is #'square
+    cast ~from (int_t) ~to (shape_t) 2 ~is #'triangle
+    cast ~from (int_t) ~to (shape_t) 3 ~is 3
+
+block:
+  foreign.enum shape_t int_t
+  | circle
+  | square = 11
+  | triangle
+
+  check:
+    #'circle ~is_a shape_t
+    shape_t.circle ~is #'circle
+    #'circle ~is_a foreign.type shape_t
+    cast ~from (shape_t) ~to (int_t) #'circle ~is 0
+    cast ~from (shape_t) ~to (int_t) #'square ~is 11
+    cast ~from (shape_t) ~to (int_t) #'triangle ~is 12
+    cast ~from (shape_t) ~to (int_t) #'sphere ~throws "value does not match type"
+    cast ~from (int_t) ~to (shape_t) 0 ~is #'circle
+    cast ~from (int_t) ~to (shape_t) 11 ~is #'square
+    cast ~from (int_t) ~to (shape_t) 12 ~is #'triangle
+    cast ~from (int_t) ~to (shape_t) 1 ~is 1
+    cast ~from (int_t) ~to (shape_t) 13 ~is 13
