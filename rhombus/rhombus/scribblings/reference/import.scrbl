@@ -110,7 +110,9 @@
  and the provided-provided name. The @rhombus(as, ~impo) modifier with an
  identifier supplies a prefix to use, instead, while the
  @rhombus(as, ~impo) modifier with @rhombus(~none) indicates that only
- exposed names should be bound.
+ exposed names should be bound. A prefix is bound only in the phases that
+ have imports (taking into account any @rhombus(modifiers)s), except that
+ the prefix is bound in phase @rhombus(0) if no names are imported.
 
  A @rhombus(module_path) clause can be be adjusted through one or more
  @rhombus(modifier)s. The set of modifiers is extensible, but

@@ -46,6 +46,10 @@
   | #,(@rhombus(meta_label, ~expo))
   | #,(@rhombus(only_space, ~expo)) $only_space_decl
   | #,(@rhombus(except_space, ~expo)) $except_space_decl
+  | #,(@rhombus(only_meta, ~expo)) $only_meta_decl
+  | #,(@rhombus(only_meta_label, ~expo))
+  | #,(@rhombus(except_meta, ~expo)) $except_meta_decl
+  | #,(@rhombus(except_meta_label, ~expo))
   | $other_modifier
 
 ){
@@ -292,6 +296,19 @@
 
 }
 
+
+@doc(
+  expo.modifier 'only_meta $phase'
+  expo.modifier 'only_meta_label'
+  expo.modifier 'except_meta $phase'
+  expo.modifier 'except_meta_label'
+){
+
+ Modifies an @rhombus(export) clause to include bindings only in the
+ specifically indicated @tech(~doc: model_doc){phase} or in any phase
+ other than the one indicated.
+
+}
 
 @doc(
   ~nonterminal:

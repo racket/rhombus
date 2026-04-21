@@ -20,6 +20,7 @@
          "enforest.rkt"
          "all-spaces-out.rkt"
          "only-spaces-out.rkt"
+         "only-meta-out.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
          "declaration.rkt"
@@ -42,6 +43,10 @@
                     meta_label
                     only_space
                     except_space
+                    only_meta
+                    only_meta_label
+                    except_meta
+                    except_meta_label
                     names
                     all_from
                     all_defined
@@ -308,6 +313,40 @@
        [(form (_::block (group space ...)
                         ...))
         (build #'form #'((space ...) ...))]))))
+
+(define-export-syntax only_meta
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form phase)
+        (define ph (syntax-e #'phase))
+        (unless (exact-integer? ph)
+          (raise-syntax-error #f "not a valid phase" stx #'phase))
+        (datum->syntax ex (list (syntax/loc #'form only-meta-out) ex #'phase) ex)]))))
+
+(define-export-syntax only_meta_label
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form)
+        (datum->syntax ex (list (syntax/loc #'form only-meta-out) ex #f) ex)]))))
+
+(define-export-syntax except_meta
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form phase)
+        (define ph (syntax-e #'phase))
+        (unless (exact-integer? ph)
+          (raise-syntax-error #f "not a valid phase" stx #'phase))
+        (datum->syntax ex (list (syntax/loc #'form except-meta-out) ex #'phase) ex)]))))
+
+(define-export-syntax except_meta_label
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form)
+        (datum->syntax ex (list (syntax/loc #'form except-meta-out) ex #f) ex)]))))
 
 (define-export-syntax names
   (export-prefix-operator

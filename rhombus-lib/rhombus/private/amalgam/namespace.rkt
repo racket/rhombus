@@ -243,6 +243,7 @@
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
                                       only-spaces-out except-spaces-out all-spaces-defined-out
+                                      only-meta-out except-meta-out
                                       all-spaces-dots-out except-out)
         [(combine-out ex ...)
          (for/fold ([ht ht]) ([ex (in-list (syntax->list #'(ex ...)))])
@@ -323,6 +324,11 @@
         [(except-out starting-e exclude-e ...)
          (define all-except-ht (loop #'(combine-out exclude-e ...) except-ht #hasheq() spaces spaces-mode))
          (loop #'starting-e ht all-except-ht spaces spaces-mode)]
+        [(~or (only-meta-out ex phase ...)
+              (except-meta-out ex phase ...))
+         (raise-syntax-error #f
+                             "phase-limiting export not supported in a namespace context"
+                             #'mod-path)]
         [(all-from-out mod-path)
          (raise-syntax-error #f
                              "module re-export not supported in a namespace context"
