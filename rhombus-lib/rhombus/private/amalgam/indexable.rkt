@@ -28,7 +28,8 @@
          (submod "map-maybe.rkt" for-print)
          (only-in (submod "function-parse.rkt" for-build)
                   find-call-result-at)
-         (submod "stream.rkt" for-index))
+         (submod "stream.rkt" for-index)
+         "info-syntax.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -148,20 +149,22 @@
      #:when (not repetition?)
      #:with assign::assign-op-seq #'assign-tail
      (define op (attribute assign.op))
-     (define indexable-set!-id (or (syntax-local-static-info indexable #'#%index-set)
-                                   (if more-static?
-                                       (raise-syntax-error who (not-static) indexable-in)
-                                       #'indexable-set!)))
-     (define indexable-ref-id (or (syntax-local-static-info indexable #'#%index-get)
-                                  (if more-static?
-                                      (raise-syntax-error who (not-static) indexable-in)
-                                      #'indexable-get)))
+     (define indexable-set!-expr (or (syntax-local-static-info indexable #'#%index-set)
+                                     (if more-static?
+                                         (raise-syntax-error who (not-static) indexable-in)
+                                         #'indexable-set!)))
+     (define indexable-ref-expr (or (syntax-local-static-info indexable #'#%index-get)
+                                    (if more-static?
+                                        (raise-syntax-error who (not-static) indexable-in)
+                                        #'indexable-get)))
      (define-values (assign-expr tail) (build-assign
                                         op
                                         #'assign.op-name
                                         #'assign.name
-                                        #`(lambda () (#,indexable-ref-id indexable-v index-v))
-                                        #`(lambda (v) (#,indexable-set!-id indexable-v index-v v))
+                                        #`(lambda ()
+                                            #,(build-info-syntax-call '#%index indexable-ref-expr #'indexable-v #'index-v))
+                                        #`(lambda (v)
+                                            #,(build-info-syntax-call '#%index indexable-set!-expr #'indexable-v #'index-v #'v))
                                         #'indexable
                                         #'assign.tail))
      (values #`(let ([indexable-v #,(discard-static-infos indexable)]
@@ -170,18 +173,18 @@
              tail)]
     [(_ (~and args (head::brackets index)) . tail)
      (define (build-ref indexable index indexable-static-info indexable-static-infos index-static-infos)
-       (define indexable-ref-id (or (indexable-static-info #'#%index-get)
-                                    (if more-static?
-                                        (raise-syntax-error who (not-static) indexable-in)
-                                        #'indexable-get)))
+       (define indexable-ref-expr (or (indexable-static-info #'#%index-get)
+                                      (if more-static?
+                                          (raise-syntax-error who (not-static) indexable-in)
+                                          #'indexable-get)))
        (define e (datum->syntax (quote-syntax here)
-                                (list indexable-ref-id (discard-static-infos indexable) (discard-static-infos index))
+                                (build-info-syntax-call '#%index indexable-ref-expr (discard-static-infos indexable) (discard-static-infos index))
                                 (span-srcloc indexable #'head)
                                 #'head))
        (define result-static-infos (cond
                                      [(or (extract-index-uniform-result
                                            (indexable-static-info #'#%index-result))
-                                          (syntax-local-static-info indexable-ref-id #'#%call-result))
+                                          (syntax-local-static-info indexable-ref-expr #'#%call-result))
                                       => (lambda (results)
                                            (find-call-result-at results 2 null #f
                                                                 (lambda ()

@@ -19,7 +19,8 @@
          "number.rkt"
          "order.rkt"
          "order-primitive.rkt"
-         "path-order.rkt")
+         "path-order.rkt"
+         "info-syntax.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -135,7 +136,7 @@
   (define direct-compare2 (if checked2?
                               (unbox (syntax-e direct-compare2/maybe-boxed))
                               direct-compare2/maybe-boxed))
-  (define (get-compare-id direct-compare)
+  (define (get-compare-expr direct-compare)
     (cond
       [(and (syntax? direct-compare)
             (eq? '#:method (syntax-e direct-compare)))
@@ -176,10 +177,10 @@
                          [(>) #'general>]
                          [else (error "unrecognized op" op)])
                        #t)])]))
-  (define-values (compare1-id immediate1?) (get-compare-id direct-compare1))
-  (define-values (compare2-id immediate2?) (get-compare-id direct-compare2))
-  (define-values (generic-id generic-immediate?) (get-compare-id #f))
-  (define-values (compare-id immediate?)
+  (define-values (compare1-id immediate1?) (get-compare-expr direct-compare1))
+  (define-values (compare2-id immediate2?) (get-compare-expr direct-compare2))
+  (define-values (generic-id generic-immediate?) (get-compare-expr #f))
+  (define-values (compare-expr immediate?)
     (cond
       [(and static? (not direct-compare1) (not direct-compare2))
        (raise-syntax-error #f
@@ -193,7 +194,7 @@
       [(free-identifier=? compare1-id compare2-id) (values compare2-id immediate2?)]
       [(free-identifier=? compare1-id generic-id) (values compare2-id immediate2?)]
       [(free-identifier=? compare2-id generic-id) (values compare1-id immediate1?)]
-      [(not static?) (get-compare-id #f)]
+      [(not static?) (get-compare-expr #f)]
       [else
        (raise-syntax-error #f
                            (string-append "incompatible specializations from arguments" statically-str)
@@ -201,18 +202,18 @@
                            #f
                            (list form1-in
                                  form2))]))
-  (k compare-id immediate?
+  (k compare-expr immediate?
      (not checked?)
      form1 form2))
 
 (define (!= a b) (not (= a b)))
 
-(define-for-syntax (build-compare compare-id op immediate? direct? form1 form2 orig-stxes)
+(define-for-syntax (build-compare compare-expr op immediate? direct? form1 form2 orig-stxes)
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    (datum->syntax (quote-syntax here)
                   (let ([e (if direct?
-                               (list compare-id form1 form2)
+                               (build-info-syntax-call '#%compare compare-expr form1 form2)
                                `(,#'let ([a1 ,form1]
                                          [a2 ,form2])
                                         (,#'check-comparable ',(case op
@@ -229,7 +230,7 @@
                                                                 [(>) 6])
                                                              a1
                                                              a2)
-                                        (,compare-id a1 a2)))])
+                                        ,(build-info-syntax-call '#%compare compare-expr #'a1 #'a2)))])
                     (if immediate?
                         e
                         `(,op ,e 0))))))
@@ -243,9 +244,9 @@
      static?
      (lambda (key) (values (syntax-local-static-info form1 key)
                            (syntax-local-static-info form2 key)))
-     (lambda (compare-id immediate? direct? form1 form2)
+     (lambda (compare-expr immediate? direct? form1 form2)
        (wrap-static-info*
-        (build-compare compare-id op immediate? direct? form1 form2
+        (build-compare compare-expr op immediate? direct? form1 form2
                        (list form1-in self-stx form2))
         (get-static-infos))))))
 
@@ -266,9 +267,9 @@
               (lambda (key)
                 (values (repetition-static-info-lookup #'form1-info.element-static-infos key)
                         (repetition-static-info-lookup #'form2-info.element-static-infos key)))
-              (lambda (compare-id immediate? direct? form1 form2)
+              (lambda (compare-expr immediate? direct? form1 form2)
                 (values
-                 (build-compare compare-id op immediate? direct? form1 form2
+                 (build-compare compare-expr op immediate? direct? form1 form2
                                 (list form1 self-stx form2))
                  (get-static-infos))))))])])))
 

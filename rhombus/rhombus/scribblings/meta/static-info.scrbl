@@ -383,27 +383,36 @@
         @rhombus([]) to access an element, potentially with static information
         for specific index values. See @rhombus(statinfo_meta.unpack_index_result).}
 
-  @item{@rhombus(statinfo_meta.index_get_key): An identifier bound to a
-        function to call (instead of falling back to a generic dynamic
+  @item{@rhombus(statinfo_meta.index_get_key): A @tech{function-like term}
+        to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        access an element.}
+        access an element. The term is combined with two arguments: the
+        expression before @rhombus([]) and the expression within
+        @rhombus([]).}
 
-  @item{@rhombus(statinfo_meta.index_set_key): An identifier bound to a
-        function to call (instead of falling back to a generic dynamic
+  @item{@rhombus(statinfo_meta.index_set_key): A @tech{function-like term}
+        to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        update an element.}
+        update an element. The term is combined with three arguments: the
+        expression before @rhombus([]), the expression within
+        @rhombus([]), and the expression to the right-hand side of an
+        assignment.}
 
-  @item{@rhombus(statinfo_meta.append_key): An identifier or a boxed identifier bound to a
-        function to call (instead of falling back to a generic dynamic
+  @item{@rhombus(statinfo_meta.append_key): A @tech{function-like term}
+        or a boxed function-like term  to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to
-        append the result of another expression. For a boxed identifier,
+        append the result of another expression. For a boxed term,
         the application will be guarded by a check to ensure that both
-        arguments share the same @rhombus(append, ~datum) implementation.}
+        arguments share the same @rhombus(append, ~datum) implementation.
+        The term is combined with two arguments, which are the
+        left-hand and right-hand expression arguments of @rhombus(++).}
 
-  @item{@rhombus(statinfo_meta.contains_key): An identifier bound to a
-        function to call (instead of falling back to a generic dynamic
+  @item{@rhombus(statinfo_meta.contains_key): A @tech{function-like term}
+        to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(in) to
-        check whether an element is included.}
+        check whether an element is included. The term is combined with
+        two arguments, which are the left-hand and right-hand expression
+        arguments of @rhombus(in).}
 
   @item{@rhombus(statinfo_meta.dot_provider_key): An identifier
         bound by @rhombus(dot.macro) to
@@ -417,10 +426,11 @@
         or superinterfaces of an interface. Intersection (``or'') of overall sequences finds
         a shared tail, while union (``and'') of overall sequences combines elements pairwise.}
 
-  @item{@rhombus(statinfo_meta.sequence_constructor_key): An identifier
-        bound as a variable or a macro that is wrapped around an expression
-        to create or specialize a sequence for @rhombus(for), or @rhombus(#true) to
-        indicate that no wrapper is needed.}
+  @item{@rhombus(statinfo_meta.sequence_constructor_key): A @tech{function-like term}
+        to call to specialize a sequence for @rhombus(for), or @rhombus(#true) to
+        indicate that no wrapper is needed. A term is combined with
+        one argument, which is the expression for a sequence to be traversed
+        b ya @rhombus(for) clause.}
 
   @item{@rhombus(statinfo_meta.sequence_element_key): Packed static information
         for the elements of the expression as a sequence used with
@@ -469,6 +479,13 @@
 )
 
  See @secref(~doc: model_doc, "annotation-macro") for examples using some of these keys.
+
+ A @deftech{function-like term} @rhombus(t, ~var) is combined with
+ argument expressions in a
+ @rhombus(#,(@rhombus(t, ~var))(#,(@rhombus(arg, ~var)), ...)) form,
+ which is a function when when @rhombus(t, ~var) is an expression, but
+ can be a macro invocation if @rhombus(t, ~var) is an identifer that is
+ bound as an expression macro.
 
 }
 

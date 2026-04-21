@@ -5,7 +5,8 @@
                      "statically-str.rkt"
                      "interface-parse.rkt"
                      "class-method-result.rkt"
-                     "annot-context.rkt")
+                     "annot-context.rkt"
+                     "pack.rkt")
          (only-in racket/vector
                   vector-append)
          racket/treelist
@@ -27,7 +28,8 @@
          (only-in (submod "function-parse.rkt" for-build) find-call-result-at)
          "is-static.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         "info-syntax.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -84,21 +86,23 @@
                                  appendable-static-info
                                  arg-static-infos
                                  k)
-  (define direct-append-id/maybe-boxed (appendable-static-info #'#%append))
-  (define checked? (and direct-append-id/maybe-boxed
-                        (box? (syntax-e direct-append-id/maybe-boxed))))
-  (define direct-append-id (if checked?
-                               (unbox (syntax-e direct-append-id/maybe-boxed))
-                               direct-append-id/maybe-boxed))
-  (define append-id (or direct-append-id
-                        (if static?
-                            (raise-syntax-error #f
-                                                (string-append "specialization not known" statically-str)
-                                                self-stx
-                                                form1-in)
-                            #'general-append)))
+  (define direct-append-expr/maybe-boxed (appendable-static-info #'#%append))
+  (define checked? (and direct-append-expr/maybe-boxed
+                        (box? (syntax-e direct-append-expr/maybe-boxed))))
+  (define direct-append-expr (if checked?
+                                 (unbox (syntax-e direct-append-expr/maybe-boxed))
+                                 direct-append-expr/maybe-boxed))
+  (define append-expr (or direct-append-expr
+                          (if static?
+                              (raise-syntax-error #f
+                                                  (string-append "specialization not known" statically-str)
+                                                  self-stx
+                                                  form1-in)
+                              #'general-append)))
   (define si (cond
-               [(syntax-local-static-info append-id #'#%call-result)
+               [(let ([t (unpack-term append-expr #f #f)])
+                  (and (identifier? t)
+                       (syntax-local-static-info t #'#%call-result)))
                 => (lambda (results)
                      (find-call-result-at results 2 null #f
                                           (lambda ()
@@ -109,12 +113,12 @@
                                              #f
                                              #f))))]
                [else #'()]))
-  (k append-id
+  (k append-expr
      (not checked?)
      form1 form2
      si))
 
-(define-for-syntax (build-append append-id direct? form1 form2 orig-stxes)
+(define-for-syntax (build-append append-expr direct? form1 form2 orig-stxes)
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    #:prop-stx (cadr orig-stxes)
@@ -122,11 +126,11 @@
                   (let ([form1 (discard-static-infos form1)]
                         [form2 (discard-static-infos form2)])
                     (if direct?
-                        (list append-id form1 form2)
+                        (build-info-syntax-call '#%append append-expr form1 form2)
                         `(,#'let ([a1 ,form1]
                                   [a2 ,form2])
                                  (,#'check-appendable a1 a2)
-                                 (,append-id a1 a2)))))))
+                                 ,(build-info-syntax-call '#%append append-expr #'a1 #'a2)))))))
 
 (define-syntax ++
   (expression-infix-operator
@@ -141,9 +145,9 @@
       static?
       (lambda (key) (syntax-local-static-info form1 key))
       (lambda (form idx) (extract-static-infos form))
-      (lambda (append-id direct? form1 form2 si)
+      (lambda (append-expr direct? form1 form2 si)
         (wrap-static-info*
-         (build-append append-id direct? form1 form2
+         (build-append append-expr direct? form1 form2
                        (list form1-in self-stx form2))
          si))))
    'left))
@@ -171,9 +175,9 @@
               (if (= idx 0)
                   #'form1-info.element-static-infos
                   (extract-static-infos form2)))
-            (lambda (append-id direct? form1 form2 si)
+            (lambda (append-expr direct? form1 form2 si)
               (values
-               (build-append append-id direct? form1 form2
+               (build-append append-expr direct? form1 form2
                              (list form1 self-stx form2))
                si)))))]))
    'left))

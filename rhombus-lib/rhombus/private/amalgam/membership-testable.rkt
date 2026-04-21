@@ -24,7 +24,8 @@
          (only-in "class-desc.rkt" define-class-desc-syntax)
          "is-static.rkt"
          "order.rkt"
-         "order-primitive.rkt")
+         "order-primitive.rkt"
+         "info-syntax.rkt")
 
 (provide (for-spaces (rhombus/class
                       rhombus/annot)
@@ -83,23 +84,23 @@
                                    static?
                                    container-static-info
                                    k)
-  (define direct-contains-id (container-static-info #'#%contains))
-  (define contains-id (or direct-contains-id
-                          (if static?
-                              (raise-syntax-error #f
-                                                  (string-append "specialization not known" statically-str)
-                                                  self-stx
-                                                  form2-in)
-                              #'general-contains)))
-  (k contains-id form1 form2))
+  (define direct-contains-expr (container-static-info #'#%contains))
+  (define contains-expr (or direct-contains-expr
+                            (if static?
+                                (raise-syntax-error #f
+                                                    (string-append "specialization not known" statically-str)
+                                                    self-stx
+                                                    form2-in)
+                                #'general-contains)))
+  (k contains-expr form1 form2))
 
-(define-for-syntax (build-contains contains-id form1 form2 mode orig-stxes)
+(define-for-syntax (build-contains contains-expr form1 form2 mode orig-stxes)
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    (datum->syntax (quote-syntax here)
                   `(,#'let ([a1 ,form1]
                             [a2 ,form2])
-                           ,(let ([r `(,contains-id a2 a1)])
+                           ,(let ([r (build-info-syntax-call '#%contains contains-expr #'a2 #'a1)])
                               (if (eq? mode 'invert)
                                   `(not ,r)
                                   r))))))
@@ -124,8 +125,8 @@
       form1 form2 self-stx form2-in
       static?
       (lambda (key) (syntax-local-static-info form2 key))
-      (lambda (contains-id form1 form2)
-        (build-contains contains-id form1 form2 mode
+      (lambda (contains-expr form1 form2)
+        (build-contains contains-expr form1 form2 mode
                         (list form1 self-stx form2-in)))))
    'left))
 
@@ -147,9 +148,9 @@
             static?
             (lambda (key)
               (repetition-static-info-lookup #'form2-info.element-static-infos key))
-            (lambda (contains-id form1 form2)
+            (lambda (contains-expr form1 form2)
               (values
-               (build-contains contains-id form1 form2 mode
+               (build-contains contains-expr form1 form2 mode
                                (list form1 self-stx form2))
                #'())))))]))
    'left))

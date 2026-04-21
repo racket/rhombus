@@ -9,14 +9,17 @@
 (provide (for-syntax simple-call?
                      normal-call?
                      normal-call-repetition?
+                     add-call-context
                      install-normal-call?!))
 
 (define-for-syntax normal-call? #f)
 (define-for-syntax normal-call-repetition? #f)
+(define-for-syntax add-call-context #f)
 
-(define-for-syntax (install-normal-call?! proc repet-proc)
+(define-for-syntax (install-normal-call?! proc repet-proc add-proc)
   (set! normal-call? proc)
-  (set! normal-call-repetition? repet-proc))
+  (set! normal-call-repetition? repet-proc)
+  (set! add-call-context add-proc))
 
 (define-for-syntax (simple-call? stx
                                  #:ellipsis-ok? [ellipsis-ok? #f]

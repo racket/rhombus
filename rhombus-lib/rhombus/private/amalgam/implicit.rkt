@@ -398,5 +398,8 @@
   (free-identifier=? (datum->syntax lit '#%literal)
                      (expr-quote #%literal)))
 
+(define-for-syntax (add-call-context stx)
+  (datum->syntax #'here (syntax-e stx) stx stx))
+
 (begin-for-syntax
-  (install-normal-call?! normal-call? normal-call-repetition?))
+  (install-normal-call?! normal-call? normal-call-repetition? add-call-context))

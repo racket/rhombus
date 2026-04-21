@@ -507,8 +507,9 @@
                    (#,key #,(cond
                               [const const]
                               [abstract?
-                               #`(lambda (obj . #,abstract-args)
-                                   ((method-ref #,methods-ref-id obj #,index) obj . #,abstract-args))]
+                               #`(parsed #:rhombus/expr
+                                         (lambda (obj . #,abstract-args)
+                                           ((method-ref #,methods-ref-id obj #,index) obj . #,abstract-args)))]
                               [box-id? (box-immutable impl-id)]
                               [else impl-id])))
                defs)

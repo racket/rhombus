@@ -7,7 +7,8 @@
                      "tag.rkt"
                      "srcloc.rkt"
                      "statically-str.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "pack.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -26,7 +27,8 @@
          (only-in "for-clause-primitive.rkt"
                   each)
          (submod "membership-testable.rkt" in-operator)
-         (submod "repet-primitive.rkt" for-sequence-check))
+         (submod "repet-primitive.rkt" for-sequence-check)
+         "info-syntax.rkt")
 
 (provide (rename-out [rhombus-for for]))
 
@@ -276,6 +278,7 @@
      #:with (tmp-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs-i.name-id ...)))])
                            ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id) name-id)))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
+     (define seq-ctr-t (unpack-term seq-ctr #f #f))
      (when (and static? (not seq-ctr))
        (raise-syntax-error #f
                            (string-append "no specific iteration implementation available" statically-str)
@@ -287,15 +290,18 @@
                           (add-with-syntax-parameters
                            #'stx-params
                            (cond
-                             [(identifier? seq-ctr)
+                             [(and seq-ctr
+                                   (or (not seq-ctr-t)
+                                       (not (eq? (syntax-e seq-ctr-t) #t))))
                               ;; when `for` optimizes, it only attaches `seq-ctr` to
                               ;; the expansion, instead of using origin on the call
                               (define seq-ctr/t (transfer-origin #'rhs seq-ctr))
-                              (if (syntax-local-value* seq-ctr expression-prefix-operator-ref)
+                              (if (and (identifier? seq-ctr-t)
+                                       (syntax-local-value* seq-ctr-t expression-prefix-operator-ref))
                                   (unwrap-static-infos
                                    (with-continuation-mark syntax-parameters-key #'stx-params
                                       (rhombus-local-expand
-                                       #`(rhombus-expression (group #,seq-ctr/t (parens (group (parsed #:rhombus/expr rhs))))))))
+                                       (build-info-syntax-call seq-ctr/t #'rhs))))
                                   #`(#,seq-ctr/t rhs))]
                              [else
                               (syntax-parse orig-stx
