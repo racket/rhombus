@@ -155,7 +155,7 @@
 ){
 
  The @tech{space} for module path forms like
- @rhombus(lib, ~at rhombus/modpath) as used by @rhombus(all_from, ~expo).
+ @rhombus(lib, ~modpath).
 
 }
 
@@ -185,7 +185,7 @@
 
  Analogous to @rhombus(expr_meta.Parsed, ~stxclass) and
  @rhombus(expr_meta.NameStart, ~stxclass), but for module-path
- forms as used by @rhombus(all_from, ~expo).
+ forms like @rhombus(lib, ~modpath).
 
 }
 

@@ -331,8 +331,8 @@
   modpath.macro '$id / $collection_module_path'
 ){
 
- Like the @rhombus(/, ~impo) operator for @rhombus(import) module
- paths, used for module paths in @rhombus(all_from, ~expo).
+ Like the @rhombus(/, ~impo) operator for @rhombus(import) module paths,
+ but used for module paths in the same way as @rhombus(lib, ~modpath).
 
 }
 
@@ -342,7 +342,8 @@
 ){
 
  Like the @rhombus(lib, ~impo) form for @rhombus(import), used for
- module paths in @rhombus(all_from, ~expo).
+ module paths in @rhombus(all_from, ~expo) and @rhombus(module) with
+ @rhombus(~lang).
 
 }
 
@@ -351,8 +352,8 @@
   modpath.macro 'file($string)'
 ){
 
- Like the @rhombus(file, ~impo) form for @rhombus(import), used for
- module paths in @rhombus(all_from, ~expo).
+ Like the @rhombus(file, ~impo) form for @rhombus(import), but used
+ for module paths in the same way as @rhombus(lib, ~modpath).
 
 }
 
@@ -364,7 +365,8 @@
 ){
 
  Like the @rhombus(!, ~impo) operator for @rhombus(import) to access a
- submodule, used for module paths in @rhombus(all_from, ~expo).
+ submodule, but used for module paths in the same way as
+ @rhombus(lib, ~modpath).
 
 }
 
@@ -374,7 +376,7 @@
 ){
 
  Like the @rhombus(self, ~impo) and @rhombus(parent, ~impo)
- @rhombus(import) forms, used for module paths in
- @rhombus(all_from, ~expo).
+ @rhombus(import) forms, but used for module paths in the same way as
+ @rhombus(lib, ~modpath).
 
 }
