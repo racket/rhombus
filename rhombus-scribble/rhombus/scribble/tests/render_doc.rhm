@@ -74,7 +74,7 @@ fun filter(html):
 
 fun read(expect):
   let o = Port.Input.open_file(expect)
-  shrubbery.read(o)
+  shrubbery.read(~in: o)
 
 when #'show in flags
 | println(filter(html), ~pretty: #true)

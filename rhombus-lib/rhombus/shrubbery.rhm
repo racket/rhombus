@@ -12,7 +12,7 @@ enum ReadMode
 | line
 | text
 
-fun read(in :: Port.Input,
+fun read(~in: in :: Port.Input = Port.Input.current(),
          ~mode: mode :: ReadMode = #'top,
          ~start_column: start :: Nat = 0):
   parse.#{parse-all}(in,

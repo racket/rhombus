@@ -3,7 +3,7 @@ import:
   rhombus/shrubbery
 
 fun read_string(s, ~mode: mode = #'top):
-  shrubbery.read(Port.Input.open_string(s),
+  shrubbery.read(~in: Port.Input.open_string(s),
                  ~mode: mode)
 
 check:

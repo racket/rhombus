@@ -129,7 +129,7 @@ meta fun to_very_pretty_source(stx):
 
 meta fun with_very_pretty_source(stx :~ Syntax):
   let str = to_very_pretty_source(stx)
-  let new_stx = shrubbery.read(Port.Input.open_string(str))
+  let new_stx = shrubbery.read(~in: Port.Input.open_string(str))
   let new_stx = transfer_raw(new_stx, stx)
   let new_str = new_stx.to_source_string()
   unless new_str == str

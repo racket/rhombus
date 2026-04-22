@@ -10,7 +10,7 @@
 @docmodule(rhombus/shrubbery)
 
 @doc(
-  fun shrubbery.read(in :: Port.Input,
+  fun shrubbery.read(~in: in :: Port.Input = Port.Input.current(),
                      ~mode: mode :: shrubbery.ReadMode = #'top,
                      ~start_column: start_column :: Int = 0)
     :: Syntax || Port.EOF
@@ -50,7 +50,7 @@
   ~defn:
     import rhombus/shrubbery
   ~repl:
-    shrubbery.read(Port.Input.open_string("fun (x):\n  x + 1"))
+    shrubbery.read(~in: Port.Input.open_string("fun (x):\n  x + 1"))
 )
 
 }
