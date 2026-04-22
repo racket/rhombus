@@ -81,6 +81,7 @@
     #:syntax-class :module-path
     #:desc "module path"
     #:operator-desc "module-path operator"
+    #:parsed-tag #:rhombus/modpath
     #:in-space in-module-path-space
     #:name-path-op #f
     #:prefix-operator-ref module-path-prefix-operator-ref

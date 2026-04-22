@@ -2,8 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
-                     "introducer.rkt"
-                     "name-start-syntax-class.rkt")
+                     "introducer.rkt")
          syntax/parse/pre
          enforest/name-parse
          "provide.rkt"
@@ -11,7 +10,8 @@
          "dotted-sequence.rkt"
          "name-root.rkt"
          "definition.rkt"
-         "pack.rkt")
+         "pack.rkt"
+         "name-start-syntax-class.rkt")
 
 (provide (for-space rhombus/stxclass
                     Term
@@ -150,9 +150,9 @@
 
 (begin-for-syntax
   (define name-start-fields
-    #'((name name #f 0 unpack-term*)
-       (head #f head tail unpack-tail-list*)
-       (tail #f tail tail unpack-tail-list*))))
+    #'((name name #f 0 unpack-term* stx)
+       (head #f head tail unpack-tail-list* stx)
+       (tail #f tail tail unpack-tail-list* stx))))
 
 (define-syntax (define-operator-syntax-classes stx)
   (syntax-parse stx

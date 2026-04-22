@@ -497,3 +497,12 @@ block:
 block:
   expr.macro '$a . g': '$a ++ "ok"'
   check "a" . g ++ "z" ~is "aokz"
+
+expr.macro 'expr_name $tail ...':
+  match '$tail ...'
+  | '$(m :: expr_meta.NameStart)': '('$m.name')'
+  | ~else: '#false'
+
+check expr_name anything.y ~matches 'anything'
+check expr_name math.pi ~matches 'pi'
+check expr_name 11 ~matches #false

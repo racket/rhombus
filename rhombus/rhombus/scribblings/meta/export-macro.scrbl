@@ -130,7 +130,8 @@
  @rhombus(expr_meta.AfterPrefixParsed, ~stxclass), and
  @rhombus(expr_meta.AfterInfixParsed, ~stxclass), but for exports.
 
- The @rhombus(expo_meta.ParsedAndModified) supports putting an import
+ The @rhombus(expo_meta.ParsedAndModified, ~stxclass) syntax class
+ supports putting an import
  modifier before or after an import form.
 
 }
@@ -149,5 +150,43 @@
 
 }
 
+@doc(
+  space.enforest module_path
+){
+
+ The @tech{space} for module path forms like
+ @rhombus(lib, ~at rhombus/modpath) as used by @rhombus(all_from, ~expo).
+
+}
+
+@doc(
+  ~meta
+  def module_path_meta.space :: SpaceMeta
+){
+
+ A compile-time value that identifies the same space as
+ @rhombus(module_path, ~space). See also @rhombus(SpaceMeta, ~annot).
+
+}
+
+@doc(
+  ~meta
+  syntax_class module_path_meta.Parsed:
+    kind: ~group
+    fields:
+      group
+  syntax_class module_path_meta.NameStart:
+    kind: ~group
+    fields:
+      name
+      [head, ...]
+      [tail, ...]
+){
+
+ Analogous to @rhombus(expr_meta.Parsed, ~stxclass) and
+ @rhombus(expr_meta.NameStart, ~stxclass), but for module-path
+ forms as used by @rhombus(all_from, ~expo).
+
+}
 
 @(macro.close_eval(macro_eval))

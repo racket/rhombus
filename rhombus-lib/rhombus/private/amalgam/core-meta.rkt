@@ -25,6 +25,7 @@
         "assign-macro.rkt"
         "import-macro.rkt"
         "export-macro.rkt"
+        "module-path-macro.rkt"
         "unquote-binding-macro.rkt"
         "syntax-class-clause-macro.rkt"
         "pattern-clause-macro.rkt"

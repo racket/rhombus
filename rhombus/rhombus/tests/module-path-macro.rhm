@@ -1,0 +1,26 @@
+#lang rhombus/and_meta
+
+module ~early the_submodule ~lang rhombus/and_meta:
+  export:
+    x
+    only_space module_path:
+      rename parent as papa
+  def x = "x"
+module ~early the_exporting_submodule ~lang rhombus/and_meta:
+  import parent!the_submodule open
+  decl.nestable_macro 'modpath $id $(mp :: module_path_meta.Parsed) $()':
+    'export all_from($mp)'
+  modpath x papa!the_submodule
+import self!the_exporting_submodule
+
+check the_exporting_submodule.x ~is "x"
+
+expr.macro 'modpath_name $tail ...':
+  match '$tail ...'
+  | '$(m :: module_path_meta.NameStart)': '('$m.name')'
+  | ~else: '#false'
+
+check modpath_name lib ~matches 'lib'
+check modpath_name nonlib ~matches 'nonlib'
+check modpath_name nonlib.x ~matches 'nonlib'
+check modpath_name the_exporting_submodule.papa ~matches 'papa'
