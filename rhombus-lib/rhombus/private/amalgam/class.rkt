@@ -597,6 +597,13 @@
          (define-values (public-field-names private-field-names) (partition-fields #'(field-name ...) #:result values))
          (define-values (public-field-arguments private-field-arguments) (partition-fields #'(field-argument ...) #:result values))
          (define-values (public-name-fields private-name-fields) (partition-fields #'(name-field ...) #:result values))
+         (define private-field-poss (for/list ([exposure (in-list exposures)]
+                                               [i (in-naturals (if super
+                                                                   (length (or (class-desc-all-fields super)
+                                                                               (class-desc-fields super)))
+                                                                   0))]
+                                               #:unless (eq? exposure 'public))
+                                      i))
          (define-values (recon-field-names recon-field-args recon-field-accs recon-field-rhss)
            (extract-reconstructor-fields stxes options super reconstructor-rhs
                                          public-field-names public-field-arguments public-name-fields))
@@ -628,6 +635,7 @@
                                                                name-field)))]
                        [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
                        [((public-field-argument ...) (private-field-argument ...)) (list public-field-arguments private-field-arguments)]
+                       [(private-field-pos ...) private-field-poss]
                        [(constructor-public-name-field ...) (partition-fields all-name-fields constructor-exposures
                                                                               #:result (lambda (pub priv) pub))]
                        [(constructor-public-field-static-infos ...) (partition-fields #'(constructor-field-static-infos ...)
@@ -805,7 +813,8 @@
                                                         (quote-syntax private-name-field)
                                                         (quote-syntax private-maybe-set-name-field!)
                                                         (quote-syntax private-field-static-infos)
-                                                        (quote-syntax private-field-argument))
+                                                        (quote-syntax private-field-argument)
+                                                        (quote private-field-pos))
                                                   ...]
                                                  [export ...]
                                                  base-stx scope-stx))

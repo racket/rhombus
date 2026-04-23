@@ -53,3 +53,19 @@
 )
 
 }
+
+@doc(
+  fun memory.order_acquire() :: Void
+  fun memory.order_release() :: Void
+){
+
+ Those operations implement a machine-level memory fence on platforms
+ where one is needed for synchronization. The
+ @rhombus(memory.order_acquire) operation ensures at least a load–load
+ and load–store fence at the machine level, and the
+ @rhombus(memory.order_release) operation ensures at least a store–store
+ and store–load fence at the machine level.
+
+ See also @secref(~doc: model_doc, "memory-model").
+
+}

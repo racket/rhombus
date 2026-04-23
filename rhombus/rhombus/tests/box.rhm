@@ -7,6 +7,7 @@ block:
     Box.value(bx, [val])
     Box.copy(bx) ~method
     Box.snapshot(bx) ~method
+    Box.compare_and_set(bx, old_val, new_val) ~method
 
 check:
   Box(1) ~is_now Box(1)
@@ -32,6 +33,10 @@ block:
     bx_copy.value ~is 10
     bx_copy === bx ~is #false
     bx_snapshot === bx ~is #false
+    bx.compare_and_set(100, 200) ~is #false
+    (recur loop (): bx.compare_and_set(10, 200) || loop()) ~is #true
+    bx.value ~is 200
+    (bx :: Box.later_of(Int)).compare_and_set(0, 1) ~throws "cannot atomically compare-and-set content of a wrapped box"
 
 block:
   use_static
@@ -84,6 +89,12 @@ check:
   dynamic(bx).value := 11
   dynamic(bx).value
   ~is 11
+
+block:
+  def bx = Box(10)
+  check dynamic(bx).compare_and_set(-10, 0) ~is #false
+  check (recur loop (): dynamic(bx).compare_and_set(10, 200) || loop()) ~is #true
+  check bx.value ~is 200
 
 check:
   10 :: Box

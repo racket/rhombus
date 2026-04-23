@@ -1,7 +1,9 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    meta_label:
+      rhombus/memory)
 
 @(def dots = @rhombus(..., ~bind))
 
@@ -235,10 +237,11 @@ pairwise equal by @rhombus(==).
 
 
 @doc(
-  method Array.set(arr :: MutableArray,
-                   n :: Nat,
-                   val :: Any)
-    :: Void
+  method Array.set(
+    arr :: MutableArray,
+    n :: Nat,
+    val :: Any
+  ) :: Void
 ){
 
  Equivalent to @rhombus(arr[n] := val) (with the default implicit
@@ -252,6 +255,35 @@ pairwise equal by @rhombus(==).
   a[1] := "e"
   a
 )
+
+}
+
+
+@doc(
+  method Array.compare_and_set(
+    arr :: MutableArray,
+    n :: Nat,
+    old_val :: Any,
+    new_val :: Any
+  ) :: Boolean
+){
+
+ Like @rhombus(Array.set(arr, new_val)), but only when the current
+ content of @rhombus(arr) at index @rhombus(n) is @rhombus(===) to
+ @rhombus(old_val) and the value can be atomically replaced with
+ @rhombus(new_val). Otherwise, the current value is left intact. The
+ result is @rhombus(#true) if the value was replaced and @rhombus(#false)
+ if not.
+
+ Beware that on some platforms, a ``spurious'' failure can produce a
+ @rhombus(#false) result and unchanged content even when the current
+ content is @rhombus(old_val).
+
+ The given @rhombus(arr) must not be wrapped to implement a delayed
+ annotation via @rhombus(Array.later_of, ~annot).
+
+ See also @rhombus(memory.order_acquire) and
+ @rhombus(memory.order_release).
 
 }
 

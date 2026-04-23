@@ -22,6 +22,7 @@
          field-desc-mutator-id
          field-desc-static-infos
          field-desc-constructor-arg
+         field-desc-pos
 
          (struct-out added-field)
          (struct-out added-method)
@@ -154,6 +155,7 @@
 (define (field-desc-mutator-id f) (list-ref f 2))
 (define (field-desc-static-infos f) (list-ref f 3))
 (define (field-desc-constructor-arg f) (list-ref f 4)) ; see above for arg
+(define (field-desc-pos f) (list-ref f 5)) ; only for internal-field descriptions
 
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))

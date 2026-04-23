@@ -10,6 +10,7 @@ block:
     Array.length(arr) ~method
     Array.get(arr, n) ~method
     Array.set(arr, n, v) ~method
+    Array.compare_and_set(arr, n, v_old, v_new) ~method
     Array.contains(arr, v, [eql]) ~method
     Array.append(arr, ...) ~method
     Array.copy(arr, [start], [end]) ~method
@@ -68,6 +69,17 @@ block:
     arr.set(0, 2)
     arr.get(0)
     ~is 2
+  block:
+    def arr = Array(1, 2, 3)
+    check arr.compare_and_set(0, 0, 100) ~is #false
+    check (recur loop(): arr.compare_and_set(0, 1, 100) || loop()) ~is #true
+    check arr.get(0) ~is 100
+    check arr.get(1) ~is 2
+    check arr.compare_and_set(1, 100, 200) ~is #false
+    check (recur loop(): arr.compare_and_set(1, 2, 200) || loop()) ~is #true
+    check arr.get(1) ~is 200
+    check: (arr :: Array.later_of(Int)).compare_and_set(0, 1, 2)
+           ~throws "cannot atomically compare-and-set element of a wrapped array"
   check:
     Array(1, 2, 3) ++ Array(0)
     ~is_now Array(1, 2, 3, 0)
@@ -152,6 +164,10 @@ block:
     arr.set(0, 2)
     arr.get(0)
     ~is 2
+  block:
+    def arr = dynamic(Array(1, 2, 3))
+    check arr.compare_and_set(0, 0, 100) ~is #false
+    check (recur loop(): arr.compare_and_set(0, 1, 100) || loop()) ~is #true
   check:
     dynamic(Array(1, 2, 3)).copy() ~is_now Array(1, 2, 3)
     dynamic(Array(4, 5, 6)).copy() == Array(4, 5, 6) ~is #false

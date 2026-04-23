@@ -10,6 +10,9 @@ export:
   current_use
   cumulative_use
 
+  order_acquire
+  order_release
+
 fun gc():
   base.#{collect-garbage}()
 
@@ -24,3 +27,9 @@ fun current_use():
   
 fun cumulative_use():
   base.#{current-memory-use}(#'cumulative)
+
+fun order_acquire():
+  base.#{memory-order-acquire}()
+
+fun order_release():
+  base.#{memory-order-release}()

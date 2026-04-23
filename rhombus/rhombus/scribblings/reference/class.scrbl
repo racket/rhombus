@@ -139,7 +139,7 @@
 
 )
 
- Fields, methods, properties, and dot syntax declared in a class can be accessed
+ Public fields, methods, properties, and dot syntax declared in a class can be accessed
  from an object (as opposed to just a class) using @rhombus(.), but fields,
  methods, and properties
  declared as @rhombus(private, ~class_clause) or @rhombus(protected, ~class_clause) can only be accessed by
@@ -154,6 +154,9 @@
  accessed with @rhombus(.) only statically. Syntactic forms bound via
  @rhombus(dot, ~class_clause) can be accessed with @rhombus(.) only statically,
  and functional update via @rhombus(with) also relies on static access.
+ Mutable fields of an object can be modified using @rhombus(.) with @rhombus(:=),
+ and atomic compare-and-set is available through the @rhombus(~cas) modifier on
+ @rhombus(:=).
 
  A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
  implies that the default constructor expects the corresponding argument
@@ -223,7 +226,7 @@
  and earlier @rhombus(field, ~class_clause) names, but it cannot refer to @rhombus(this),
  later fields of the class, methods of the class, or properties of the class. All fields
  added through a @rhombus(field, ~class_clause) clause without @rhombus(immutable, ~class_clause) are mutable, and they
- can be updated in a custom constructor (form example) using
+ can be updated in a custom constructor (for example) using
  @tech(~doc: meta_doc){assignment operators} such as @rhombus(:=). The
  @rhombus(field, ~class_clause) or @rhombus(immutable, ~class_clause) form can appear any number of times as a
  @rhombus(class_clause), with or without a

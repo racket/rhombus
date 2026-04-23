@@ -105,3 +105,36 @@ check:
   ~throws values("length",
                  "no such field or method",
                  "based on static information")
+
+block:
+  class Posn(mutable x, y):
+    nonfinal
+    field style = -1
+  class Posn4D(z, mutable w):
+    extends Posn
+  def p4 = Posn4D(1, 2, 3, 4)
+  p4.x := 10
+  check p4.x ~is 10
+  check p4.x := ~cas 11 ~to 12 ~is #false
+  check (recur loop(): (p4.x := ~cas 10 ~to 11) || loop()) ~is #true
+  check p4.x ~is 11
+  check p4.style ~is -1
+  check p4.style := ~cas 1 ~to -10 ~is #false
+  check (recur loop(): (p4.style := ~cas -1 ~to -10) || loop()) ~is #true
+  check p4.style ~is -10
+  check p4.w ~is 4
+  check p4.w := ~cas 14 ~to 13 ~is #false
+  check (recur loop(): (p4.w := ~cas 4 ~to 40) || loop()) ~is #true
+  check p4.w ~is 40
+
+check:
+  ~eval
+  class Posn(x, y)
+  Posn(1, 2).x := 2
+  ~throws "left-hand argument is not a mutable identifier"
+
+check:
+  ~eval
+  class Posn(mutable x, y)
+  dynamic(Posn(1, 2)).x := ~cas 1 ~to 2
+  ~throws "not an allowed literal term"

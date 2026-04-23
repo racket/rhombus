@@ -41,7 +41,8 @@
             (or (static-info-lookup lhs-si #'unbox)
                 #'()))])
   #:methods
-  (copy
+  (compare_and_set
+   copy
    snapshot))
 
 (define/arity (Box v)
@@ -72,6 +73,16 @@
   (case-lambda
     [(b) (unbox b)]
     [(b v) (set-box! b v)]))
+
+(define/method (Box.compare_and_set b old-x x)
+  #:primitive (box-cas!)
+  (when (and (impersonator? b)
+             (box? b))
+    (raise-arguments-error
+     who
+     "cannot atomically compare-and-set content of a wrapped box"
+     "box" b))
+  (box-cas! b old-x x))
 
 (define-binding-syntax Box
   (binding-transformer

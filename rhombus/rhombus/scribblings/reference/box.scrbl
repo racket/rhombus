@@ -1,7 +1,9 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    meta_label:
+      rhombus/memory)
 
 @title{Boxes}
 
@@ -131,6 +133,33 @@ the same according to @rhombus(is_now).
   Box.value(b, 2)
   Box.value(b)
 )
+
+}
+
+
+@doc(
+  method Box.compare_and_set(
+    bx :: MutableBox,
+    old_val :: Any,
+    new_val :: Any
+  ) :: Boolean
+){
+
+ Like @rhombus(Box.value(bx, new_val)), but only when the current
+ content of @rhombus(bx) is @rhombus(===) to @rhombus(old_val) and the
+ value can be atomically replaced with @rhombus(new_val). Otherwise, the
+ current value is left intact. The result is @rhombus(#true) if the value
+ was replaced and @rhombus(#false) if not.
+
+ Beware that on some platforms, a ``spurious'' failure can produce a
+ @rhombus(#false) result and unchanged content even when the current
+ content is @rhombus(old_val).
+
+ The given @rhombus(bx) must not be wrapped to implement a delayed
+ annotation via @rhombus(Box.later_of, ~annot).
+
+ See also @rhombus(memory.order_acquire) and
+ @rhombus(memory.order_release).
 
 }
 

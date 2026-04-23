@@ -50,7 +50,8 @@
 
  The @rhombus(:=) operator is also recognized by other forms, such as
  @rhombus(.) and @rhombus(#%index), for changing mutable components of
- some values.
+ some values. See @rhombus(.) for information about using @rhombus(~cas)
+ after @rhombus(:=).
 
 @examples(
   def mutable count = 0

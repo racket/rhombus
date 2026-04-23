@@ -10,6 +10,8 @@
                      "statically-str.rkt"
                      "maybe-as-original.rkt")
          racket/unsafe/undefined
+         (only-in racket/unsafe/ops
+                  unsafe-struct*-cas!)
          "class-method.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dotted-sequence-parse.rkt"
@@ -488,7 +490,7 @@
                     success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) objects-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
-  (define (do-field fld)
+  (define (do-field fld get-pos)
     (cond
       [repetition?
        ;; let dot-provider dispatcher handle repetition construction:
@@ -496,6 +498,16 @@
       [else
        (define accessor-id (field-desc-accessor-id fld))
        (syntax-parse tail
+         [(_:::=-expr #:cas from-seq ... #:to . tail)
+          (with-syntax ([pos (get-pos)])
+            (success #`(let ([obj #,(discard-static-infos form1)])
+                         (#,(relocate field-id accessor-id) obj) ; for predicate
+                         (compare-and-set-field! obj pos (rhombus-expression (group from-seq ...)) (rhombus-expression (group . tail))))
+                     #'()))]
+         [(_:::=-expr (~and from #:cas) . tail)
+          (raise-syntax-error #f
+                              "expected matching `~to` for compare-and-set assignment"
+                              #'from)]
          [assign::assign-op-seq
           #:when (syntax-e (field-desc-mutator-id fld))
           (define-values (assign-expr tail) (build-assign
@@ -654,10 +666,20 @@
                    (for/or ([a-field (in-list (class-desc-all-fields desc))]
                             #:when (protect? a-field))
                      (define fd (protect-v a-field))
-                     (and (eq? (car fd) (syntax-e field-id))
+                     (and (eq? (field-desc-name fd) (syntax-e field-id))
                           (allow-protected?)
                           fd)))))
-     => (lambda (fld) (do-field fld))]
+     => (lambda (fld) (do-field fld (lambda ()
+                                      (for/or ([a-field (in-list (or (class-desc-all-fields desc)
+                                                                     (class-desc-fields desc)))]
+                                               [i (in-naturals)])
+                                        (define name
+                                          (cond
+                                            [(protect? a-field) (field-desc-name (protect-v a-field))]
+                                            [(symbol? a-field) a-field]
+                                            [else (car a-field)]))
+                                        (and (eq? name (syntax-e field-id))
+                                             i)))))]
     [(hash-ref (objects-desc-method-map desc) (syntax-e field-id) #f)
      => (lambda (pos)
           (define shape (vector-ref (objects-desc-method-shapes desc) pos))
@@ -689,7 +711,7 @@
                                          (not non-final?)
                                          (make-interface-check desc field-id)))]))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
-     => (lambda (fld) (do-field fld))]
+     => (lambda (fld) (do-field fld (lambda () (field-desc-pos fld))))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
      => (lambda (id/intf/property)
           (define property? (pair? (syntax-e id/intf/property)))
@@ -718,7 +740,7 @@
              (define-values (ref-id pos result-id) (unpack-intf-ref id/intf/fld))
              (do-method pos #:result-id result-id #:nonfinal? #t #:ref-id ref-id)]
             [else
-             (do-field id/intf/fld)]))]
+             (do-field id/intf/fld (lambda () (field-desc-pos id/intf/fld)))]))]
     [else (failure)]))
 
 (define-for-syntax no-constructor-transformer
@@ -755,3 +777,10 @@
          [else (error "unknown super")]))
      (cons name-instance (if (identifier? dot-providers) (list dot-providers) dot-providers))]
     [else name-instance]))
+
+(define (compare-and-set-field! obj pos old new)
+  (when (impersonator? obj)
+    (raise-arguments-error '|compare-and-set assignment|
+                           "cannot atomically compare-and-set field of a wrapped object"
+                           "object" obj))
+  (unsafe-struct*-cas! obj pos old new))

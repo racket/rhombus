@@ -45,7 +45,7 @@ See also @secref("Equatables").
 
  The @rhombus(===) operator reports whether @rhombus(v1) and @rhombus(v2) are the same object.
  Being the @emph{same} is weakly defined, but only @rhombus(==) values
- can possibly be the same object, and mutable values are the same only if
+ can possibly be the same object, and mutable values are the same if
  modifying one has the same effect as modifying the other. Interned
  values like symbols are @rhombus(===) when they are @rhombus(==).
 

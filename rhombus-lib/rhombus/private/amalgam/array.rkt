@@ -69,6 +69,7 @@
   (length
    get
    set
+   compare_and_set
    contains
    append
    copy
@@ -271,6 +272,16 @@
 (define/method (Array.set v i x)
   #:primitive (vector-set!)
   (vector-set! v i x))
+
+(define/method (Array.compare_and_set v i old-x x)
+  #:primitive (vector-cas!)
+  (when (and (impersonator? v)
+             (vector? v))
+    (raise-arguments-error
+     who
+     "cannot atomically compare-and-set element of a wrapped array"
+     "array" v))
+  (vector-cas! v i old-x x))
 
 (define/method (Array.contains v i [eql equal-always?])
   (check-array who v)

@@ -9,7 +9,8 @@
     meta_label:
       rhombus/custodian open
       rhombus/network open
-      rhombus/thread open)
+      rhombus/thread open
+      rhombus/memory)
 
 @(def reduces = elem("→"))
 @(def rspace = elem(~style: style("ghost", PairList[]), "→"))
@@ -1041,3 +1042,29 @@ custodians, references to other custodians, or references to custodian
 boxes for other custodians.
 
 }==|
+
+@// ------------------------------------------------------------------------
+@subsection(~tag: "memory-model"){Memory Model}
+
+@tech(~doc: ref_doc){Parallel threads} can expose the underlying
+machine’s memory model, including a weak memory ordering. For example,
+when a parallel thread writes to multiple slots in a mutable vector,
+it’s possible on some platforms for another parallel thread to observe
+the writes in a different order or not at all, unless the threads are
+explicitly synchronized.
+
+Rhombus ensures that a machine’s memory model is not observed in a way
+that unsafely exposes the implementation of primitive datatypes. For
+example, it is not possible for one thread to see a partially
+constructed primitive value as a result of reading a vector that is
+mutated by another thread.
+
+The @rhombus(Box.compare_and_set) method,
+@rhombus(Array.compare_and_set) method, and @rhombus(.) operator with
+@rhombus(:= ~cas) for object fields all provide a machine-level
+compare-and-set, so they can be used in ways that are specifically
+supported by the a machine’s memory model. The
+@rhombus(memory.order_acquire) and @rhombus(memory.order_release)
+function similarly constrain machine-level stores and loads.
+Synchronization operations such as semaphores semaphores imply suitable
+machine-level acquire and release ordering.
