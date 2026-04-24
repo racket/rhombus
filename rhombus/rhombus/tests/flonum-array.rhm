@@ -1,0 +1,81 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/flonum
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~import rhombus/flonum:
+    Array.make(n, [v])
+    Array.length(arr) ~method
+    Array.get(arr, i) ~method
+    Array.set(arr, i, v) ~method
+    Array.contains(arr, v) ~method
+    Array.copy(arr, [start], [end]) ~method
+    Array.to_list(arr) ~method
+    Array.to_sequence(arr) ~method
+
+check:
+  flonum.Array(1.0) ~is_now flonum.Array(1.0)
+  flonum.Array(1.0) == flonum.Array(1.0) ~is #false
+  flonum.Array(1.0) is_a Array ~is #false
+  flonum.Array(1.0) is_a flonum.Array ~is #true
+  flonum.Array(1.0, 2.0, 3.0, 4.0) is_a flonum.Array ~is #true
+  flonum.Array(1) ~throws values(error.annot_msg(),
+                                 error.annot("Flonum").msg)
+  flonum.Array(1.0, 2, 3.0) ~throws values(error.annot_msg(),
+                                           error.annot("Flonum").msg)
+
+block:
+  def arr = flonum.Array(1.0, 2.0, 3.0, 4.0)
+  check:
+    to_string(arr) ~is "flonum.Array(1.0, 2.0, 3.0, 4.0)"
+    arr[0] ~is 1.0
+    arr[3] ~is 4.0
+    arr[-1] ~throws values(error.annot_msg(),
+                           error.annot("Nat").msg)
+    arr[4] ~throws "index is out of range"
+    arr.length() ~is 4
+    arr[0] < arr[1] ~is #true
+    arr[1] := 20.0 ~is #void
+    arr[1] ~is 20.0
+    (for List (x in arr): x) ~is [1.0, 20.0, 3.0, 4.0]
+    (for List (x in arr.to_sequence()): x) ~is [1.0, 20.0, 3.0, 4.0]
+    arr.to_list() ~is [1.0, 20.0, 3.0, 4.0]
+    PairList[& arr] ~is PairList[1.0, 20.0, 3.0, 4.0]
+    3.0 in arr ~is #true
+    30.0 in arr ~is #false
+    "3" in arr ~is #false
+  def arr2 = arr.copy()
+  check:
+    arr2 ~is_now flonum.Array(1.0, 20.0, 3.0, 4.0)
+
+block:
+  use_dynamic
+  def arr = dynamic(flonum.Array(1.0, 2.0, 3.0, 4.0))
+  check:
+    to_string(arr) ~is "flonum.Array(1.0, 2.0, 3.0, 4.0)"
+    arr[0] ~is 1.0
+    arr[3] ~is 4.0
+    arr[-1] ~throws values(error.annot_msg(),
+                           error.annot("Nat").msg)
+    arr[4] ~throws "index is out of range"
+    arr.length() ~is 4
+    arr[0] < arr[1] ~is #true
+    arr[1] := 20.0 ~is #void
+    arr[1] ~is 20.0
+    (for List (x in arr): x) ~is [1.0, 20.0, 3.0, 4.0]
+    (for List (x in arr.to_sequence()): x) ~is [1.0, 20.0, 3.0, 4.0]
+    arr.to_list() ~is [1.0, 20.0, 3.0, 4.0]
+    PairList[& arr] ~is PairList[1.0, 20.0, 3.0, 4.0]
+    3.0 in arr ~is #true
+    30.0 in arr ~is #false
+    "3" in arr ~is #false
+  def arr2 = arr.copy()
+  check:
+    arr2 ~is_now flonum.Array(1.0, 20.0, 3.0, 4.0)
+
+block:
+  let [v, ...] = [1.0, 2.0, 3.0]
+  check:
+    flonum.Array(v, ...) ~is_now flonum.Array(1.0, 2.0, 3.0)
+    [flonum.Array(v, v), ...] ~is_now [flonum.Array(1.0, 1.0), flonum.Array(2.0, 2.0), flonum.Array(3.0, 3.0)]

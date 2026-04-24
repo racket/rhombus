@@ -141,3 +141,62 @@ unspecialized and flonum-specific operations.
  the mantissa, while bit @rhombus(63) is the sign bit.
 
 }
+
+
+@doc(
+  annot.macro 'flonum.Array'
+){
+
+ Matches any @deftech{flonum array}, which is like a normal
+ @tech{array}, but contains only @tech{flonums}.
+ A flonum array is always mutable, but it does not satisfy
+ @rhombus(Array, ~annot) or @rhombus(MutableArray, ~annot).
+
+ A flonum array potentially provides better performance than a normal
+ array of flonums, because the elements are known to be flonums without a
+ check on access. In particular, flonum calculations that read and write
+ flonum arrays may perform better by reducing allocation compared to
+ normal arrays.
+
+ Like an array, a flonum array is @tech{indexable} using @brackets,
+ assignable via @brackets and @rhombus(:=), supports @tech{membership
+  tests} using the @rhombus(in) operator, and can be used as
+ @tech{sequence}. Two flonum arrays are equal by @rhombus(is_now) as long
+ as they have the same length and their elements are pairwise equal by
+ @rhombus(flonum.(==)).
+
+}
+
+@doc(
+  fun flonum.Array(x :: Fxnum, ...) :: flonum.Array
+  fun flonum.Array.make(len :: Nat, x :: Flonum = 0.0) :: flonum.Array
+){
+
+ Like @rhombus(Array) and @rhombus(Array.make), but creates a
+ @tech{flonum array}.
+
+}
+
+@doc(
+  method (arr :: flonum.Array).length() :: Int
+  method (arr :: flonum.Array).get(n :: Nat) :: Flonum
+  method (arr :: flonum.Array).set(n :: Nat, x :: Flonum) :: Void
+  method (arr :: flonum.Array).contains(v :: Any) :: Boolean
+  method (arr :: flonum.Array).copy(
+    start :: Nat = 0,
+    end :: Nat = arr.length()
+  ) :: flonum.Array
+  method (arr :: flonum.Array).to_list() :: List.of(Flonum)
+  method (arr :: flonum.Array).to_sequence()
+    :: Sequence.assume_of(Flonum)
+){
+
+ Like @rhombus(Array.length), @rhombus(Array.get), @rhombus(Array.set),
+ @rhombus(Array.contains), @rhombus(Array.copy), @rhombus(Array.to_list),
+ and @rhombus(Array.to_sequence), but for @tech{flonum arrays}.
+
+ The @rhombus(flonum.Array.contains) method accepts any argument value
+ to find, but it will only succeed for flonums. The comparsion operation
+ is always @rhombus(flonum.(==)).
+
+}

@@ -8,6 +8,8 @@
                      "class-method-result.rkt")
          racket/treelist
          racket/mutable-treelist
+         racket/flonum
+         racket/fixnum
          "vector-member.rkt"
          "provide.rkt"
          "expression.rkt"
@@ -50,6 +52,8 @@
       (vector? v)
       (mutable-treelist? v)
       (range? v)
+      (flvector? v)
+      (fxvector? v)
       (MembershipTestable? v)))
 
 (define-class-desc-syntax MembershipTestable
@@ -173,6 +177,14 @@
      (mutable-treelist-member? v1 v2 equal-always?)]
     [(range? v1)
      (range-contains? v1 v2)]
+    [(flvector? v1)
+     (and (flonum? v2)
+          (for/or ([fl (in-flvector v1)])
+            (fl= fl v2)))]
+    [(fxvector? v1)
+     (and (fixnum? v2)
+          (for/or ([fx (in-fxvector v1)])
+            (fx= fx v2)))]
     [else
      (define in1 (contains-ref v1 #f))
      (unless in1

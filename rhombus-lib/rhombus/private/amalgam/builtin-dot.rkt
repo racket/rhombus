@@ -2,6 +2,8 @@
 (require racket/mutability
          racket/treelist
          racket/mutable-treelist
+         racket/flonum
+         racket/fixnum
          (only-in racket/private/for
                   stream?)
          "pipe-port.rkt"
@@ -24,7 +26,9 @@
          (submod "srcloc-object.rkt" for-builtin)
          (submod "port.rkt" for-builtin)
          (submod "exn-object.rkt" for-builtin)
-         (submod "stream.rkt" for-builtin))
+         (submod "stream.rkt" for-builtin)
+         (submod "flonum-array.rkt" for-builtin)
+         (submod "fixnum-array.rkt" for-builtin))
 
 (define (merge ht ht2)
   (if ht
@@ -73,6 +77,8 @@
     [(box? v) box-method-table]
     [(mutable-treelist? v) mutable-treelist-method-table]
     [(stream? v) stream-method-table]
+    [(flvector? v) flvector-method-table]
+    [(fxvector? v) fxvector-method-table]
     [(weak-box? v) weak-box-method-table]
     [(ephemeron? v) ephemeron-method-table]
     [else #f]))

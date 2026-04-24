@@ -1,0 +1,81 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/fixnum
+
+block:
+  import "static_arity.rhm"
+  static_arity.check ~import rhombus/fixnum:
+    Array.make(n, [v])
+    Array.length(arr) ~method
+    Array.get(arr, i) ~method
+    Array.set(arr, i, v) ~method
+    Array.contains(arr, v) ~method
+    Array.copy(arr, [start], [end]) ~method
+    Array.to_list(arr) ~method
+    Array.to_sequence(arr) ~method
+
+check:
+  fixnum.Array(1) ~is_now fixnum.Array(1)
+  fixnum.Array(1) == fixnum.Array(1) ~is #false
+  fixnum.Array(1) is_a Array ~is #false
+  fixnum.Array(1) is_a fixnum.Array ~is #true
+  fixnum.Array(1, 2, 3, 4) is_a fixnum.Array ~is #true
+  fixnum.Array(1.0) ~throws values(error.annot_msg(),
+                                   error.annot("Fixnum").msg)
+  fixnum.Array(1, 2.0, 3) ~throws values(error.annot_msg(),
+                                         error.annot("Fixnum").msg)
+
+block:
+  def arr = fixnum.Array(1, 2, 3, 4)
+  check:
+    to_string(arr) ~is "fixnum.Array(1, 2, 3, 4)"
+    arr[0] ~is 1
+    arr[3] ~is 4
+    arr[-1] ~throws values(error.annot_msg(),
+                           error.annot("Nat").msg)
+    arr[4] ~throws "index is out of range"
+    arr.length() ~is 4
+    arr[0] < arr[1] ~is #true
+    arr[1] := 20 ~is #void
+    arr[1] ~is 20
+    (for List (x in arr): x) ~is [1, 20, 3, 4]
+    (for List (x in arr.to_sequence()): x) ~is [1, 20, 3, 4]
+    arr.to_list() ~is [1, 20, 3, 4]
+    PairList[& arr] ~is PairList[1, 20, 3, 4]
+    3 in arr ~is #true
+    30 in arr ~is #false
+    "3" in arr ~is #false
+  def arr2 = arr.copy()
+  check:
+    arr2 ~is_now fixnum.Array(1, 20, 3, 4)
+
+block:
+  use_dynamic
+  def arr = dynamic(fixnum.Array(1, 2, 3, 4))
+  check:
+    to_string(arr) ~is "fixnum.Array(1, 2, 3, 4)"
+    arr[0] ~is 1
+    arr[3] ~is 4
+    arr[-1] ~throws values(error.annot_msg(),
+                           error.annot("Nat").msg)
+    arr[4] ~throws "index is out of range"
+    arr.length() ~is 4
+    arr[0] < arr[1] ~is #true
+    arr[1] := 20 ~is #void
+    arr[1] ~is 20
+    (for List (x in arr): x) ~is [1, 20, 3, 4]
+    (for List (x in arr.to_sequence()): x) ~is [1, 20, 3, 4]
+    arr.to_list() ~is [1, 20, 3, 4]
+    PairList[& arr] ~is PairList[1, 20, 3, 4]
+    3 in arr ~is #true
+    30 in arr ~is #false
+    "3" in arr ~is #false
+  def arr2 = arr.copy()
+  check:
+    arr2 ~is_now fixnum.Array(1, 20, 3, 4)
+
+block:
+  let [v, ...] = [1, 2, 3]
+  check:
+    fixnum.Array(v, ...) ~is_now fixnum.Array(1, 2, 3)
+    [fixnum.Array(v, v), ...] ~is_now [fixnum.Array(1, 1), fixnum.Array(2, 2), fixnum.Array(3, 3)]

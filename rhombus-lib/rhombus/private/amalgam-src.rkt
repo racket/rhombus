@@ -131,3 +131,9 @@
 
 (module+ unwrap
   (bounce (submod "amalgam/syntax-object.rkt" for-unwrap)))
+
+(module+ fixnum
+  (bounce "amalgam/fixnum-array.rkt"))
+
+(module+ flonum
+  (bounce "amalgam/flonum-array.rkt"))

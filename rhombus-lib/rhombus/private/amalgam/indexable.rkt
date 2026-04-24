@@ -9,6 +9,8 @@
          racket/mutability
          racket/treelist
          racket/mutable-treelist
+         racket/fixnum
+         racket/flonum
          (only-in racket/private/for
                   stream?)
          "provide.rkt"
@@ -67,6 +69,8 @@
       (mutable-treelist? v)
       (map-maybe? v)
       (stream? v)
+      (flvector? v)
+      (fxvector? v)
       (Indexable? v)))
 
 (define-class-desc-syntax Indexable
@@ -105,6 +109,8 @@
       (mutable-hash? v)
       (mutable-bytes? v)
       (mutable-treelist? v)
+      (flvector? v)
+      (fxvector? v)
       (MutableIndexable? v)))
 
 (define-class-desc-syntax MutableIndexable
@@ -246,6 +252,8 @@
     [(bytes? indexable) (bytes-ref indexable index)]
     [(mutable-treelist? indexable) (mutable-treelist-ref indexable index)]
     [(stream? indexable) (Stream.get indexable index)]
+    [(flvector? indexable) (flvector-ref indexable index)]
+    [(fxvector? indexable) (fxvector-ref indexable index)]
     [else
      (define ref (indexable-ref indexable #f))
      (unless ref
@@ -258,6 +266,8 @@
     [(mutable-hash? indexable) (hash-set! indexable index val)]
     [(mutable-bytes? indexable) (bytes-set! indexable index val)]
     [(mutable-treelist? indexable) (mutable-treelist-set! indexable index val)]
+    [(flvector? indexable) (flvector-set! indexable index val)]
+    [(fxvector? indexable) (fxvector-set! indexable index val)]
     [else
      (define set (setable-ref indexable #f))
      (unless set

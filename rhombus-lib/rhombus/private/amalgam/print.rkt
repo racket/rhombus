@@ -6,6 +6,8 @@
          racket/mutability
          racket/treelist
          racket/mutable-treelist
+         racket/flonum
+         racket/fixnum
          (only-in racket/private/for
                   stream?
                   stream-empty?)
@@ -479,6 +481,18 @@
      (pretty-shrubbery qs
                        #:armor? (not pretty?)
                        #:prefer-multiline? pretty?)]
+    [(flvector? v)
+     (pretty-listlike
+      (pretty-text "flonum.Array(")
+      (for/list ([e (in-flvector v)])
+        (print e))
+      (pretty-text ")"))]
+    [(fxvector? v)
+     (pretty-listlike
+      (pretty-text "fixnum.Array(")
+      (for/list ([e (in-fxvector v)])
+        (print e))
+      (pretty-text ")"))]
     [(weak-box? v)
      (pretty-listlike
       (pretty-text "WeakBox(")

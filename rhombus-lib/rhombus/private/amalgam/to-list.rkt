@@ -1,6 +1,8 @@
 #lang racket/base
 (require racket/treelist
          racket/mutable-treelist
+         racket/flonum
+         racket/fixnum
          "range-struct.rkt"
          (submod "range-struct.rkt" descending)
          "annotation-failure.rkt")
@@ -39,6 +41,8 @@
       (mutable-treelist? v)
       (list-range? v)
       (descending-list-range? v)
+      (flvector? v)
+      (fxvector? v)
       (Listable? v)))
 
 (define (to-list who v)
@@ -49,6 +53,8 @@
     [(mutable-treelist? v) (mutable-treelist->list v)]
     [(list-range? v) (list-range->list v)]
     [(descending-list-range? v) (descending-list-range->list v)]
+    [(flvector? v) (for/list ([fl (in-flvector v)]) fl)]
+    [(fxvector? v) (for/list ([fx (in-fxvector v)]) fx)]
     [(general-to-treelist who v) => treelist->list]
     [else #f]))
 
@@ -60,6 +66,8 @@
     [(mutable-treelist? v) (mutable-treelist-snapshot v)]
     [(list-range? v) (list-range->treelist v)]
     [(descending-list-range? v) (descending-list-range->treelist v)]
+    [(flvector? v) (for/treelist ([fl (in-flvector v)]) fl)]
+    [(fxvector? v) (for/treelist ([fx (in-fxvector v)]) fx)]
     [else (general-to-treelist who v)]))
 
 (define (general-to-treelist who v)

@@ -2,6 +2,7 @@
 import:
   lib("racket/fixnum.rkt") as rkt
   "private/unsafeable.rhm"
+  "private/fixnum.rkt" as rhm_fx
 
 export:
   + - * div mod rem
@@ -13,6 +14,8 @@ export:
   to_flonum
   bits
   wraparound
+  rename:
+    rhm_fx.#{fixnum.Array} as Array
 
 // For error reporting, the Racket-level functions are renamed by
 // Rhombus's built-in rewrite table

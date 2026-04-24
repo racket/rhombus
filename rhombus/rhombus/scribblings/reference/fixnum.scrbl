@@ -166,3 +166,60 @@ same according to @rhombus(===).
  Conversions between @tech{fixnum} and @tech{flonum} values.
 
 }
+
+
+@doc(
+  annot.macro 'fixnum.Array'
+){
+
+ Matches any @deftech{fixnum array}, which is like a normal
+ @tech{array}, but contains only @tech{fixnums}.
+ A fixnum array is always mutable, but it does not satisfy
+ @rhombus(Array, ~annot) or @rhombus(MutableArray, ~annot).
+
+ A fixnum array potentially provides better performance than a normal
+ array of fixnums, because the elements are known to be fixnums without a
+ check on access.
+
+ Like an array, a fixnum array is @tech{indexable} using @brackets,
+ assignable via @brackets and @rhombus(:=), supports @tech{membership
+  tests} using the @rhombus(in) operator, and can be used as
+ @tech{sequence}. Two fixnum arrays are equal by @rhombus(is_now) as long
+ as they have the same length and their elements are pairwise equal by
+ @rhombus(fixnum.(==)).
+
+}
+
+@doc(
+  fun fixnum.Array(x :: Fxnum, ...) :: fixnum.Array
+  fun fixnum.Array.make(len :: Nat, x :: Fixnum = 0) :: fixnum.Array
+){
+
+ Like @rhombus(Array) and @rhombus(Array.make), but creates a
+ @tech{fixnum array}.
+
+}
+
+@doc(
+  method (arr :: fixnum.Array).length() :: Int
+  method (arr :: fixnum.Array).get(n :: Nat) :: Fixnum
+  method (arr :: fixnum.Array).set(n :: Nat, x :: Fixnum) :: Void
+  method (arr :: fixnum.Array).contains(v :: Any) :: Boolean
+  method (arr :: fixnum.Array).copy(
+    start :: Nat = 0,
+    end :: Nat = arr.length()
+  ) :: fixnum.Array
+  method (arr :: fixnum.Array).to_list() :: List.of(Fixnum)
+  method (arr :: fixnum.Array).to_sequence()
+    :: Sequence.assume_of(Fixnum)
+){
+
+ Like @rhombus(Array.length), @rhombus(Array.get), @rhombus(Array.set),
+ @rhombus(Array.contains), @rhombus(Array.copy), @rhombus(Array.to_list),
+ and @rhombus(Array.to_sequence), but for @tech{fixnum arrays}.
+
+ The @rhombus(fixnum.Array.contains) method accepts any argument value
+ to find, but it will only succeed for fixnums. The comparsion operation
+ is always @rhombus(fixnum.(==)).
+
+}

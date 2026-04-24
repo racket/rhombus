@@ -3,6 +3,7 @@ import:
   lib("racket/flonum.rkt") as rkt
   "private/flbit-field.rkt" as bit
   "private/unsafeable.rhm"
+  "private/flonum.rkt" as rhm_fl
 
 export:
   + - * / **
@@ -27,6 +28,8 @@ export:
   bit_field
   from_int
   to_int
+  rename:
+    rhm_fl.#{flonum.Array} as Array
 
 // For error reporting, the Racket-level functions are renamed by
 // Rhombus's built-in rewrite table
