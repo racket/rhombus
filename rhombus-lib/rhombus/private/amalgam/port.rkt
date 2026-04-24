@@ -32,7 +32,8 @@
          (submod "list.rkt" for-listable)
          (submod "listable.rkt" for-static-info)
          (submod "sequenceable.rkt" for-static-info)
-         "printer-property.rkt")
+         "printer-property.rkt"
+         "path-string.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -336,6 +337,7 @@
   #:static-infos ((#%call-result #,(static-infos-and
                                     (get-input-port-static-infos)
                                     (get-file-stream-port-static-infos))))
+  (check-path-string who path)
   (open-input-file path #:mode mode))
 
 (define/arity Port.Input.open_string
@@ -373,7 +375,7 @@
                                     (get-file-stream-port-static-infos))))
   (define exists (->ExistsMode exists-in))
   (unless exists
-    (if (path-string? path)
+    (if (immutable-path-string? path)
         (raise-annotation-failure who exists-in "Port.Output.ExistsMode")
         (raise-annotation-failure who path "PathString")))
   (open-output-file path
@@ -407,7 +409,7 @@
                                                 (get-file-stream-port-static-infos)))))))
   (define exists (->ExistsMode exists-in))
   (unless exists
-    (if (path-string? path)
+    (if (immutable-path-string? path)
         (raise-annotation-failure who exists-in "Port.Output.ExistsMode")
         (raise-annotation-failure who path "PathString")))
   (open-input-output-file path

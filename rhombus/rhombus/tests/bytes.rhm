@@ -378,3 +378,10 @@ block:
   check #"a"[0] compares_unequal #"b"[0] ~is #true
   check #"a"[0] >= #"b"[0] ~is #false
   check #"a"[0] > #"b"[0] ~is #false
+
+
+check:
+  #"a" is_a BytesNoNull ~is #true
+  #"" is_a BytesNoNull ~is #true
+  #"a\0b" is_a BytesNoNull ~is #false
+  #"a".copy() is_a BytesNoNull ~is #true

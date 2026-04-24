@@ -52,6 +52,7 @@
          (for-space rhombus/annot
                     ReadableString
                     MutableString
+                    StringNoNull
                     StringCI
                     ReadableStringCI
                     StringLocale
@@ -214,6 +215,14 @@
   (identifier-annotation immutable-string? #,(get-string-ci-static-infos) #:static-only))
 (define-annotation-syntax ReadableStringCI
   (identifier-annotation string? #,(get-readable-string-ci-static-infos) #:static-only))
+
+(define (string/no-null? s)
+  (and (immutable-string? s)
+       (for/and ([c (in-string s)])
+         (not (eqv? c #\nul)))))
+
+(define-annotation-syntax StringNoNull
+  (identifier-annotation string/no-null? #,(get-string-static-infos)))
 
 (define-for-syntax (convert-string-locale-compare-static-info static-info)
   (syntax-parse static-info

@@ -27,7 +27,8 @@
                      Bytes)
          (for-space rhombus/annot
                     MutableBytes
-                    ImmutableBytes))
+                    ImmutableBytes
+                    BytesNoNull))
 
 (module+ for-builtin
   (provide bytes-method-table))
@@ -80,6 +81,14 @@
 (void (set-primitive-contract! 'mutable-bytes? "MutableBytes"))
 (define-annotation-syntax MutableBytes (identifier-annotation mutable-bytes? #,(get-bytes-static-infos)))
 (define-annotation-syntax ImmutableBytes (identifier-annotation immutable-bytes? #,(get-bytes-static-infos)))
+
+(define (bytes/no-null? s)
+  (and (bytes? s)
+       (for/and ([c (in-bytes s)])
+         (not (eqv? c 0)))))
+
+(define-annotation-syntax BytesNoNull
+  (identifier-annotation bytes/no-null? #,(get-bytes-static-infos)))
 
 (define (check-bytes who b)
   (unless (bytes? b)

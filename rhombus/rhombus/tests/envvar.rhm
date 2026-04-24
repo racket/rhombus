@@ -1,0 +1,48 @@
+#lang rhombus/static
+import:
+  rhombus/envvar open
+  rhombus/subprocess
+
+check:
+  "PATH" is_a StringEnvVarName ~is #true
+  "PATH=" is_a StringEnvVarName ~is #false
+  "PATH".copy() is_a StringEnvVarName ~is #false
+  #"PATH" is_a BytesEnvVarName ~is #true
+  #"PATH=" is_a BytesEnvVarName ~is #false
+  #"PATH".copy() is_a BytesEnvVarName ~is #true
+
+check:
+  getenv("PATH") ~is_a maybe(String)
+  getenv("RHOMBUS_GETENV_CHECK") ~is #false
+  putenv("RHOMBUS_GETENV_CHECK", "on") ~is #true
+  getenv("RHOMBUS_GETENV_CHECK") ~is "on"
+  EnvVars.current().get(#"RHOMBUS_GETENV_CHECK") ~is #"on"
+  (if system.type() == #'windows
+   | println("on")
+   | subprocess.shell("echo $RHOMBUS_GETENV_CHECK")) ~prints "on\n"
+  EnvVars.current().set(#"RHOMBUS_GETENV_CHECK", #false) ~is #void
+  getenv("RHOMBUS_GETENV_CHECK") ~is #false
+
+check:
+  EnvVars.current().set(#"RHOMBUS_GETENV_CHECK", #"on") ~is #void
+  EnvVars.current().get(#"RHOMBUS_GETENV_CHECK") ~is #"on"
+
+def e = EnvVars.current().copy()
+
+check:
+  e.get(#"RHOMBUS_GETENV_CHECK") ~is #"on"
+  EnvVars.current().set(#"RHOMBUS_GETENV_CHECK", #false) ~is #void
+  EnvVars.current().get(#"RHOMBUS_GETENV_CHECK") ~is #false
+  e.get(#"RHOMBUS_GETENV_CHECK") ~is #"on"
+  e.names() ~is_a List.of(Bytes)
+  Set(& e.names()) ~is Set(& EnvVars.current().names()) ++ { #"RHOMBUS_GETENV_CHECK" }
+
+def e2 = EnvVars({ #"A": #"apple", #"B": #"banana" })
+check:
+  e2.get(#"A") ~is #"apple"
+  e2.get(#"B") ~is #"banana"
+  e2.get(#"C") ~is #false
+  e2.get(#"PATH") ~is #false
+
+check:
+  EnvVars.from_handle(EnvVars.current().handle) === EnvVars.current() ~is #true

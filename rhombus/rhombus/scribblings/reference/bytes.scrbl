@@ -27,11 +27,16 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
     ~method_fallback: Bytes
   annot.macro 'ImmutableBytes':
     ~method_fallback: Bytes
+  annot.macro 'BytesNoNull':
+    ~method_fallback: Bytes
 ){
 
  Matches byte strings, where @rhombus(MutableBytes, ~annot) matches only
  mutable byte strings, and and @rhombus(ImmutableBytes, ~annot) matches
  only immutable byte strings.
+
+ The @rhombus(BytesNoNull, ~annot) annotation matches byte strings that do
+ not contain a @rhombus(0) byte.
 
  Static information associated by @rhombus(Bytes, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.

@@ -364,3 +364,10 @@ check:
     error.annot("Path.like(Path(\"/\"))").msg,
     error.val("oops").msg,
   )
+
+check:
+  "a" is_a PathString ~is #true
+  "" is_a PathString ~is #false
+  "a\0b" is_a PathString ~is #false
+  "a".copy() is_a PathString ~is #false
+  #"a" is_a PathString ~is #false

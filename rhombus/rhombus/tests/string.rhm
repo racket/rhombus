@@ -702,3 +702,9 @@ block:
   check:
     ([1, 2, 3] :~ matching(_ :: ReadableString.to_string)).first ~is 1
     (PairList[1, 2, 3] :~ matching(_ :: ReadableString.to_string)).first ~is 1
+
+check:
+  "a" is_a StringNoNull ~is #true
+  "" is_a StringNoNull ~is #true
+  "a\0b" is_a StringNoNull ~is #false
+  "a".copy() is_a StringNoNull ~is #false

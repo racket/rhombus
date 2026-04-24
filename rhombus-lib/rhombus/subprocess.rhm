@@ -127,13 +127,13 @@ fun run(exe :: PathString,
         ~out: out :: Port.Output || Subprocess.Pipe = stdout,
         ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
         ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
-        arg :: PathString || ReadableString, ...) :~ Subprocess:
+        arg :: Path || StringNoNull || BytesNoNull, ...) :~ Subprocess:
   let exe: if Path.parent(exe) == #'relative
            | find_executable_path(exe) || exe
            | exe
   do_run(to_string(exe), exe, arg, ..., ~in: in, ~out: out, ~err: err, ~group: group)
 
-fun run_shell(command :: String,
+fun run_shell(command :: StringNoNull,
               ~in: in :: Port.Input || Subprocess.Pipe = stdin,
               ~out: out :: Port.Output || Subprocess.Pipe = stdout,
               ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
@@ -141,18 +141,17 @@ fun run_shell(command :: String,
   let args = rkt_shell.#{shell-path/args}(#'#{subprocess.shell}, command)
   do_run(command, & args, ~in: in, ~out: out, ~err: err, ~group: group)
 
-fun shell(command :: String):
+fun shell(command :: StringNoNull):
   let args = rkt_shell.#{shell-path/args}(#'#{subprocess.shell}, command)
   let sp = do_run(command, & args)
   sp.wait_ok()
 
 fun run_command(exe :: PathString,
-                command :: String,
+                command :: StringNoNull,
                 ~in: in :: Port.Input || Subprocess.Pipe = stdin,
                 ~out: out :: Port.Output || Subprocess.Pipe = stdout,
                 ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
-                ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group(),
-                arg :: PathString || ReadableString, ...) :~ Subprocess:
+                ~group: group :: Subprocess.Group || Subprocess.NewGroup = current_group()) :~ Subprocess:
   unless system.type() == #'windows
   | error(~who: #'run_command, "supported only on Windows")
   do_run(command, exe, #'exact, command, ~in: in, ~out: out, ~err: err, ~group: group)

@@ -9,6 +9,7 @@
 @include_section("path.scrbl")
 @include_section("cross_path.scrbl")
 @include_section("filesystem.scrbl")
+@include_section("envvar.scrbl")
 @include_section("subprocess.scrbl")
 @include_section("network.scrbl")
 @include_section("system.scrbl")

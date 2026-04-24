@@ -23,7 +23,8 @@
          (submod "list.rkt" for-listable)
          (submod "string.rkt" static-infos)
          (submod "symbol.rkt" for-static-info)
-         "path-order.rkt")
+         "path-order.rkt"
+         "path-string.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -223,7 +224,7 @@
   (cond
     [(path-for-some-system? v)
      (path-convention-type v)]
-    [(or (path-string? v)
+    [(or (immutable-path-string? v)
          (eq? v 'up)
          (eq? v 'same))
      (system-path-convention-type)]
@@ -258,11 +259,13 @@
 
 (define/method (Path.name p)
   #:local-primitive (split-path)
+  (check-cross-path-string who p)
   (define-values (parent name dir?) (split-path p))
   name)
 
 (define/method (Path.parent p)
   #:local-primitive (split-path)
+  (check-cross-path-string who p)
   (define-values (parent name dir?) (split-path p))
   parent)
 
@@ -286,58 +289,75 @@
 (define/method (Path.add p . ss)
   #:primitive (build-path)
   #:static-infos ((#%call-result #,(get-path-static-infos)))
+  (define (check v)
+    (unless (or (path-for-some-system? v)
+                (immutable-path-string? v)
+                (eq? v 'up)
+                (eq? v 'same))
+      (raise-annotation-failure who v "PathString || CrossPath || Path.Dot")))
+  (check p)
+  (for ([s (in-list ss)]) (check s))
   (apply build-path p ss))
 
 (define/method (Path.split p)
   #:primitive (explode-path)
   #:static-infos ((#%call-result ((#%index-result #,(get-path-static-infos))
                                   #,@(get-treelist-static-infos))))
+  (check-cross-path-string who p)
   (to-treelist #f (explode-path p)))
 
 (define/method (Path.directory_only p)
   #:primitive (path-only)
+  (check-cross-path-string who p)
   (path-only p))
 
 (define/method (Path.suffix p)
   #:primitive (path-get-extension)
   #:static-infos ((#%call-result ((#%maybe #,(get-path-static-infos)))))
+  (check-cross-path-string who p)
   (define maybe-bstr (path-get-extension p))
   (and maybe-bstr (bytes->immutable-bytes maybe-bstr)))
 
 (define/method (Path.add_suffix p sfx #:sep [sep "_"])
   #:primitive (path-add-extension)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (path-add-extension p sfx sep))
 
 (define/method (Path.replace_suffix p sfx)
   #:primitive (path-replace-extension)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (path-replace-extension p sfx))
 
 (define/method (Path.to_absolute_path p #:relative_to [base-path (current-directory)])
   #:primitive (path->complete-path)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (path->complete-path p base-path))
 
 (define/method (Path.to_directory_path p)
   #:primitive (path->directory-path)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (path->directory-path p))
 
 (define/method (Path.cleanse p)
   #:primitive (cleanse-path)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (cleanse-path p))
 
 (define/method (Path.normal_case p)
   #:primitive (normal-case-path)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
+  (check-cross-path-string who p)
   (normal-case-path p))
 
 (define/method (Path.simplify p)
   #:primitive (simplify)
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
-  (unless (path-string? p) (raise-annotation-failure who p "PathString"))
+  (check-path-string who p)
   (simplify-path p #f))
 
 (define/method (Path.as_relative_to p base-p
@@ -345,15 +365,15 @@
                                     #:more_than_same [more-than-same? #t]
                                     #:normal_case [normalize-case? #t])
   #:static-infos ((#%call-result #,(get-path-for-some-system-static-infos)))
-  (unless (or (path-string? p) (path-for-some-system? p)) (raise-annotation-failure who p "PathString || CrossPath"))
-  (unless (or (path-string? base-p) (path-for-some-system? p)) (raise-annotation-failure who base-p "PathString || CrossPath"))
+  (check-cross-path-string who p)
+  (check-cross-path-string who base-p)
   (find-relative-path base-p
                       (if (string? p) (string->path p) p)
                       #:more-than-root? more-than-root?
                       #:more-than-same? more-than-same?
                       #:normalize-case? normalize-case?))
 
-(define-annotation-syntax PathString (identifier-annotation path-string? ()))
+(define-annotation-syntax PathString (identifier-annotation immutable-path-string? ()))
 
 (define (path-for-some-system-is-absolute? v)
   (and (path-for-some-system? v)

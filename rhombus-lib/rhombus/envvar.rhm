@@ -1,0 +1,83 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  StringEnvVarName
+  BytesEnvVarName
+  getenv
+  putenv
+  EnvVars
+
+fun is_string_envvar_name(v):
+  v is_a String && rkt.#{string-environment-variable-name?}(v)
+
+annot.macro 'StringEnvVarName':
+  'satisfying(is_string_envvar_name) && assuming(String)'
+annot.macro 'BytesEnvVarName':
+  'satisfying(rkt.#{bytes-environment-variable-name?}) && assuming(Bytes)'
+
+fun getenv(name :: StringEnvVarName) :~ String:
+  let s = rkt.getenv(name)
+  s && to_string(s)
+
+fun putenv(name :: StringEnvVarName, value :: maybe(StringNoNull)):
+  rkt.putenv(name, value)
+
+def cache = WeakMutableMap.by(===){}
+
+class EnvVars(private _handle):
+  property handle: _handle
+  internal _EnvVars
+
+  constructor ({ name :: BytesEnvVarName: val :: BytesNoNull,
+                 ... }):
+    let [[a, ...], ...] = [[name, val], ...]
+    _EnvVars(rkt.#{make-environment-variables}(a, ..., ...))
+
+  fun wrap(handle):
+    cache.maybe[handle] || (block:
+                              def e = _EnvVars(handle)
+                              cache[handle] := e
+                              e)
+
+  method get(name :: BytesEnvVarName) :~ maybe(Bytes):
+    rkt.#{environment-variables-ref}(_handle, name)
+
+  fun throw_error():
+    error("envvar set failed")
+
+  method set(name :: BytesEnvVarName,
+             val :: maybe(BytesNoNull),
+             ~fail: fail :: Function.of_arity(0) = throw_error):
+    if fail === throw_error
+    | rkt.#{environment-variables-set!}(_handle, name, val)
+    | rkt.#{environment-variables-set!}(_handle, name, val, fail)
+
+  method names() :~ List.of(BytesEnvVarName):
+    [& rkt.#{environment-variables-names}(_handle)]
+
+  method copy() :~ EnvVars:
+    wrap(rkt.#{environment-variables-copy}(_handle))
+
+  export:
+    current
+    from_handle
+
+  def current :~ Function.assume_of(Function.all_of(() -> EnvVars, EnvVars -> Void)):
+    rkt.#{make-derived-parameter}(
+      rkt.#{current-environment-variables},
+      fun (v :: EnvVars):
+        ~name: EnvVars.current
+        v.handle,
+      fun (handle):
+        wrap(handle),
+      #'rhombus,
+      #'#{EnvVars.current}
+    )
+
+  fun from_handle(handle) :: EnvVars:
+    ~who: who
+    unless rkt.#{environment-variables?}(handle)
+    | error(~who: who, "not an environment-variables handle")
+    wrap(handle)

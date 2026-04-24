@@ -35,6 +35,8 @@ Strings are @tech{comparable}, which means that generic operations like
   annot.macro 'ReadableString.to_string'
   annot.macro 'MutableString':
     ~method_fallback: String
+  annot.macro 'StringNoNull':
+    ~method_fallback: String
 ){
 
  Matches strings. The @rhombus(ReadableString, ~annot) annotation allows mutable
@@ -44,6 +46,9 @@ Strings are @tech{comparable}, which means that generic operations like
  allows the same strings as @rhombus(ReadableString, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string, like
  @rhombus(String.snapshot).
+
+ The @rhombus(StringNoNull, ~annot) annotation matches strings that do
+ not contain @rhombus(Char"\0") character.
 
  Static information associated by @rhombus(String, ~annot), etc., makes
  an expression acceptable as a sequence to @rhombus(for) in static mode.

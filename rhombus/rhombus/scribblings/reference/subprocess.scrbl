@@ -3,7 +3,8 @@
     "common.rhm" open
     meta_label:
       rhombus/subprocess
-      rhombus/subprocess open)
+      rhombus/subprocess open
+      rhombus/envvar)
 
 @title(~tag: "subprocess"){Subprocesses}
 
@@ -30,7 +31,7 @@
     ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
               = (if current_group_new() | #'new | #'same),
-    arg :: PathString || ReadableString,
+    arg :: PathString || StringNoNull || BytesNoNull,
     ...
   ) :: Subprocess
 ){
@@ -66,19 +67,22 @@
  be closed explicitly, perhaps using @rhombus(Subprocess.close). See also
  @rhombus(Closeable.let, ~defn).
 
+ The environment variables for a new subprocess are determined by
+ the @rhombus(envvar.EnvVars.current) parameter.
+
 }
 
 
 @doc(
   fun subprocess.run_shell(
-    command :: String,
+    command :: StringNoNull,
     ~in: in :: Port.Input || Subprocess.Pipe = stdin,
     ~out: out :: Port.Output || Subprocess.Pipe = stdout,
     ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
     ~group: group :: Subprocess.Group || Subprocess.NewGroup
               = (if current_group_new() | #'new | #'same)
   ) :: Subprocess
-  fun shell(command :: String) :: Boolean
+  fun shell(command :: StringNoNull) :: Boolean
 ){
 
  The @rhombus(run_shell) function is like @rhombus(run), but it runs a
@@ -90,6 +94,27 @@
 
  The @rhombus(shell) function is a shorthand to combine @rhombus(run_shell)
  and @rhombus(Subprocess.wait_ok) as @rhombus(run_shell(command).wait_ok()).
+
+}
+
+@doc(
+  fun subprocess.run_command(
+    program :: PathString,
+    command :: StringNoNull,
+    ~in: in :: Port.Input || Subprocess.Pipe = stdin,
+    ~out: out :: Port.Output || Subprocess.Pipe = stdout,
+    ~err: err :: Port.Output || Subprocess.ErrorPipe = stderr,
+    ~group: group :: Subprocess.Group || Subprocess.NewGroup
+              = (if current_group_new() | #'new | #'same)
+  ) :: Subprocess
+){
+
+ Like @rhombus(subprocess.run), but only for Windows, where the
+ @rhombus(command) string is provided to @rhombus(program) as its
+ complete command line. This function reflects the fact that Windows
+ programs natively receive a single command-line string, although most
+ Windows programs parse a command line consistent with one that
+ @rhombus(subprocess.run) constructs from individual arguments.
 
 }
 
