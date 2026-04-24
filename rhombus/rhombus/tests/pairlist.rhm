@@ -33,6 +33,9 @@ block:
     PairList.to_sequence(lst) ~method
 
 check:
+  to_string(PairList) ~is "#<function:PairList>"
+
+check:
   PairList.length(PairList[1, 2, 3])
   ~is 3
 

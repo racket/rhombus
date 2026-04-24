@@ -64,7 +64,7 @@ by an evaluator, for example.
   fun Evaluator.import(mod :: ModulePath) :: Void
 ){
 
- Imports @rhombus(mod) into the current evaluator, even if the @rhombus(import)
+ Imports @rhombus(mod) as @rhombus(open, ~impo) into the current evaluator, even if the @rhombus(import)
  definition form is not available in the evaluator itself.
 
 }

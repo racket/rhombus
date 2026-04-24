@@ -40,6 +40,9 @@ block:
     List.to_sequence(lst) ~method
 
 check:
+  to_string(List) ~is "#<function:List>"
+
+check:
   List.length([1, 2, 3])
   ~is 3
 

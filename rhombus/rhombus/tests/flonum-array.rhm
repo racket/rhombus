@@ -15,6 +15,9 @@ block:
     Array.to_sequence(arr) ~method
 
 check:
+  to_string(flonum.Array) ~is "#<function:flonum.Array>"
+
+check:
   flonum.Array(1.0) ~is_now flonum.Array(1.0)
   flonum.Array(1.0) == flonum.Array(1.0) ~is #false
   flonum.Array(1.0) is_a Array ~is #false

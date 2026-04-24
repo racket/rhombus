@@ -537,7 +537,7 @@
   (mutable-treelist-reverse! l))
 
 ;; used to define `List` and `PairList` further below:
-(define-for-syntax (make-constructor proc-stx build-form get-static-infos
+(define-for-syntax (make-constructor proc-stx proc-val-stx build-form get-static-infos
                                      #:repetition? [repetition? #f]
                                      #:mutable? [mutable? #f]
                                      #:rep-for-form rep-for-form
@@ -578,8 +578,8 @@
                          #:span-form-name? #t)]
       [(form-id . tail)
        (values (if repetition?
-                   (identifier-repetition-use proc-stx)
-                   (relocate-id #'form-id proc-stx))
+                   (identifier-repetition-use proc-val-stx)
+                   (relocate-id #'form-id proc-val-stx))
                #'tail)])))
 
 (define-for-syntax (make-treelist-rest-selector args-n post-args-n)
@@ -1777,17 +1777,25 @@
      #,(build-*list-form content #'treelist #'empty-treelist #'treelist-append
                          #'ensure-treelist)))
 
+(define treelist-as-List (procedure-rename treelist 'List))
+(define list-as-PairList (procedure-rename list 'PairList))
+(define mutable-treelist-as-MutableList (procedure-rename mutable-treelist 'MutableList))
+
+(define-static-info-syntax treelist-as-List (#%indirect-static-info treelist))
+(define-static-info-syntax list-as-PairList (#%indirect-static-info list))
+(define-static-info-syntax mutable-treelist-as-MutableList (#%indirect-static-info mutable-treelist))
+
 (define-syntax List
   (expression-transformer
-   (make-constructor #'treelist build-treelist-form get-treelist-static-infos
+   (make-constructor #'treelist #'treelist-as-List build-treelist-form get-treelist-static-infos
                      #:rep-for-form #'for/treelist)))
 (define-syntax PairList
   (expression-transformer
-   (make-constructor #'list build-list-form get-list-static-infos
+   (make-constructor #'list #'list-as-PairList build-list-form get-list-static-infos
                      #:rep-for-form #'for/list)))
 (define-syntax MutableList
   (expression-transformer
-   (make-constructor #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos
+   (make-constructor #'mutable-treelist #'mutable-treelist-as-MutableList build-mutable-treelist-form get-mutable-treelist-static-infos
                      #:mutable? #t
                      #:rep-for-form #'for/treelist
                      #:rep-solo-for-form #'for/mutable-treelist)))
@@ -1795,17 +1803,17 @@
 (define-repetition-syntax List
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'treelist build-treelist-form get-treelist-static-infos
+                     #'treelist #'treelist-as-List build-treelist-form get-treelist-static-infos
                      #:rep-for-form #'for/treelist)))
 (define-repetition-syntax PairList
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'list build-list-form get-list-static-infos
+                     #'list #'list-as-PairList build-list-form get-list-static-infos
                      #:rep-for-form #'for/list)))
 (define-repetition-syntax MutableList
   (repetition-transformer
    (make-constructor #:repetition? #t
-                     #'mutable-treelist build-mutable-treelist-form get-mutable-treelist-static-infos
+                     #'mutable-treelist #'mulable-treelist-as-MutableList build-mutable-treelist-form get-mutable-treelist-static-infos
                      #:mutable? #t
                      #:rep-for-form #'for/mutable-treelist)))
 

@@ -34,6 +34,9 @@ block:
     MutableList.to_sequence(lst) ~method
 
 check:
+  to_string(MutableList) ~is "#<function:MutableList>"
+
+check:
   MutableList.length(MutableList[1, 2, 3])
   ~is 3
 

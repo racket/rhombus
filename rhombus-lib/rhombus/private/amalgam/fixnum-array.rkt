@@ -20,7 +20,8 @@
          "class-primitive.rkt"
          "rhombus-primitive.rkt"
          (submod "list.rkt" for-compound-repetition)
-         (submod "arithmetic.rkt" static-infos))
+         (submod "arithmetic.rkt" static-infos)
+         (submod "array.rkt" for-array))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -54,11 +55,11 @@
    to_list
    to_sequence))
 
+(define fxvector-as-fixnum.Array (procedure-rename fxvector 'fixnum.Array))
+(define-static-info-syntax fxvector-as-fixnum.Array (#%indirect-static-info fxvector))
+
 (define-syntax fixnum.Array
-  (expression-repeatable-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id . tail) (values (relocate-id #'form-id #'fxvector) #'tail)]))))
+  (make-array-like-syntax #'fxvector #'fxvector-as-fixnum.Array))
 
 (define-annotation-syntax fixnum.Array
   (identifier-annotation fxvector? #,(get-fxvector-static-infos)))

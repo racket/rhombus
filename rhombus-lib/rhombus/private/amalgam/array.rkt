@@ -12,6 +12,7 @@
          "vector-member.rkt"
          "provide.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
@@ -32,7 +33,8 @@
          "rhombus-primitive.rkt"
          "../version-case.rkt"
          "slice.rkt"
-         (submod "list.rkt" for-compound-repetition))
+         (submod "list.rkt" for-compound-repetition)
+         (submod "implicit.rkt" normal-call))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -46,6 +48,9 @@
 
 (module+ for-builtin
   (provide array-method-table))
+
+(module+ for-array
+  (provide (for-syntax make-array-like-syntax)))
 
 (define-primitive-class Array array vector
   #:lift-declaration
@@ -84,11 +89,23 @@
    to_list
    to_sequence))
 
-(define-syntax Array
-  (expression-repeatable-transformer
-   (lambda (stx)
+(define-for-syntax (make-array-like-syntax vector-id vector-as-Array-id)
+  (expression-and-repetition-transformer
+   (lambda (stx repet?)
+     (define (wrap-id id) (if repet? (identifier-repetition-use id) id))
      (syntax-parse stx
-       [(form-id . tail) (values (relocate-id #'form-id #'vector) #'tail)]))))
+       [(form-id (~and p (tag::parens _ ...)) . tail)
+        #:when (if repet?
+                   (normal-call? #'tag)
+                   (normal-call-repetition? #'tag))
+        (values (wrap-id (relocate-id #'form-id vector-id)) #'(p . tail))]
+       [(form-id . tail) (values (wrap-id (relocate-id #'form-id vector-as-Array-id)) #'tail)]))))
+
+(define vector-as-Array (procedure-rename vector 'Array))
+(define-static-info-syntax vector-as-Array (#%indirect-static-info vector))
+
+(define-syntax Array
+  (make-array-like-syntax #'vector #'vector-as-Array))
 
 (define-syntax (no-of-static-infos data static-infoss)
   #`())

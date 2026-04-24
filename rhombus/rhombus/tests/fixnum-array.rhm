@@ -15,6 +15,9 @@ block:
     Array.to_sequence(arr) ~method
 
 check:
+  to_string(fixnum.Array) ~is "#<function:fixnum.Array>"
+
+check:
   fixnum.Array(1) ~is_now fixnum.Array(1)
   fixnum.Array(1) == fixnum.Array(1) ~is #false
   fixnum.Array(1) is_a Array ~is #false
