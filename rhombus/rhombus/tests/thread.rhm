@@ -1,6 +1,7 @@
 #lang rhombus/static
 import:
   rhombus/thread open
+  rhombus/measure
   "version_guard.rhm"
 
 block:
@@ -15,6 +16,8 @@ block:
   check s.post() ~is #void
   check s ~is_a Evt
   check s.sync() ~is s
+  check s.post() ~is #void 
+  check Evt.from_handle(s.handle).sync() ~is s.handle
 
 block:
   let mutable v = 0
@@ -96,6 +99,69 @@ block:
 block:
   check Evt.always.sync() ~is Evt.always
   check Evt.never.sync(~timeout: 0) ~is #false
+  check Evt.always.wrap(fun (v):
+                          check v ~is Evt.always
+                          "hi")
+    .sync() ~is "hi"
+  check Evt.choice(Evt.always, Evt.never)
+    .sync() ~is Evt.always
+  block:
+    let e = Evt.choice(Evt.always.wrap(fun (_): "one"),
+                       Evt.always.wrap(fun (_): "two"))
+    let s:
+      for Set (i in 0..50):
+        e.sync()
+    // fails with propability 1 in 2 ** 50
+    check s ~is { "one", "two" }
+  check Evt.guard(fun (): Evt.always).sync() ~is Evt.always
+  check Evt.poll_guard(fun (poll):
+                         check poll ~is #true
+                         Evt.never)
+    .sync(~timeout: 0) ~is #false
+  check Evt.poll_guard(fun (poll):
+                         check poll ~is #false
+                         Evt.always)
+    .sync() ~is Evt.always
+
+block:
+  check Evt.always.replace(fun (v):
+                             check v ~is Evt.always
+                             Evt.always.wrap(fun (v): "replaced"))
+    .sync() ~is "replaced"
+  let e2 = Evt.always.replace(fun (v):
+                                check v ~is Evt.always
+                                "replaced immediately")
+  check e2.sync() ~is e2
+  let e3 = Evt.always.replace(fun (v):
+                                check v ~is Evt.always
+                                values("many", "values"))
+  check e3.sync() ~is e3
+  check Evt.always.wrap(fun (v): values("a", "b", "c"))
+    .replace(fun (a, b, c):
+               Evt.always.wrap(fun (v): values(a, c)))
+    .sync() ~is values("a", "c")
+
+block:
+  let ready = Semaphore()
+  let ch = Channel()
+  check ch.sync(~timeout: 0) ~is #false
+  check Evt.nack_guard(fun (nack :~ Evt):
+                         ready.post()
+                         thread: nack.sync(); ch.put("done")
+                         Evt.never)
+    .sync(ready) ~is ready
+  check ch.get() ~is "done"
+  check Evt.nack_guard(fun (nack :~ Evt):
+                         thread: nack.sync(); ch.put("done")
+                         Evt.always.wrap(fun (_): "ok"))
+    .sync(Evt.never) ~is "ok"
+  check ch.sync(~timeout: 0) ~is #false
+
+check:
+  Evt.alarm(system.milliseconds()).sync() ~is_a Evt
+  Evt.alarm(measure.real_milliseconds(), ~monotonic: #true).sync() ~is_a Evt
+  // assuming that 1_000 seconds do no pass
+  Evt.alarm(system.milliseconds() + 1_000_000).sync(Evt.always) ~is Evt.always
 
 block:
   let ch: Channel()

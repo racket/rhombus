@@ -36,7 +36,8 @@ interface Evt:
     | base.#{sync/timeout/enable-break}(timeout, h(this), h(evt), ...)
     | base.#{sync/timeout}(timeout, h(this), h(evt), ...)
 
-  method wrap(wr_fun, ~return: return :: WrapReturn = #'no_break) :~ Evt:
+  method wrap(wr_fun :: Function,
+              ~return: return :: WrapReturn = #'no_break) :~ Evt:
     fun h(e :~ Evt):
       match e
       | e :: __Evt: e.sync_handle
@@ -47,11 +48,37 @@ interface Evt:
       | #'no_break: base.#{wrap-evt}(h(this), wr_fun)
     WrapEvt(hand)
 
+  method replace(replace_fun :: Function) :~ Evt:
+    let self:
+      match this
+      | e :: __Evt: e.sync_handle
+      | ~else: handle
+    def hand = base.#{replace-evt}(self, fun (arg, ...):
+                                           call_with_values(
+                                             fun ():
+                                               replace_fun(arg, ...),
+                                             fun
+                                             | (e :: __Evt):
+                                                 e.sync_handle
+                                             | (e :: Evt):
+                                                 e.handle
+                                             | (res, ...):
+                                                 base.#{wrap-evt}(base.#{always-evt},
+                                                                  fun (_): result)
+                                           ))
+    def result = ReplaceEvt(hand)
+    result
+
 enum WrapReturn
 | tail
 | no_break
 
 class WrapEvt(hand):
+  implements Evt
+  opaque
+  override property handle: hand
+
+class ReplaceEvt(hand):
   implements Evt
   opaque
   override property handle: hand

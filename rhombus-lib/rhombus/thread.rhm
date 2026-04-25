@@ -187,20 +187,132 @@ class SystemIdleEvt():
   private implements evt._Evt
   opaque
   override property handle: rkt.#{system-idle-evt}()
-  private override property sync_handle: rkt.#{system-idle-evt}()
+  private override property sync_handle: rkt.#{wrap-evt}(rkt.#{system-idle-evt}(), fun (b): this)
   private implements Printable
   private override describe(mode, recur): "Evt.system_idle"
+
+class AlarmEvt(private _handle):
+  implements evt.Evt
+  internal _AlarmEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: rkt.#{wrap-evt}(handle, fun (b): this)
+  private implements Printable
+  private override describe(mode, recur): "Evt.alarm(...)"
+
+class GuardEvt(private _handle):
+  implements evt.Evt
+  internal _GuardEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: _handle
+  private implements Printable
+  private override describe(mode, recur): "Evt.guard(...)"
+
+class NackGuardEvt(private _handle):
+  implements evt.Evt
+  internal _NackGuardEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: _handle
+  private implements Printable
+  private override describe(mode, recur): "Evt.nack_guard(...)"
+
+class PollGuardEvt(private _handle):
+  implements evt.Evt
+  internal _PollGuardEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: _handle
+  private implements Printable
+  private override describe(mode, recur): "Evt.poll_guard(...)"
+
+class NackEvt(private _handle):
+  implements evt.Evt
+  internal _NackEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: rkt.#{wrap-evt}(_handle, fun (v): this)
+
+class ChoiceEvt(private _handle):
+  implements evt.Evt
+  internal _ChoiceEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: _handle
+  private implements Printable
+  private override describe(mode, recur): "Evt.choice(...)"
+
+class GenericEvt(private _handle):
+  implements evt.Evt
+  internal _GenericEvt
+  constructor ~none
+  opaque
+  override property handle: _handle
+  private implements Printable
+  private override describe(mode, recur): "Evt.from_handle(...)"
+
+fun sync_handle(e :~ evt.Evt):
+  match e
+  | e :: evt.__Evt:
+      e.sync_handle
+  | ~else:
+      e.handle
 
 namespace Evt:
   export:
     rename:
       evt.Evt.sync as sync
       evt.Evt.wrap as wrap
+      evt.Evt.replace as replace
       evt.WrapReturn as WrapReturn
+      evt.Evt.handle as handle
     always
     never
     system_idle
+    alarm
+    guard
+    nack_guard
+    poll_guard
+    choice
+    from_handle
+
+  alias 'Evt': 'evt.Evt'
 
   def always = AlwaysEvt()
   def never = NeverEvt()
   def system_idle = SystemIdleEvt()
+
+  fun alarm(msecs :: Real, ~monotonic =  #false) :~ AlarmEvt:
+    _AlarmEvt(rkt.#{alarm-evt}(msecs, monotonic))
+
+  fun guard(maker :: () -> Evt) :~ GuardEvt:
+    _GuardEvt(rkt.#{guard-evt}(fun (): sync_handle(maker())))
+
+  fun nack_guard(maker :: (Evt) -> evt.Evt) :~ NackGuardEvt:
+    _NackGuardEvt(rkt.#{nack-guard-evt}(fun (nack): sync_handle(maker(_NackEvt(nack)))))
+
+  fun poll_guard(maker :: (Any) -> Evt) :~ PollGuardEvt:
+    _PollGuardEvt(rkt.#{poll-guard-evt}(fun (p): sync_handle(maker(p))))
+
+  fun choice(evt :: Evt, ...) :~ ChoiceEvt:
+    _ChoiceEvt(rkt.#{choice-evt}(sync_handle(evt), ...))
+
+  fun from_handle(v) :~ Evt:
+    ~who: who
+    unless rkt.#{evt?}(v)
+    | error(~who: who, "not an evt handle")
+    _GenericEvt(v)
+
