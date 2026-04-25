@@ -20,7 +20,8 @@
                      (for-syntax racket/base)
                      (only-in (submod "list.rkt" for-listable)
                               get-treelist-static-infos)
-                     "syntax-wrap.rkt")
+                     "syntax-wrap.rkt"
+                     "annot-context.rkt")
          "space-provide.rkt"
          "definition.rkt"
          "name-root-ref.rkt"
@@ -259,18 +260,19 @@
       [_
        (treelist (treelist -1 (unpack-static-infos who stx)))]))
 
-  (define/arity (statinfo_meta.pack_dependent_result id-stx data)
+  (define/arity (statinfo_meta.pack_dependent_result id-stx data [env (hasheq)])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (define id (unpack-term id-stx #f #f))
     (unless (identifier? id) (raise-annotation-failure who id-stx "Identifier"))
     (unless (syntax*? id) (raise-annotation-failure who data "Syntax"))
-    #`(#,id #,data))
+    (unless (hash? env) (raise-annotation-failure who env "Map.of(Identifier, Any)"))
+    #`(#,id #,data . #,(dependency-env-encode env)))
 
   (define/arity (statinfo_meta.unpack_dependent_result stx)
     #:static-infos ((#%call-result ((#%values #,(get-treelist-static-infos)
                                               #,(get-treelist-static-infos)))))
     (syntax-parse (unpack-term stx who #f)
-      [(id:identifier data) (values #'id #'data)]
+      [(id:identifier data . env) (values #'id #'data (dependency-env-decode #'env))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "ill-formed packed dependent result"
                                  "syntax object" stx)]))

@@ -105,11 +105,12 @@
                        (syntax-local-static-info t #'#%call-result)))
                 => (lambda (results)
                      (find-call-result-at results 2 null #f
-                                          (lambda ()
+                                          (lambda (env)
                                             (annotation-dependencies
                                              (list (arg-static-infos form1 0)
                                                    (arg-static-infos form2 1))
                                              (hashalw)
+                                             env
                                              #f
                                              #f))))]
                [else #'()]))

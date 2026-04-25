@@ -341,6 +341,15 @@
    number of keywords: A keyword-splice argument that will not include any
    of the listed keywords, because those keywords have separate arguments.}
 
+  @item{A boxed integer or keyword: An argument from an immediately
+   enclosing context for a @rhombus(->, ~annot) annotation. This argument
+   must be captured to form a dependency closure.}
+
+  @item{An identifier: An argument from an enclosing context further
+   outside of @rhombus(->, ~annot) annotation that is captured for the
+   immediately enclosing context and that must be captured again to form a
+   dependency closure.}
+
 )
 
  Note that a function form's argument may not all have names that can be
@@ -354,6 +363,7 @@
   class annot_meta.Dependencies(
     arguments :: List.of(Syntax),
     keyword_arguments :: Map.of(Keyword, Syntax),
+    env :: Map.by(equal_name_and_scopes).of(Identifier, Syntax),
     has_more_arguments :: Any.to_boolean,
     has_more_keyword_arguments :: Any.to_boolean
   )
@@ -372,6 +382,10 @@
  The @rhombus(keyword_arguments) list holds static information for the
  by-keyword arguments, not including any keywords supplied through a
  keyword-argument splice.
+
+ The @rhombus(env) argument holds static information for arguments from
+ an enclosing context of a @rhombus(->, ~annot) annotation. These are
+ arguments that were captured for a dependency closure.
 
  The @rhombus(has_more_arguments) and
  @rhombus(has_more_keyword_arguments) fields effectively report whether

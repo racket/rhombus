@@ -19,7 +19,9 @@
                      "class-parse.rkt"
                      "origin.rkt"
                      "annotation-failure.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     (only-in "syntax-map.rkt"
+                              empty-equal_name_and_scopes-map))
          "provide.rkt"
          "deprecated.rkt"
          "enforest.rkt"
@@ -521,9 +523,15 @@
     (cond
       [(for/or ([c-static-infos (in-list c-static-infoss)])
          (static-info-lookup c-static-infos #'#%dependent-result #:no-indirect? #t))
+       (define env
+         (for/fold ([env empty-equal_name_and_scopes-map]) ([c-static-infos (in-list c-static-infoss)])
+           (syntax-parse (static-info-lookup c-static-infos #'#%dependent-result #:no-indirect? #t)
+             [(_ _ . env-desc) (dependency-env-decode #'env-desc #f env)]
+             [_ env])))
        #`((#%dependent-result (dependent-compound-static-infos (#,info-maker-id
                                                                 #,info-maker-data
-                                                                #,c-static-infoss))))]
+                                                                #,c-static-infoss)
+                                                               . #,(dependency-env-encode env))))]
       [else
        (define info-maker (syntax-local-value info-maker-id))
        (info-maker info-maker-data c-static-infoss)])))
@@ -537,7 +545,7 @@
            [(static-info-lookup c-static-infos #'#%dependent-result)
             => (lambda (dep)
                  (syntax-parse dep
-                   [(id data)
+                   [(id data . _)
                     (define proc (syntax-local-value #'id))
                     (static-infos-and (proc #'data deps)
                                       (static-infos-remove c-static-infos #'#%dependent-result))]))]
@@ -1454,12 +1462,19 @@
                         "cannot find argument by name"
                         (respan form)
                         id))
-  (define data (if (treelist? v) (treelist->list v) v))
+  (define data (cond
+                 [(treelist? v) (treelist->list v)]
+                 [(box? v) id]
+                 [else v]))
+  (define env (cond
+                [(box? v) #`((#,data #,(unbox v)))]
+                [(identifier? v) #`((#,data #,v))]
+                [else #'()]))
   (relocate+reraw
    (respan form)
    (annotation-predicate-form
     #'always-satisfied
-    #`((#%dependent-result (#,accessor-id #,(make-data data)))))))
+    #`((#%dependent-result (#,accessor-id #,(make-data data) . #,env))))))
 
 (define-for-syntax (make-like accessor-id)
   (annotation-prefix-operator
@@ -1483,6 +1498,8 @@
               (list-ref args v))]
         [(keyword? v)
          (hash-ref (annotation-dependencies-kw-args deps) v #f)]
+        [(symbol? v)
+         (hash-ref (annotation-dependencies-env deps) data #f)]
         [(and (pair? v)
               (or (eq? (car v) 'repet)
                   (eq? (car v) 'splice))
@@ -1556,7 +1573,7 @@
   (define results (static-info-lookup statinfos #'#%call-result))
   (or (and results
            (find-call-result-at results #f #f #f
-                                (lambda () (annotation-dependencies null #hasheq() #f #f))))
+                                (lambda (env) (annotation-dependencies null #hasheq() env #f #f))))
       #'()))
 
 (define-annotation-syntax Any.like_result

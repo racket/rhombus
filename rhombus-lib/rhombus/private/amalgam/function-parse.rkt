@@ -1301,10 +1301,11 @@
        [else
         ;; anonymous-function shorthand
         (define get-arg-static-infos
-          (lambda ()
+          (lambda (env)
             (annotation-dependencies (for/list ([arg (in-list rands)])
                                        (datum->syntax #f (extract-static-infos arg)))
                                      (hashalw)
+                                     empty-equal_name_and_scopes-map
                                      #f
                                      #f)))
         (define static-infos (static-infos-and
@@ -1453,7 +1454,7 @@
                           props-stx)))
          (define w-call-e (wrap-call call-e extra-rands))
          (define get-arg-static-infos
-           (lambda ()
+           (lambda (env)
              (define init-t (cons (reverse (for/list ([rand (in-list w0-extra-rands)])
                                              (datum->syntax #f (extract-static-infos rand))))
                                   (hashalw)))
@@ -1469,6 +1470,7 @@
                            (cdr t)))))
              (annotation-dependencies (reverse (car t))
                                       (cdr t)
+                                      env
                                       (and rsts #t)
                                       (and kwrsts #t))))
          (define result-static-infos (static-infos-and
@@ -1497,7 +1499,7 @@
    ;; not converted to an anonymous function:
    #f))
 
-;; does not support keyword arguments, for now
+;; finds arity-specific result info; does not support keyword arguments, for now
 (define-for-syntax (find-call-result-at results arity kws kw-rest? get-arg-static-infos)
   (syntax-parse results
     [(#:at_arities r)
@@ -1530,23 +1532,91 @@
          [_ #'()]))]
     [_ (force-call-results results get-arg-static-infos)]))
 
+;; applies dependent-result specification to produce a specialized result
 (define-for-syntax (force-call-results static-infos get-arg-static-infos)
   (cond
     [(static-info-lookup static-infos #'#%dependent-result)
      => (lambda (d)
           (define si (static-infos-remove static-infos #'#%dependent-result))
           (syntax-parse d
-            [(id:identifier data)
+            [(id:identifier data . env)
              (define proc (get-dependent-result-proc #'id))
-             (define deps (get-arg-static-infos))
+             (define deps (get-arg-static-infos (dependency-env-decode #'env #t)))
              (if deps
-                 (static-infos-and si (proc #'data deps))
+                 (dependency-env-capture (static-infos-and si (proc #'data deps))
+                                         (lambda (env) deps))
                  si)]
             [_ si]))]
     [(static-info-lookup static-infos #'#%values)
      => (lambda (d)
           #`((#%values #,(for/list ([si (in-list (syntax->list d))])
                            (force-call-results si get-arg-static-infos)))))]
+    [else (dependency-env-capture static-infos get-arg-static-infos)]))
+
+;; checks whether the result (potentially after specialization)
+;; represents a dependent-function result, in which case we may need
+;; to close over the current dependency environment; the closure is
+;; encoded by converting a free-variable "compile-time" environment
+;; within a dependent-result spec to a variable-to-static-info
+;; "run-time" environment map with the dependent-result spec
+(define-for-syntax (dependency-env-capture static-infos get-arg-static-infos)
+  (define (replace si key val)
+    (static-infos-and (static-infos-remove si key) #`((#,key #,val))))
+  (cond
+    [(static-info-lookup static-infos #'#%call-result)
+     => (lambda (res-si)
+          (define new-res-si
+            (let res-loop ([res-si res-si])
+              (syntax-parse res-si
+                [(#:at_arities r)
+                 (define a+sis (syntax->list #'r))
+                 (define new-a+sis
+                   (for/list ([a+si (in-list a+sis)])
+                     (syntax-parse a+si
+                       [(a results)
+                        (define results-stx #'results)
+                        (define new-results (res-loop results-stx))
+                        (if (eq? new-results results-stx)
+                            a+si
+                            #`(a #,new-results))]
+                       [_ a+si])))
+                 (if (equal? a+sis new-a+sis)
+                     res-si
+                     #`(#:at_arities #,new-a+sis))]
+                [_
+                 (let loop ([res-si res-si])
+                   (cond
+                     [(static-info-lookup res-si #'#%dependent-result)
+                      => (lambda (d)
+                           (syntax-parse d
+                             [(id:identifier data) res-si]
+                             [(id:identifier data . env-desc)
+                              (define env (dependency-env-decode #'env-desc #f))
+                              (define deps (get-arg-static-infos (hasheq)))
+                              (define closed-env (for/fold ([closed-env env]) ([(k v) (in-hash env)])
+                                                   (define new-v
+                                                     (cond
+                                                       [(integer? v) (and (v . < . (length (annotation-dependencies-args deps)))
+                                                                          (list-ref (annotation-dependencies-args deps) v))]
+                                                       [(keyword? v) (hash-ref (annotation-dependencies-kw-args deps) v #f)]
+                                                       [(identifier? v) (hash-ref (annotation-dependencies-env deps) k #f)]
+                                                       [else #f]))
+                                                   (if new-v
+                                                       (hash-set closed-env k new-v)
+                                                       closed-env)))
+                              (replace res-si #'#%dependent-result
+                                       #`(id data . #,(dependency-env-encode closed-env)))]
+                             [_ res-si]))]
+                     [(static-info-lookup res-si #'#%values)
+                      => (lambda (d)
+                           (replace res-si #'#%values
+                                    (for/list ([si (in-list (syntax->list d))])
+                                      (loop si))))]
+                     [else res-si]))])))
+          (cond
+            [(eq? new-res-si res-si) static-infos]
+            [else
+             (replace static-infos #'#%call-result new-res-si)]))]
     [else static-infos]))
 
 (define-for-syntax (handle-repetition repetition?

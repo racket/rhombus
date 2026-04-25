@@ -5,7 +5,8 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "srcloc.rkt"
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "annot-context.rkt")
          "dotted-sequence-parse.rkt")
 
 ;; Represent static information in either of two ways:
@@ -466,18 +467,20 @@
 
   (syntax-parse as
     #:literals (#%dependent-result)
-    [((#%dependent-result a-clos))
+    [((#%dependent-result (~and a-clos (_ _ . a-env))))
      (syntax-parse bs
        #:literals (#%dependent-result)
-       [((#%dependent-result b-clos))
-        #`((#%dependent-result (#,merge-dependent-id (a-clos b-clos))))]
+       [((#%dependent-result (~and b-clos (_ _ . b-env))))
+        (define env (dependency-env-decode #'b-env #f
+                                           (dependency-env-decode #'a-env #f)))
+        #`((#%dependent-result (#,merge-dependent-id (a-clos b-clos) . #,(dependency-env-encode env))))]
        [_
-        #`((#%dependent-result (#,merge-dependent-id (a-clos (independent #,bs)))))])]
+        #`((#%dependent-result (#,merge-dependent-id (a-clos (independent #,bs)) . a-env)))])]
     [_
      (syntax-parse bs
        #:literals (#%dependent-result)
-       [((#%dependent-result b-clos))
-        #`((#%dependent-result (#,merge-dependent-id ((independent #,as) b-clos))))]
+       [((#%dependent-result (~and b-clos (_ _ b-env))))
+        #`((#%dependent-result (#,merge-dependent-id ((independent #,as) b-clos) . b-env)))]
        [_ (merge as bs)])]))
 
 (define-for-syntax (static-infos-maybe-dependent-result-and as bs)

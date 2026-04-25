@@ -155,11 +155,13 @@
 
 @doc(
   ~meta
-  fun statinfo_meta.pack_dependent_result(bridge_name :: Identifier,
-                                          data :: Syntax)
-    :: Syntax
+  fun statinfo_meta.pack_dependent_result(
+    bridge_name :: Identifier,
+    data :: Syntax,
+    env :: Map.of(Identifier, Any) = {}
+  ) :: Syntax
   fun statinfo_meta.unpack_dependent_result(dep_stx :: Syntax)
-    :: values(Identifier, Syntax)
+    :: values(Identifier, Syntax, Map.of(Identifier, Any))
 ){
 
  Analogous to @rhombus(statinfo_meta.pack) and
@@ -171,6 +173,15 @@
  that accepts two arguments: the @rhombus(data) syntax object and a
  @rhombus(annot_meta.Dependencies) object. The result should be static
  information in packed form to use for the function-call result.
+
+ The @rhombus(env) argument describes a closure over dependent variables
+ that is captured or should be captured when the result is selected for a
+ function call. Captured information is represented by a map whose values
+ are syntax objects for packed static information. Capturing instructions
+ are represented by a map who values are each an integer, keyword, or
+ identifier, indicating a by-position argument, keyword argument, or
+ surrounding-closure captured variable whose information should be
+ captured.
 
  Typically, @rhombus(data) includes position information derived from
  @rhombus(annot_meta.Context) in an annotation macro, and then static
@@ -188,11 +199,13 @@
   ) :: Syntax
   fun statinfo_meta.unpack_index_result(call_stx :: Syntax)
     :: values(maybe(Syntax), [[Any, Syntax], ...])
-  fun statinfo_meta.unpack_uniform_index_result(call_stx :: Syntax)
-    :: Syntax
-  fun statinfo_meta.unpack_index_result_at_index(call_stx :: Syntax,
-                                                 key :: Any)
-    :: Syntax
+  fun statinfo_meta.unpack_uniform_index_result(
+    call_stx :: Syntax
+  ) :: Syntax
+  fun statinfo_meta.unpack_index_result_at_index(
+    call_stx :: Syntax,
+    key :: Any
+  ) :: Syntax
 ){
 
  Analogous to @rhombus(statinfo_meta.pack) and
@@ -244,7 +257,8 @@
 
 @doc(
   fun statinfo_meta.gather(expr_stx :: Syntax) :: Syntax
-  fun statinfo_meta.replace(expr_stx :: Syntax, statinfo_stx :: Syntax) :: Syntax
+  fun statinfo_meta.replace(expr_stx :: Syntax, statinfo_stx :: Syntax)
+    :: Syntax
 ){
 
  Returns or replaces all of the static information of @rhombus(expr_stx)

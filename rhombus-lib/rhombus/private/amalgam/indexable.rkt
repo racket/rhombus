@@ -193,11 +193,12 @@
                                           (syntax-local-static-info indexable-ref-expr #'#%call-result))
                                       => (lambda (results)
                                            (find-call-result-at results 2 null #f
-                                                                (lambda ()
+                                                                (lambda (env)
                                                                   (annotation-dependencies
                                                                    (list (indexable-static-infos)
                                                                          (index-static-infos))
                                                                    (hashalw)
+                                                                   env
                                                                    #f
                                                                    #f))))]
                                      [else #'()]))

@@ -50,7 +50,7 @@
           (syntax-parse #'tail
             [(arrow::name . _)
              #:when (free-identifier=? (in-annotation-space #'arrow.name) (annot-quote ->))
-             (parens-arrow-annotation #'arrow.name args #'head #'tail)]
+             (parens-arrow-annotation #'arrow.name args #'head #'tail ctx)]
             [_
              (cond
                [(null? args)
@@ -68,7 +68,7 @@
    (lambda () `((default . stronger)))
    'macro
    (lambda (lhs stx ctx)
-     (arrow-annotation (list (list #f #f #f lhs)) #f #f #f #f lhs stx))
+     (arrow-annotation (list (list #f #f #f lhs)) #f #f #f #f lhs stx ctx))
    'right))
 
 (begin-for-syntax
@@ -80,18 +80,18 @@
              #:when (free-identifier=? (in-binding-space #'name)
                                        (bind-quote ::)))))
 
-(define-for-syntax (parens-arrow-annotation arrow-name args head tail)
+(define-for-syntax (parens-arrow-annotation arrow-name args head tail ctx)
   (define-values (multi-kw+name+opt+lhs rest-name+ann rest-ann-whole? kw-rest-name+ann kw-rest-first?)
     (syntax-parse args
       #:datum-literals (group)
       [((group #:any))
        (values null '#:any #f '#:any #f)]
       [_
-       (parse-annotation-sequence arrow-name args #f)]))
+       (parse-annotation-sequence arrow-name args #f #:ctx ctx)]))
   (arrow-annotation multi-kw+name+opt+lhs
                     rest-name+ann rest-ann-whole?
                     kw-rest-name+ann kw-rest-first?
-                    head tail))
+                    head tail ctx))
 
 (define-for-syntax (parse-annotation-sequence arrow-name args as-result? #:ctx [ctx empty-annot-context])
   (define-values (non-rest-args rest-name+ann rest-ann-whole? kw-rest-name+ann kw-rest-first?)
@@ -218,9 +218,9 @@
 (define-for-syntax (arrow-annotation multi-kw+name+opt+lhs
                                      rest-name+ann rest-ann-whole?
                                      kw-rest-name+ann kw-rest-first?
-                                     head stx)
+                                     head stx prev-ctx)
   (define arrow (syntax-parse stx [(a . _) #'a]))
-  (define ctx (make-arg-context multi-kw+name+opt+lhs))
+  (define ctx (make-arg-context multi-kw+name+opt+lhs prev-ctx))
   (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole? loc tail)
     (let ()
       (define (multi args p-res tail)
@@ -1109,9 +1109,22 @@
     [else
      (raise-annotation-failure '|-> ~name result| s "error.Who")]))
 
-(define-for-syntax (make-arg-context multi-kw+name+opt+lhs)
+(define-for-syntax (make-arg-context multi-kw+name+opt+lhs prev-ctx)
   (define args
-    (for/fold ([args empty-equal_name_and_scopes-map]
+    (for/fold ([args (if prev-ctx
+                         (for/fold ([args empty-equal_name_and_scopes-map])
+                                   ([(k v) (in-hash (annotation-context-argument-names prev-ctx))])
+                           (cond
+                             [(or (integer? v) (keyword? v))
+                              ;; mapping to a box means in the closure, and also
+                              ;; provides capture info
+                              (hash-set args k (box v))]
+                             [(or (box? v) (identifier? v))
+                              ;; mapping to an identifier means that it's in the closure,
+                              ;; and capture is from an enclosing closure
+                              (hash-set args k k)]
+                             [else args]))
+                         empty-equal_name_and_scopes-map)]
                [i 0]
                #:result args)
               ([kw+name+opt+lhs (in-list multi-kw+name+opt+lhs)])

@@ -260,3 +260,59 @@ block:
 check to_string.map([10, 20, 30])[0].length() ~is 2
 check [10, 20, 30].map(to_string)[1].length() ~is 2
 check String.append.map(["a", "b", "c"], ["zzz", "zz", "z"])[1].length() ~is 3
+
+block:
+  fun foo(bar :: Any) :: (() -> Any.like(bar)):
+    fun ():
+      bar
+  check foo("ok!")().length() ~is 3
+
+block:
+  fun foo(bar :: () -> Any) :: (() -> Any.like_result(bar)):
+    def v = bar()
+    fun ():
+      v
+  check foo(fun () :: String: "ok!!")().length() ~is 4
+
+block:
+  fun foo(a :: Any) :: ((b :: Any) -> values(Any.like(a), Any.like(b))):
+    fun (b):
+      values(a, b)
+  def (s, l) = foo("ok!")([1, 2, 3, 4])
+  check s.length() ~is 3
+  check l.length() ~is 4
+
+block:
+  fun foo(a :: Any)
+    :: Function.all_of(
+      (b :: Any) -> values(Any.like(a), Any.like(b)),
+      (b :: Any, Any) -> values(Any.like(b), Any.like(a))
+    ):
+      fun
+      | (b):
+          values(a, b)
+      | (b, c):
+          values(b, a)
+  def (s, l) = foo("ok!")([1, 2, 3, 4])
+  check s.length() ~is 3
+  check l.length() ~is 4
+  def (s2, l2) = foo("ok!")([1, 2, 3, 4], #true)
+  check s2.length() ~is 4
+  check l2.length() ~is 3
+
+block:
+  // contravariant-position dependent annotations are not useful,
+  // but for consistency, references to variables for dependency
+  // shoudl work consistently
+  fun foo(bar :: Any) :: (Any.like(bar) -> Any.like(bar)):
+    fun (x):
+      bar
+  fun foo2(bar :: Any) :: ((Any.like(bar)) -> Any.like(bar)):
+    fun (x):
+      bar
+  fun foo3(bar :: Any) :: ((Any.like(bar), Any.like(bar)) -> Any.like(bar)):
+    fun (x, y):
+      bar
+  check foo("ok!")("str").length() ~is 3
+  check foo2("ok!")("str").length() ~is 3
+  check foo3("ok!")("str", "str").length() ~is 3
