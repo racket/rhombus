@@ -30,7 +30,8 @@
          (submod  "import.rkt" for-meta)
          (submod "syntax-class.rkt" for-anonymous-syntax-class)
          "sequence-pattern.rkt"
-         (only-in "static-info.rkt" unwrap-static-infos))
+         (only-in "static-info.rkt" unwrap-static-infos)
+         "realm.rkt")
 
 (provide (for-space rhombus/unquote_bind
                     #%parens
@@ -736,10 +737,10 @@
        val]
       [else
        (unless (treelist? val)
-         (raise-arguments-error who
-                                "default value does not match expected depth"
-                                "field" (unquoted-printing-string (symbol->string var-name))
-                                "expected depth" top-depth
-                                "value" top-val))
+         (raise-arguments-error* who rhombus-realm
+                                 "default value does not match expected depth"
+                                 "field" (unquoted-printing-string (symbol->string var-name))
+                                 "expected depth" top-depth
+                                 "value" top-val))
        (for/list ([v (in-treelist val)])
          (loop v (sub1 depth)))])))

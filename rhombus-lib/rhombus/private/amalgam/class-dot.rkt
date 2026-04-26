@@ -780,7 +780,7 @@
 
 (define (compare-and-set-field! obj pos old new)
   (when (impersonator? obj)
-    (raise-arguments-error '|compare-and-set assignment|
-                           "cannot atomically compare-and-set field of a wrapped object"
-                           "object" obj))
+    (raise-arguments-error* '|compare-and-set assignment| rhombus-realm
+                            "cannot atomically compare-and-set field of a wrapped object"
+                            "object" obj))
   (unsafe-struct*-cas! obj pos old new))

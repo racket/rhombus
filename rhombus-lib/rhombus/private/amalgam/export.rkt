@@ -16,6 +16,8 @@
                      "macro-result.rkt"
                      "id-binding.rkt"
                      "dotted-sequence.rkt"
+                     "syntax-wrap.rkt"
+                     "realm.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "all-spaces-out.rkt"
@@ -123,18 +125,19 @@
 
   (define (make-export-modifier-ref parsed-ex)
     ;; "accessor" closes over unpacked `parsed-ex`
-    (let ([ex (syntax-parse parsed-ex
+    (let ([ex (syntax-parse (syntax-unwrap parsed-ex)
                 #:datum-literals (parsed)
-                [(parsed #:rhombus/expo req) (syntax-local-introduce #'req)]
-                [_ (raise-arguments-error
-                    'export_meta.ParsedModifier
+                [(parsed #:rhombus/expo ex) (syntax-local-introduce #'ex)] ; export transformer scope
+                [_ (raise-arguments-error*
+                    'expo_meta.ParsedModifier rhombus-realm
                     "given export to modify is not parsed"
                     "base export" parsed-ex)])])
       (lambda (v)
         (define mod (export-modifier-ref v))
         (and mod
              (transformer (lambda (stx ignored-ex)
-                            ((transformer-proc mod) (syntax-local-introduce ex) stx)))))))
+                            ((transformer-proc mod) (syntax-local-introduce ex) ; export-modifier transformer scope
+                                                    stx)))))))
 
   (define name-root-export-modifier-ref
     (make-name-root-ref #:binding-ref export-modifier-ref

@@ -34,7 +34,8 @@
          "../version-case.rkt"
          "slice.rkt"
          (submod "list.rkt" for-compound-repetition)
-         (submod "implicit.rkt" normal-call))
+         (submod "implicit.rkt" normal-call)
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -294,8 +295,8 @@
   #:primitive (vector-cas!)
   (when (and (impersonator? v)
              (vector? v))
-    (raise-arguments-error
-     who
+    (raise-arguments-error*
+     who rhombus-realm
      "cannot atomically compare-and-set element of a wrapped array"
      "array" v))
   (vector-cas! v i old-x x))

@@ -296,7 +296,7 @@
                                                 [_
                                                  (raise-annotation-failure who name "Name")]))]
                                            [else
-                                            (raise-arguments-error 'exports "unregnized request"
+                                            (raise-arguments-error 'exports "unrecognized request"
                                                                    "request" query)]))))))]
               [extras (hash-set extras 'expose expose)])
          (define defns

@@ -10,7 +10,8 @@
          "call-result-key.rkt"
          "composite.rkt"
          "class-primitive.rkt"
-         "rhombus-primitive.rkt")
+         "rhombus-primitive.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -78,8 +79,8 @@
   #:primitive (box-cas!)
   (when (and (impersonator? b)
              (box? b))
-    (raise-arguments-error
-     who
+    (raise-arguments-error*
+     who rhombus-realm
      "cannot atomically compare-and-set content of a wrapped box"
      "box" b))
   (box-cas! b old-x x))

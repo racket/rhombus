@@ -13,7 +13,8 @@
          "name-root-ref.rkt"
          "dotted-sequence-parse.rkt"
          "static-info.rkt"
-         "indirect-static-info-key.rkt")
+         "indirect-static-info-key.rkt"
+         "realm.rkt")
 
 (provide (for-space rhombus/defn
                     delayed_declare
@@ -45,7 +46,8 @@
   (define (delayed-annotation-ref v) (and (delayed-annotation? v) v)))
 
 (define (too-early who)
-  (raise-arguments-error who "delayed annotation is not yet completed"))
+  (raise-arguments-error* who rhombus-realm
+                          "delayed annotation is not yet completed"))
 
 (define-for-syntax (make-delayed-static-info who)
   (let ([static-infos #f])

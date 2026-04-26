@@ -33,7 +33,8 @@
          (submod "listable.rkt" for-static-info)
          (submod "sequenceable.rkt" for-static-info)
          "printer-property.rkt"
-         "path-string.rkt")
+         "path-string.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -554,7 +555,10 @@
   #:primitive (peek-bytes! peek-bytes-avail! peek-bytes-avail!* peek-bytes-avail!/enable-break)
   (cond
     [(eq? wait 'all)
-     (when progress (raise-arguments-error who "progress evt not supported in wait mode" "wait mode" wait))
+     (when progress
+       (raise-arguments-error* who rhombus-realm
+                               "progress evt not supported in wait mode"
+                               "wait mode" wait))
      (peek-bytes! bstr skip port start end)]
     [(eq? wait 'some)
      (peek-bytes-avail! bstr skip (and progress (extract-progress-evt who progress)) port start end)]
