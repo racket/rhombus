@@ -10,7 +10,7 @@
 
 @title(~tag: "text"){Pict Text Layout}
 
-@docmodule(pict/text)
+@docmodule(~open, pict/text)
 
 The @rhombus(text) function from @rhombusmodname(pict) can draw text,
 but only in a fixed, given font. The @rhombusmodname(pict/text) library

@@ -3,7 +3,7 @@
 @(import:
     meta_label:
       rhombus open
-      pict
+      pict open
       pict/rhombus open)
 
 @(def shrubbery_scrbl: ModulePath'lib("shrubbery/scribblings/shrubbery.scrbl")')
@@ -27,7 +27,7 @@
 
 @title(~tag: "rhombus"){Code as Picts}
 
-@docmodule(pict/rhombus)
+@docmodule(~open, pict/rhombus)
 
 The @rhombusmodname(pict/rhombus) library provides a @rhombus(rhombus)
 form form rendering literal shrubbery forms as a pict.

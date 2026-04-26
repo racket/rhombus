@@ -4,6 +4,7 @@
     meta_label:
       rhombus open
       pict open
+      pict/radial
       pict/radial open)
 
 @(def radial_eval = make_rhombus_eval())
@@ -16,7 +17,7 @@
           beside
           rectangle
           ellipse
-      pict/radial open
+      pict/radial
 )
 
 @title(~tag: "radial"){Pict Radial Shapes}
@@ -24,14 +25,14 @@
 @docmodule(pict/radial)
 
 @doc(
-  fun star(~points: n :: PosInt = 5, ....) :: Pict
-  fun flash(~bumps: n :: PosInt = 10, ....) :: Pict
-  fun sun(~rays: n :: PosInt = 10, ....) :: Pict
-  fun flower(~petals: n :: PosInt = 6, ....) :: Pict
-  fun cloud(~bumps: n :: PosInt = 6, ....) :: Pict
-  fun regular_polygon(~sides: n :: PosInt = 10, ....) :: Pict
-  fun gear(~arms: n :: PosInt = 10, ....,
-           ~hole: hole :: Real = 0.5) :: Pict
+  fun radial.star(~points: n :: PosInt = 5, ....) :: Pict
+  fun radial.flash(~bumps: n :: PosInt = 10, ....) :: Pict
+  fun radial.sun(~rays: n :: PosInt = 10, ....) :: Pict
+  fun radial.flower(~petals: n :: PosInt = 6, ....) :: Pict
+  fun radial.cloud(~bumps: n :: PosInt = 6, ....) :: Pict
+  fun radial.regular_polygon(~sides: n :: PosInt = 10, ....) :: Pict
+  fun radial.gear(~arms: n :: PosInt = 10, ....,
+                  ~hole: hole :: Real = 0.5) :: Pict
 ){
 
  The same as @rhombus(radial_pict), but with defaults for arguments so that
@@ -42,18 +43,18 @@
 
 @examples(
   ~eval: radial_eval
-  star(~fill: "gold")
-  flash(~fill: "red")
-  flower(~fill: "purple")
-  cloud(~fill: "gray")
-  regular_polygon(~fill: "blue")
-  gear(~fill: "brown")
+  radial.star(~fill: "gold")
+  radial.flash(~fill: "red")
+  radial.flower(~fill: "purple")
+  radial.cloud(~fill: "gray")
+  radial.regular_polygon(~fill: "blue")
+  radial.gear(~fill: "brown")
 )
 
 }
 
 @doc(
-  fun radial_pict(
+  fun radial.radial_pict(
     ~points: n :: PosInt = 6,
     ~width: width :: Real = 64,
     ~height: height :: Real = width,
@@ -141,25 +142,25 @@
 
 @examples(
   ~eval: radial_eval
-  radial_pict()
-  radial_pict(~fill: #'inherit).colorize("red")
-  radial_pict(~width: 64, ~height: 32, ~rotate: math.pi * 1/2)
-  radial_pict(~inner_pause: 0.5, ~outer_pause: 0.25, ~fill: "black")
-  radial_pict(~outer_pull: 0.25, ~fill: "purple")
-  radial_pict(~inner_pull: 0.25, ~fill: "forestgreen")
-  radial_pict(~outer_pull: 0.25, ~inner_radius: -0.5, ~fill: "lightblue")
+  radial.radial_pict()
+  radial.radial_pict(~fill: #'inherit).colorize("red")
+  radial.radial_pict(~width: 64, ~height: 32, ~rotate: math.pi * 1/2)
+  radial.radial_pict(~inner_pause: 0.5, ~outer_pause: 0.25, ~fill: "black")
+  radial.radial_pict(~outer_pull: 0.25, ~fill: "purple")
+  radial.radial_pict(~inner_pull: 0.25, ~fill: "forestgreen")
+  radial.radial_pict(~outer_pull: 0.25, ~inner_radius: -0.5, ~fill: "lightblue")
   beside(~sep: 16, ~vert: #'top,
-         ellipse(~around: radial_pict(~points: 3)),
-         rectangle(~around: radial_pict(~points: 3)),
-         rectangle(~around: radial_pict(~points: 3, ~bound: #'shrink)),
-         rectangle(~around: radial_pict(~points: 3, ~bound: #'stretch)))
+         ellipse(~around: radial.radial_pict(~points: 3)),
+         rectangle(~around: radial.radial_pict(~points: 3)),
+         rectangle(~around: radial.radial_pict(~points: 3, ~bound: #'shrink)),
+         rectangle(~around: radial.radial_pict(~points: 3, ~bound: #'stretch)))
 )
 
 }
 
 @doc(
-  annot.macro 'Radial'
-  fun radial(
+  annot.macro 'radial.Radial'
+  fun radial.radial(
     ~points: n :: PosInt = 6,
     ~width: width :: Real = 64,
     ~height: height :: Real = width,
@@ -186,7 +187,7 @@
 
 @examples(
   ~eval: radial_eval
-  def r = radial(~points: 7)
+  def r = radial.radial(~points: 7)
   r.pict(~fill: "blue")
   r.pict(~line: "blue", ~line_width: 3)
 )
@@ -195,14 +196,14 @@
 }
 
 @doc(
-  fun star_radial(~points: n :: PosInt = 5, ....) :: Radial
-  fun flash_radial(~bumps: n :: PosInt = 10, ....) :: Radial
-  fun sun_radial(~rays: n :: PosInt = 10, ....) :: Radial
-  fun flower_radial(~petals: n :: PosInt = 6, ....) :: Radial
-  fun cloud_radial(~bumps: n :: PosInt = 6, ....) :: Radial
-  fun regular_polygon_radial(~sides: n :: PosInt = 10, ....) :: Radial
-  fun circle_radial(~sides: n :: PosInt = 10, ....) :: Radial
-  fun gear_radial(~arms: n :: PosInt = 10, ....) :: Radial
+  fun radial.star_radial(~points: n :: PosInt = 5, ....) :: Radial
+  fun radial.flash_radial(~bumps: n :: PosInt = 10, ....) :: Radial
+  fun radial.sun_radial(~rays: n :: PosInt = 10, ....) :: Radial
+  fun radial.flower_radial(~petals: n :: PosInt = 6, ....) :: Radial
+  fun radial.cloud_radial(~bumps: n :: PosInt = 6, ....) :: Radial
+  fun radial.regular_polygon_radial(~sides: n :: PosInt = 10, ....) :: Radial
+  fun radial.circle_radial(~sides: n :: PosInt = 10, ....) :: Radial
+  fun radial.gear_radial(~arms: n :: PosInt = 10, ....) :: Radial
 ){
 
  The same as @rhombus(radial), but with defaults for arguments so that
@@ -211,19 +212,19 @@
 
 @examples(
   ~eval: radial_eval
-  flower_radial(~petals: 5).pict(~fill: "pink")
+  radial.flower_radial(~petals: 5).pict(~fill: "pink")
 )
 
 }
 
 @doc(
-  method (radial :: Radial).pict(
+  method (rad :: radial.Radial).pict(
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: BoundingBoxMode = #'unit
   ) :: Pict
-  method (radial :: Radial).path() :: Path
+  method (rad :: radial.Radial).path() :: Path
 ){
 
  Converts a @rhombus(Radial, ~annot) to a pict or a DC path.
@@ -234,15 +235,15 @@
 
 @examples(
   ~eval: radial_eval
-  regular_polygon_radial().pict(~fill: "orange")
-  regular_polygon_radial(~width: 64).path().bounding_box()
+  radial.regular_polygon_radial().pict(~fill: "orange")
+  radial.regular_polygon_radial(~width: 64).path().bounding_box()
 )
 
 }
 
 @doc(
-  fun radials_pict(
-    radial :: Radial, ...,
+  fun radial.radials_pict(
+    rad :: Radial, ...,
     ~fill: fill :: maybe(ColorMode) = #false,
     ~line: line :: maybe(ColorMode) = !fill && #'inherit,
     ~line_width: line_width :: LineWidth = #'inherit,
@@ -255,15 +256,15 @@
 
 @examples(
   ~eval: radial_eval
-  radials_pict([regular_polygon_radial(~width: 64),
-                gear_radial(~width: 52)],
-               ~fill: "orange")
+  radial.radials_pict([radial.regular_polygon_radial(~width: 64),
+                       radial.gear_radial(~width: 52)],
+                      ~fill: "orange")
 )
 
 }
 
 @doc(
-  fun arrow(
+  fun radial.arrow(
     ~length: length :: Real = 64,
     ~breadth: breadth :: Real = length,
     ~tail: tail :: Real = 0.5,
@@ -275,7 +276,7 @@
     ~line_width: line_width :: LineWidth = #'inherit,
     ~bound: bound :: ArrowBoundingBoxMode = #'unit
   ) :: Pict
-  fun arrow_path(
+  fun radial.arrow_path(
     ~length: length :: Real = 64,
     ~breadth: breadth :: Real = length,
     ~tail: tail :: Real = 0.5,
@@ -318,15 +319,15 @@
 
 @examples(
   ~eval: radial_eval
-  arrow(~fill: "forestgreen")
-  arrow(~tail: 0, ~fill: "blue")
+  radial.arrow(~fill: "forestgreen")
+  radial.arrow(~tail: 0, ~fill: "blue")
 )
 
 }
 
 @doc(
-  fun evenly_spaced(i :: Int, out_of_n :: PosInt) :: Real
-  fun jitter_spaced(jitter :: Real) :: (Int, PosInt) -> Real
+  fun radial.evenly_spaced(i :: Int, out_of_n :: PosInt) :: Real
+  fun radial.jitter_spaced(jitter :: Real) :: (Int, PosInt) -> Real
 ){
 
  Functions useful for @rhombus(~angle_at) arguments to
@@ -339,14 +340,14 @@
 
 @examples(
   ~eval: radial_eval
-  radial_pict(~points: 5, ~angle_at: jitter_spaced(0.2))
+  radial.radial_pict(~points: 5, ~angle_at: radial.jitter_spaced(0.2))
 )
 
 }
 
 
 @doc(
-  enum BoundingBoxMode
+  enum radial.BoundingBoxMode
   | unit
   | shrink
   | stretch
@@ -357,7 +358,7 @@
 }
 
 @doc(
-  enum ArrowBoundingBoxMode
+  enum radial.ArrowBoundingBoxMode
   | unit
   | shrink
   | line    

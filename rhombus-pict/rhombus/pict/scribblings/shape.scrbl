@@ -341,10 +341,15 @@
   | ~is_a Color
   | ~is_a String
   | inherit
+  annot.macro 'Color'
 ){
 
  A color specification, where @rhombus(#'inherit) allows the color to be
  configured externally, such as through @rhombus(Pict.colorize).
+
+ The @rhombus(Color, ~annot) annotation from @rhombusmodname(pict) is
+ re-exported from @rhombusmodname(draw) (i.e., it's the same binding as
+ @rhombus(draw.Color, ~annot)).
 
 }
 
