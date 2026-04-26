@@ -135,13 +135,22 @@
                                       ;; Even though `root` is in principle a namespace, it may be documented only
                                       ;; as an annotation, so try that as a fallback.
                                       ;; A `root-id` can be #f, in which case `root-names` must be empty.
-                                      ;; Otherwise, `root-id` should have a corresponding initial element in
+                                      ;; Otherwise, `root-id` usually has a corresponding initial element in
                                       ;; `root-names`, and `ns-id` has a corresponding final element in `root-names`,
                                       ;; but `root-id` and `ns-id` are composed with preceding roots and maybe an import
                                       ;; namespace so that they have a binding, while `root-names` is used for
                                       ;; the documented dotted name.
+                                      ;; If `root-id` is not #f but `root-names` is empty, then `root-id`
+                                      ;; is used only to specify a root for looking up cross-reference information
+                                      ;; (e.g., for a namespace extension, where the extension might be an immediate rator).
                                       (delayed-element
                                        (lambda (renderer sec ri)
+                                         (log-shrubbery-render-info "VIA-RESULT~a"
+                                                                    (format-log
+                                                                     'root-id root-id
+                                                                     'root-names root-names
+                                                                     'rators rators
+                                                                     'field field))
                                          (define default (element tt-style field-str))
                                          (define (find-racket-tag* id root-id root-names
                                                                    #:space [space #f]
@@ -160,7 +169,8 @@
                                                                                          space)
                                                                                    space)
                                                                        'binding (identifier-binding
-                                                                                 (if shift? (syntax-shift-phase-level id* #f) id*))))
+                                                                                 (if shift? (syntax-shift-phase-level id* #f) id*)
+                                                                                 #f)))
                                            (define tag
                                              (find-racket-tag sec ri
                                                               (if shift? (syntax-shift-phase-level id* #f) id*)
@@ -191,14 +201,14 @@
                                                                        'field field))
                                            (define (start)
                                              (cond
-                                               [root-id                                                
+                                               [(and root-id (pair? root-names))
                                                 (define ns-id* (in-name-root-space ns-id 'add))
                                                 (define annot-id (in-annot-space ns-id 'add))
                                                 (prep-namespace-for-binding ns-id*)
                                                 (find-via-namespace-id ns-id* annot-id rators #f root-id root-names)]
                                                [else
                                                 (define rator (car rators))
-                                                (define tag (find-racket-tag* rator #f null
+                                                (define tag (find-racket-tag* rator root-id null
                                                                               #:shift? #f))
                                                 (parameterize ([current-namespace ns])
                                                   (find-via-rator-tag tag rator (cdr rators)))]))
@@ -269,7 +279,9 @@
                                                 (define annot-id (let ([id (binding->id sym (spacer-binding-annot-b sb))])
                                                                    (and id (in-annot-space (syntax-shift-phase-level id #f) 'add))))
                                                 (find-via-namespace-id ns-id annot-id more-rators #f root-id root-names)]
-                                               [else default]))
+                                               [else
+                                                (log-shrubbery-render-info "NO-ANNOT")
+                                                default]))
 
                                            (define (find-via-namespace-id ns-id annot-id more-rators shift? root-id root-names)
                                              (define (try-fallback)

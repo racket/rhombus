@@ -268,6 +268,13 @@
      (ret-extract-spacer-infos #'ret)]
     [_ #f]))
 
+(define-for-syntax (def-extract-spacer-infos stx space-names)
+  (syntax-parse (unpack-group stx #f #f)
+    #:datum-literals (parens group op ::)
+    [(group _::doc-form _ ... (op ::) . ret)
+     (ret-extract-spacer-infos #'ret)]
+    [_ #f]))
+
 (define-for-syntax (target->dotted-identifier name sym)
   (cond
     [(identifier? name)
@@ -282,16 +289,20 @@
          t)]))
 
 (define-for-syntax (ret-extract-spacer-infos ret)
+  (define key 'result_annotation)
   (syntax-parse ret
-    #:datum-literals (block alts)
+    #:datum-literals (block alts of now_of later_of)
     [(id:identifier)
-     (hash 'result_annotation #'id)]
+     (hash key #'id)]
     [(id:identifier (block . _))
-     (hash 'result_annotation #'id)]
+     (hash key #'id)]
     [(id:identifier (alts . _))
-     (hash 'result_annotation #'id)]
+     (hash key #'id)]
     [((~var id (identifier-target 'rhombus/annot)))
-     (hash 'result_annotation (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
+     (hash key (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
+    [(t ... (op |.|) (~or of now_of later_of assume_of) . _) ; FIXME: hardwired constructors
+     #:with ((~var id (identifier-target 'rhombus/annot))) #'(t ...)
+     (hash key (target->dotted-identifier (attribute id.name) (attribute id.sym)))]
     [_
      #f]))
 
@@ -808,6 +819,7 @@
   #f
   head-extract-name
   head-extract-metavariables
+  #:spacer-infos def-extract-spacer-infos
   head-extract-typeset)
 
 (define-doc Parameter.def [rhombus Parameter]

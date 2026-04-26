@@ -648,7 +648,7 @@
 (struct root-sequence (full        ; source identifiers, including ending name
                        name        ; ending name
                        start-id    ; dot-composited bound identifier that `(cdr root-names)` and `(last full)` is added to
-                       root-names) ; like `full`, but without ending name and without a leading import namespace (if any)
+                       root-names) ; like `full`, but without a leading import namespace (if any)
   #:transparent)
 
 ;; replace `root.field` with a typeset element, including detection of
@@ -702,6 +702,54 @@
        (cond
          [(via-result? comp)
           (datum->syntax stx (element-via-result comp render-via-result-annotation) stx stx)]
+         [(and (root-sequence? comp)
+               (let ([r (resolve-name-ref '(#f)
+                                          (car (root-sequence-full comp))
+                                          (cdr (root-sequence-full comp)))])
+                 (and r
+                      (hash-ref r 'starts-as-extension? #f)
+                      r)))
+          => (lambda (resolved)
+               (log-shrubbery-render-info "DOTTED-RESOLVED~a"
+                                          (format-log
+                                           'resolved resolved))
+               (define vr
+                 (via-result #f
+                             (cons (hash-ref resolved 'target)
+                                   (hash-ref resolved 'remains))))
+               (datum->syntax stx
+                              (element-via-result vr render-via-result-annotation
+                                                  #:extends (hash-ref resolved 'root))
+                              stx stx))]
+         [(root-sequence? comp)
+          (define resolved (resolve-name-ref '(#f)
+                                             (car (root-sequence-full comp))
+                                             (cdr (root-sequence-full comp))))
+          (define can-rator (if resolved
+                                (add1 (length (hash-ref resolved 'remains '())))
+                                ;; the leading name must be at least bound for-label,
+                                ;; or we would not have gotten here, so try searching
+                                ;; from there
+                                (length (root-sequence-root-names comp))))
+          (log-shrubbery-render-info "DOTTED-ROOT-SEQ~a"
+                                     (format-log
+                                      'resolved resolved
+                                      'can-rator can-rator))
+          (define vr
+            (cond
+              [(equal? can-rator (length (root-sequence-root-names comp)))
+               (via-result #f (cons (root-sequence-start-id comp)
+                                    (cdr (root-sequence-root-names comp))))]
+              [else
+               (let ([rev-full (list-tail (reverse (root-sequence-full comp)) can-rator)])
+                 (via-result (root-sequence (reverse rev-full)
+                                            (car rev-full)
+                                            (root-sequence-start-id comp)
+                                            (reverse (list-tail (reverse (root-sequence-root-names comp)) can-rator)))
+                             (list-tail (root-sequence-root-names comp) (- (length (root-sequence-root-names comp)) can-rator))))]))
+          (datum->syntax stx (element-via-result vr render-via-result-annotation) stx stx)]
+         ;; this old approach is superceded by the previous case, which (unlike this old case)
+         ;; follows property and definition annotations from documentation
          [(root-sequence? comp)
           (define-values (new-elem/id leftover)
             ;; `dotted-name-ref` detects import namespaces as needed
@@ -822,6 +870,7 @@
        (define annot (and of-stx (syntax-property (term-ctx of-stx) 'annot)))
        (log-shrubbery-render-info "OF~a"
                                   (format-log
+                                   'stx stx
                                    'val-key val-key
                                    'of-stx of-stx
                                    'annot annot))
@@ -846,7 +895,7 @@
                                             #:nominal-module nom-mpi
                                             #:nominal-symbol nom-sym)
                                            sym))
-             (root-sequence (list id stx) stx id (list id))]
+             (root-sequence (list id stx) stx id (list id stx))]
             [else #f])]
          [(result) ; check result of some other identifier as function/method
           (define rator (and (not (hash-ref seen (cdr annot) #f))
@@ -857,6 +906,7 @@
                                                      space-names)))
           (log-shrubbery-render-info "RESULT~a"
                                      (format-log
+                                      'stx stx
                                       'rator rator
                                       'comp comp))
           (cond
@@ -872,7 +922,7 @@
                    (via-result (root-sequence (reverse rev-full)
                                               (car rev-full)
                                               (root-sequence-start-id comp)
-                                              (reverse (cdr (reverse (root-sequence-root-names comp)))))                               
+                                              (reverse (cdr (reverse (root-sequence-root-names comp)))))
                                (list (root-sequence-name comp) stx))))]
             [(identifier? rator)
              ;; look up result of `rator` by itself via doc info
@@ -886,6 +936,7 @@
              (define binder (and binds (hash-ref binds (syntax-e of-stx) #f)))
              (log-shrubbery-render-info "OF-ID~a"
                                         (format-log
+                                         'stx stx
                                          'of-stx of-stx
                                          'binder binder))
              (cond
@@ -909,6 +960,7 @@
                 (define field (syntax-property of-stx 'field))
                 (log-shrubbery-render-info "OF-OF~a"
                                            (format-log
+                                            'stx stx
                                             'of-stx of-stx
                                             'field field))
                 (case (and field (car field))
@@ -917,6 +969,7 @@
                    (define comp (find-dotted-composition of-stx info seen space-names))
                    (log-shrubbery-render-info "OF-OF~a"
                                               (format-log
+                                               'stx stx
                                                'comp comp))
                    (cond
                      [(via-result? comp)
@@ -937,9 +990,11 @@
                                                       (list stx)))
                    (log-shrubbery-render-info "ID~a"
                                               (format-log
-                                               'of-stx of-stx
                                                'stx stx
-                                               'resolved resolved))
+                                               'of-stx of-stx
+                                               'use-space-names use-space-names
+                                               'resolved resolved
+                                               'binding (identifier-binding of-stx #f)))
                    (cond
                      [resolved
                       (if (null? (hash-ref resolved 'roots null))
@@ -953,11 +1008,19 @@
                                          stx
                                          of-stx
                                          (list of-stx stx)))]
+                     [(identifier-binding of-stx #f)
+                      ;; could be a property access, so treat similar
+                      ;; to a namespace reference
+                      (root-sequence (list of-stx stx)
+                                         stx
+                                         of-stx
+                                         (list of-stx stx))]
                      [else #f])])])]
             [else #f])]))]
     [else #f]))
 
-(define (element-via-result head render-via-result-annotation)
+(define (element-via-result head render-via-result-annotation
+                            #:extends [extends-root-id #f])
   (define root (via-result-comp head))
   (define rev-rators (reverse (via-result-rators head)))
   (define id (car rev-rators))
@@ -980,8 +1043,8 @@
                                    'root-names (root-sequence-root-names root)
                                    't t))
        (and t (add-space (hash-ref t 'target) 'rhombus/namespace))]))
-  (render-via-result-annotation root-id
-                                (or ns-id root-id)
+  (render-via-result-annotation (or root-id extends-root-id)
+                                (or ns-id root-id extends-root-id)
                                 (if (root-sequence? root)
                                     (root-sequence-root-names root)
                                     (if root (list root) null))

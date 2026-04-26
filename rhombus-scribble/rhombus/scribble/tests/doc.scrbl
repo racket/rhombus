@@ -15,6 +15,7 @@
           ReadableString
           Port
           math
+          showln
       rhombus/meta:
         expose:
           expr
@@ -23,7 +24,9 @@
       rhombus/draw
       rhombus/cmdline
       rhombus/date
-      rhombus/scribble/tests/local open)
+      rhombus/scribble/tests/local open
+      rhombus/thread
+      rhombus/thread open)
 
 @title{Example}
 
@@ -71,6 +74,19 @@ Starting example:
     s.length()
 )
 
+@rhombusblock(
+  showln.length()
+  rhombus.showln.length()
+  def s6 = String.snapshot("Hello")
+  s6.utf8_bytes.length()
+  String.utf8_length.length()
+  rhombus.String.utf8_length.length()
+  String.more.length()
+  Evt.always.length()
+  Evt.always().length()
+  thread.Evt.always.length()
+)
+
 @examples(
   println("1\n\n2")
 )
@@ -89,8 +105,11 @@ Starting example:
                         c: fun (x):
                              x)
   fun repr() :: String
+  def showln :: String
   method (s :: String).length()
   method String.get()
+  property (s :: String).utf8_bytes :: String
+  def String.utf8_length :: String
   fun println() :: ReadableString
   annot.macro 'String'
   annot.macro 'ReadableString':
@@ -249,6 +268,18 @@ Starting example:
   inp.read_bytes()
   inp.close()
 )
+
+}
+
+@section{Dotted Definition}
+
+@docmodule(~open, rhombus/thread)
+
+@doc(
+  def Evt.always :: String
+){
+
+ Not really a string, of course.
 
 }
 

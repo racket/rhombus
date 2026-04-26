@@ -46,7 +46,7 @@
 (define-for-syntax (resolve-name-ref space-names root fields
                                      #:parens [ptag #f]
                                      #:raw [given-raw #f])
-  (define (loop root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len)
+  (define (loop root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len starts-ext?)
     (cond
       [(null? fields) #f]
       [else
@@ -113,7 +113,7 @@
                                             (or (syntax-raw-suffix-property p) '())
                                             (syntax-raw-suffix-property ptag)))
              p))
-       (define (add-rest p [space-name space-name])
+       (define (add-rest p space-name starts-ext?)
          (and p (hash 'target p
                       'remains (cdr fields)
                       'space space-name
@@ -132,8 +132,9 @@
                       'raw-prefix (and (not given-raw)
                                        (or ns-raw-prefix
                                            (and is-import? raw-prefix)))
-                      'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len))))
-       (define (next named-dest)
+                      'raw-prefix-len (+ (if is-import? 1 0) raw-prefix-len)
+                      'starts-as-extension? starts-ext?)))
+       (define (next named-dest starts-ext?)
          (define r
            (and named-dest
                 (loop/squashed named-dest (syntax-e field) field-phase
@@ -146,7 +147,8 @@
                                    (cons root-sym ns-root-syms))
                                (cdr fields)
                                raw (or (and is-import? raw-prefix) ns-raw-prefix)
-                               (if is-import? (add1 raw-prefix-len) raw-prefix-len))))
+                               (if is-import? (add1 raw-prefix-len) raw-prefix-len)
+                               starts-ext?)))
          ;; if there are more fields, also try `root.field` as a root:
          (define r2
            (and (pair? (cdr fields))
@@ -170,7 +172,8 @@
                                       ns-root-syms
                                       (cdr fields)
                                       raw ns-raw-prefix
-                                      raw-prefix-len)))))
+                                      raw-prefix-len
+                                      (or starts-ext? (not ns-root)))))))
          (if (and r2 (or (not r)
                          (< (length (hash-ref r2 'remains null))
                             (length (hash-ref r 'remains null)))))
@@ -188,8 +191,8 @@
             (transfer-parens-suffix
              (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
                                   (or given-raw raw))))
-          (or (next named-dest)
-              (add-rest named-dest))]
+          (or (next named-dest starts-ext?)
+              (add-rest named-dest space-name starts-ext?))]
          [else
           (define named-id+space
             (for/or ([id-space-name (in-list space-names)])
@@ -207,12 +210,13 @@
                                        (datum->syntax id (syntax-e id) named-id named-id))
                                      (or given-raw raw)))])
                      (cons named-id id-space-name)))))
+          (define next-starts-ext? (or starts-ext? (not ns-root)))
           (if named-id+space
-              (or (next (car named-id+space))
-                  (add-rest (car named-id+space) (cdr named-id+space)))
-              (next #f))])]))
-  (define (loop/squashed root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len)
-    (define r (loop root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len))
+              (or (next (car named-id+space) next-starts-ext?)
+                  (add-rest (car named-id+space) (cdr named-id+space) next-starts-ext?))
+              (next #f starts-ext?))])]))
+  (define (loop/squashed root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len starts-ext?)
+    (define r (loop root root-sym root-phase ns-root ns-roots ns-root-syms fields root-raw ns-raw-prefix raw-prefix-len starts-ext?))
     (cond
       [(and (pair? fields)
             (pair? (cdr fields))
@@ -229,11 +233,11 @@
                                                                      "."
                                                                      (syntax-raw-property b))))
                                      (cddr fields)))
-       (define r2 (loop root root-sym root-phase ns-root ns-roots ns-root-syms squashed-fields root-raw ns-raw-prefix raw-prefix-len))
+       (define r2 (loop root root-sym root-phase ns-root ns-roots ns-root-syms squashed-fields root-raw ns-raw-prefix raw-prefix-len starts-ext?))
        (if (and r2 (or (not r)
                        (< (length (hash-ref r2 'remains null))
                           (length (hash-ref r 'remains null)))))
            r2
            r)]
       [else r]))
-  (loop/squashed root (and root (syntax-e root)) 0 #f null null fields #f #f 0))
+  (loop/squashed root (and root (syntax-e root)) 0 #f null null fields #f #f 0 #f))
