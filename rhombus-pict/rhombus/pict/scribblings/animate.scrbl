@@ -370,7 +370,7 @@
   ~repl:
     def p = circle(~size: 20, ~fill: "lightgreen")
     p.epoch_extent(0)
-    def q = q.epoch_set_extent(0, 0.5)
+    def q = p.epoch_set_extent(0, 0.5)
     q.epoch_extent(0)
 )
 
