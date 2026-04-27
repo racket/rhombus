@@ -8,7 +8,9 @@
 A @deftech{path} value represents a filesystem path for the host
 operating system. A @tech{cross-platform path} is a generalization of a
 path, and most path operations also accept cross-platform paths, but
-they produce specifically paths when given paths.
+they produce specifically paths when given paths. See
+@secref(~doc: model_doc, "path") in @docref(model_doc) for more
+information about paths, path syntax, and path representations.
 
 Paths are @tech{comparable}, which means that generic operations like
 @rhombus(<) and @rhombus(>) work on paths.

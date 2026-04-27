@@ -25,3 +25,4 @@ language.
 @include_section("eval-model.scrbl")
 @include_section("syntax-model.scrbl")
 @include_section("static-overview.scrbl")
+@include_section("io-model.scrbl")

@@ -2,7 +2,8 @@
 @(import:
     "common.rhm" open
     meta_label:
-      rhombus/measure)
+      rhombus/measure
+      rhombus/bytes)
 
 @title(~tag: "system"){System Information and Control}
 
@@ -122,6 +123,36 @@
  for @defterm{shared objects}, also known as @defterm{dynamically linked
   libraries}. Possible results include @rhombus(#".so"), @rhombus(#".dll"),
  and @rhombus(#".dylib").
+
+}
+
+@doc(
+  fun system.locale_string_encoding() :: String
+){
+
+ A string for the current locale's encoding. This string is suitable for
+ use as an encoding name with @rhombus(bytes.Converter).
+
+}
+
+@doc(
+  fun system.language_and_country() :: String
+){
+
+ A string to identify the current user’s language and country.
+
+ On Unix and Mac OS, the string is five characters: two lowercase ASCII
+ letters for the language, an underscore, and two uppercase ASCII letters
+ for the country. On Windows, the string can be arbitrarily long, but the
+ language and country are in English (all ASCII letters or spaces)
+ separated by an underscore.
+
+ On Unix, the result is determined by checking the @tt{LC_ALL},
+ @tt{LC_TYPE}, and @tt{LANG} environment variables, in that order (and
+ the result is used if the environment variable’s value starts with two
+ lowercase ASCII letters, an underscore, and two uppercase ASCII letters,
+ followed by either nothing or a period). On Windows and Mac OS, the
+ result is determined by system calls.
 
 }
 

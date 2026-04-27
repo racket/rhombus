@@ -6,11 +6,8 @@
 
 @local_table_of_contents()
 
-@include_section("port.scrbl")
-@include_section("input_port.scrbl")
-@include_section("output_port.scrbl")
-@include_section("file_stream_port.scrbl")
-@include_section("pipe.scrbl")
+@include_section("all_port.scrbl")
+@include_section("converter.scrbl")
 @include_section("log.scrbl")
 @include_section("printing.scrbl")
 @include_section("shrubbery.scrbl")

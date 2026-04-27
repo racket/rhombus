@@ -1,0 +1,44 @@
+#lang rhombus/static
+import:
+  rhombus/bytes
+
+block:
+  def c = bytes.Converter(~from: "UTF-8-permissive", ~to: "UTF-8")
+  check c ~is_a bytes.Converter
+  check c.convert(#"") ~is_now values(#"", 0, bytes.Converter.Status.complete)
+  check c.convert(#"apple") ~is_now values(#"apple", 5, #'complete)
+  check c.convert(#"apple", ~start: 1, ~end: 4) ~is_now values(#"ppl", 3, #'complete)
+  check c.convert(#"\xFF") ~is_now values(#"\357\277\275", 1, #'complete)
+  check c.convert(#"\357") ~is_now values(#"", 0, bytes.Converter.Status.aborts)
+  check c.convert(#"\357\277\275") ~is_now values(#"\357\277\275", 3, #'complete)
+  def dest2 = Bytes.make(2)
+  check c.convert_to(#"\357\277\275", ~dest: dest2) ~is values(0, 0, bytes.Converter.Status.continues)
+  def dest5 = Bytes.make(5)
+  check: c.convert_to(#"\357\277\275", ~dest: dest5, ~dest_start: 1, ~dest_end: 4)
+         ~is values(3, 3, #'complete)
+  check: dest5 ~is_now #"\0\357\277\275\0"
+  check c.end() ~is_now values(#"", #'complete)
+  check c.end_to(~dest: dest5) ~is values(0, #'complete)
+  check c.close() ~is #void
+  check c.convert(#"") ~throws values("bytes.Converter.convert:",
+                                      "converter is closed")
+  check c.convert_to(#"", ~dest: dest5) ~throws values("bytes.Converter.convert_to:",
+                                                       "converter is closed")
+  check c.end() ~throws values("bytes.Converter.end:",
+                               "converter is closed")
+  check c.end_to(~dest: dest5) ~throws values("bytes.Converter.end_to:",
+                                              "converter is closed")
+
+block:
+  check: bytes.Converter.try_open(~from: "UTF-8-permissive", ~to: "UTF-8")
+         ~is_a bytes.Converter
+  check: bytes.Converter.try_open(~from: "UTF-8-not-so-permissive", ~to: "crazy-UTF-8")
+         ~is #false
+  check: bytes.Converter.try_open(~from: "UTF-8-permissive", ~to: "UTF-8")!!.close()
+         ~is #void
+
+block:
+  check bytes.current_locale() ~is_a String
+  check: parameterize { bytes.current_locale: "other" }:
+            bytes.current_locale()
+         ~is "other"

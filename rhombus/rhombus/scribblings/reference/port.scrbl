@@ -2,12 +2,7 @@
 @(import:
     "common.rhm" open)
 
-@title{Ports}
-
-A @deftech{port} is an input or output stream for a file, network
-connection, terminal, etc. An @tech{input port} is specifically for
-input, while an @tech{output port} is specifically for
-output; it is possible for an object to be both an input and output port.
+@title(~tag: "general-port"){Port Objects}
 
 @doc(
   annot.macro 'Port'
@@ -62,6 +57,8 @@ output; it is possible for an object to be both an input and output port.
  terminal, @rhombus(#'block) buffered otherwise. The initial
  @rhombus(stderr) port's buffer mode is @rhombus(#'none).
 
+ See also @secref(~doc: model_doc, "port-buffer").
+
 }
 
 
@@ -108,6 +105,8 @@ output; it is possible for an object to be both an input and output port.
  produced by @rhombus(Port.open_input_output_file) share the file position, setting the
  position via one port does not flush the other port's buffer.
 
+ See also @secref(~doc: model_doc, "linecol").
+
 }
 
 
@@ -145,6 +144,8 @@ output; it is possible for an object to be both an input and output port.
  @rhombus(Port.next_location) with arguments attempts to set the next
  location, but the attempt is ignored if location tracking has not been
  enabled or if the port does not support external adjustments.
+
+ See also @secref(~doc: model_doc, "linecol").
 
 }
 

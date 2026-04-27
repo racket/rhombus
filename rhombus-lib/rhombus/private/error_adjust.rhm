@@ -1,0 +1,6 @@
+#lang rhombus/static
+import:
+  "amalgam.rkt"!error_adjust
+
+export:
+  error_adjust.local_error_adjust

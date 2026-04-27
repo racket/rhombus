@@ -1,0 +1,91 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+  rhombus/private/error_adjust.local_error_adjust
+
+export:
+  Converter
+  current_locale
+
+class Converter(private _handle):
+  ~name: bytes.Converter
+  internal _Converter
+
+  constructor (~from: from :: String, ~to: to :: String):
+    let handle = rkt.#{bytes-open-converter}(from, to)
+    if handle
+    | super(handle)
+    | error(~who: "bytes.Converter",
+            "converter not available",
+            error.val(~label: "from", from),
+            error.val(~label: "to", to))
+
+  property handle: _handle
+
+  method close():
+    rkt.#{bytes-close-converter}(_handle)
+
+  enum Status
+  | complete
+  | continues
+  | aborts
+  | error
+
+  method convert(
+    src :: Bytes,
+    ~start: src_start :: Nat = 0,
+    ~end: src_end :: Nat = src.length()
+  ) :~ values(Bytes, Nat, Status):
+    ~who: who
+    local_error_adjust { #'#{bytes-convert}: who }:
+      rkt.#{bytes-convert}(handle,
+                           src, src_start, src_end)
+
+  method convert_to(
+    src :: Bytes,
+    ~start: src_start :: Nat = 0,
+    ~end: src_end :: Nat = src.length(),
+    ~dest: dest :: MutableBytes,
+    ~dest_start: dest_start :: Nat = 0,
+    ~dest_end: dest_end :: Nat = dest.length()
+  ) :~ values(Nat, Nat, Status):
+    ~who: who
+    local_error_adjust { #'#{bytes-convert}: who }:
+      rkt.#{bytes-convert}(handle,
+                           src, src_start, src_end,
+                           dest, dest_start, dest_end)
+
+  method end() :~ values(Bytes, Status):
+    ~who: who
+    local_error_adjust { #'#{bytes-convert-end}: who }:
+      rkt.#{bytes-convert-end}(handle)
+
+  method end_to(
+    ~dest: dest :: MutableBytes,
+    ~dest_start: dest_start :: Nat = 0,
+    ~dest_end: dest_end :: Nat = dest.length()
+  ) :: values(Nat, Status):
+    ~who: who
+    local_error_adjust { #'#{bytes-convert-end}: who }:
+      rkt.#{bytes-convert-end}(handle,
+                               dest, dest_start, dest_end)
+
+  export:
+    Status
+    try_open
+
+  fun try_open(~from: from :: String, ~to: to :: String) :~ maybe(Converter):
+    let handle = rkt.#{bytes-open-converter}(from, to)
+    handle && _Converter(handle)
+
+def current_locale :~ Function.assume_of(Function.all_of(() -> maybe(String), maybe(String) -> Void)):
+  rkt.#{make-derived-parameter}(
+    rkt.#{current-locale},
+    fun (s :: String):
+      ~name: current_locale
+      s,
+    fun (s):
+      to_string(s),
+    #'rhombus,
+    #'#{current_locale}
+  )

@@ -19,6 +19,8 @@ namespace system:
     target_machine
     version
     racket_version
+    locale_string_encoding
+    language_and_country
     path
     seconds
     milliseconds
@@ -57,6 +59,12 @@ namespace system:
 
   fun racket_version() :~ String:
     String.snapshot(rkt.#{version}())
+
+  fun locale_string_encoding() :~ String:
+    to_string(rkt.#{locale-string-encoding}())
+
+  fun language_and_country() :~ String:
+    to_string(rkt.#{system-language+country}())
 
   fun path(which :: Symbol):
     ~who: who
