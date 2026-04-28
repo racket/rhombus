@@ -140,7 +140,7 @@ namespace payload:
   namespace multipart:
     export:
       Part
-    class Part(_handle):
+    class Part(private _handle):
       opaque
       internal _Part
       export:
@@ -166,7 +166,7 @@ namespace payload:
     | easy.#{multipart-payload}(f.handle, ...)
 
 
-class PoolConfig(_handle):
+class PoolConfig(private _handle):
   opaque
   internal _PoolConfig
   property handle: _handle
@@ -175,7 +175,7 @@ class PoolConfig(_handle):
     super(easy.#{make-pool-config}(~#{max-size}: max_size,
                                    ~#{idle-timeout}: idle_timeout))
 
-class Timeouts(_handle):
+class Timeouts(private _handle):
   opaque
   internal _Timeouts
   property handle: _handle
@@ -186,7 +186,7 @@ class Timeouts(_handle):
                                       ~connect: connect,
                                       ~request: request))
 
-class LiteralURL(_handle):
+class LiteralURL(private _handle):
   opaque
   internal _LiteralURL
   private implements Printable
@@ -209,7 +209,7 @@ let header_rx = rx'case_insensitive:
                        ++ ($val:
                               any *)'
 
-class Response(_handle):
+class Response(private _handle):
   opaque
   implements Closeable
   internal _Response
@@ -316,7 +316,7 @@ expr.macro 'header_extract($who, $hand, $key, ...)':
                         [['quote', '#true'],
                          expr_meta.pack_expr('#false')]])
 
-class Proxy(_handle):
+class Proxy(private _handle):
   opaque
   internal _Proxy
   property handle: _handle
@@ -347,7 +347,7 @@ fun https(~proxy_url: proxy_url :: String || Bytes || url.URL,
                                  fun (url_handle):
                                    matches(url.URL.from_handle(url_handle))))
 
-class Session(_handle):
+class Session(private _handle):
   opaque
   implements Closeable
   internal _Session

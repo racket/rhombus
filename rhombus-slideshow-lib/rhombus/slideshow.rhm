@@ -202,7 +202,7 @@ fun start_at_recent():
 
 // ----------------------------------------
 
-class Slide(_handle):
+class Slide(private _handle):
   internal _Slide
   constructor ~none
   property handle: _handle

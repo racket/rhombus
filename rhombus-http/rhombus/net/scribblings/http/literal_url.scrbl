@@ -12,15 +12,14 @@
 @(def url_class = @rhombus(url.URL, ~class))
 @doc(
   class http.LiteralURL():
-    constructor (s :: String):
-      super(easy.#{string->url/literal}(s))
+    constructor (s :: String)
 
   method (url :: http.LiteralURL).to_string() :: String
 ){
 
  A @rhombus(LiteralURL, ~class) object represents Literal URL string
  that may not conform to the parsing implemented by @url_class.
- for user, path, query and fragment components. When converting to a
+ for user, path, query, and fragment components. When converting to a
  string, only the components of those components that are not already
  percent encoded are encoded. A component is considered to be percent
  encoded if all of its percent characters are followed by two hexadecimal

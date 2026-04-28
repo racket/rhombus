@@ -10,12 +10,11 @@ export:
   Semaphore
   Channel
   Synchronizable
-  except_space class:
-    evt.ProgressEvt
-    evt.CommitEvt
   Evt
   only_space annot:
     evt.Evt
+    evt.ProgressEvt
+    evt.CommitEvt
 
 expr.macro 'thread:
               $(group_option_sequence
@@ -83,7 +82,7 @@ namespace ~open:
       opaque
       internal _Pool
       constructor (n :: PosInt = processor_count()):
-        super(rkt_thd.#{make-parallel-thread-pool}(n))    
+        super(rkt_thd.#{make-parallel-thread-pool}(n))
       property handle: hand
       method close():
         rkt_thd.#{parallel-thread-pool-close}(hand)
@@ -315,4 +314,3 @@ namespace Evt:
     unless rkt.#{evt?}(v)
     | error(~who: who, "not an evt handle")
     _GenericEvt(v)
-

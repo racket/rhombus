@@ -25,7 +25,7 @@ enum NetworkWait
 
 // TCP ----------------------------------------
 
-class TCPListener(_handle):
+class TCPListener(private _handle):
   opaque
   implements Closeable
   constructor (~host: host :: maybe(String) = #false,
@@ -99,14 +99,16 @@ namespace TCP:
     let (h, p, ph, pp) = tcp.#{tcp-addresses}(port, #true)
     values(to_string(h), p, to_string(ph), pp)
 
-class AcceptEvt(_handle):
+class AcceptEvt(private _handle):
   implements Evt
   opaque
+  constructor (hand):
+    super(hand)
   override property handle: _handle
 
 // UDP ----------------------------------------
 
-class UDP(_handle):
+class UDP(private _handle):
   opaque
   internal _UDP
   implements Closeable
@@ -245,26 +247,34 @@ class UDP(_handle):
   property | multicast_ttl :~ Byte: rkt.#{udp-multicast-ttl}(_handle)
            | multicast_ttl := (n :: Byte): rkt.#{udp-multicast-set-ttl!}(_handle, n)
 
-  class SendEvt(_handle):
+  class SendEvt(private _handle):
     implements Evt
     opaque
+    constructor (hand):
+      super(hand)
     override property handle: _handle
 
-  class ReceiveEvt(_handle):
+  class ReceiveEvt(private _handle):
     implements Evt
     opaque
+    constructor (hand):
+      super(hand)
     override property handle: _handle
 
-  class SendReadyEvt(_handle):
+  class SendReadyEvt(private _handle):
     implements Evt
     private implements _Evt
     opaque
+    constructor (hand):
+      super(hand)
     override property handle: _handle
     private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)
 
-  class ReceiveReadyEvt(_handle):
+  class ReceiveReadyEvt(private _handle):
     implements Evt
     private implements _Evt
     opaque
+    constructor (hand):
+      super(hand)
     override property handle: _handle
     private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)

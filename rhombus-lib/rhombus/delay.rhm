@@ -12,7 +12,7 @@ export:
   delay
   Delay
 
-class Delay(_handle):
+class Delay(private _handle):
   opaque
   internal _Delay
   constructor (thunk):

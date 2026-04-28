@@ -251,14 +251,14 @@ class NothingAfterPictEpoch():
   override sustain(extent):
     [this, extent, StaticPictEpoch(nothing), 0]
 
-class MetadataPictEpoch(_metadata):
+class MetadataPictEpoch(data):
   extends LikePictEpoch
   override sustain(extent):
     let [pre :~ PictEpoch, pre_extent, post :~ PictEpoch, post_extent] = e.sustain(extent)
-    [MetadataPictEpoch(pre, instance_as, _metadata), pre_extent,
+    [MetadataPictEpoch(pre, instance_as, data), pre_extent,
      post, post_extent]
   override metadata():
-    _metadata
+    data
 
 class ProcPictEpoch(proc,
                     _children_and_config :~ List,
@@ -362,23 +362,23 @@ class TransitionPictEpoch(epochs :~ List.of(PictEpoch),
 expr.macro 'AMETHOD($name, $arg, ...)':
   'fun (this :~ _AnimPict): this . $name($arg, ...)'
 
-class AnimPict(_identity_f :~ PictIdentity,
-               _epochs :~ List.of(PictEpoch),
-               _epoch_extents :~ List.of(Real), // parallel to `_epochs`
-               _duration_start :~ Int,  // index into `_epoch` for time box start
-               _duration :~ Int, // number of epochs; see below for more information
-               _sustaining,
-               _before :~ StaticPict, // for measuring
-               _children :~ AnimPict || List.of(AnimPict),
+class AnimPict(private _identity_f :~ PictIdentity,
+               private _epochs :~ List.of(PictEpoch),
+               private _epoch_extents :~ List.of(Real), // parallel to `_epochs`
+               private _duration_start :~ Int,  // index into `_epoch` for time box start
+               private _duration :~ Int, // number of epochs; see below for more information
+               private _sustaining,
+               private _before :~ StaticPict, // for measuring
+               private _children :~ AnimPict || List.of(AnimPict),
                // a superset of children, but can have extra children that are hidden from functions like find
-               _dependencies :~ maybe(List),
+               private _dependencies :~ maybe(List),
                // like dependencies, but non-picts
-               _config :~ maybe(Map),
-               _child_starts :~ Int || List.of(Int),
+               private _config :~ maybe(Map),
+               private _child_starts :~ Int || List.of(Int),
                // arbitrary data associated with the pict- but not configurable (pict can't be rebuilt with new metadata)
-               _metadata :~ Map,
+               private _metadata :~ Map,
                // a function to rebuild this pict based on a new dependencies and configuration
-               _rebuild :~ Function.of_arity(1)):
+               private _rebuild :~ Function.of_arity(1)):
   ~name Pict
   extends Pict
   internal _AnimPict
@@ -899,7 +899,7 @@ fun anim_pict_like(this :~ _AnimPict,
             metadata,
             rebuild)
 
-fun anim_pict_adjust(this :~ AnimPict,
+fun anim_pict_adjust(this :~ _AnimPict,
                      ~dependencies: dependencies = #false,
                      adjust,
                      ~rebuild: rebuild = adjust,

@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   lib("racket/base.rkt")
+  "core-meta.rkt" open
   "enum.rhm" open
   "maybe.rhm" open
   "evt.rkt".#{set-evt!}
@@ -11,7 +12,6 @@ export:
   Evt
   _Evt
   __Evt
-  WrapEvt
   WrapReturn
   ProgressEvt
   CommitEvt
@@ -73,23 +73,29 @@ enum WrapReturn
 | tail
 | no_break
 
-class WrapEvt(hand):
+class WrapEvt(private _handle):
   implements Evt
   opaque
-  override property handle: hand
+  constructor (hand):
+    super(hand)
+  override property handle: _handle
 
-class ReplaceEvt(hand):
+class ReplaceEvt(private _handle):
   implements Evt
   opaque
-  override property handle: hand
+  constructor (hand):
+    super(hand)
+  override property handle: _handle
 
-class ProgressEvt(hand):
+class ProgressEvt(private _handle):
   implements Evt
   private implements _Evt
   internal _ProgressEvt
   opaque
-  override property handle: hand
-  private override property sync_handle: base.#{wrap-evt}(hand, fun (v): this)
+  constructor (hand):
+    super(hand)
+  override property handle: _handle
+  private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)
 
 interface CommitEvt
 

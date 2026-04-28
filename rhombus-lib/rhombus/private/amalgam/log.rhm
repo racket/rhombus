@@ -178,12 +178,14 @@ class LogReceiver(private _handle):
             error.val(handle))
     _LogReceiver(handle)
 
-class LoggerChangeEvt(hand):
+class LoggerChangeEvt(private _handle):
   implements Evt
   private implements _Evt
   opaque
-  override property handle: hand
-  private override property sync_handle: base.#{wrap-evt}(hand, fun (v): this)
+  constructor (hand):
+    super(hand)
+  override property handle: _handle
+  private override property sync_handle: base.#{wrap-evt}(_handle, fun (v): this)
 
 expr.macro 'log': 'Logger.current()'
 
