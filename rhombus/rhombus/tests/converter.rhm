@@ -42,3 +42,6 @@ block:
   check: parameterize { bytes.current_locale: "other" }:
             bytes.current_locale()
          ~is "other"
+
+block:
+  check bytes.hex_string(#"\1\2\377a") ~is "0102ff61"

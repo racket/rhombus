@@ -11,3 +11,4 @@
 @include_section("log.scrbl")
 @include_section("printing.scrbl")
 @include_section("shrubbery.scrbl")
+@include_section("crypto_hash.scrbl")

@@ -6,6 +6,7 @@ import:
 export:
   Converter
   current_locale
+  hex_string
 
 class Converter(private _handle):
   ~name: bytes.Converter
@@ -89,3 +90,15 @@ def current_locale :~ Function.assume_of(Function.all_of(() -> maybe(String), ma
     #'rhombus,
     #'#{current_locale}
   )
+
+fun hex_string(bstr :: Bytes) :~ String:
+  let out = Port.Output.open_bytes()
+  fun digit(i):
+    if i < 10
+    | i + Char"0".to_int()
+    | i-10 + Char"a".to_int()
+  for PairList (i in 0..bstr.length()):
+    let b = bstr[i]
+    out.write_byte(digit(b bits.(>>) 4))
+    out.write_byte(digit(b bits.and 0xF))
+  out.get_string()

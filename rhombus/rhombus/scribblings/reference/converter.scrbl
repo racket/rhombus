@@ -264,3 +264,22 @@ encodings.
  for more information.
 
 }
+
+@doc(
+  fun bytes.hex_string(bstr :: Bytes) :: String
+){
+
+ Returns a string with a 2-digit hexadecimal number each the byte values
+ in @rhombus(bstr). That is, the result string has twice as many
+ characters as @rhombus(bstr) has bytes, and every character in the
+ result string is a hexadecimal digit in the range @rhombus(Char"0") to
+ @rhombus(Char"9") or @rhombus(Char"a") to @rhombus(Char"f").
+
+@examples(
+  ~hidden:
+    import rhombus/bytes
+  ~repl:
+    bytes.hex_string(#"A\000\377")
+)
+
+}

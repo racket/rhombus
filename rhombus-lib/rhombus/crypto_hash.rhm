@@ -1,0 +1,30 @@
+#lang rhombus/static
+import:
+  lib("racket/base.rkt") as rkt
+  rhombus/bytes
+
+export:
+  sha1_bytes
+  sha224_bytes
+  sha256_bytes
+  sha1
+  sha224
+  sha256
+
+fun sha1_bytes(in :: Bytes || Port.Input) :~ Bytes:
+  rkt.#{sha1-bytes}(in)
+
+fun sha224_bytes(in :: Bytes || Port.Input) :~ Bytes:
+  rkt.#{sha224-bytes}(in)
+
+fun sha256_bytes(in :: Bytes || Port.Input) :~ Bytes:
+  rkt.#{sha256-bytes}(in)
+
+fun sha1(in :: Bytes || Port.Input) :~ String:
+  bytes.hex_string(rkt.#{sha1-bytes}(in))
+
+fun sha224(in :: Bytes || Port.Input) :~ String:
+  bytes.hex_string(rkt.#{sha224-bytes}(in))
+
+fun sha256(in :: Bytes || Port.Input) :~ String:
+  bytes.hex_string(rkt.#{sha256-bytes}(in))

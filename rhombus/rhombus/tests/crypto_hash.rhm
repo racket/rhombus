@@ -1,0 +1,12 @@
+#lang rhombus/static
+import:
+  rhombus/crypto_hash
+
+check crypto_hash.sha1_bytes(#"apple") ~is_now  #"\320\276-\304!\276O\315\1r\345\257\316\3529p\342\363\331@"
+check crypto_hash.sha1(#"apple") ~is "d0be2dc421be4fcd0172e5afceea3970e2f3d940"
+
+check crypto_hash.sha224_bytes(#"apple") ~is_now #"\267\273\375\361\241\1)\231\263\304f\375\353\220jb\234\252^>\2$(\321\353p\"\201"
+check crypto_hash.sha224(#"apple") ~is "b7bbfdf1a1012999b3c466fdeb906a629caa5e3e022428d1eb702281"
+
+check crypto_hash.sha256_bytes(#"apple") ~is_now #":{\323\3426\n=)\356\2446\374\373~D\3075\321\27\304-\34\0305B\vk\231B\335O\e"
+check crypto_hash.sha256(#"apple") ~is "3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1b"
