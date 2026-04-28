@@ -140,6 +140,8 @@ namespace payload:
   namespace multipart:
     export:
       Part
+      field
+      file
     class Part(private _handle):
       opaque
       internal _Part
@@ -155,7 +157,7 @@ namespace payload:
       _Part(easy.#{field-part}(name, value, content_type))
     fun file(~name: name :: Bytes || String,
              ~in: inp :: Port.Input,
-             ~filename: filename :: Bytes || String = to_string(Port.name(inp)),
+             ~filename: filename :: Bytes || String = to_string(inp.name()),
              ~content_type: content_type :: Bytes || String = #"application/octet-stream") :: Part:
       ~name: multipart.Part.field
       _Part(easy.#{file-part}(name, inp, filename, content_type))

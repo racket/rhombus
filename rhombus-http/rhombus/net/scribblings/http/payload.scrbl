@@ -38,7 +38,7 @@
 ){
 
  Produces a payload function that encodes @rhombus(v) as form data using the
- @rhombus(application/x-www-form-urlencoded) content type.
+ @tt{application/x-www-form-urlencoded} content type.
 
 }
 
@@ -65,5 +65,53 @@
 ){
 
  Produces a payload function that uses @rhombus(inp) as the request body.
+
+}
+
+
+@doc(
+  class http.payload.multipart.Part():
+    constructor ~none
+  fun http.payload.multipart(
+    ~boundary: boundary :: maybe(Bytes || String),
+    f :: payload.multipart.Part, ...
+  ) :: payload.Function
+){
+
+ A @rhombus(payload.multipart.Part, ~class) can be used with @rhombus(payload.multipart)
+ to produce a @tt{multipart/form-data} payload.
+
+}
+
+@doc(
+  fun http.payload.multipart.Part.field(
+    ~name: name :: Bytes || String,
+    ~value: value :: Bytes || String,
+    ~content_type: content_type :: Bytes || String = #"text/plain"
+  ) :: payload.multipart.Part
+){
+
+ Produces a @rhombus(payload.multipart.Part, ~class) that encapsulates a form field.
+
+}
+
+@doc(
+  fun http.payload.multipart.Part.file(
+    ~name: name :: Bytes || String,
+    ~in: inp :: Port.Input,
+    ~filename: filename :: Bytes || String = to_string(inp.name()),
+    ~content_type: content_type :: Bytes || String = #"application/octet-stream"
+  ) :: payload.multipart.Part
+){
+
+ Produces a @rhombus(payload.multipart.Part, ~class) that encapsulates a file.
+
+}
+
+@doc(
+  property (pt :: http.payload.multipart.Part).handle
+){
+
+ Returns a Racket representation of the part.
 
 }
