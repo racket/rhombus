@@ -102,13 +102,13 @@
 @doc(
   method (finder :: Find).in(
     pict :: Pict,
-    epoch :: Int = 0, n :: RealIn(0, 1) = 0,
+    epoch :: Int = 0, n :: Real.in(0, 1) = 0,
     ~nth: nth :: Nat || matching(#'unique) = #'unique
   ) :: values(Real, Real)
 ){
 
  Applies @rhombus(finder) to @rhombus(pict) to get an x-offset and
- y-offset. An exception is thrown is a needed component pict cannot be
+ y-offset. An exception is thrown if a needed component pict cannot be
  found in @rhombus(pict) or if it is found at multiple locations
  within @rhombus(pict).
 
@@ -124,9 +124,9 @@
 @doc(
   method (finder :: Find).maybe_in(
     pict :: Pict,
-    epoch :: Int = 0, n :: RealIn(0, 1) = 0,
+    epoch :: Int = 0, n :: Real.in(0, 1) = 0,
     ~nth: nth :: Nat || matching(#'unique) = #'unique
-  ) :: values(Real, Real)
+  ) :: values(maybe(Real), maybe(Real))
 ){
 
  Like @rhombus(Find.in), but if a location cannot be found in
