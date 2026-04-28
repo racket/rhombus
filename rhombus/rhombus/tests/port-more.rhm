@@ -1,0 +1,232 @@
+#lang rhombus/static
+import:
+  rhombus/port
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.limit(in, 5)
+  check out.write_bytes(#"abcdefghij") ~is 10
+  check in2.read_bytes(10) ~is_now #"abcde"
+  in2.close()
+  
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.peeking(in,
+                               ~name: "peeking",
+                               ~skip: 1,
+                               ~init_position: 10)
+  check in2.name() ~is "peeking"
+  check out.write_bytes(#"abcdefghij") ~is 10
+  check in2.position() ~is 9
+  check in2.read_bytes(5) ~is_now #"bcdef"
+  check in2.read_bytes(2) ~is_now #"gh"
+  check in.read_bytes(6) ~is_now #"abcdef"  
+  in2.close()
+
+block:
+  let (in, out) = Port.Pipe.make()
+  in.locations_enabled(#true)
+  let in2 = port.input.relocate(in, 11, 0, 32, ~name: "moved", ~close: #true)
+  in2.locations_enabled(#true)
+  check out.write_bytes(#"abcdefghij") ~is 10
+  check in2.name() ~is "moved"
+  check in2.position() ~is 31
+  check in2.next_location() ~is values(11, 0, 32)
+  check in.read_bytes(3) ~is_now #"abc"
+  check in2.next_location() ~is values(11, 3, 35)
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.reencode(in,
+                                ~name: "new",
+                                ~from: "UTF-8",
+                                ~error_bytes: #"oops",
+                                ~close: #true)
+  check in2.name() ~is "new"
+  out.write_bytes(#"_\377_")
+  out.close()
+  check in2.read_bytes(4) ~is_now #"_oop"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.reencode(in,
+                                ~name: "new",
+                                ~from: "UTF-8",
+                                ~close: #true,
+                                ~encode_fail: fun (s, in):
+                                                check s ~is_a String
+                                                check in ~is_a Port.Input
+                                                error("no good"))
+  check in2.name() ~is "new"
+  out.write_bytes(#"_\377_")
+  out.close()
+  check in2.read_bytes(4) ~throws "no good"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let (in2, out2) = Port.Pipe.make()
+  let in3 = port.input.append(in, in2)
+  out2.write_bytes(#"apple")
+  out.write_bytes(#"banana")
+  check in3.read_bytes(5) ~is_now #"banan"
+  out.close()
+  out2.close()
+  check in3.read_bytes(10) ~is_now #"aapple"
+
+block:
+  let in = port.input.interleave()
+  check in.read_bytes(5) ~is Port.eof
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.interleave(in)
+  out.write_bytes(#"apple")
+  check in2.read_bytes(5) ~is_now #"apple"  
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let (in2, out2) = Port.Pipe.make()
+  let in3 = port.input.interleave(in, in2)
+  out2.write_bytes(#"apple")
+  check in3.read_bytes(5) ~is_now #"apple"
+  out.write_bytes(#"banana")
+  check in3.read_bytes(3) ~is_now #"ban"
+  out.close()
+  out2.close()
+  check in3.read_bytes(10) ~is_now #"ana"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let (in2, out2) = Port.Pipe.make()
+  let (in3, out3) = Port.Pipe.make()
+  let in3 = port.input.interleave(in, in2, in3)
+  out2.write_bytes(#"apple")
+  check in3.read_bytes(5) ~is_now #"apple"
+  out.write_bytes(#"banana")
+  check in3.read_bytes(6) ~is_now #"banana"
+  out2.write_bytes(#"cherry")
+  check in3.read_bytes(3) ~is_now #"che"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let in2 = port.input.dup(in)
+  out.write_bytes(#"apple")
+  check in2.read_bytes(3) ~is_now #"app"
+  in2.close()
+  check in.read_bytes(2) ~is_now #"le"
+
+block:
+  let in = port.input.open_nowhere(~name: "none")
+  check in.name() ~is "none"
+  check in.read_bytes(10) ~is Port.eof
+
+block:
+  let (in, out) = Port.Pipe.make()
+  out.locations_enabled(#true)
+  let out2 = port.output.relocate(out, 11, 0, 32, ~name: "moved", ~close: #true)
+  out2.locations_enabled(#true)
+  check out2.position() ~is 31
+  check out2.next_location() ~is values(11, 0, 32)
+  check out2.name() ~is "moved"
+  check out.write_bytes(#"abc") ~is 3
+  check out2.next_location() ~is values(11, 3, 35)
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let out2 = port.output.reencode(out,
+                                  ~name: "new",
+                                  ~from: "UTF-8",
+                                  ~error_bytes: #"oops",
+                                  ~close: #true)
+  check out2.name() ~is "new"
+  out2.write_bytes(#"_\377_")
+  out2.close()
+  check in.read_bytes(4) ~is_now #"_oop"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let out2 = port.output.reencode(out,
+                                  ~name: "new",
+                                  ~from: "UTF-8",
+                                  ~close: #true,
+                                  ~encode_fail: fun (s, in):
+                                                  check s ~is_a String
+                                                  check in ~is_a Port.Output
+                                                  error("no good"))
+  check out2.name() ~is "new"
+  check (block: out2.write_bytes(#"_\377_"); out2.close()) ~throws "no good"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let (in2, out2) = Port.Pipe.make()
+  let out3 = port.output.tee(out, out2)
+  check out3.write_bytes(#"apple") ~is 5
+  check in.read_bytes(4) ~is_now #"appl"
+  check in2.read_bytes(5) ~is_now #"apple"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let (in2, out2) = Port.Pipe.make()
+  let out3 = port.output.tee(out, out2)
+  check out3.write_bytes(#"apple") ~is 5
+  check in.read_bytes(4) ~is_now #"appl"
+  check in2.read_bytes(5) ~is_now #"apple"
+
+block:
+  let (in, out) = Port.Pipe.make()
+  let out2 = port.output.dup(out)
+  out2.write_bytes(#"apple")
+  check in.read_bytes(3) ~is_now #"app"
+  out2.close()
+  out.write_bytes(#"banana")
+  check in.read_bytes(4) ~is_now #"leba"
+  out.close()
+
+block:
+  let out = port.output.open_nowhere(~name: "none")
+  check out.name() ~is "none"
+  check out.write_bytes(#"anything") ~is 8
+
+block:
+  let (in, out) = port.pipe.make_special(4, ~in_name: "in", ~out_name: "out")
+  check out ~is_a Port.Output.Special
+  check in.name() ~is "in"
+  check out.name() ~is "out"
+  check out.write_bytes(#"abc") ~is 3
+  check out.write(#'other) ~is #true
+  check in.read_bytes(3) ~is_now #"abc"
+  check in.read_byte(~special_wrap: List) ~is_now [#'other]
+
+block:
+  let in0 = Port.Input.open_bytes(#"apple")
+  let (in, out) = Port.Pipe.make()  
+  port.copy(in0, out)
+  out.close()
+  check in.read_bytes(10) ~is_now #"apple"
+
+block:
+  let in0 = Port.Input.open_bytes(#"apple")
+  let (in, out) = Port.Pipe.make()  
+  let (in2, out2) = Port.Pipe.make()  
+  port.copy(in0, out, out2)
+  out.close()
+  out2.close()
+  check in.read_bytes(10) ~is_now #"apple"
+  check in2.read_bytes(10) ~is_now #"apple"
+
+block:
+  let in0 = Port.Input.open_bytes(#"ap\xFFple")
+  let (in, out) = Port.Pipe.make()  
+  port.copy(in0, out, ~in_encoding: "UTF-8-permissive", ~out_encoding: "UTF-8")
+  out.close()
+  check in.read_bytes(10) ~is_now #"ap\357\277\275ple"
+
+block:
+  let in0 = Port.Input.open_bytes(#"ap\xFFple")
+  let (in, out) = Port.Pipe.make()  
+  let (in2, out2) = Port.Pipe.make()  
+  port.copy(in0, out, out2, ~in_encoding: "UTF-8-permissive", ~out_encoding: "UTF-8")
+  out.close()
+  out2.close()
+  check in.read_bytes(10) ~is_now #"ap\357\277\275ple"
+  check in2.read_bytes(10) ~is_now #"ap\357\277\275ple"

@@ -48,5 +48,5 @@ This document defines the main Rhombus language bindings.
 @include_section("io.scrbl")
 @include_section("os.scrbl")
 @include_section("concurrency.scrbl")
-@include_section("security.scrbl")
+@include_section("shutdown.scrbl")
 @include_section("runtime.scrbl")

@@ -1,0 +1,117 @@
+#lang rhombus/static
+import:
+  lib("racket/port.rkt") as rkt
+
+export:
+  input
+  output
+  pipe
+  copy
+
+namespace input:
+  export fun limit(in :: Port.Input,
+                   limit :: Nat,
+                   ~close = #false) :~ Port.Input:
+    rkt.#{make-limited-input-port}(in, limit, close)
+  export fun peeking(in :: Port.Input,
+                     ~name: name = in.name(),
+                     ~skip: skip :: Nat = 0,
+                     ~init_position: init_position :: PosInt = 1) :~ Port.Input:
+    rkt.#{peeking-input-port}(in, name, skip, ~#{init-position}: init_position)
+  export fun relocate(in :: Port.Input,
+                      line :: maybe(PosInt),
+                      column :: maybe(Nat),
+                      position :: maybe(PosInt),
+                      ~name: name = in.name(),
+                      ~close = #false) :~ Port.Input:
+      rkt.#{relocate-input-port}(in, line, column, position, close, ~name: name)
+  export fun reencode(in :: Port.Input,
+                      ~from: from :: String,
+                      ~name: name = in.name(),
+                      ~error_bytes: error_bytes :: maybe(Bytes) = #false,
+                      ~convert_newlines = #false,
+                      ~close = #false,
+                      ~encode_fail: encode_fail :: Function.of_arity(2) described_as (String, Port.Input) -> Never
+                                      = default_encode_fail) :~ Port.Input:
+    if encode_fail == default_encode_fail
+    | rkt.#{reencode-input-port}(in, from, error_bytes, close, name, convert_newlines)
+    | rkt.#{reencode-input-port}(in, from, error_bytes, close, name, convert_newlines, encode_fail)
+  export fun append(~close = #false,
+                    ~name: name = default_encode_fail,
+                    in :: Port.Input,
+                    ...) :~ Port.Input:
+    rkt.#{input-port-append}(close, in, ..., ~name: (if name == default_encode_fail
+                                                     | [in.name(), ...]
+                                                     | name))
+  export fun interleave(~buffer_limit: buffer_limit :: maybe(Nat) = 4096,
+                        in :: Port.Input,
+                        ...) :~ Port.Input:
+    recur loop(ins = [in, ...]):
+      match ins
+      | []:
+          rkt.#{open-input-nowhere}()
+      | [in]: in
+      | [in1, in2]:
+          rkt.#{merge-input}(in1, in2, buffer_limit)
+      | [in, & ins]:
+          rkt.#{merge-input}(in, loop(ins), buffer_limit)
+
+  export fun dup(in :: Port.Input,
+                 ~close = #false) :~ Port.Input:
+    rkt.#{dup-input-port}(in, close)
+  export fun open_nowhere(~name: name = #'nowhere) :~ Port.Input:
+    rkt.#{open-input-nowhere}(name)
+
+namespace output:
+  export fun relocate(out :: Port.Output,
+                      line :: maybe(PosInt),
+                      column :: maybe(Nat),
+                      position :: maybe(PosInt),
+                      ~name: name = out.name(),
+                      ~close = #false) :~ Port.Output:
+    rkt.#{relocate-output-port}(out, line, column, position, close, ~name: name)
+  export fun reencode(out :: Port.Output,
+                      ~from: from :: String,
+                      ~name: name = out.name(),
+                      ~error_bytes: error_bytes :: maybe(Bytes) = #false,
+                      ~convert_newlines = #false,
+                      ~close = #false,
+                      ~encode_fail: encode_fail :: Function.of_arity(2) described_as (String, Port.Output) -> Never
+                                      = default_encode_fail) :~ Port.Output:
+    if encode_fail == default_encode_fail
+    | rkt.#{reencode-output-port}(out, from, error_bytes, close, name, convert_newlines)
+    | rkt.#{reencode-output-port}(out, from, error_bytes, close, name, convert_newlines, encode_fail)
+  export fun tee(out :: Port.Output, ...) :~ Port.Output:
+    recur loop(outs = [out, ...]):
+      match outs
+      | []: output.open_nowhere()
+      | [out]: out
+      | [out, & outs]:
+          rkt.#{combine-output}(out, loop(outs))
+  export fun dup(out :: Port.Output,
+                 ~close = #false) :~ Port.Output:
+    rkt.#{dup-output-port}(out, close)
+  export fun open_nowhere(~name: name = #'nowhere,
+                          ~allow_special = #false) :~ Port.Output:
+    rkt.#{open-output-nowhere}(name, allow_special)
+
+namespace pipe:
+  export fun make_special(limit :: Nat,
+                          ~in_name: in_name = #'pipe,
+                          ~out_name: out_name = #'pipe) :~ values(Port.Input,
+                                                                  Port.Output.Special):
+    rkt.#{make-pipe-with-specials}(limit, in_name, out_name)
+
+export fun copy(in :: Port.Input,
+                ~in_encoding: from :: String = "UTF-8",
+                ~out_encoding: to :: String = "UTF-8",
+                out :: Port.Output,
+                ...,):
+  cond
+  | from == "UTF-8" && to == "UTF-8":
+      rkt.#{copy-port}(in, out, ...)
+  | ~else:
+      rkt.#{convert-stream}(from, in, to, output.tee(out, ...))
+
+fun default_encode_fail(msg, in):
+  error(msg)

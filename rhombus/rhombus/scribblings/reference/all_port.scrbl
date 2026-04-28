@@ -19,3 +19,4 @@ information about ports.
 @include_section("output_port.scrbl")
 @include_section("file_stream_port.scrbl")
 @include_section("pipe.scrbl")
+@include_section("port-lib.scrbl")
