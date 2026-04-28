@@ -30,11 +30,11 @@ block:
                                               "converter is closed")
 
 block:
-  check: bytes.Converter.try_open(~from: "UTF-8-permissive", ~to: "UTF-8")
+  check: bytes.Converter.maybe_open(~from: "UTF-8-permissive", ~to: "UTF-8")
          ~is_a bytes.Converter
-  check: bytes.Converter.try_open(~from: "UTF-8-not-so-permissive", ~to: "crazy-UTF-8")
+  check: bytes.Converter.maybe_open(~from: "UTF-8-not-so-permissive", ~to: "crazy-UTF-8")
          ~is #false
-  check: bytes.Converter.try_open(~from: "UTF-8-permissive", ~to: "UTF-8")!!.close()
+  check: bytes.Converter.maybe_open(~from: "UTF-8-permissive", ~to: "UTF-8")!!.close()
          ~is #void
 
 block:

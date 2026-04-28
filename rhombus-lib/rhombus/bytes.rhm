@@ -72,9 +72,9 @@ class Converter(private _handle):
 
   export:
     Status
-    try_open
+    maybe_open
 
-  fun try_open(~from: from :: String, ~to: to :: String) :~ maybe(Converter):
+  fun maybe_open(~from: from :: String, ~to: to :: String) :~ maybe(Converter):
     let handle = rkt.#{bytes-open-converter}(from, to)
     handle && _Converter(handle)
 

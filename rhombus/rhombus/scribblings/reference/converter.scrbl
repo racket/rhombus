@@ -245,7 +245,7 @@ encodings.
 }
 
 @doc(
-  fun bytes.Converter.try_open(~from: from :: String, ~to: to :: String)
+  fun bytes.Converter.maybe_open(~from: from :: String, ~to: to :: String)
     :: maybe(Converter)
 ){
 
