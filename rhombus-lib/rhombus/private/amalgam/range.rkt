@@ -125,8 +125,8 @@
   #:namespace-fields
   ()
   #:properties
-  ([first SequenceRange.first  (lambda (s) (get-int-static-infos))]
-   [rest SequenceRange.rest (lambda (s) (get-sequence-range-static-infos))])
+  ([first SequenceRange.first]
+   [rest SequenceRange.rest])
   #:methods
   (to_sequence
    step_by))
@@ -166,8 +166,8 @@
    [from_exclusive_to_inclusive DescendingRange.from_exclusive_to_inclusive]
    [from_exclusive DescendingRange.from_exclusive])
   #:properties
-  ([first DescendingRange.first  (lambda (s) (get-int-static-infos))]
-   [rest DescendingRange.rest (lambda (s) (get-descending-range-static-infos))])
+  ([first DescendingRange.first]
+   [rest DescendingRange.rest])
   #:methods
   (is_empty
    to_sequence
@@ -1352,14 +1352,10 @@
 
 (define/method (SequenceRange.first r)
   #:static-infos ((#%call-result #,(get-int-static-infos)))
-  (define (wrong)
-    (raise-annotation-failure who r "SequenceRange && !satisying(Range.is_empty)"))
   (sequence-range-stream-op who r #f))
 
 (define/method (SequenceRange.rest r)
   #:static-infos ((#%call-result #,(get-sequence-range-static-infos)))
-  (define (wrong)
-    (raise-annotation-failure who r "SequenceRange && !satisying(Range.is_empty)"))
   (sequence-range-stream-op who r #t))
 
 (define-for-syntax (range-explode/inline range-expr)
@@ -1743,9 +1739,11 @@
     [else (wrong)]))
 
 (define/method (DescendingRange.first r)
+  #:static-infos ((#%call-result #,(get-int-static-infos)))
   (descending-range-stream-op who r #f))
 
 (define/method (DescendingRange.rest r)
+  #:static-infos ((#%call-result #,(get-descending-range-static-infos)))
   (descending-range-stream-op who r #t))
 
 (define/method (DescendingRange.is_empty r)

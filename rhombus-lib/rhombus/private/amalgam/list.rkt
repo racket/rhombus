@@ -88,20 +88,6 @@
            to-treelist to-list
            (for-syntax get-treelist-static-infos)))
 
-(define-for-syntax (extract-result-statinfo lhs-si)
-  (or (extract-index-uniform-result
-       (static-info-lookup lhs-si #'#%index-result))
-      #'()))
-
-(define-for-syntax (add-result-statinfo lhs-si base-si)
-  (define maybe-index-result
-    (extract-index-uniform-result
-     (static-info-lookup lhs-si #'#%index-result)))
-  (if maybe-index-result
-      #`((#%index-result #,maybe-index-result)
-         #,@base-si)
-      base-si))
-
 (define-primitive-class List treelist
   #:lift-declaration
   #:constructor-static-info ((#%call-result ((#%dependent-result (merge-args treelist)))))
@@ -121,11 +107,9 @@
    [later_of List.later_of]
    [tuple_of List.tuple_of])
   #:properties
-  ([first List.first extract-result-statinfo]
-   [last List.last extract-result-statinfo]
-   [rest List.rest
-         (lambda (lhs-si)
-           (add-result-statinfo lhs-si (get-treelist-static-infos)))])
+  ([first List.first]
+   [last List.last]
+   [rest List.rest])
   #:methods
   (length
    is_empty
@@ -174,11 +158,9 @@
    [of PairList.of]
    [tuple_of PairList.tuple_of])
   #:properties
-  ([first PairList.first extract-result-statinfo]
-   [last PairList.last extract-result-statinfo]
-   [rest PairList.rest
-         (lambda (lhs-si)
-           (add-result-statinfo lhs-si (get-list-static-infos)))])
+  ([first PairList.first]
+   [last PairList.last]
+   [rest PairList.rest])
   #:methods
   (length
    is_empty
@@ -933,42 +915,9 @@
   (syntax-parse stx
     [(_ accum e) #'(reverse e)]))
 
-(define-syntax (build-identity stx)
-  (syntax-parse stx
-    [(_ accum e) #'e]))
-
 (define-syntax (build-accum stx)
   (syntax-parse stx
     [(_ accum e) #'(cons e accum)]))
-
-(define-for-syntax (make-repet expr-to-for-clause-stx)
-  (repetition-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-id (~and args (_::parens e::expression)) . tail)
-        (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
-                                      #`(([(repet) #,(expr-to-for-clause-stx
-                                                      (discard-static-infos #'e.parsed))]))
-                                      #'repet
-                                      (extract-result-statinfo
-                                       (extract-static-infos #'e.parsed))
-                                      0)
-                #'tail)]))))
-
-(define-repetition-syntax List.repet
-  (make-repet (lambda (expr)
-                #`(in-treelist (let ([l #,expr])
-                                 (unless (variable-reference-from-unsafe? (#%variable-reference))
-                                   (check-treelist 'List.repet l))
-                                 l)))))
-
-(define-repetition-syntax PairList.repet
-  (make-repet (lambda (expr)
-                #`(in-list (let ([l #,expr])
-                             (unless (variable-reference-from-unsafe? (#%variable-reference))
-                               (check-list 'PairList.repet l))
-                             l)))))
 
 (define (check-function-of-arity n who proc)
   (unless (and (procedure? proc)

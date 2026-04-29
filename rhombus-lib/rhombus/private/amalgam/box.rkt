@@ -37,10 +37,7 @@
   (now_of
    later_of)
   #:properties
-  ([value Box.value #:mutator Box.value
-          (lambda (lhs-si)
-            (or (static-info-lookup lhs-si #'unbox)
-                #'()))])
+  ([value Box.value #:mutable])
   #:methods
   (compare_and_set
    copy

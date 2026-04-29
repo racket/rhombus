@@ -160,7 +160,7 @@
   ([empty empty-readable-map]
    #:no-methods)
   #:properties
-  ([maybe Map.maybe extract-maybe-statinfo])
+  ([maybe Map.maybe])
   #:methods
   ([length Map.length]
    [keys Map.keys]
@@ -197,7 +197,7 @@
    [later_of Map.later_of]
    [by Map.by])
   #:properties
-  ([maybe Map.maybe extract-maybe-statinfo])
+  ([maybe Map.maybe])
   #:methods
   (append
    set
@@ -218,7 +218,7 @@
    [now_of MutableMap.now_of]
    [later_of MutableMap.later_of])
   #:properties
-  ([maybe Map.maybe extract-maybe-statinfo])
+  ([maybe Map.maybe])
   #:methods
   (set
    remove))

@@ -70,10 +70,10 @@
                                (ns-field ...)))
                    #:defaults ([(ns-field 1) '()]))
         #:properties
-        ([property property-accessor
-                   (~optional (~seq #:mutator property-mutator))
-                   (~optional property-extract
-                              #:defaults ([property-extract #'extract-empty-statinfo]))]
+        ([property property-proc (~or* (~and (~seq #:mutable)
+                                             (~parse property-mutable? #'#t))
+                                       (~and (~seq)
+                                             (~parse property-mutable? #'#f)))]
          ...)
         #:methods
         ((~or* (~and [method mask name-method-proc:identifier method-proc:identifier]
@@ -125,14 +125,11 @@
            (define new? (eq? '#:new (syntax-e #'creation)))]
      #:with name? (datum->syntax #'name/rkt (string->symbol (format "~a?" (syntax-e #'name/rkt))))
      #:with (~var struct:name) (datum->syntax #'name/rkt (string->symbol (format "struct:~a" (syntax-e #'name/rkt))))
-     #:with ([prop prop-accessor (~optional prop-mutator) prop-extract] ...)
+     #:with ([prop prop-proc prop-mutable?] ...)
      #`(#,@(if transparent?
-               #`([field Name.field (~? (lambda (lhs-si)
-                                          #`field-static-infos)
-                                        extract-empty-statinfo)]
-                  ...)
+               #'([field Name.field #f] ...)
                '())
-        [property property-accessor (~? property-mutator) property-extract] ...)
+        [property property-proc property-mutable?] ...)
      #:with name-dot-dispatch (datum->syntax #'name (string->symbol
                                                      (format "~a-dot-dispatch" (syntax-e #'name))))
      #:attr parent-dot-dispatch (and (syntax-e #'parent)
@@ -176,9 +173,9 @@
              ...) (if super
                       (class-desc-fields super)
                       null)
-     #:with (method-dispatch/maybe-depr ...) (for/list ([method (syntax->list #'(method ...))]
-                                                        [method-dispatch (syntax->list #'(method-dispatch ...))]
-                                                        [method-depr (syntax->list #'(method-depr ...))])
+     #:with (method-dispatch/maybe-depr ...) (for/list ([method (in-list (syntax->list #'(method ...)))]
+                                                        [method-dispatch (in-list (syntax->list #'(method-dispatch ...)))]
+                                                        [method-depr (in-list (syntax->list #'(method-depr ...)))])
                                                (syntax-parse method-depr
                                                  [(#:deprecate spaces date)
                                                   (define name-method
@@ -187,37 +184,42 @@
                                                  [_ method-dispatch]))
 
      (define declaration
-       (let ([mutator-pairs #'((~? (~@ 'prop prop-mutator)) ...)])
+       (let ([mutator-pairs (for/foldr ([mutator-pairs '()])
+                                       ([prop (in-list (syntax->list #'(prop ...)))]
+                                        [prop-proc (in-list (syntax->list #'(prop-proc ...)))]
+                                        [prop-mutable? (in-list (syntax->list #'(prop-mutable? ...)))]
+                                        #:when (syntax-e prop-mutable?))
+                              (list* #`(quote #,prop) prop-proc mutator-pairs))])
          (if new?
              #`(struct name/rkt (field ...)
                  #:property prop:field-name->accessor
                  (list* '()
-                        (hasheq (~@ 'prop prop-accessor)
+                        (hasheq (~@ 'prop prop-proc)
                                 ...
                                 (~@ 'method method-proc)
                                 ...
                                 (~@ 'dot-method dot-method-proc)
                                 ...)
                         #hasheq())
-                 #,@(if (null? (syntax-e mutator-pairs))
+                 #,@(if (null? mutator-pairs)
                         '()
                         #`(#:property prop:field-name->mutator
                            (list* '()
-                                  (hasheq . #,mutator-pairs)))))
+                                  (hasheq #,@mutator-pairs)))))
              #`(begin
                  (define name-method-table
                    (hash-add* (~? parent-method-table '#hasheq())
-                              (~@ 'prop prop-accessor)
+                              (~@ 'prop prop-proc)
                               ...
                               (~@ 'method method-proc)
                               ...
                               (~@ 'dot-method dot-method-proc)
                               ...))
-                 #,@(if (null? (syntax-e mutator-pairs))
+                 #,@(if (null? mutator-pairs)
                         '()
                         (list #`(define name-mutator-table
                                   (hash-add* (~? parent-mutator-table '#hasheq())
-                                             . #,mutator-pairs))))))))
+                                             #,@mutator-pairs))))))))
 
      #`(begin
          ;; must be before the creation of method table
@@ -299,7 +301,7 @@
            #:fields
            #,(if (attribute no-methods)
                  #'(ns-field ...)
-                 #'(ns-field ... [prop prop-accessor] ... [method name-method-proc . method-depr] ...)))
+                 #'(ns-field ... [prop prop-proc] ... [method name-method-proc . method-depr] ...)))
 
          (define-syntax (get-name-field-list) #`field-list)
 
@@ -358,18 +360,7 @@
          (define-for-syntax name-dot-dispatch
            (lambda (field-sym field-proc ary nary repetition? fail-k)
              (case field-sym
-               [(prop)
-                (cond
-                  [repetition?
-                   ;; let dot-provider dispatcher handle repetition construction:
-                   (fail-k)]
-                  [else
-                   (field-proc (lambda (lhs lhs-si reloc)
-                                 (wrap-static-info*
-                                  (reloc #`(prop-accessor #,lhs))
-                                  (prop-extract lhs-si)))
-                               (~? (lambda (lhs rhs reloc)
-                                     (reloc #`(prop-mutator #,lhs #,rhs)))))])]
+               [(prop) (field-proc (quote-syntax prop-proc) (quote prop-mutable?))]
                ...
                [(method) method-dispatch/maybe-depr]
                ...
@@ -381,9 +372,6 @@
          (define-syntax name-instance
            (dot-provider (dot-parse-dispatch name-dot-dispatch)))
          )]))
-
-(define-for-syntax (extract-empty-statinfo lhs-si)
-  #'())
 
 (define-for-syntax (add-dot-providers dot-provider dot-providers)
   (cons dot-provider

@@ -24,8 +24,7 @@
   (provide (for-spaces (#f
                         rhombus/statinfo)
                        Map.maybe)
-           MapMaybe.get/optimize
-           (for-syntax extract-maybe-statinfo)))
+           MapMaybe.get/optimize))
 
 (module+ for-print
   (provide map-maybe?
@@ -73,7 +72,7 @@
 (define-syntax (map-build-convert arg-id build-convert-stxs kws data)
   arg-id)
 
-(define-for-syntax (do-extract-maybe-statinfo lhs-si)
+(define-for-syntax (extract-maybe-statinfo lhs-si)
   (define si (extract-index-uniform-result
               (static-info-lookup lhs-si #'#%index-result)))
   (cond
@@ -84,13 +83,6 @@
                             maybe-si))]
     [else si]))
 
-(define-for-syntax (extract-maybe-statinfo lhs-si)
-  (define demaybed-si (do-extract-maybe-statinfo lhs-si))
-  (if demaybed-si
-      #`((#%index-result ((#%maybe #,demaybed-si)))
-         #,@(get-map-maybe-static-infos))
-      (get-map-maybe-static-infos)))
-
 (define (check-readable-map who ht)
   (unless (hash? ht)
     (raise-annotation-failure who ht "ReadableMap")))
@@ -99,7 +91,7 @@
   (define args (annotation-dependencies-args deps))
   (define map-i 0)
   (define si
-    (or (do-extract-maybe-statinfo (or (and (< map-i (length args))
+    (or (extract-maybe-statinfo (or (and (< map-i (length args))
                                             (list-ref args map-i))
                                        #'()))
         #'()))

@@ -63,8 +63,8 @@
    [empty Stream.empty]
    [cons Stream.cons])
   #:properties
-  ([first Stream.first extract-result-statinfo]
-   [rest Stream.rest extract-rest-statinfo])
+  ([first Stream.first]
+   [rest Stream.rest])
   #:methods
   (is_empty
    get))

@@ -35,14 +35,8 @@
   ([cons Pair.cons]
    of)
   #:properties
-  ([first Pair.first
-          (lambda (lhs-si)
-            (or (static-info-lookup lhs-si #'car)
-                #'()))]
-   [rest Pair.rest
-         (lambda (lhs-si)
-           (or (static-info-lookup lhs-si #'cdr)
-                #'()))])
+  ([first Pair.first]
+   [rest Pair.rest])
   #:methods
   ())
 

@@ -1898,10 +1898,23 @@ check:
   (9 <.. 10).rest ~throws empty_msg
   (10 <..= 10).rest ~throws empty_msg
 
-// although `is_empty` is already tests above,
+// although `is_empty` is already tested above,
 // some extra checks in the context of `.first`
 // and `.rest` to check that things are consistent
 check:
   (10 .. 10).is_empty() ~is #true
   (9 <.. 10).is_empty() ~is #true
   (10 <..= 10).is_empty() ~is #true
+
+block:
+  use_static
+  check:
+    (1 .. 10).rest.rest.first < dynamic(4)
+    ~is #true
+  check:
+    ((1 .. 10)
+       |> SequenceRange.rest(_)
+       |> SequenceRange.rest(_)
+       |> SequenceRange.first(_))
+      < dynamic(4)
+    ~is #true

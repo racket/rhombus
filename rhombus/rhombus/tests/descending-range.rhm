@@ -1022,3 +1022,16 @@ check:
   (1 >.. 0).is_empty() ~is #true
   (0 >..= 0).is_empty() ~is #true
   (0 >=.. 0).is_empty() ~is #true
+
+block:
+  use_static
+  check:
+    (10 >=.. 0).rest.rest.first > dynamic(7)
+    ~is #true
+  check:
+    ((10 >=.. 0)
+       |> DescendingRange.rest(_)
+       |> DescendingRange.rest(_)
+       |> DescendingRange.first(_))
+      > dynamic(7)
+    ~is #true

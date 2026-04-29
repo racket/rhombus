@@ -62,15 +62,16 @@
                                field-stx))
          (success-call/dynamic)]))
 
+    (define (make-rator direct-id)
+      (cond
+        [repetition? (identifier-repetition-use direct-id)]
+        [else direct-id]))
+
     (define (nary mask direct-id id)
-      (define rator
-        (cond
-          [repetition? (identifier-repetition-use direct-id)]
-          [else direct-id]))
       (ary mask
            (lambda (args reloc)
              (define-values (proc tail to-anon-function?)
-               (parse-function-call rator (list lhs) #`(#,dot #,args)
+               (parse-function-call (make-rator direct-id) (list lhs) #`(ignored #,args)
                                     #:srcloc (reloc #'#f)
                                     #:static? more-static?
                                     #:can-anon-function? #t
@@ -80,48 +81,43 @@
            (lambda (reloc)
              (reloc #`(#,id #,(discard-static-infos lhs))))))
 
-    (define (just-access mk)
-      (success-k (mk (discard-static-infos lhs)
-                     (extract-static-infos lhs)
-                     (lambda (e)
-                       (relocate+reraw
-                        (respan (datum->syntax #f (list lhs dot field-stx)))
-                        e)))
-                 tail))
-
-    (define field
-      (case-lambda
-        [(mk)
-         (just-access mk)]
-        [(mk mk-set)
-         (syntax-parse tail
-           [assign::assign-op-seq
-            (define-values (assign-expr tail)
-              (build-assign
-               (attribute assign.op)
-               #'assign.op-name
-               #'assign.name
-               #`(lambda ()
-                   #,(mk #'lhs
-                         (extract-static-infos lhs)
-                         (lambda (e)
-                           (relocate+reraw
-                            (respan (datum->syntax #f (list lhs dot field-stx)))
-                            e))))
-               #`(lambda (v)
-                   #,(mk-set #'lhs
-                             #'v
-                             (lambda (e)
-                               (relocate+reraw
-                                (respan (datum->syntax #f (list lhs dot field-stx)))
-                                e))))
-               #'value
-               #'assign.tail))
-            (success-k #`(let ([lhs #,(discard-static-infos lhs)])
-                           #,assign-expr)
-                       tail)]
-           [_
-            (just-access mk)])]))
+    (define (field direct-id mutable?)
+      (define rator (make-rator direct-id))
+      (define srcloc (relocate+reraw
+                      (respan (datum->syntax #f (list lhs dot field-stx)))
+                      #'#f))
+      (define (access lhs)
+        (define-values (proc tail to-anon-function?)
+          (parse-function-call rator (list lhs) #'(ignored (parens))
+                               #:srcloc srcloc
+                               #:static? #t
+                               #:repetition? repetition?))
+        proc)
+      (define (mutate lhs v)
+        (define-values (proc tail to-anon-function?)
+          (parse-function-call rator (list lhs v) #'(ignored (parens))
+                               #:srcloc srcloc
+                               #:static? #t
+                               #:repetition? repetition?))
+        proc)
+      (if mutable?
+          (syntax-parse tail
+            [assign::assign-op-seq
+             (define-values (assign-expr new-tail)
+               (build-assign
+                (attribute assign.op)
+                #'assign.op-name
+                #'assign.name
+                #`(lambda () #,(access #'lhs))
+                #`(lambda (v) #,(mutate #'lhs #'v))
+                #'value
+                #'assign.tail))
+             (success-k #`(let ([lhs #,(discard-static-infos lhs)])
+                            #,assign-expr)
+                        new-tail)]
+            [_
+             (success-k (access lhs) tail)])
+          (success-k (access lhs) tail)))
 
     (k (syntax-e field-stx) field ary nary repetition? fail-k)))
 
