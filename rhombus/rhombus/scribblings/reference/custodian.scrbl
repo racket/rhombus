@@ -55,6 +55,47 @@ custodian is shut down.
 
 }
 
+@doc(
+  method (cust :: Custodian).current_memory_use() :: Nat
+  method (cust :: Custodian).limit_memory(
+    limit_amt :: Nat,
+    ~shutdown: shutdown_cust :: Custodian = cust
+  ) :: Void
+){
+
+ The @rhombus(Custodian.current_memory_use) method reports the amount of
+ memory in bytes that is currently allocated an attributed to threads
+ managed by @rhombus(cust). See also
+ @secref(~doc: model_doc, "custodian-model").
+
+ @margin_note{A custodian's limit is checked only after a garbage
+  collection, except that it may also be checked during certain large
+  allocations that are individually larger than the custodian's limit. A
+  single garbage collection may shut down multiple custodians, even if
+  shutting down only one of the custodians would have reduced memory use
+  for other custodians.}
+
+ The @rhombus(Custodian.limit_memory) method registers a limited-memory
+ check. If Rhombus later reaches a state after garbage collection (see
+ @secref(~doc: model_doc, "gc-model")) where @rhombus(cust) owns more
+ than @rhombus(limit_amt) bytes, then @rhombus(shutdown_cust) is shut
+ down.
+
+ @margin_note{New memory allocation will be accounted to the running
+  @tech{thread}'s managing custodian. In other words, a
+  custodian's limit applies only to the allocation made by the threads
+  that it manages.}
+
+ For reliable shutdown, @rhombus(limit_amt) must be much lower than the
+ total amount of memory available (minus the size of memory that is
+ potentially used and not charged to @rhombus(limit_cust)). Moreover, if
+ individual allocations that are initially charged to
+ @rhombus(limit_cust) can be arbitrarily large, then
+ @rhombus(shutdown_cust) must be the same as @rhombus(cust), so that
+ excessively large immediate allocations can be rejected with an
+ @rhombus(Exn:Fail:OutOfMemory) exception.
+
+}
 
 @doc(
   class Custodian.Box():

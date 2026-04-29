@@ -46,6 +46,13 @@ namespace ~open:
                            ~keep: keep))
     override property handle: hand
     private override property sync_handle: rkt.#{wrap-evt}(hand, fun (v): this)
+
+    private implements Equatable
+    private override equals(other :~ Thread, recur):
+      recur(hand, other.hand)
+    private override hash_code(recur):
+      recur(hand)
+
     method wait(fail_k :: Function.of_arity(0) = Function.pass):
       rkt_thd.#{thread-wait}(hand, fail_k)
     method break(kind :: Thread.Break = #'interrupt):
@@ -56,8 +63,16 @@ namespace ~open:
     method kill():
       rkt.#{kill-thread}(hand)
 
+    method send(v,
+                ~fail: fail :: maybe(Function.of_arity(0)) described_as (maybe(() -> ~any)) = #false):
+      rkt.#{thread-send}(hand, v, fail)
+
     export:
       from_handle
+      current
+      receive
+      maybe_receive
+      receive_evt
       sleep
       Break
       Pool
@@ -72,6 +87,15 @@ namespace ~open:
       | error(~who: who, "not a thread handle",
               error.val(hand))
       _Thread(hand)
+
+    fun current() :~ Thread:
+      _Thread(rkt.#{current-thread}())
+    fun receive():
+      rkt.#{thread-receive}()
+    fun maybe_receive():
+      rkt.#{thread-try-receive}()
+    fun receive_evt() :~ evt.Evt:
+      _ThreadReceiveEvt(rkt.#{thread-receive-evt}())
 
     enum Break
     | interrupt
@@ -200,6 +224,17 @@ class AlarmEvt(private _handle):
   private override property sync_handle: rkt.#{wrap-evt}(handle, fun (b): this)
   private implements Printable
   private override describe(mode, recur): "Evt.alarm(...)"
+
+class ThreadReceiveEvt(private _handle):
+  implements evt.Evt
+  internal _ThreadReceiveEvt
+  constructor ~none
+  private implements evt._Evt
+  opaque
+  override property handle: _handle
+  private override property sync_handle: rkt.#{wrap-evt}(handle, fun (b): this)
+  private implements Printable
+  private override describe(mode, recur): "Thread.receive_evt(...)"
 
 class GuardEvt(private _handle):
   implements evt.Evt

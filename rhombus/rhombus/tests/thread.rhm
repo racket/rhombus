@@ -28,6 +28,23 @@ block:
   check v ~is 1
   check th ~is_a Evt
   check th.sync() ~is th
+  check th.send("anything") ~is #false
+  check th.send("anything", ~fail: fun (): "done already") ~is "done already"
+
+block:
+  let orig_th = Thread.current()
+  check Thread.receive_evt().sync(~timeout: 0) ~is #false
+  check Thread.maybe_receive() ~is #false
+  check orig_th ~is_a Thread
+  let th = (thread:
+              orig_th.send(Thread.receive()))
+  th.send(#'ping)
+  check th.wait() ~is #void
+  check Thread.receive_evt() ~is_a Evt
+  check Thread.receive_evt().sync() ~is_a Evt
+  check Thread.receive() ~is #'ping
+  check Thread.receive_evt().sync(~timeout: 0) ~is #false
+  check Thread.maybe_receive() ~is #false
 
 version_guard.at_least "8.18.0.11":
   check: Thread(~pool: Thread.Pool.own,

@@ -967,6 +967,8 @@
             #:datum-literals (alts block group parens)
             [(#:none) vars]
             [((block (group #:none))) vars]
+            [(#:error) vars]
+            [((block (group #:error))) vars]
             [((parens . gs) . _)
              (do-parens-extract-metavariables #'gs space-name vars)]
             [((alts (block (group (parens . gs)) . _) ...))

@@ -10,7 +10,9 @@
       rhombus/custodian open
       rhombus/network open
       rhombus/thread open
-      rhombus/memory)
+      rhombus/custodian open
+      rhombus/memory
+      rhombus/will)
 
 @(def reduces = elem("→"))
 @(def rspace = elem(~style: style("ghost", PairList[]), "→"))
@@ -1022,12 +1024,8 @@ custodian is shut down. However, the custodian only weakly retains the box
 itself, so the box and its content can be collected if there
 are no other references to them.
 
-@//|=={
-
-When Rhombus is compiled with support for per-custodian memory
-accounting (see @racket[custodian-memory-accounting-available?]), the
-@racket[current-memory-use] function can report a custodian-specific
-result.  This result determines how much memory is occupied by objects
+The @rhombus(Custodian.current_use) method can report a custodian-specific
+memory use. This result determines how much memory is occupied by objects
 that are @tech{reachable} from the custodian's managed values, especially its
 threads, and including its sub-custodians' managed values. If an
 object is reachable from two custodians where neither is an ancestor
@@ -1036,12 +1034,48 @@ and the choice can change after each collection; objects reachable
 from both a custodian and its descendant, however, are reliably
 charged to the custodian and not to the descendants, unless the
 custodian can reach the objects only through a descendant custodian or
-a descendant's thread.  Reachability for per-custodian accounting does
+a descendant's thread. Reachability for per-custodian accounting does
 not include weak references, references to threads managed by other
 custodians, references to other custodians, or references to custodian
 boxes for other custodians.
 
-}==|
+@// ------------------------------------------------------------------------
+@subsection(~tag: "will-model"){Wills and Will Executors}
+
+A @deftech{will executor} manages a collection of values and associated
+@deftech{will} functions (a.k.a. @deftech{finalizers}). The @tech{will}
+function for each value is ready to be executed when the value has been
+proven (by the garbage collector) to be unreachable, except through
+@tech{weak references} or as the registrant for other will executors. A
+@tech{will} is useful for triggering clean-up actions on data associated
+with an unreachable value, such as closing a port embedded in an object
+when the object is no longer used.
+
+Calling the @rhombus(will.Executor.execute) or
+@rhombus(will.Executor.maybe_execute) method executes a will that is
+ready in a will executor. A will executor is also a
+@tech(~doc: ref_doc){synchronizable event}, so @rhombus(Evt.sync)
+(especially with @rhombus(~timeout)) can be used to detect when a will
+executor has ready wills. Wills are not executed automatically, because
+certain programs need control to avoid race conditions. However, a
+program can create a thread whose sole job is to execute wills for a
+particular executor.
+
+If a value is registered with multiple wills (in one or multiple
+executors), the wills are readied in the reverse order of
+registration. Since readying a will procedure makes the value
+reachable again, the will must be executed and the value must be
+proven again unreachable through only weak references before another
+of the wills is readied or executed.  However, wills for distinct
+unreachable values are readied at the same time, regardless of whether
+the values are reachable from each other.
+
+A will executor's registrant is held non-weakly until after the
+corresponding will procedure is executed. Thus, if the content value
+of a weak box (see @rhombus(WeakBox)) is registered with a will
+executor, the weak box's content is not changed to @rhombus(#false) until
+all wills have been executed for the value and the value has been
+proven again reachable through only weak references.
 
 @// ------------------------------------------------------------------------
 @subsection(~tag: "memory-model"){Memory Model}

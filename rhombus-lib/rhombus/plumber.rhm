@@ -1,0 +1,47 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+  "private/parameter.rhm"
+
+export:
+  Plumber
+
+def handles = WeakMutableMap.by(===)()
+
+class Plumber(private _handle):
+  opaque
+  internal _Plumber
+  constructor ():
+    from_handle(rkt.#{make-plumber}())
+
+  property handle: _handle
+
+  class FlushHandle(private _handle):
+    internal _FlushHandle
+    constructor ~error
+    method remove():
+      rkt.#{plumber-flush-handle-remove!}(_handle)
+
+  method flush_all():
+    rkt.#{plumber-flush-all}(_handle)
+  method add_flush(proc :: Function.of_arity(1) described_as ((Plumber.FlushHandle) -> ~any),
+                   ~weak = #false) :~ FlushHandle:
+    let h: rkt.#{plumber-add-flush!}(_handle,
+                                     fun (h): proc(handles[h]),
+                                     weak)
+    let fh = _FlushHandle(h)
+    handles[h] := fh
+    fh
+
+  export:
+    current
+    from_handle
+    FlushHandle
+
+parameter.def_from_racket current from_handle:
+  ~orig: rkt.#{current-plumber}
+  ~class: Plumber
+  ~_class: _Plumber
+  ~_handle: _handle
+  ~what: "a plumber"
+  ~predicate: rkt.#{plumber?}

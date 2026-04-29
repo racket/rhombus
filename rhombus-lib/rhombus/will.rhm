@@ -1,0 +1,33 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt") as rkt
+
+export:
+  Executor
+
+class Executor(private _handle):
+  opaque
+  internal _Executor
+  constructor ():
+    _Executor(rkt.#{make-will-executor}())
+
+  property handle: _handle
+
+  method execute():
+    rkt.#{will-execute}(_handle)
+
+  method maybe_execute(~none: v = #false):
+    rkt.#{will-try-execute}(_handle, v)
+
+  method register(v :: Any,
+                  proc :: Function.of_arity(1) described_as ((Any) -> ~any)):
+    rkt.#{will-register}(_handle, v, proc)
+
+  export:
+    from_handle
+
+  fun from_handle(hand):
+    ~who: who
+    unless rkt.#{will-executor?}(hand)
+    | error(~who: who, "not a will-executor handle", hand)
+    _Executor(hand)

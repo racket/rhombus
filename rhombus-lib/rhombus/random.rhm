@@ -23,7 +23,9 @@ class Random(private _handle):
   | (state :: RandomState):
       from_handle(rkt.#{vector->pseudo-random-generator}(state))
 
-  export: current
+  export:
+    current
+    from_handle
 
   method
   | random() :~ Number:
@@ -53,6 +55,8 @@ parameter.def_from_racket current from_handle:
   ~class: Random
   ~_class: _Random
   ~_handle: _handle
+  ~what: "a pseudo-random generator"
+  ~predicate: rkt.#{pseudo-random-generator?}
 
 fun shuffle(l :: List, rnd :: Random = current()) :~ List:
   // Fisher-Yates shuffle

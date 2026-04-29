@@ -1,0 +1,28 @@
+#lang rhombus/static
+import:
+  rhombus/plumber open
+
+check Plumber() ~is_a Plumber
+check Plumber.current() ~is_a Plumber
+check: Plumber.current() === Plumber.current()
+       ~is #true
+check: Plumber.from_handle(Plumber.current().handle) === Plumber.current()
+       ~is #true
+
+block:
+  let p = Plumber()
+  let mutable done = #false
+  let h = p.add_flush(fun (h):
+                        check h ~is_a Plumber.FlushHandle
+                        done := #true)
+  check h ~is_a Plumber.FlushHandle
+  check done ~is #false
+  check p.flush_all() ~is #void
+  check done ~is #true
+  done := #false
+  check p.flush_all() ~is #void
+  check done ~is #true
+  done := #false
+  check h.remove() ~is #void
+  check p.flush_all() ~is #void
+  check done ~is #false

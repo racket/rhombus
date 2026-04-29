@@ -13,6 +13,10 @@ check Custodian() ~is_a Custodian
 
 check Custodian.current() === Custodian.current() ~is #true
 
+check: Custodian.from_handle(Custodian.current().handle)
+         === Custodian.current()
+       ~is #true
+
 check:
   parameterize { Custodian.current: Custodian() }:
     check:
@@ -63,3 +67,18 @@ block:
   check bx.value ~is 1
   check c.shutdown_all() ~is #void
   check bx.value ~is #false
+
+block:
+  import rhombus/thread open
+  let orig_t = Thread.current()
+  check Custodian.current().current_memory_use() ~is_a Int
+  parameterize { Custodian.current: Custodian() }:
+    (thread:
+       try:
+         Custodian.current().limit_memory(1024*1024)
+         let bstr = Bytes.make(4*1024*1024)
+         orig_t.send("not ok")
+         ~catch exn :: Exn.Fail.OutOfMemory:
+           orig_t.send(exn)
+      ).wait()
+  check Thread.receive() ~is_a Exn.Fail.OutOfMemory

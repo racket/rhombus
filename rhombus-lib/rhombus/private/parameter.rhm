@@ -21,7 +21,9 @@ defn.macro 'def_from_racket $name $from_handle:
               ~orig: $orig
               ~class: $class
               ~_class: $_class
-              ~_handle: $_handle':
+              ~_handle: $_handle
+              ~what: $what
+              ~predicate: $pred':
   let full_name = Symbol.from_string(class +& "." +& name)
   let param_annot:
     let '$(a :: annot_meta.Parsed)':
@@ -34,16 +36,21 @@ defn.macro 'def_from_racket $name $from_handle:
   '
     def params = WeakMutableMap.by(===){}
     fun $from_handle(hand):
-      let self = $_class(hand)
-      params[hand] := self
-      self
+      ~name: $class . $from_handle
+      ~who: who
+      unless $pred(hand)
+      | error(~who: who, "not " ++ $what ++ " handle")
+      params.maybe[hand] || (block:
+                               let self = $_class(hand)
+                               params[hand] := self
+                               self)
     def $name :~ $param_annot = make_derived_parameter(
       $orig,
       fun (v :: $_class described_as $class):
         ~name: $full_name
         v . $_handle,
       fun (hand):
-        params.get(hand, fun (): $from_handle(hand)),
+        $from_handle(hand),
       #' $full_name,
       #'rhombus
     )

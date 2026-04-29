@@ -19,6 +19,12 @@ class Custodian(private _handle):
   method is_shutdown():
     rkt.#{custodian-shut-down?}(_handle)
 
+  method limit_memory(amount :: Nat, ~shutdown: stop_cust :: Custodian = this):
+    rkt.#{custodian-limit-memory}(_handle, amount, stop_cust._handle)
+
+  method current_memory_use() :~ Int:
+    rkt.#{current-memory-use}(_handle)
+
   class Box(private _handle):
     opaque
     constructor (v,
@@ -28,6 +34,7 @@ class Custodian(private _handle):
 
   export:
     current
+    from_handle
     Box
 
 parameter.def_from_racket current from_handle:
@@ -35,3 +42,5 @@ parameter.def_from_racket current from_handle:
   ~class: Custodian
   ~_class: _Custodian
   ~_handle: _handle
+  ~what: "a custodian"
+  ~predicate: rkt.#{custodian?}

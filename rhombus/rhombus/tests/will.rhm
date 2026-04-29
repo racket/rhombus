@@ -1,0 +1,22 @@
+#lang rhombus/static
+import:
+  rhombus/will
+  rhombus/memory
+
+check will.Executor() ~is_a will.Executor
+check will.Executor.from_handle(will.Executor().handle) ~is_a will.Executor
+
+block:
+  let we = will.Executor()
+  let mutable b = Box("live")
+  we.register(b, fun (b_r :~ Box):
+                   b := b_r
+                   b_r.value := "was dead"
+                   values("ran", "box"))
+  b := #false
+  memory.gc()
+  check b ~is #false
+  check we.execute() ~is values("ran", "box")
+  check b ~is_a Box
+  check Box.value(b) ~is "was dead"
+  check we.maybe_execute() ~is #false

@@ -72,6 +72,18 @@ synchronization result is just the thread object itself.
 }
 
 @doc(
+  fun Thread.current() :: Thread
+){
+
+ Returns an object representing the current thread.
+
+ Calling @rhombus(Thread.current) multiple times within a thread returns
+ objects that are @rhombus(==), but they may not be @rhombus(===).
+
+}
+
+
+@doc(
   method (th :: Thread).wait(
     fail_k :: Function.of_arity(0) = Function.pass
   ) :: Any
@@ -126,6 +138,58 @@ synchronization result is just the thread object itself.
 
  Terminates the thread @rhombus(th). If the thread has already
  terminated, then @rhombus(Thread.kill) has no effect.
+
+}
+
+
+@doc(
+  method (th :: Thread).send(
+    v :: Any,
+    ~fail: fail :: maybe(() -> ~any) = #false
+  )
+  fun Thread.receive()
+  fun Thread.maybe_receive()
+  fun Thread.receive_evt() :: Evt
+){
+
+ Each @tech{thread} has a mailbox to receive messages, where each
+ message can be any Rhombus value.
+
+ The @rhombus(Thread.send) method queues a message for @rhombus(th). As
+ long as @rhombus(th) is still running, @rhombus(Thread.send) immediately
+ returns @rhombus(#void). If @rhombus(th) has stopped running and
+ @rhombus(fail) is a function, it is called and its returned is returned.
+ If @rhombus(th) has stopped running and @rhombus(fail) is
+ @rhombus(#false), the result is @rhombus(#false).
+
+ The @rhombus(Thread.receive) function blocks until the current thread
+ has a message, and then it dequeues and returns that message. The
+ @rhombus(Thread.maybe_receive) function either dequeues and returns an
+ immediately available message, or it returns @rhombus(#false)
+ immediately if no message is queued. The @rhombus(Thread.receive_evt)
+ function returns a @tech{synchronizable event} that is ready when the
+ current thread has a message; the event's synchronization result is
+ itself.
+
+ The @rhombus(Thread.receive), @rhombus(Thread.maybe_receive), and
+ @rhombus(Thread.receive_evt) functions are not methods, because a thread
+ can only receive messages to itself, so @rhombus(Thread.current()) is
+ implicit.
+
+@examples(
+  ~eval: thread_eval
+  ~repl:
+    def orig = Thread.current()
+    def t:
+      thread:
+        match Thread.receive()
+        | #'ping: orig.send(#'pong)
+    Thread.maybe_receive()
+    t.send(#'ping)
+    Thread.receive()
+    t.wait()
+    t.send(#'oops, ~fail: fun (): "thread isn't there")
+)
 
 }
 
