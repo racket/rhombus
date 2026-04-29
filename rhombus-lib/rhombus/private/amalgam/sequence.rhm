@@ -25,10 +25,6 @@ namespace Sequence:
     generate
     to_stream
     assume_of
-    expect_of
-  annot.macro 'expect_of($(ann :: Group), ...)':
-    deprecated.#{warn-deprecated!}(#'#{Sequence.expect_of}, "15-MAR-2026")
-    'assume_of($ann, ...)'
   annot.macro 'assume_of($(ann :: Group), ...)':
     ~all_stx: stx
     ~context: ctx

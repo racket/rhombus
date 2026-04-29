@@ -58,7 +58,7 @@
 (define-for-syntax (get-listable-static-infos)
   #`((#%dot-provider listable-instance)))
 
-(define-for-syntax (listable-expect-of-predicate predicate-stxs)
+(define-for-syntax (listable-assume-of-predicate predicate-stxs)
   #`(lambda (arg) #t))
 
 (define-syntax (listable-of-static-infoss data static-infoss)
@@ -69,7 +69,7 @@
   #'listable? #,(get-listable-static-infos)
   1
   #f
-  listable-expect-of-predicate
+  listable-assume-of-predicate
   #'listable-of-static-infoss #f
   "converter annotation not supported for elements"
   #'())
@@ -85,8 +85,7 @@
 (define-name-root Listable
   #:fields
   ([to_list Listable.to_list]
-   [assume_of Listable.assume_of]
-   [expect_of Listable.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"]))
+   [assume_of Listable.assume_of]))
 
 (define-syntax to-list-static-infos
   (lambda (data deps)

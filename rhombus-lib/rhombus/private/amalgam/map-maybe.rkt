@@ -45,8 +45,7 @@
   #:just-annot
   #:fields ()
   #:namespace-fields
-  ([assume_of MapMaybe.assume_of]
-   [expect_of MapMaybe.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"])
+  ([assume_of MapMaybe.assume_of])
   #:properties
   ()
   #:methods

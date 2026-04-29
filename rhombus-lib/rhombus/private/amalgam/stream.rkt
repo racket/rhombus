@@ -59,7 +59,6 @@
   ()
   #:namespace-fields
   ([assume_of Stream.assume_of]
-   [expect_of Stream.assume_of #:deprecate (rhombus/annot) "15-Mar-2026"]
    [empty Stream.empty]
    [cons Stream.cons])
   #:properties
@@ -91,7 +90,7 @@
 (define-annotation-constructor (StreamAgain Stream.assume_of)
   ()
   #'stream? #,(get-stream-static-infos)
-  'any ;; allow any number of annotations in `expect_of`
+  'any ;; allow any number of annotations in `assume_of`
   #f
   (lambda (predicate-stxs) #`(lambda (arg) #t))
   #'stream-of-static-infos #f
