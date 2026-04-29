@@ -6,7 +6,7 @@
   ~category: [#'core, 16],
 ){Rhombus Language Model}
 
-This document defines evaluation and syntax concepts of the Rhombus
+This document defines the evaluation and syntax concepts of the Rhombus
 language.
 
 @itemlist(
@@ -16,7 +16,7 @@ language.
  @item{For documentation on the bindings that implement the concepts
  described here, see @docref(ref_doc) and @docref(meta_doc).}
 
- @item{For more documentation, see @docref(getting_started_doc).}
+ @item{For even more, see @top_ref().}
 
 )
 

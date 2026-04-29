@@ -7,32 +7,12 @@ To get started with Rhombus:
 @itemlist(
 
  @item{Install
- @hyperlink("https://racket-lang.org/download"){Racket}.
-
- To try out Rhombus quickly, it may be easiest to install a
- @hyperlink("https://users.cs.utah.edu/plt/rhombus-snapshots/"){snapshot Racket with Rhombus included}.
- For less common machine types or for long-term support,
- however, a @hyperlink("https://racket-lang.org/download"){Regular Racket release} is the best option.
-
- Depending on your operating system, you may be able to install through
- its package manager, but the
- @hyperlink("https://racket-lang.org/download"){Racket download site} is
- always a fine option.
+ @hyperlink("https://rhombus-lang.org/download"){Rhombus}.
 
  Installation will give you the DrRacket programming environment and
- command-line programs @exec{racket} and @exec{raco}.}
+ command-line programs @exec{rhombus}, @exec{racket}, and @exec{raco}.}
 
-
- @item{Install the @bold{@tt{rhombus}} package for Racket.
-
- This step is not needed if you installed a snapshot with Rhombus
- included.
-
- In DrRacket, select the @onscreen{Install Package...} item in the
- @onscreen{File} menu. Alternatively, on the command line, use
-
- @nested(~style: #'inset){@exec{raco pkg install rhombus}}}
-
+ @item{Start DrRacket.}
 
  @item{Type your first Rhombus program into the top area of DrRacket,
 

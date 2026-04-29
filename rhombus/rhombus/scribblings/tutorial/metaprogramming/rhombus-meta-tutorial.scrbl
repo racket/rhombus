@@ -1,10 +1,10 @@
 #lang rhombus/scribble
 
-@(def guide_doc = ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")')
+@(def top_doc = ModulePath'lib("rhombus/scribblings/main/rhombus.scrbl")')
 
 @title(~category: #'tutorial){Rhombus Metaprogramming Tutorial}
 
-This tutorial is about syntax and macros in @docref(guide_doc). It's
+This tutorial is about syntax and macros in @docref(top_doc). It's
 intended for readers who are familiar with environment-passing
 interpreters, but only because interpreters serve as a stand-in for
 useful applications, and interpreters are @emph{not} the kind of

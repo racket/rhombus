@@ -34,6 +34,7 @@ export:
   more_args
   shrubref
   shrublink
+  top_doc
   shrub_doc
   guide_doc
   model_doc
@@ -41,6 +42,7 @@ export:
   meta_doc
   getting_started_doc
   raco_doc
+  top_ref
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @whn is
@@ -98,6 +100,7 @@ fun shrubref(tag):
 fun shrublink(tag, content):
   scribble.seclink(~doc: shrub_doc, tag, content)
 
+def top_doc = ModulePath'lib("rhombus/scribblings/main/rhombus.scrbl")'
 def guide_doc = ModulePath'lib("rhombus/scribblings/guide/rhombus-guide.scrbl")'
 def model_doc = ModulePath'lib("rhombus/scribblings/model/rhombus-model.scrbl")'
 def ref_doc = ModulePath'lib("rhombus/scribblings/reference/rhombus-reference.scrbl")'
@@ -106,3 +109,5 @@ def getting_started_doc = ModulePath'lib("rhombus/scribblings/getting-started/rh
 
 // Link to this one only indirectly:
 def raco_doc = ModulePath'lib("scribblings/raco/raco.scrbl")'
+
+fun top_ref(): @manual.elem{the full @manual.seclink(~doc: top_doc, "top"){Rhombus Documentation}}

@@ -12,11 +12,13 @@ This document defines Rhombus's advanced metaprogramming facilities.
 
  @item{For a general overview of the language, see @docref(guide_doc).}
 
- @item{For bindings in the main language, including basic
+ @item{For the main language, including basic
  metaprogramming support in the form of @tech(~doc: ref_doc){syntax
   objects} and the @rhombus(macro) form, see @docref(ref_doc).}
 
- @item{For more documentation, see @docref(getting_started_doc).}
+ @item{For general concepts of the language, see @docref(model_doc).}
+
+ @item{For even more, see @top_ref().}
 
 )
 

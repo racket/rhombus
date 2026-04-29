@@ -7,15 +7,17 @@
   ~category: [#'core, 18],
  ){Rhombus Reference}
 
-This document defines the main Rhombus language bindings.
+This document defines the main Rhombus language.
 
 @itemlist(
 
  @item{For a general overview of the language, see @docref(guide_doc).}
 
- @item{For more bindings that support metaprograming, see @docref(meta_doc).}
+ @item{For additional metaprogramming support, see @docref(meta_doc).}
 
- @item{For more documentation, see @docref(getting_started_doc).}
+ @item{For general concepts of the language, see @docref(model_doc).}
+
+ @item{For even more, see @top_ref().}
 
 )
 
