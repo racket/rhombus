@@ -244,12 +244,17 @@ block:
 
 block:
   let p = Port.Output.open_bytes()
-  p.write_bytes(#"apple")
+  p.write_byte(Char"a".to_int())
+  p.write_bytes(#"pple")
   check p.get_bytes() ~is_now #"apple"
   p.write_bytes(#"apple", ~start: 3)
   check p.get_bytes() ~is_now #"applele"
   p.write_bytes(#"apple", ~start: 1, ~end: 4)
   check p.get_bytes() ~is_now #"appleleppl"
+  p.write_char(Char"x")
+  check p.get_bytes() ~is_now #"applelepplx"
+  p.write_char(Char"λ")
+  check p.get_bytes() ~is_now #"applelepplx\316\273"
 
 block:
   let p = Port.Output.open_bytes()

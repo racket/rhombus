@@ -724,7 +724,7 @@
 
 (define/method (Port.Output.write_char port ch)
   #:primitive (write-char)
-  (write-byte ch port))
+  (write-char ch port))
 
 (define/method (Port.Output.Special.write port v
                                           #:wait [wait 'all])
