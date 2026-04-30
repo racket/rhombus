@@ -7,7 +7,7 @@ To get started with Rhombus:
 @itemlist(
 
  @item{Install
- @hyperlink("https://rhombus-lang.org/download"){Rhombus}.
+ @hyperlink("https://rhombus-lang.org/download.html"){Rhombus}.
 
  Installation will give you the DrRacket programming environment and
  command-line programs @exec{rhombus}, @exec{racket}, and @exec{raco}.}
