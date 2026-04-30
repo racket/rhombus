@@ -330,7 +330,11 @@
 (define-for-syntax (enforest-rhombus-expression stx)
   (with-syntax-error-respan
     (syntax-parse stx
-      [(_ e::expression) #'e.parsed])))
+      [(_ g)
+       ;; remove srcloc from `g`, because it's likely to refer to
+       ;; implementation internals that generated `rhombus-expression`
+       #:with e::expression (datum->syntax #f (syntax-e #'g))
+       #'e.parsed])))
 
 ;; If `e` is a block with a single group, and if the group is not a
 ;; definition, then parse the expression

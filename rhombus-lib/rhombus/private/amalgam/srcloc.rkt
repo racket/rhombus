@@ -4,6 +4,7 @@
          syntax/parse/pre
          shrubbery/property
          shrubbery/print
+         "../version-case.rkt"
          "origin.rkt")
 
 (provide syntax-srcloc
@@ -376,6 +377,11 @@
    (lambda ()
      body ...)))
 
+(meta-if-version-at-least
+ "9.2.0.3"
+ (void)
+ (define error-syntax->srcloc-handler (make-parameter (lambda (stx) #f))))
+
 (define (call-with-syntax-error-respan thunk)
   (with-handlers ([exn:fail:syntax?
                    (lambda (exn)
@@ -386,7 +392,10 @@
                           exn
                           (struct-copy exn:fail:syntax exn
                                        [exprs new-exprs]))))])
-    (thunk)))
+    (parameterize ([error-syntax->srcloc-handler
+                    (lambda (s)
+                      (syntax-srcloc (maybe-respan s)))])
+      (thunk))))
 
 (define (shift-origin stx from-stx)
   (let ([o (syntax-property from-stx 'origin)])

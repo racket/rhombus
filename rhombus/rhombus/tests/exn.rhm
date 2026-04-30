@@ -21,7 +21,8 @@ block:
   fun rkt_unwrap(stx): base.#{syntax->list}(stx)
   def v:
     try:
-      parameterize { Evaluator.current: Evaluator.make_rhombus() }:
+      parameterize { Evaluator.current: Evaluator.make_rhombus(),
+                     base.#{error-print-source-location}: #false }:
         eval('fun')
       ~catch x:
         x
