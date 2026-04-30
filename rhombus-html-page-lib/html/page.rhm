@@ -1,0 +1,3 @@
+#lang rhombus
+import: rhombus/html/page
+export: all_from(.page)

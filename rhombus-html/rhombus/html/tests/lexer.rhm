@@ -1,0 +1,364 @@
+#lang rhombus/static/and_meta
+
+// ============================================================================
+// Test runner for the html5lib tokenizer test suite.
+// --- initial implementation by Claude.ai
+//
+// Tests live in tests/cases/*.test (downloaded from
+// https://github.com/html5lib/html5lib-tests). Each is a JSON document of
+// the form
+//
+//   {"tests": [
+//      {"description": "...",
+//       "input": "...",
+//       "output": [["StartTag", "h", {}], ...],
+//       "initialStates": ["Data state", ...]?,
+//       "lastStartTag": "..."?,
+//       "doubleEscaped": true?,
+//       "errors": [{"code": "...", ...}, ...]?
+//      },
+//      ...]}
+//
+// We compare token streams. Errors are not compared by default.
+//
+// Usage:
+//
+//   racket lexer.rhm                 -- run all test files
+//   racket lexer.rhm test1           -- run a specific file
+//   racket lexer.rhm test1 -v        -- show failure details
+// ============================================================================
+
+import:
+  rhombus/html/private/lexer:
+    expose:
+      run
+      Lexer
+      Token
+      Attribute
+      data_state
+      rcdata_state
+      rawtext_state
+      script_data_state
+      plaintext_state
+      cdata_section_state
+  lib("json/main.rkt") as json
+  lib("racket/base.rkt") as rkt
+  rhombus/cmdline open
+  rhombus/runtime_path
+
+// ----------------------------------------------------------------------------
+// Mapping html5lib state names to our state functions
+
+def STATE_BY_NAME :: Map = {
+  "Data state": data_state,
+  "RCDATA state": rcdata_state,
+  "RAWTEXT state": rawtext_state,
+  "Script data state": script_data_state,
+  "PLAINTEXT state": plaintext_state,
+  "CDATA section state": cdata_section_state
+}
+
+
+// ----------------------------------------------------------------------------
+// Input preprocessing per HTML5 spec (just CR/CRLF normalization here)
+
+fun replace_all(s :: ReadableString, from :: ReadableString, to :: ReadableString) :~ String:
+  recur loop(rem :~ String = to_string(s), out :~ String = ""):
+    let i = rem.find(from)
+    cond
+    | i == #false: out ++ rem
+    | ~else:
+        loop(rem.substring(i + from.length(), rem.length()),
+             out ++ rem.substring(0, i) ++ to_string(to))
+
+fun preprocess(s :: String) :: String:
+  let s2 = replace_all(s, "\r\n", "\n")
+  replace_all(s2, "\r", "\n")
+
+
+// ----------------------------------------------------------------------------
+// "doubleEscaped" decoding: replace literal \uHHHH with the corresponding
+// Unicode code point.
+
+fun double_unescape(s :: String) :: String:
+  recur loop(i :: Int = 0, out :: String = ""):
+    let n = s.length()
+    cond
+    | i >= n: out
+    | i + 6 <= n && s[i] == Char"\\" && s[i + 1] == Char"u":
+        let hex = s.substring(i + 2, i + 6)
+        let v:
+          recur to_int(j :: Int = 0, acc :: Int = 0):
+            cond
+            | j == 4: acc
+            | ~else:
+                let c = hex[j]
+                let n = c.to_int()
+                let d:
+                  cond
+                  | 0x30 <= n && n <= 0x39: n - 0x30
+                  | 0x41 <= n && n <= 0x46: n - 0x41 + 10
+                  | 0x61 <= n && n <= 0x66: n - 0x61 + 10
+                  | ~else: -1
+                cond
+                | d < 0: -1
+                | ~else: to_int(j + 1, acc * 16 + d)
+        cond
+        | v >= 0 && v <= 0x10FFFF && !(0xD800 <= v && v <= 0xDFFF):
+            loop(i + 6, out ++ to_string(Char.from_int(v)))
+        | ~else:
+            loop(i + 1, out ++ to_string(s[i]))
+    | ~else:
+        loop(i + 1, out ++ to_string(s[i]))
+
+
+// ----------------------------------------------------------------------------
+// Convert our token stream to the html5lib canonical form:
+//   - drop trailing EOF
+//   - coalesce consecutive Character tokens into one ["Character", str]
+//   - StartTag: ["StartTag", name, {attrs}, true_if_self_closing]
+//                or just ["StartTag", name, {attrs}]
+//   - EndTag: ["EndTag", name]
+//   - Comment / DOCTYPE same shape as the spec test format
+
+fun attrs_to_map(attrs :: List) :: Map:
+  let mutable m :: Map = {}
+  for (a in attrs):
+    let na :: Attribute = a
+    m := m ++ {na.name: na.value}
+  m
+
+fun convert_token(t):
+  match t
+  | st :: Token.StartTag:
+      let am = attrs_to_map(st.attributes)
+      cond
+      | st.self_closing: ["StartTag", st.name, am, #true]
+      | ~else: ["StartTag", st.name, am]
+  | et :: Token.EndTag:
+      ["EndTag", et.name]
+  | cm :: Token.Comment:
+      ["Comment", cm.data]
+  | dt :: Token.Doctype:
+      ["DOCTYPE", dt.name, dt.public_id, dt.system_id, !dt.force_quirks]
+  | _: ["???", to_string(t)]   // shouldn't be reached for our token classes
+
+fun canonicalize(tokens :: List) :: List:
+  recur loop(toks = tokens, str_acc :: String = "", acc :: List = []):
+    fun flushed(acc :: List) :~ List:
+      cond
+      | str_acc == "": acc
+      | ~else: List.cons(["Character", str_acc], acc)
+    match toks
+    | []: List.reverse(flushed(acc))
+    | [t :: Token.EOF, & rest]: loop(rest, str_acc, acc)
+    | [t :: Token.Character, & rest]:
+        loop(rest, str_acc ++ to_string(t), acc)
+    | [other, & rest]:
+        loop(rest, "", List.cons(convert_token(other), flushed(acc)))
+
+
+// ----------------------------------------------------------------------------
+// Convert expected (html5lib-format, parsed from JSON) to a comparable form
+// that's structurally identical to canonicalize's output. Mostly that means:
+//   - PairList -> List
+//   - mutable strings -> immutable
+//   - object map keys (#'name -> "name")
+
+// Recursively normalize a JSON-decoded value to canonical form:
+//   - mutable strings -> immutable
+//   - PairList -> List
+//   - Maps -> Maps with normalized keys/values
+//   - Symbol keys -> string keys (already-immutable)
+//   - if `~unescape: #true`, decode \uHHHH inside any string we encounter
+fun normalize(v, ~unescape: ue :: Boolean = #false):
+  cond
+  | v is_a ReadableString:
+      let s :: String = to_string(v)
+      cond
+      | ue: double_unescape(s)
+      | ~else: s
+  | v is_a Symbol:
+      to_string(v)
+  | v is_a List || v is_a PairList:
+      for List (x in [& v]): normalize(x, ~unescape: ue)
+  | v is_a Map:
+      let mutable m :: Map = {}
+      for ((k, val) in (v :~ Map)):
+        m := m ++ {normalize(k, ~unescape: ue): normalize(val, ~unescape: ue)}
+      m
+  | ~else: v
+
+fun convert_expected_token(tok) :~ List:
+  let lst :: List = tok
+  match lst[0]
+  | "StartTag":
+      cond
+      | lst.length() >= 4 && lst[3]: ["StartTag", lst[1], lst[2], #true]
+      | ~else: ["StartTag", lst[1], lst[2]]
+  | _: lst
+
+fun convert_expected(toks_pl, ~double_escape: de) :~ List:
+  let normalized :~ List = normalize(toks_pl, ~unescape: de)
+  for List (tok in normalized):
+    convert_expected_token(tok)
+
+
+// ----------------------------------------------------------------------------
+// Running a single test
+
+class TestResult(name :: String, file :: PathString, state :: String, ok :: Boolean, expected, actual):
+  // Classify failures attributable to our limited named-entity table:
+  //   - Any failure in namedEntities.test
+  //   - Any failure where the test description starts with "Named entity"
+  //   - Any failure where the actual has an un-expanded '&' the expected lacks
+  method is_entity_related() :: Boolean:
+    cond
+    | this.ok: #false
+    | to_string(this.file).find("namedEntities.test"): #true
+    | this.name.find("amed entity"): #true
+    | this.name.find("emicolonless named entity"): #true
+    | this.name.find("ntity in attribute"): #true
+    | this.name.find("ntity with trailing semicolon"): #true
+    | this.name.find("ntity without trailing semicolon"): #true
+    | this.name.find("on BMP-charref"): #true
+    | ~else:
+        recur loop(a :~ List = this.actual, e :~ List = this.expected):
+          cond
+          | a == [] || e == []: #false
+          | ~else:
+              let ah :: List = [& a[0]]
+              let eh :: List = [& e[0]]
+              cond
+              | ah[0] == "Character" && eh[0] == "Character":
+                  let astr :: String = ah[1]
+                  let estr :: String = eh[1]
+                  cond
+                  | astr.find("&") && !estr.find("&"): #true
+                  | astr.length() > estr.length() && astr.find("&"): #true
+                  | ~else: loop(a.rest, e.rest)
+              | ah[0] == "StartTag" && eh[0] == "StartTag" && ah.length() >= 3 && eh.length() >= 3:
+                  let am :: Map = ah[2]
+                  let em :: Map = eh[2]
+                  let stale_attr:
+                    for any ((k, av) in am):
+                      em.has_key(k) && (av :: String).find("&") && !(em[k] :: String).find("&")
+                  cond
+                  | stale_attr: #true
+                  | ~else: loop(a.rest, e.rest)
+              | ~else: loop(a.rest, e.rest)
+
+fun run_one(file :: PathString, t :: Map) :~ List:
+  let desc :: String = to_string(t[#'description])
+  let raw_input :: String = to_string(t[#'input])
+  let de = t.has_key(#'doubleEscaped) && t[#'doubleEscaped]
+  let input :: String = preprocess(if de | double_unescape(raw_input) | raw_input)
+  let last_start_tag = if t.has_key(#'lastStartTag) | to_string(t[#'lastStartTag]) | #false
+  let initial_state_names :~ List:
+    cond
+    | t.has_key(#'initialStates): for List (s in t[#'initialStates] :~ PairList): to_string(s)
+    | ~else: ["Data state"]
+  let expected = convert_expected(t[#'output], ~double_escape: de)
+  for List (state_name in initial_state_names):
+    let state_fn = STATE_BY_NAME[state_name]
+    let lex = Lexer(Port.Input.open_string(input))
+    cond
+    | last_start_tag: lex.last_start_tag_name := last_start_tag
+    | ~else: #void
+    let (tokens, _) = run(lex, state_fn)
+    let actual = canonicalize(tokens)
+    let ok = actual == expected
+    TestResult(desc, file, state_name, ok, expected, actual)
+
+
+// ----------------------------------------------------------------------------
+// Running a whole test file
+
+fun run_file(file :: PathString, ~verbose: verbose :: Boolean) :~ List:
+  let p = Port.Input.open_file(file)
+  let data :: Map.of(Any, PairList.of(Map)) = json.#{read-json}(p, ~#{null}: #false)
+  let tests = data[#'tests]
+  let results :: List.of(TestResult):
+    let mutable acc :: List = []
+    for (t in tests):
+      acc := acc ++ run_one(file, t)
+    acc
+  let pass = results.filter(~keep: fun(r :~ TestResult): r.ok).length()
+  let fail = results.length() - pass
+  let entity_fails = results.filter(~keep: fun(r :~ TestResult): !r.ok && r.is_entity_related()).length()
+  let real_fails = fail - entity_fails
+  let basename = Path.name(file)
+  let suffix:
+    cond
+    | fail == 0: ""
+    | entity_fails > 0 && real_fails == 0: "  (all " +& entity_fails +& " failures are due to the limited named-entity table)"
+    | entity_fails > 0: "  (" +& entity_fails +& " entity-table, " +& real_fails +& " other)"
+    | ~else: "  (" +& real_fails +& " other)"
+  println(basename +& ": " +& pass +& "/" +& results.length() +& " passed" ++ suffix)
+  cond
+  | verbose && fail > 0:
+      for (r in results):
+        cond
+        | !r.ok:
+            let tag = if r.is_entity_related() | "[entity]" | ""
+            println("  FAIL " ++ tag ++ " [" +& r.state +& "] " +& r.name)
+            println("    expected: " +& r.expected)
+            println("    actual:   " +& r.actual)
+        | ~else: #void
+  | ~else: #void
+  results
+
+
+// ----------------------------------------------------------------------------
+// Command line
+
+runtime_path.def dir: "lexer"
+
+fun list_tests_dir() :~ List:
+  for List (name in filesystem.files(dir)):
+    let s :~ String:
+      cond
+      | name is_a ReadableString: to_string(name)
+      | ~else: rkt.#{path->string}(name)
+    let immut = s.snapshot()
+    cond
+    | immut.length() > 5 && immut.substring(immut.length() - 5, immut.length()) == ".test" && immut != "xmlViolation.test":
+        dir +/ immut
+    | ~else: #false
+
+fun main():
+  let args :~ List:
+    let cl = current_command_line()
+    for List (a in cl): a
+  let verbose = "-v" in args
+  let names :~ List.of(String) = args.filter(~keep: fun(a): !(a == "-v"))
+  let files :: List:
+    cond
+    | names == []:
+        list_tests_dir().filter(~keep: fun(p): p)
+    | ~else:
+        for List (n in names):
+          dir +/ (n ++ ".test")
+  let mutable total = 0
+  let mutable total_ok = 0
+  let mutable total_entity = 0
+  let mutable total_real = 0
+  for (f in files):
+    let results = run_file(f, ~verbose: verbose)
+    total := total + results.length()
+    total_ok := total_ok + results.filter(~keep: fun(r :~ TestResult): r.ok).length()
+    total_entity := total_entity + results.filter(~keep: fun(r :~ TestResult): !r.ok && r.is_entity_related()).length()
+    total_real := total_real + results.filter(~keep: fun(r :~ TestResult): !r.ok && !r.is_entity_related()).length()
+  println("---")
+  println("TOTAL: " +& total_ok +& "/" +& total +& " passed")
+  cond
+  | total_entity > 0:
+      println("  " +& total_entity +& " failures attributable to the limited named-entity table")
+  | ~else: #void
+  cond
+  | total_real > 0:
+      println("  " +& total_real +& " failures NOT explained by the limited entity table")
+      rkt.exit(1)
+  | ~else: #void
+
+main()

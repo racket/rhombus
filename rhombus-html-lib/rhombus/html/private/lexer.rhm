@@ -1,0 +1,2056 @@
+#lang rhombus/static/and_meta
+import:
+  "entities.rhm"
+  lib("racket/base.rkt") as rkt
+
+export:
+  Token
+  Attribute
+  Lexer
+  run
+  // States that the html5lib tests can configure as initial states:
+  data_state
+  rcdata_state
+  rawtext_state
+  script_data_state
+  plaintext_state
+  cdata_section_state
+
+// ============================================================================
+// HTML5 lexer, following https://html.spec.whatwg.org/#tokenization
+// --- initial implementation by Claude.ai
+//
+// Each spec "state" becomes a Rhombus function via the `state` macro defined
+// below. A state function reads one input character and returns the next
+// state function (or #false to halt). Side effects -- emitting tokens,
+// recording parse errors, mutating the in-progress tag/comment/doctype,
+// etc. -- are performed through helper functions that take the lexer
+// (named `lex` by convention) as their first argument. The lexer name is
+// chosen at the `state` use-site so the body's `lex` references are local
+// and visible.
+//
+// A handful of states (markup-declaration-open, after-DOCTYPE-name, the
+// named-character-reference state) need multi-character lookahead and don't
+// fit the consume-and-dispatch pattern, so they're written as plain Rhombus
+// functions. The macro and the plain functions interoperate transparently
+// because both are just `fun(lex :~ Lexer) -> next-state-or-false`.
+// ============================================================================
+
+
+// ----------------------------------------------------------------------------
+// Tokens
+
+veneer TokenCharacter(this :: Char)
+
+class TokenNoncharacter():
+  nonfinal
+
+enum Token
+| ~is_a TokenCharacter
+| ~is_a TokenNoncharacter
+
+class Token.StartTag(name :: String, self_closing :: Boolean, attributes :: List):
+  extends TokenNoncharacter
+class Token.EndTag(name :: String, self_closing :: Boolean, attributes :: List):
+  extends TokenNoncharacter
+class Token.Comment(data :: String):
+  extends TokenNoncharacter
+class Token.Doctype(name, public_id, system_id, force_quirks :: Boolean):
+  extends TokenNoncharacter
+class Token.EOF():
+  extends TokenNoncharacter
+
+alias 'Token.Character': 'TokenCharacter'
+
+// ----------------------------------------------------------------------------
+// In-progress builders
+
+// Finalized attribute as carried by emitted tokens
+class Attribute(~name: name :: String,
+                ~value: value :: String)
+
+class TagBuilder(
+  kind,                              // #'start | #'end
+  mutable name_accum :: Port.Output.String,
+  mutable self_closing :: Boolean,
+  mutable attributes :~ List.of(Attribute)
+):
+  field name_done = #false
+  method get_name():
+    name_done || (block:
+                    name_done := name_accum.get_string()
+                    rkt.#{datum-intern-literal}(name_done))
+
+class AttributeBuilder(name :~ Port.Output.String,
+                       value :~ Port.Output.String):
+  method finalize() :~ Attribute:
+    Attribute(~name: rkt.#{datum-intern-literal}(name.get_string()),
+              ~value: value.get_string())
+
+class CommentBuilder(mutable data :: String)
+
+class DoctypeBuilder(
+  mutable name,                      // String | #false  (#false == "missing")
+  mutable public_id,                 // String | #false
+  mutable system_id,                 // String | #false
+  mutable force_quirks :: Boolean
+)
+
+
+// ----------------------------------------------------------------------------
+// Lexer state object
+
+class Lexer(port :: Port.Input):
+  field tokens :: List = []          // emitted tokens, in order
+  field errors :: List = []          // parse error names, in order
+  field peeked :: List = []          // List(Char) -- chars to deliver next
+  field last_char = #false           // Char | Port.eof | #false
+  field return_state = #false        // state-function | #false
+  field current_tag = #false         // TagBuilder | #false
+  field current_attribute = #false   // AttributeBuilder | #false
+  field last_start_tag_name = #false // String | #false (for "appropriate end tag")
+  field cdata_allowed :: Boolean = #false  // set by tree-construction stage when
+                                            // current node is in a foreign namespace
+  field current_comment = #false     // CommentBuilder | #false
+  field current_doctype = #false     // DoctypeBuilder | #false
+  field temp_buffer :: String = ""   // for char references and script-data escapes
+
+  // Consume the next input character, honoring previously pushed-back chars.
+  method consume():
+    let c:
+      match this.peeked
+      | [first, & rest]:
+          this.peeked := rest
+          first
+      | []:
+          this.port.read_char()
+    this.last_char := c
+    c
+
+  // Push a character back so it'll be re-delivered next.
+  method push_back(c):
+    this.peeked := List.cons(c, this.peeked)
+
+  // Push a string back so its characters are re-delivered in order.
+  method push_back_string(s :: String):
+    let chars :: List = for List (c in s): c
+    this.peeked := chars ++ this.peeked
+
+  // Read up to n more characters into `peeked` (without "consuming" them).
+  // Returns the contents of `peeked` (as far as it goes, up to n chars).
+  method peek_string(n :: Int) :~ String:
+    let needed = n - this.peeked.length()
+    if needed > 0
+    | recur loop(i :: Int = 0, acc :: List = []):
+        if i == needed
+        | this.peeked := this.peeked ++ List.reverse(acc)
+        | block:
+            let c = this.port.read_char()
+            cond
+            | c is_a Char: loop(i + 1, List.cons(c, acc))
+            | ~else: this.peeked := this.peeked ++ List.reverse(acc)
+    | #void
+    let take_n = if n < this.peeked.length() | n | this.peeked.length()
+    let chars :: List = List.take(this.peeked, take_n)
+    String.append(& for List (c in chars): to_string(c))
+
+  // Try to consume the literal string `s` (case-insensitively if ~ci).
+  // On match: consume it and return #true. On mismatch: don't consume, return #false.
+  method try_match_string(s :: String, ~ci: ci :: Boolean = #false) :: Boolean:
+    let n = s.length()
+    let avail = this.peek_string(n)
+    cond
+    | avail.length() < n: #false
+    | ~else:
+        let matches:
+          recur loop(i :: Int = 0):
+            cond
+            | i == n: #true
+            | ~else:
+                let a = avail[i]
+                let b = s[i]
+                let same:
+                  if ci
+                  | a.foldcase() == b.foldcase()
+                  | a == b
+                if same | loop(i + 1) | #false
+        cond
+        | matches:
+            this.peeked := List.drop(this.peeked, n)
+            #true
+        | ~else: #false
+
+
+// ----------------------------------------------------------------------------
+// Helpers used inside state bodies. Each one takes the lexer as its first
+// argument. State bodies bind the lexer with `state NAME(lex)` (see the macro
+// below) and pass it explicitly.
+
+fun emit(lex :~ Lexer, t :: Token):
+  // Track last-emitted start tag's name for "appropriate end tag" check.
+  match t
+  | st :: Token.StartTag: lex.last_start_tag_name := st.name
+  | _: #void
+  lex.tokens := List.add(lex.tokens, t)
+
+fun set_return_state(lex :~ Lexer, s):
+  lex.return_state := s
+
+fun parse_error(lex :~ Lexer, name):
+  lex.errors := List.add(lex.errors, name)
+
+// Push the just-consumed char back, then yield `s` as the next state.
+fun reconsume_in(lex :~ Lexer, s):
+  lex.peeked := List.cons(lex.last_char, lex.peeked)
+  s
+
+// ---- tag building ----------------------------------------------------------
+
+fun create_start_tag(lex :~ Lexer):
+  lex.current_tag := TagBuilder(#'start, Port.Output.open_string(), #false, [])
+
+fun create_end_tag(lex :~ Lexer):
+  lex.current_tag := TagBuilder(#'end, Port.Output.open_string(), #false, [])
+
+fun append_to_tag_name(lex :~ Lexer, c :: Char):
+  let t :: TagBuilder = lex.current_tag
+  t.name_accum.write_char(c)
+
+// Start a new attribute on the current tag. The previous current_attribute,
+// if any, is pushed onto the tag's attribute list.
+fun start_new_attribute(lex :~ Lexer):
+  finish_current_attribute(lex)
+  let a = AttributeBuilder(Port.Output.open_string(), Port.Output.open_string())
+  lex.current_attribute := a
+
+fun finish_current_attribute(lex :~ Lexer):
+  let t :: TagBuilder = lex.current_tag
+  match lex.current_attribute
+  | #false: #void
+  | a :: AttributeBuilder:
+      // Spec says: if there's another attribute with the same name, this one
+      // is a duplicate-attribute parse error and is dropped from the token.
+      let a = a.finalize()
+      let dup:
+        for any (existing :~ Attribute in t.attributes):
+          existing.name == a.name
+      cond
+      | dup:
+          parse_error(lex, #'duplicate_attribute)
+      | ~else:
+          t.attributes := t.attributes.add(a)
+      lex.current_attribute := #false
+
+fun append_to_current_attribute_name(lex :~ Lexer, c :: Char):
+  let a :~ AttributeBuilder = lex.current_attribute
+  a.name.write_char(c)
+
+fun append_to_current_attribute_value(lex :~ Lexer, c :: Char):
+  let a :~ AttributeBuilder = lex.current_attribute
+  a.value.write_char(c)
+
+fun emit_current_tag(lex :~ Lexer):
+  finish_current_attribute(lex)
+  let t :: TagBuilder = lex.current_tag
+  let attrs = t.attributes
+  let tok:
+    match t.kind
+    | #'start: Token.StartTag(t.get_name(), t.self_closing, attrs)
+    | #'end:
+        // Spec: end tag with attributes / self-closing -> parse error
+        if t.self_closing
+        | parse_error(lex, #'end_tag_with_trailing_solidus)
+        | #void
+        if !(attrs == [])
+        | parse_error(lex, #'end_tag_with_attributes)
+        | #void
+        Token.EndTag(t.get_name(), t.self_closing, attrs)
+  lex.current_tag := #false
+  emit(lex, tok)
+
+// "An appropriate end tag token is one whose tag name matches the tag name of
+//  the last start tag to have been emitted from this tokenizer."
+fun is_appropriate_end_tag(lex :~ Lexer) :: Boolean:
+  let t :: TagBuilder = lex.current_tag
+  lex.last_start_tag_name == t.get_name()
+
+// ---- comment building ------------------------------------------------------
+
+fun create_comment(lex :~ Lexer, initial :: String):
+  lex.current_comment := CommentBuilder(initial)
+
+fun append_to_comment(lex :~ Lexer, c :: Char):
+  let cm :: CommentBuilder = lex.current_comment
+  cm.data := cm.data ++ to_string(c)
+
+fun append_str_to_comment(lex :~ Lexer, s :: String):
+  let cm :: CommentBuilder = lex.current_comment
+  cm.data := cm.data ++ s
+
+fun emit_current_comment(lex :~ Lexer):
+  let cm :: CommentBuilder = lex.current_comment
+  lex.current_comment := #false
+  emit(lex, Token.Comment(cm.data))
+
+// ---- doctype building ------------------------------------------------------
+
+fun create_doctype(lex :~ Lexer):
+  lex.current_doctype := DoctypeBuilder(#false, #false, #false, #false)
+
+fun set_doctype_name_to(lex :~ Lexer, c :: Char):
+  let d :: DoctypeBuilder = lex.current_doctype
+  d.name := to_string(c)
+
+fun append_to_doctype_name(lex :~ Lexer, c :: Char):
+  let d :: DoctypeBuilder = lex.current_doctype
+  d.name := (d.name :: String) ++ to_string(c)
+
+fun set_doctype_public_id_empty(lex :~ Lexer):
+  (lex.current_doctype :: DoctypeBuilder).public_id := ""
+
+fun append_to_doctype_public_id(lex :~ Lexer, c :: Char):
+  let d :: DoctypeBuilder = lex.current_doctype
+  d.public_id := (d.public_id :: String) ++ to_string(c)
+
+fun set_doctype_system_id_empty(lex :~ Lexer):
+  (lex.current_doctype :: DoctypeBuilder).system_id := ""
+
+fun append_to_doctype_system_id(lex :~ Lexer, c :: Char):
+  let d :: DoctypeBuilder = lex.current_doctype
+  d.system_id := (d.system_id :: String) ++ to_string(c)
+
+fun set_doctype_force_quirks(lex :~ Lexer):
+  (lex.current_doctype :: DoctypeBuilder).force_quirks := #true
+
+fun emit_current_doctype(lex :~ Lexer):
+  let d :: DoctypeBuilder = lex.current_doctype
+  lex.current_doctype := #false
+  emit(lex, Token.Doctype(d.name, d.public_id, d.system_id, d.force_quirks))
+
+// ---- temp buffer (script-data and char references) -------------------------
+
+fun temp_buffer_clear(lex :~ Lexer):
+  lex.temp_buffer := ""
+
+fun temp_buffer_append(lex :~ Lexer, c :: Char):
+  lex.temp_buffer := lex.temp_buffer ++ to_string(c)
+
+fun temp_buffer_append_str(lex :~ Lexer, s :: String):
+  lex.temp_buffer := lex.temp_buffer ++ s
+
+// Emit each character in the temp buffer as a character token.
+fun temp_buffer_emit_as_character_tokens(lex :~ Lexer):
+  for (c in lex.temp_buffer):
+    emit(lex, Token.Character(c))
+
+// "Was the character reference consumed as part of an attribute?"
+fun consumed_as_part_of_attribute(lex :~ Lexer) :: Boolean:
+  let s = lex.return_state
+  (s == attribute_value_double_quoted_state) || (s == attribute_value_single_quoted_state) || (s == attribute_value_unquoted_state)
+
+// Flush the temp buffer either to the current attribute's value (if the
+// reference was inside an attribute) or as character tokens.
+fun flush_code_points_consumed_as_character_reference(lex :~ Lexer):
+  if consumed_as_part_of_attribute(lex)
+  | block:
+      for (c in lex.temp_buffer):
+        append_to_current_attribute_value(lex, c)
+  | temp_buffer_emit_as_character_tokens(lex)
+
+
+// ----------------------------------------------------------------------------
+// The `state` macro
+//
+// Usage:
+//
+//   state name(lex)
+//   | <pattern> ...: <body>
+//   | ...
+//
+// expands to:
+//
+//   fun name(lex :~ Lexer):
+//     match (lex :~ Lexer).consume()
+//     | <pattern> ...: <body>
+//     | ...
+//
+// The lexer name is given at the use site (conventionally `lex`); body
+// patterns and bodies see it as a normal local. The redundant `:~ Lexer`
+// cast in the template is needed because the formal annotation on a
+// pattern-variable binding doesn't propagate static type info to other
+// uses of the same pattern variable within the template.
+//
+// The body's last expression must be the next state function (or `#false`
+// to halt the trampoline).
+
+defn.macro 'state $name($lex)
+            | $pat ...: $body
+            | ...':
+  'fun $name($lex :~ Lexer):
+     match $(lex).consume()
+     | $pat ...: $body
+     | ...'
+
+
+// ----------------------------------------------------------------------------
+// Constants and small helpers
+
+def REPLACEMENT_CHAR :: Char = Char.from_int(0xFFFD)
+def NULL_CHAR :: Char = Char.from_int(0)
+
+fun is_ascii_alpha(c :: Char) :: Boolean:
+  let n = c.to_int()
+  (0x41 <= n && n <= 0x5A) || (0x61 <= n && n <= 0x7A)
+
+fun is_ascii_upper_alpha(c :: Char) :: Boolean:
+  let n = c.to_int()
+  0x41 <= n && n <= 0x5A
+
+fun is_ascii_lower_alpha(c :: Char) :: Boolean:
+  let n = c.to_int()
+  0x61 <= n && n <= 0x7A
+
+fun is_ascii_digit(c :: Char) :: Boolean:
+  let n = c.to_int()
+  0x30 <= n && n <= 0x39
+
+fun is_ascii_alphanumeric(c :: Char) :: Boolean:
+  is_ascii_alpha(c) || is_ascii_digit(c)
+
+fun is_ascii_hex_digit(c :: Char) :: Boolean:
+  let n = c.to_int()
+  is_ascii_digit(c) || (0x41 <= n && n <= 0x46) || (0x61 <= n && n <= 0x66)
+
+fun is_html_whitespace(c :: Char) :: Boolean:
+  c == Char"\t" || c == Char"\n" || c == Char"\f" || c == Char" "
+
+def NAMED_ENTITY_PREFIXES :~ Set:
+  for Set ((k, _) in entities.NAMED_ENTITIES):
+    each i in 1..=k.length()
+    k.substring(0, i)
+
+// ============================================================================
+// State definitions, in spec section order.
+// ============================================================================
+
+// 13.2.5.1 Data state
+state data_state(lex)
+| Char"&":
+    set_return_state(lex, data_state)
+    character_reference_state
+| Char"<":
+    tag_open_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(Char"\0"))
+    data_state
+| Port.eof:
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    data_state
+
+// 13.2.5.2 RCDATA state
+state rcdata_state(lex)
+| Char"&":
+    set_return_state(lex, rcdata_state)
+    character_reference_state
+| Char"<":
+    rcdata_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    rcdata_state
+| Port.eof:
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    rcdata_state
+
+// 13.2.5.3 RAWTEXT state
+state rawtext_state(lex)
+| Char"<":
+    rawtext_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    rawtext_state
+| Port.eof:
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    rawtext_state
+
+// 13.2.5.4 Script data state
+state script_data_state(lex)
+| Char"<":
+    script_data_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_state
+| Port.eof:
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_state
+
+// 13.2.5.5 PLAINTEXT state
+state plaintext_state(lex)
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    plaintext_state
+| Port.eof:
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    plaintext_state
+
+// 13.2.5.6 Tag open state
+state tag_open_state(lex)
+| Char"!":
+    markup_declaration_open_state
+| Char"/":
+    end_tag_open_state
+| Char"?":
+    parse_error(lex, #'unexpected_question_mark_instead_of_tag_name)
+    create_comment(lex, "")
+    reconsume_in(lex, bogus_comment_state)
+| Port.eof:
+    parse_error(lex, #'eof_before_tag_name)
+    emit(lex, Token.Character(Char"<"))
+    emit(lex, Token.EOF())
+    #false
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_start_tag(lex)
+        reconsume_in(lex, tag_name_state)
+    | ~else:
+        parse_error(lex, #'invalid_first_character_of_tag_name)
+        emit(lex, Token.Character(Char"<"))
+        reconsume_in(lex, data_state)
+
+// 13.2.5.7 End tag open state
+state end_tag_open_state(lex)
+| Char">":
+    parse_error(lex, #'missing_end_tag_name)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_before_tag_name)
+    emit(lex, Token.Character(Char"<"))
+    emit(lex, Token.Character(Char"/"))
+    emit(lex, Token.EOF())
+    #false
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_end_tag(lex)
+        reconsume_in(lex, tag_name_state)
+    | ~else:
+        parse_error(lex, #'invalid_first_character_of_tag_name)
+        create_comment(lex, "")
+        reconsume_in(lex, bogus_comment_state)
+
+// 13.2.5.8 Tag name state
+state tag_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_attribute_name_state
+| Char"/":
+    self_closing_start_tag_state
+| Char">":
+    emit_current_tag(lex)
+    data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_tag_name(lex, REPLACEMENT_CHAR)
+    tag_name_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_tag_name(lex, c.downcase())
+    | ~else:
+        append_to_tag_name(lex, c)
+    tag_name_state
+
+// 13.2.5.9 RCDATA less-than sign state
+state rcdata_less_than_sign_state(lex)
+| Char"/":
+    temp_buffer_clear(lex)
+    rcdata_end_tag_open_state
+| c:
+    emit(lex, Token.Character(Char"<"))
+    reconsume_in(lex, rcdata_state)
+
+// 13.2.5.10 RCDATA end tag open state
+state rcdata_end_tag_open_state(lex)
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_end_tag(lex)
+        reconsume_in(lex, rcdata_end_tag_name_state)
+    | ~else:
+        emit(lex, Token.Character(Char"<"))
+        emit(lex, Token.Character(Char"/"))
+        reconsume_in(lex, rcdata_state)
+
+// 13.2.5.11 RCDATA end tag name state
+state rcdata_end_tag_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    cond
+    | is_appropriate_end_tag(lex): before_attribute_name_state
+    | ~else: rcdata_anything_else_for_end_tag(lex)
+| Char"/":
+    cond
+    | is_appropriate_end_tag(lex): self_closing_start_tag_state
+    | ~else: rcdata_anything_else_for_end_tag(lex)
+| Char">":
+    cond
+    | is_appropriate_end_tag(lex):
+        emit_current_tag(lex)
+        data_state
+    | ~else: rcdata_anything_else_for_end_tag(lex)
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_tag_name(lex, c.downcase())
+        temp_buffer_append(lex, c)
+        rcdata_end_tag_name_state
+    | is_ascii_lower_alpha(c):
+        append_to_tag_name(lex, c)
+        temp_buffer_append(lex, c)
+        rcdata_end_tag_name_state
+    | ~else: rcdata_anything_else_for_end_tag(lex)
+| Port.eof: rcdata_anything_else_for_end_tag(lex)
+
+fun rcdata_anything_else_for_end_tag(lex :~ Lexer):
+  // Treat as "<", "/", and the temp buffer's chars in rcdata_state.
+  emit(lex, Token.Character(Char"<"))
+  emit(lex, Token.Character(Char"/"))
+  for (c in lex.temp_buffer):
+    emit(lex, Token.Character(c))
+  reconsume_in(lex, rcdata_state)
+
+// 13.2.5.12 RAWTEXT less-than sign state
+state rawtext_less_than_sign_state(lex)
+| Char"/":
+    temp_buffer_clear(lex)
+    rawtext_end_tag_open_state
+| c:
+    emit(lex, Token.Character(Char"<"))
+    reconsume_in(lex, rawtext_state)
+
+// 13.2.5.13 RAWTEXT end tag open state
+state rawtext_end_tag_open_state(lex)
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_end_tag(lex)
+        reconsume_in(lex, rawtext_end_tag_name_state)
+    | ~else:
+        emit(lex, Token.Character(Char"<"))
+        emit(lex, Token.Character(Char"/"))
+        reconsume_in(lex, rawtext_state)
+
+// 13.2.5.14 RAWTEXT end tag name state
+state rawtext_end_tag_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    cond
+    | is_appropriate_end_tag(lex): before_attribute_name_state
+    | ~else: rawtext_anything_else_for_end_tag(lex)
+| Char"/":
+    cond
+    | is_appropriate_end_tag(lex): self_closing_start_tag_state
+    | ~else: rawtext_anything_else_for_end_tag(lex)
+| Char">":
+    cond
+    | is_appropriate_end_tag(lex):
+        emit_current_tag(lex)
+        data_state
+    | ~else: rawtext_anything_else_for_end_tag(lex)
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_tag_name(lex, c.downcase())
+        temp_buffer_append(lex, c)
+        rawtext_end_tag_name_state
+    | is_ascii_lower_alpha(c):
+        append_to_tag_name(lex, c)
+        temp_buffer_append(lex, c)
+        rawtext_end_tag_name_state
+    | ~else: rawtext_anything_else_for_end_tag(lex)
+| Port.eof: rawtext_anything_else_for_end_tag(lex)
+
+fun rawtext_anything_else_for_end_tag(lex :~ Lexer):
+  emit(lex, Token.Character(Char"<"))
+  emit(lex, Token.Character(Char"/"))
+  for (c in lex.temp_buffer):
+    emit(lex, Token.Character(c))
+  reconsume_in(lex, rawtext_state)
+
+// 13.2.5.15 Script data less-than sign state
+state script_data_less_than_sign_state(lex)
+| Char"/":
+    temp_buffer_clear(lex)
+    script_data_end_tag_open_state
+| Char"!":
+    emit(lex, Token.Character(Char"<"))
+    emit(lex, Token.Character(Char"!"))
+    script_data_escape_start_state
+| c:
+    emit(lex, Token.Character(Char"<"))
+    reconsume_in(lex, script_data_state)
+
+// 13.2.5.16 Script data end tag open state
+state script_data_end_tag_open_state(lex)
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_end_tag(lex)
+        reconsume_in(lex, script_data_end_tag_name_state)
+    | ~else:
+        emit(lex, Token.Character(Char"<"))
+        emit(lex, Token.Character(Char"/"))
+        reconsume_in(lex, script_data_state)
+
+// 13.2.5.17 Script data end tag name state
+state script_data_end_tag_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    cond
+    | is_appropriate_end_tag(lex): before_attribute_name_state
+    | ~else: script_data_anything_else_for_end_tag(lex)
+| Char"/":
+    cond
+    | is_appropriate_end_tag(lex): self_closing_start_tag_state
+    | ~else: script_data_anything_else_for_end_tag(lex)
+| Char">":
+    cond
+    | is_appropriate_end_tag(lex):
+        emit_current_tag(lex)
+        data_state
+    | ~else: script_data_anything_else_for_end_tag(lex)
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_tag_name(lex, c.downcase())
+        temp_buffer_append(lex, c)
+        script_data_end_tag_name_state
+    | is_ascii_lower_alpha(c):
+        append_to_tag_name(lex, c)
+        temp_buffer_append(lex, c)
+        script_data_end_tag_name_state
+    | ~else: script_data_anything_else_for_end_tag(lex)
+| Port.eof: script_data_anything_else_for_end_tag(lex)
+
+fun script_data_anything_else_for_end_tag(lex :~ Lexer):
+  emit(lex, Token.Character(Char"<"))
+  emit(lex, Token.Character(Char"/"))
+  for (c in lex.temp_buffer):
+    emit(lex, Token.Character(c))
+  reconsume_in(lex, script_data_state)
+
+// 13.2.5.18 Script data escape start state
+state script_data_escape_start_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_escape_start_dash_state
+| c:
+    reconsume_in(lex, script_data_state)
+
+// 13.2.5.19 Script data escape start dash state
+state script_data_escape_start_dash_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_escaped_dash_dash_state
+| c:
+    reconsume_in(lex, script_data_state)
+
+// 13.2.5.20 Script data escaped state
+state script_data_escaped_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_escaped_dash_state
+| Char"<":
+    script_data_escaped_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_escaped_state
+
+// 13.2.5.21 Script data escaped dash state
+state script_data_escaped_dash_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_escaped_dash_dash_state
+| Char"<":
+    script_data_escaped_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_escaped_state
+
+// 13.2.5.22 Script data escaped dash dash state
+state script_data_escaped_dash_dash_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_escaped_dash_dash_state
+| Char"<":
+    script_data_escaped_less_than_sign_state
+| Char">":
+    emit(lex, Token.Character(Char">"))
+    script_data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_escaped_state
+
+// 13.2.5.23 Script data escaped less-than sign state
+state script_data_escaped_less_than_sign_state(lex)
+| Char"/":
+    temp_buffer_clear(lex)
+    script_data_escaped_end_tag_open_state
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        temp_buffer_clear(lex)
+        emit(lex, Token.Character(Char"<"))
+        reconsume_in(lex, script_data_double_escape_start_state)
+    | ~else:
+        emit(lex, Token.Character(Char"<"))
+        reconsume_in(lex, script_data_escaped_state)
+
+// 13.2.5.24 Script data escaped end tag open state
+state script_data_escaped_end_tag_open_state(lex)
+| c:
+    cond
+    | c is_a Char && is_ascii_alpha(c):
+        create_end_tag(lex)
+        reconsume_in(lex, script_data_escaped_end_tag_name_state)
+    | ~else:
+        emit(lex, Token.Character(Char"<"))
+        emit(lex, Token.Character(Char"/"))
+        reconsume_in(lex, script_data_escaped_state)
+
+// 13.2.5.25 Script data escaped end tag name state
+state script_data_escaped_end_tag_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    cond
+    | is_appropriate_end_tag(lex): before_attribute_name_state
+    | ~else: script_data_escaped_anything_else_for_end_tag(lex)
+| Char"/":
+    cond
+    | is_appropriate_end_tag(lex): self_closing_start_tag_state
+    | ~else: script_data_escaped_anything_else_for_end_tag(lex)
+| Char">":
+    cond
+    | is_appropriate_end_tag(lex):
+        emit_current_tag(lex)
+        data_state
+    | ~else: script_data_escaped_anything_else_for_end_tag(lex)
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_tag_name(lex, c.downcase())
+        temp_buffer_append(lex, c)
+        script_data_escaped_end_tag_name_state
+    | is_ascii_lower_alpha(c):
+        append_to_tag_name(lex, c)
+        temp_buffer_append(lex, c)
+        script_data_escaped_end_tag_name_state
+    | ~else: script_data_escaped_anything_else_for_end_tag(lex)
+| Port.eof: script_data_escaped_anything_else_for_end_tag(lex)
+
+fun script_data_escaped_anything_else_for_end_tag(lex :~ Lexer):
+  emit(lex, Token.Character(Char"<"))
+  emit(lex, Token.Character(Char"/"))
+  for (c in lex.temp_buffer):
+    emit(lex, Token.Character(c))
+  reconsume_in(lex, script_data_escaped_state)
+
+// 13.2.5.26 Script data double escape start state
+state script_data_double_escape_start_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" " || Char"/" || Char">":
+    let next:
+      if lex.temp_buffer == "script"
+      | script_data_double_escaped_state
+      | script_data_escaped_state
+    let l = lex
+    emit(lex, Token.Character(l.last_char :: Char))
+    next
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        temp_buffer_append(lex, c.downcase())
+        emit(lex, Token.Character(c))
+        script_data_double_escape_start_state
+    | is_ascii_lower_alpha(c):
+        temp_buffer_append(lex, c)
+        emit(lex, Token.Character(c))
+        script_data_double_escape_start_state
+    | ~else: reconsume_in(lex, script_data_escaped_state)
+| Port.eof: reconsume_in(lex, script_data_escaped_state)
+
+// 13.2.5.27 Script data double escaped state
+state script_data_double_escaped_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_double_escaped_dash_state
+| Char"<":
+    emit(lex, Token.Character(Char"<"))
+    script_data_double_escaped_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_double_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_double_escaped_state
+
+// 13.2.5.28 Script data double escaped dash state
+state script_data_double_escaped_dash_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_double_escaped_dash_dash_state
+| Char"<":
+    emit(lex, Token.Character(Char"<"))
+    script_data_double_escaped_less_than_sign_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_double_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_double_escaped_state
+
+// 13.2.5.29 Script data double escaped dash dash state
+state script_data_double_escaped_dash_dash_state(lex)
+| Char"-":
+    emit(lex, Token.Character(Char"-"))
+    script_data_double_escaped_dash_dash_state
+| Char"<":
+    emit(lex, Token.Character(Char"<"))
+    script_data_double_escaped_less_than_sign_state
+| Char">":
+    emit(lex, Token.Character(Char">"))
+    script_data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    emit(lex, Token.Character(REPLACEMENT_CHAR))
+    script_data_double_escaped_state
+| Port.eof:
+    parse_error(lex, #'eof_in_script_html_comment_like_text)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    emit(lex, Token.Character(c))
+    script_data_double_escaped_state
+
+// 13.2.5.30 Script data double escaped less-than sign state
+state script_data_double_escaped_less_than_sign_state(lex)
+| Char"/":
+    temp_buffer_clear(lex)
+    emit(lex, Token.Character(Char"/"))
+    script_data_double_escape_end_state
+| c:
+    reconsume_in(lex, script_data_double_escaped_state)
+
+// 13.2.5.31 Script data double escape end state
+state script_data_double_escape_end_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" " || Char"/" || Char">":
+    let next:
+      if lex.temp_buffer == "script"
+      | script_data_escaped_state
+      | script_data_double_escaped_state
+    emit(lex, Token.Character(lex.last_char :: Char))
+    next
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        temp_buffer_append(lex, c.downcase())
+        emit(lex, Token.Character(c))
+        script_data_double_escape_end_state
+    | is_ascii_lower_alpha(c):
+        temp_buffer_append(lex, c)
+        emit(lex, Token.Character(c))
+        script_data_double_escape_end_state
+    | ~else: reconsume_in(lex, script_data_double_escaped_state)
+| Port.eof: reconsume_in(lex, script_data_double_escaped_state)
+
+// 13.2.5.32 Before attribute name state
+state before_attribute_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_attribute_name_state
+| Char"/" || Char">" || Port.eof:
+    reconsume_in(lex, after_attribute_name_state)
+| Char"=":
+    parse_error(lex, #'unexpected_equals_sign_before_attribute_name)
+    start_new_attribute(lex)
+    append_to_current_attribute_name(lex, Char"=")
+    attribute_name_state
+| c:
+    start_new_attribute(lex)
+    reconsume_in(lex, attribute_name_state)
+
+// 13.2.5.33 Attribute name state
+state attribute_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" " || Char"/" || Char">" || Port.eof:
+    reconsume_in(lex, after_attribute_name_state)
+| Char"=":
+    before_attribute_value_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_current_attribute_name(lex, REPLACEMENT_CHAR)
+    attribute_name_state
+| Char"\"" || Char"'" || Char"<":
+    parse_error(lex, #'unexpected_character_in_attribute_name)
+    append_to_current_attribute_name(lex, lex.last_char :: Char)
+    attribute_name_state
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_current_attribute_name(lex, c.downcase())
+    | ~else:
+        append_to_current_attribute_name(lex, c)
+    attribute_name_state
+
+// 13.2.5.34 After attribute name state
+state after_attribute_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    after_attribute_name_state
+| Char"/":
+    self_closing_start_tag_state
+| Char"=":
+    before_attribute_value_state
+| Char">":
+    emit_current_tag(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    start_new_attribute(lex)
+    reconsume_in(lex, attribute_name_state)
+
+// 13.2.5.35 Before attribute value state
+state before_attribute_value_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_attribute_value_state
+| Char"\"":
+    attribute_value_double_quoted_state
+| Char"'":
+    attribute_value_single_quoted_state
+| Char">":
+    parse_error(lex, #'missing_attribute_value)
+    emit_current_tag(lex)
+    data_state
+| c:
+    reconsume_in(lex, attribute_value_unquoted_state)
+
+// 13.2.5.36 Attribute value (double-quoted) state
+state attribute_value_double_quoted_state(lex)
+| Char"\"":
+    after_attribute_value_quoted_state
+| Char"&":
+    set_return_state(lex, attribute_value_double_quoted_state)
+    character_reference_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_current_attribute_value(lex, REPLACEMENT_CHAR)
+    attribute_value_double_quoted_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_current_attribute_value(lex, c)
+    attribute_value_double_quoted_state
+
+// 13.2.5.37 Attribute value (single-quoted) state
+state attribute_value_single_quoted_state(lex)
+| Char"'":
+    after_attribute_value_quoted_state
+| Char"&":
+    set_return_state(lex, attribute_value_single_quoted_state)
+    character_reference_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_current_attribute_value(lex, REPLACEMENT_CHAR)
+    attribute_value_single_quoted_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_current_attribute_value(lex, c)
+    attribute_value_single_quoted_state
+
+// 13.2.5.38 Attribute value (unquoted) state
+state attribute_value_unquoted_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_attribute_name_state
+| Char"&":
+    set_return_state(lex, attribute_value_unquoted_state)
+    character_reference_state
+| Char">":
+    emit_current_tag(lex)
+    data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_current_attribute_value(lex, REPLACEMENT_CHAR)
+    attribute_value_unquoted_state
+| Char"\"" || Char"'" || Char"<" || Char"=" || Char"`":
+    parse_error(lex, #'unexpected_character_in_unquoted_attribute_value)
+    append_to_current_attribute_value(lex, lex.last_char :: Char)
+    attribute_value_unquoted_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_current_attribute_value(lex, c)
+    attribute_value_unquoted_state
+
+// 13.2.5.39 After attribute value (quoted) state
+state after_attribute_value_quoted_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_attribute_name_state
+| Char"/":
+    self_closing_start_tag_state
+| Char">":
+    emit_current_tag(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_whitespace_between_attributes)
+    reconsume_in(lex, before_attribute_name_state)
+
+// 13.2.5.40 Self-closing start tag state
+state self_closing_start_tag_state(lex)
+| Char">":
+    let t :: TagBuilder = lex.current_tag
+    t.self_closing := #true
+    emit_current_tag(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_tag)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'unexpected_solidus_in_tag)
+    reconsume_in(lex, before_attribute_name_state)
+
+// 13.2.5.41 Bogus comment state
+state bogus_comment_state(lex)
+| Char">":
+    emit_current_comment(lex)
+    data_state
+| Port.eof:
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_comment(lex, REPLACEMENT_CHAR)
+    bogus_comment_state
+| c :: Char:
+    append_to_comment(lex, c)
+    bogus_comment_state
+
+// 13.2.5.42 Markup declaration open state
+//
+// This state doesn't fit the consume-and-dispatch pattern: it peeks ahead 2
+// or 7 characters. We write it as a plain function instead of using `state`.
+fun markup_declaration_open_state(lex :~ Lexer):
+  cond
+  | lex.try_match_string("--"):
+      create_comment(lex, "")
+      comment_start_state
+  | lex.try_match_string("DOCTYPE", ~ci: #true):
+      doctype_state
+  | lex.try_match_string("[CDATA[", ~ci: #false):
+      // CDATA sections are only valid in foreign (SVG / MathML) content.
+      // The tree-construction stage sets `lex.cdata_allowed` based on the
+      // current node's namespace; if it's set, switch to the CDATA section
+      // state. Otherwise it's a parse error and we treat the whole thing
+      // as a bogus comment whose data starts with "[CDATA[".
+      cond
+      | lex.cdata_allowed:
+          cdata_section_state
+      | ~else:
+          parse_error(lex, #'cdata_in_html_content)
+          create_comment(lex, "[CDATA[")
+          bogus_comment_state
+  | ~else:
+      parse_error(lex, #'incorrectly_opened_comment)
+      create_comment(lex, "")
+      bogus_comment_state
+
+// 13.2.5.43 Comment start state
+state comment_start_state(lex)
+| Char"-":
+    comment_start_dash_state
+| Char">":
+    parse_error(lex, #'abrupt_closing_of_empty_comment)
+    emit_current_comment(lex)
+    data_state
+| c:
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.44 Comment start dash state
+state comment_start_dash_state(lex)
+| Char"-":
+    comment_end_state
+| Char">":
+    parse_error(lex, #'abrupt_closing_of_empty_comment)
+    emit_current_comment(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_comment)
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    append_to_comment(lex, Char"-")
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.45 Comment state
+state comment_state(lex)
+| Char"<":
+    append_to_comment(lex, Char"<")
+    comment_less_than_sign_state
+| Char"-":
+    comment_end_dash_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_comment(lex, REPLACEMENT_CHAR)
+    comment_state
+| Port.eof:
+    parse_error(lex, #'eof_in_comment)
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_comment(lex, c)
+    comment_state
+
+// 13.2.5.46 Comment less-than sign state
+state comment_less_than_sign_state(lex)
+| Char"!":
+    append_to_comment(lex, Char"!")
+    comment_less_than_sign_bang_state
+| Char"<":
+    append_to_comment(lex, Char"<")
+    comment_less_than_sign_state
+| c:
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.47 Comment less-than sign bang state
+state comment_less_than_sign_bang_state(lex)
+| Char"-":
+    comment_less_than_sign_bang_dash_state
+| c:
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.48 Comment less-than sign bang dash state
+state comment_less_than_sign_bang_dash_state(lex)
+| Char"-":
+    comment_less_than_sign_bang_dash_dash_state
+| c:
+    reconsume_in(lex, comment_end_dash_state)
+
+// 13.2.5.49 Comment less-than sign bang dash dash state
+state comment_less_than_sign_bang_dash_dash_state(lex)
+| Char">" || Port.eof:
+    reconsume_in(lex, comment_end_state)
+| c:
+    parse_error(lex, #'nested_comment)
+    reconsume_in(lex, comment_end_state)
+
+// 13.2.5.50 Comment end dash state
+state comment_end_dash_state(lex)
+| Char"-":
+    comment_end_state
+| Port.eof:
+    parse_error(lex, #'eof_in_comment)
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    append_to_comment(lex, Char"-")
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.51 Comment end state
+state comment_end_state(lex)
+| Char">":
+    emit_current_comment(lex)
+    data_state
+| Char"!":
+    comment_end_bang_state
+| Char"-":
+    append_to_comment(lex, Char"-")
+    comment_end_state
+| Port.eof:
+    parse_error(lex, #'eof_in_comment)
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    append_str_to_comment(lex, "--")
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.52 Comment end bang state
+state comment_end_bang_state(lex)
+| Char"-":
+    append_str_to_comment(lex, "--!")
+    comment_end_dash_state
+| Char">":
+    parse_error(lex, #'incorrectly_closed_comment)
+    emit_current_comment(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_comment)
+    emit_current_comment(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    append_str_to_comment(lex, "--!")
+    reconsume_in(lex, comment_state)
+
+// 13.2.5.53 DOCTYPE state
+state doctype_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_name_state
+| Char">":
+    reconsume_in(lex, before_doctype_name_state)
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    create_doctype(lex)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_whitespace_before_doctype_name)
+    reconsume_in(lex, before_doctype_name_state)
+
+// 13.2.5.54 Before DOCTYPE name state
+state before_doctype_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_name_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    create_doctype(lex)
+    set_doctype_name_to(lex, REPLACEMENT_CHAR)
+    doctype_name_state
+| Char">":
+    parse_error(lex, #'missing_doctype_name)
+    create_doctype(lex)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    create_doctype(lex)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    create_doctype(lex)
+    cond
+    | is_ascii_upper_alpha(c):
+        set_doctype_name_to(lex, c.downcase())
+    | ~else:
+        set_doctype_name_to(lex, c)
+    doctype_name_state
+
+// 13.2.5.55 DOCTYPE name state
+state doctype_name_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    after_doctype_name_state
+| Char">":
+    emit_current_doctype(lex)
+    data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_doctype_name(lex, REPLACEMENT_CHAR)
+    doctype_name_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    cond
+    | is_ascii_upper_alpha(c):
+        append_to_doctype_name(lex, c.downcase())
+    | ~else:
+        append_to_doctype_name(lex, c)
+    doctype_name_state
+
+// 13.2.5.56 After DOCTYPE name state
+//
+// Has multi-character lookahead for "PUBLIC" / "SYSTEM"; written as a plain
+// function.
+fun after_doctype_name_state(lex :~ Lexer):
+  let c = lex.consume()
+  cond
+  | c == Char"\t" || c == Char"\n" || c == Char"\f" || c == Char" ":
+      after_doctype_name_state
+  | c == Char">":
+      emit_current_doctype(lex)
+      data_state
+  | c == Port.eof:
+      parse_error(lex, #'eof_in_doctype)
+      set_doctype_force_quirks(lex)
+      emit_current_doctype(lex)
+      emit(lex, Token.EOF())
+      #false
+  | ~else:
+      // Push back c, then test for "PUBLIC" / "SYSTEM".
+      lex.push_back(c :: Char)
+      cond
+      | lex.try_match_string("PUBLIC", ~ci: #true):
+          after_doctype_public_keyword_state
+      | lex.try_match_string("SYSTEM", ~ci: #true):
+          after_doctype_system_keyword_state
+      | ~else:
+          parse_error(lex, #'invalid_character_sequence_after_doctype_name)
+          set_doctype_force_quirks(lex)
+          // The spec says reconsume in the bogus DOCTYPE state. Since we
+          // already pushed c back above, we can just go to that state.
+          bogus_doctype_state
+
+// 13.2.5.57 After DOCTYPE public keyword state
+state after_doctype_public_keyword_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_public_identifier_state
+| Char"\"":
+    parse_error(lex, #'missing_whitespace_after_doctype_public_keyword)
+    set_doctype_public_id_empty(lex)
+    doctype_public_identifier_double_quoted_state
+| Char"'":
+    parse_error(lex, #'missing_whitespace_after_doctype_public_keyword)
+    set_doctype_public_id_empty(lex)
+    doctype_public_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'missing_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.58 Before DOCTYPE public identifier state
+state before_doctype_public_identifier_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_public_identifier_state
+| Char"\"":
+    set_doctype_public_id_empty(lex)
+    doctype_public_identifier_double_quoted_state
+| Char"'":
+    set_doctype_public_id_empty(lex)
+    doctype_public_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'missing_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.59 DOCTYPE public identifier (double-quoted) state
+state doctype_public_identifier_double_quoted_state(lex)
+| Char"\"":
+    after_doctype_public_identifier_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_doctype_public_id(lex, REPLACEMENT_CHAR)
+    doctype_public_identifier_double_quoted_state
+| Char">":
+    parse_error(lex, #'abrupt_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_doctype_public_id(lex, c)
+    doctype_public_identifier_double_quoted_state
+
+// 13.2.5.60 DOCTYPE public identifier (single-quoted) state
+state doctype_public_identifier_single_quoted_state(lex)
+| Char"'":
+    after_doctype_public_identifier_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_doctype_public_id(lex, REPLACEMENT_CHAR)
+    doctype_public_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'abrupt_doctype_public_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_doctype_public_id(lex, c)
+    doctype_public_identifier_single_quoted_state
+
+// 13.2.5.61 After DOCTYPE public identifier state
+state after_doctype_public_identifier_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    between_doctype_public_and_system_identifiers_state
+| Char">":
+    emit_current_doctype(lex)
+    data_state
+| Char"\"":
+    parse_error(lex, #'missing_whitespace_between_doctype_public_and_system_identifiers)
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_double_quoted_state
+| Char"'":
+    parse_error(lex, #'missing_whitespace_between_doctype_public_and_system_identifiers)
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_single_quoted_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.62 Between DOCTYPE public and system identifiers state
+state between_doctype_public_and_system_identifiers_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    between_doctype_public_and_system_identifiers_state
+| Char">":
+    emit_current_doctype(lex)
+    data_state
+| Char"\"":
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_double_quoted_state
+| Char"'":
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_single_quoted_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.63 After DOCTYPE system keyword state
+state after_doctype_system_keyword_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_system_identifier_state
+| Char"\"":
+    parse_error(lex, #'missing_whitespace_after_doctype_system_keyword)
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_double_quoted_state
+| Char"'":
+    parse_error(lex, #'missing_whitespace_after_doctype_system_keyword)
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'missing_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.64 Before DOCTYPE system identifier state
+state before_doctype_system_identifier_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    before_doctype_system_identifier_state
+| Char"\"":
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_double_quoted_state
+| Char"'":
+    set_doctype_system_id_empty(lex)
+    doctype_system_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'missing_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'missing_quote_before_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.65 DOCTYPE system identifier (double-quoted) state
+state doctype_system_identifier_double_quoted_state(lex)
+| Char"\"":
+    after_doctype_system_identifier_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_doctype_system_id(lex, REPLACEMENT_CHAR)
+    doctype_system_identifier_double_quoted_state
+| Char">":
+    parse_error(lex, #'abrupt_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_doctype_system_id(lex, c)
+    doctype_system_identifier_double_quoted_state
+
+// 13.2.5.66 DOCTYPE system identifier (single-quoted) state
+state doctype_system_identifier_single_quoted_state(lex)
+| Char"'":
+    after_doctype_system_identifier_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    append_to_doctype_system_id(lex, REPLACEMENT_CHAR)
+    doctype_system_identifier_single_quoted_state
+| Char">":
+    parse_error(lex, #'abrupt_doctype_system_identifier)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    append_to_doctype_system_id(lex, c)
+    doctype_system_identifier_single_quoted_state
+
+// 13.2.5.67 After DOCTYPE system identifier state
+state after_doctype_system_identifier_state(lex)
+| Char"\t" || Char"\n" || Char"\f" || Char" ":
+    after_doctype_system_identifier_state
+| Char">":
+    emit_current_doctype(lex)
+    data_state
+| Port.eof:
+    parse_error(lex, #'eof_in_doctype)
+    set_doctype_force_quirks(lex)
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    parse_error(lex, #'unexpected_character_after_doctype_system_identifier)
+    reconsume_in(lex, bogus_doctype_state)
+
+// 13.2.5.68 Bogus DOCTYPE state
+state bogus_doctype_state(lex)
+| Char">":
+    emit_current_doctype(lex)
+    data_state
+| Char"\0":
+    parse_error(lex, #'unexpected_null_character)
+    bogus_doctype_state
+| Port.eof:
+    emit_current_doctype(lex)
+    emit(lex, Token.EOF())
+    #false
+| c:
+    bogus_doctype_state
+
+// 13.2.5.69 CDATA section state
+state cdata_section_state(lex)
+| Char"]":
+    cdata_section_bracket_state
+| Port.eof:
+    parse_error(lex, #'eof_in_cdata)
+    emit(lex, Token.EOF())
+    #false
+| c :: Char:
+    emit(lex, Token.Character(c))
+    cdata_section_state
+
+// 13.2.5.70 CDATA section bracket state
+state cdata_section_bracket_state(lex)
+| Char"]":
+    cdata_section_end_state
+| c:
+    emit(lex, Token.Character(Char"]"))
+    reconsume_in(lex, cdata_section_state)
+
+// 13.2.5.71 CDATA section end state
+state cdata_section_end_state(lex)
+| Char"]":
+    emit(lex, Token.Character(Char"]"))
+    cdata_section_end_state
+| Char">":
+    data_state
+| c:
+    emit(lex, Token.Character(Char"]"))
+    emit(lex, Token.Character(Char"]"))
+    reconsume_in(lex, cdata_section_state)
+
+
+// ----------------------------------------------------------------------------
+// Character reference states (13.2.5.72-80)
+//
+// The full ~2231-entry named-character-reference table lives in
+// `entities.rhm`, generated from https://html.spec.whatwg.org/entities.json.
+// We bind it to a local `NAMED_ENTITIES` here. It really is just a
+// `Map(String, String)`; everything below treats it that way.
+
+def NAMED_ENTITIES :~ Map.of(String, String) = entities.NAMED_ENTITIES
+
+// 13.2.5.72 Character reference state
+fun character_reference_state(lex :~ Lexer):
+  lex.temp_buffer := "&"
+  let c = lex.consume()
+  cond
+  | c is_a Char && is_ascii_alphanumeric(c):
+      lex.push_back(c)
+      named_character_reference_state
+  | c == Char"#":
+      lex.temp_buffer := lex.temp_buffer ++ "#"
+      numeric_character_reference_state
+  | ~else:
+      flush_code_points_consumed_as_character_reference(lex)
+      cond
+      | c is_a Char:
+          lex.push_back(c)
+          lex.return_state
+      | ~else:  // Port.eof
+          lex.return_state
+
+// 13.2.5.73 Named character reference state
+//
+// The spec text:
+//   "Consume the maximum number of characters possible, where the consumed
+//    characters are one of the identifiers in the first column of the named
+//    character references table. Append each character to the temporary
+//    buffer when it's consumed."
+//
+// We implement this by reading characters while *some* known entity name
+// still has the accumulated characters as a prefix. After we've gone past
+// any prefix, find the longest *exact* known prefix and "push back" the
+// extra characters we read.
+fun named_character_reference_state(lex :~ Lexer):
+  // Read while the accumulated string (after `&`) is a strict prefix of
+  // some known name OR is itself a known name. Also bail out if we see a
+  // non-alphanumeric/non-`;` character.
+  let collected:
+    recur loop(acc :: String = ""):
+      let nxt = lex.consume()
+      cond
+      | nxt is_a Char && (is_ascii_alphanumeric(nxt) || nxt == Char";"):
+          let acc2 = acc ++ to_string(nxt)
+          cond
+          | acc2 in NAMED_ENTITY_PREFIXES:
+              if nxt == Char";"
+              | block:
+                  acc2
+              | block:
+                  loop(acc2)
+          | ~else:
+              // No entity name extends acc2; we've gone too far, push back
+              // the most recent char.
+              lex.push_back(nxt)
+              acc
+      | ~else:
+          cond
+          | nxt is_a Char: lex.push_back(nxt)
+          | ~else: #void
+          acc
+  // Now find the longest match: prefer `acc` itself, else any prefix.
+  let match_name:
+    recur shrink(s :~ String = collected):
+      cond
+      | s == "": #false
+      | s in NAMED_ENTITIES: s
+      | ~else: shrink(s.substring(0, String.length(s) - 1))
+  cond
+  | match_name:
+      // Determine if next char is in attribute-value context with weird
+      // semicolon-omission rules.
+      let last_consumed = (match_name :: String)[String.length(match_name :: String) - 1]
+      let was_with_semi = (last_consumed == Char";")
+      // The "next input character" in the spec sense is the first
+      // character after the matched portion, which is either:
+      //   - the first char of `extras` (collected beyond match_name), or
+      //   - a peek into the actual port if no extras
+      let next_is_eq_or_alpha:
+        let mlen = String.length(match_name :: String)
+        let clen = String.length(collected :: String)
+        let nxt:
+          cond
+          | mlen < clen: (collected :: String)[mlen]
+          | ~else:
+              let s = lex.peek_string(1)
+              cond
+              | s == "": #false
+              | ~else: s[0]
+        cond
+        | nxt is_a Char: (nxt == Char"=") || is_ascii_alphanumeric(nxt)
+        | ~else: #false
+      cond
+      | (!was_with_semi) && consumed_as_part_of_attribute(lex) && next_is_eq_or_alpha:
+          // historical: don't treat as char ref
+          let mlen = String.length(match_name :: String)
+          let clen = String.length(collected :: String)
+          let extras = (collected :: String).substring(mlen, clen)
+          lex.push_back_string(extras)
+          lex.temp_buffer := "&" ++ match_name
+          flush_code_points_consumed_as_character_reference(lex)
+          lex.return_state
+      | ~else:
+          if !was_with_semi
+          | parse_error(lex, #'missing_semicolon_after_character_reference)
+          | #void
+          let mlen = String.length(match_name :: String)
+          let clen = String.length(collected :: String)
+          let extras = (collected :: String).substring(mlen, clen)
+          lex.push_back_string(extras)
+          lex.temp_buffer := NAMED_ENTITIES[match_name :: String]
+          flush_code_points_consumed_as_character_reference(lex)
+          lex.return_state
+  | ~else:
+      // No match. Flush "&" + collected, then go to ambiguous-ampersand if
+      // collected ends in alphanumeric.
+      lex.temp_buffer := "&" ++ collected
+      flush_code_points_consumed_as_character_reference(lex)
+      ambiguous_ampersand_state
+
+// 13.2.5.74 Ambiguous ampersand state
+state ambiguous_ampersand_state(lex)
+| Char";":
+    parse_error(lex, #'unknown_named_character_reference)
+    reconsume_in(lex, lex.return_state)
+| c :: Char:
+    cond
+    | is_ascii_alphanumeric(c):
+        cond
+        | consumed_as_part_of_attribute(lex):
+            append_to_current_attribute_value(lex, c)
+        | ~else:
+            emit(lex, Token.Character(c))
+        ambiguous_ampersand_state
+    | ~else:
+        reconsume_in(lex, lex.return_state)
+| Port.eof:
+    reconsume_in(lex, lex.return_state)
+
+// 13.2.5.75 Numeric character reference state
+def NUMERIC_REF_CODE = Box(0)
+
+state numeric_character_reference_state(lex)
+| Char"x" || Char"X":
+    temp_buffer_append(lex, lex.last_char :: Char)
+    NUMERIC_REF_CODE.value := 0
+    hexadecimal_character_reference_start_state
+| c:
+    NUMERIC_REF_CODE.value := 0
+    reconsume_in(lex, decimal_character_reference_start_state)
+
+// 13.2.5.76 Hexadecimal character reference start state
+state hexadecimal_character_reference_start_state(lex)
+| c :: Char:
+    cond
+    | is_ascii_hex_digit(c):
+        reconsume_in(lex, hexadecimal_character_reference_state)
+    | ~else:
+        parse_error(lex, #'absence_of_digits_in_numeric_character_reference)
+        flush_code_points_consumed_as_character_reference(lex)
+        reconsume_in(lex, lex.return_state)
+| Port.eof:
+    parse_error(lex, #'absence_of_digits_in_numeric_character_reference)
+    flush_code_points_consumed_as_character_reference(lex)
+    lex.return_state
+
+// 13.2.5.77 Decimal character reference start state
+state decimal_character_reference_start_state(lex)
+| c :: Char:
+    cond
+    | is_ascii_digit(c):
+        reconsume_in(lex, decimal_character_reference_state)
+    | ~else:
+        parse_error(lex, #'absence_of_digits_in_numeric_character_reference)
+        flush_code_points_consumed_as_character_reference(lex)
+        reconsume_in(lex, lex.return_state)
+| Port.eof:
+    parse_error(lex, #'absence_of_digits_in_numeric_character_reference)
+    flush_code_points_consumed_as_character_reference(lex)
+    lex.return_state
+
+// 13.2.5.78 Hexadecimal character reference state
+state hexadecimal_character_reference_state(lex)
+| c :: Char:
+    let n = c.to_int()
+    cond
+    | is_ascii_digit(c):
+        NUMERIC_REF_CODE.value := NUMERIC_REF_CODE.value * 16 + (n - 0x30)
+        hexadecimal_character_reference_state
+    | (0x41 <= n) && (n <= 0x46):
+        NUMERIC_REF_CODE.value := NUMERIC_REF_CODE.value * 16 + (n - 0x41 + 10)
+        hexadecimal_character_reference_state
+    | (0x61 <= n) && (n <= 0x66):
+        NUMERIC_REF_CODE.value := NUMERIC_REF_CODE.value * 16 + (n - 0x61 + 10)
+        hexadecimal_character_reference_state
+    | c == Char";":
+        numeric_character_reference_end_state
+    | ~else:
+        parse_error(lex, #'missing_semicolon_after_character_reference)
+        reconsume_in(lex, numeric_character_reference_end_state)
+| Port.eof:
+    parse_error(lex, #'missing_semicolon_after_character_reference)
+    numeric_character_reference_end_state
+
+// 13.2.5.79 Decimal character reference state
+state decimal_character_reference_state(lex)
+| c :: Char:
+    let n = c.to_int()
+    cond
+    | is_ascii_digit(c):
+        NUMERIC_REF_CODE.value := NUMERIC_REF_CODE.value * 10 + (n - 0x30)
+        decimal_character_reference_state
+    | c == Char";":
+        numeric_character_reference_end_state
+    | ~else:
+        parse_error(lex, #'missing_semicolon_after_character_reference)
+        reconsume_in(lex, numeric_character_reference_end_state)
+| Port.eof:
+    parse_error(lex, #'missing_semicolon_after_character_reference)
+    numeric_character_reference_end_state
+
+// 13.2.5.80 Numeric character reference end state
+fun numeric_character_reference_end_state(lex :~ Lexer):
+  let code:
+    let raw = NUMERIC_REF_CODE.value
+    cond
+    | raw == 0:
+        parse_error(lex, #'null_character_reference)
+        0xFFFD
+    | raw > 0x10FFFF:
+        parse_error(lex, #'character_reference_outside_unicode_range)
+        0xFFFD
+    | (0xD800 <= raw) && (raw <= 0xDFFF):
+        parse_error(lex, #'surrogate_character_reference)
+        0xFFFD
+    | ~else:
+        // A few more spec-mandated parse-error checks (noncharacters, C0
+        // controls, etc.) are skipped for brevity; we still apply the C1
+        // remap below.
+        raw
+  let final_code:
+    // Spec also remaps a handful of legacy code points (e.g. 0x80 -> 0x20AC)
+    // We include the table for completeness.
+    let remap = {0x80: 0x20AC, 0x82: 0x201A, 0x83: 0x0192, 0x84: 0x201E,
+                 0x85: 0x2026, 0x86: 0x2020, 0x87: 0x2021, 0x88: 0x02C6,
+                 0x89: 0x2030, 0x8A: 0x0160, 0x8B: 0x2039, 0x8C: 0x0152,
+                 0x8E: 0x017D, 0x91: 0x2018, 0x92: 0x2019, 0x93: 0x201C,
+                 0x94: 0x201D, 0x95: 0x2022, 0x96: 0x2013, 0x97: 0x2014,
+                 0x98: 0x02DC, 0x99: 0x2122, 0x9A: 0x0161, 0x9B: 0x203A,
+                 0x9C: 0x0153, 0x9E: 0x017E, 0x9F: 0x0178}
+    cond
+    | remap.has_key(code): remap[code]
+    | ~else: code
+  lex.temp_buffer := to_string(Char.from_int(final_code))
+  flush_code_points_consumed_as_character_reference(lex)
+  lex.return_state
+
+// ----------------------------------------------------------------------------
+// Trampoline driver
+
+fun run(lex :~ Lexer, start) :~ values(List, List):
+  recur loop(state = start):
+    let next = state(lex)
+    if next
+    | loop(next)
+    | values(lex.tokens, lex.errors)

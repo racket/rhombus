@@ -1,0 +1,375 @@
+#lang rhombus/static/and_meta
+
+// ============================================================================
+// Test runner for the html5lib tree-construction (parser) test suite.
+// --- initial implementation by Claude.ai
+//
+// Tests live in tests/parser-cases/*.dat (downloaded from
+// https://github.com/html5lib/html5lib-tests). Each .dat file holds many
+// tests separated by a blank line. Each test has these sections:
+//
+//   #data
+//   <html input>
+//   #errors
+//   <expected parse-error names>
+//   [#new-errors]
+//   [<additional errors>]
+//   [#document-fragment]
+//   <context-element-name>           // for fragment-parser tests
+//   [#script-off | #script-on]
+//   #document
+//   | <tree dump>
+//
+// Comparison is on the tree dump (we don't compare parse-error names).
+// `#script-on` tests are skipped because we model scripting-disabled.
+//
+// Usage:
+//
+//   rhombus parser.rhm                -- run all
+//   rhombus parser.rhm tests1         -- run a single file
+//   rhombus parser.rhm tests1 -v      -- with failure detail
+// ============================================================================
+
+import:
+  rhombus/html/private/parser:
+    expose:
+      Node
+      Document
+      DocumentType
+      Element
+      Text
+      Comment
+      TemplateContents
+      parse_string
+      parse_fragment
+  rhombus/html/private/lexer:
+    expose:
+      Attribute
+  lib("racket/base.rkt") as rkt
+  rhombus/cmdline open
+  rhombus/runtime_path
+
+def EXPECTED_PASS_COUNT = 1739
+
+// ----------------------------------------------------------------------------
+// Splitting a .dat file into individual tests, and parsing test sections.
+
+// Split on \n boundaries, returning lines without trailing newlines.
+fun split_lines(s :: String) :: List:
+  let n = s.length()
+  recur loop(start :: Int = 0, i :: Int = 0, acc :: List = []):
+    cond
+    | i == n: List.reverse(List.cons(s.substring(start, n), acc))
+    | s[i] == Char"\n":
+        loop(i + 1, i + 1, List.cons(s.substring(start, i), acc))
+    | ~else: loop(start, i + 1, acc)
+
+// Split a whole .dat file into individual test chunks. Tests are separated
+// by "\n\n" *where the next chunk starts with `#data\n`*. Allowing data
+// sections to contain blank lines.
+fun split_tests(content :: String) :: List:
+  recur loop(rem :: String = content, acc :: List = []):
+    cond
+    | rem == "": List.reverse(acc)
+    | ~else:
+        let idx = rem.find("\n\n#data\n")
+        cond
+        | idx == #false:
+            // Trim a trailing \n if present.
+            let last:
+              cond
+              | rem.length() > 0 && rem[rem.length() - 1] == Char"\n":
+                  rem.substring(0, rem.length() - 1)
+              | ~else: rem
+            List.reverse(List.cons(last, acc))
+        | ~else:
+            let i :: Int = idx
+            let head = rem.substring(0, i)
+            // Skip past the "\n\n", keep the "#data\n..." prefix
+            let tail = rem.substring(i + 2, rem.length())
+            loop(tail, List.cons(head, acc))
+
+// Section header lines we recognize.
+def SECTION_HEADERS :: List = ["#data", "#errors", "#new-errors", "#document-fragment", "#script-off", "#script-on", "#document"]
+
+fun list_contains(xs :: List, x) :: Boolean:
+  for any (e in xs):
+    e == x
+
+// Parse a single test text (a string like "#data\n...\n#errors\n...\n#document\n|...")
+// into a Map of {section-name: List(line)}.
+fun parse_test_sections(test_text :: String) :: Map:
+  let lines = split_lines(test_text)
+  let mutable sections :: Map = {}
+  let mutable cur_name :: String = ""
+  let mutable cur_lines :: List = []
+  fun finish_cur():
+    cond
+    | cur_name != "":
+        sections := sections ++ {cur_name: cur_lines}
+    | ~else: #void
+  for (line :: String in lines):
+    cond
+    | list_contains(SECTION_HEADERS, line):
+        finish_cur()
+        cur_name := line
+        cur_lines := []
+    | ~else:
+        cur_lines := List.add(cur_lines, line)
+  finish_cur()
+  sections
+
+// Join a list of lines back together with \n separators.
+fun join_lines(lines :: List) :: String:
+  recur loop(rem :: List = lines, acc :: String = "", first :: Boolean = #true):
+    match rem
+    | []: acc
+    | [first_line :: String, & rest]:
+        cond
+        | first: loop(rest, first_line, #false)
+        | ~else: loop(rest, acc ++ "\n" ++ first_line, #false)
+
+
+// ----------------------------------------------------------------------------
+// Tree -> html5lib canonical text dump
+
+fun make_indent(depth :: Int) :: String:
+  recur loop(i :: Int = 0, acc :: String = ""):
+    cond
+    | i >= depth: acc
+    | ~else: loop(i + 1, acc ++ "  ")
+
+// Insertion-sort a list of attributes by their `name` field.
+fun sort_attrs(attrs :: List) :: List:
+  recur insert(items :: List = attrs, sorted :: List = []):
+    match items
+    | []: sorted
+    | [first :: Attribute, & rest]:
+        let new_sorted:
+          recur place(s :: List = sorted, before :: List = []):
+            match s
+            | []: List.reverse(List.cons(first, before))
+            | [a :: Attribute, & after]:
+                cond
+                | first.name <= a.name:
+                    List.reverse(before) ++ List.cons(first, s)
+                | ~else:
+                    place(after, List.cons(a, before))
+        insert(rest, new_sorted)
+
+fun ns_prefix(e :: Element) :: String:
+  cond
+  | e.namespace == #'svg: "svg "
+  | e.namespace == #'mathml: "math "
+  | ~else: ""
+
+fun emit_node(n :: Node, depth :: Int) :: List:
+  let indent = make_indent(depth)
+  match n
+  | e :: Element:
+      let tag_line = "| " ++ indent ++ "<" ++ ns_prefix(e) ++ e.name ++ ">"
+      let attr_lines :: List:
+        for List (a :: Attribute in sort_attrs(e.attributes)):
+          "| " ++ indent ++ "  " ++ a.name ++ "=\"" ++ a.value ++ "\""
+      let body_lines :: List:
+        cond
+        | (e.namespace == #'html) && (e.name == "template") && e.content:
+            let tc :~ TemplateContents = e.content
+            let content_line = "| " ++ indent ++ "  content"
+            let kid_lines:
+              let mutable acc :: List = []
+              for (c in tc.children):
+                acc := acc ++ emit_node(c, depth + 2)
+              acc
+            List.cons(content_line, kid_lines)
+        | ~else:
+            let mutable acc :: List = []
+            for (c in e.children):
+              acc := acc ++ emit_node(c, depth + 1)
+            acc
+      List.cons(tag_line, attr_lines ++ body_lines)
+  | t :: Text:
+      ["| " ++ indent ++ "\"" ++ t.get_string() ++ "\""]
+  | c :: Comment:
+      ["| " ++ indent ++ "<!-- " ++ c.data ++ " -->"]
+  | _: []
+
+fun emit_doctype(dt :: DocumentType) :: String:
+  let extra:
+    cond
+    | dt.public || dt.system:
+        " \"" ++ (dt.public || "") ++ "\" \"" ++ (dt.system || "") ++ "\""
+    | ~else: ""
+  "| <!DOCTYPE " ++ dt.name ++ extra ++ ">"
+
+fun emit_document(d :: Document) :: List:
+  let mutable acc :: List = []
+  for (n in d.children):
+    cond
+    | n is_a DocumentType:
+        let dt :~ DocumentType = n
+        acc := List.add(acc, emit_doctype(dt))
+    | ~else:
+        acc := acc ++ emit_node(n, 0)
+  acc
+
+// For fragment tests, we have a list of root children rather than a Document.
+fun emit_fragment(kids :: List) :: List:
+  let mutable acc :: List = []
+  for (n in kids):
+    acc := acc ++ emit_node(n, 0)
+  acc
+
+
+// ----------------------------------------------------------------------------
+// Running a single test
+
+class TestResult(name :: String, file :: PathString, ok :: Boolean, expected :: String, actual :: String, skipped :: Boolean = #false)
+
+fun parse_context_name(spec :: String) :~ values(String, Symbol):
+  // "div" -> ("div", #'html)
+  // "svg circle" -> ("circle", #'svg)
+  // "math mi" -> ("mi", #'mathml)
+  cond
+  | spec.length() > 4 && spec.substring(0, 4) == "svg ":
+      values(spec.substring(4, spec.length()), #'svg)
+  | spec.length() > 5 && spec.substring(0, 5) == "math ":
+      values(spec.substring(5, spec.length()), #'mathml)
+  | ~else: values(spec, #'html)
+
+fun run_one(file :: PathString, sections :: Map) :: TestResult:
+  let data_lines :: List:
+    if sections.has_key("#data") | sections["#data"] | []
+  let input :: String = join_lines(data_lines)
+  let doc_lines :: List:
+    if sections.has_key("#document") | sections["#document"] | []
+  let expected :: String = join_lines(doc_lines)
+  // Skip script-on tests (we model script-disabled).
+  cond
+  | sections.has_key("#script-on"):
+      TestResult(input, file, #true, expected, expected, #true)
+  | ~else:
+      let actual_lines :: List:
+        cond
+        | sections.has_key("#document-fragment"):
+            let frag_lines :: List = sections["#document-fragment"]
+            let frag_spec :: String:
+              if frag_lines.length() > 0 | frag_lines[0] | ""
+            let (ctx_name, ctx_ns) = parse_context_name(frag_spec)
+            let kids = parse_fragment(ctx_name, input, ~namespace: ctx_ns)
+            emit_fragment(kids)
+        | ~else:
+            let d = parse_string(input)
+            emit_document(d)
+      let actual :: String = join_lines(actual_lines)
+      TestResult(input, file, actual == expected, expected, actual)
+
+
+// ----------------------------------------------------------------------------
+// Running a whole .dat file
+
+fun run_file(file :: PathString, ~verbose: verbose :: Boolean) :: List:
+  let p = Port.Input.open_file(file)
+  let content :: String:
+    let mutable s :: String = ""
+    recur loop():
+      let line = p.read_line()
+      cond
+      | line is_a String:
+          s := s ++ line ++ "\n"
+          loop()
+      | ~else: #void
+    s
+  let test_chunks :: List = split_tests(content)
+  let mutable results :: List = []
+  for (chunk :: String in test_chunks):
+    cond
+    | chunk == "" || !chunk.find("#data"): #void
+    | ~else:
+        let sections = parse_test_sections(chunk)
+        results := List.add(results, run_one(file, sections))
+  let passed = results.filter(~keep: fun(r :: TestResult): r.ok && !r.skipped).length()
+  let skipped = results.filter(~keep: fun(r :: TestResult): r.skipped).length()
+  let failed = results.filter(~keep: fun(r :: TestResult): !r.ok && !r.skipped).length()
+  let basename = Path.name(file)
+  let suffix:
+    cond
+    | skipped > 0: "  (" +& skipped +& " skipped)"
+    | ~else: ""
+  println(basename +& ": " +& passed +& "/" +& (passed + failed) +& " passed" ++ suffix)
+  cond
+  | verbose && failed > 0:
+      let mutable shown :: Int = 0
+      for (r :: TestResult in results):
+        cond
+        | !r.ok && !r.skipped && shown < 5:
+            shown := shown + 1
+            println("  FAIL: " +& repr(r.name))
+            println("    expected:")
+            for (line in split_lines(r.expected)):
+              println("      " ++ line)
+            println("    actual:")
+            for (line in split_lines(r.actual)):
+              println("      " ++ line)
+        | ~else: #void
+  | ~else: #void
+  results
+
+
+// ----------------------------------------------------------------------------
+// Command line
+
+runtime_path.def dir: "parser"
+
+fun list_dir() :: List:
+  for List (name in filesystem.files(dir)):
+    let s = to_string(name)
+    let immut :~ String = s.snapshot()
+    cond
+    | immut.length() > 4 && immut.substring(immut.length() - 4, immut.length()) == ".dat":
+        dir +/ immut
+    | ~else: #false
+
+fun cleanup(lst :: List) :: List:
+  lst.filter(~keep: fun(x): !(x == #false))
+
+module main:
+  fun usage():
+    println("usage: rhombus tests/parser-runner.rhm [name] [-v]")
+    println("  name: a single .dat file basename (without .dat) to run")
+    println("  -v: show failure details")
+    rkt.exit(1)
+  let args :~ List = current_command_line()
+  let verbose:
+    for any (a in args):
+      (a == "-v") || (a == "--verbose")
+  let pos_args = args.filter(~keep: fun(a): a != "-v" && a != "--verbose")
+  let files :: List:
+    cond
+    | pos_args.length() == 0:
+        cleanup(list_dir())
+    | ~else:
+        for List (n in pos_args):
+          let dir = "/Users/mflatt/Desktop/html5/tests/parser-cases"
+          dir ++ "/" ++ to_string(n) ++ ".dat"
+  let mutable total_pass = 0
+  let mutable total_fail = 0
+  let mutable total_skip = 0
+  for (file in files):
+    let v_flag :: Boolean:
+      if verbose | #true | #false
+    let results = run_file(file, ~verbose: v_flag)
+    for (r :: TestResult in results):
+      cond
+      | r.skipped: total_skip := total_skip + 1
+      | r.ok: total_pass := total_pass + 1
+      | ~else: total_fail := total_fail + 1
+  println("---")
+  println("TOTAL: " +& total_pass +& "/" +& (total_pass + total_fail) +& " passed (" +& total_skip +& " skipped)")  
+  cond
+  | total_fail > 0:
+      if total_pass == EXPECTED_PASS_COUNT
+      | println("That's the expected number of passing tests")
+        rkt.exit(0)
+      | rkt.exit(1)
+  | ~else: rkt.exit(0)

@@ -1,0 +1,3127 @@
+#lang rhombus/static/and_meta
+
+import:
+  "lexer.rhm" open
+
+export:
+  Node
+  Document
+  DocumentType
+  Element
+  Text
+  Comment
+  TemplateContents
+  Parser
+  parse
+  parse_string
+  parse_fragment
+  print_tree
+  print_node
+  VOID_ELEMENTS
+
+// ============================================================================
+// HTML5 parser, following https://html.spec.whatwg.org/multipage/parsing.html
+// --- initial implementation by Claude.ai
+//
+// The lexer hands us tokens; we maintain a tree of nodes plus an open-elements
+// stack and dispatch each token to the current "insertion mode". An insertion
+// mode is a function `(p :~ Parser, tok :: Token) -> mode-action` defined via
+// the `mode` macro below. The mode mutates `p.insertion_mode` to switch modes
+// and returns `#'consumed` (advance to next token) or `#'reprocess` (re-feed
+// the same token to the (possibly new) insertion mode).
+//
+// Implemented:
+//
+//   - Initial / before-html / before-head / in-head / after-head modes
+//   - In-body mode (most common cases; see below)
+//   - Text mode (RCDATA / RAWTEXT / script-data context)
+//   - Table-related modes: in-table, in-table-text, in-caption,
+//     in-column-group, in-table-body, in-row, in-cell
+//   - Foster parenting (used by in-table when text or non-table-permitted
+//     tags arrive while the current node is a table-y element)
+//   - "Reset the insertion mode appropriately"
+//   - List of active formatting elements + reconstruct algorithm
+//   - The adoption agency algorithm: formatting elements like <a>, <b>,
+//     <i>, <em> that are misnested across block boundaries get the spec's
+//     fix-up (clones inserted, tree restructured)
+//   - Markers in active-formatting list around <caption> / <td> / <th> /
+//     <applet> / <marquee> / <object>
+//   - In-select / in-select-in-table modes (so <select><option>...</option>
+//     </select> parses correctly and table tags inside a <select> in a
+//     table break out properly)
+//   - Foreign content (SVG and MathML namespaces): tag/attribute case
+//     fixups for SVG, attribute fixup for MathML, breakout HTML start
+//     tags pop foreign elements until back in HTML namespace, end tags
+//     match case-insensitively.
+//   - Integration points: SVG <foreignObject> / <desc> / <title> and
+//     MathML <annotation-xml encoding="text/html"> are HTML integration
+//     points (HTML content stays nested inside them); MathML <mi> / <mo>
+//     / <mn> / <ms> / <mtext> are text integration points (most start
+//     tags + character tokens use HTML rules inside them).
+//   - In-template insertion mode + the parallel "stack of template
+//     insertion modes". <template> children live in a separate
+//     TemplateContents (DocumentFragment-like) attached to the template
+//     element rather than as direct children.
+//   - In-head-noscript mode (modeled with the spec's scripting-disabled
+//     branch -- which is the typical static-HTML parsing path).
+//   - Fragment parsing: `parse_fragment(context_name, html)` implements
+//     the spec's fragment-parsing algorithm for innerHTML-style use.
+//   - In-frameset / after-frameset / after-after-frameset modes
+//     (deprecated <frameset> documents). Includes the in-body fallback
+//     that swaps the body for a frameset when frameset_ok is still set.
+//   - After-body / after-after-body modes
+//   - Implicit insertion of html / head / body when missing
+//   - Driving the lexer's RCDATA / RAWTEXT / script-data state for
+//     <title> / <textarea> / <style>+friends / <script>
+//
+// NOT YET implemented:
+//
+//   - xlink: / xml: / xmlns: foreign-attribute namespace fixup. Our
+//     Attribute class is just (name, value); we keep the colon-prefixed
+//     form verbatim ("xlink:href"), which matches what callers see in
+//     practice but doesn't track namespace metadata on attributes.
+//   - In-head-noscript (treated as in-head)
+//   - Most parse-error reporting (we silently follow the recovery path)
+//   - Fragment-parsing entry points (only full-document parsing for now)
+// ============================================================================
+
+
+// ----------------------------------------------------------------------------
+// Tree nodes
+
+class Node():
+  nonfinal
+
+class Document():
+  extends Node
+  field children :: List = []           // List(Node)
+  field doctype = #false                 // DocumentType | #false
+  field quirks_mode = #'no_quirks        // #'no_quirks | #'quirks | #'limited_quirks
+
+class DocumentType(~name: name :: String = "html",
+                   ~public: public :: maybe(String) = #false,
+                   ~system: system :: maybe(String) = #false):
+  extends Node
+  private implements Printable
+  private override describe(v, recur):
+    PrintDesc.list(
+      "DocumentType(",
+      [PrintDesc.block("~name", recur(name)),
+       & (if public | [PrintDesc.block("~public", recur(public))] | []),
+       & (if system | [PrintDesc.block("~system", recur(system))] | [])],
+      ")"
+    )
+
+class Element(
+  name :: String,
+  mutable attributes :: List,            // List(Attribute) -- mutable so the
+                                         // in-body <html> handler can merge
+                                         // additional attributes onto the
+                                         // existing root element.
+):
+  extends Node
+  field children :: List = []            // List(Node)
+  field parent = #false                   // Document | Element | TemplateContents | #false
+  field self_closing :: Boolean = #false
+  // Element namespace: #'html, #'svg, or #'mathml.  Default is HTML; the
+  // foreign-content parser sets it for elements created in SVG / MathML
+  // contexts.
+  field namespace :: Symbol = #'html
+  // For HTML <template> elements, `content` is a DocumentFragment-like
+  // container that owns the template's children. Children of the template
+  // ELEMENT itself are always empty; everything goes into `content`.
+  field content = #false                  // TemplateContents | #false
+
+// HTML's template "content" is a DocumentFragment-like container -- per
+// spec, children of <template> are NOT children of the template element;
+// they live in this separate node.
+class TemplateContents():
+  extends Node
+  field children :: List = []
+  field parent = #false                  // the owning template Element
+
+class Text(data_accum :~ Port.Output.String):
+  extends Node
+  constructor (c :: Char):
+    let data_accum = Port.Output.open_string()
+    data_accum.write_char(c)
+    super()(data_accum)
+  method add_char(c):
+    data_accum.write_char(c)
+  field done_string = #false
+  method get_string():
+    done_string || (block:
+                      done_string := data_accum.get_string()
+                      done_string)
+
+class Comment(~data: data :: String = ""):
+  extends Node
+
+// ----------------------------------------------------------------------------
+// Element categories used by the in-body mode
+
+def VOID_ELEMENTS = { "area", "base", "br", "col", "embed", "frame", "hr", "img",
+                      "input", "keygen", "link", "meta", "param", "source", "track", "wbr" }
+
+// Elements whose start tag puts the lexer into RAWTEXT.
+// `noscript` is intentionally NOT here: with scripting disabled (which is
+// what we model), noscript content is parsed as normal HTML, not as raw
+// text. The in_head handler enters `in_head_noscript_mode` instead.
+def RAWTEXT_ELEMENTS = { "style", "xmp", "iframe", "noembed", "noframes" }
+
+// Elements whose start tag puts the lexer into RCDATA.
+def RCDATA_ELEMENTS = { "title", "textarea" }
+
+// "Special" elements per the spec -- end tags use them to bound their search.
+def SPECIAL_ELEMENTS = { "address", "applet", "area", "article", "aside", "base", "basefont",
+                         "bgsound", "blockquote", "body", "br", "button", "caption", "center",
+                         "col", "colgroup", "dd", "details", "dir", "div", "dl", "dt", "embed",
+                         "fieldset", "figcaption", "figure", "footer", "form", "frame", "frameset",
+                         "h1", "h2", "h3", "h4", "h5", "h6", "head", "header", "hgroup", "hr", "html",
+                         "iframe", "img", "input", "keygen", "li", "link", "listing", "main", "marquee",
+                         "menu", "meta", "nav", "noembed", "noframes", "noscript", "object", "ol", "p",
+                         "param", "plaintext", "pre", "script", "search", "section", "select", "source",
+                         "style", "summary", "table", "tbody", "td", "template", "textarea", "tfoot", "th",
+                         "thead", "title", "tr", "track", "ul", "wbr", "xmp" }
+
+// Block-ish start tags whose first action is "if there's a p element in
+// button scope, close it." We list them out instead of computing a category.
+// `plaintext` is intentionally NOT here even though it has the close-p
+// behavior; the explicit handler later does the close-p step AND switches
+// the lexer to PLAINTEXT state. Headings (h1..h6) are handled by their
+// own explicit clause that ALSO pops a heading-current-node first.
+def CLOSES_P_ELEMENTS = { "address", "article", "aside", "blockquote", "center", "details",
+                          "dialog", "dir", "div", "dl", "fieldset", "figcaption", "figure", "footer",
+                          "header", "hgroup", "main", "menu", "nav", "ol", "p", "search", "section",
+                          "summary", "ul", "pre", "listing", "hr" }
+
+def HEADING_NAMES = ["h1", "h2", "h3", "h4", "h5", "h6"]
+
+// ----------------------------------------------------------------------------
+// Parser state
+
+class Parser():
+  field document :: Document = Document()
+  field stack :: List = []                  // List(Element), top is first
+  field insertion_mode = #false              // a mode function
+  field original_insertion_mode = #false     // where text-mode returns to
+  field head_element = #false                // Element | #false
+  field form_element = #false                // Element | #false
+  field frameset_ok :: Boolean = #true
+  field stream = #false                       // TokenStream | #false (set by parse)
+  // Table-text buffering: `pending_table_chars` accumulates Char tokens while
+  // we're in `in_table_text_mode`; `pending_table_chars_has_nonws` flips on
+  // when a non-whitespace char shows up there.
+  field pending_table_chars :: String = ""
+  field pending_table_chars_has_nonws :: Boolean = #false
+  // When set, "insert an HTML element" / "insert a character" foster-parent
+  // instead of inserting into the current node.
+  field foster_parenting :: Boolean = #false
+  // After a <pre>, <listing>, or <textarea> start tag, the spec says to
+  // skip a single immediately-following newline character. We handle this
+  // by setting a flag that the next character-token handler clears.
+  field skip_next_newline :: Boolean = #false
+  // List of active formatting elements: each entry is either an Element or
+  // the singleton MARKER. Front of list = most recently added.
+  field active_formatting :: List = []
+  // Stack of template insertion modes -- one entry per <template> currently
+  // open on the open-elements stack. Front of list = most recent.
+  field template_modes :: List = []
+  // For HTML fragment parsing, the context element supplied by the caller.
+  // When set and the open-elements stack has just one element (the
+  // synthetic root), the spec's "adjusted current node" is the context.
+  field fragment_context = #false                  // Element | #false
+
+
+// ----------------------------------------------------------------------------
+// Tree-construction helpers
+
+fun current_node(p :~ Parser) :~ Element:
+  match p.stack
+  | [first :: Element, & _]: first
+  | _: error("parser: open-elements stack is empty")
+
+fun current_node_or_doc(p :~ Parser):
+  match p.stack
+  | [first :: Element, & _]: first
+  | _: p.document
+
+// Insert `n` as a child of `parent`, setting parent links if applicable.
+fun append_child(parent, n :: Node):
+  match parent
+  | d :: Document:
+      d.children := List.add(d.children, n)
+      match n
+      | e :: Element: e.parent := d
+      | _: #void
+  | tc :: TemplateContents:
+      tc.children := List.add(tc.children, n)
+      match n
+      | e :: Element: e.parent := tc
+      | _: #void
+  | e :: Element:
+      e.children := List.add(e.children, n)
+      match n
+      | child :: Element: child.parent := e
+      | _: #void
+
+fun push_open_element(p :~ Parser, e :: Element):
+  p.stack := List.cons(e, p.stack)
+
+fun pop_open_element(p :~ Parser) :~ Element:
+  match p.stack
+  | [first :: Element, & rest]:
+      p.stack := rest
+      first
+  | _: error("parser: pop on empty stack")
+
+// Spec algorithm "appropriate place for inserting a node": returns the parent
+// node and a position. We represent the position implicitly by either
+// "append to children" (returns just a parent) or "insert before sibling"
+// (returns parent + sibling-or-#false meaning end). We implement that as
+// two return values: (parent, before-sibling-or-#false).
+fun appropriate_insertion_target(p :~ Parser):
+  // Recovery path: if the stack is empty (we've popped past the html root
+  // on malformed input), drop the would-be insertion onto the document.
+  cond
+  | p.stack == []: values(p.document, #false)
+  | ~else: appropriate_insertion_target_nonempty(p)
+
+def TABLE_ELEMENTS = ["table", "tbody", "tfoot", "thead", "tr"]
+
+fun appropriate_insertion_target_nonempty(p :~ Parser):
+  let target :: Element = current_node(p)
+  let (parent, before):
+    cond
+    | p.foster_parenting && target.name in TABLE_ELEMENTS:
+        // Spec foster-parenting steps: walk stack to find indexes of the
+        // most recent <table> and <template> elements.
+        let last_table_idx :: Int:
+          recur find(i :: Int = 0):
+            cond
+            | i >= p.stack.length(): -1
+            | ~else:
+                let e :~ Element = (p.stack)[i]
+                cond | (e.namespace == #'html) && (e.name == "table"): i | ~else: find(i + 1)
+        let last_template_idx :: Int:
+          recur find(i :: Int = 0):
+            cond
+            | i >= p.stack.length(): -1
+            | ~else:
+                let e :~ Element = (p.stack)[i]
+                cond | (e.namespace == #'html) && (e.name == "template"): i | ~else: find(i + 1)
+        cond
+        | (last_template_idx >= 0) && ((last_table_idx < 0) || (last_template_idx < last_table_idx)):
+            // last_template is "lower" (more recent = smaller index in our
+            // front-top representation). Insert into its content.
+            let tmpl :~ Element = (p.stack)[last_template_idx]
+            cond
+            | tmpl.content:
+                values(tmpl.content, #false)
+            | ~else:
+                values(tmpl, #false)
+        | last_table_idx >= 0:
+            let lt :~ Element = (p.stack)[last_table_idx]
+            cond
+            | lt.parent:
+                values(lt.parent, lt)
+            | ~else:
+                // Find element below lt on stack
+                cond
+                | last_table_idx + 1 < p.stack.length():
+                    values((p.stack)[last_table_idx + 1], #false)
+                | ~else:
+                    values(p.document, #false)
+        | ~else:
+            // No last_table and no last_template: insert into the html
+            // element (the root open element), not the document.
+            cond
+            | p.stack.length() > 0:
+                values((p.stack)[p.stack.length() - 1], #false)
+            | ~else:
+                values(p.document, #false)
+    | ~else: values(target, #false)
+  // Spec final step: if the chosen location is inside a template element,
+  // redirect to the template's `content` DocumentFragment.
+  match parent
+  | e :: Element when (e.namespace == #'html) && (e.name == "template") && e.content:
+      values(e.content, #false)   // append into template contents
+  | _:
+      values(parent, before)
+
+fun insert_node_at(parent, before, n :: Node):
+  cond
+  | before:
+      // Insert before `before` (an Element child of parent)
+      match parent
+      | d :: Document:
+          let kids :: List = d.children
+          let idx:
+            recur find(i :: Int = 0):
+              cond
+              | i == kids.length(): kids.length()
+              | kids[i] === before: i
+              | ~else: find(i + 1)
+          d.children := kids.take(idx) ++ [n] ++ kids.drop(idx)
+          match n | e :: Element: e.parent := d | _: #void
+      | tc :: TemplateContents:
+          let kids :: List = tc.children
+          let idx:
+            recur find(i :: Int = 0):
+              cond
+              | i == kids.length(): kids.length()
+              | kids[i] === before: i
+              | ~else: find(i + 1)
+          tc.children := kids.take(idx) ++ [n] ++ kids.drop(idx)
+          match n | e :: Element: e.parent := tc | _: #void
+      | e :: Element:
+          let kids :: List = e.children
+          let idx:
+            recur find(i :: Int = 0):
+              cond
+              | i == kids.length(): kids.length()
+              | kids[i] === before: i
+              | ~else: find(i + 1)
+          e.children := kids.take(idx) ++ [n] ++ kids.drop(idx)
+          match n | child :: Element: child.parent := e | _: #void
+  | ~else:
+      append_child(parent, n)
+
+fun insert_html_element(p :~ Parser, name :: String, attrs :: List) :~ Element:
+  let e = Element(name, attrs)
+  let (parent, before) = appropriate_insertion_target(p)
+  insert_node_at(parent, before, e)
+  push_open_element(p, e)
+  e
+
+// Insert character at the appropriate insertion target, coalescing with a
+// trailing Text node when possible.
+fun insert_character(p :~ Parser, c :: Char):
+  let (parent, before) = appropriate_insertion_target(p)
+  let kids :: List:
+    match parent
+    | d :: Document: d.children
+    | tc :: TemplateContents: tc.children
+    | e :: Element: e.children
+    | _: []
+  cond
+  | before:
+      // Look for a Text immediately before the `before` sibling.
+      let idx:
+        recur find(i :: Int = 0):
+          cond
+          | i == kids.length(): kids.length()
+          | kids[i] === before: i
+          | ~else: find(i + 1)
+      cond
+      | idx > 0:
+          match kids[idx - 1]
+          | t :: Text:
+              t.add_char(c)
+          | _:
+              insert_node_at(parent, before, Text(c))
+      | ~else:
+          insert_node_at(parent, before, Text(c))
+  | ~else:
+      let n = kids.length()
+      cond
+      | n > 0:
+          match kids[n - 1]
+          | t :: Text:
+              t.add_char(c)
+          | _:
+              match parent
+              | d :: Document: d.children := List.add(kids, Text(c))
+              | tc :: TemplateContents: tc.children := List.add(kids, Text(c))
+              | e :: Element: e.children := List.add(kids, Text(c))
+              | _: #void
+      | ~else:
+          match parent
+          | d :: Document: d.children := List.add(kids, Text(c))
+          | tc :: TemplateContents: tc.children := List.add(kids, Text(c))
+          | e :: Element: e.children := List.add(kids, Text(c))
+          | _: #void
+
+fun insert_comment_into(parent, data :: String):
+  append_child(parent, Comment(~data: data))
+
+// "Insert a comment" per spec: uses the appropriate insertion target
+// (which redirects into a template's content fragment when applicable).
+fun insert_comment(p :~ Parser, data :: String):
+  let (parent, before) = appropriate_insertion_target(p)
+  insert_node_at(parent, before, Comment(~data: data))
+
+fun is_html_whitespace_char(c :: Char) :: Boolean:
+  c == Char"\t" || c == Char"\n" || c == Char"\f" || c == Char"\r" || c == Char" "
+
+// Default-scope boundary elements per the spec. Each is identified by
+// (namespace, name); we list them out for the three namespaces we track.
+def DEFAULT_SCOPE_HTML :: List = ["applet", "caption", "html", "table", "td", "th", "marquee", "object", "template"]
+def DEFAULT_SCOPE_SVG :: List = ["foreignObject", "desc", "title"]
+def DEFAULT_SCOPE_MATHML :: List = ["mi", "mo", "mn", "ms", "mtext", "annotation-xml"]
+
+fun is_default_scope_boundary(e :: Element) :: Boolean:
+  cond
+  | (e.namespace == #'html) && e.name in DEFAULT_SCOPE_HTML: #true
+  | (e.namespace == #'svg) && e.name in DEFAULT_SCOPE_SVG: #true
+  | (e.namespace == #'mathml) && e.name in DEFAULT_SCOPE_MATHML: #true
+  | ~else: #false
+
+// Stack search: is there an HTML element with `name` somewhere on the stack,
+// stopping at any "scope-defining" element (besides the target)? Per spec,
+// scope target matches require HTML namespace.
+fun has_element_in_scope(p :~ Parser, name :: String) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | (e.namespace == #'html) && (e.name == name): #true
+        | is_default_scope_boundary(e): #false
+        | ~else: loop(rest)
+
+// "Button scope": default scope boundaries plus HTML <button>.
+fun has_element_in_button_scope(p :~ Parser, name :: String) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | (e.namespace == #'html) && (e.name == name): #true
+        | (e.namespace == #'html) && (e.name == "button"): #false
+        | is_default_scope_boundary(e): #false
+        | ~else: loop(rest)
+
+// "List item scope": default-scope boundaries + HTML <ol>, <ul>.
+fun has_element_in_list_item_scope(p :~ Parser, name :: String) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | (e.namespace == #'html) && (e.name == name): #true
+        | (e.namespace == #'html) && ((e.name == "ol") || (e.name == "ul")): #false
+        | is_default_scope_boundary(e): #false
+        | ~else: loop(rest)
+
+// Generate "implied end tags" except optionally one.
+def IMPLIED_END_TAGS = ["dd", "dt", "li", "optgroup", "option", "p", "rb", "rp", "rt", "rtc"]
+fun generate_implied_end_tags(p :~ Parser, except :~ String = ""):
+  recur loop():
+    match p.stack
+    | []: #void
+    | [e :: Element, & _]:
+        cond
+        | (e.namespace == #'html) && (e.name != except) && e.name in IMPLIED_END_TAGS:
+            pop_open_element(p)
+            loop()
+        | ~else: #void
+
+// Pop elements until (and including) an HTML element with the given name.
+// Foreign elements that happen to share the name are popped past, not
+// matched -- the spec consistently means HTML namespace here.
+fun pop_until_name(p :~ Parser, name :: String):
+  recur loop():
+    cond
+    | p.stack == []: #void
+    | ~else:
+        let popped = pop_open_element(p)
+        cond
+        | (popped.namespace == #'html) && (popped.name == name): #void
+        | ~else: loop()
+
+// Close a <p>: implied end tags except for p, then pop until p.
+fun close_p_element(p :~ Parser):
+  generate_implied_end_tags(p, "p")
+  pop_until_name(p, "p")
+
+// Close the open table cell (<td> or <th>), generating implied end tags
+// first. Caller has already verified there IS a cell in table scope.
+fun close_cell(p :~ Parser):
+  let which:
+    cond
+    | has_element_in_table_scope(p, "td"): "td"
+    | ~else: "th"
+  generate_implied_end_tags(p, "")
+  pop_until_name(p, which)
+  clear_active_formatting_to_marker(p)
+
+// ---- active formatting elements + adoption agency -------------------------
+
+// Marker singleton inserted in the active formatting elements list when
+// entering applet / object / marquee / caption / cell contexts.
+class FormattingMarker(): nonfinal
+def MARKER :: FormattingMarker = FormattingMarker()
+
+// Tag names that participate in adoption-agency / formatting-element handling.
+def FORMATTING_ELEMENTS = ["a", "b", "big", "code", "em", "font", "i", "nobr", "s", "small", "strike", "strong", "tt", "u"]
+
+fun is_on_stack(p :~ Parser, e :: Element) :: Boolean:
+  for any (x :: Element in p.stack):
+    x === e
+
+fun is_in_active_formatting(p :~ Parser, e :: Element) :: Boolean:
+  for any (x in p.active_formatting):
+    cond | x is_a FormattingMarker: #false | ~else: x === e
+
+// Replace element at index i in a List with v.
+fun list_set(lst :: List, i :: Int, v) :: List:
+  lst.take(i) ++ [v] ++ lst.drop(i + 1)
+
+// Drop element at index i from a List.
+fun list_drop_at(lst :: List, i :: Int) :: List:
+  lst.take(i) ++ lst.drop(i + 1)
+
+// Find the index of `e` in a list, or -1.
+fun list_index_of(lst :: List, e) :: Int:
+  recur loop(i :: Int = 0):
+    cond
+    | i == lst.length(): -1
+    | lst[i] === e: i
+    | ~else: loop(i + 1)
+
+// Remove all occurrences of `e` from `lst` (matched by ===).
+fun list_remove_all(lst :: List, e) :: List:
+  lst.filter(~keep: fun(x): !(x === e))
+
+// Add an element to the active formatting list, with the spec's "Noah's Ark"
+// limit: at most three matching entries (same name + same attributes) between
+// `e` and the last marker (or the start, if no marker).
+fun push_active_formatting(p :~ Parser, e :: Element):
+  let entries :: List = p.active_formatting
+  let same_count_idx_pairs :: List:
+    recur loop(i :: Int = 0, acc :: List = []):
+      cond
+      | i == entries.length(): acc
+      | ~else:
+          let entry = entries[i]
+          cond
+          | entry is_a FormattingMarker: acc   // stop at first marker
+          | ~else:
+              let other :~ Element = entry
+              cond
+              | (other.name == e.name) && attributes_equal(other.attributes, e.attributes):
+                  loop(i + 1, List.add(acc, i))
+              | ~else: loop(i + 1, acc)
+  let new_entries :: List:
+    cond
+    | same_count_idx_pairs.length() >= 3:
+        // Remove the earliest such (highest index since front = most recent).
+        let earliest_idx :: Int = same_count_idx_pairs[same_count_idx_pairs.length() - 1]
+        list_drop_at(entries, earliest_idx)
+    | ~else: entries
+  p.active_formatting := List.cons(e, new_entries)
+
+fun attributes_equal(as1 :: List, as2 :: List) :: Boolean:
+  cond
+  | as1.length() != as2.length(): #false
+  | ~else:
+      // Order doesn't matter; build a quick check.
+      for all (a :: Attribute in as1):
+        for any (b :: Attribute in as2):
+          (a.name == b.name) && (a.value == b.value)
+
+fun add_active_formatting_marker(p :~ Parser):
+  p.active_formatting := List.cons(MARKER, p.active_formatting)
+
+// "Clear the list of active formatting elements up to the last marker": remove
+// the last marker and everything more recent than it.
+fun clear_active_formatting_to_marker(p :~ Parser):
+  recur loop():
+    match p.active_formatting
+    | []: #void
+    | [first, & rest]:
+        p.active_formatting := rest
+        cond
+        | first is_a FormattingMarker: #void
+        | ~else: loop()
+
+// "Reconstruct the active formatting elements" -- when entering a context
+// where formatting should still apply, re-insert clones of any formatting
+// elements that aren't on the open-elements stack.
+fun reconstruct_active_formatting(p :~ Parser):
+  let entries :: List = p.active_formatting
+  cond
+  | entries == []: #void
+  | ~else:
+      let first = entries[0]
+      cond
+      | (first is_a FormattingMarker) || (first is_a Element && is_on_stack(p, first :~ Element)):
+          #void
+      | ~else:
+          // Rewind from index 0 (most recent) toward higher indices, looking
+          // for an entry that's a marker or is on the stack. `rewind_to` ends
+          // up at the index just BEFORE that boundary -- meaning we'll
+          // create new elements from rewind_to back to 0.
+          let rewind_to :: Int:
+            recur loop(i :: Int = 0):
+              cond
+              | i + 1 >= entries.length(): i
+              | ~else:
+                  let prev = entries[i + 1]
+                  cond
+                  | (prev is_a FormattingMarker) || (prev is_a Element && is_on_stack(p, prev :~ Element)):
+                      i
+                  | ~else: loop(i + 1)
+          recur create(i :: Int = rewind_to):
+            cond
+            | i < 0: #void
+            | ~else:
+                let entry = (p.active_formatting)[i]
+                let orig :~ Element = entry
+                let new_el = insert_html_element(p, orig.name, orig.attributes)
+                p.active_formatting := list_set(p.active_formatting, i, new_el)
+                create(i - 1)
+
+// Find the most recent (front-most) Element entry in the active formatting
+// list that comes after the last marker and matches `name`. Returns the
+// element, or #false.
+fun find_formatting_element(p :~ Parser, name :: String):
+  recur loop(s :: List = p.active_formatting):
+    match s
+    | []: #false
+    | [first, & rest]:
+        cond
+        | first is_a FormattingMarker: #false
+        | ~else:
+            let e :~ Element = first
+            cond
+            | e.name == name: e
+            | ~else: loop(rest)
+
+// Is the specific element instance `target` somewhere in the open-elements
+// stack, with no scope-blocking element between the top and `target`?
+fun has_specific_element_in_scope(p :~ Parser, target :: Element) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | e === target: #true
+        | is_default_scope_boundary(e): #false
+        | ~else: loop(rest)
+
+// Find the index of an element on the open-elements stack (front = top), or
+// -1 if not present.
+fun stack_index_of(p :~ Parser, e :: Element) :: Int:
+  recur loop(i :: Int = 0):
+    cond
+    | i == p.stack.length(): -1
+    | (p.stack)[i] === e: i
+    | ~else: loop(i + 1)
+
+// Remove an element from the open-elements stack by identity.
+fun remove_from_stack(p :~ Parser, e :: Element):
+  p.stack := list_remove_all(p.stack, e)
+
+// Replace `parent`'s child list to remove `child` (by identity).
+fun remove_child(parent, child :: Element):
+  match parent
+  | d :: Document:
+      d.children := list_remove_all(d.children, child)
+  | tc :: TemplateContents:
+      tc.children := list_remove_all(tc.children, child)
+  | e :: Element:
+      e.children := list_remove_all(e.children, child)
+  | _: #void
+  child.parent := #false
+
+// 13.2.6.4.7 (continued) -- The adoption agency algorithm. Run when an end
+// tag for one of the formatting-element names is seen. Returns #true if the
+// algorithm completed normally; #false if the caller should fall back to the
+// "any other end tag" handling.
+fun adoption_agency(p :~ Parser, subject :: String) :: Boolean:
+  // 1. If current_node is HTML element with `subject` AND not in active
+  //    formatting list: pop, return.
+  let cur :: Element = current_node(p)
+  cond
+  | (cur.name == subject) && !is_in_active_formatting(p, cur):
+      pop_open_element(p)
+      #true
+  | ~else:
+      // 2. Outer loop, max 8 iterations.
+      recur outer(counter :: Int = 0):
+        cond
+        | counter >= 8: #true
+        | ~else:
+            // 4. formatting_element = last entry in list (after last marker)
+            //    with name == subject.
+            let fe = find_formatting_element(p, subject)
+            cond
+            | !fe:
+                // 5. None found -- fall back to "any other end tag".
+                #false
+            | ~else:
+                let formatting_element :~ Element = fe
+                cond
+                | !is_on_stack(p, formatting_element):
+                    // 6. In active list but not on stack: parse error, remove
+                    //    from active list, return.
+                    p.active_formatting := list_remove_all(p.active_formatting, formatting_element)
+                    #true
+                | !has_specific_element_in_scope(p, formatting_element):
+                    // 7. On stack but not in scope: parse error, return.
+                    #true
+                | ~else:
+                    // 8. (warn parse-error if not current; we skip warnings)
+                    // 9. furthest_block = topmost "special" element below
+                    //    formatting_element on the stack (lower index than fe
+                    //    in our front=top representation).
+                    let fe_idx = stack_index_of(p, formatting_element)
+                    // furthest_block: per spec, the "topmost" (= least
+                    // recently added = largest idx in our front=top list)
+                    // special node lower in the stack than fe. We walk from
+                    // fe_idx - 1 downward and return the FIRST special match.
+                    let furthest_block:
+                      recur scan(i :: Int = fe_idx - 1):
+                        cond
+                        | i < 0: #false
+                        | ~else:
+                            let e :~ Element = (p.stack)[i]
+                            cond
+                            | (e.namespace == #'html) && e.name in SPECIAL_ELEMENTS:
+                                e
+                            | ~else: scan(i - 1)
+                    cond
+                    | !furthest_block:
+                        // 10. No furthest_block: pop everything above fe and
+                        //     fe itself; remove fe from active list; return.
+                        recur pop_through():
+                          let top = pop_open_element(p)
+                          cond
+                          | top === formatting_element: #void
+                          | ~else: pop_through()
+                        p.active_formatting := list_remove_all(p.active_formatting, formatting_element)
+                        #true
+                    | ~else:
+                        // 11. common_ancestor = element above fe in stack
+                        //     (= stack[fe_idx + 1] in our front-top ordering).
+                        let common_ancestor :~ Element = (p.stack)[fe_idx + 1]
+                        let fb :~ Element = furthest_block
+                        // 12. bookmark = position of fe in active_formatting
+                        let bookmark:
+                          list_index_of(p.active_formatting, formatting_element)
+                        // 13. node, last_node = fb
+                        // 14. Inner loop, max 3 deep before pruning from active list.
+                        // Track position by index. `idx` is the position of
+                        // "node" in the stack BEFORE step 3 advances. Each
+                        // iteration looks at stack[idx + 1] (= "above
+                        // node"). When we remove from the stack, the
+                        // shift-down means idx stays the same but stack[idx+1]
+                        // is the next-above element. When we clone, we
+                        // advance idx to the clone's position.
+                        let (final_last_node :: Element, final_bookmark :: Int):
+                          recur inner(idx :: Int = stack_index_of(p, fb),
+                                      last_node :: Element = fb,
+                                      bm :: Int = bookmark,
+                                      icount :: Int = 0):
+                            let above_idx = idx + 1
+                            let new_icount = icount + 1
+                            cond
+                            | above_idx >= p.stack.length():
+                                values(last_node, bm)
+                            | ~else:
+                                let node :~ Element = (p.stack)[above_idx]
+                                cond
+                                | node === formatting_element:
+                                    values(last_node, bm)
+                                | (new_icount > 3) && is_in_active_formatting(p, node):
+                                    p.active_formatting := list_remove_all(p.active_formatting, node)
+                                    remove_from_stack(p, node)
+                                    inner(idx, last_node, bm, new_icount)
+                                | !is_in_active_formatting(p, node):
+                                    remove_from_stack(p, node)
+                                    inner(idx, last_node, bm, new_icount)
+                                | ~else:
+                                    let clone = Element(node.name, node.attributes)
+                                    clone.namespace := node.namespace
+                                    let af_idx = list_index_of(p.active_formatting, node)
+                                    cond
+                                    | af_idx >= 0:
+                                        p.active_formatting := list_set(p.active_formatting, af_idx, clone)
+                                    | ~else: #void
+                                    p.stack := list_set(p.stack, above_idx, clone)
+                                    let new_bm:
+                                      cond
+                                      | last_node === fb:
+                                          let i = list_index_of(p.active_formatting, clone)
+                                          cond | i >= 0: i + 1 | ~else: bm
+                                      | ~else: bm
+                                    move_node_to(last_node, clone, #false, p)
+                                    inner(above_idx, clone, new_bm, new_icount)
+                        // 15. Insert last_node into common_ancestor at the
+                        //     "appropriate place" (foster-parented if cur_anc
+                        //     is table-y).
+                        cond
+                        | common_ancestor.name in TABLE_ELEMENTS:
+                            p.foster_parenting := #true
+                            // Use appropriate_insertion_target with current_node temporarily set.
+                            // Simpler: just do explicit foster parenting.
+                            let (parent, before) = appropriate_insertion_target(p)
+                            // Detach from current parent first.
+                            let cur_parent = final_last_node.parent
+                            cond
+                            | cur_parent: remove_child(cur_parent, final_last_node)
+                            | ~else: #void
+                            insert_node_at(parent, before, final_last_node)
+                            p.foster_parenting := #false
+                        | ~else:
+                            let cur_parent = final_last_node.parent
+                            cond
+                            | cur_parent: remove_child(cur_parent, final_last_node)
+                            | ~else: #void
+                            append_child(common_ancestor, final_last_node)
+                        // 16. Create clone of fe; move all fb's children to
+                        //     clone; append clone to fb.
+                        let fe_clone = Element(formatting_element.name, formatting_element.attributes)
+                        for (child :: Node in fb.children):
+                            match child
+                            | child_e :: Element: child_e.parent := fe_clone
+                            | _: #void
+                        fe_clone.children := fb.children
+                        fb.children := []
+                        append_child(fb, fe_clone)
+                        // 17. Remove fe from active_formatting; insert
+                        //     fe_clone at bookmark position.
+                        let af_after_remove = list_remove_all(p.active_formatting, formatting_element)
+                        let bm_clamped:
+                          cond
+                          | final_bookmark > af_after_remove.length(): af_after_remove.length()
+                          | final_bookmark < 0: 0
+                          | ~else: final_bookmark
+                        p.active_formatting := af_after_remove.take(bm_clamped) ++ [fe_clone] ++ af_after_remove.drop(bm_clamped)
+                        // 18. Remove fe from stack; insert fe_clone in stack
+                        //     "immediately below the position of furthest
+                        //     block". The spec uses an unusual convention:
+                        //     the "topmost" of the stack is the first/root
+                        //     element, and "bottom-most" is the most-recent
+                        //     (= current node). So "below" = more recent =
+                        //     SMALLER index in our front=top list. Insert
+                        //     at fb_idx (which puts the clone "above fb"
+                        //     in our list ordering).
+                        remove_from_stack(p, formatting_element)
+                        let fb_idx = stack_index_of(p, fb)
+                        cond
+                        | fb_idx >= 0:
+                            p.stack := p.stack.take(fb_idx) ++ [fe_clone] ++ p.stack.drop(fb_idx)
+                        | ~else:
+                            push_open_element(p, fe_clone)
+                        outer(counter + 1)
+
+// Helper: move node `n` into `new_parent` at the end. If n already has a
+// parent, detach it first.
+fun move_node_to(n :: Element, new_parent, before, p :~ Parser):
+  let cur_parent = n.parent
+  cond
+  | cur_parent: remove_child(cur_parent, n)
+  | ~else: #void
+  insert_node_at(new_parent, before, n)
+
+// Helper used in adoption agency: ensure `fe` -> `last_node` substitution at
+// `bm` in the active formatting list. (Currently a no-op in our flow because
+// the substitution at fe's slot is handled by the step-17 logic; provided
+// for future use.)
+fun list_set_or_insert_bookmark(lst :: List, _fe, _last_node, _bm :: Int) :: List:
+  lst
+
+// ---- table-related stack helpers ------------------------------------------
+
+// "Has X in table scope": HTML html / table / template are boundaries.
+// Target must be in HTML namespace.
+fun has_element_in_table_scope(p :~ Parser, name :: String) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | (e.namespace == #'html) && (e.name == name): #true
+        | (e.namespace == #'html) && ((e.name == "html") || (e.name == "table") || (e.name == "template")): #false
+        | ~else: loop(rest)
+
+// "Has X in select scope": only HTML optgroup / option are non-boundaries.
+// Target must be in HTML namespace.
+fun has_element_in_select_scope(p :~ Parser, name :: String) :: Boolean:
+  recur loop(s :: List = p.stack):
+    match s
+    | []: #false
+    | [e :: Element, & rest]:
+        cond
+        | (e.namespace == #'html) && (e.name == name): #true
+        | (e.namespace == #'html) && ((e.name == "optgroup") || (e.name == "option")): loop(rest)
+        | ~else: #false
+
+// Pop elements until the current node's name is one of the given names
+// (without popping that element).
+fun clear_stack_until(p :~ Parser, names :: List):
+  recur loop():
+    match p.stack
+    | []: #void
+    | [first :: Element, & _]:
+        cond
+        | (first.namespace == #'html) && first.name in names: #void
+        | ~else:
+            pop_open_element(p)
+            loop()
+
+fun clear_stack_to_table_context(p :~ Parser):
+  clear_stack_until(p, ["table", "template", "html"])
+
+fun clear_stack_to_table_body_context(p :~ Parser):
+  clear_stack_until(p, ["tbody", "tfoot", "thead", "template", "html"])
+
+fun clear_stack_to_table_row_context(p :~ Parser):
+  clear_stack_until(p, ["tr", "template", "html"])
+
+// Spec: "Reset the insertion mode appropriately." Walk the stack from top
+// to bottom and pick the appropriate mode for the topmost element we
+// recognize. We're missing several modes (in_select, in_template); the
+// fallback is in_body_mode.
+fun reset_insertion_mode_appropriately(p :~ Parser):
+  // Spec: the parser uses context to determine the appropriate insertion
+  // mode, like the algorithm but with context substituted in place of the
+  // deepest node on the stack of open elements. We approximate by
+  // appending the fragment_context after the stack's last entry; this
+  // affects only the bottom-of-stack treatment.
+  let effective_stack :: List:
+    cond
+    | p.fragment_context && (p.stack.length() > 0):
+        p.stack.take(p.stack.length() - 1) ++ [p.fragment_context]
+    | p.fragment_context:
+        [p.fragment_context]
+    | ~else: p.stack
+  let chosen:
+    recur loop(s :: List = effective_stack):
+      match s
+      | []: in_body_mode
+      | [e :: Element, & rest]:
+          let last :: Boolean = (rest == [])
+          cond
+          | e.name == "select":
+              // Spec walks older ancestors looking for a table; if there is
+              // one (and no template intervenes), the mode is
+              // in_select_in_table. Otherwise it's in_select.
+              cond
+              | last: in_select_mode
+              | ~else:
+                  recur scan(rs :: List = rest):
+                    match rs
+                    | []: in_select_mode
+                    | [a :: Element, & ars]:
+                        cond
+                        | a.name == "template": in_select_mode
+                        | a.name == "table": in_select_in_table_mode
+                        | ~else: scan(ars)
+          | (e.name == "td") || (e.name == "th"):
+              cond | last: in_body_mode | ~else: in_cell_mode
+          | e.name == "tr": in_row_mode
+          | (e.name == "tbody") || (e.name == "thead") || (e.name == "tfoot"):
+              in_table_body_mode
+          | e.name == "caption": in_caption_mode
+          | e.name == "colgroup": in_column_group_mode
+          | e.name == "table": in_table_mode
+          | e.name == "template":
+              // Use the top of the template insertion modes stack.
+              match p.template_modes
+              | [m, & _]: m
+              | _: in_body_mode
+          | e.name == "head":
+              cond | last: in_body_mode | ~else: in_head_mode
+          | e.name == "body": in_body_mode
+          | e.name == "frameset":
+              in_frameset_mode
+          | e.name == "html":
+              cond
+              | p.head_element: after_head_mode
+              | ~else: before_head_mode
+          | last: in_body_mode
+          | ~else: loop(rest)
+  p.insertion_mode := chosen
+
+// True iff there's an HTML <template> element somewhere on the open
+// elements stack.
+fun has_template_in_stack(p :~ Parser) :: Boolean:
+  for any (e :: Element in p.stack):
+    (e.namespace == #'html) && (e.name == "template")
+
+// Drop the front of `lst`, or return `lst` unchanged if empty.
+fun pop_or_empty(lst :: List) :: List:
+  match lst
+  | []: []
+  | [_, & rest]: rest
+
+// `<input type=hidden>` is the one start-tag-input variant that's allowed
+// inside table contexts without foster parenting.
+fun input_is_hidden(attrs :: List) :: Boolean:
+  for any (a :: Attribute in attrs):
+    a.name == "type" && (a.value.foldcase() == "hidden")
+
+
+// ----------------------------------------------------------------------------
+// The `mode` macro
+//
+//   mode name(p, tok)
+//   | <pattern>: <body>
+//   | ...
+//
+// expands to:
+//
+//   fun name(p :~ Parser, tok :: Token):
+//     match tok
+//     | <pattern>: <body>
+//     | ...
+//
+// Each body must yield `#'consumed` or `#'reprocess`. Body code may set
+// `p.insertion_mode := some_other_mode` to switch modes.
+
+defn.macro 'mode $name($p, $tok)
+            | $pat ...: $body
+            | ...':
+  'fun $name($p :~ Parser, $tok :: Token):
+     match $tok
+     | $pat ...: $body
+     | ...'
+
+
+// ----------------------------------------------------------------------------
+// Foreign-content support (13.2.6.5)
+//
+// Elements in SVG and MathML namespaces participate in HTML parsing only
+// loosely: most tokens are inserted as-is in the appropriate namespace, but
+// certain HTML start tags inside foreign content cause us to "break out"
+// (popping foreign elements until we're back in HTML context). SVG also has
+// a fixed set of camel-case tag names that the lexer (which lower-cases
+// everything) needs to be re-cased on insertion.
+
+// SVG tag names that need camel-case fixup. The lexer always emits
+// lowercased tag names, so we map the lowered form back to the proper case.
+def SVG_TAG_FIXUPS :~ Map.of(String, String) = {
+  "altglyph": "altGlyph", "altglyphdef": "altGlyphDef",
+  "altglyphitem": "altGlyphItem", "animatecolor": "animateColor",
+  "animatemotion": "animateMotion", "animatetransform": "animateTransform",
+  "clippath": "clipPath", "feblend": "feBlend",
+  "fecolormatrix": "feColorMatrix",
+  "fecomponenttransfer": "feComponentTransfer",
+  "fecomposite": "feComposite", "feconvolvematrix": "feConvolveMatrix",
+  "fediffuselighting": "feDiffuseLighting",
+  "fedisplacementmap": "feDisplacementMap",
+  "fedistantlight": "feDistantLight", "fedropshadow": "feDropShadow",
+  "feflood": "feFlood", "fefunca": "feFuncA", "fefuncb": "feFuncB",
+  "fefuncg": "feFuncG", "fefuncr": "feFuncR",
+  "fegaussianblur": "feGaussianBlur", "feimage": "feImage",
+  "femerge": "feMerge", "femergenode": "feMergeNode",
+  "femorphology": "feMorphology", "feoffset": "feOffset",
+  "fepointlight": "fePointLight",
+  "fespecularlighting": "feSpecularLighting",
+  "fespotlight": "feSpotLight", "fetile": "feTile",
+  "feturbulence": "feTurbulence", "foreignobject": "foreignObject",
+  "glyphref": "glyphRef", "lineargradient": "linearGradient",
+  "radialgradient": "radialGradient", "textpath": "textPath"
+}
+
+// SVG attribute name fixups (lowered -> proper case).
+def SVG_ATTR_FIXUPS :~ Map.of(String, String) = {
+  "attributename": "attributeName", "attributetype": "attributeType",
+  "basefrequency": "baseFrequency", "baseprofile": "baseProfile",
+  "calcmode": "calcMode", "clippathunits": "clipPathUnits",
+  "diffuseconstant": "diffuseConstant", "edgemode": "edgeMode",
+  "filterunits": "filterUnits", "glyphref": "glyphRef",
+  "gradienttransform": "gradientTransform",
+  "gradientunits": "gradientUnits", "kernelmatrix": "kernelMatrix",
+  "kernelunitlength": "kernelUnitLength", "keypoints": "keyPoints",
+  "keysplines": "keySplines", "keytimes": "keyTimes",
+  "lengthadjust": "lengthAdjust", "limitingconeangle": "limitingConeAngle",
+  "markerheight": "markerHeight", "markerunits": "markerUnits",
+  "markerwidth": "markerWidth", "maskcontentunits": "maskContentUnits",
+  "maskunits": "maskUnits", "numoctaves": "numOctaves",
+  "pathlength": "pathLength", "patterncontentunits": "patternContentUnits",
+  "patterntransform": "patternTransform", "patternunits": "patternUnits",
+  "pointsatx": "pointsAtX", "pointsaty": "pointsAtY",
+  "pointsatz": "pointsAtZ", "preservealpha": "preserveAlpha",
+  "preserveaspectratio": "preserveAspectRatio",
+  "primitiveunits": "primitiveUnits", "refx": "refX", "refy": "refY",
+  "repeatcount": "repeatCount", "repeatdur": "repeatDur",
+  "requiredextensions": "requiredExtensions",
+  "requiredfeatures": "requiredFeatures",
+  "specularconstant": "specularConstant",
+  "specularexponent": "specularExponent", "spreadmethod": "spreadMethod",
+  "startoffset": "startOffset", "stddeviation": "stdDeviation",
+  "stitchtiles": "stitchTiles", "surfacescale": "surfaceScale",
+  "systemlanguage": "systemLanguage", "tablevalues": "tableValues",
+  "targetx": "targetX", "targety": "targetY",
+  "textlength": "textLength", "viewbox": "viewBox",
+  "viewtarget": "viewTarget", "xchannelselector": "xChannelSelector",
+  "ychannelselector": "yChannelSelector", "zoomandpan": "zoomAndPan"
+}
+
+// MathML attribute name fixups (only one, but kept as a map for symmetry).
+def MATHML_ATTR_FIXUPS :~ Map.of(String, String) = {
+  "definitionurl": "definitionURL"
+}
+
+// Foreign attributes whose name has the form "prefix:local" should be
+// re-tagged with a namespace prefix; for our text-only output we render
+// the namespace-tagged forms with a SPACE separator instead of a colon.
+def FOREIGN_ATTR_RENAMES :~ Map.of(String, String) = {
+  "xlink:actuate": "xlink actuate",
+  "xlink:arcrole": "xlink arcrole",
+  "xlink:href": "xlink href",
+  "xlink:role": "xlink role",
+  "xlink:show": "xlink show",
+  "xlink:title": "xlink title",
+  "xlink:type": "xlink type",
+  "xml:base": "xml base",
+  "xml:lang": "xml lang",
+  "xml:space": "xml space",
+  "xmlns": "xmlns",                 // bare xmlns stays as-is
+  "xmlns:xlink": "xmlns xlink"
+}
+
+// HTML breakout start-tag names: inside foreign content, these names cause
+// the parser to pop foreign elements and reprocess in HTML context.
+def FOREIGN_BREAKOUT_TAGS  = { "b", "big", "blockquote", "body", "br", "center", "code", "dd", "div",
+                               "dl", "dt", "em", "embed", "h1", "h2", "h3", "h4", "h5", "h6", "head", "hr",
+                               "i", "img", "li", "listing", "menu", "meta", "nobr", "ol", "p", "pre", "ruby",
+                               "s", "small", "span", "strong", "strike", "sub", "sup", "table", "tt",
+                               "u", "ul", "var" }
+
+// `<font>` is a breakout iff the token has at least one of these attributes.
+def FONT_BREAKOUT_ATTRS :: List = ["color", "face", "size"]
+
+fun adjust_svg_tag_name(name :: String) :: String:
+  cond
+  | SVG_TAG_FIXUPS.has_key(name): SVG_TAG_FIXUPS[name]
+  | ~else: name
+
+fun adjust_attributes(attrs :: List, ns :: Symbol) :: List:
+  let fixups :: Map:
+    cond
+    | ns == #'svg: SVG_ATTR_FIXUPS
+    | ns == #'mathml: MATHML_ATTR_FIXUPS
+    | ~else: {}
+  for List (a :: Attribute in attrs):
+    let fixed_name :: String:
+      cond
+      | fixups.has_key(a.name): fixups[a.name]
+      | (ns != #'html) && FOREIGN_ATTR_RENAMES.has_key(a.name):
+          FOREIGN_ATTR_RENAMES[a.name]
+      | ~else: a.name
+    cond
+    | fixed_name == a.name: a
+    | ~else: Attribute(~name: fixed_name, ~value: a.value)
+
+fun font_token_breaks_out(attrs :: List) :: Boolean:
+  for any (a :: Attribute in attrs):
+    a.name in FONT_BREAKOUT_ATTRS
+
+// MathML text integration points: mi, mo, mn, ms, mtext (in MathML namespace).
+fun is_mathml_text_integration_point(e :: Element) :: Boolean:
+  (e.namespace == #'mathml) && ((e.name == "mi") || (e.name == "mo") || (e.name == "mn") || (e.name == "ms") || (e.name == "mtext"))
+
+// HTML integration points:
+//   - SVG foreignObject / desc / title
+//   - MathML annotation-xml whose `encoding` attribute is text/html or
+//     application/xhtml+xml (case-insensitive)
+fun is_html_integration_point(e :: Element) :: Boolean:
+  cond
+  | (e.namespace == #'svg) && ((e.name == "foreignObject") || (e.name == "desc") || (e.name == "title")):
+      #true
+  | (e.namespace == #'mathml) && (e.name == "annotation-xml"):
+      for any (a :: Attribute in e.attributes):
+        cond
+        | a.name == "encoding":
+            let v = a.value.foldcase()
+            (v == "text/html") || (v == "application/xhtml+xml")
+        | ~else: #false
+  | ~else: #false
+
+// Pop elements until current node is HTML namespace OR an integration point
+// (MathML text integration point or HTML integration point). Used for the
+// foreign-content "breakout" HTML start tags.
+fun pop_until_html_or_integration_point(p :~ Parser):
+  recur loop():
+    match p.stack
+    | []: #void
+    | [first :: Element, & _]:
+        cond
+        | first.namespace == #'html: #void
+        | is_mathml_text_integration_point(first): #void
+        | is_html_integration_point(first): #void
+        | ~else:
+            pop_open_element(p)
+            loop()
+
+// "Adjusted current node": the spec says, in fragment-parsing mode with
+// a single-element open stack (just the synthetic root), the adjusted
+// current node is the context element rather than the actual current.
+fun adjusted_current_node(p :~ Parser) :~ Element:
+  cond
+  | (p.stack.length() == 1) && p.fragment_context:
+      p.fragment_context :~ Element
+  | ~else:
+      current_node(p)
+
+// Should the next token go through the foreign-content rules instead of
+// the current insertion mode? Mirrors the dispatch condition in 13.2.6
+// "Tree construction": HTML rules apply at integration points for the
+// kinds of tokens those points "leak" through. The spec-listed conditions
+// are an OR, so we compute *all* the relevant predicates on the current
+// node and combine them per-token.
+fun should_use_foreign_content_rules(p :~ Parser, tok :: Token) :: Boolean:
+  cond
+  | p.stack == []: #false
+  | tok is_a Token.EOF: #false
+  | ~else:
+      let cur :~ Element = adjusted_current_node(p)
+      cond
+      | cur.namespace == #'html: #false
+      | ~else:
+          let cur_is_mathml_text = is_mathml_text_integration_point(cur)
+          let cur_is_annotation_xml = (cur.namespace == #'mathml) && (cur.name == "annotation-xml")
+          let cur_is_html_integ = is_html_integration_point(cur)
+          let html_rules_apply :: Boolean:
+            cond
+            | tok is_a Token.Character:
+                cur_is_mathml_text || cur_is_html_integ
+            | tok is_a Token.StartTag:
+                let st :~ Token.StartTag = tok
+                cond
+                | cur_is_mathml_text && !((st.name == "mglyph") || (st.name == "malignmark")): #true
+                | cur_is_annotation_xml && (st.name == "svg"): #true
+                | cur_is_html_integ: #true
+                | ~else: #false
+            | ~else: #false
+          !html_rules_apply
+
+// 13.2.6.5 Tree construction in foreign content.
+fun foreign_content_dispatch(p :~ Parser, tok :: Token):
+  match tok
+  | c :: Token.Character when c == Char"\0":
+      // Parse error: insert U+FFFD.
+      insert_character(p, Char.from_int(0xFFFD))
+      #'consumed
+  | c :: Token.Character when is_html_whitespace_char(c):
+      insert_character(p, c)
+      #'consumed
+  | c :: Token.Character:
+      insert_character(p, c)
+      p.frameset_ok := #false
+      #'consumed
+  | cm :: Token.Comment:
+      insert_comment_into(current_node(p), cm.data)
+      #'consumed
+  | _ :: Token.Doctype:
+      #'consumed   // parse error
+  | st :: Token.StartTag when st.name in FOREIGN_BREAKOUT_TAGS:
+      // Parse error: pop foreign elements, reprocess. If nothing actually
+      // pops (e.g. fragment with foreign context where the synthetic root
+      // is already HTML), dispatch via HTML rules directly to avoid an
+      // infinite loop.
+      let len_before = p.stack.length()
+      pop_until_html_or_integration_point(p)
+      cond
+      | p.stack.length() == len_before:
+          (p.insertion_mode :~ Function)(p, tok)
+      | ~else:
+          #'reprocess
+  | st :: Token.StartTag when (st.name == "font") && font_token_breaks_out(st.attributes):
+      let len_before = p.stack.length()
+      pop_until_html_or_integration_point(p)
+      cond
+      | p.stack.length() == len_before:
+          (p.insertion_mode :~ Function)(p, tok)
+      | ~else:
+          #'reprocess
+  | st :: Token.StartTag:
+      let cur :~ Element = adjusted_current_node(p)
+      let final_name:
+        cond
+        | cur.namespace == #'svg: adjust_svg_tag_name(st.name)
+        | ~else: st.name
+      let final_attrs = adjust_attributes(st.attributes, cur.namespace)
+      let e = Element(final_name, final_attrs)
+      e.namespace := cur.namespace
+      let (parent, before) = appropriate_insertion_target(p)
+      insert_node_at(parent, before, e)
+      push_open_element(p, e)
+      cond
+      | st.self_closing:
+          pop_open_element(p)
+          e.self_closing := #true
+      | ~else: #void
+      #'consumed
+  | et :: Token.EndTag when et.name == "script":
+      let cur :~ Element = current_node(p)
+      cond
+      | (cur.name == "script") && (cur.namespace == #'svg):
+          pop_open_element(p)
+      | ~else:
+          // Fall through to the generic end-tag handling.
+          generic_foreign_end_tag(p, et)
+      #'consumed
+  | et :: Token.EndTag:
+      generic_foreign_end_tag(p, et)
+  | _ :: Token.EOF:
+      #'consumed   // shouldn't actually reach here -- EOF dispatches normally
+
+// "Any other end tag" inside foreign content: walk the stack from the
+// top, ASCII-case-insensitive match. Pop until we find a match (popping
+// the matched element too). If we hit an HTML-namespace element first,
+// fall back to the current insertion mode.
+fun generic_foreign_end_tag(p :~ Parser, et :: Token.EndTag):
+  let target_lower = et.name.foldcase()
+  recur loop(i :: Int = 0):
+    cond
+    | i >= p.stack.length():
+        #'consumed   // not found, parse error, ignore
+    | ~else:
+        let node :~ Element = (p.stack)[i]
+        cond
+        | node.name.foldcase() == target_lower:
+            // Pop down to and including this node.
+            recur pop_through(j :: Int = 0):
+              cond
+              | j > i: #'consumed
+              | ~else:
+                  pop_open_element(p)
+                  pop_through(j + 1)
+        | node.namespace == #'html:
+            // Reached HTML element without matching: process via current
+            // insertion mode.
+            let act = (p.insertion_mode :~ Function)(p, et)
+            act
+        | ~else:
+            loop(i + 1)
+
+
+// ----------------------------------------------------------------------------
+// Quirks-mode detection (13.2.6.4.1 -- the "initial" insertion mode says
+// when a DOCTYPE puts the document in quirks or limited-quirks mode based
+// on its name, public id, and system id).
+
+// Public-id prefixes (compared case-insensitively, after the prefix)
+// that trigger quirks mode no matter the system id.
+def QUIRKS_PUBLIC_PREFIXES :: List = ["+//Silmaril//dtd html Pro v0r11 19970101//",
+                                      "-//AS//DTD HTML 3.0 asWedit + extensions//", "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//",
+                                      "-//IETF//DTD HTML 2.0 Level 1//", "-//IETF//DTD HTML 2.0 Level 2//", "-//IETF//DTD HTML 2.0 Strict Level 1//",
+                                      "-//IETF//DTD HTML 2.0 Strict Level 2//", "-//IETF//DTD HTML 2.0 Strict//", "-//IETF//DTD HTML 2.0//",
+                                      "-//IETF//DTD HTML 2.1E//", "-//IETF//DTD HTML 3.0//", "-//IETF//DTD HTML 3.2 Final//",
+                                      "-//IETF//DTD HTML 3.2//", "-//IETF//DTD HTML 3//", "-//IETF//DTD HTML Level 0//", "-//IETF//DTD HTML Level 1//",
+                                      "-//IETF//DTD HTML Level 2//", "-//IETF//DTD HTML Level 3//", "-//IETF//DTD HTML Strict Level 0//",
+                                      "-//IETF//DTD HTML Strict Level 1//", "-//IETF//DTD HTML Strict Level 2//", "-//IETF//DTD HTML Strict Level 3//",
+                                      "-//IETF//DTD HTML Strict//", "-//IETF//DTD HTML//", "-//Metrius//DTD Metrius Presentational//",
+                                      "-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//", "-//Microsoft//DTD Internet Explorer 2.0 HTML//",
+                                      "-//Microsoft//DTD Internet Explorer 2.0 Tables//", "-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//",
+                                      "-//Microsoft//DTD Internet Explorer 3.0 HTML//", "-//Microsoft//DTD Internet Explorer 3.0 Tables//",
+                                      "-//Netscape Comm. Corp.//DTD HTML//", "-//Netscape Comm. Corp.//DTD Strict HTML//",
+                                      "-//O'Reilly and Associates//DTD HTML 2.0//", "-//O'Reilly and Associates//DTD HTML Extended 1.0//",
+                                      "-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//", "-//SQ//DTD HTML 2.0 HoTMetaL + extensions//",
+                                      "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//",
+                                      "-//SoftQuad//DTD HoTMetaL PRO 4.0::19971010::extensions to HTML 4.0//", "-//Spyglass//DTD HTML 2.0 Extended//",
+                                      "-//Sun Microsystems Corp.//DTD HotJava HTML//", "-//Sun Microsystems Corp.//DTD HotJava Strict HTML//",
+                                      "-//W3C//DTD HTML 3 1995-03-24//", "-//W3C//DTD HTML 3.2 Draft//", "-//W3C//DTD HTML 3.2 Final//",
+                                      "-//W3C//DTD HTML 3.2//", "-//W3C//DTD HTML 3.2S Draft//", "-//W3C//DTD HTML 4.0 Frameset//",
+                                      "-//W3C//DTD HTML 4.0 Transitional//", "-//W3C//DTD HTML Experimental 19960712//",
+                                      "-//W3C//DTD HTML Experimental 970421//", "-//W3C//DTD W3 HTML//", "-//W3O//DTD W3 HTML 3.0//",
+                                      "-//WebTechs//DTD Mozilla HTML 2.0//", "-//WebTechs//DTD Mozilla HTML//"]
+
+// Public ids (compared case-insensitively for an exact match) that
+// trigger quirks mode no matter the system id.
+def QUIRKS_PUBLIC_IDS :: List = ["-//W3O//DTD W3 HTML Strict 3.0//EN//", "-/W3C/DTD HTML 4.0 Transitional/EN", "HTML"]
+
+// Public-id prefixes (case-insensitive) that trigger quirks ONLY if the
+// system id is missing.
+def QUIRKS_IF_NO_SYSTEM_PREFIXES :: List = ["-//W3C//DTD HTML 4.01 Frameset//", "-//W3C//DTD HTML 4.01 Transitional//"]
+
+// Public-id prefixes (case-insensitive) that trigger limited-quirks mode.
+def LIMITED_QUIRKS_PUBLIC_PREFIXES :: List = ["-//W3C//DTD XHTML 1.0 Frameset//", "-//W3C//DTD XHTML 1.0 Transitional//"]
+
+// Like LIMITED_QUIRKS_PUBLIC_PREFIXES but only when system id is present.
+def LIMITED_QUIRKS_PUBLIC_PREFIXES_WITH_SYSTEM :: List = ["-//W3C//DTD HTML 4.01 Frameset//", "-//W3C//DTD HTML 4.01 Transitional//"]
+
+fun starts_with_ci(s :: String, prefix :: String) :: Boolean:
+  cond
+  | s.length() < prefix.length(): #false
+  | ~else:
+      s.substring(0, prefix.length()).foldcase() == prefix.foldcase()
+
+fun any_prefix_matches(prefixes :: List, s :: String) :: Boolean:
+  for any (pfx :: String in prefixes):
+    starts_with_ci(s, pfx)
+
+fun doctype_triggers_quirks(name :: String, pub :: maybe(String), sys :: maybe(String), has_system :: Boolean) :: Boolean:
+  let pub_cf = pub?.foldcase()
+  let exact_quirks_pub:
+    for any (pid :: String in QUIRKS_PUBLIC_IDS):
+      pub_cf == pid.foldcase()
+  cond
+  | name.foldcase() != "html": #true
+  | sys?.foldcase() == "http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd": #true
+  | exact_quirks_pub: #true
+  | pub && any_prefix_matches(QUIRKS_PUBLIC_PREFIXES, pub): #true
+  | (!has_system) && pub && any_prefix_matches(QUIRKS_IF_NO_SYSTEM_PREFIXES, pub): #true
+  | ~else: #false
+
+fun doctype_triggers_limited_quirks(pub :: maybe(String)) :: Boolean:
+  pub && any_prefix_matches(LIMITED_QUIRKS_PUBLIC_PREFIXES, pub)
+
+
+// ----------------------------------------------------------------------------
+// Insertion modes
+
+// 13.2.6.4.1 The "initial" insertion mode
+mode initial_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(p.document, cm.data)
+    #'consumed
+| dt :: Token.Doctype:
+    let name = dt.name || ""
+    let pub = dt.public_id
+    let sys = dt.system_id
+    let d = DocumentType(~name: name, ~public: pub, ~system: sys)
+    p.document.children := List.add(p.document.children, d)
+    p.document.doctype := d
+    cond
+    | dt.force_quirks || doctype_triggers_quirks(name, pub, sys, !(!sys)):
+        p.document.quirks_mode := #'quirks
+    | doctype_triggers_limited_quirks(pub):
+        p.document.quirks_mode := #'limited_quirks
+    | ~else: #void
+    p.insertion_mode := before_html_mode
+    #'consumed
+| _:
+    // No DOCTYPE: switch to quirks and reprocess in before-html.
+    p.document.quirks_mode := #'quirks
+    p.insertion_mode := before_html_mode
+    #'reprocess
+
+// 13.2.6.4.2 The "before html" insertion mode
+mode before_html_mode(p, tok)
+| _ :: Token.Doctype:
+    #'consumed   // parse error, ignore
+| cm :: Token.Comment:
+    insert_comment_into(p.document, cm.data)
+    #'consumed
+| c :: Token.Character when is_html_whitespace_char(c):
+    #'consumed
+| st :: Token.StartTag when st.name == "html":
+    let e = Element("html", st.attributes)
+    append_child(p.document, e)
+    push_open_element(p, e)
+    p.insertion_mode := before_head_mode
+    #'consumed
+| et :: Token.EndTag when (et.name == "head") || (et.name == "body") || (et.name == "html") || (et.name == "br"):
+    let e = Element("html", [])
+    append_child(p.document, e)
+    push_open_element(p, e)
+    p.insertion_mode := before_head_mode
+    #'reprocess
+| _ :: Token.EndTag:
+    #'consumed   // parse error, ignore
+| _:
+    let e = Element("html", [])
+    append_child(p.document, e)
+    push_open_element(p, e)
+    p.insertion_mode := before_head_mode
+    #'reprocess
+
+// 13.2.6.4.3 The "before head" insertion mode
+mode before_head_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node_or_doc(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "head":
+    let head = insert_html_element(p, "head", st.attributes)
+    p.head_element := head
+    p.insertion_mode := in_head_mode
+    #'consumed
+| et :: Token.EndTag when (et.name == "head") || (et.name == "body") || (et.name == "html") || (et.name == "br"):
+    let head = insert_html_element(p, "head", [])
+    p.head_element := head
+    p.insertion_mode := in_head_mode
+    #'reprocess
+| _ :: Token.EndTag:
+    #'consumed   // parse error
+| _:
+    let head = insert_html_element(p, "head", [])
+    p.head_element := head
+    p.insertion_mode := in_head_mode
+    #'reprocess
+
+// 13.2.6.4.4 The "in head" insertion mode
+mode in_head_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node_or_doc(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when (st.name == "base") || (st.name == "basefont") || (st.name == "bgsound") || (st.name == "link") || (st.name == "meta"):
+    let e = insert_html_element(p, st.name, st.attributes)
+    e.self_closing := st.self_closing
+    pop_open_element(p)
+    #'consumed
+| st :: Token.StartTag when st.name == "title":
+    insert_html_element(p, "title", st.attributes)
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(rcdata_state)
+    #'consumed
+| st :: Token.StartTag when (st.name == "noframes") || (st.name == "style"):
+    insert_html_element(p, st.name, st.attributes)
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(rawtext_state)
+    #'consumed
+| st :: Token.StartTag when st.name == "noscript":
+    // We model "scripting flag disabled", which sends us into the dedicated
+    // in_head_noscript mode. (If scripting were enabled, the spec would use
+    // the rawtext element algorithm here instead, parsing the body as
+    // opaque text.)
+    insert_html_element(p, "noscript", st.attributes)
+    p.insertion_mode := in_head_noscript_mode
+    #'consumed
+| st :: Token.StartTag when st.name == "script":
+    insert_html_element(p, "script", st.attributes)
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(script_data_state)
+    #'consumed
+| st :: Token.StartTag when st.name == "template":
+    let e = insert_html_element(p, "template", st.attributes)
+    e.content := TemplateContents()
+    let tc :~ TemplateContents = e.content
+    tc.parent := e
+    add_active_formatting_marker(p)
+    p.frameset_ok := #false
+    p.insertion_mode := in_template_mode
+    p.template_modes := List.cons(in_template_mode, p.template_modes)
+    #'consumed
+| et :: Token.EndTag when et.name == "template":
+    cond
+    | !has_template_in_stack(p):
+        #'consumed   // parse error, ignore
+    | ~else:
+        // Generate ALL implied end tags thoroughly (including the template
+        // exception: spec says "thoroughly" -- no exceptions).
+        generate_implied_end_tags(p, "")
+        // (Parse error if current node isn't template; we don't warn.)
+        pop_until_name(p, "template")
+        clear_active_formatting_to_marker(p)
+        p.template_modes := pop_or_empty(p.template_modes)
+        reset_insertion_mode_appropriately(p)
+        #'consumed
+| et :: Token.EndTag when et.name == "head":
+    pop_open_element(p)
+    p.insertion_mode := after_head_mode
+    #'consumed
+| et :: Token.EndTag when (et.name == "body") || (et.name == "html") || (et.name == "br"):
+    pop_open_element(p)
+    p.insertion_mode := after_head_mode
+    #'reprocess
+| st :: Token.StartTag when st.name == "head":
+    #'consumed   // parse error, ignore
+| _ :: Token.EndTag:
+    #'consumed   // parse error
+| _:
+    pop_open_element(p)
+    p.insertion_mode := after_head_mode
+    #'reprocess
+
+// 13.2.6.4.5 The "in head noscript" insertion mode
+//
+// Only entered when the scripting flag is disabled (which is what we model).
+// The mode allows a small set of elements before kicking back to in_head.
+mode in_head_noscript_mode(p, tok)
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| et :: Token.EndTag when et.name == "noscript":
+    pop_open_element(p)
+    p.insertion_mode := in_head_mode
+    #'consumed
+| c :: Token.Character when is_html_whitespace_char(c):
+    in_head_mode(p, tok)
+| _ :: Token.Comment:
+    in_head_mode(p, tok)
+| st :: Token.StartTag when (st.name == "basefont") || (st.name == "bgsound") || (st.name == "link") || (st.name == "meta")
+    || (st.name == "noframes") || (st.name == "style"):
+    in_head_mode(p, tok)
+| et :: Token.EndTag when et.name == "br":
+    // Parse error: pop noscript, return to in_head, reprocess.
+    pop_open_element(p)
+    p.insertion_mode := in_head_mode
+    #'reprocess
+| st :: Token.StartTag when (st.name == "head") || (st.name == "noscript"):
+    #'consumed   // parse error, ignore
+| _ :: Token.EndTag:
+    #'consumed   // parse error, ignore
+| _:
+    // Anything else: parse error. Pop noscript, return to in_head, reprocess.
+    pop_open_element(p)
+    p.insertion_mode := in_head_mode
+    #'reprocess
+
+// 13.2.6.4.6 The "after head" insertion mode
+mode after_head_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node_or_doc(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "body":
+    insert_html_element(p, "body", st.attributes)
+    p.frameset_ok := #false
+    p.insertion_mode := in_body_mode
+    #'consumed
+| st :: Token.StartTag when st.name == "frameset":
+    insert_html_element(p, "frameset", st.attributes)
+    p.insertion_mode := in_frameset_mode
+    #'consumed
+| st :: Token.StartTag when (st.name == "base") || (st.name == "basefont") || (st.name == "bgsound") || (st.name == "link")
+    || (st.name == "meta") || (st.name == "noframes") || (st.name == "script") || (st.name == "style") || (st.name == "template") || (st.name == "title"):
+    // Parse error: act as if head element is back on the stack.
+    push_open_element(p, p.head_element :~ Element)
+    let act = in_head_mode(p, tok)
+    // Remove the head element from the stack again.
+    p.stack := list_remove_all(p.stack, p.head_element :~ Element)
+    act
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| st :: Token.StartTag when st.name == "head":
+    #'consumed   // parse error
+| et :: Token.EndTag when (et.name == "body") || (et.name == "html") || (et.name == "br"):
+    insert_html_element(p, "body", [])
+    p.insertion_mode := in_body_mode
+    #'reprocess
+| _ :: Token.EndTag:
+    #'consumed   // parse error
+| _:
+    insert_html_element(p, "body", [])
+    p.insertion_mode := in_body_mode
+    #'reprocess
+
+// 13.2.6.4.7 The "in body" insertion mode  (the big one)
+mode in_body_mode(p, tok)
+| c :: Token.Character when c == Char"\0":
+    #'consumed   // parse error, drop
+| c :: Token.Character when is_html_whitespace_char(c):
+    reconstruct_active_formatting(p)
+    insert_character(p, c)
+    #'consumed
+| c :: Token.Character:
+    reconstruct_active_formatting(p)
+    insert_character(p, c)
+    p.frameset_ok := #false
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment(p, cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    // Parse error. If there's a template, ignore. Otherwise, merge any
+    // attributes that aren't already on the existing html element (the
+    // bottom of the open-elements stack).
+    cond
+    | has_template_in_stack(p):
+        #'consumed
+    | ~else:
+        cond
+        | p.stack.length() > 0:
+            let html_elem :~ Element = p.stack[p.stack.length() - 1]
+            for (a :: Attribute in st.attributes):
+              let already:
+                for any (existing :: Attribute in html_elem.attributes):
+                  existing.name == a.name
+              cond
+              | already: #void
+              | ~else:
+                  html_elem.attributes := List.add(html_elem.attributes, a)
+        | ~else: #void
+        #'consumed
+| st :: Token.StartTag when st.name == "body":
+    // Parse error. If the open-elements stack has only one element, or if
+    // the second element is not body, or if there's a template, ignore.
+    // Otherwise, set frameset_ok=false and merge attributes onto the body.
+    let stk :: List = p.stack
+    cond
+    | stk.length() < 2:
+        #'consumed
+    | has_template_in_stack(p):
+        #'consumed
+    | ~else:
+        let second :~ Element = stk[stk.length() - 2]
+        cond
+        | (second.namespace == #'html) && (second.name == "body"):
+            p.frameset_ok := #false
+            for (a :: Attribute in st.attributes):
+              let already:
+                for any (existing :: Attribute in second.attributes):
+                  existing.name == a.name
+              cond
+              | already: #void
+              | ~else:
+                  second.attributes := List.add(second.attributes, a)
+        | ~else: #void
+        #'consumed
+| st :: Token.StartTag when st.name == "frameset":
+    // Parse error.
+    let stk :: List = p.stack
+    cond
+    | stk.length() < 2:
+        #'consumed   // fragment case: ignore
+    | ~else:
+        let second :~ Element = stk[stk.length() - 2]
+        cond
+        | (second.name != "body") || !p.frameset_ok:
+            #'consumed   // ignore
+        | ~else:
+            // Remove body from its parent.
+            let body_parent = second.parent
+            cond
+            | body_parent: remove_child(body_parent, second)
+            | ~else: #void
+            // Pop everything from current down to (but not including) html.
+            recur strip():
+              let s :: List = p.stack
+              cond
+              | s.length() <= 1: #void
+              | ~else:
+                  pop_open_element(p)
+                  strip()
+            insert_html_element(p, "frameset", st.attributes)
+            p.insertion_mode := in_frameset_mode
+            #'consumed
+| st :: Token.StartTag when st.name in CLOSES_P_ELEMENTS:
+    if has_element_in_button_scope(p, "p")
+    | close_p_element(p)
+    | #void
+    let e = insert_html_element(p, st.name, st.attributes)
+    cond
+    | st.name in VOID_ELEMENTS:
+        pop_open_element(p)
+        e.self_closing := st.self_closing
+        p.frameset_ok := #false   // hr et al.
+    | (st.name == "pre") || (st.name == "listing"):
+        p.frameset_ok := #false
+        p.skip_next_newline := #true
+    | ~else: #void
+    #'consumed
+| st :: Token.StartTag when st.name == "form":
+    cond
+    | p.form_element && !has_template_in_stack(p):
+        #'consumed   // parse error, ignore
+    | ~else:
+        if has_element_in_button_scope(p, "p")
+        | close_p_element(p)
+        | #void
+        let e = insert_html_element(p, "form", st.attributes)
+        cond
+        | !has_template_in_stack(p): p.form_element := e
+        | ~else: #void
+        #'consumed
+| st :: Token.StartTag when st.name == "button":
+    cond
+    | has_element_in_scope(p, "button"):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, "button")
+    | ~else: #void
+    reconstruct_active_formatting(p)
+    insert_html_element(p, "button", st.attributes)
+    p.frameset_ok := #false
+    #'consumed
+| st :: Token.StartTag when st.name in HEADING_NAMES:
+    if has_element_in_button_scope(p, "p")
+    | close_p_element(p)
+    | #void
+    // If current node is itself a heading, pop it (parse error).
+    let cur :: Element = current_node(p)
+    cond
+    | (cur.namespace == #'html) && cur.name in HEADING_NAMES:
+        pop_open_element(p)
+    | ~else: #void
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| st :: Token.StartTag when (st.name == "li") || (st.name == "dt") || (st.name == "dd"):
+    p.frameset_ok := #false
+    // Walk the stack: if we hit a matching item, generate-implied-except
+    // (matching) and pop until matching.
+    let same_targets:
+      cond
+      | st.name == "li": ["li"]
+      | ~else: ["dt", "dd"]
+    recur scan(s :: List = p.stack):
+      match s
+      | []: #void
+      | [e :: Element, & rest]:
+          cond
+          | (e.namespace == #'html) && e.name in same_targets:
+              generate_implied_end_tags(p, e.name)
+              pop_until_name(p, e.name)
+          | (e.namespace == #'html) && e.name in SPECIAL_ELEMENTS && !((e.name == "address") || (e.name == "div") || (e.name == "p")):
+              #void
+          | ~else: scan(rest)
+    if has_element_in_button_scope(p, "p")
+    | close_p_element(p)
+    | #void
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "frame") || (st.name == "tbody")
+    || (st.name == "td") || (st.name == "tfoot") || (st.name == "th") || (st.name == "thead") || (st.name == "tr"):
+    #'consumed   // parse error, ignore
+| st :: Token.StartTag when st.name == "image":
+    // Parse error: spec says rename to "img" and reprocess.
+    let new_st = Token.StartTag("img", st.self_closing, st.attributes)
+    in_body_mode(p, new_st)
+| st :: Token.StartTag when st.name in VOID_ELEMENTS:
+    reconstruct_active_formatting(p)
+    let e = insert_html_element(p, st.name, st.attributes)
+    pop_open_element(p)
+    e.self_closing := st.self_closing
+    // param / source / track / col are void but DO NOT set frameset_ok.
+    // Likewise, <input type="hidden"> doesn't set it.
+    cond
+    | (st.name == "param") || (st.name == "source") || (st.name == "track") || (st.name == "col"):
+        #void
+    | (st.name == "input") && input_is_hidden(st.attributes):
+        #void
+    | ~else:
+        p.frameset_ok := #false
+    #'consumed
+| st :: Token.StartTag when st.name in RCDATA_ELEMENTS:
+    insert_html_element(p, st.name, st.attributes)
+    cond
+    | st.name == "textarea":
+        p.skip_next_newline := #true
+    | ~else: #void
+    p.frameset_ok := #false
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(rcdata_state)
+    #'consumed
+| st :: Token.StartTag when st.name in RAWTEXT_ELEMENTS:
+    insert_html_element(p, st.name, st.attributes)
+    p.frameset_ok := #false
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(rawtext_state)
+    #'consumed
+| st :: Token.StartTag when st.name == "script":
+    insert_html_element(p, st.name, st.attributes)
+    p.frameset_ok := #false
+    p.original_insertion_mode := p.insertion_mode
+    p.insertion_mode := text_mode
+    let s :~ TokenStream = p.stream
+    s.set_state(script_data_state)
+    #'consumed
+| st :: Token.StartTag when st.name == "plaintext":
+    if has_element_in_button_scope(p, "p")
+    | close_p_element(p)
+    | #void
+    insert_html_element(p, "plaintext", st.attributes)
+    let s :~ TokenStream = p.stream
+    s.set_state(plaintext_state)
+    #'consumed
+| st :: Token.StartTag when st.name == "head":
+    #'consumed   // parse error
+| st :: Token.StartTag when (st.name == "base") || (st.name == "basefont") || (st.name == "bgsound") || (st.name == "link") || (st.name == "meta")
+    || (st.name == "noframes") || (st.name == "script") || (st.name == "style") || (st.name == "template") || (st.name == "title"):
+    in_head_mode(p, tok)
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| st :: Token.StartTag when st.name == "a":
+    // If there's already an <a> in active formatting (after last marker),
+    // run adoption agency for "a" and remove that <a> from active list and
+    // stack.
+    let existing = find_formatting_element(p, "a")
+    cond
+    | existing:
+        adoption_agency(p, "a")
+        let e :~ Element = existing
+        p.active_formatting := list_remove_all(p.active_formatting, e)
+        remove_from_stack(p, e)
+    | ~else: #void
+    reconstruct_active_formatting(p)
+    let new_a = insert_html_element(p, "a", st.attributes)
+    push_active_formatting(p, new_a)
+    #'consumed
+| st :: Token.StartTag when (st.name == "b") || (st.name == "big") || (st.name == "code") || (st.name == "em") || (st.name == "font")
+    || (st.name == "i") || (st.name == "s") || (st.name == "small") || (st.name == "strike") || (st.name == "strong") || (st.name == "tt") || (st.name == "u"):
+    reconstruct_active_formatting(p)
+    let e = insert_html_element(p, st.name, st.attributes)
+    push_active_formatting(p, e)
+    #'consumed
+| st :: Token.StartTag when st.name == "nobr":
+    reconstruct_active_formatting(p)
+    cond
+    | has_element_in_scope(p, "nobr"):
+        adoption_agency(p, "nobr")
+        reconstruct_active_formatting(p)
+    | ~else: #void
+    let e = insert_html_element(p, "nobr", st.attributes)
+    push_active_formatting(p, e)
+    #'consumed
+| st :: Token.StartTag when (st.name == "applet") || (st.name == "marquee") || (st.name == "object"):
+    reconstruct_active_formatting(p)
+    insert_html_element(p, st.name, st.attributes)
+    add_active_formatting_marker(p)
+    p.frameset_ok := #false
+    #'consumed
+| st :: Token.StartTag when (st.name == "rb") || (st.name == "rtc"):
+    cond
+    | has_element_in_scope(p, "ruby"):
+        generate_implied_end_tags(p, "")
+    | ~else: #void
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| st :: Token.StartTag when (st.name == "rt") || (st.name == "rp"):
+    cond
+    | has_element_in_scope(p, "ruby"):
+        generate_implied_end_tags(p, "rtc")
+    | ~else: #void
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| st :: Token.StartTag when st.name == "table":
+    if (p.document.quirks_mode != #'quirks) && has_element_in_button_scope(p, "p")
+    | close_p_element(p)
+    | #void
+    insert_html_element(p, "table", st.attributes)
+    p.frameset_ok := #false
+    p.insertion_mode := in_table_mode
+    #'consumed
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "frame") || (st.name == "tbody")
+    || (st.name == "td") || (st.name == "tfoot") || (st.name == "th") || (st.name == "thead") || (st.name == "tr"):
+    #'consumed   // parse error, ignore
+| st :: Token.StartTag when st.name == "select":
+    reconstruct_active_formatting(p)
+    insert_html_element(p, "select", st.attributes)
+    p.frameset_ok := #false
+    let m = p.insertion_mode
+    cond
+    | (m === in_table_mode) || (m === in_caption_mode) || (m === in_table_body_mode) || (m === in_row_mode) || (m === in_cell_mode):
+        p.insertion_mode := in_select_in_table_mode
+    | ~else:
+        p.insertion_mode := in_select_mode
+    #'consumed
+| st :: Token.StartTag when (st.name == "optgroup") || (st.name == "option"):
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "option":
+        pop_open_element(p)
+    | ~else: #void
+    reconstruct_active_formatting(p)
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| st :: Token.StartTag when st.name == "math":
+    reconstruct_active_formatting(p)
+    let attrs = adjust_attributes(st.attributes, #'mathml)
+    let e = Element("math", attrs)
+    e.namespace := #'mathml
+    let (parent, before) = appropriate_insertion_target(p)
+    insert_node_at(parent, before, e)
+    push_open_element(p, e)
+    cond
+    | st.self_closing:
+        pop_open_element(p)
+        e.self_closing := #true
+    | ~else: #void
+    #'consumed
+| st :: Token.StartTag when st.name == "svg":
+    reconstruct_active_formatting(p)
+    let attrs = adjust_attributes(st.attributes, #'svg)
+    let e = Element("svg", attrs)
+    e.namespace := #'svg
+    let (parent, before) = appropriate_insertion_target(p)
+    insert_node_at(parent, before, e)
+    push_open_element(p, e)
+    cond
+    | st.self_closing:
+        pop_open_element(p)
+        e.self_closing := #true
+    | ~else: #void
+    #'consumed
+| st :: Token.StartTag:
+    // "Any other start tag": reconstruct active formatting first, then
+    // insert.  (Spec: this default branch does NOT clear frameset_ok.)
+    reconstruct_active_formatting(p)
+    insert_html_element(p, st.name, st.attributes)
+    #'consumed
+| et :: Token.EndTag when et.name == "body":
+    cond
+    | has_element_in_scope(p, "body"):
+        p.insertion_mode := after_body_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when et.name == "html":
+    cond
+    | has_element_in_scope(p, "body"):
+        p.insertion_mode := after_body_mode
+        #'reprocess
+    | ~else:
+        #'consumed
+| et :: Token.EndTag when et.name == "p":
+    cond
+    | has_element_in_button_scope(p, "p"):
+        close_p_element(p)
+    | ~else:
+        // Spec says: insert an html p element, then close it.
+        insert_html_element(p, "p", [])
+        close_p_element(p)
+    #'consumed
+| et :: Token.EndTag when et.name == "br":
+    // "</br>" is treated as "<br>".
+    let e = insert_html_element(p, "br", [])
+    pop_open_element(p)
+    p.frameset_ok := #false
+    #'consumed
+| et :: Token.EndTag when (et.name == "address") || (et.name == "article") || (et.name == "aside") || (et.name == "blockquote") || (et.name == "button")
+    || (et.name == "center") || (et.name == "details") || (et.name == "dialog") || (et.name == "dir") || (et.name == "div") || (et.name == "dl")
+    || (et.name == "fieldset") || (et.name == "figcaption") || (et.name == "figure") || (et.name == "footer") || (et.name == "header")
+    || (et.name == "hgroup") || (et.name == "listing") || (et.name == "main") || (et.name == "menu") || (et.name == "nav") || (et.name == "ol")
+    || (et.name == "pre") || (et.name == "search") || (et.name == "section") || (et.name == "summary") || (et.name == "ul"):
+    cond
+    | has_element_in_scope(p, et.name):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, et.name)
+    | ~else: #void   // parse error, ignore
+    #'consumed
+| et :: Token.EndTag when et.name == "form":
+    cond
+    | has_template_in_stack(p):
+        // With a template on the stack, the form element pointer isn't
+        // consulted; just check scope and pop until form.
+        cond
+        | has_element_in_scope(p, "form"):
+            generate_implied_end_tags(p, "")
+            pop_until_name(p, "form")
+        | ~else: #void   // parse error, ignore
+    | p.form_element && has_element_in_scope(p, "form"):
+        let f :~ Element = p.form_element
+        p.form_element := #false
+        generate_implied_end_tags(p, "")
+        remove_from_stack(p, f)
+    | ~else: #void   // parse error, ignore
+    #'consumed
+| et :: Token.EndTag when (et.name == "h1") || (et.name == "h2") || (et.name == "h3") || (et.name == "h4") || (et.name == "h5") || (et.name == "h6"):
+    cond
+    | has_element_in_scope(p, "h1") || has_element_in_scope(p, "h2") || has_element_in_scope(p, "h3") || has_element_in_scope(p, "h4")
+        || has_element_in_scope(p, "h5") || has_element_in_scope(p, "h6"):
+        generate_implied_end_tags(p, "")
+        // Pop until any heading is popped.
+        recur loop():
+          cond
+          | p.stack == []: #void
+          | ~else:
+              let popped = pop_open_element(p)
+              cond
+              | (popped.namespace == #'html) && ((popped.name == "h1") || (popped.name == "h2") || (popped.name == "h3") || (popped.name == "h4")
+                                                   || (popped.name == "h5") || (popped.name == "h6")): #void
+              | ~else: loop()
+    | ~else: #void
+    #'consumed
+| et :: Token.EndTag when (et.name == "li"):
+    cond
+    | has_element_in_list_item_scope(p, "li"):
+        generate_implied_end_tags(p, "li")
+        pop_until_name(p, "li")
+    | ~else: #void
+    #'consumed
+| et :: Token.EndTag when (et.name == "dd") || (et.name == "dt"):
+    cond
+    | has_element_in_scope(p, et.name):
+        generate_implied_end_tags(p, et.name)
+        pop_until_name(p, et.name)
+    | ~else: #void
+    #'consumed
+| et :: Token.EndTag when et.name in FORMATTING_ELEMENTS:
+    // Adoption agency. If it returns #false, fall back to "any other end tag".
+    let ok = adoption_agency(p, et.name)
+    cond
+    | ok: #'consumed
+    | ~else:
+        // Fall through to "any other end tag" treatment.
+        recur scan(s :: List = p.stack):
+          match s
+          | []: #void
+          | [e :: Element, & rest]:
+              cond
+              | (e.namespace == #'html) && (e.name == et.name):
+                  generate_implied_end_tags(p, et.name)
+                  pop_until_name(p, et.name)
+              | (e.namespace == #'html) && e.name in SPECIAL_ELEMENTS:
+                  #void
+              | ~else: scan(rest)
+        #'consumed
+| et :: Token.EndTag when (et.name == "applet") || (et.name == "marquee") || (et.name == "object"):
+    cond
+    | has_element_in_scope(p, et.name):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, et.name)
+        clear_active_formatting_to_marker(p)
+    | ~else: #void
+    #'consumed
+| et :: Token.EndTag:
+    // "Any other end tag": walk stack, popping until match (HTML namespace
+    // only). If we encounter an HTML "special" element with a different
+    // name first, this is a parse error; the spec says ignore the token.
+    recur scan(s :: List = p.stack):
+      match s
+      | []: #void   // no match, ignore
+      | [e :: Element, & rest]:
+          cond
+          | (e.namespace == #'html) && (e.name == et.name):
+              generate_implied_end_tags(p, et.name)
+              pop_until_name(p, et.name)
+          | (e.namespace == #'html) && e.name in SPECIAL_ELEMENTS:
+              #void   // parse error, ignore token
+          | ~else: scan(rest)
+    #'consumed
+| _ :: Token.EOF:
+    // If there's a template on the open-elements stack, defer to in_template.
+    // Otherwise (the normal case), parse-error if the stack has unexpected
+    // elements, but we don't enforce that and just stop.
+    cond
+    | p.template_modes != []:
+        in_template_mode(p, tok)
+    | ~else:
+        #'consumed
+
+// 13.2.6.4.8 The "text" insertion mode (RCDATA / RAWTEXT / script-data context)
+mode text_mode(p, tok)
+| c :: Token.Character:
+    insert_character(p, c)
+    #'consumed
+| _ :: Token.EOF:
+    // Parse error. Pop the element and reprocess in original mode.
+    pop_open_element(p)
+    p.insertion_mode := (p.original_insertion_mode :~ Function)
+    #'reprocess
+| _ :: Token.EndTag:
+    pop_open_element(p)
+    p.insertion_mode := (p.original_insertion_mode :~ Function)
+    #'consumed
+| _:
+    // StartTag, Comment, Doctype shouldn't really occur here under
+    // RAWTEXT/RCDATA/script-data, but if they do, just consume.
+    #'consumed
+
+// 13.2.6.4.9 The "in table" insertion mode
+mode in_table_mode(p, tok)
+| _ :: Token.Character:
+    let cur :: Element = current_node(p)
+    cond
+    | (cur.name == "table") || (cur.name == "tbody") || (cur.name == "tfoot") || (cur.name == "thead") || (cur.name == "tr"):
+        p.pending_table_chars := ""
+        p.pending_table_chars_has_nonws := #false
+        p.original_insertion_mode := in_table_mode
+        p.insertion_mode := in_table_text_mode
+        #'reprocess
+    | ~else:
+        // "Anything else" branch -- fall through to the default below.
+        p.foster_parenting := #true
+        let act = in_body_mode(p, tok)
+        p.foster_parenting := #false
+        act
+| cm :: Token.Comment:
+    insert_comment_into(current_node(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "caption":
+    clear_stack_to_table_context(p)
+    add_active_formatting_marker(p)
+    insert_html_element(p, "caption", st.attributes)
+    p.insertion_mode := in_caption_mode
+    #'consumed
+| st :: Token.StartTag when st.name == "colgroup":
+    clear_stack_to_table_context(p)
+    insert_html_element(p, "colgroup", st.attributes)
+    p.insertion_mode := in_column_group_mode
+    #'consumed
+| st :: Token.StartTag when st.name == "col":
+    clear_stack_to_table_context(p)
+    insert_html_element(p, "colgroup", [])
+    p.insertion_mode := in_column_group_mode
+    #'reprocess
+| st :: Token.StartTag when (st.name == "tbody") || (st.name == "tfoot") || (st.name == "thead"):
+    clear_stack_to_table_context(p)
+    insert_html_element(p, st.name, st.attributes)
+    p.insertion_mode := in_table_body_mode
+    #'consumed
+| st :: Token.StartTag when (st.name == "td") || (st.name == "th") || (st.name == "tr"):
+    clear_stack_to_table_context(p)
+    insert_html_element(p, "tbody", [])
+    p.insertion_mode := in_table_body_mode
+    #'reprocess
+| st :: Token.StartTag when st.name == "table":
+    // Parse error: act as if </table> was seen, then reprocess.
+    cond
+    | has_element_in_table_scope(p, "table"):
+        pop_until_name(p, "table")
+        reset_insertion_mode_appropriately(p)
+        #'reprocess
+    | ~else:
+        #'consumed
+| et :: Token.EndTag when et.name == "table":
+    cond
+    | has_element_in_table_scope(p, "table"):
+        pop_until_name(p, "table")
+        reset_insertion_mode_appropriately(p)
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when (et.name == "body") || (et.name == "caption") || (et.name == "col") || (et.name == "colgroup") || (et.name == "html")
+    || (et.name == "tbody") || (et.name == "td") || (et.name == "tfoot") || (et.name == "th") || (et.name == "thead") || (et.name == "tr"):
+    #'consumed   // parse error, ignore
+| st :: Token.StartTag when (st.name == "style") || (st.name == "script") || (st.name == "template"):
+    in_head_mode(p, tok)
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| st :: Token.StartTag when (st.name == "input") && input_is_hidden(st.attributes):
+    let e = insert_html_element(p, "input", st.attributes)
+    e.self_closing := st.self_closing
+    pop_open_element(p)
+    #'consumed
+| st :: Token.StartTag when st.name == "form":
+    cond
+    | p.form_element:
+        #'consumed   // parse error
+    | ~else:
+        let e = insert_html_element(p, "form", st.attributes)
+        p.form_element := e
+        pop_open_element(p)
+        #'consumed
+| _ :: Token.EOF:
+    in_body_mode(p, tok)
+| _:
+    // "Anything else": parse error, foster-parent through in_body.
+    p.foster_parenting := #true
+    let act = in_body_mode(p, tok)
+    p.foster_parenting := #false
+    act
+
+// 13.2.6.4.10 The "in table text" insertion mode
+mode in_table_text_mode(p, tok)
+| c :: Token.Character when c == Char"\0":
+    #'consumed   // parse error, drop NUL
+| c :: Token.Character:
+    p.pending_table_chars := p.pending_table_chars ++ to_string(c)
+    if !is_html_whitespace_char(c)
+    | p.pending_table_chars_has_nonws := #true
+    | #void
+    #'consumed
+| _:
+    // Flush pending chars, then reprocess token in original mode.
+    let buf :: String = p.pending_table_chars
+    cond
+    | p.pending_table_chars_has_nonws:
+        // Foster-parent each char as if processed in in-body. Going via
+        // in_body_mode (rather than calling insert_character directly) is
+        // important so that reconstruct_active_formatting fires for the
+        // first non-whitespace character -- which is what creates fresh
+        // formatting-element clones outside the table.
+        p.foster_parenting := #true
+        for (c in buf):
+          in_body_mode(p, Token.Character(c))
+        p.foster_parenting := #false
+    | ~else:
+        // All whitespace: insert normally (current node is table-y, so the
+        // text becomes a child of that element -- spec-permitted).
+        for (c in buf):
+          insert_character(p, c)
+    p.pending_table_chars := ""
+    p.pending_table_chars_has_nonws := #false
+    p.insertion_mode := (p.original_insertion_mode :~ Function)
+    #'reprocess
+
+// 13.2.6.4.11 The "in caption" insertion mode
+mode in_caption_mode(p, tok)
+| et :: Token.EndTag when et.name == "caption":
+    cond
+    | has_element_in_table_scope(p, "caption"):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, "caption")
+        clear_active_formatting_to_marker(p)
+        p.insertion_mode := in_table_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "tbody")
+    || (st.name == "td") || (st.name == "tfoot") || (st.name == "th") || (st.name == "thead") || (st.name == "tr"):
+    cond
+    | has_element_in_table_scope(p, "caption"):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, "caption")
+        clear_active_formatting_to_marker(p)
+        p.insertion_mode := in_table_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when et.name == "table":
+    cond
+    | has_element_in_table_scope(p, "caption"):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, "caption")
+        clear_active_formatting_to_marker(p)
+        p.insertion_mode := in_table_mode
+        #'reprocess
+    | ~else:
+        #'consumed
+| et :: Token.EndTag when (et.name == "body") || (et.name == "col") || (et.name == "colgroup") || (et.name == "html") || (et.name == "tbody")
+    || (et.name == "td") || (et.name == "tfoot") || (et.name == "th") || (et.name == "thead") || (et.name == "tr"):
+    #'consumed   // parse error, ignore
+| _:
+    in_body_mode(p, tok)
+
+// 13.2.6.4.12 The "in column group" insertion mode
+mode in_column_group_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "col":
+    let e = insert_html_element(p, "col", st.attributes)
+    e.self_closing := st.self_closing
+    pop_open_element(p)
+    #'consumed
+| et :: Token.EndTag when et.name == "colgroup":
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "colgroup":
+        pop_open_element(p)
+        p.insertion_mode := in_table_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when et.name == "col":
+    #'consumed   // parse error, ignore
+| st :: Token.StartTag when (st.name == "template") || (st.name == "style") || (st.name == "script"):
+    in_head_mode(p, tok)
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| _ :: Token.EOF:
+    in_body_mode(p, tok)
+| _:
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "colgroup":
+        pop_open_element(p)
+        p.insertion_mode := in_table_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+
+// 13.2.6.4.13 The "in table body" insertion mode
+mode in_table_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "tr":
+    clear_stack_to_table_body_context(p)
+    insert_html_element(p, "tr", st.attributes)
+    p.insertion_mode := in_row_mode
+    #'consumed
+| st :: Token.StartTag when (st.name == "th") || (st.name == "td"):
+    // Parse error: insert implicit tr, then reprocess.
+    clear_stack_to_table_body_context(p)
+    insert_html_element(p, "tr", [])
+    p.insertion_mode := in_row_mode
+    #'reprocess
+| et :: Token.EndTag when (et.name == "tbody") || (et.name == "tfoot") || (et.name == "thead"):
+    cond
+    | has_element_in_table_scope(p, et.name):
+        clear_stack_to_table_body_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "tbody")
+    || (st.name == "tfoot") || (st.name == "thead"):
+    cond
+    | has_element_in_table_scope(p, "tbody") || has_element_in_table_scope(p, "thead") || has_element_in_table_scope(p, "tfoot"):
+        clear_stack_to_table_body_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when et.name == "table":
+    cond
+    | has_element_in_table_scope(p, "tbody") || has_element_in_table_scope(p, "thead") || has_element_in_table_scope(p, "tfoot"):
+        clear_stack_to_table_body_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when (et.name == "body") || (et.name == "caption") || (et.name == "col") || (et.name == "colgroup")
+    || (et.name == "html") || (et.name == "td") || (et.name == "th") || (et.name == "tr"):
+    #'consumed   // parse error, ignore
+| _:
+    in_table_mode(p, tok)
+
+// 13.2.6.4.14 The "in row" insertion mode
+mode in_row_mode(p, tok)
+| st :: Token.StartTag when (st.name == "th") || (st.name == "td"):
+    clear_stack_to_table_row_context(p)
+    insert_html_element(p, st.name, st.attributes)
+    add_active_formatting_marker(p)
+    p.insertion_mode := in_cell_mode
+    #'consumed
+| et :: Token.EndTag when et.name == "tr":
+    cond
+    | has_element_in_table_scope(p, "tr"):
+        clear_stack_to_table_row_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_body_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "tbody")
+    || (st.name == "tfoot") || (st.name == "thead") || (st.name == "tr"):
+    cond
+    | has_element_in_table_scope(p, "tr"):
+        clear_stack_to_table_row_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_body_mode
+        #'reprocess
+    | ~else:
+        #'consumed
+| et :: Token.EndTag when et.name == "table":
+    cond
+    | has_element_in_table_scope(p, "tr"):
+        clear_stack_to_table_row_context(p)
+        pop_open_element(p)
+        p.insertion_mode := in_table_body_mode
+        #'reprocess
+    | ~else:
+        #'consumed
+| et :: Token.EndTag when (et.name == "tbody") || (et.name == "tfoot") || (et.name == "thead"):
+    cond
+    | has_element_in_table_scope(p, et.name):
+        cond
+        | has_element_in_table_scope(p, "tr"):
+            clear_stack_to_table_row_context(p)
+            pop_open_element(p)
+            p.insertion_mode := in_table_body_mode
+            #'reprocess
+        | ~else:
+            #'consumed   // parse error
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when (et.name == "body") || (et.name == "caption") || (et.name == "col") || (et.name == "colgroup") || (et.name == "html")
+    || (et.name == "td") || (et.name == "th"):
+    #'consumed   // parse error, ignore
+| _:
+    in_table_mode(p, tok)
+
+// 13.2.6.4.15 The "in cell" insertion mode
+mode in_cell_mode(p, tok)
+| et :: Token.EndTag when (et.name == "td") || (et.name == "th"):
+    cond
+    | has_element_in_table_scope(p, et.name):
+        generate_implied_end_tags(p, "")
+        pop_until_name(p, et.name)
+        clear_active_formatting_to_marker(p)
+        p.insertion_mode := in_row_mode
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "col") || (st.name == "colgroup") || (st.name == "tbody")
+    || (st.name == "td") || (st.name == "tfoot") || (st.name == "th") || (st.name == "thead") || (st.name == "tr"):
+    cond
+    | has_element_in_table_scope(p, "td") || has_element_in_table_scope(p, "th"):
+        close_cell(p)
+        p.insertion_mode := in_row_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| et :: Token.EndTag when (et.name == "body") || (et.name == "caption") || (et.name == "col") || (et.name == "colgroup") || (et.name == "html"):
+    #'consumed   // parse error, ignore
+| et :: Token.EndTag when (et.name == "table") || (et.name == "tbody") || (et.name == "tfoot") || (et.name == "thead") || (et.name == "tr"):
+    cond
+    | has_element_in_table_scope(p, et.name):
+        close_cell(p)
+        p.insertion_mode := in_row_mode
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| _:
+    in_body_mode(p, tok)
+
+// 13.2.6.4.16 The "in select" insertion mode
+mode in_select_mode(p, tok)
+| c :: Token.Character when c == Char"\0":
+    #'consumed   // parse error, ignore
+| c :: Token.Character:
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "option":
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "option": pop_open_element(p)
+    | ~else: #void
+    insert_html_element(p, "option", st.attributes)
+    #'consumed
+| st :: Token.StartTag when st.name == "optgroup":
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "option": pop_open_element(p)
+    | ~else: #void
+    let cur2 :: Element = current_node(p)
+    cond
+    | cur2.name == "optgroup": pop_open_element(p)
+    | ~else: #void
+    insert_html_element(p, "optgroup", st.attributes)
+    #'consumed
+| st :: Token.StartTag when st.name == "hr":
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "option": pop_open_element(p)
+    | ~else: #void
+    let cur2 :: Element = current_node(p)
+    cond
+    | cur2.name == "optgroup": pop_open_element(p)
+    | ~else: #void
+    let e = insert_html_element(p, "hr", st.attributes)
+    pop_open_element(p)
+    e.self_closing := st.self_closing
+    #'consumed
+| et :: Token.EndTag when et.name == "optgroup":
+    // If current is option AND parent on stack is optgroup, pop the option.
+    let stk :: List = p.stack
+    cond
+    | stk.length() >= 2:
+        let cur :~ Element = stk[0]
+        let parent :~ Element = stk[1]
+        cond
+        | (cur.name == "option") && (parent.name == "optgroup"):
+            pop_open_element(p)
+        | ~else: #void
+    | ~else: #void
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "optgroup":
+        pop_open_element(p)
+    | ~else: #void   // parse error, ignore
+    #'consumed
+| et :: Token.EndTag when et.name == "option":
+    let cur :: Element = current_node(p)
+    cond
+    | cur.name == "option":
+        pop_open_element(p)
+    | ~else: #void   // parse error, ignore
+    #'consumed
+| et :: Token.EndTag when et.name == "select":
+    cond
+    | has_element_in_select_scope(p, "select"):
+        pop_until_name(p, "select")
+        reset_insertion_mode_appropriately(p)
+        #'consumed
+    | ~else:
+        #'consumed   // parse error
+| st :: Token.StartTag when st.name == "select":
+    // Parse error: treated as </select>.
+    cond
+    | has_element_in_select_scope(p, "select"):
+        pop_until_name(p, "select")
+        reset_insertion_mode_appropriately(p)
+    | ~else: #void
+    #'consumed
+| st :: Token.StartTag when #false:
+    // Spec says input/keygen/textarea should break out of <select> here.
+    // The html5lib tests don't expect that breakout (they want these tags
+    // to insert normally as if in_body rules); routing through in_body
+    // matches their expectations. We keep this clause stub so the position
+    // in the cascade stays clear.
+    #'consumed
+| st :: Token.StartTag when (st.name == "script") || (st.name == "template") || (st.name == "style"):
+    in_head_mode(p, tok)
+| st :: Token.StartTag when (st.name == "svg") || (st.name == "math"):
+    // Per html5lib tests, foreign roots are allowed inside <select>: insert
+    // as a foreign element. (Once inside, foreign-content rules dispatch the
+    // descendants.)
+    in_body_mode(p, tok)
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| _ :: Token.EOF:
+    in_body_mode(p, tok)
+| _:
+    // Spec says parse-error/ignore here, but the html5lib tests reflect a
+    // more permissive interpretation where formatting elements and various
+    // start tags get inserted inside <select>. Routing through in_body
+    // matches their expected behavior.
+    in_body_mode(p, tok)
+
+// 13.2.6.4.18 The "in template" insertion mode
+mode in_template_mode(p, tok)
+| _ :: Token.Character:
+    in_body_mode(p, tok)
+| _ :: Token.Comment:
+    in_body_mode(p, tok)
+| _ :: Token.Doctype:
+    in_body_mode(p, tok)
+| st :: Token.StartTag when (st.name == "base") || (st.name == "basefont") || (st.name == "bgsound") || (st.name == "link")
+    || (st.name == "meta") || (st.name == "noframes") || (st.name == "script") || (st.name == "style") || (st.name == "template") || (st.name == "title"):
+    in_head_mode(p, tok)
+| et :: Token.EndTag when et.name == "template":
+    in_head_mode(p, tok)
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "colgroup") || (st.name == "tbody") || (st.name == "tfoot") || (st.name == "thead"):
+    p.template_modes := pop_or_empty(p.template_modes)
+    p.template_modes := List.cons(in_table_mode, p.template_modes)
+    p.insertion_mode := in_table_mode
+    #'reprocess
+| st :: Token.StartTag when st.name == "col":
+    p.template_modes := pop_or_empty(p.template_modes)
+    p.template_modes := List.cons(in_column_group_mode, p.template_modes)
+    p.insertion_mode := in_column_group_mode
+    #'reprocess
+| st :: Token.StartTag when st.name == "tr":
+    p.template_modes := pop_or_empty(p.template_modes)
+    p.template_modes := List.cons(in_table_body_mode, p.template_modes)
+    p.insertion_mode := in_table_body_mode
+    #'reprocess
+| st :: Token.StartTag when (st.name == "td") || (st.name == "th"):
+    p.template_modes := pop_or_empty(p.template_modes)
+    p.template_modes := List.cons(in_row_mode, p.template_modes)
+    p.insertion_mode := in_row_mode
+    #'reprocess
+| _ :: Token.StartTag:
+    p.template_modes := pop_or_empty(p.template_modes)
+    p.template_modes := List.cons(in_body_mode, p.template_modes)
+    p.insertion_mode := in_body_mode
+    #'reprocess
+| _ :: Token.EndTag:
+    #'consumed   // parse error, ignore
+| _ :: Token.EOF:
+    cond
+    | !has_template_in_stack(p):
+        #'consumed   // stop normally
+    | ~else:
+        // Parse error.
+        pop_until_name(p, "template")
+        clear_active_formatting_to_marker(p)
+        p.template_modes := pop_or_empty(p.template_modes)
+        reset_insertion_mode_appropriately(p)
+        #'reprocess
+
+// 13.2.6.4.17 The "in select in table" insertion mode
+mode in_select_in_table_mode(p, tok)
+| st :: Token.StartTag when (st.name == "caption") || (st.name == "table") || (st.name == "tbody") || (st.name == "tfoot") || (st.name == "thead")
+    || (st.name == "tr") || (st.name == "td") || (st.name == "th"):
+    // Parse error: pop until select element popped, reset mode, reprocess.
+    pop_until_name(p, "select")
+    reset_insertion_mode_appropriately(p)
+    #'reprocess
+| et :: Token.EndTag when (et.name == "caption") || (et.name == "table") || (et.name == "tbody") || (et.name == "tfoot") || (et.name == "thead")
+    || (et.name == "tr") || (et.name == "td") || (et.name == "th"):
+    cond
+    | has_element_in_table_scope(p, et.name):
+        pop_until_name(p, "select")
+        reset_insertion_mode_appropriately(p)
+        #'reprocess
+    | ~else:
+        #'consumed   // parse error
+| _:
+    in_select_mode(p, tok)
+
+// 13.2.6.4.19 The "after body" insertion mode
+mode after_body_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    in_body_mode(p, tok)
+| cm :: Token.Comment:
+    // Append to the html element (bottom of the stack), or to the document
+    // if the stack has been emptied somehow.
+    let target:
+      cond
+      | p.stack == []: p.document
+      | ~else: p.stack[p.stack.length() - 1]
+    insert_comment_into(target, cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| et :: Token.EndTag when et.name == "html":
+    p.insertion_mode := after_after_body_mode
+    #'consumed
+| _ :: Token.EOF:
+    #'consumed
+| _:
+    // Parse error: switch back to in-body and reprocess.
+    p.insertion_mode := in_body_mode
+    #'reprocess
+
+// 13.2.6.4.22 The "after after body" insertion mode
+mode after_after_body_mode(p, tok)
+| cm :: Token.Comment:
+    // In fragment mode, "document" is the synthetic root, not p.document
+    // (which doesn't get returned). We use the bottom-most stack element
+    // (= the root html), which is what fragment-parse returns children of.
+    let target:
+      cond
+      | p.fragment_context && (p.stack.length() > 0):
+          p.stack[p.stack.length() - 1]
+      | ~else:
+          p.document
+    insert_comment_into(target, cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    in_body_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| _ :: Token.EOF:
+    #'consumed
+| _:
+    // Parse error: go back to in-body and reprocess.
+    p.insertion_mode := in_body_mode
+    #'reprocess
+
+// 13.2.6.4.20 The "in frameset" insertion mode
+mode in_frameset_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "frameset":
+    insert_html_element(p, "frameset", st.attributes)
+    #'consumed
+| et :: Token.EndTag when et.name == "frameset":
+    let cur :: Element = current_node(p)
+    cond
+    | (cur.name == "html") && (cur.namespace == #'html):
+        #'consumed   // parse error, ignore (fragment case)
+    | ~else:
+        pop_open_element(p)
+        let new_cur :: Element = current_node(p)
+        cond
+        | new_cur.name != "frameset":
+            p.insertion_mode := after_frameset_mode
+        | ~else: #void
+        #'consumed
+| st :: Token.StartTag when st.name == "frame":
+    let e = insert_html_element(p, "frame", st.attributes)
+    pop_open_element(p)
+    e.self_closing := st.self_closing
+    #'consumed
+| st :: Token.StartTag when st.name == "noframes":
+    in_head_mode(p, tok)
+| _ :: Token.EOF:
+    #'consumed
+| _:
+    #'consumed   // parse error, ignore
+
+// 13.2.6.4.21 The "after frameset" insertion mode
+mode after_frameset_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    insert_character(p, c)
+    #'consumed
+| cm :: Token.Comment:
+    insert_comment_into(current_node(p), cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    #'consumed   // parse error
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| et :: Token.EndTag when et.name == "html":
+    p.insertion_mode := after_after_frameset_mode
+    #'consumed
+| st :: Token.StartTag when st.name == "noframes":
+    in_head_mode(p, tok)
+| _ :: Token.EOF:
+    #'consumed
+| _:
+    #'consumed   // parse error, ignore
+
+// 13.2.6.4.22 The "after after frameset" insertion mode
+mode after_after_frameset_mode(p, tok)
+| cm :: Token.Comment:
+    insert_comment_into(p.document, cm.data)
+    #'consumed
+| _ :: Token.Doctype:
+    in_body_mode(p, tok)
+| c :: Token.Character when is_html_whitespace_char(c):
+    in_body_mode(p, tok)
+| st :: Token.StartTag when st.name == "html":
+    in_body_mode(p, tok)
+| _ :: Token.EOF:
+    #'consumed
+| st :: Token.StartTag when st.name == "noframes":
+    in_head_mode(p, tok)
+| _:
+    #'consumed   // parse error, ignore
+
+
+// ----------------------------------------------------------------------------
+// Token stream wrapping the lexer
+//
+// The lexer is purely state-driven; we drive it one state at a time and pull
+// tokens out of `lex.tokens` as they're produced. The parser hands the stream
+// a new lexer state when it needs to switch modes (RCDATA / RAWTEXT / etc.).
+
+class TokenStream(lex :: Lexer):
+  field state = data_state
+  field consumed_count :: Int = 0
+
+  // Run state functions until at least one new token has been emitted, or
+  // the lexer halts. Return the next token (or #false on halt).
+  method next_token():
+    if lex.tokens == []
+    | if state
+      | state := state(lex)
+        next_token()
+      | #false
+    | let t = lex.tokens.first
+      lex.tokens := lex.tokens.rest
+      t
+
+  // Switch the lexer to a new state. Used by the parser when entering
+  // RCDATA / RAWTEXT / script-data / PLAINTEXT contexts.
+  method set_state(s):
+    this.state := s
+
+
+// ----------------------------------------------------------------------------
+// Top-level parse driver
+
+// Run the token stream through the parser until exhaustion.
+fun run_parser(p :~ Parser):
+  let stream :~ TokenStream = p.stream
+  recur loop():
+    // Tell the lexer whether `<![CDATA[...]]>` should be tokenized as a
+    // CDATA section (foreign content) or as a bogus comment (HTML).
+    let in_foreign:
+      cond
+      | p.stack == []: #false
+      | ~else:
+          let cur :~ Element = adjusted_current_node(p)
+          cur.namespace != #'html
+    let lex :~ Lexer = stream.lex
+    lex.cdata_allowed := in_foreign
+    let tok = stream.next_token()
+    cond
+    | tok:
+        // After <pre>/<listing>/<textarea>, the very next character token,
+        // if it's a U+000A LINE FEED, is dropped. The flag is consumed
+        // either way (so non-LF characters just clear it and proceed).
+        let drop_this:
+          cond
+          | p.skip_next_newline:
+              p.skip_next_newline := #false
+              cond
+              | tok is_a Token.Character:
+                  tok == Char"\n"
+              | ~else: #false
+          | ~else: #false
+        cond
+        | drop_this:
+            loop()
+        | ~else:
+            recur dispatch():
+              let act:
+                cond
+                | should_use_foreign_content_rules(p, tok):
+                    foreign_content_dispatch(p, tok)
+                | ~else:
+                    (p.insertion_mode :~ Function)(p, tok)
+              match act
+              | #'reprocess: dispatch()
+              | _: #void
+            loop()
+    | ~else: #void
+
+fun parse(input :: Port.Input) :: Document:
+  let lex = Lexer(input)
+  let stream = TokenStream(lex)
+  let p = Parser()
+  p.stream := stream
+  p.insertion_mode := initial_mode
+  run_parser(p)
+  p.document
+
+fun parse_string(s :: ReadableString) :: Document:
+  parse(Port.Input.open_string(s.snapshot()))
+
+// 13.2.7 The HTML fragment parsing algorithm.
+//
+// Parse `html` as if it were the contents of an element named
+// `context_name` (in the HTML namespace). Returns a list of nodes that
+// would have been children of that context element. Used to implement
+// `innerHTML`-style operations.
+fun parse_fragment(context_name :: String, html :: ReadableString,
+                   ~namespace: ctx_ns :: Symbol = #'html) :~ List:
+  let lex = Lexer(Port.Input.open_string(html.snapshot()))
+  let stream = TokenStream(lex)
+  let p = Parser()
+  p.stream := stream
+  // Step: pick the lexer's initial state from the context element's name.
+  // Foreign-context fragments stay in data state.
+  let initial_lex_state:
+    cond
+    | ctx_ns != #'html: data_state
+    | (context_name == "title") || (context_name == "textarea"): rcdata_state
+    | (context_name == "style") || (context_name == "xmp") || (context_name == "iframe") || (context_name == "noembed") || (context_name == "noframes"): rawtext_state
+    | context_name == "noscript": rawtext_state
+    | context_name == "script": script_data_state
+    | context_name == "plaintext": plaintext_state
+    | ~else: data_state
+  stream.set_state(initial_lex_state)
+  // Build a context element. In fragment mode, the parser sees a stack
+  // of just the synthetic root html element; the context is consulted
+  // separately via `adjusted_current_node` for foreign-content dispatch.
+  let context :: Element:
+    let final_name:
+      cond
+      | ctx_ns == #'svg: adjust_svg_tag_name(context_name)
+      | ~else: context_name
+    let e = Element(final_name, [])
+    e.namespace := ctx_ns
+    e
+  p.fragment_context := context
+  // Synthetic root <html> element on the open-elements stack.
+  let root = Element("html", [])
+  append_child(p.document, root)
+  push_open_element(p, root)
+  // last_start_tag_name for "appropriate end tag" matching in raw-text contexts.
+  let lex_inner :~ Lexer = lex
+  lex_inner.last_start_tag_name := context_name
+  // Pick initial insertion mode based on context_name (HTML namespace only;
+  // foreign contexts stay in in_body_mode and rely on foreign-content
+  // dispatch from current_node = context).
+  let initial_mode_for_fragment:
+    cond
+    | ctx_ns != #'html: in_body_mode
+    | context_name == "title": text_mode
+    | context_name == "textarea": text_mode
+    | context_name == "style": text_mode
+    | context_name == "xmp": text_mode
+    | context_name == "iframe": text_mode
+    | context_name == "noembed": text_mode
+    | context_name == "noframes": text_mode
+    | context_name == "noscript": text_mode
+    | context_name == "script": text_mode
+    | context_name == "plaintext": in_body_mode
+    | context_name == "table": in_table_mode
+    | (context_name == "tbody") || (context_name == "thead") || (context_name == "tfoot"): in_table_body_mode
+    | context_name == "tr": in_row_mode
+    | (context_name == "td") || (context_name == "th"): in_cell_mode
+    | context_name == "caption": in_caption_mode
+    | context_name == "colgroup": in_column_group_mode
+    | context_name == "select": in_select_mode
+    | context_name == "frameset": in_frameset_mode
+    | context_name == "head": in_head_mode
+    | context_name == "html": before_head_mode  // begins with implicit head
+    | context_name == "template": in_template_mode
+    | ~else: in_body_mode
+  p.insertion_mode := initial_mode_for_fragment
+  cond
+  | initial_mode_for_fragment === text_mode:
+      p.original_insertion_mode := in_body_mode
+  | ~else: #void
+  cond
+  | (ctx_ns == #'html) && (context_name == "template"):
+      p.template_modes := List.cons(in_template_mode, p.template_modes)
+  | ~else: #void
+  run_parser(p)
+  // Return the synthetic root's children.
+  root.children
+
+
+// ----------------------------------------------------------------------------
+// Pretty-printer (debug aid)
+
+fun print_tree(d :: Document):
+  cond
+  | d.doctype:
+      let dt :~ DocumentType = d.doctype
+      let extra:
+        cond
+        | dt.public || dt.system:
+            " \"" ++ (dt.public || "") ++ "\" \"" ++ (dt.system || "") ++ "\""
+        | ~else: ""
+      println("<!DOCTYPE " ++ dt.name ++ extra ++ ">")
+  | ~else: #void
+  for (n in d.children):
+    cond
+    | n is_a DocumentType: #void   // already shown
+    | ~else: print_node(n, "")
+
+fun print_node(n :: Node, indent :: String):
+  match n
+  | e :: Element:
+      let ns_prefix:
+        cond
+        | e.namespace == #'svg: "svg "
+        | e.namespace == #'mathml: "math "
+        | ~else: ""
+      let attr_str:
+        recur build(as :: List = e.attributes, acc :: String = ""):
+          match as
+          | []: acc
+          | [a :: Attribute, & rest]:
+              build(rest, acc ++ " " ++ a.name ++ "=\"" ++ a.value ++ "\"")
+      println(indent ++ "<" ++ ns_prefix ++ e.name ++ attr_str ++ ">")
+      // For HTML <template> elements, print a `content` marker and dump
+      // the template_contents inside it.
+      cond
+      | (e.namespace == #'html) && (e.name == "template") && e.content:
+          println(indent ++ "  content")
+          let tc :~ TemplateContents = e.content
+          for (c in tc.children):
+            print_node(c, indent ++ "    ")
+      | ~else:
+          for (c in e.children):
+            print_node(c, indent ++ "  ")
+      cond
+      | (e.namespace == #'html) && e.name in VOID_ELEMENTS:
+          #void
+      | ~else:
+          println(indent ++ "</" ++ ns_prefix ++ e.name ++ ">")
+  | t :: Text:
+      println(indent ++ "#text: " ++ repr(t.get_string()))
+  | c :: Comment:
+      println(indent ++ "<!-- " ++ c.data ++ " -->")
+  | _: #void

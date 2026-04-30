@@ -1,0 +1,190 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/rx open
+  html as html_lib
+
+export:
+  elem
+  styles
+  StyleSet
+  css
+
+fun hyphenate(kw) :: String:
+  rx'"_"'.replace_all(to_string(kw), "-")
+
+fun pack_css_to(v :: List, o :: Port.Output, sep :: String):
+  for ([attr, val] in v):
+    o.print(sep ++ hyphenate(attr) ++ ": " ++ val ++ ";")
+
+fun all_styles(styles :: ReadableMap):
+  let o = Port.Output.open_bytes()
+  for ((k, v :: List) in styles):
+    o.print("\n." ++ hyphenate(k) ++ "{")
+    pack_css_to(v, o, "\n  ")
+    o.print("\n}")
+  o.get_string()
+
+fun check_attrs(name, attrs :~ List):
+  for ([kw, val, srcloc] in attrs):
+    unless val is_a (String || Real)
+    | error(~who: name,
+            ~exn: Exn.Fail.Annot,
+            "values attribute is not a string or real number",
+            error.text(~label: "attribute keyword", to_string(Syntax.make(kw))),
+            error.val(val),
+            ~srcloc: srcloc)
+
+fun make_styled(name, style_name = #false, spec = [], prefix = #false, styles = #false)
+  :~ Function.assume_of((~any) -> html_lib.Element):
+    check_attrs(style_name, spec)
+    let full_style_name = style_name // maybe add an option to use `prefix`...
+    when styles
+    | when Map.get(styles, full_style_name, #false)
+      | error("duplicate definition of style name",
+              error.val(~label: "name", full_style_name))
+      let [[kw, v, _], ...] = spec
+      MutableMap.set(styles, full_style_name, [[kw, v], ...])
+    fun (attrs :~ List, content, srclocs):
+      check_attrs(style_name || name, attrs)
+      let content:
+        recur loop(content = content, srcloc = srclocs):
+          match content
+          | content :: List:
+              match srcloc
+              | srclocs :: List:
+                  List.append(
+                    & for List (c in content, srcloc in srclocs):
+                      loop(c, srcloc)
+                  )
+              | ~else:
+                  List.append(
+                    & for List (c in content):
+                      loop(c, srcloc)
+                  )
+          | _ :: html_lib.Element:
+              [content]
+          | _ :: String:
+              [content]
+          | ~else:
+              error(~who: style_name || name,
+                    ~exn: Exn.Fail.Annot,              
+                    "invalid element content",
+                    error.val(content),
+                    ~srcloc: srcloc)
+      let attrs:
+        let [[kw, val, _], ...] = attrs
+        [html_lib.Attribute(~name: to_string(kw), ~value: to_string(val)), ...]
+      html_lib.Element(~name: name,
+                       ~attributes: if full_style_name
+                                    | List.cons(html_lib.Attribute(~name: "class",
+                                                                   ~value: hyphenate(full_style_name)),
+                                                attrs)
+                                    | attrs,
+                       ~content: content)
+
+meta:
+  fun parse_styled(proc, body):
+    match body
+    | '$_:
+         $(kw :: Keyword): $rhs
+         ...
+         $arg
+         ...':
+        '$proc([[#' $kw, $rhs, $(rhs.srcloc())], ...], [$arg, ...], [$(arg.srcloc()), ...])'
+
+syntax_parameter.bridge styles_id:
+  [#false, #false]
+
+decl.nestable_macro 'styles $(id :: Identifier):
+                       $body
+                       ...':
+  '«
+     def styles = MutableMap()
+     def $id = _StyleSet(styles)
+     namespace ~open:
+       syntax_parameter.relet styles_id:
+         ['styles', $(to_string(id))]
+       $body
+       ...
+   »'
+
+class StyleSet(private styles):
+  constructor ~error
+  internal _StyleSet
+  method to_css() :~ String:
+    all_styles(styles)
+
+meta fun parse_def(ns_id, stx):
+  match stx
+  | '$self $(id :: Identifier):
+       $(kw :: Keyword): $val
+       ...':
+      let [styles, prefix] = syntax_parameter_meta.lookup('styles_id')
+      unless styles
+      | syntax_meta.error("not within a `styles` body", stx)
+      '«
+         def proc = make_styled($ns_id,
+                                $(to_string(id)),
+                                [[#' $kw, $val, $(val.srcloc())],
+                                 ...],
+                                $prefix,
+                                $styles)
+         expr.macro '$id $('$')_ $('...')':
+           ~all_stx: stx
+           parse_styled('proc', stx)
+         export $id
+        »'
+
+decl.nestable_macro 'elem $id':
+  '«
+     def tag = make_styled($(to_string(id)))
+     expr.macro '$id $('$')_ $('...')':
+       ~all_stx: stx
+       parse_styled('tag', stx)
+     namespace $id:
+       export: def
+       decl.nestable_macro 'def $('$')_ $('...')':
+         ~all_stx: stx
+         parse_def($(to_string(id)), stx)
+     export $id
+   »'
+
+elem html
+elem head
+elem meta
+elem title
+elem style
+elem script
+elem body
+elem link
+
+elem h1
+elem h2
+elem h3
+elem h4
+elem h5
+elem h6
+
+elem div
+elem span
+
+elem pre
+elem img
+elem a
+elem br
+elem b
+elem i
+elem li
+elem ul
+elem ol
+elem p
+
+fun pack_css(v :: List):
+  let o = Port.Output.open_bytes()
+  pack_css_to(v, o, " ")
+  o.get_string()
+
+expr.macro 'css:
+              $(kw :: Keyword): $rhs
+              ...':
+  'pack_css([[#' $kw, $rhs], ...])'

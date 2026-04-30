@@ -1,0 +1,79 @@
+#lang rhombus/static/and_meta
+import:
+  "html/private/parser.rhm"
+  "html/private/class.rhm"
+  "html/private/syntax.rhm"
+  "html/private/write.rhm":
+    expose:
+      NewlineMode
+  "html/private/syntax.rhm"!from
+  "html/private/class.rhm"!repack
+
+export:
+  read
+  all_from(.class)
+  all_from(.syntax)
+  all_from(.write)
+  from_string
+  from_bytes
+  to_string
+  to_bytes
+  read_syntax
+  write_syntax
+  syntax_to_string
+  syntax_to_bytes
+  string_to_syntax
+  bytes_to_syntax
+
+fun read(
+  ~in: inp :: Port.Input = Port.Input.current()
+) :: class.Document:
+  repack.repack(parser.parse(inp))
+
+fun from_string(str :: String) :: class.Document:
+  read(~in: Port.Input.open_string(str))
+
+fun from_bytes(bstr :: Bytes) :: class.Document:
+  read(~in: Port.Input.open_bytes(bstr))
+
+fun to_string(doc :: class.Document || class.Content,
+              ~newlines: add_newlines :: NewlineMode = #'safe) :: String:
+  let o = Port.Output.open_string()
+  write.write(~out: o, doc, ~newlines: add_newlines)
+  o.get_string()
+
+fun to_bytes(doc :: class.Document || class.Content,
+             ~newlines: add_newlines :: NewlineMode = #'safe) :: Bytes:
+  let o = Port.Output.open_string()
+  write.write(~out: o, doc, ~newlines: add_newlines)
+  o.get_bytes()
+
+
+fun read_syntax(~in: inp :: Port.Input = Port.Input.current()) :: Syntax:
+  syntax.to_syntax(read(~in: inp))
+
+fun write_syntax(stx :: Syntax,
+                 ~out: outp :: Port.Output = Port.Output.current(),
+                 ~newlines: add_newlines :: NewlineMode = #'safe):
+  ~who: who
+  write.write(~out: outp,
+              from.do_from_syntax(who, stx),
+              ~newlines: add_newlines)
+
+fun syntax_to_string(stx :: Syntax,
+                     ~newlines: add_newlines :: NewlineMode = #'safe) :: String:
+  ~who: who
+  to_string(from.do_from_syntax(who, stx),
+            ~newlines: add_newlines)
+
+fun syntax_to_bytes(stx :: Syntax,
+                    ~newlines: add_newlines :: NewlineMode = #'safe) :: Bytes:
+  ~who: who
+  to_bytes(from.do_from_syntax(who, stx),
+           ~newlines: add_newlines)
+
+fun string_to_syntax(str :: String) :: Syntax:
+  syntax.to_syntax(from_string(str))
+
+fun bytes_to_syntax(bstr :: Bytes) :: Syntax:
+  syntax.to_syntax(from_bytes(bstr))

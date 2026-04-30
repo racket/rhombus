@@ -1,0 +1,119 @@
+#lang rhombus/static/and_meta
+import:
+  "class.rhm" open
+
+export:
+  write
+  NewlineMode
+
+enum NewlineMode
+| none
+| safe
+| pretty
+
+def SIBLING_NEWLINE_NAMES = { "td", "tr", "div", "li" }
+def SAFE_NEWLINE_NAMES = { "head", "body", "meta", "script", "td", "tr", "div", "li",
+                           "h1", "h2", "h3", "h4", "h5", "h6" }
+
+fun write(~out: out :: Port.Output = Port.Output.current(),
+          b :: Document || Content,
+          ~newlines: add_newlines :: NewlineMode = #'safe):
+  fun maybe_sibling_newline(prev, child):
+    when add_newlines == #'pretty
+    | match values(prev, child)
+      | (prev :: Element, child :: Element):
+          when prev.name == child.name && prev.name in SIBLING_NEWLINE_NAMES
+          | println("")
+      | ~else: #void
+  fun wr(b :~ Document || Content, raw_text = #false) :~ Syntax:
+    match b
+    | d :: Document:
+        let dt :~ DocumentType = d.doctype
+        when dt
+        | let extra:
+            cond
+            | dt.public || dt.system:
+                " \"" ++ (dt.public || "") ++ "\" \"" ++ (dt.system || "") ++ "\""
+            | ~else: ""
+          println(~out: out,
+                  "<!DOCTYPE " ++ dt.name ++ extra ++ ">")
+        for fold (prev = #false) (child in d.content):
+          maybe_sibling_newline(prev, child)
+          wr(child)
+          child
+        #void
+    | e :: Element:
+        let ns_prefix:
+          cond
+          | e.namespace == #'svg: "svg "
+          | e.namespace == #'mathml: "math "
+          | ~else: ""
+        let attr_str:
+          recur build(as :: List = e.attributes, acc :: List = []):
+            match as
+            | []: String.append(& acc)
+            | [a :: Attribute, & rest]:
+                build(rest, acc ++ [" " ++ a.name
+                                      ++ (cond
+                                          | a.value == "": ""
+                                          | a.value.contains("\""):
+                                              "='" ++ value_escape(a.value, Char"'", "'", "&apos;") ++ "'"
+                                          | ~else:
+                                              "=\"" ++ value_escape(a.value, Char"\"", "\"", "&quot;") ++ "\"")])
+        print(~out: out, "<")
+        print(~out: out, ns_prefix)
+        print(~out: out, e.name)
+        print(~out: out, attr_str)
+        if e.is_self_closing && e.content == []
+        | print(~out: out, "/>")
+        | print(~out: out, ">")
+        let split_elements = e.name == "head" && e.namespace == #'html
+        let raw_text = (e.name == "script" || e.name == "style") && e.namespace == #'html
+        for fold (prev = #false) (c in e.content):
+          if add_newlines == #'pretty && split_elements && c is_a Element
+          | println("")
+          | maybe_sibling_newline(prev, c)
+          wr(c, raw_text)
+          c
+        cond
+        | e.is_self_closing && e.content == []:
+            #void
+        | ~else:
+            print(~out: out, "</")
+            print(~out: out, ns_prefix)
+            print(~out: out, e.name)
+            when add_newlines == #'safe && (e.name in SAFE_NEWLINE_NAMES)
+            | println(~out: out, "")
+            print(~out: out, ">")
+    | t :: String:
+        cond
+        | raw_text || !needs_char_data_escape(t):
+            print(~out: out, t)
+        | ~else:
+            print_escaped(~out: out, t)
+    | c :: Comment:
+        print(~out: out, "<!-- " ++ c.data ++ " -->")
+    | c :: Inject:
+        print(~out: out, c.text)
+  wr(b)
+  when add_newlines == #'pretty
+  | println(~out: out, "")
+
+
+fun value_escape(val :~ String, quote :~ Char, quote_str :~ String, quoted_quote :~ String):
+  if (for any (c in val):
+        c == quote || c == Char"&")
+  | val.replace("&", "&amp;").replace(quote_str, quoted_quote)
+  | val
+
+fun needs_char_data_escape(t :~ String):
+  for any (c in t):
+    c == Char"&" || c == Char"<" || c == Char">"
+
+fun print_escaped(~out: out, t :~ String):
+  for (c in t):
+    match c
+    | Char"&": print(~out: out, "&amp;")
+    | Char"<": print(~out: out, "&lt;")
+    | Char">": print(~out: out, "&gt;")
+    | ~else: print(~out: out, c)

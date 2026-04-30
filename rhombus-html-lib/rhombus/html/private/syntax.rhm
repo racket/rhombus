@@ -1,0 +1,88 @@
+#lang rhombus/static/and_meta
+import:
+  "class.rhm" open
+  "parser.rhm".VOID_ELEMENTS
+
+export:
+  to_syntax
+  from_syntax
+  syntax
+  doc
+
+module from:
+  export:
+    do_from_syntax
+
+fun to_syntax(b :: Document || Content):
+  fun convert(b :~ Document || Content) :~ Syntax:
+    match b
+    | d :: Document:
+        Syntax.make_sequence(d.content.map(convert))
+    | e :: Element:
+        let [attr, ...] = e.attributes
+        let [child, ...] = e.content
+        '$(Symbol.from_string(e.name)):
+           $(Keyword.from_string(attr.name)): $attr.value
+           ...
+           $(convert(child))
+           ...'
+    | s :: String:
+        Syntax.make(s)
+    | c :: Comment:
+        Syntax.inject(c)
+  convert(b).strip_scopes()
+
+syntax_class Attr:
+  fields: a
+| '$(kw :: Keyword): $(s :: String)':
+    field a = Attribute(~name: to_string(kw.unwrap()),
+                        ~value: s.unwrap())
+
+fun from_syntax(s :: Syntax) :~ Document:
+  ~who: who
+  do_from_syntax(who, s)
+
+fun do_from_syntax(who, s :: Syntax) :~ Document:
+  fun convert(s :: Syntax) :~ List:
+    match s
+    | '$(id :: Identifier):
+         $(attr :: Attr)
+         ...
+         $child
+         ...':
+        let name = to_string(id.unwrap())
+        [Element(~name: name,
+                 ~attributes: [attr.a, ...],
+                 ~content: List.append(convert(child), ...),
+                 ~is_template: name == "template",
+                 ~is_self_closing: name in VOID_ELEMENTS,
+                 ~namespace: #'html)]
+    | '($c, ...)':
+        List.append(convert(c), ...)
+    | '[$c, ...]':
+        List.append(convert(c), ...)
+    | '':
+        []
+    | '$(t :: Term)':
+        match Syntax.unwrap(t)
+        | n :: Content:
+            [n]
+        | ~else:
+            error(~who: who, "invalid", error.val(s))
+    | '$t ...':
+        List.append(convert(t), ...)
+    | '$g; ...':
+        List.append(convert(g), ...)
+  Document(~content: convert(s))
+
+expr.macro 'syntax: $body':
+  ~op_stx: self
+  'check_valid($(to_string(self)), '$body')'
+
+fun check_valid(who, s :~ Syntax) :~ Document:
+  do_from_syntax(who, s)
+  s
+
+expr.macro 'doc: $body':
+  ~op_stx: self
+  'do_from_syntax($(to_string(self)), '$body')'

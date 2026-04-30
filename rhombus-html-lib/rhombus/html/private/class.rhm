@@ -1,0 +1,112 @@
+#lang rhombus/static/and_meta
+import:
+  "lexer.rhm":
+    expose:
+      Attribute
+  "parser.rhm":
+    expose:
+      Comment
+      DocumentType
+
+// The objects created by the AI-generated "parser" layer are awkward in a
+// few ways, especially beause they're mutable.
+// So, `repack` converts a parse result into a cleaner, immutable structure.
+
+export:
+  Document
+  DocumentType
+  Element
+  Comment
+  Inject
+  Attribute
+  Content
+
+module repack:
+  export:
+    repack
+
+annot.delayed_declare Content
+
+class Element(~name: name :: String = "div",
+              ~attributes: attributes :: List.of(Attribute) = [],
+              ~content: content :: List.of(Content) = [],
+              ~is_template: is_template :: Boolean = #false,
+              ~is_self_closing: is_self_closing :: Boolean = #false,
+              ~namespace: namespace :: Symbol = #'html):
+  private implements Printable
+  private override describe(v, recur):
+    PrintDesc.list(
+      "Element(",
+      [PrintDesc.block("~name", recur(name)),
+       & (if attributes != []
+          | [PrintDesc.block("~attributes", recur(attributes))]
+          | []),
+       & (if content != []
+          | [PrintDesc.block("~content", recur(content))]
+          | []),
+       & (if is_template
+          | [PrintDesc.block("~is_template", recur(is_template))]
+          | []),
+       & (if is_self_closing
+          | [PrintDesc.block("~is_self_closing", recur(is_self_closing))]
+          | []),
+       & (if namespace != #'html
+          | [PrintDesc.block("~namespace", recur(namespace))]
+          | [])],
+      ")"
+    )
+
+
+enum QuirksMode
+| no_quirks
+| quirks
+| limited_quirks
+
+class Document(~doctype: doctype :: maybe(DocumentType) = #false,
+               ~content: content :: List.of(Content) = [],
+               ~quirks_mode: quirks_mode :: QuirksMode = #'no_quirks):
+  export:
+    QuirksMode
+  private implements Printable
+  private override describe(v, recur):
+    PrintDesc.list(
+      "Document(",
+      [& (if doctype
+          | [PrintDesc.block("~doctype", recur(doctype))]
+          | []),
+       PrintDesc.block("~content", recur(content)),
+       & (if quirks_mode != #'no_quirks
+          | [PrintDesc.block("~quirks_mode", recur(quirks_mode))]
+          | [])],
+      ")"
+    )
+
+class Inject(~text: text :: String)
+
+fun repack(v):
+  match v
+  | d :: parser.Document:
+      let children = d.children.map(repack)
+      Document(~content:
+                 if children.length() > 0 && children[0] is_a DocumentType
+                 | children.rest
+                 | children,
+               ~doctype: d.doctype,
+               ~quirks_mode: d.quirks_mode)
+  | e :: parser.Element:
+      Element(~name: e.name,
+              ~attributes: e.attributes,
+              ~content:
+                match e.content
+                | #false: e.children.map(repack)
+                | c :: parser.TemplateContents:
+                    c.children.map(repack),
+              ~is_template: e.content != #false,
+              ~is_self_closing: e.self_closing,
+              ~namespace: e.namespace)
+  | e :: parser.Text:
+      e.get_string()
+  | ~else:
+      v
+
+annot.delayed_complete Content: Element || String || Comment || Inject

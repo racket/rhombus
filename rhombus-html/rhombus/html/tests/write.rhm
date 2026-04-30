@@ -1,0 +1,24 @@
+#lang rhombus/static/and_meta
+import:
+  html
+
+check: html.to_string(html.Element(~name: "example"))
+       ~is "<example></example>"
+
+check: html.to_string(html.Element(~name: "example", ~is_self_closing: #true))
+       ~is "<example/>"
+
+check: html.to_string(html.Element(~name: "example",
+                                   ~content: ["a", "b"]))
+       ~is "<example>ab</example>"
+
+check: html.to_string(html.Element(~name: "example",
+                                   ~content: ["a & b"]))
+       ~is "<example>a &amp; b</example>"
+
+check: html.to_string(html.Element(~name: "example",
+                                   ~content: ["a",
+                                              html.Inject(~text: "& ^#^&<"),
+                                              "b"]))
+       ~is "<example>a& ^#^&<b</example>"
+       
