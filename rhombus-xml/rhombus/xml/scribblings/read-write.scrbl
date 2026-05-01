@@ -33,11 +33,11 @@
  whitespace that is not explicitly present in @rhombus(doc). If
  @rhombus(indentation) is @rhombus(#'scan), then whitespace is added
  within each element unless any content within the element (potentially
- nested in other elements) is a @rhombus(xml.PCData, ~class) or
+ nested in other elements) is an
  @rhombus(xml.Entity, ~class). If @rhombus(indentation) is
  @rhombus(#'peek), then printing is like @rhombus(#'scan), except that
- only the immediate content of an element is checked, and nested
- @rhombus(xml.PCData, ~class) or @rhombus(xml.Entity, ~class) do not
+ only the immediate content of an element is checked, and a nested
+ @rhombus(xml.Entity, ~class) does not
  disable whitespace.
 
 }

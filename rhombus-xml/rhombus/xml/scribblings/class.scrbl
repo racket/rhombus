@@ -99,7 +99,7 @@
   can be created with this mode only with @rhombus(text) that does not
   contain a @litchar{]]>}.}
 
- @item{@rhombus(#'cdata): Text is written using an integer entity form
+ @item{@rhombus(#'entity): Text is written using an integer entity form
   @litchar{&#}…@litchar{;}. A @rhombus(xml.Text, ~class) object can be
   created with this mode only with @rhombus(text) that contains a single
   character.}

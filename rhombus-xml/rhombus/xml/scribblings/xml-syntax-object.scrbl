@@ -16,7 +16,7 @@ direction. XML syntax objects can be produced from XML directly with
 with @rhombus(xml.write_syntax), @rhombus(xml.syntax_to_string), and
 @rhombus(xml.syntax_to_bytes).
 
-The @rhombus(xml.syntax) for is essentially an alias of @rhombus('')
+The @rhombus(xml.syntax) form is essentially an alias of @rhombus('')
 (see @rhombus(#%quotes)), but it checks that the result syntax object
 conforms to XML syntax object constraints.
 
