@@ -169,10 +169,12 @@ block:
     | str :: String:
         let shrubbery_read = Evaluator.instantiate(ModulePath 'rhombus/shrubbery',
                                                    #'read)
-        let v = shrubbery_read(Port.Input.open_string(str),
+        let v = shrubbery_read(~in: Port.Input.open_string(str),
                                ~mode: #'interactive)
         call_with_values(fun (): eval(v, ~as_interaction: #true),
-                         println)
+                         fun (arg, ...):
+                           let p = rkt.#{current-print}()
+                           Function.pass(p(arg), ...))
         can_configure
   #void
 
