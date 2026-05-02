@@ -3,9 +3,7 @@
 (define collection 'multi)
 
 (define deps
-  '(["base" #:version "9.2"]
-    "rhombus-lib"
-    ["ffi2-lib" #:version "0.2"]))
+  '("base"))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-ffi\"")
 

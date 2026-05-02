@@ -9,10 +9,7 @@
 (define build-deps
   '("rhombus"
     "racket-doc" ; via `hash_lang`
-    "rhombus-scribble-lib"
-    "racket-test"
-    "ffi2"
-    "rhombus-draw"))
+    "rhombus-scribble-lib"))
 
 (define pkg-desc "Rhombus foreign-function interface")
 
