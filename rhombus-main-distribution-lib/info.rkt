@@ -9,6 +9,7 @@
     "rhombus-gui-lib"
     "rhombus-pict-lib"
     "rhombus-scribble-lib"
+    "rhombus-ffi-lib"
 
     "rhombus-ssl-lib"
     "rhombus-http-lib"

@@ -9,6 +9,7 @@
     "rhombus-gui"
     "rhombus-pict"
     "rhombus-scribble"
+    "rhombus-ffi"
 
     "rhombus-ssl"
     "rhombus-http"
