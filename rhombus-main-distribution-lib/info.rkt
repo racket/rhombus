@@ -13,6 +13,7 @@
     "rhombus-ssl-lib"
     "rhombus-http-lib"
     "rhombus-url-lib"
+    "rhombus-html-lib"
     "rhombus-xml-lib"
     "rhombus-json-lib"
     "rhombus-net-cookie-lib"

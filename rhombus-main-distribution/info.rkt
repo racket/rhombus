@@ -13,6 +13,7 @@
     "rhombus-ssl"
     "rhombus-http"
     "rhombus-url"
+    "rhombus-html"
     "rhombus-xml"
     "rhombus-json"
     "rhombus-net-cookie"
