@@ -20,7 +20,7 @@
       html
 )
 
-@title(~category: #'#{parsing-library}){Generating HTML Pages}
+@title(~category: [#'#{parsing-library}, -10]){Generating Web Pages}
 
 @docmodule(~open, html/page)
 
