@@ -508,12 +508,12 @@ fun make_iemization(~style: style :: Style = Style.plain,
     core.itemization(style, PairList(PairList(block, ...), ...))
 
 fun make_nested_flow(~style: style :: Style = Style.plain,
-                     blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []) :~ NestedFlow:
+                     blocks :: Listable.to_list && List.of(FlowBlock) = []) :~ NestedFlow:
     ~name: NestedFlow
     core.#{nested-flow}(style, PairList(& blocks))
 
 fun make_compound_paragraph(~style: style :: Style = Style.plain,
-                            blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []) :~ CompoundParagraph:
+                            blocks :: Listable.to_list && List.of(FlowBlock) = []) :~ CompoundParagraph:
     ~name: CompoundParagraph
     core.#{compound-paragraph}(style, PairList(& blocks))
 

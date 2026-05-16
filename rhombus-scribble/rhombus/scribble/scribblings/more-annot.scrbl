@@ -122,13 +122,13 @@
   veneer NestedFlow
   fun NestedFlow(
     ~style: style :: Style = Style.plain,
-    blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []
+    blocks :: Listable.to_list && List.of(FlowBlock) = []
   ) :: NestedFlow
   property (nf :: NestedFlow).style :: Style
   property (nf :: NestedFlow).blocks :: PairList.of(FlowBlock)
 ){
 
- Represents a @tech{nested flow}. Normally, an itemization is created
+ Represents a @tech{nested flow}. Normally, a nested flow is created
  with @rhombus(nested).
 
  @veneer_same(NestedFlow, rkt_nested_flow)
@@ -139,7 +139,7 @@
   veneer CompoundParagraph
   fun CompoundParagraph(
     ~style: style :: Style = Style.plain,
-    blocks :: Listable.to_list && List.of(List.of(FlowBlock)) = []
+    blocks :: Listable.to_list && List.of(FlowBlock) = []
   ) :: CompoundParagraph
   property (cp :: CompoundParagraph).style :: Style
   property (cp :: CompoundParagraph).blocks :: PairList.of(FlowBlock)
