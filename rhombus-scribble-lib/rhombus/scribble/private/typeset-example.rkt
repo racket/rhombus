@@ -143,7 +143,7 @@
      (style 'code-inset null)
      (list
       (table
-       plain
+       (style "RktBlk" null)
        (map
         list
         (apply

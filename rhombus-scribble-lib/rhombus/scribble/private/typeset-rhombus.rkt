@@ -396,7 +396,7 @@
    #:render_lines (lambda (lines)
                     (if (null? lines)
                         (element plain "")
-                        (table plain (map list lines))))
+                        (table (style "RktBlk" null) (map list lines))))
    #:rendered_shape element-shape
    #:is_rendered element*?))
 

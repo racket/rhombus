@@ -8,6 +8,9 @@ import:
     rhombus open
     rhombus/meta open
   shrubbery/render/private/typeset_meta open
+  lib("scribble/base.rkt") as rkt_scribble
+  lib("scriblib/render-cond.rkt").#{cond-element}
+  lib("racket/base.rkt").else as rkt_else
 
 export:
   all_from(rhombus/meta)
@@ -116,15 +119,22 @@ fun top_ref(): @manual.elem{the full @manual.seclink(~doc: top_doc, "top"){Rhomb
 
 def envvar = manual.tt
 
+expr.macro 'html_only:
+              $expr':
+  expr_meta.pack_s_exp(['#{cond-element}',
+                        ['html',
+                         expr_meta.pack_expr(expr)],
+                        ['rkt_else', expr_meta.pack_expr('PairList.empty')]])
+
 fun kind_search(kind :: String, content = kind):
-  import lib("scribble/base.rkt") as rkt_scribble
   let e = @scribble.elem{Search the documentation for @content forms.}
   let (_, _, allow_kws) = Function.arity(rkt_scribble.seclink)
   if #'~query in allow_kws
-  | rkt_scribble.seclink(~doc: ModulePath'lib("scribblings/main/search.scrbl")'.s_exp(),
-                         "top",
-                         e :: scribble.Content.to_s_exp,
-                         ~query: PairList[Pair(#'q, "K:\"" ++ kind ++ "\"")])
+  | html_only:
+      rkt_scribble.seclink(~doc: ModulePath'lib("scribblings/main/search.scrbl")'.s_exp(),
+                           "top",
+                           e :: scribble.Content.to_s_exp,
+                           ~query: PairList[Pair(#'q, "K:\"" ++ kind ++ "\"")])
   | // Not right for documentation in user scope, but should work installation
     // scope (which includes the main Racket doc site)
     scribble.hyperlink("../search/index.html?q=K:\"" ++ kind ++ "\"",
