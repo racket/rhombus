@@ -24,6 +24,8 @@
                                          . #,(get-treelist-static-infos))]
    [(wrap_body wrap-body) ((#%function-arity 4))]
    [(is_method method?)])
+  #:namespace-fields
+  ()
   #:properties
   ()
   #:methods

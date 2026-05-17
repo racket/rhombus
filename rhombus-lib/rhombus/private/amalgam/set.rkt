@@ -191,11 +191,12 @@
   #:opaque #:no-primitive
   #:fields ()
   #:namespace-fields
-  ([empty empty-readable-set]
-   #:no-methods)
+  ([empty empty-readable-set])
   #:properties
   ()
   #:methods
+  ()
+  #:dot-methods
   ([length Set.length]
    [contains Set.contains]
    [to_list Set.to_list]

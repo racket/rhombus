@@ -88,7 +88,7 @@
   #:fields ()
   #:namespace-fields
   (;; `to_string` is in "string.rhm"
-   #:no-methods)
+   )
   #:properties
   ()
   #:methods

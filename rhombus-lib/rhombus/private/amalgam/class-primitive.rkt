@@ -65,10 +65,8 @@
                (~and [field Name.field (~optional field-static-infos)]
                      (~bind [Name.field-def #f])))
          ...)
-        (~optional (~seq #:namespace-fields
-                         (~or* (ns-field ... (~and no-methods #:no-methods))
-                               (ns-field ...)))
-                   #:defaults ([(ns-field 1) '()]))
+        #:namespace-fields
+        (ns-field ...)
         #:properties
         ([property property-proc (~or* (~and (~seq #:mutable)
                                              (~parse property-mutable? #'#t))
@@ -299,9 +297,9 @@
 
          (define-name-root Name
            #:fields
-           #,(if (attribute no-methods)
-                 #'(ns-field ...)
-                 #'(ns-field ... [prop prop-proc] ... [method name-method-proc . method-depr] ...)))
+           (ns-field ...
+            [prop prop-proc] ...
+            [method name-method-proc . method-depr] ...))
 
          (define-syntax (get-name-field-list) #`field-list)
 

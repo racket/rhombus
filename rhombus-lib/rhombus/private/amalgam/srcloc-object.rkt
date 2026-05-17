@@ -34,6 +34,8 @@
    [(column) ((#%maybe #,(get-int-static-infos)))]
    [(position) ((#%maybe #,(get-int-static-infos)))]
    [(span) ((#%maybe #,(get-int-static-infos)))])
+  #:namespace-fields
+  ()
   #:properties
   ()
   #:methods

@@ -37,6 +37,8 @@
    [(keyword_arguments args) #,(get-map-static-infos)]
    [(has_more_arguments rest?)]
    [(has_more_keyword_arguments kw-rest?)])
+  #:namespace-fields
+  ()
   #:properties
   ()
   #:methods

@@ -45,6 +45,8 @@
   #:translucent
   #:fields
   ([(handler handler)])
+  #:namespace-fields
+  ()
   #:properties
   ()
   #:methods

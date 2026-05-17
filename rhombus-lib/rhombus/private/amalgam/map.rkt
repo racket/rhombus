@@ -157,11 +157,12 @@
   #:opaque
   #:fields ()
   #:namespace-fields
-  ([empty empty-readable-map]
-   #:no-methods)
+  ([empty empty-readable-map])
   #:properties
   ([maybe Map.maybe])
   #:methods
+  ()
+  #:dot-methods
   ([length Map.length]
    [keys Map.keys]
    [values Map.values]

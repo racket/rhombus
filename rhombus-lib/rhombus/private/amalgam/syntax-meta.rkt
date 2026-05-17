@@ -71,6 +71,8 @@
     #:just-annot
     #:fields
     ()
+    #:namespace-fields
+    ()
     #:properties
     ()
     #:methods

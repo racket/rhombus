@@ -646,6 +646,8 @@
           #:fields
           ((~? [(start) #,(get-int-static-infos)])
            (~? [(end) #,(get-int-static-infos)]))
+          #:namespace-fields
+          ()
           #:properties
           ()
           #:methods
