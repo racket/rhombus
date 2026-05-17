@@ -44,6 +44,7 @@ export:
   getting_started_doc
   raco_doc
   top_ref
+  kind_search
 
 fun see_implicit(what, whn, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @whn is
@@ -114,3 +115,20 @@ def raco_doc = ModulePath'lib("scribblings/raco/raco.scrbl")'
 fun top_ref(): @manual.elem{the full @manual.seclink(~doc: top_doc, "top"){Rhombus Documentation}}
 
 def envvar = manual.tt
+
+fun kind_search(kind :: String, content = kind):
+  import lib("scribble/base.rkt") as rkt_scribble
+  let e = @scribble.elem{Search the documentation for @content forms.}
+  let (_, _, allow_kws) = Function.arity(rkt_scribble.seclink)
+  if #'~query in allow_kws
+  | rkt_scribble.seclink(~doc: ModulePath'lib("scribblings/main/search.scrbl")'.s_exp(),
+                         "top",
+                         e :: scribble.Content.to_s_exp,
+                         ~query: PairList[Pair(#'q, "K:\"" ++ kind ++ "\"")])
+  | // Not right for documentation in user scope, but should work installation
+    // scope (which includes the main Racket doc site)
+    scribble.hyperlink("../search/index.html?q=K:\"" ++ kind ++ "\"",
+                       e,
+                       ~style: scribble.Style(~name: "plainlink",
+                                              ~properties:
+                                                [scribble.Style.HTML.Attributes({ #'pltdoc: "" })]))

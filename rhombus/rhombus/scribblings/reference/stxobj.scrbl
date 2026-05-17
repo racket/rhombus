@@ -456,6 +456,8 @@ or adjusted in any way
  Other syntax pattern binding forms can be defined with
  @rhombus(unquote_bind.macro).
 
+ @kind_search("unquote binding")
+
 }
 
 @doc(

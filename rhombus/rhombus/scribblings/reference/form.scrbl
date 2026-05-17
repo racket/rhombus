@@ -50,6 +50,8 @@ identifiers, expressions, or binding patterns.
  Unless otherwise specified, a name like @rhombus(fun_expr, ~var) is an
  alias for @rhombus(expr), similar to the rule for @rhombus(id).
 
+ @kind_search("expression")
+
 }
 
 @doc(
@@ -62,9 +64,11 @@ identifiers, expressions, or binding patterns.
  repetitions), function calls, and arithmetic are some examples of
  repetition forms, but @rhombuslangname(rhombus) provides many more.
 
- Besides all of the expression forms provided by
+ Besides all of the repetition forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
  @top_rhombus(repet.macro).
+
+ @kind_search("repetition")
 
 }
 
@@ -77,6 +81,8 @@ identifiers, expressions, or binding patterns.
  In syntax descriptions, @rhombus(entry_point) stands for an @tech{entry
   point}, which is syntactically an immediate function. The @rhombus(fun, ~entry_point)
  and @rhombus(macro, ~entry_point) expression forms also work as entry-point forms.
+
+ @kind_search("entry point")
 
 }
 
@@ -92,6 +98,8 @@ identifiers, expressions, or binding patterns.
  works as an immediate-callee form, as well as the
  @rhombus(#%parens, ~immediate_callee) form when used with
  @rhombus(_).
+
+ @kind_search("immediate callee")
 
 }
 
@@ -110,6 +118,8 @@ identifiers, expressions, or binding patterns.
  Besides all of the expression forms provided by
  @rhombuslangname(rhombus), new ones can be defined with
  @top_rhombus(defn.macro).
+
+ @kind_search("definition")
 
 }
 
@@ -151,6 +161,8 @@ identifiers, expressions, or binding patterns.
  @rhombuslangname(rhombus), new ones can be defined with
  @top_rhombus(decl.macro) and @top_rhombus(decl.nestable_macro).
 
+ @kind_search("declaration")
+
 }
 
 
@@ -172,6 +184,8 @@ identifiers, expressions, or binding patterns.
  Besides all of the binding forms provided by @rhombuslangname(rhombus),
  new ones can be defined with @top_rhombus(bind.macro).
 
+ @kind_search("binding operator"){binding}
+
 }
 
 
@@ -187,6 +201,8 @@ identifiers, expressions, or binding patterns.
  @rhombuslangname(rhombus), new ones can be defined with
  @top_rhombus(annot.macro).
 
+ @kind_search("annotation")
+
 }
 
 
@@ -198,9 +214,14 @@ identifiers, expressions, or binding patterns.
  In syntax descriptions, @rhombus(reducer) stands for any
  @tech(~doc: guide_doc){reducer} form.
 
- Besides all of the reducer forms provided by
- @rhombuslangname(rhombus), new ones can be defined with
+ Besides all of the reducer forms provided by @rhombuslangname(rhombus),
+ including @rhombus(fold, ~reducer), @rhombus(all, ~reducer),
+ @rhombus(any, ~reducer), @rhombus(List, ~reducer),
+ @rhombus(Map, ~reducer), @rhombus(Set, ~reducer), and
+ @rhombus(math.sum, ~reducer), new reducers can be defined with
  @top_rhombus(reducer.macro).
+
+ @kind_search("reducer")
 
 }
 
@@ -272,5 +293,7 @@ identifiers, expressions, or binding patterns.
  @rhombus(==, ~key_comp) (the default), @rhombus(===, ~key_comp),
  @rhombus(is_now, ~key_comp), and @rhombus(is_same_number_or_object, ~key_comp).
  New configurations can be defined with @top_rhombus(key_comp.def).
+
+ @kind_search("map configuration")
 
 }

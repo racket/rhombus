@@ -93,7 +93,7 @@
  If @rhombus(indirect) is @tech{content}, then the link's resolution in
  HTML can be delayed, like @rhombus(seclink) with
  @rhombus(~indirect: #true). The indirect content is prefixed with
- ``the'' and suffixed with “``documentation'' to generate the rendered
+ ``the'' and suffixed with ``documentation'' to generate the rendered
  text of the link. For example,
 
 @rhombusblock(
