@@ -379,6 +379,28 @@
 }
 
 @doc(
+  method (pict :: Pict).refocus_around_ink() :: Pict
+){
+
+ Returns a @tech{pict} that is the same as @rhombus(pict), but with a
+ shifted @tech{bounding box} to surround all of the visible effect that
+ @rhombus(pict) produces in a drawing context. This bounding of drawing
+ ``ink'' takes into account drawing with different pen widths, the shapes
+ of drawn text, and clipping, as opposed to just collecting bounding
+ boxes of @rhombus(pict) and its children.
+
+@examples(
+  ~eval: pict_eval
+  ~repl:
+    def h = text("Hello")
+    rectangle(~around: h)
+    rectangle(~around: h.refocus_around_ink())
+)
+
+}
+
+
+@doc(
   method (pict :: Pict).freeze(~scale: scale :: Real = 2.0) :: Pict
 ){
 

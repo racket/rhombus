@@ -2,8 +2,10 @@
 import:
   "rkt.rhm"
   "size.rhm".SizeLike.to_size as SizeLike
+  "rect.rhm".Rect
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
+  rhombus/version
 
 export:
   RecordDC
@@ -11,10 +13,14 @@ export:
 class RecordDC():
   extends SomeDC
 
-  constructor (size :: SizeLike):
+  constructor (size :: SizeLike,
+               ~record_ink: record_ink :: Any.to_boolean = #false):
     let hand = rkt.make_object(rkt.#{record-dc%},
                                size.width,
-                               size.height)
+                               size.height,
+                               & (if (system.racket_version() :: version.Version) < ("9.2.0.4" :: version.Version)
+                                  | []
+                                  | [record_ink]))
     super(hand)()
 
   method get_record():
@@ -25,6 +31,10 @@ class RecordDC():
     fun (dc :: DC):
       ~name: draw
       proc(dc.handle)
+
+  method ink_extent() :~ Rect:
+    let (l, t, w, h) = rkt.send handle.#{get-ink-extent}()
+    Rect(l, t, w, h)
 
   export:
     record_to_draw

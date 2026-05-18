@@ -8,13 +8,17 @@
   class draw.RecordDC():
     implements DC
     constructor (
-      size :: SizeLike
+      size :: SizeLike,
+      ~record_ink: record_ink :: Any.to_boolean = #false
     )
 ){
 
  Creates a drawing context that records drawing operations for replay
  later. The @rhombus(size) argument merely determines the result of
  @rhombus(DC.size), and it does not clip drawing operations.
+
+ If @rhombus(record_ink) is true, then drawing records ink effects so
+ that @rhombus(RecordDC.ink_extent) can report ink bounds.
 
  Use @rhombus(RecordDC.get_draw) to get a drawing function that replays
  the recorded drawing, or use @rhombus(RecordDC.get_record) to get a
@@ -59,5 +63,22 @@
 
  A drawing function returned by @rhombus(RecordDC.record_to_draw)
  behaves like one from @rhombus(RecordDC.get_draw).
+
+}
+
+@doc(
+  method (dc :: draw.RecordDC).ink_extent() :: Rect
+){
+
+ Returns a rectangle that bounds all
+ drawing into @rhombus(dc), as long as ink recording was enabled through
+ the @rhombus(~record_ink) constructor argument for @rhombus(RecordDC).
+
+ Bounding drawing ``ink'' takes into account the visible effect of
+ drawing with different pen widths and the shape of drawn text, as
+ opposed to just collecting path coordinates and nominal text extents.
+
+ If ink record is not enabled for @rhombus(dc),
+ @rhombus(RecordDC.ink_extent) throws an exception.
 
 }

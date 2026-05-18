@@ -1,9 +1,11 @@
 #lang rhombus/static/and_meta
 import:
+  rhombus/version
   rhombus/draw:
     expose:
       Color
       DC
+      RecordDC
   lib("pict/main.rkt") as rkt:
     expose #{pict?}
     except dc
@@ -254,6 +256,21 @@ class Pict():
   abstract method clip() :~ Pict
 
   abstract method freeze(~scale: scale :: Real = 2.0) :~ Pict
+  method refocus_around_ink() :~ Pict:
+    if (system.racket_version() :: version.Version) < ("9.2.0.4" :: version.Version)
+    | let h = snapshot().handle
+      let p_h = rkt.#{panorama}(h)
+      let (t, l) = rkt.#{lt-find}(p_h, h)
+      let (r, b) = rkt.#{rb-find}(p_h, h)
+      let w = rkt.#{pict-width}(p_h)
+      let h = rkt.#{pict-height}(p_h)
+      pad(~top: t, ~left: l, ~right: w - r, ~bottom: h - b)
+    | let p_w = width
+      let p_h = height
+      let dc = RecordDC([p_w, p_h], ~record_ink: #true)
+      draw(dc)
+      let r = dc.ink_extent()
+      pad(~left: -r.x, ~top: -r.y, ~right: (r.x + r.width) - p_w, ~bottom: (r.y + r.height) - p_h)
 
   abstract protected method _time_pad(before :: Int, after :: Int) :~ Pict
   abstract method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
