@@ -12,3 +12,5 @@
 (define pkg-desc "Tools for rendering shrubbery forms to external documents")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

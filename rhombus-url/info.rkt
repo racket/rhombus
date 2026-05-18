@@ -14,3 +14,5 @@
 (define pkg-desc "Rhombus URL library")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

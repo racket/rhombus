@@ -18,3 +18,5 @@
 (define pkg-desc "Rhombus GUI library")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

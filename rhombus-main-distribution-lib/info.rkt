@@ -25,3 +25,5 @@
 (define pkg-desc "implementation (no documentation) part of \"rhombus-main-distribution\"")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

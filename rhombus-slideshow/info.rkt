@@ -17,3 +17,5 @@
 (define pkg-desc "Rhombus slide-presentation library")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

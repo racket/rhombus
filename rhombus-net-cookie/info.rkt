@@ -15,3 +15,5 @@
 (define pkg-desc "Rhombus library for RFC 6265 cookies")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

@@ -13,3 +13,5 @@
 (define pkg-desc "Rhombus JSON library")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))

@@ -17,3 +17,5 @@
 
 ;; keep in sync with runtime version at "rhombus/private/amalgam/version.rkt"
 (define version "0.45")
+
+(define language-families '("Rhombus"))

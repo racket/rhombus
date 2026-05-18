@@ -19,3 +19,5 @@
 (define pkg-desc "Rhombus text-document and documentation library")
 
 (define license '(Apache-2.0 OR MIT))
+
+(define language-families '("Rhombus"))
