@@ -887,6 +887,7 @@
                                   reconstructor-rhs reconstructor-stx-params serializer-stx-params in-final?
                                   private-interfaces protected-interfaces
                                   names
+                                  #:method-vtable [method-vtable #f]
                                   #:veneer-vtable [veneer-vtable #f])
   (with-syntax ([(name reflect-name name? name-convert reconstructor-name serializer-name
                        methods-ref
@@ -924,10 +925,14 @@
                      ;; to macro-introduced methods
                      (list (datum->syntax #'name raw-m-name)
                            (let ([idx (mindex-index mix)])
-                             (if veneer-vtable
-                                 ;; always static:
-                                 (vector-ref veneer-vtable idx)
-                                 idx))
+                             (cond
+                               [veneer-vtable
+                                ;; always static:
+                                (vector-ref veneer-vtable idx)]
+                               [(or (mindex-final? mix) in-final?)
+                                (vector-ref method-vtable idx)]
+                               [else
+                                idx]))
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))
                            (if (mindex-property? mix) 'property 'method)))]

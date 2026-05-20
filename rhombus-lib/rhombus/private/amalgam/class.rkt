@@ -692,6 +692,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               reconstructor-rhs reconstructor-stx-params serializer-stx-params final?
                               private-interfaces protected-interfaces
+                              #:method-vtable method-vtable
                               #'(name reflect-name name? #f reconstructor-name serializer-name
                                       prop-methods-ref
                                       all-static-infos

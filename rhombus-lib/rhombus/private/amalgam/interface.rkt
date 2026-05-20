@@ -331,6 +331,7 @@
                               added-methods method-mindex method-names method-private method-private-inherit
                               #f #f #f #f
                               #hasheq() #hasheq()
+                              #:method-vtable method-vtable
                               #'(name reflect-name internal-name? #f #f #f
                                       internal-name-ref
                                       internal-all-static-infos
