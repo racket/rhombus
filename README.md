@@ -3,7 +3,7 @@ language that is easy to use and uniquely customizable.
 
 For an overview of Rhombus's goals and design, see
 
-* [Documentation](https://docs.racket-lang.org/rhombus@rhombus/index.html)
+* [Documentation](https://docs.racket-lang.org/rhombus@rhombus/index.html?fam=Rhombus&famroot=rhombus)
   as rendered by the Racket package-build service
 
 * [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
