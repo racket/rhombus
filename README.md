@@ -3,7 +3,9 @@ language that is easy to use and uniquely customizable.
 
 For an overview of Rhombus's goals and design, see
 
-* [Documentation](https://docs.racket-lang.org/rhombus@rhombus/index.html?fam=Rhombus&famroot=rhombus)
+* [Rhombus Goals](https://rhombus-lang.org/goal.html)
+
+* [Documentation](https://docs.racket-lang.org/rhombus/index.html?fam=Rhombus&famroot=rhombus)
   as rendered by the Racket package-build service
 
 * [OOPSLA'23 paper](https://doi.org/10.1145/3622818)
@@ -14,18 +16,22 @@ Rhombus implementation.
 
 # Trying Rhombus
 
-The quickest route to trying Rhombus is the
-[snapshot Racket with Rhombus included](https://users.cs.utah.edu/plt/rhombus-snapshots/).
+See [Getting Started with Rhombus](https://docs.racket-lang.org/rhombus-getting-started/index.html?fam=Rhombus&famroot=rhombus)
+→ [Quick Start](https://docs.racket-lang.org/rhombus-guide/Quick_Start.html?fam=Rhombus&famroot=rhombus)
+→ [Rhombus Download](https://rhombus-lang.org/download.html).
 
-Alternatively, using [Racket](https://racket-lang.org), install the package `rhombus`
-through DrRacket's "Install Package..." menu item or on the command
-line with
+As the download page explains, you can get a Rhombus distribution,
+which is a Racket distribution that is bundled with Rhombus packages,
+or you can start with [Racket](https://racket-lang.org) and install
+the package `rhombus` through DrRacket's "Install Package..." menu
+item or on the command line with
 
 ```
 raco pkg install rhombus
 ```
 
-See also the [documentation Quick Start](https://docs.racket-lang.org/rhombus-guide/Quick_Start.html).
+More precisely, the `rhombus-main` package has everything that is
+included in a Rhombus distribution, but `rhombus` provides the basics.
 
 # Other Resources
 
@@ -54,3 +60,13 @@ and other concrete proposals.
 GitHub [**discussions**](../../discussions) provide a forum for discussing
 Rhombus broadly, as opposed to discusssing details of specific
 proposals.
+
+## Community
+
+Find other Rhombus users on the [Racket Discord](https://discord.gg/6Zq8sH5)'s
+`#rhombus` channel or on the [Racket Discourse](https://racket.discourse.group/) forum.
+
+# More Information
+
+See the [Rhombus](https://rhombus-lang.org) web page for more
+information and resources.
