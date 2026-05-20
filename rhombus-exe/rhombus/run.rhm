@@ -138,7 +138,7 @@ cmdline.current_command_line(args[S.leftover_args])
 when S.version in args || S.action !in args
 | println(@str{Welcome to Rhombus v@(system.version())})
 
-when S.no_make in args && (S.repl in args || S.no_lib !in args || args[S.evals] != [])
+when S.no_make !in args && (S.repl in args || S.no_lib !in args || args[S.evals] != [])
 | let make:
     rkt.#{dynamic-require}(ModulePath('lib("compiler/private/cm-minimal.rkt")').s_exp(),
                            #'#{make-compilation-manager-load/use-compiled-handler})
