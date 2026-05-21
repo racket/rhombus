@@ -25,26 +25,31 @@ class Posn4(x, y):
 block:
   let p = Posn(1, 2)
   let (st, _) = rkt.#{struct-info}(p)
+  check to_string(st) ~is "#<struct-type:Posn>"
   check rkt.#{struct-type-authentic?}(st) ~is #true
 
 block:
   let p = SubPosn(1, 2, 3)
   let (st, _) = rkt.#{struct-info}(p)
+  check to_string(st) ~is "#<struct-type:SubPosn>"
   check rkt.#{struct-type-authentic?}(st) ~is #true
 
 block:
   let p = Posn2(1, 2)
   let (st, _) = rkt.#{struct-info}(p)
+  check to_string(st) ~is "#<struct-type:Posn2>"
   check rkt.#{struct-type-authentic?}(st) ~is #false
 
 block:
   let p = SubPosn2(1, 2, 3)
   let (st, _) = rkt.#{struct-info}(p)
+  check to_string(st) ~is "#<struct-type:SubPosn2>"
   check rkt.#{struct-type-authentic?}(st) ~is #false
 
 block:
   let p = Posn3(1, 2)
   let (st, _) = rkt.#{struct-info}(p)
+  check to_string(st) ~is "#<struct-type:Posn3>"
   check rkt.#{struct-type-authentic?}(st) ~is #false
 
 block:

@@ -312,6 +312,8 @@
   (cond
     [(hash-ref ht v #f)
      => (lambda (ref) ref)]
+    [(struct-type? v)  ; check early no property-based predicate accidenatlly applies
+     (default-print v mode ht)]
     [(printer-ref v #f)
      => (lambda (printer)
           (fresh-ref
@@ -536,17 +538,20 @@
     [(ffi2-ptr? v)
      (pretty-text (format "~s" v))]
     [else
-     (cond
-       [(display?)
-        (pretty-display v)]
-       [else
-        (define rop (open-output-bytes))
-        (display "#{" rop)
-        (unless (number? v)
-          (display "'" rop))
-        (racket-print (racket-print-redirect v) rop 1)
-        (display "}" rop)
-        (pretty-text (get-output-bytes rop))])]))
+     (default-print v mode ht)]))
+
+(define (default-print v mode ht)
+  (cond
+    [(eq? mode 'text)
+     (pretty-display v)]
+    [else
+     (define rop (open-output-bytes))
+     (display "#{" rop)
+     (unless (number? v)
+       (display "'" rop))
+     (racket-print (racket-print-redirect v) rop 1)
+     (display "}" rop)
+     (pretty-text (get-output-bytes rop))]))
 
 (define get-exn-name (lambda (v) (object-name v)))
 (define (set-get-exn-name! proc) (set! get-exn-name proc))
