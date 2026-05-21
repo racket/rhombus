@@ -32,6 +32,7 @@
                     opaque
                     prefab
                     authentic
+                    ostensible
                     field
                     immutable
                     reconstructor
@@ -149,6 +150,12 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(#:authentic))]))))
+
+(define-class-clause-syntax ostensible
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_) (wrap-class-clause #`(#:ostensible))]))))
 
 (define-class-clause-syntax prefab
   (class-clause-transformer

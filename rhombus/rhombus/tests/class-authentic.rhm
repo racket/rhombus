@@ -1,0 +1,72 @@
+#lang rhombus
+import:
+  lib("racket/base.rkt") as rkt
+
+class Posn(x, y)
+class BasePosn(x, y):
+  nonfinal
+class SubPosn(z):
+  extends BasePosn
+
+class Posn2(x, y):
+  ostensible
+class BasePosn2(x, y):
+  nonfinal
+  ostensible
+class SubPosn2(z):
+  extends BasePosn2
+
+class Posn3(x, y):
+  prefab
+
+class Posn4(x, y):
+  opaque
+
+block:
+  let p = Posn(1, 2)
+  let (st, _) = rkt.#{struct-info}(p)
+  check rkt.#{struct-type-authentic?}(st) ~is #true
+
+block:
+  let p = SubPosn(1, 2, 3)
+  let (st, _) = rkt.#{struct-info}(p)
+  check rkt.#{struct-type-authentic?}(st) ~is #true
+
+block:
+  let p = Posn2(1, 2)
+  let (st, _) = rkt.#{struct-info}(p)
+  check rkt.#{struct-type-authentic?}(st) ~is #false
+
+block:
+  let p = SubPosn2(1, 2, 3)
+  let (st, _) = rkt.#{struct-info}(p)
+  check rkt.#{struct-type-authentic?}(st) ~is #false
+
+block:
+  let p = Posn3(1, 2)
+  let (st, _) = rkt.#{struct-info}(p)
+  check rkt.#{struct-type-authentic?}(st) ~is #false
+
+block:
+  let p = Posn4(1, 2)
+  let (st, _) = rkt.#{struct-info}(p)
+  check st ~is #false
+
+check:
+  ~eval
+  class BasePosn(x, y):
+    nonfinal
+  class SubPosn(z):
+    extends BasePosn
+    ostensible
+  ~throws "cannot create an authentic subclass of a non-authentic superclass"
+
+check:
+  ~eval
+  class BasePosn(x, y):
+    nonfinal
+    ostensible
+  class SubPosn(z):
+    extends BasePosn
+    authentic
+  ~throws "cannot create a non-authentic subclass of an authentic superclass"

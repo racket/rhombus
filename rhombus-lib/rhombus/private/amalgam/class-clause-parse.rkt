@@ -163,6 +163,10 @@
                (when (hash-ref options 'prefab? #f)
                  (raise-syntax-error #f "a prefab class cannot be authentic" orig-stx clause))
                (hash-set options 'authentic? #t)]
+              [(#:ostensible)
+               (when (hash-has-key? options 'authentic?)
+                 (raise-syntax-error #f "multiple authenticity clauses" orig-stx clause))
+               (hash-set options 'authentic? #f)]
               [(#:prefab)
                (when (hash-has-key? options 'prefab?)
                  (raise-syntax-error #f "multiple prefab clauses" orig-stx clause))

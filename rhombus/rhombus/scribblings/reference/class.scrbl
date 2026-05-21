@@ -81,6 +81,8 @@
   | #,(@rhombus(static_info, ~class_clause)) $static_info_decl
   | #,(@rhombus(opaque, ~class_clause))
   | #,(@rhombus(prefab, ~class_clause))
+  | #,(@rhombus(authentic, ~class_clause))
+  | #,(@rhombus(ostensible, ~class_clause))
   | #,(@rhombus(serializable, ~class_clause)) $serializable_decl
   | #,(@rhombus(primitive_property, ~class_clause)) $primitive_property_decl
   | $other_class_clause
@@ -1014,7 +1016,8 @@
   superclass must also be @rhombus(prefab, ~class_clause).}
 
  @item{A @rhombus(prefab, ~class_clause) class is implicitly
-  @rhombus(nonfinal, ~class_clause), and it cannot be
+  @rhombus(nonfinal, ~class_clause) and @rhombus(ostensible, ~class_clause),
+  and it cannot be
   @rhombus(opaque, ~class_clause) or @rhombus(authentic, ~class_clause).}
 
  @item{When a field is declared with a @rhombus(field_spec) that has a
@@ -1032,12 +1035,23 @@
 
 @doc(
   class_clause.macro 'authentic'
+  class_clause.macro 'ostensible'
 ){
 
  When a @tech{class clause} is @rhombus(authentic, ~class_clause), then
- the new class cannot be chaperoned or impersonated. At most one class
- clause in a @rhombus(class) form can be
- @rhombus(authentic, ~class_clause).
+ instances of the new class cannot be @defterm{chaperoned} or
+ @defterm{impersonated} at the Racket level (to implement delayed
+ contracts or other proxies). Instances of a class with an
+ @rhombus(ostensible, ~class_clause) can be chaperoned or impersonated.
+
+ At most one of @rhombus(authentic, ~class_clause) or
+ @rhombus(ostensible, ~class_clause) can appear as a class clause in a
+ @rhombus(class) form. If a class has @rhombus(prefab, ~class_clause),
+ then it cannot also have @rhombus(authentic, ~class_clause). The default
+ for a class without a superclass corresponds to
+ @rhombus(authentic, ~class_clause). A class with a superclass defaults
+ to its superclass's authenticity, and a class cannot have a different
+ authenticity than its superclass.
 
 }
 

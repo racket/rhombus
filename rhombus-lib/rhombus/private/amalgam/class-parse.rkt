@@ -296,12 +296,14 @@
                           "superclass must be prefab for a prefab subclass"
                           stxes
                           parent-name)))
-  (unless (eq? (and (memq 'authentic (objects-desc-flags super)) #t)
-               (hash-ref options 'authentic? #f))
+  (define super-authentic? (and (memq 'authentic (objects-desc-flags super)) #t))
+  (define authentic? (and (not (hash-ref options 'prefab? #f))
+                          (hash-ref options 'authentic? super-authentic?)))
+  (unless (eq? super-authentic? authentic?)
     (raise-syntax-error #f
-                        (if (hash-ref options 'authentic? #f)
-                            "cannot create a non-authenic subclass of an authentic superclass"
-                            "cannot create an authenic subclass of a non-authentic superclass")
+                        (if authentic?
+                            "cannot create a non-authentic subclass of an authentic superclass"
+                            "cannot create an authentic subclass of a non-authentic superclass")
                         stxes
                         parent-name)))
 

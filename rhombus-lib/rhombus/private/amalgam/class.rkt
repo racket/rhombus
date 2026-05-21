@@ -342,8 +342,11 @@
                                                                                #:results values))
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
-       (define authentic? (hash-ref options 'authentic? #f))
        (define prefab? (hash-ref options 'prefab? #f))
+       (define authentic? (and (not prefab?)
+                               (hash-ref options 'authentic? (if super
+                                                                 (and (memq 'authentic (objects-desc-flags super)) #t)
+                                                                 #t))))
        (define final? (hash-ref options 'final? (not prefab?)))
        (define opaque? (hash-ref options 'opaque? #f))
        (define primitive-properties (hash-ref options 'primitive-properties '()))
