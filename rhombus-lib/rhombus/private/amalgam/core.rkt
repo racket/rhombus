@@ -216,7 +216,11 @@
          (raise-no-module-block stx #'content))
        #`(#%plain-module-begin
           (#%declare #:realm rhombus
-                     #:require=define)
+                     #:require=define
+                     ;; very large modules will cause trouble, we don't have to
+                     ;; worry about the historical transition from "some trouble"
+                     ;; to "huge trouble" that makes Racket have a limit by default
+                     #:unlimited-compile)
           #,(if use-module-block?
                 #`(rhombus-top
                    (group #%module_block (block . content)))
