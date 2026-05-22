@@ -17,7 +17,8 @@
                                     "syntax-class-primitive.rkt")
                      (only-in "implicit.rkt"
                               #%parens)
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "../version-case.rkt")
          (only-in "declaration.rkt"
                   in-decl-space
                   decl-quote
@@ -217,10 +218,13 @@
        #`(#%plain-module-begin
           (#%declare #:realm rhombus
                      #:require=define
-                     ;; very large modules will cause trouble, we don't have to
-                     ;; worry about the historical transition from "some trouble"
-                     ;; to "huge trouble" that makes Racket have a limit by default
-                     #:unlimited-compile)
+                     #,@(meta-if-version-at-least
+                         "9.2"
+                         ;; very large modules will cause trouble, we don't have to
+                         ;; worry about the historical transition from "some trouble"
+                         ;; to "huge trouble" that makes Racket have a limit by default
+                         #'(#:unlimited-compile)
+                         #'()))
           #,(if use-module-block?
                 #`(rhombus-top
                    (group #%module_block (block . content)))
