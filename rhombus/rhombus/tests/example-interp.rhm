@@ -49,9 +49,9 @@ fun interp(e, env :~ Map):
                           interp('$y ...', env))
   // `let` as a convenience
   | 'block:
-       let $(x :: Identifier) = $rhs
+       let $(x :: Identifier) = $rhs ...
        $body':
-      interp('(fun ($x): $body)($rhs)', env)
+      interp('(fun ($x): $body)($rhs ...)', env)
 
 // Some primitives in an initial environment
 def init_env:
