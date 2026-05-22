@@ -310,7 +310,7 @@ but the @rhombus(to_string) conversion of a complex number omits
 
  When expressions for both @rhombus(x) and @rhombus(y) have static
  information from @rhombus(Flonum, ~annot) (or just @rhombus(x) in the
- case of prefix the @rhombus(-) operator), then the arithmetic operation
+ case of the prefix @rhombus(-) operator), then the arithmetic operation
  is specialized to one that expects @rhombus(Flonum, ~annot) arguments.
  If the static information is incorrect (e.g., because a non-checking
  @rhombus(:~) is used), then a run-time error is reported if an argument
