@@ -82,6 +82,10 @@
                 ...'
   grammar arg
   | $identifier
+  | ($arg_seq)
+
+  grammar arg_seq
+  | $identifier
   | ($identifier #,(@rhombus(::, ~bind)) $annot)
   | ($identifier #,(@rhombus(as, ~impo)) $identifier)
   | ($identifier #,(@rhombus(as, ~impo)) $identifier #,(@rhombus(::, ~bind)) $annot)
@@ -224,15 +228,23 @@
 @doc(
   ~nonterminal:
     arg: cmdline.flag
-    maybe_ellipsis: cmdline.flag
+    arg_seq: cmdline.flag
 
-  expr.macro 'cmdline.args $arg ... $maybe_ellipsis'
+  expr.macro 'cmdline.args $arg ... $opt_arg ... $maybe_arg_ellipsis'
 
-  expr.macro 'cmdline.args $arg ... $maybe_ellipsis:
+  expr.macro 'cmdline.args $arg ... $opt_arg ... $maybe_arg_ellipsis:
                 $option
                 ...
                 $body
                 ...'
+
+  grammar opt_arg
+  | ($arg_seq = $expr)
+
+  grammar maybe_arg_ellipsis
+  | $arg #,(dots)
+  | #,(epsilon)
+
   grammar option
   | ~init $expr
   | ~init: $body; ...
@@ -242,8 +254,12 @@
  describe the handling of arguments after command-line flags for
  @rhombus(cmdline.parse) and related forms.
 
+ Besides the @rhombus(arg) forms that are allowed for @rhombus(cmdline.flag),
+ @rhombus(cmdline.args) allows a argument with a default-value expression,
+ which makes it an optional argument.
+
  The set of @rhombus(option)s for @rhombus(cmdline.args) is more limited
- than @rhombus(cmdline.flags), since it does not include flag string or
+ than @rhombus(cmdline.flag), since it does not include a flag string or
  flag-specific help text.
 
  The @rhombus(body) sequence implements argument parsing the same way as
@@ -299,6 +315,7 @@
   | $placement
 
   grammar placement
+  | ~top
   | ~after_options
   | ~after_notation
 ){
@@ -312,13 +329,16 @@
  @rhombus(cmdline.parse), and the text will be rendered in the same
  relative order as the flag and help-text implementations.
 
+ If @rhombus(~top) is provided as an @rhombus(option), the help text is
+ written immediately after a usage line and before describing option
+ handling.
  If @rhombus(~after_options) is provided as an @rhombus(option) and the help text
  is after all flags and other help text, then it is placed after the
  builtin flags when those flags are not disabled (e.g., using
  @rhombus(~no_builtin) in @rhombus(cmdline.parse)).
  If @rhombus(~after_notation) is provided as an @rhombus(option), then the help text
- is place even later, after a description of flag notation. Without
- @rhombus(~after_options) or @rhombus(~after_options), trailing help text is rendered after all other text and
+ is place even later, after a description of flag notation. Without @rhombus(~top),
+ @rhombus(~after_options), or @rhombus(~after_options), trailing help text is rendered after all other text and
  flags, but before the help text for builtin options.
 
 }

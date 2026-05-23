@@ -38,21 +38,25 @@ Parameter.def current_containing_flag_string :: maybe(String) = #false
 class Handler(init :~ Map,
               args :~ List.of(String),
               repeat_last :~ Boolean,
+              num_required_args :~ Int,
               handler :: (~any) -> Map):
   nonfinal
   constructor (init :: Map,
                args :: List.of(String),
                repeat_last :: Any.to_boolean,
+               num_required_args :: Int,
                handler :: Function described_as ((~any) -> Map)):
     ~who: who
     let (a, req_kws, _) = handler.arity()
-    let args_mask: (if repeat_last | -1 | 1) bits.(<<) (args.length() + 1)
+    let args_mask: for fold(mask = 0) (len in num_required_args..=args.length()):
+                     mask bits.or ((if repeat_last | -1 | 1) bits.(<<) (len + 1))
     unless req_kws == [] && ((a bits.and args_mask) == args_mask)
     | error(~who: who,
             "handler function's arity is not consistent with receiving a map followed by arguments",
             error.val(~label: "handler", handler),
-            error.val(~label: "arguments", args))
-    super(init, args, repeat_last, handler)
+            error.val(~label: "accepted arguments", args),
+            error.val(~label: "required arguments", num_required_args))
+    super(init, args, repeat_last, num_required_args, handler)
 
 interface Content
 
@@ -64,12 +68,13 @@ class Flag(flag_strs :~ List.of(String),
   constructor (defaults :: Map,
                args :: List.of(String),
                repeat_last :: Any.to_boolean,
+               num_required_args :~ Int,
                handler :: Function described_as ((~any) -> Map),
                flag_strs :: List.of(String),
                help :: maybe(String)):
     ~who: who
     let self:
-      super(defaults, args, repeat_last, handler)(flag_strs, help)
+      super(defaults, args, repeat_last, num_required_args, handler)(flag_strs, help)
     for (flag in flag_strs):
       unless (ok_flag_string(flag))
       | error(~who: who,
@@ -91,6 +96,7 @@ class OnceAny(choices :: List.of(Flag || OnceAny)):
   implements Content
 
 enum TextPlacement
+| top
 | inline
 | after_options
 | after_notation
@@ -134,8 +140,8 @@ class Parser(private _parse,
 
 fun make_builtin_flags(help :: Map -> Map) :~ List.of(Content):
   [
-    OnceEach([Flag({}, [], #false, help, ["--help", "-h"], "Show this information and exit, ignoring remaining arguments."),
-              FinalFlag({}, [], #false, fun (state): state, ["--"], "No argument after this flag is a flag.")])
+    OnceEach([Flag({}, [], #false, 0, help, ["--help", "-h"], "Show this information and exit, ignoring remaining arguments."),
+              FinalFlag({}, [], #false, 0, fun (state): state, ["--"], "No argument after this flag is a flag.")])
   ]
 
 fun command_line_parser(
@@ -167,10 +173,10 @@ fun command_line_parser(
             fun finish(state, line :~ List):
               cond
               | args.repeat_last:
-                  when line.length() < args.args.length() - 1
+                  when line.length() < args.num_required_args
                   | throw_wrong_args(~who: program_name(exe_who), args, line, #false, #false)
               | ~else:
-                  when line.length() != args.args.length()
+                  when line.length() !in args.num_required_args..=args.args.length()
                   | throw_wrong_args(~who: program_name(exe_who), args, line, #false, #false)
               args.handler(state, & line)
             match line
@@ -312,9 +318,17 @@ fun apply_flag(flag_str, first, flag, state, line :~ List,
       values(state, once, line, is_final || f is_a FinalFlag)
 
 fun format_args(args :~ Handler, prefix :~ String = "") :~ String:
-  if args.args == []
-  | ""
-  | prefix ++ "<" ++ String.join(args.args, "> <") ++ ">" ++ (if args.repeat_last | " ..." | "")
+  cond
+  | args.args == []:
+      ""
+  | args.num_required_args < args.args.length() - (if args.repeat_last | 1 | 0):
+      prefix ++ "<" ++ String.join(args.args.take(args.num_required_args), "> <")
+        ++ "> [<" ++ String.join(args.args.sublist(args.num_required_args, args.args.length() - (if args.repeat_last | 1 | 0)), "> <")
+        ++ ">]" ++ (if args.repeat_last
+                    | " <" ++ args.args.last ++  "> ..."
+                    | "")
+  | ~else:
+      prefix ++ "<" ++ String.join(args.args, "> <") ++ ">" ++ (if args.repeat_last | " ..." | "")
 
 fun throw_wrong_args(~who: exe_who, h :~ Handler, line :~ List, flag_str, first):
   let (flag_desc, after_desc):
@@ -383,6 +397,13 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
   let args_str:
     format_args(args, " ")
   println(@str{usage: @(program_name(exe_who))@(options_str)@(args_str)})
+  for (flag in flags):
+    match flag
+    | t :: Text:
+        when t.placement == #'top
+        | println(t.text)
+    | ~else:
+        #void
   when min_flags > 0
   | println("")
     if max_flags == 1
@@ -452,7 +473,7 @@ fun show_help(~program: exe_who :: String || Path = current_program(),
             | #'once_end: print("\\   ")
             println(help.last)
       | t :: Text:
-          unless t.placement == #'after_notation
+          unless (t.placement == #'after_notation || t.placement == #'top)
           | println(t.text)
     let any_multi = (for any ([mode, flag] in mode_and_flags): mode == #'multi)
     let any_once = (for any ([mode, flag] in mode_and_flags): mode == #'once_start)

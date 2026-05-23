@@ -56,26 +56,60 @@ fun convert_lib_module_path(x):
   | ~else: #false
 
 meta:
-  syntax_class Arg:
+  syntax_class ArgSeq:
     fields: name_str
             id
             kind
   | '$(id :: Identifier)':
       field name_str: to_string(id)
       field kind: 'String'
-  | '($(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier))':
+  | '$(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier)':
       field name_str: to_string(name)
       field kind: 'String'
-  | '($(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name))':
+  | '$(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name)':
       field name_str: to_string(id)
-  | '($(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name))':
+  | '$(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name)':
       field name_str: to_string(name)
+
+  syntax_class Arg:
+    fields: name_str
+            id
+            kind
+            default
+  | '$(id :: Identifier)':
+      field name_str: to_string(id)
+      field kind: 'String'
+      field default: ''
+  | '($(arg :: ArgSeq))':
+      field name_str = arg.name_str
+      field id = arg.id
+      field kind = arg.kind
+      field default: ''
+
+  syntax_class OptionalArg:
+    fields: name_str
+            id
+            kind
+            default
+  | '($(arg :: ArgSeq) $('=' && eql_op) $(default_tail :: Group))':
+      field name_str = arg.name_str
+      field id = arg.id
+      field kind = arg.kind
+      field default = '$eql_op $default_tail'
 
   syntax_class MaybeDots
   | '$(bound_as bind_meta.space: '...')':
       field [seq, ...] = ['...']
   | '':
       field [seq, ...] = []
+
+  syntax_class MaybeArgDots
+  | '$(one_arg :: Arg) $(bound_as bind_meta.space: '...')':
+      field [seq, ...] = ['...']
+      field [arg, ...] = [one_arg]
+  | '':
+      field [seq, ...] = []
+      field [arg, ...] = []
 
   syntax_class Key
   | '~key: $key_body'
@@ -122,6 +156,12 @@ meta:
                     [extra, ...]):
     when [arg, ...] == [] && [dots.seq, ...] != []
     | syntax_meta.error("no arguments before ellipses", stx, dots)
+    let num_required_args:
+      (for math.sum (arg in [arg, ...]):
+         if arg.default matches ''
+         | 1
+         | 0)
+        - (if [dots.seq, ...] == [] | 0 | 1)
     let [[bind_string, from_string, statinfos], ...]:
       for List (kind in [arg.kind, ...]):
         match kind
@@ -141,12 +181,13 @@ meta:
                                 | '{}')),
          [$(arg.name_str), ...],
          $([dots.seq, ...] != []),
+         $num_required_args,
          fun (accum :~ Map,
               $arg.id :: converting(fun (s :~ String) :~ providing($statinfos):
                                       match s
                                       | $bind_string: $from_string
                                       | ~else:
-                                          arg_fail($arg.name_str, s)),
+                                          arg_fail($arg.name_str, s)) $arg.default,
               ...,
               $dots.seq, ...):
            $(cond
@@ -180,18 +221,18 @@ meta:
         e
 
 expr.macro
-| 'args $(arg :: Arg) ... $(dots :: MaybeDots) $()':
+| 'args $(arg :: Arg) ... $(o_arg :: OptionalArg) ... $(dots :: MaybeArgDots) $()':
     ~all_stx: stx
     parse_handler(
       stx,
       'Handler',
-      [arg, ...], dots,
+      [arg, ..., o_arg, ..., dots.arg, ...], dots,
       #false, fun (): '#'args', ~always_arg_list: #true,
       '{}',
       [],
       []
     )
-| 'args $(arg :: Arg) ... $(dots :: MaybeDots):
+| 'args $(arg :: Arg) ... $(o_arg :: OptionalArg) ... $(dots :: MaybeArgDots):
      $(group_option_sequence
        | '$(_ :: Key: open)'
        | '$(_ :: Init: open)':
@@ -202,7 +243,7 @@ expr.macro
     parse_handler(
       stx,
       'Handler',
-      [arg, ...], dots,
+      [arg, ..., o_arg, ..., dots.arg, ...], dots,
       key_body, fun (): '#'args',
       init_body,
       [body, ...],
@@ -328,6 +369,8 @@ fun flatten(who, args :~ List, srclocs :~ List, pred, desc, keep_srcloc = #false
 expr.macro 'help:
               $(group_option_sequence
                 | '$(pattern
+                     | '~top':
+                         field placement = #'top
                      | '~after_options':
                          field placement = #'after_options
                      | '~after_notation':
@@ -398,7 +441,7 @@ fun extract_args(who, element_and_srclocs :~ List):
                 "multiple args handlers provided")
         element
       | args
-  args || Handler({}, [], #false, fun (accum): accum)
+  args || Handler({}, [], #false, 0, fun (accum): accum)
 
 fun extract_flags(who, element_and_srclocs :~ List):
   for List ([element, srcloc] in element_and_srclocs):

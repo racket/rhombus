@@ -30,6 +30,18 @@ check:
       args x y
   ~is { #'args: ["ex", "why"] }
 
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args x y (z = x ++ y)
+  ~is { #'args: ["ex", "why", "exwhy"] }
+
+check:
+  with_line ["ex", "why", "other"]:
+    parse:
+      args x y (z = "no")
+  ~is { #'args: ["ex", "why", "other"] }
+
 block:
   let p:
     parser:
@@ -74,9 +86,27 @@ check:
   ~throws "expected <x> <y> on the command line"
 
 check:
+  with_line ["ex"]:
+    parse:
+      args x y (z = "other")
+  ~throws "expected <x> <y> [<z>] on the command line"
+
+check:
+  with_line ["ex"]:
+    parse:
+      args x y (z = "other") w ...
+  ~throws "expected <x> <y> [<z>] <w> ... on the command line"
+
+check:
   with_line ["100.0"]:
     parse:
       args (n :: Int)
+  ~throws invalid_argument
+
+check:
+  with_line ["100.0"]:
+    parse:
+      args (n :: Int = 0)
   ~throws invalid_argument
 
 block:

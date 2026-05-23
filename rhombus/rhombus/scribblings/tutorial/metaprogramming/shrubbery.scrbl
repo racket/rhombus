@@ -299,7 +299,7 @@ places where newlines are optional and allowed:
 
 @itemlist(
 
- @item{Extra newlines are allowed between @bnf.nt{group} in a group
+ @item{Extra newlines are allowed between @bnf.nt{group}s in a group
  sequence, including sequences where @litchar{,} separates @bnf.nt{group}s.
 
   Examples:
@@ -361,7 +361,7 @@ sequence of @litchar{|} forms, each with a @bnf.nt{group} sequence. The
 individual @litchar{|}s within one @bnf.nt{alt}s are also separated by
 newlines. A newline is therefore potentially ambiguous as a
 @bnf.nt{group} separator or a @litchar{|}-form separator; the ambiguity
-is resolved by also choosing to interpret the newline as a
+is resolved by choosing to interpret the newline as a
 @litchar{|}-form separator.
 
 @rhombusblock(
