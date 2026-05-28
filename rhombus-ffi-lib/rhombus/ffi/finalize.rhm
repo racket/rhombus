@@ -1,6 +1,6 @@
 #lang rhombus/static
 import:
-  lib("ffi/unsafe/private/finalizer.rkt").#{register-finalizer}
+  lib("ffi/unsafe.rkt").#{register-finalizer}
   lib("ffi/unsafe/alloc.rkt")
 
 export:
