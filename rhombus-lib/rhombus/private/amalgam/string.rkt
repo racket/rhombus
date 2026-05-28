@@ -539,7 +539,7 @@
     (raise-annotation-failure who from "ReadableString || RX"))
   (check-readable-string who to)
   (string->immutable-string
-   (string-replace s1 from to #:all? all?)))
+   (string-replace s1 (if (string? from) from (rx-regexp from)) to #:all? all?)))
 
 (define/method (String.copy s)
   #:primitive (string-copy)
