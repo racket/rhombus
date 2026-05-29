@@ -721,3 +721,14 @@ block:
     String.from_list([1]) ~throws values("from_list",
                                          error.annot_msg(),
                                          error.annot("List.of(Char)").msg)
+
+block:
+  // check rx with string methods
+  import:
+    rhombus/rx open
+  check "apple".replace(rx'"p" +', "!") ~is "a!le"
+  check "appleppp".replace(rx'"p" +', "!") ~is "a!leppp"
+  check "appleppp".replace(rx'"p" +', "!", ~all: #true) ~is "a!le!"
+  check "apple".split(rx'"p" +') ~is ["a", "le"]
+  check "apple".trim(rx'"p" +') ~is "apple"
+  check "pappleppp".trim(rx'"p" +') ~is "apple"
