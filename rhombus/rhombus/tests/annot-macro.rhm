@@ -156,3 +156,23 @@ block:
   check maybe_annop :: ~is [#true]
   check maybe_annop :=~ ~is [#false]
   check maybe_annop ++ ~is "no"
+
+block:
+  annot.macro 'identity_at':
+    error("dummy")
+  expr.macro 'identity_at $term ...':
+    match '$term ...'
+    | '$(ann :: annot_meta.AfterPrefixParsed('identity_at'))':
+        values('(fun (x :: $ann): x)',
+               '$ann.tail ...')
+  check identity_at Int (1) ~is 1
+
+block:
+  annot.macro '$ignored identity_at':
+    error("dummy")
+  expr.macro '$ignored identity_at $term ...':
+    match '$term ...'
+    | '$(ann :: annot_meta.AfterInfixParsed('identity_at'))':
+        values('(fun (x :: $ann): x)',
+               '$ann.tail ...')
+  check 0 identity_at Int (1) ~is 1

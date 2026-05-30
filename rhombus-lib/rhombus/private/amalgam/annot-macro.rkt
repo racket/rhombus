@@ -81,8 +81,8 @@
   (define-operator-syntax-classes
     Parsed :annotation #:rhombus/annot
     NameStart in-annotation-space
-    AfterPrefixParsed :prefix-op+annotation+tail
-    AfterInfixParsed :infix-op+annotation+tail
+    AfterPrefixParsed :annotation-prefix-op+form+tail
+    AfterInfixParsed :annotation-infix-op+form+tail
     #:extra-arity-mask 3))
 
 (begin-for-syntax
