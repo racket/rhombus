@@ -64,3 +64,10 @@ libc.fun sprintf_errno2(bytes_ptr_t, string_t, ~varargs) :: (vd :: void_t, e :: 
 check sprintf_errno2(bstr, "hello") ~matches [#void, _ :: Int]
 libc.fun nonesuch(int_t) :: int_t
 check nonesuch(0) ~throws "not available"
+
+block:
+  // checking parsing without `~varargs`, so don't call:
+  foreign.fun sprintf_named_arg(bar :: bytes_ptr_t, string_t) :: void_t:
+    ~lib: c_lib
+    ~c_id: sprintf
+  #void

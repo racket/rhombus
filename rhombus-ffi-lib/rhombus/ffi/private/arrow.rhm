@@ -44,7 +44,8 @@ meta syntax_class Argument:
     field annot = type_meta.unpack_annot(t)
 
 type.macro
-| '#%parens $(args && '($(a :: Argument))')':
+| '#%parens $(args && '($(a_g :: Group))')':
+    let '$(a :: Argument)' = a_g
     if a.t
     | a.t
     | type_meta.pack_tuple('($a.arg)', '[$a.annot]').relocate(args)
