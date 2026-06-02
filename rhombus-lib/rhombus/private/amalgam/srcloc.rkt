@@ -71,7 +71,9 @@
 ;; though, like the way `for` and `class` are implemented, then
 ;; explicit `respan` may be needed. In those cases, `respan` may also
 ;; be needed for input to `syntax-parse`, in case it is responsible
-;; for raising an exception when a match files.
+;; for raising an exception when a match files. The use of
+;; `with-syntax-error-respan` in "forwarding-sequence.rkt" should
+;; cover many cases, however.
 ;;
 ;; "Relocate" means to take source location from one syntax object and
 ;; use it for another. The target of a relocation is normally a

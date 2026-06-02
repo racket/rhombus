@@ -140,23 +140,24 @@
                           [(module . _) #'form]
                           [(module* . _) #'form]
                           [_
-                           (with-continuation-mark
-                               syntax-parameters-key #'stx-params
-                               (local-expand #'form
-                                             (get-expand-context)
-                                             (list #'rhombus-forward
-                                                   #'rhombus-forward-export-all
-                                                   #'define-values
-                                                   #'define-syntaxes
-                                                   #'define-syntax-parameter
-                                                   #'with-syntax-parameters
-                                                   ;; etc.
-                                                   #'begin
-                                                   #'provide
-                                                   #'#%require
-                                                   #'#%declare
-                                                   #'begin-for-syntax)
-                                             def-ctx))]))
+                           (with-syntax-error-respan
+                             (with-continuation-mark
+                                 syntax-parameters-key #'stx-params
+                                 (local-expand #'form
+                                               (get-expand-context)
+                                               (list #'rhombus-forward
+                                                     #'rhombus-forward-export-all
+                                                     #'define-values
+                                                     #'define-syntaxes
+                                                     #'define-syntax-parameter
+                                                     #'with-syntax-parameters
+                                                     ;; etc.
+                                                     #'begin
+                                                     #'provide
+                                                     #'#%require
+                                                     #'#%declare
+                                                     #'begin-for-syntax)
+                                               def-ctx)))]))
        (define (need-end-expr state) (syntax-parse state
                                        [(#:block #t orig) #'(#:block #f orig)]
                                        [_ state]))
