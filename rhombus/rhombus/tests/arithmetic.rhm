@@ -1,21 +1,19 @@
 #lang rhombus
 
 check:
-  10 * (-3) + 2
-  ~is -28
+  10 * (-3) + 2 ~is -28
+  10 + (-3) * 2 ~is 4
+  10 * 2 / 4 ~is 5
+  10 / 2 * 4 ~is 20
 
 check:
-  10 + (-3) * 2
-  ~is 4
-
-check:
-  10 * 2 / 4
-  ~is 5
-
-check:
-  ~eval
-  10 / 2 * 4
-  ~is 20
+  - 1 * 7 ~is -7
+  -1 mod 7 ~is 6
+  - 1 mod 7 ~is 6
+  -(1 mod 7) ~is -1
+  -0.0 + 0.0 ~is 0.0
+  - 0.0 + 0.0 ~is 0.0
+  -(0.0 + 0.0) ~is -0.0
 
 check:
   fun five(x):

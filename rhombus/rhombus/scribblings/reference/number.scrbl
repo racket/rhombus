@@ -297,7 +297,7 @@ but the @rhombus(to_string) conversion of a complex number omits
   operator ((x :: Number) - (y :: Number)) :: Number:
     ~order: addition
   operator (- (x :: Number)) :: Number:
-    ~order: addition
+    ~order: multiplication
   operator ((x :: Number) * (y :: Number)) :: Number:
     ~order: multiplication
   operator ((x :: Number) / (y :: Number)) :: Number:

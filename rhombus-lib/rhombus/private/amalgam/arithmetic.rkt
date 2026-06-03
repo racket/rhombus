@@ -96,7 +96,7 @@
 
 (define-prefixes define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
   -
-  #:order addition
+  #:order multiplication
   #:static-infos #,(get-number-static-infos)
   #:flonum fl- #,(get-flonum-static-infos))
 (define-infixes define-values-for-syntax (minus-expr-infix minus-repet-infix)
