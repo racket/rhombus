@@ -40,9 +40,11 @@
 (define (call_capturing_values thunk)
   (call-with-values thunk treelist))
 
-(define (does_contain_each strs in-str)
-  (for/and ([str (in-treelist strs)])
-    (does_contain str in-str)))
+(define (does_contain_each strs in-str is-rx? rx-match?)
+  (for/and ([pat (in-treelist strs)])
+    (if (is-rx? pat)
+        (rx-match? pat in-str)
+        (does_contain pat in-str))))
 
 (define (does_contain str in-str)
   (or (equal? str "")

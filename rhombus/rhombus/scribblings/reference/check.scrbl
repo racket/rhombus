@@ -1,7 +1,9 @@
 #lang rhombus/scribble/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open)
+    "nonterminal.rhm" open
+    meta_label:
+      rhombus/rx open)
 
 @(def check_eval = make_rhombus_eval(~attach: #false))
 @examples(
@@ -10,6 +12,7 @@
     import lib("racket/base.rkt").#{error-display-handler}
     #{error-display-handler}(fun (msg, exn):
                                print(msg, ~out: stderr))
+    import rhombus/rx open
 )
 
 @title{Unit Testing}
@@ -24,11 +27,12 @@
                 $maybe_eval
                 $body
                 ...
-                $expected_result'
+                $expected_result
+                ... ~nonempty'
   expr.macro 'check:
-                $expr $expected_result
+                $expr $expected_result ... ~nonempty
                 ...'
-  expr.macro 'check $expr $expected_result'
+  expr.macro 'check $expr $expected_result ... ~nonempty'
 
   grammar maybe_eval
   | ~eval
@@ -55,7 +59,7 @@
 
  Evaluates the @rhombus(body) or @rhombus(expr) form, catching any
  exception that is thrown, then determines whether the result or
- exception matches @rhombus(expected_result):
+ exception matches each @rhombus(expected_result):
 
 @itemlist(
 
@@ -79,22 +83,32 @@
   supplied @nontermref(bind)s in @rhombus(expected_values_bind), and that
   each value matches the corresponding @nontermref(bind).}
 
- @item{In @rhombus(~prints) mode, evaluates the @rhombus(expected_expr)
-  or @rhombus(expected_body) in a mode that captures output to
-  @rhombus(stdout) to a string, then checks that there is
-  no exception and the output string is the same as the expected result.}
+ @item{In @rhombus(~prints) mode, evaluates the
+  @rhombus(expected_expr) or @rhombus(expected_body) to obtain any number
+  (as multiple values) of strings or @tech{regexps}, then checks that there is
+  no exception and the output string contains each expected string and
+  matches each expected regexp. Use @rhombus(rx'') to check that nothing is
+  printed, since empty output includes the string @rhombus("").}
 
- @item{In @rhombus(~throws) mode, obtains one or more strings (as
-  multiple values) by evaluating @rhombus(expected_body) or
-  @rhombus(expected_expr), then checks that original @rhombus(body) or
-  @rhombus(expr) threw an exception and that each string is contained in
-  the exception message.}
+ @item{In @rhombus(~throws) mode, evaluates the @rhombus(expected_expr)
+  or @rhombus(expected_body) to obtain any number (as multiple values) of
+  strings and @tech{regexps}, then checks that original @rhombus(body) or
+  @rhombus(expr) threw an exception whose message constains each expected
+  string and matches each expected regexp.}
 
  @item{In @rhombus(~completes) mode, checks merely that the original
   result is not an exception. A @rhombus(#void) is implicitly added to the
-  end of @rhombus(body) or @rhombus(expr), so it could end with a definition.}
+  end of @rhombus(body) or @rhombus(expr), so it could end with a definition,
+  as long as no other kind of @rhombus(expected_result) is present for
+  the same @rhombus(expr) or @rhombus(body) sequence.}
 
 )
+
+ When @rhombus(expected_result)s are present for one @rhombus(expr) or
+ @rhombus(body) sequence, then they must all match for the check to be
+ considered passing. Printed output is captured for an @rhombus(expr) or
+ @rhombus(body) sequence only when at least one @rhombus(expected_result)
+ is a @rhombus(~prints_like) or @rhombus(~prints) form.
 
  If @rhombus(~eval) is present, then @rhombus(body) is quoted to be
  parsed and evaluated using @rhombus(eval) at run time. A typical use of
@@ -105,7 +119,7 @@
  evaluated as an interactive form (i.e., @rhombus(eval) is called with
  @rhombus(~as_interactive: #true)).
 
- Providing multiple @rhombus(expr expected_result) groups in a single
+ Providing multiple @rhombus(expr expected_result ...) groups in a single
  @rhombus(check) form is the same as providing each group to a separate
  @rhombus(check) form. The @rhombus(~eval) mode is not supported in the
  shorthand forms of @rhombus(check).
@@ -121,6 +135,7 @@
   ~eval: check_eval
   check 1+1 ~is 2
   check 1+1 ~is 3
+  check 1+1 ~is_a Int ~prints rx''
   check:
     1+1
     ~is 2
@@ -134,11 +149,18 @@
     1+1
     ~is_a String
   check:
+    1+1
+    ~is_a Int
+    ~prints rx''
+  check:
     [1+1, 1+2]
     ~matches [_ :: Int, ...]
   check:
     '$(1+1)'
     ~prints_like '2'
+  check:
+    println("hi", "there")
+    ~prints values("hi", "ere", rx'["a" - "z" space]*')
   check:
     1+"a"
     ~throws "expected: Number"

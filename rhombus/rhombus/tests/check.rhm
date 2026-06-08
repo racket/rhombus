@@ -1,6 +1,7 @@
 #lang rhombus/and_meta
 import:
   lib("raco/testing.rkt")
+  rhombus/rx open
 
 fun check_error(thunk, is_ok, form_str, should_str):
   let str:
@@ -109,3 +110,71 @@ check:
     1 no ~weird
   ~throws values("invalid check line",
                  "keyword is not a result keyword")
+
+check:
+  ~eval
+  check:
+    2 ~is ok
+    "done"
+  ~throws values("invalid check line")
+
+check:
+  ~eval
+  check:
+    ok
+    ~is ok
+    "done"
+  ~throws values("invalid expected-result clause")
+
+check:
+  ~eval
+  check 1 ~is 1 ~completes naught
+  ~throws values("invalid expected-result clause")
+
+check:
+  10/0 ~throws rx_in'"division"'
+  10/0 ~throws rx_in'"by zero"'
+  10/0 ~throws values(rx_in'"division"', rx_in'"by zero"')
+  10/0 ~throws values("division", rx_in'"by zero"')
+  println("hello") ~prints rx_in'"ello"'
+  println("hello") ~prints values("h", rx_in'"ello"')
+
+check:
+  10 ~is 10 ~matches 10
+  10 ~is_a Int ~matches 10
+  10/0 ~throws "division by zero" ~prints ""
+  def x = 10 ~completes
+  1 ~is 1 ~completes
+  println("hi", "there") ~prints "hi" ~prints "ere"
+
+check 1 ~is 1 ~completes
+
+check:
+  1 + 2
+  ~is 3
+  ~is_a Int
+  ~completes
+
+check:
+  parameterize { Port.Output.current_error: Port.Output.current(),
+                 testing.#{test-log-enabled?}: #false }:
+    check 10/0 ~throws rx'"by zero"'
+  ~prints values("got: exception",
+                 "/: division by zero",
+                 "expected: exception rx '\"by zero\"'")
+
+check:
+  check 10 ~throws #'oops
+  ~throws values(error.annot_msg("`~throws` clause result"))
+
+check:
+  check 10 ~throws values("ok", #'oops)
+  ~throws values(error.annot_msg("`~throws` clause result"))
+
+check:
+  check 10 ~prints #'oops
+  ~throws values(error.annot_msg("`~prints` clause result"))
+
+check:
+  check 10 ~prints values("ok", #'oops)
+  ~throws values(error.annot_msg("`~prints` clause result"))

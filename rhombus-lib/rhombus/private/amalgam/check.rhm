@@ -4,6 +4,8 @@ import:
   "call-capture-exn.rkt" open
   lib("racket/base.rkt").#{error-print-source-location}
   lib("raco/testing.rkt").#{test-log!}
+  "rx_object.rhm".RX
+  "error.rhm" open
 
 use_static
 
@@ -24,16 +26,43 @@ meta:
     kind: ~term
   | '~completes'
 
+  syntax_class BodyTerm:
+  | '$(! ((_ :: ResultMode) || (_ :: CompletesMode)))'
+
   syntax_class Result:
+    fields: body mode add_void
     kind: ~sequence
   | '$(mode :: ResultMode): $(body :: Block)':
-      field [suffix, ...]: []
+      field add_void: #false
   | '$(mode :: ResultMode) $g ...':
       field body: ': $g ...'
-      field [suffix, ...]: []
+      field add_void: #false
   | '$(mode :: CompletesMode)':
       field body: ': #void'
-      field [suffix, ...]: ['#void']
+      field add_void: #true
+
+  syntax_class ResultSequence:
+    kind: ~sequence
+  | '$(mode :: ResultMode) $_ ...'
+  | '$(mode :: CompletesMode) $_ ...'
+
+  syntax_class ResultInlineSequence:
+    kind: ~sequence
+  | '$(mode :: ResultMode) $(_ :: BodyTerm) ...'
+  | '$(mode :: CompletesMode) $(_ :: BodyTerm) ...'
+
+  syntax_class MustResult(stx):
+    fields: body mode add_void
+    kind: ~group
+  | '$(r :: Result)':
+      field body = r.body
+      field mode = r.mode
+      field add_void = r.add_void
+  | '$(g :: Group)':
+      syntax_meta.error("invalid expected-result clause", stx, '$g')
+      field body = #false
+      field mode = #false
+      field add_void = #false
 
   syntax_class EvalClause:
     fields: make_eval
@@ -41,6 +70,19 @@ meta:
       field make_eval = 'Evaluator.make_rhombus()'
   | '~eval: $(block :: Block)':
       field make_eval = 'block $block'
+
+  syntax_class BodyGroup:
+    kind: ~group
+  | '$(be :: BodyTerm) $_ ...'
+
+  fun make_suffix(add_void, ...):
+    if all(add_void, ...)
+    | ['#void']
+    | []
+
+  fun check_body(stx, what, seq):
+    when seq == []
+    | syntax_meta.error("empty " ++ what, stx)
 
 expr.macro '«located '$w'»':
   '[#' $w, $(w.srcloc())]'
@@ -52,49 +94,70 @@ expr.macro
 // `~eval` case
 | 'check:
      $(eval :: EvalClause)
-     $result1
+     $(body :: BodyGroup)
      ...
-     $(result2 :: Result)':
+     $(result_g0 :: ResultSequence)
+     $result_g
+     ...':
     ~op_stx: check_id
+    ~all_stx: stx
+    let ['$(result :: MustResult(stx))', ...] = [result_g0, result_g, ...]
+    let [suffix, ...] = make_suffix(result.add_void, ...)
     'check_same(located '$(check_id)',
                 fun ():
-                  eval_test(no_scopes '$result1
+                  eval_test(no_scopes '$body
                                        ...
-                                       $result2.suffix
+                                       $suffix
                                        ...',
                             $eval.make_eval),
-                matcher($result2.mode, $result2.body),
-                #'$result2.mode)'
+                [matcher($result.mode, $result.body), ...],
+                [#'$result.mode, ...])'
 // normal block
 | 'check:
-     $result1
+     $(body :: BodyGroup)
      ...
-     $(result2 :: Result)':
+     $(result_g0 :: ResultSequence)
+     $result_g     
+     ...':
     ~op_stx: check_id
+    ~all_stx: stx
+    let ['$(result :: MustResult(stx))', ...] = [result_g0, result_g, ...]
+    let [suffix, ...] = make_suffix(result.add_void, ...)
+    check_body(stx, "body sequence", [body, ..., suffix, ...])
     'check_same(located '$(check_id)',
                 fun ():
-                  $result1
+                  $body
                   ...
-                  $result2.suffix
+                  $suffix
                   ...,
-                matcher($result2.mode, $result2.body),
-                #'$result2.mode)'
+                [matcher($result.mode, $result.body), ...],
+                [#'$result.mode, ...])'
 // single lines in block
-| 'check: $result1 ... $(result2 :: Result); ...':
+| 'check: $(body :: BodyTerm) ... $(result_s :: ResultInlineSequence) ... ~nonempty; ...':
     ~op_stx: check_id
+    ~all_stx: stx
+    let [['$(result :: MustResult(stx))', ...], ...] = [[result_s, ...], ...]
+    let [[suffix, ...], ...] = [make_suffix(result.add_void, ...), ...]
+    // Not clear that this can fails, since an empty sequence before an
+    // expected-result keyword should cause a previous case to match
+    Function.pass(check_body(stx, "expression", [body, ..., suffix, ...]), ...)
     'block:
        check_same(located '$(check_id)',
-                  fun (): $result1 ...; $result2.suffix; ...,
-                  matcher($result2.mode, $result2.body),
-                  located '$result2.mode')
+                  fun (): $body ...; $suffix; ...,
+                  [matcher($result.mode, $result.body), ...],
+                  [located '$result.mode', ...])
        ...'
 // single line
-| 'check $result1 ... $(result2 :: Result)':
+| 'check $(body :: BodyTerm) ... $(result_s :: ResultInlineSequence) ... ~nonempty':
     ~op_stx: check_id
+    ~all_stx: stx
+    let ['$(result :: MustResult(stx))', ...] = [result_s, ...]
+    let [suffix, ...] = make_suffix(result.add_void, ...)
+    check_body(stx, "expression", [body, ..., suffix, ...])
     'check_same(located '$(check_id)',
-                fun (): $result1 ...; $result2.suffix; ...,
-                matcher($result2.mode, $result2.body),
-                #'$result2.mode)'
+                fun (): $body ...; $suffix; ...,
+                [matcher($result.mode, $result.body), ...],
+                [#'$result.mode, ...])'
 // error cases
 | 'check:
      $_
@@ -140,55 +203,75 @@ expr.macro
          | (_): #%literal $(to_string(ann))'
 | 'matcher($_, $body)': 'fun () $body'
 
-fun check_same(loc_where :~ List, thunk, expected_thunk, maybe_loc_mode):
-  let [mode, srcloc :~ Srcloc]:
-    match maybe_loc_mode
-    | [mode, srcloc]: maybe_loc_mode
-    | mode: [mode, loc_where[1]]
-  let (got :~ List, exn_msg, output) = call_capturing_exn(thunk, mode == #'~prints, mode != #'~throws)
-  let expected :~ List = call_capturing_values(expected_thunk)
-  let ok:
-    match mode
-    | #'~prints:
-        !exn_msg && (output == expected[0])
-    | #'~prints_like:
-        !exn_msg && (to_string(got) == to_string(expected))
-    | #'~is:
-        !exn_msg && (got == expected)
-    | #'~is_now:
-        !exn_msg && (got is_now expected)
-    | #'~throws:
-        exn_msg && does_contain_each(expected, exn_msg)
-    | #'~completes:
-        !exn_msg
-    | #'~is_a:
-        !exn_msg && got.length() == 1 && expected[0](got[0])
-    | #'~matches:
-        !exn_msg && expected[0](& got)
-  #{test-log!}(ok)
-  unless ok
-  | fun
-    | values_str([v]): to_string(v, ~mode: #'expr)
-    | values_str(lst): "values " +& to_string(lst, ~mode: #'expr)
-    let msg:
-      (if #{error-print-source-location}()
-       | (if srcloc | srcloc.source +& ":" +& srcloc.line | "???")
-       | loc_where[0])
-        +& ": failed\n"
-        +& "  got: "
-        // magic number is length of "  got: exception "
-        +& (exn_msg && ("exception " +& reindent_exn_msg(exn_msg, 17))
-              || output && to_string(output, ~mode: #'expr)
-              || values_str(got))
-        +& "\n"
-        +& "  expected: " +& (match mode
-                              | #'~completes: "completion"
-                              | #'~throws: "exception " +& values_str(expected)
-                              | #'~matches: "matching " +& expected_thunk(#false)
-                              | #'~is_a: "satisfying " +& expected_thunk(#false)
-                              | #'~prints: "output " +& values_str(expected)
-                              | ~else: values_str(expected))
-    display_as_exn(msg, srcloc)
+fun check_same(loc_where :~ List, thunk, expected_thunks :~ List, maybe_loc_modes :~ List):
+  let [[mode, srcloc :~ Srcloc], ...]:
+    for List (maybe_loc_mode in maybe_loc_modes):
+      match maybe_loc_mode
+      | [mode, srcloc]: maybe_loc_mode
+      | mode: [mode, loc_where[1]]
+  let modes = [mode, ...]
+  let (got :~ List, exn_msg, output) = call_capturing_exn(thunk, #'~prints in modes, #'~throws in modes)
+  let [expected :~ List, ...] = expected_thunks.map(call_capturing_values)
+  fun check_strings(expected, exn_ok, output, clause_kw_str):
+    match expected
+    | [_ :: String || RX, ...]:
+        exn_ok && does_contain_each(expected, output,
+                                    fun (x): x is_a RX,
+                                    fun (rx :~ RX, str): rx.is_match(to_string(str)))
+    | ~else:
+        for (expected in (expected :~ List)):
+          unless expected is_a (String || RX)
+          | error(~who: loc_where[0],
+                  error.annot_msg("`" ++ clause_kw_str ++ "` clause result"),
+                  error.annot("String || RX"),
+                  error.val(expected))
+  let no_exns = all(mode != #'~throws, ...)
+  for (mode in [mode, ...],
+       srcloc in [srcloc, ...],
+       expected in [expected, ...],
+       expected_thunk in expected_thunks):
+    let ok:
+      match mode
+      | #'~prints:
+          check_strings(expected, !no_exns || !exn_msg, output, "~prints")
+      | #'~prints_like:
+          !exn_msg && (to_string(got) == to_string(expected))
+      | #'~is:
+          !exn_msg && (got == expected)
+      | #'~is_now:
+          !exn_msg && (got is_now expected)
+      | #'~throws:
+          check_strings(expected, exn_msg, exn_msg, "~throws")
+      | #'~completes:
+          !exn_msg
+      | #'~is_a:
+          !exn_msg && got.length() == 1 && expected[0](got[0])
+      | #'~matches:
+          !exn_msg && expected[0](& got)
+    #{test-log!}(ok)
+    unless ok
+    | fun
+      | values_str([v]): to_string(v, ~mode: #'expr)
+      | values_str(lst): "values " +& to_string(lst, ~mode: #'expr)
+      let msg:
+        (if #{error-print-source-location}()
+         | (if srcloc | srcloc.source +& ":" +& srcloc.line | "???")
+         | loc_where[0])
+          +& ": failed\n"
+          +& "  got: "
+          // magic number is length of "  got: exception "
+          +& (exn_msg && ("exception " +& reindent_exn_msg(exn_msg, 17))
+                || (mode in [#'~prints, #'~prints_like]) && output && to_string(output, ~mode: #'expr)
+                || values_str(got))
+          +& "\n"
+          +& "  expected: " +& (match mode
+                                | #'~completes: "completion"
+                                | #'~throws: "exception " +& values_str(expected)
+                                | #'~matches: "matching " +& expected_thunk(#false)
+                                | #'~is_a: "satisfying " +& expected_thunk(#false)
+                                | #'~prints: "output " +& values_str(expected)
+                                | ~else: values_str(expected))
+      display_as_exn(msg, srcloc)
 
 fun eval_test(stx, evalor):
   parameterize { Evaluator.current: evalor }:
