@@ -141,7 +141,7 @@
 
  Like @rhombus(class_clause.macro), but defines for use both in
  @rhombus(class) clauses and @rhombus(interface) clauses by
- binding in both the the @rhombus(class_clause, ~space) and
+ binding in both the @rhombus(class_clause, ~space) and
  @rhombus(interface_clause, ~space) @tech{spaces}.
 
 }

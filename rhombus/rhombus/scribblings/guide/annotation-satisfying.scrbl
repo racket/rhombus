@@ -61,7 +61,7 @@ check that is repeated via @rhombus(List.of, ~annot) or delayed by
 when the enclosing annotation is reached, not each time the repeated or
 delayed annotation is checked. Still, expressions in an annotation
 associated with a function argument must be evaluated each time the
-function is called, because because bindings for earlier arguments are
+function is called, because bindings for earlier arguments are
 available to the expression.
 
 @examples(

@@ -10,7 +10,7 @@ A @tech(~doc: ref_doc){stream} is like a sequence, but it is stateless
 and supports functional ``first'' and ``rest'' operations like a linked
 list. Lists and sequence ranges can be used as streams. Any sequence can
 be turned into a stream using @rhombus(Sequence.to_stream), which
-instantiates the sequence an caches results so that the same first value
+instantiates the sequence and caches results so that the same first value
 can be provided from a stream as many times as it is requested. An
 element can be accessed from a stream using @brackets, which is
 equivalent to accessing the @rhombus(Stream.rest) property as many times

@@ -6,7 +6,7 @@
 
 Exactly how static information is associated to expressions and
 bindings depends on the expression or binding form. It's not
-possible to write down exhaustive rules for for Rhombus static
+possible to write down exhaustive rules for Rhombus static
 information---in the same way that it's not possible to write down a
 full grammar, since the grammar can be extended via macros. A binding
 or expression form's documentation should define what static

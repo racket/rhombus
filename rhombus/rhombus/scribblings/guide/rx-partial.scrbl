@@ -27,9 +27,9 @@ the entire string.
 
 A match to only part of the input can be enabled in either of two ways:
 by using @rhombus(rx_in) to create the regexp, or by using the
-@rhombus(RX.match_in) method to match to input. Using both
+@rhombus(RX.match_in) method to match the input. Using both
 @rhombus(rx_in) and @rhombus(RX.match_in) has the same effect as using
-only one of them. A partial match locates the the earliest point in the
+only one of them. A partial match locates the earliest point in the
 input where a successful match can start.
 
 @examples(

@@ -25,7 +25,7 @@ privately implementing @rhombus(Printable, ~class) will achieve the goal.
 
 To privately implement an interface, use
 @rhombus(private, ~class_clause) @rhombus(implements, ~class_clause),
-and override the interfaces methods with
+and override the interface's methods with
 @rhombus(private, ~class_clause) methods.
 
 @examples(

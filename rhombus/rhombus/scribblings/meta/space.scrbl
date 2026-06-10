@@ -268,10 +268,10 @@ driver and macro-definitions forms.
   a prefix operator or identifier that is bound for the space. Parsing
   proceeds as if after the argument of the operator, which means that
   parsing can stop with a tail sequence remaining. The parsed ``argument''
-  is is the matched result, the consumed terms are in a
+  is the matched result, the consumed terms are in a
   @rhombus(group, ~datum) field, and the remaining tail is a
   @rhombus(tail, ~datum) repetition field.
-  This clause form can prefixed with @rhombus(private, ~space_meta_clause).}
+  This clause form can be prefixed with @rhombus(private, ~space_meta_clause).}
 
  @item{@rhombus(parse_infix_more_syntax_class, ~space_meta_clause):
   Declares an identifier like

@@ -49,7 +49,7 @@ arguments that are provided to the function. After importing the
   f(1, 2)  // prints "calling f with arguments [1, 2]"
 )
 
-Roughly, the @rhombus(def_noisy) form works by replacing
+Roughly, the @rhombus(noisy_fun) form works by replacing
 
 @rhombusblock(
   noisy_fun f(x, y):

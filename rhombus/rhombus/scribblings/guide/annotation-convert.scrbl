@@ -82,7 +82,7 @@ in @secref(~doc: model_doc, "bind-macro-protocol")) are not used.} When a furthe
 annotation wraps a converting annotation, however, the conversion must
 be computed to apply a predicate (even the @rhombus(Any, ~annot)
 predicate) or further conversion. The nested-annotation strategy is used
-in the following example for @rhombus(UTF8BytesAsString), where is
+in the following example for @rhombus(UTF8BytesAsString), where it is
 useful because checking whether a byte string is a UTF-8 encoding might
 as well decode it. Annotation constructors like @rhombus(List.of, ~annot)
 similarly convert eagerly when given a converting annotation for

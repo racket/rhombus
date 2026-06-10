@@ -350,7 +350,7 @@ Paths are @tech{comparable}, which means that generic operations like
 ){
 
  Extracts or adjusts the suffix of a path, which is the part of
- @rhombus(Path.name(path).bytes()) that starts with with last
+ @rhombus(Path.name(path).bytes()) that starts with the last
  @rhombus(Byte#".") and runs to the end of the byte string. If the path
  name has no @rhombus(Byte#"."), then the path has no suffix, and
  @rhombus(Path.suffix) returns @rhombus(#false).

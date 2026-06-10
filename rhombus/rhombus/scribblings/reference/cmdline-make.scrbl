@@ -183,7 +183,7 @@
 
  The @rhombus(~multi) option causes a parser using the flag to allow
  multiple instances of the flag in a command line. If @rhombus(~multi) is
- not present, but the the @rhombus(cmdline.flag) form is syntactically
+ not present, but the @rhombus(cmdline.flag) form is syntactically
  within a @rhombus(cmdline.multi) form, then @rhombus(~multi) mode is
  automatically enabled. Otherwise, the flag can appear at most once
  within a command line. A flag without @rhombus(~multi) can be used in
@@ -192,7 +192,7 @@
  @rhombus(~multi) option is present or a syntactically enclosing
  @rhombus(cmdline.multi) form is present.
 
- The @rhombus(~final) option causes all arguments that appears after he
+ The @rhombus(~final) option causes all arguments that appear after the
  flag to be treated as non-flag arguments. This is the behavior of the
  builtin @litchar{--} flag, and it is rarely needed for other flags.
 

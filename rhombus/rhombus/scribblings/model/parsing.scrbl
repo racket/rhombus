@@ -223,11 +223,11 @@ Much of the heavy lifting of expansion is embedded in an individual
  @rhombus(parse_syntax_class, ~space_meta_clause) is used to match
  syntax, the match applies @rhombus(enforest) with @rhombus(lookup)
  adapted to the appropriate @tech{space}. That process includes implicit
- uses of parsing syntax classes, such as an a macro bound by
- @rhombus(expr.macro) with an an escaped identifier as the pattern after
+ uses of parsing syntax classes, such as a macro bound by
+ @rhombus(expr.macro) with an escaped identifier as the pattern after
  the defined name. The syntax object associated with the match to a
  parsing syntax class is a parsed @rhombus(tree) that can be returned or
- incoporated into a larger syntax object.
+ incorporated into a larger syntax object.
 
  Nested uses of @rhombus(enforest) (via a syntax class) within a
  @rhombus(transform) class explain how parsing is trigered for spaces

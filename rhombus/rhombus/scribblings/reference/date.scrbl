@@ -401,7 +401,7 @@ absolute point in time as a date and time in a specific time zone.
 
  Represents an absolute date and time within a specific time zone. The
  @rhombus(time_zone_offset) argument is in seconds. There is no checking
- that @rhombus(time_zone_offset), @rhombus(is_dst), and and
+ that @rhombus(time_zone_offset), @rhombus(is_dst), and
  @rhombus(time_zone_name) are consistent, but they will be filled in
  correctly when a function like @rhombus(date.ZonedDateTime.now)
  @rhombus(date.ZonedDateTime.from_seconds) is used to create a

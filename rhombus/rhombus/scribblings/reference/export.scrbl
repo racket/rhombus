@@ -223,7 +223,7 @@
  useful if @rhombus(export_clause) has a block, which would otherwise
  preclude putting a @rhombus(modifier) afterward.
 
- If @rhombus(#%parens, ~expo) is not followed by parentheses, then it it
+ If @rhombus(#%parens, ~expo) is not followed by parentheses, then it is
  treated like @rhombus(names: #,(rhombus(#%parens, ~datum)), ~expo) to
  export @rhombus(#%parens, ~datum) (in some space).
 

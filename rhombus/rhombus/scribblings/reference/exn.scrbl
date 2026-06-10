@@ -68,7 +68,7 @@
       println("out")
 )
 
- If an exception is thrown during the the @rhombus(body) sequence, the
+ If an exception is thrown during the @rhombus(body) sequence, the
  control escapes to the context of the @rhombus(try) @rhombus(body)
  sequence (i.e., ``inside'' the @rhombus(~initially) and
  @rhombus(~finally) guards) and the @rhombus(~catch) cases are tried in

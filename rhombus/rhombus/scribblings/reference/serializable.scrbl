@@ -177,7 +177,7 @@ serializing and deserializing values.
  The intent of a @rhombus(deserializer) is that the
  @rhombus(~deserialize) @tech{entry point} accepts the content of an
  old-version object and returns a current-version object corresponding
- the the old object. For example, default values may be used for fields
+ to the old object. For example, default values may be used for fields
  added in a newer version of the class.
 
 }

@@ -99,7 +99,7 @@ is not enforced on implementations. That is, a class might implement
 @rhombus(area) to take additional arguments. Result
 annotations are different. If @rhombus(area) declares a result
 annotation, a check is added to each implementation to ensure that it
-results a satisfying result.
+returns a satisfying result.
 
 @examples(
   ~defn:

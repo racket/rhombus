@@ -115,7 +115,7 @@
   loop()
 )
 
- Typically, the @rhombus(inner_bind)s include the the @rhombus(each_id)s
+ Typically, the @rhombus(inner_bind)s include the @rhombus(each_id)s
  supplied to the match for @rhombus(pattern), so they can be referenced
  in @rhombus(loop_body). However, the @rhombus(each_id)s are not the same
  as the identifiers used in the triggering @rhombus(each, ~for_clause)

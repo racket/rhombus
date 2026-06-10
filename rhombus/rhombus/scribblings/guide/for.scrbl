@@ -114,7 +114,7 @@ immediately after @rhombus(each, ~for_clause).
 
 Note that the shorthand form using parentheses for an initial
 @rhombus(each, ~for_clause) clause corresponds to this parallel mode,
-since the short is for a single @rhombus(each, ~for_clause) clause:
+since the shorthand is for a single @rhombus(each, ~for_clause) clause:
 
 @examples(
   for (friend in ["Alice", "Bob", "Carol"],

@@ -55,7 +55,7 @@ You can also put @rhombus(Map) in front of @braces, but that makes
 more sense with map constructors other than the @rhombus(Map) default,
 such as @rhombus(MutableMap).
 
-When a requested key is not in a map, the an exception is thrown. Use
+When a requested key is not in a map, an exception is thrown. Use
 the @rhombus(Map.maybe) property of a map to get a value that looks
 up keys in the original map but returns @rhombus(#false) for unmapped
 keys.
@@ -138,7 +138,7 @@ using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 )
 
 In a map @braces pattern, a @rhombus(&) form binds
-to map for the ``rest'' of the map, analogous to the way @rhombus(&)
+to a map for the ``rest'' of the map, analogous to the way @rhombus(&)
 binds with lists. In a map @braces expression,
 @rhombus(&) splices in the content of another map, similar to the way
 @rhombus(&) works for list construction.

@@ -30,14 +30,14 @@ closed and the temporary file is automatically deleted:
 The @rhombus(Closeable.let) form is unusual in that it is a
 @deftech{definition sequence} macro, which receives all forms that
 follow the definition in a block context. The @rhombus(Closeable.let)
-form moves those forms into a @rhombus(try) close and adds a call to
-@rhombus(Closeable.let) in a @rhombus(~finally) clause, so the close
-operation happens even if an error occurs the body after
+form moves those forms into a @rhombus(try) form and adds a call to
+@rhombus(Closeable.close) in a @rhombus(~finally) clause, so the close
+operation happens even if an error occurs in the body after
 @rhombus(Closeable.let).
 
 Beware that the right-hand side of a @rhombus(Closeable.let) definition
 is evaluated with asynchronous breaks disabled. Disabling breaks
 reliably handles the case that, say, a user hits Ctl-C in a terminal
 running a Rhombus program. In that case, either the
-@rhombus(Closeable, ~annot) is has not opened, or it is opened and will
+@rhombus(Closeable, ~annot) has not opened, or it is opened and will
 be reliably closed when the exception triggered by Ctl-C is thrown.

@@ -291,7 +291,7 @@ multiplying like the expression @rhombus(*) operator.
  pattern matches any character or byte except a newline, while
  @rhombus(any, ~at rhombus/rx) also matches a newline. The
  @rhombus(char, ~at rhombus/rx) and @rhombus(byte, ~at rhombus/rx) forms
- are like @rhombus(any, ~at rhombus/rx) and also imply that that the
+ are like @rhombus(any, ~at rhombus/rx) and also imply that the
  enclosing @tech{regexp} matches strings or byte strings, respectively.
 
 @examples(

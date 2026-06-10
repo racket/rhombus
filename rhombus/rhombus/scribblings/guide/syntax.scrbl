@@ -35,7 +35,7 @@ itself remains quoted.
   '1 + $('$') 2'
 )
 
-Nesting quotes do not require a corresponding nesting of escaping
+Nested quotes do not require a corresponding nesting of escaping
 @rhombus($) to escape outside the original quotes. For example,
 @rhombus('('$(1+2)')') is the same as @rhombus('('3')') in Rhombus,
 even though the escape is inside two layers of quotes.
@@ -115,8 +115,8 @@ to form a repetition of matches:
  must thread potentially long sequences into and out of macro
  transformers.}
 
-A @rhombus($)-escaped variable in a @quotes pattern matches one term in
-with a group, or it matches a whole group if the a @rhombus($)-escaped
+A @rhombus($)-escaped variable in a @quotes pattern matches one term
+within a group, or it matches a whole group if the @rhombus($)-escaped
 variable is alone within its group.
 
 @examples(
@@ -222,9 +222,9 @@ example.
   '[$x]'
 )
 
-Although a @rhombus($) escape followed by variable in a @quotes pattern
+Although a @rhombus($) escape followed by a variable in a @quotes pattern
 normally matches only one term, a variable can be annotated with the
-@rhombus(TermSequence, ~stxclass) syntax class to match multiple terms.
+@rhombus(Sequence, ~stxclass) syntax class to match multiple terms.
 Sequence matches can be ambiguous, in which case ambiguity is resolved
 by eagerly matching terms to earlier escapes.
 

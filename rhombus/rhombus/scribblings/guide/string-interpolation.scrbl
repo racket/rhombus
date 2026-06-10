@@ -23,7 +23,7 @@ functions:
  (expression) mode; the escape form uses @litchar("@").
 
  A @litchar("@") form is desugared at the shrubbery layer, not the
- langauge layer; it is always equivalent to a function-call form. Text
+ language layer; it is always equivalent to a function-call form. Text
  plus escapes turn into a list argument in the function call.}
 
  @item{@rhombus(str) and related functions are designed to be called
@@ -42,7 +42,7 @@ is equivalent to the shrubbery form
 @rhombusblock(str(["Hello"]))
 
 Within a @rhombus(#,(hash_lang()) #,(@rhombuslangname(rhombus))) module,
-both of those are a call to the @rhombus(str) function, which simplify
+both of those are a call to the @rhombus(str) function, which simply
 converts every element of the list to a string and then appends the
 strings.
 
@@ -57,7 +57,7 @@ is equivalent to
 which illustrates how @litchar("@") acts as an escape within the
 literal-text @braces of an enclosing @litchar("@") form.
 
-The use of @litchar("@") to start a literal-text form an to escape
+The use of @litchar("@") to start a literal-text form and to escape
 within literal text are actually the same @litchar("@"), just in (1)
 function-call form with a function @rhombus(str) to call, and (2)
 parenthesized-expression form, with no function to call immediately
@@ -112,7 +112,7 @@ with escapes inside the argument of @rhombus(str) to format numbers.
 See @rhombus(str.d) and @rhombus(str.f) for additional examples.
 
 String interpolation is just one use of shrubbery @litchar("@")
-notation. The same notation is used for writing documentation,
-@margin_note{See the @self_source, for example.} creating slide
+notation. The same notation is used for writing
+documentation,@margin_note{See the @self_source, for example.} creating slide
 presentations, and other tasks that involve lots of prose. Those many
 uses make shrubbery's @litchar("@") notation worthwhile.

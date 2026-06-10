@@ -25,7 +25,7 @@ integer as its first element and a string as is second element. A
 @rhombus(matching, ~annot) annotation with a list pattern and
 @rhombus(_, ~bind) wildcards. Using @brackets directly for an annotation
 (i.e., @rhombus(#%brackets, ~annot)) is an even more compact form that
-it is equivalent to using @rhombus(List.tuple_of, ~annot).
+is equivalent to using @rhombus(List.tuple_of, ~annot).
 
 @examples(
   ~eval: list_eval

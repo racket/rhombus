@@ -95,7 +95,7 @@
 )
 
  Note that a @rhombus(modifier) used immediately before a
- @rhombus(import_item) or or as the start of an @rhombus(import_clause)
+ @rhombus(import_item) or as the start of an @rhombus(import_clause)
  can never include a block as part of the @rhombus(modifier).
 
  An @rhombus(import_item) is typically a @rhombus(module_path), but it
@@ -107,14 +107,14 @@
  By default, each clause with a @rhombus(module_path) binds a prefix
  name that is derived from the @rhombus(module_path)'s last element.
  Imports from the module are then accessed using the prefix, @litchar{.},
- and the provided-provided name. The @rhombus(as, ~impo) modifier with an
+ and the provided name. The @rhombus(as, ~impo) modifier with an
  identifier supplies a prefix to use, instead, while the
  @rhombus(as, ~impo) modifier with @rhombus(~none) indicates that only
  exposed names should be bound. A prefix is bound only in the phases that
  have imports (taking into account any @rhombus(modifiers)s), except that
  the prefix is bound in phase @rhombus(0) if no names are imported.
 
- A @rhombus(module_path) clause can be be adjusted through one or more
+ A @rhombus(module_path) clause can be adjusted through one or more
  @rhombus(modifier)s. The set of modifiers is extensible, but
  includes @rhombus(as, ~impo), @rhombus(rename, ~impo), and
  @rhombus(expose, ~impo).
@@ -398,7 +398,7 @@
 ){
 
  Modifies an @rhombus(import) clause so that all imports are shifted to
- the the label phase. Note that if a name is exported at multiple phases,
+ the label phase. Note that if a name is exported at multiple phases,
  attempting to import all of them will create a conflict that is reported
  as a syntax error; in that case, using @rhombus(only, ~impo) or
  @rhombus(only_meta, ~impo) can help.

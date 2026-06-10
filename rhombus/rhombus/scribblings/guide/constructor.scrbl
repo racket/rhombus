@@ -106,7 +106,7 @@ that the @rhombus(Posn) constructor supports.
       | ():
           super()(~z: 0)
       | (~x: x, ~y: y, ~z: z):
-          super(~x: x, ~y: x)(~z: z)
+          super(~x: x, ~y: y)(~z: z)
       | (~r: r, ~θ: θ, ~φ: φ):
           super(~r: r*math.cos(φ), ~θ: θ)(~z: r*math.sin(φ))
   ~repl:
@@ -117,9 +117,9 @@ that the @rhombus(Posn) constructor supports.
 
 When @rhombus(Posn3D) instances are created like this, the
 @rhombus(super) calls in the @rhombus(Posn3D) constructor first gather
-the two sets of arguments, and the the first set is passed on to the
+the two sets of arguments, and the first set is passed on to the
 constructor of @rhombus(Posn). Within that invocation of the
-@rhombus(Posn) constructor, calling @rhombus(super) produces an the
+@rhombus(Posn) constructor, calling @rhombus(super) produces an
 instance of @rhombus(Posn3D), not merely a @rhombus(Posn) instance.
 
 When a @rhombus(constructor, ~class_clause) clause creates a constructor

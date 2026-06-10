@@ -527,7 +527,7 @@
  bound to a match for a sequence of groups.
 
  The @rhombus(Block, ~stxclass) syntax class can be used only for a
- pattern escape that is along within a block. The identifier is
+ pattern escape that is alone within a block. The identifier is
  bound to a match for the entire block as a single term (i.e., as a
  single-term syntax object that has a block term, and not as a
  multi-group syntax object).

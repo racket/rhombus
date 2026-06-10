@@ -83,7 +83,7 @@ A port can be used for @rhombus(stdout) or @rhombus(stdin) by using
 
 Finally, since the combination of opening, setting @rhombus(stdin) or
 @rhombus(stdout), and then close is so common, it is supported directly
-by @rhombus(Port.Output.using) and @rhombus(Port.Intput.using).
+by @rhombus(Port.Output.using) and @rhombus(Port.Input.using).
 
 @examples(
   ~repl:
@@ -103,8 +103,8 @@ The @rhombus(Port.Output.open_string) function creates an output port
 that accumulates a string, so it can be used to build up large strings
 where appending would be inconvenient or inefficient. The
 @rhombus(Port.Output.String.get_string) method extracts an accumulated
-string from the port. The @rhombus(Port.Output.open_string) function
-similar enables reading from a string. String ports can be closed, but
+string from the port. The @rhombus(Port.Input.open_string) function
+similarly enables reading from a string. String ports can be closed, but
 since they do not allocate constrained system resources, leaving them
 completely to garbage collection is fine.
 
@@ -116,7 +116,7 @@ completely to garbage collection is fine.
     outp.print("world")
     outp.get_string()
   ~repl:
-    def inp = Port.Input.open_string("λ") // UTF-8 is encoding is #"\316\273"
+    def inp = Port.Input.open_string("λ") // UTF-8 encoding is #"\316\273"
     inp.read_byte()
     inp.read_byte()
 )

@@ -170,7 +170,7 @@
  @rhombus(v) to a string using @rhombus(repr).
 
  Use @rhombus(error.annot) to report an annotation in an error message,
- where @rhombus(Syntax.to_source_string) may be useful (especially in in
+ where @rhombus(Syntax.to_source_string) may be useful (especially in
  a macro's implementation) to construct a suitable string form of an
  annotation. The annotation string is adjusted using the given
  @rhombus(realm).

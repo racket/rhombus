@@ -228,7 +228,7 @@
 ){
 
  Like @rhombus(private, ~interface_clause), but protected methods and
- and properties, can be referenced and overridden within subclasses, subinterfaces, and
+ properties can be referenced and overridden within subclasses, subinterfaces, and
  subveneers. An overriding declaration does not use
  @rhombus(protected, ~interface_clause) again.
 

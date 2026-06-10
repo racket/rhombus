@@ -34,13 +34,13 @@ user-specific path for executables that are installed by packages.
 
 Using the @exec{rhombus} executable is like using the @exec{racket}
 executable with @exec_flag{-y}, which caches compilation of a module to
-a @filepath{compiled} a subdirectory (and the same for any dependency of
+a @filepath{compiled} subdirectory (and the same for any dependency of
 the module to run).
 
 Using @exec{racket} or using @exec{rhombus} with the @exec_flag{-u} flag
-skip a compilation check, but it still uses a cached compilation if
+skips a compilation check, but it still uses a cached compilation if
 available. Skipping the compilation check for a module and its
-dependencies may significantly reduce start-up time, especially all
+dependencies may significantly reduce start-up time, especially if all
 modules are already compiled. Meanwhile, a module's compilation does not
 have to be cached, so always using just @exec{racket} or always using
 @exec_flag{-u} is allowed. Beware, however, of using a cached

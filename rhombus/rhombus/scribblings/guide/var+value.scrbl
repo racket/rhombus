@@ -46,7 +46,7 @@ form, however, returns multiple values:
 )
 
 When an expression in a module body returns multiple values, each one is
-printed. Returning multiple values is different that returning one value
+printed. Returning multiple values is different than returning one value
 that is a list of values, similar to the way that passing multiple
 arguments to a function is different than passing one argument that is a
 list. To receive multiple values from an expression, you need to use a

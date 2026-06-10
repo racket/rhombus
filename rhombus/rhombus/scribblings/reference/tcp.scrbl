@@ -24,7 +24,7 @@
 
  The @rhombus(TCP.abandon) function is almost the same as closing a port
  with @rhombus(Port.Input.close) or @rhombus(Port.Output.close), but in
- in the case of closing an output port, the connection peer does not
+ the case of closing an output port, the connection peer does not
  receive an end-of-file in its input stream.
 
 }

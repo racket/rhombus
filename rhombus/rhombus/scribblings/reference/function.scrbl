@@ -665,7 +665,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
   expr.macro '$post_fun_expr compose_values $pre_fun_expr'
 ){
 
- Produces a function that that composes the result functions of
+ Produces a function that composes the result functions of
  @rhombus(pre_fun_expr) and @rhombus(post_fun_expr) so that
 
 @rhombusblock(
@@ -685,10 +685,10 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  @rhombus(post_fun_expr).
 
  In static mode (see @rhombus(use_static)) when using @rhombus(compose)
- or @rhombus(∘), if @rhombus(post_fun_expr) with has a known arity, it
+ or @rhombus(∘), if @rhombus(post_fun_expr) has a known arity, it
  must accept a single argument. In all modes and including
  @rhombus(compose_values), static information about the arity of
- @rhombus(pre_fun_expr) is propagated the the operation's result, and
+ @rhombus(pre_fun_expr) is propagated to the operation's result, and
  static information about the call result of @rhombus(post_fun_expr) is
  propagated to the operation's result.
 

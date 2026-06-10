@@ -210,7 +210,7 @@ or matches a pair list, instead of a list.
   ~defn:
     def autos = PairList["beetle", "jeep", "miata"]
   ~repl:
-    Pair.cons("cadillac", autos)
+    PairList.cons("cadillac", autos)
     autos is_a List
     autos is_a Listable
 )
@@ -227,7 +227,6 @@ elements.
   ~eval: list_eval
   autos
   [& autos]
-  PairList["cadillac", & [& autos, "corvette"]]
   PairList["cadillac", & [& autos, "corvette"]]
 )
 

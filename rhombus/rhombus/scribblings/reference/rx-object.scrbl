@@ -248,7 +248,7 @@
  Creates a @tech{regexp} that matches @rhombus(literal).
 
  If used directly, the regular expression matches case-sensitively, but
- it adapts to to the case-sensitivity of its context when spliced into a
+ it adapts to the case-sensitivity of its context when spliced into a
  larger regular expression using a @rhombus($, ~at rhombus/rx) escape.
 
 }

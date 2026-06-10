@@ -431,9 +431,9 @@ Moreover, an @deftech{input string port} reads from a @tech{byte
   method (port :: Port.Input.Progress).is_evt(e :: ProgressEvt) :: Boolean
 ){
 
- The @rhombus(Port.Input.Progress.evt) method returns a a @tech{synchronizable
+ The @rhombus(Port.Input.Progress.evt) method returns a @tech{synchronizable
  event} that becomes ready for synchronization when data is read from
- @rhombus(port). The @rhombus(Port.Input.Progress.evt) method check whether
+ @rhombus(port). The @rhombus(Port.Input.Progress.evt) method checks whether
  @rhombus(e) belongs to @rhombus(port).
 
 }

@@ -88,7 +88,7 @@ generally. A pattern formed with @rhombus(||, ~at rhombus/rx) matches
 when the pattern to its left matches or the pattern to its right
 matches. The precedence of @rhombus(||, ~at rhombus/rx) is weaker than
 juxtaposition. Parentheses are simply grouping forms, and they do not
-imply not @tech{capture groups} as in some regexp notations.
+imply @tech{capture groups} as in some regexp notations.
 
 @examples(
   ~eval: rx_eval
@@ -121,13 +121,13 @@ capture group, where index @rhombus(0) corresponds to the whole pattern.
     m[1]
 )
 
-When @rhombus($, ~at rhombus/rx) is followed by and identifier without a
-subsequence @colon block, then it is a @deftech{backreference} to a
+When @rhombus($, ~at rhombus/rx) is followed by an identifier without a
+subsequent @colon block, then it is a @deftech{backreference} to a
 capture group. The backreference matches input that is exactly the same
 as the captured match.
 
 @margin_note_block{Backreferences extend the matching capability of
- regexps beyond the automata-theory definition of regular expressions.
+ regexps beyond the automata-theory definition of regular expressions,
  but backreference support is commonly included in regexp libraries,
  anyway.}
 
@@ -138,7 +138,7 @@ as the captured match.
     rx'($prefix: "a"+ "b"+ || "x"+ "y"+) $prefix'.match("xyxxy")
 )
 
-The @rhombus($, ~at rhombus/rx) operator support backreferences by
+The @rhombus($, ~at rhombus/rx) operator supports backreferences by
 integer index, too. The @rhombus(~~, ~at rhombus/rx) operator creates an
 anonymous capture group that can only be referenced by index.
 
@@ -158,7 +158,7 @@ a @tech{regexp} object that can be spliced into the enclosing pattern.
 
 We've only touched on a few of the regexp pattern and character set
 operators provided by @rhombusmodname(rhombus/rx).
-@Secref("rx-quickref"), provides a quick reference to the full set of
+@Secref("rx-quickref") provides a quick reference to the full set of
 exported operators. New operators can be defined outside of
 @rhombusmodname(rhombus/rx) using @rhombus(rx.macro) or
 @rhombus(rx_charset.macro).

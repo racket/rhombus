@@ -52,7 +52,7 @@ to work:
  handle the module body. In a Rhombus-implemented language, this should
  normally be @rhombus(#{#%module-begin}) from @rhombuslangname(rhombus).
  Using that @rhombus(#{#%module-begin}) obliges the module to also export
- @rhombus(#%module_body, ~datum).}
+ @rhombus(#%module_block, ~datum).}
 
  @item{@rhombus(#%module_block, ~datum): A Rhombus declaration form that
  is implicitly wrapped around a module's body by
@@ -73,21 +73,21 @@ to work:
 
  @item{@rhombus(#%interaction, ~datum): A Rhombus declaration form that
  is implicitly wrapped around interactive evaluation by
- @rhombus(#{#%top-interaction}). A form sequence o evaluate is received
+ @rhombus(#{#%top-interaction}). A form sequence to evaluate is received
  as a block. Exporting @rhombus(#%interaction, ~decl) from
  @rhombuslangname(rhombus) allows a REPL to work in the same way as for
- @rhombuslangname(rhombus) module.}
+ a @rhombuslangname(rhombus) module.}
 
  @item{Other bindings as needed by the language, especially common forms
  like @rhombus(def, ~defn) and @rhombus(fun) and
  @seclink(~doc: ref_doc, "implicit"){implicit forms} like
- @rhombus(#%call), @rhombus(#%parens), and , @rhombus(#%literal). These
+ @rhombus(#%call), @rhombus(#%parens), and @rhombus(#%literal). These
  bindings, too, are often reexported from @rhombuslangname(rhombus).}
 
 )
 
 For example, the following module defines a language that is like
-@rhombuslangname(rhombus), but it replaces @rhombus(#%module_body) to
+@rhombuslangname(rhombus), but it replaces @rhombus(#%module_block, ~decl) to
 first print out the source of all forms in the module body. After
 printing, the body forms are evaluated the same way as in
 @rhombuslangname(rhombus).
@@ -162,8 +162,8 @@ configurations take the form of submodules:
 
 @itemlist(
 
- @item{A @rhombus(configure_runtime, ~datum) submodule is instantated
- before its enclosing module when then enclosing module is the main
+ @item{A @rhombus(configure_runtime, ~datum) submodule is instantiated
+ before its enclosing module when the enclosing module is the main
  module of a program. Instantiating the submodule is intended to have
  side effects that configure the environment.
 
@@ -196,7 +196,7 @@ configurations take the form of submodules:
  @rhombus(enter_parameterization) returns a
  @tech(~doc: model_doc){parameterization} that is used while the module
  is being compiled, and @rhombus(exit_parameterization) is called to
- obtain a more nested parameterization to use when compilation is a
+ obtain a more nested parameterization to use when compilation of a
  dependency is triggered.
 
  More precisely, a @rhombus(#{configure-expand}, ~datum) submodule is
@@ -248,8 +248,8 @@ Racket level, requires the submodule to export three functions:
 is convenient for defining Rhombus-like languages.
 
 The key clause in a @rhombuslangname(rhombus/reader) module is
-@rhombus(~lang) followed by module path for the @rhombus(~lang)-protocol
-module to use for the parsed module. The module can can be relative to
+@rhombus(~lang) followed by a module path for the @rhombus(~lang)-protocol
+module to use for the parsed module. The module path can be relative to
 the enclosing @rhombus(reader, ~datum) submodule, so
 @rhombus(parent, ~impo) serves as a reference to the enclosing module.
 The following example is the same as @filepath("noisy_rhombus.rhm") in
@@ -302,7 +302,7 @@ A small problem remains here, created by the mismatch between
 @rhombus(noisy_rhombus, ~datum) is
 @rhombus(lib("noisy_rhombus/main.rkt"), ~impo), while the
 @rhombus(import) interpretation is
-@rhombus(lib("noisy_rhombus/main.rhm"), ~impo). Consequently, these
+@rhombus(lib("noisy_rhombus/main.rhm"), ~impo). Consequently, the
 following @rhombus(all_from, ~expo) does not work as would be expected:
 
 @filebox(
@@ -323,7 +323,7 @@ in the @rhombus(reader, ~datum) module. Changing to
     ~lang "main.rhm"
 )
 
-causes as @rhombus(#,(@hash_lang()) noisy_rhombus) module to use
+causes a @rhombus(#,(@hash_lang()) noisy_rhombus) module to use
 @rhombus(lib("noisy_rhombus/main.rhm"), ~impo) as the initially imported
 module, and we can create @filepath("noisy_rhombus/main.rhm") to
 reexport @filepath("noisy_rhombus/main.rkt"):
@@ -357,7 +357,7 @@ by reexporting and also propagating submodule definitions and exports.
 Note that @filepath{noisy_rhombus/main.rhm} depends on
 @filepath{noisy_rhombus/main.rkt} while
 @filepath{noisy_rhombus/main.rkt} indirectly depends on
-@filepath{noisy_rhombus/main.rkt}. This kind of cycle is allowed,
+@filepath{noisy_rhombus/main.rhm}. This kind of cycle is allowed,
 because @rhombuslangname(rhombus/reader) delays its reference by quoting
 the @rhombus(~lang) module name.
 
@@ -366,7 +366,7 @@ Rhombus is
 
 @itemlist(
 
- @item{Create or link a collection as a directly like
+ @item{Create or link a collection as a directory like
  @filepath{noisy_rhombus} (but with a more suitable name).}
 
  @item{Export the language's implementation from @filepath{main.rkt} in

@@ -11,7 +11,7 @@ file. For defining modules in other contexts, Rhombus provides a
 @// ----------------------------------------------------------------------
 @section(~tag: "module-syntax-form"){The @rhombus(module, ~decl) Form}
 
-The a module that is not in its own file can be written as
+A module that is not in its own file can be written as
 
 @rhombusblock(
   module #,(@rhombus(name_id, ~var)) ~lang #,(@rhombus(initial_module_path, ~var)):
@@ -34,9 +34,8 @@ bindings described in this guide, including @rhombus(import),
 
 For example, the @filepath{cake.rhm} example of the
 @seclink("module-basics"){previous section} could be written within
-another module or even in a @tech{REPL} with
-@margin_note{To write this in the Rhombus @tech{REPL}, it's easiest to
- remove the blank lines.}
+another module or even in a @tech{REPL} as@margin_note{To write this in
+ the Rhombus @tech{REPL}, it's easiest to remove the blank lines.}
 
 @rhombusblock(
   module cake ~lang #,(@rhombuslangname(rhombus)):
@@ -53,7 +52,7 @@ another module or even in a @tech{REPL} with
       println(pre ++ String.make(n, ch) ++ post)
 )
 
-This @rhombus(cake, ~datum) module that is not associated with any file.
+This @rhombus(cake, ~datum) module is not associated with any file.
 To refer to such an unassociated module, use the @rhombus(self, ~impo)
 module path with @rhombus(!, ~impo):
 

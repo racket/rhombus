@@ -38,7 +38,7 @@ to implement an ``if'' ... ``else if'' ... ``else if'' ... combination,
 the @rhombus(cond) form supports that combination better. It expects
 alternatives where each @litchar{|} has a test expression followed by a
 block. Evaluating the @rhombus(cond) form dispatches to the block after
-first test that produces a non-@rhombus(#false) value. The
+the first test that produces a non-@rhombus(#false) value. The
 @rhombus(~else) keyword can be used in place of a last test.
 
 @examples(
@@ -86,7 +86,7 @@ function declaration and the pattern match, like this:
 )
 
 There's no @rhombus(~else) for this fused form, but @rhombus(_, ~bind) can be
-useful in catch-call clauses where the argument is not used. Also, the
+useful in catch-all clauses where the argument is not used. Also, the
 function name and all relevant argument positions have to be repeated in
 every case, but that's often a readable trade-off. Match-dispatching
 functions cannot have optional arguments, but different cases

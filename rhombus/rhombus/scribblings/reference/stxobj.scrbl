@@ -386,7 +386,7 @@ or adjusted in any way
  An @rhombus($, ~bind)@rhombus(id) escape matches a single term, a
  group, or a multi-group sequence, depending on its context. It matches a
  multi-group sequence only when the @rhombus($, ~bind)@rhombus(id) escape
- is alone within its group and the group is along within a block or
+ is alone within its group and the group is alone within a block or
  @quotes form. Otherwise, the escape matches a group only when it is
  alone within its group. In all other contexts, a
  @rhombus($, ~bind)@rhombus(id) escape matches a single term. Beware that

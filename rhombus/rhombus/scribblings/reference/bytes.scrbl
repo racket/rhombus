@@ -32,7 +32,7 @@ like @rhombus(<) and @rhombus(>) work on byte strings.
 ){
 
  Matches byte strings, where @rhombus(MutableBytes, ~annot) matches only
- mutable byte strings, and and @rhombus(ImmutableBytes, ~annot) matches
+ mutable byte strings, and @rhombus(ImmutableBytes, ~annot) matches
  only immutable byte strings.
 
  The @rhombus(BytesNoNull, ~annot) annotation matches byte strings that do

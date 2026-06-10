@@ -50,7 +50,7 @@ Both approaches work in this example, because the field is mutable. If a
 private field is immutable, then it needs to be written with other
 fields in parentheses, because a @rhombus(field, ~class_clause)
 declaration in a class body always creates a mutable field. If the
-initial value of a private depends on values supplied when an object is
+initial value of a private field depends on values supplied when an object is
 created, then a custom constructor may be needed. When a private field
 is declared within parentheses after a class name, then the underlying
 constructor accessed with @rhombus(super)---as used in a custom

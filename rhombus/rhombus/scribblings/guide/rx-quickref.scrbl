@@ -53,7 +53,7 @@ Regexp operators:
   (lookahead(#,(@rhombus(pat, ~var)))) @{Match empty if @rhombus(pat, ~var) matches after}
   (lookbehind(#,(@rhombus(pat, ~var)))) @{Match empty if @rhombus(pat, ~var) matches before}
   (! lookahead(#,(@rhombus(pat, ~var)))) @{Match empty if @rhombus(pat, ~var) does not match after}
-  (! lookbehind(#,(@rhombus(pat, ~var)))) @{Match empty if @rhombus(pat, ~var) does match before}
+  (! lookbehind(#,(@rhombus(pat, ~var)))) @{Match empty if @rhombus(pat, ~var) does not match before}
   word_boundary @{Match empty outside of word}
   word_continue @{Match empty within word}
   (if #,(@rhombus(tst, ~var)) | #,(@rhombus(pat, ~var)) | #,(@rhombus(pat, ~var))) @{Condition on lookahead, lookbehind, or backreference}
@@ -75,19 +75,19 @@ Character sets that can be used directly as regexp operators:
   xdigit @{Hexadecimal digits @litchar{0}-@litchar{9}, @litchar{a}-@litchar{f}, and @litchar{A}-@litchar{F}}
   alnum @{@rhombus(alpha, ~at rhombus/rx_charset) plus @rhombus(digit, ~at rhombus/rx_charset)}
   word @{@rhombus(alnum, ~at rhombus/rx_charset) plus @litchar{_}}
-  newline @{Newline (ASCI 10)}
-  blank @{Space (ASCI 32) and tab (ASCI 7)}
-  space @{Newline (10), return (13), space (32), tab (7), and form feed (12)}
+  newline @{Newline (ASCII 10)}
+  blank @{Space (ASCII 32) and tab (ASCII 9)}
+  space @{Newline (10), return (13), space (32), tab (9), and form feed (12)}
   graph @{ASCII characters that print with ink}
   print @{@rhombus(graph, ~at rhombus/rx_charset) plus @rhombus(space, ~at rhombus/rx_charset)}
-  cntrl @{ASCII control character(ASCII 0 through 31)}
+  cntrl @{ASCII control characters (ASCII 0 through 31)}
   ascii @{ASCII characters (ASCII 0 through 127)}
   latin1 @{Latin-1 characters (Unicode 0 through 255)}
   (unicode.Ll) @{Character in a Unicode general category Ll}
   (unicode.#,(@rhombus(cat, ~var))) @{Character in other Unicode general category...}
 )
 
-Character sets that can be used directly as regexp operators:
+Character-set forms for combining and constructing character sets:
 
 @quickref(
   rhombus/rx_charset

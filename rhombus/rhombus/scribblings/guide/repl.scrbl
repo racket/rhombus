@@ -39,8 +39,8 @@ continuing with an indented @rhombus(+) on the next line.
 )
 
 The Rhombus REPL supports only the former interaction. Naturally, the
-REPL waits for multi-line input with an opening parenthesis, bracket,
-bracket or quote is not yet closed.
+REPL waits for multi-line input when an opening parenthesis, bracket,
+brace, or quote is not yet closed.
 
 @examples(
   (1 + 2

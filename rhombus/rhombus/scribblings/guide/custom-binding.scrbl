@@ -19,7 +19,7 @@ underlying binding or annotation form. But instead of having a
 @rhombus(super) that is mapped to the underlying forms, binding and
 annotation customization rely on an @rhombus(internal, ~class_clause)
 clause to give a name to the more primitive form, and then that name can
-be used in an example.
+be used in an expansion.
 
 For example, suppose we customize the constructor for a
 @rhombus(Sandwich) class to accept any number of arguments, instead of

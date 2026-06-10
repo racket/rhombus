@@ -39,7 +39,7 @@ distinct argument for an anonymous function that replaces the
 parenthesized expression. ``Immediate'' here means that the @rhombus(_)
 is not nested more deeply within the @parens, such as being in a block
 or under more parentheses. As the last example above illustrates,
-@parens plus @rhombus(_) is a general way to turn on operator into a
+@parens plus @rhombus(_) is a general way to turn an operator into a
 function.
 
 Another form of the @rhombus(_) shorthand is like a function call, but
@@ -58,7 +58,7 @@ unlikely to collide with an expression form, because @rhombus(_) by
 itself as an expression is a syntax error. For example,
 @rhombus(math.max(_, 2)) by itself is a syntax error. (Also,
 @rhombus(_, ~bind) as a binding form matches without binding a name, so
-@rhombus(_) is not easy to bind locally. The shorthand is limited,
+@rhombus(_) is not easy to bind locally.) The shorthand is limited,
 however, and intended only for the simplest of cases. Fall back to
 @rhombus(fun) at the first sign of trouble.
 

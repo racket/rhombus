@@ -84,7 +84,7 @@
  operator that @rhombus(~op_stx) would capture. The @rhombus(~name_prefix)
  option binds an identifier to a symbol or @rhombus(#false) for a name
  prefix created by an enclosing namespace; this prefix should not be used
- for the binding, but it should be used for run-time reports, such as as
+ for the binding, but it should be used for run-time reports, such as
  naming the origin of a run-time error. The @rhombus(~effect_id)
  option binds an identifier to an identifier or @rhombus(#false) for a
  name to prefix non-definitions in the enclosing context, such as configured

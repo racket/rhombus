@@ -15,8 +15,8 @@ program source starts
   #,(hash_lang()) #,(@rhombuslangname(rhombus))
 )
 
-then DrRacket will load an use an editor mode suitable for Rhombus. In
-particular, the Tab key will cycle though valid indentations of the
+then DrRacket will load and use an editor mode suitable for Rhombus. In
+particular, the Tab key will cycle through valid indentations of the
 current line, and Shift-Tab cycles in the opposite order.
 
 Rhombus is supported in Emacs through

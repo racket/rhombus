@@ -103,7 +103,7 @@ The initially defined operators mostly have the usual precedence:
 @rhombus(-), while @rhombus(+) and @rhombus(-) have the same precedence
 and are left-associative. The @rhombus(*) and @rhombus(/) operators have
 the same precedence as long as @rhombus(*) appears only to the left of
-@rhombus(/),
+@rhombus(/).
 
 A precedence declaration in @rhombus(operator) takes the form of keyword
 blocks at the start of the operator's body. The possible keyword options
@@ -129,7 +129,7 @@ grouped on lines however is convenient.
 Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
 @rhombus(~stronger_than), or @rhombus(~same_as) to declare a precedence
 relationship for operators not otherwise mentioned. Instead of listing
-individual operators, a order order such as
+individual operators, an operator order such as
 @rhombus(arithmetic, ~operator_order) can be used to generalize the
 declaration.
 
@@ -186,7 +186,7 @@ operator after @rhombus(.) in parentheses:
 If the point of an operator is terseness, however, an import prefix may
 defeat the point. Using a library that supplies operators may be one
 reason to expose an imported name. To
-selectively make an operator accessible without it import's prefix, use
+selectively make an operator accessible without its import prefix, use
 the @rhombus(expose, ~impo) import modifier or a dotted import:
 
 @rhombusblock(

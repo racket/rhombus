@@ -504,8 +504,8 @@
  A @deftech{function-like term} @rhombus(t, ~var) is combined with
  argument expressions in a
  @rhombus(#,(@rhombus(t, ~var))(#,(@rhombus(arg, ~var)), ...)) form,
- which is a function when when @rhombus(t, ~var) is an expression, but
- can be a macro invocation if @rhombus(t, ~var) is an identifer that is
+ which is a function call when @rhombus(t, ~var) is an expression, but
+ can be a macro invocation if @rhombus(t, ~var) is an identifier that is
  bound as an expression macro.
 
 }

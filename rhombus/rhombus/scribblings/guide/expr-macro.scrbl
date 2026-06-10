@@ -11,7 +11,7 @@ definitions, and more. Each kind of macro extension has a different
 protocol and a different form for defining a macro. In the case of
 expressions, a macro receives the sequence of terms starting with the
 macro operator/identifier within a group. A macro
-consumes only the tokens that its pattern matches, and it's right-hand
+consumes only the tokens that its pattern matches, and its right-hand
 side is an immediate template expression that produces the macro
 expansion. A general form of macro is implemented with arbitrary
 compile-time computation, and it can return terms that the macro's
@@ -41,12 +41,12 @@ terms that use that identifier or operator literally. If the first term
 in the pattern is an unescaped identifier or operator, a prefix macro is
 defined; otherwise, the second term must be unescaped, and an infix
 macro is defined. The above macro definition starts with an unescaped
-@rhombus(thunk), so it defined the @rhombus(thunk) macro.
+@rhombus(thunk), so it defines the @rhombus(thunk) macro.
 
 The @rhombus(expr.macro) form must be imported from
 @rhombusmodname(rhombus/meta), but a @rhombus(macro) is
 available in just @rhombuslangname(rhombus). The @rhombus(macro) form
-is more limited, because it's body must be a template written with @quotes,
+is more limited, because its body must be a template written with @quotes,
 instead of an arbitrary compile-time expression.
 
 @examples(
@@ -93,7 +93,7 @@ identifier for its left-hand side. The pattern variable is bound to an
 opaque representation of the parsed form. In the definition of
 @rhombus(no_fail) above, the pattern variable @rhombus(left) stands for a parsed
 form, and not just a single shrubbery term. The form is parsed according
-to declared precedence relationships; you can specify their presence in the same
+to declared precedence relationships; you can specify precedence in the same
 way as for @rhombus(operator).
 
 @examples(
@@ -125,7 +125,7 @@ pattern variable stands for an opaque parsed form. With both arguments
 as parsed, you might as well use @rhombus(operator) in many cases, but
 macros provide control over evaluation order. For example, this
 @rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
-side before it's left-hand side:
+side before its left-hand side:
 
 @examples(
   ~defn:
@@ -185,7 +185,7 @@ a block pattern, an alternatives pattern, or
 @rhombus(#,(@rhombus($, ~bind))()), where @rhombus(#,(@rhombus($, ~bind))())
 means that the pattern is required to match to the end of a group. In some
 cases,  @rhombus(#,(@rhombus($, ~bind))()) can be useful to constrain
-a macro uses to appear at the end of a group.
+a macro's uses to appear at the end of a group.
 
 @examples(
   ~eval: macro_eval

@@ -6,7 +6,7 @@
 
 @title(~tag: "subclass"){Subclasses}
 
-When defining body of a new @rhombus(class), add
+When defining the body of a new @rhombus(class), add an
 @rhombus(extends, ~class_clause) clause followed by the name of an existing
 class. Instances of the new class, the @emph{subclass}, will also count as
 instances of the existing class, the @emph{superclass}. Since that creates

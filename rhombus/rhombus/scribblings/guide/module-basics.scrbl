@@ -188,7 +188,7 @@ converts the reference to a collection-based module path:
  @rhombus(import slideshow/main).}
 
  @item{Second, @rhombus(import) implicitly adds a @filepath{.rhm} suffix
- to the path while treating its a @rhombus(lib, ~impo) form, so
+ to the path while treating it as a @rhombus(lib, ~impo) form, so
  @rhombus(import slideshow/main) is equivalent to
  @rhombus(import lib("slideshow/main.rhm")). }
 
@@ -234,7 +234,7 @@ same collection (but not the same libraries, and the package manager
 ensures that installed packages do not conflict at that level).
 
 The distinction between packages and modules is unlike some package
-manages for specific programming languages, but it is similar to many
+managers for specific programming languages, but it is similar to many
 operating-system package managers. A package provides a set of library
 modules, but there's no requirement that the modules have a name that is
 based on the package name. A package can add to multiple
@@ -243,7 +243,7 @@ collection. For example, the @pkg{rhombus-ssl-lib} package provides a
 @rhombusmodname(net/ssl, ~indirect) module, even though @litchar{net} is not in
 the package name. The @pkg{rhombus-url-lib} package similarly provides
 @rhombusmodname(net/url, ~indirect), also adding to the @filepath{net}
-collection. The package manager ensures that full library names do
+collection. The package manager ensures that full library names do not
 conflict. Much like operating-system packages, updates to a package are
 generally intended to be backward-compatible, and API changes are
 reflected by increasing a number that is part of the package name.

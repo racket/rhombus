@@ -16,9 +16,9 @@
 
 @title(~tag: "rx-byte-or-char"){String, Byte String, and Port Matching}
 
-A @tech{regexp} produces by @rhombus(rx) matches in either character
+A @tech{regexp} produced by @rhombus(rx) matches in either character
 mode or byte mode. The mode is inferred from the @rhombus(rx) pattern.
-For example, it a literal string is part of the pattern, then it must be
+For example, if a literal string is part of the pattern, then it must be
 in character mode, but if a literal byte string is part of the pattern,
 it must be in byte mode. The @rhombus(string, ~at rhombus/rx) and
 @rhombus(bytes, ~at rhombus/rx) forms can be used to make the choice

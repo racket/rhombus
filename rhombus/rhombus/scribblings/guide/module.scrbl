@@ -44,7 +44,7 @@ parentheses.
 )
 
 @margin_note_block{In DrRacket's interactions area, a single input line is
- accepted as complete as long as it's openers and closers are balanced,
+ accepted as complete as long as its openers and closers are balanced,
  and as long as it doesn't contain @litchar{:} or @litchar{;} outside of
  an opener--closer pair. A blank line terminates multi-line input. For
  multi-line input where the first line would otherwise parse as complete,
@@ -54,7 +54,7 @@ parentheses.
  To get a Rhombus read-eval-print loop on the
  command line, use @exec{rhombus} or @exec{racket -I rhombus}. The rules for single-line
  and multi-line input are the same as in DrRacket's interactions area.
- Use can use the @litchar{,enter} command to load a module and evaluate
+ You can use the @litchar{,enter} command to load a module and evaluate
  additional expressions in the context of that module's body.}
 
 The definition of @rhombus(fahrenheit_freezing) could also have been

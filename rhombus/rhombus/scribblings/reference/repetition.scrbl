@@ -301,7 +301,7 @@ positions.
  to provide a clearer message when @rhombus(each) was meant to be used in
  a repetition context.
 
- The @rhombus(each, ~repet) repetion form is different from the
+ The @rhombus(each, ~repet) repetition form is different from the
  @rhombus(each, ~for_clause) form for @rhombus(for). They use the same
  name, because they are both related to extracting elements from a
  sequence.

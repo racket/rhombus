@@ -4,8 +4,8 @@
 
 @title(~tag: "print"){Printing Strings and Other Values}
 
-One way to print a value to have it be the result of an expression that
-is immediately with a module body.
+One way to print a value is to have it be the result of an expression that
+is immediately within a module body.
 
 @rhombusblock(
   #,@(hash_lang()) #,(@rhombuslangname(rhombus))
@@ -36,7 +36,7 @@ Among predefined datatypes, only strings, byte strings, symbols, and
 @tech{syntax objects} print differently in @rhombus(#'text) mode versus
 @rhombus(#'expr) mode. A predefined compound datatype, such as a list or
 map, prints the same in both modes, always printing elements of the
-compound datatype in @rhombus(#'expr) mode. A classes that implement the
+compound datatype in @rhombus(#'expr) mode. Classes that implement the
 @rhombus(Printable, ~class) interface can make different choices based
 on the @rhombus(mode, ~var) argument given to its
 @rhombus(describe, ~datum) method.
