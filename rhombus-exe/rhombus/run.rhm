@@ -19,6 +19,7 @@ fun file_to_mod_path(str :: String):
 enum S
 | evals
 | leftover_args
+| program
 | action
 | repl
 | init_lib
@@ -129,11 +130,14 @@ def args :~ Map:
                 "expected a module path as first argument",
                 error.text(~label: "given", args.first))
         state[S.evals] := [mp]
+        state[S.program] := args.first
         state[S.leftover_args] := args.rest
         state[S.action] := #true
       | state[S.leftover_args] := [arg, ...]
 
 cmdline.current_command_line(args[S.leftover_args])
+when S.program in args
+| cmdline.current_program(args[S.program])
 
 when S.version in args || S.action !in args
 | println(@str{Welcome to Rhombus v@(system.version())})
