@@ -350,4 +350,30 @@ key ways:
 
 }
 
+@doc(
+  fun para(content :: Any, ...) :: List
+){
+
+ Returns a list like @rhombus([content, ...]), but strings nested within
+ lists are converted to ``typeset'' certain character sequences,
+ performing the following replacements:
+
+@itemlist(
+
+  @item{@litchar{---} → @litchar{—} (em dash)}
+  @item{@litchar{--} → @litchar{–} (en dash)}
+  @item{@litchar{``} → @litchar{“} (curly open quote)}
+  @item{@litchar{''} → @litchar{”} (curly close quote)}
+  @item{@litchar{'} → @litchar{’} (curly single close quote)}
+  
+)
+
+@examples(
+  ~eval: html_eval
+  ~repl:
+    @para{Say ``Hello, world!'' --- because it's traditional.}
+)
+    
+}
+
 @close_eval(html_eval)

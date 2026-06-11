@@ -8,6 +8,7 @@ export:
   styles
   StyleSet
   css
+  para
 
 fun hyphenate(kw) :: String:
   rx'"_"'.replace_all(to_string(kw), "-")
@@ -209,3 +210,16 @@ expr.macro 'css:
               $(kw :: Keyword): $rhs
               ...':
   'pack_css([[#' $kw, $rhs], ...])'
+
+fun para(c, ...):
+  recur loop(c = [c, ...]):
+    match c
+    | s :: String:
+        let s = rx'"---"'.replace_all(s, "—")
+        let s = rx'"--"'.replace_all(s, "–")
+        let s = rx'"``"'.replace_all(s, "“")
+        let s = rx'"''"'.replace_all(s, "”")
+        let s = rx'"'"'.replace_all(s, "’")
+        s
+    | [c, ...]: [loop(c), ...]
+    | ~else: c
