@@ -90,18 +90,13 @@ or expression with @rhombus(:~, ~bind) or @rhombus(::, ~bind) might make the bin
 or expression a dot provider. See @secref(~doc: model_doc, "static-info") for more
 information on dot providers and other static information.
 
-The @rhombus(use_static) definition form redefines
-@rhombus(#%dynamism, ~datum) so that the @rhombus(.) operator works
-only in efficient mode with a dot provider, among others. If the
+The @rhombus(use_static) definition form makes the @rhombus(.) operator work
+only in efficient mode with a dot provider. If the
 left-hand side of the @rhombus(.) is not a dot provider, then
 @rhombus(.) under @rhombus(use_static) reports a compile-time
-error. The @rhombus(use_dynamic) form binds
-@rhombus(#%dynamism, ~datum) to the default @rhombus(#%dynamism),
-which allows dynamic field lookup if the left-hand side is not a dot
+error. The @rhombus(use_dynamic) form is the opposite,
+allowing dynamic field lookup if the left-hand side is not statically a dot
 provider.
-
-@margin_note_block{Use @rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/static)))
- for @rhombus(use_static) as the default mode instead of @rhombus(use_dynamic).}
 
 @examples(
   ~eval: ann_eval
@@ -113,5 +108,10 @@ provider.
       (1).x
 )
 
+A module starting with
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus))) behaves by
+default as if @rhombus(use_dynamic) is declared. A module starting with
+@rhombus(#,(@hash_lang()) #,(@rhombuslangname(rhombus/static))) behaves
+by default as if @rhombus(use_static) is declared, instead.
 
 @(close_eval(ann_eval))

@@ -64,9 +64,11 @@ written with @litchar{:} instead of @rhombus(=), like this:
   def fahrenheit_freezing: 32
 )
 
-By convention, however, @rhombus(=) is used for single expressions, while
-@litchar{:} is useful for multi-line definitions and blocks. A @rhombus(=) is
-interchangeable for @litchar{:} only in certain forms, like
+By convention, @rhombus(=) is used before a simple expression in a
+definition, especially expressions that fit on a single line. A
+definition with @litchar{:} is useful for larger expressions, and
+especially expressions that use @litchar{:} themselves. A @rhombus(=) is
+interchangeable with @litchar{:} only in certain forms, like
 @rhombus(def).
 
 A Rhombus module can export definitions to other modules using
@@ -114,9 +116,9 @@ supply an explicit prefix, use the @rhombus(as, ~impo) modifier:
   convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
 )
 
-Use the @rhombus(open, ~impo) modifier to import without a prefix---but
-this kind of ``namespace dumping'' is considered bad style in most
-cases:
+Use the @rhombus(open, ~impo) modifier to import without a prefix,
+albeit at the risk of creating import conflicts of obscuring the origin
+of a binding.
 
 @rhombusblock(
   import:
@@ -136,8 +138,9 @@ determines the default import prefix.
   measure.cpu_milliseconds()  // prints a number
 )
 
-@margin_note_block{Technically, the use of @litchar{.} with an import name as a hierarchical reference is not
-the same as the @rhombus(.) operator described in the next section.}
+@margin_note_block{Technically, the @litchar{.} operator is overloaded for use
+ in hierarchical references, as in @rhombus(measure.cpu_milliseconds),
+ and also in field and method selection, as described in the next section.}
 
 The default file suffix for an unquoted module path is
 @filepath{.rhm}. To reference a Racket module, use a
@@ -155,7 +158,7 @@ There's a lot more to the syntax of @rhombus(import) and
 documentation of @rhombus(import) and @rhombus(export) for more
 information.
 
-For examples in most of this guide, we will mostly not write
+For examples in this guide, we will mostly not write
 modules explicitly. Examples will sometimes show definitions, which are
 meant as part of some implicit module, with interactive examples
 shown with a leading @litchar{> } prompt and the expected result.

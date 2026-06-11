@@ -118,7 +118,7 @@ be used multiple times.
 
 Instead of using @rhombus(...) in @brackets
 or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
-or reference a plain list value whose elements are the rest of the list.
+or reference a plain list value.
 
 @examples(
   ~eval: list_eval
@@ -131,6 +131,12 @@ or reference a plain list value whose elements are the rest of the list.
       [others, ...]
     [grocery, ..., & ["pencil", "eraser"]]
 )
+
+Whether to use @rhombus(&) or @rhombus(...) is mostly a matter of
+whether it's more convenient to work in terms of list elements or an
+overall list. When you bind with @rhombus([grocery, ...]) and then
+reference with @rhombus([grocery, ...]), the compiler knows to
+use the original matched list instead of reconstructing it.
 
 When @brackets appears after an expression, then instead
 of forming a list, it accesses an element of an @tech(~doc: ref_doc){indexable} value.

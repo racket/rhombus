@@ -38,47 +38,17 @@ function to extract the field value from an instance of the class:
   Posn.x(origin)
 )
 
-Comparing @rhombus(Posn.x) to a function that uses @rhombus(.x) on its
-argument, the difference is that @rhombus(Posn.x) works only on
-@rhombus(Posn) instances. That constraint makes field access via
-@rhombus(Posn.x) more efficient than a generic lookup of a field with
-@rhombus(.x).
+The @rhombus(Posn.x) to a function works only on @rhombus(Posn)
+instances. In contrast, the @rhombus(.x) in @rhombus(origin.x)
+accesses an @rhombus(x) field from any kind of object as the value of
+@rhombus(origin). The constraint on @rhombus(Posn.x) make it more
+efficient than a generic lookup of a field with @rhombus(.x).
 
 An @deftech{annotation} associated with a binding or expression can make
 field access with @rhombus(.x) the same as using a class-specific
 accessor. Annotations are particularly encouraged for a function
 argument that is a class instance, and the annotation is written after
-the argument name with @rhombus(:~, ~bind) and the class name:
-
-@examples(
-  ~eval: posn_eval
-  ~defn:
-    fun flip(p :~ Posn):
-      Posn(p.y, p.x)
-  ~repl:
-    flip(Posn(1, 2))
-)
-
-Using @rhombus(:~, ~bind) makes an assertion about values that are provided as
-arguments, but that assertion is not checked when the argument is
-provided. In effect, the annotation simply selects a class-specific
-field accessor for @rhombus(.x). If @rhombus(flip) is called with
-@rhombus(0), then a run-time error will occur at the point that
-@rhombus(p.y) attempts to access the @rhombus(y) field of a
-@rhombus(Posn) instance:
-
-@examples(
-  ~eval: posn_eval
-  ~error:
-    flip(0)
-)
-
-The @rhombus(::, ~bind) binding operator is another way to annotate a variable.
-Unlike @rhombus(:~, ~bind), @rhombus(::, ~bind) installs a run-time check that a value
-supplied for the variable satisfies its annotation. The following
-variant of the @rhombus(flip) function will report an error if its
-argument is not a @rhombus(Posn) instance, and the error is from
-@rhombus(flip) instead of delayed to the access of @rhombus(y):
+the argument name with @rhombus(::, ~bind) and the class name:
 
 @examples(
   ~eval: posn_eval
@@ -86,21 +56,50 @@ argument is not a @rhombus(Posn) instance, and the error is from
     fun flip(p :: Posn):
       Posn(p.y, p.x)
   ~repl:
+    flip(Posn(1, 2))
+)
+
+Using @rhombus(::, ~bind) makes an assertion about values that are
+provided as arguments, and that assertion is checked when the argument
+is provided.
+
+@examples(
+  ~eval: posn_eval
+  ~error:
+    flip(0)
+)
+
+The @rhombus(:~, ~bind) binding operator is another way to annotate a
+variable. Unlike @rhombus(::, ~bind), @rhombus(:~, ~bind) does not imply
+an immediate run-time check. The following variant of the @rhombus(flip)
+function accepts any value as its argument, and an error for a
+non-@rhombus(Posn) argument is delayed to the access of @rhombus(y):
+
+@examples(
+  ~eval: posn_eval
+  ~defn:
+    fun flip(p :~ Posn):
+      Posn(p.y, p.x)
+  ~repl:
     ~error:
       flip(0)
 )
 
+In effect, the @rhombus(:~) annotation here just selects a
+class-specific field accessor for @rhombus(.y) and @rhombus(.x), the
+same as using @rhombus(Posn.y) and @rhombus(Posn.x).
+
 Normally, @rhombus(::, ~bind) is preferred to @rhombus(:~, ~bind) with a
 class annotation, because the implied run-time check is inexpensive---and
-the check may subsume checks that are otherwise performed at uses of the binding, anyway.
+the check may subsume and optimize away checks that are otherwise performed
+at uses of the binding, anyway.
 The run-time check for some other annotations can be expensive (such as
 an annotation created with @rhombus(List.of, ~annot) as described in
 @secref("list")). If a programmer uses @rhombus(::, ~bind) everywhere to
 try to get maximum checking and maximum guarantees, it's easy to create
-expensive function boundaries. Rhombus programmers are encouraged to use
-@rhombus(:~, ~bind) when in doubt, but use
-@rhombus(::, ~bind) where a defensive check is needed, such as for the
-arguments of an exported function.
+expensive function boundaries. Use @rhombus(::, ~bind) where a defensive
+check is helpful, such as for the arguments of an exported function, and
+where the cost is minimal or worthwhile.
 
 The use of @rhombus(::, ~bind) or @rhombus(:~, ~bind) as above is not specific to
 @rhombus(fun). The @rhombus(::, ~bind) and @rhombus(:~, ~bind) binding operators work
@@ -173,7 +172,9 @@ themselves patterns. Here's a function that works only on the origin:
 Finally, a function can have a result annotation, which is written with
 @rhombus(::) or @rhombus(:~) after the parentheses for the function's
 argument. With a @rhombus(::) result annotation, every return value from
-the function is checked against the annotation. Beware that a function's
+the function is checked against the annotation. That kind of checking
+is sometimes worthwhile, but @rhombus(:~) is more often appropriate to communicate
+the kind of result that a function definitely returns. Beware that a function's
 body does not count as being tail position when the function is declared
 with a @rhombus(::) result annotation.
 

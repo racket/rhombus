@@ -18,8 +18,10 @@ precedence than @rhombus(&&) and @rhombus(||), while @rhombus(&&) has
 higher precedence than @rhombus(||). Arithmetic operators have higher
 precedence than comparison operators, @rhombus(||), @rhombus(&&), but
 they have no precedence relative to @rhombus(!). The @rhombus(==)
-operator reports structural equality independent of mutations, while
-the @rhombus(===) operator reports object equality. Comparison
+comparison operator reports structural equality for immutable components,
+the @rhombus(is_now) comparison operator extends to structural equality using the
+current values of mutable components, and
+the @rhombus(===) operator compares object identity (use with care). Comparison
 operators are non-associative and have no precedence relationship with
 each other.
 
