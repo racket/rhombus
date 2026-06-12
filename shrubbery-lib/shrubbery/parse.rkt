@@ -254,7 +254,16 @@
             (closer-column? closer)
             column
             (column . column<? . closer
-                    #:incomparable (make-incomparable t))))
+                    #:incomparable (make-incomparable t))
+            ;; indentation matters only for a line-initial token, not
+            ;; for a token that continues a line (e.g., a `|` after a
+            ;; multi-line opener-closer term that ends with the closer
+            ;; less indented than this group sequence); a token is a
+            ;; line continuation if it's on the same line as preceding
+            ;; content
+            (not (and (token-line t)
+                      (eqv? (token-line t) (line+ (group-state-last-line sg)
+                                                  (cont-delta-line-span (group-state-delta sg))))))))
      (cond
        [(eq? (token-name t) 'group-comment)
         (check-no-commenting)
@@ -521,6 +530,9 @@
                                                   [check-column? (next-line?* rest-l group-end-line)]
                                                   [last-line group-end-line]
                                                   [comma-time? (and (group-state-paren-immed sg) #t)]
+                                                  [bar-closes-line (next-block-close-line (group-state-bar-closes-line sg)
+                                                                                          line
+                                                                                          group-end-line)]
                                                   [delta group-delta]
                                                   [commenting #f]
                                                   [tail-commenting group-tail-commenting]
@@ -786,6 +798,7 @@
                                             [line at-line]
                                             [delta at-delta]
                                             [block-mode (next-block-mode (state-block-mode s))]
+                                            [bar-closes-line (next-block-close-line (state-bar-closes-line s) line at-line)]
                                             [raw null]
                                             [at-mode new-at-mode])))
            (define new-g (at-adjust
@@ -1508,6 +1521,11 @@
 
 (define (next-block-mode mode)
   #f)
+
+(define (next-block-close-line bcl pre-line post-line)
+  (if (eqv? bcl pre-line)
+      post-line
+      bcl))
 
 (define (next-group-block-mode mode)
   (cond

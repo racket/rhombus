@@ -1574,6 +1574,15 @@ a
   b | x
   d
 
+a w List(x,
+         z) | b
+a | w List(x,
+           z) | b
+
+pick | one (
+         b
+) | two
+
 something +
 more stuff
 
@@ -1713,6 +1722,9 @@ INPUT
     (group four)
     (group a b)
     (group a (alts (block (group b (alts (block (group x)))) (group d))))
+    (group a w List (parens (group x) (group z)) (alts (block (group b))))
+    (group a (alts (block (group w List (parens (group x) (group z)))) (block (group b))))
+    (group pick (alts (block (group one (parens (group b)))) (block (group two))))
     (group something (op +))
     (group more stuff)
     (group something (block (group more stuff)))
@@ -1992,6 +2004,8 @@ tail @(«| then | else»)
                @pct(0.5) cherries}
 
 a | w @(«x: z») | b
+a | w @(«x:
+           z») | b
 
 The end
 INPUT
@@ -2152,7 +2166,7 @@ a | w @(«x:
         (group pct (parens (group 0.5)))
         (group " cherries")))))
     (group a (alts (block (group w x (block (group z)))) (block (group b))))
-    ;(group a (alts (block (group w x (block (group z)) (alts (block (group b)))))))
+    (group a (alts (block (group w x (block (group z)))) (block (group b))))
     (group The end)))
 
 (define input3b

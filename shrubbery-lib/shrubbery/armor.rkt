@@ -98,6 +98,15 @@
                  (if (group-close? (car (parse-state-gs state)))
                      (cons (cons prev-end 'close) inserts)
                      inserts)))
+         (define (adjust-bar-line state)
+           (define gs (parse-state-gs state))
+           (cond
+             [(and (pair? gs) (group-bar-line (car gs)))
+              (struct-copy parse-state state
+                           [gs (cons (struct-copy group (car gs)
+                                                  [bar-line (line-orig-start t pos)])
+                                     (cdr gs))])]
+             [else state]))
          (cond
            [(pos . >= . end)
             (cond
@@ -133,8 +142,9 @@
                  [(pair? (parse-state-gs state))
                   (close-one)]
                  [else (loop e e #f
-                             (or (parse-state-prev state)
-                                 state)
+                             (adjust-bar-line
+                              (or (parse-state-prev state)
+                                  state))
                              #f
                              inserts)])]
               [(comma-operator)
@@ -232,6 +242,7 @@
                  [(and g-col
                        (col . < . g-col)
                        (not continued?))
+                  (define gs (cdr (parse-state-gs state)))
                   (loop pos prev-end #f
                         (struct-copy parse-state state
                                      [gs (cdr (parse-state-gs state))])

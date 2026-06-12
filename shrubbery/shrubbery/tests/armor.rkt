@@ -36,7 +36,7 @@
   (unless (equal? orig-parsed armor-parsed)
     (out "original" orig-parsed pretty-write)
     (out "armored" armor-parsed pretty-write)
-    (out "armored-text" armored pretty-write)
+    (out "armored-text" armored display)
     (error "parse of armored is different"))
 
   (when unarmor?

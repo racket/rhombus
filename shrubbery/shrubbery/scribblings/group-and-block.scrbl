@@ -386,6 +386,21 @@ The following two groups are the same:
     | universe
 )
 
+A @litchar{|} counts as being on the ``same line'' as another
+@litchar{|} if a term in its place would continue a group that starts
+on the same physical line as the earlier @litchar{|}. The actual line
+can be a different physical line due to a multi-line term, such as one
+written with @parens. The following two groups are the same:
+
+@rhombusblock(
+  pick | one (
+    b
+  ) | two
+
+  pick | one(b) | two
+)
+
+
 @section(~tag: "semicolon"){Separating Groups with @litchar{;} and @litchar{,}}
 
 A @litchar{;} separates two groups on the same line. A @litchar{;} is
