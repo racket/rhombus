@@ -1,0 +1,114 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/version_meta
+
+decl.macro 'check_version_case $if_at_least $when_at_least $pre $post':
+  '«
+     // nested decls
+     namespace ~open:
+       version_meta . $if_at_least $pre
+       | import rhombus/date
+       | #void
+       check date.Time() ~is date.Time()
+
+       version_meta . $if_at_least $post
+       | import rhombus/date as date0
+       | import rhombus/date as date2
+       check date2.Time() ~is date2.Time()
+
+       version_meta . $if_at_least $pre
+       | def yes1 = "yes"
+       | def yes1 = "no"
+
+       check yes1 ~is "yes"
+
+       version_meta . $if_at_least $pre
+       | def yes2 = "yep"
+         def yes3 = "yeah"
+       |«»
+
+       check yes2 ~is "yep"
+       check yes3 ~is "yeah"
+
+       version_meta . $if_at_least $pre
+       |«»
+       | def no1 = "no"
+
+       version_meta . $when_at_least $pre:
+         def yes4 = "yes!"
+
+       check yes4 ~is "yes!"
+
+     // defns
+     block:
+       version_meta . $if_at_least $pre
+       | def yes1 = "yes"
+       | def yes1 = "no"
+
+       check yes1 ~is "yes"
+
+       version_meta . $if_at_least $pre
+       | def yes2 = "yep"
+         def yes3 = "yeah"
+       |«»
+
+       check yes2 ~is "yep"
+       check yes3 ~is "yeah"
+
+       version_meta . $if_at_least $post
+       | def no1 = "yep"
+       | def no1 = "no"
+
+       check no1 ~is "no"
+
+       version_meta . $if_at_least $pre
+       |«»
+       | def no2 = "no"
+
+       version_meta . $when_at_least $pre:
+         def yes4 = "yes!"
+
+       check yes4 ~is "yes!"
+
+     // exprs
+     check:
+       (version_meta . $if_at_least $pre
+        | 1
+        | 2)
+       ~is 1
+
+     check:
+       (version_meta . $if_at_least $pre
+        | def yes = "yes"
+          check yes ~is "yes"
+          "ok"
+        | "not ok")
+       ~is "ok"
+
+     check:
+       (version_meta . $when_at_least $pre:
+          def yes = "yes"
+          check yes ~is "yes"
+          "ok")
+       ~is "ok"
+
+     check:
+       (version_meta . $when_at_least $post:
+          "oops")
+       ~is #void
+   »'
+
+check_version_case if_at_least when_at_least "0.1" "5.0"
+check_version_case if_racket_at_least when_racket_at_least "7.0" "20.0"
+
+namespace ~open:
+  version_meta.when_at_least "0.1":
+    export yes10
+  def yes10 = "yep"
+check yes10 ~is "yep"
+
+// make sure the body can be a declaration,
+// not only a nestable declaration
+version_meta.when_at_least "0.1":
+  meta:
+    "ok"

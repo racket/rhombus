@@ -1,0 +1,93 @@
+#lang rhombus/static/and_meta
+import:
+  meta:
+    lib("version/utils.rkt") as rkt
+
+export:
+  if_at_least
+  when_at_least
+  if_racket_at_least
+  when_racket_at_least
+
+meta syntax_class VersionString:
+  description: "version string"
+| '$(vers :: String)':
+    match_when rkt.#{valid-version?}(vers.unwrap())
+
+meta fun make_when_at_least(stx :: Syntax, as_block, wrt_vers):
+  if as_block
+  | match stx
+    | '$_ $(vers :: VersionString): $(body :: Block)':
+        if !rkt.#{version<?}(wrt_vers, vers.unwrap())
+        | 'block $body'
+        | '#void'
+    | '$_ $(vers :: VersionString) $_ ...':
+        syntax_meta.error("expected a block",
+                          stx)
+  | match stx
+    | '$_ $(vers :: VersionString): $body':
+        if !rkt.#{version<?}(wrt_vers, vers.unwrap())
+        | body
+        | ''
+    | '$_ $(vers :: VersionString) $_ ...':
+        syntax_meta.error("expected a block",
+                          stx)
+
+meta fun make_if_at_least(stx :: Syntax, as_block, wrt_vers):
+  if as_block
+  | match stx
+    | '$_ $(vers :: VersionString) | $(thn :: Block) | $(els :: Block)':
+        if !rkt.#{version<?}(wrt_vers, vers.unwrap())
+        | 'block $thn'
+        | 'block $els'
+    | '$_ $(vers :: VersionString) $_ ...':
+        syntax_meta.error("expected two alternatives",
+                          stx)
+  | match stx
+    | '$_ $(vers :: VersionString) | $thn | $els':
+        if !rkt.#{version<?}(wrt_vers, vers.unwrap())
+        | thn
+        | els
+    | '$_ $(vers :: VersionString) $_ ...':
+        syntax_meta.error("expected two alternatives",
+                          stx)
+
+decl.nestable_macro 'if_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #false, system.version())
+defn.macro 'if_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #false, system.version())
+expr.macro 'if_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #true, system.version())
+
+decl.nestable_macro 'when_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #false, system.version())
+defn.macro 'when_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #false, system.version())
+expr.macro 'when_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #true, system.version())
+
+decl.nestable_macro 'if_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #false, system.racket_version())
+defn.macro 'if_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #false, system.racket_version())
+expr.macro 'if_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_if_at_least(stx, #true, system.racket_version())
+
+decl.nestable_macro 'when_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #false, system.racket_version())
+defn.macro 'when_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #false, system.racket_version())
+expr.macro 'when_racket_at_least $_ ...':
+  ~all_stx: stx
+  make_when_at_least(stx, #true, system.racket_version())
