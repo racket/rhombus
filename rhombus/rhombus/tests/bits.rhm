@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -83,7 +83,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.14.0.2":
+version_meta.when_racket_at_least "8.14.0.2":
   check:
     1 bits.(?) "oops" ~throws values(
       "bits.(?): " ++ error.annot_msg(),
@@ -108,7 +108,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.14.0.2":
+version_meta.when_racket_at_least "8.14.0.2":
   check:
     bits.field(1, "oops", 3) ~throws values(
       "bits.field: " ++ error.annot_msg(),

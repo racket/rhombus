@@ -2,7 +2,7 @@
 import:
   rhombus/thread open
   rhombus/measure
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   let s = Semaphore(0)
@@ -46,7 +46,7 @@ block:
   check Thread.receive_evt().sync(~timeout: 0) ~is #false
   check Thread.maybe_receive() ~is #false
 
-version_guard.at_least "8.18.0.11":
+version_meta.when_racket_at_least "8.18.0.11":
   check: Thread(~pool: Thread.Pool.own,
                 ~keep: Thread.Keep.results,
                 fun (): values(1, 2)).wait()

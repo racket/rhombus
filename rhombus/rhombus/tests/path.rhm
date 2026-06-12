@@ -1,7 +1,7 @@
 #lang rhombus/static/and_meta
 
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -264,7 +264,7 @@ block:
   check Path("x/y.zzzzz").suffix() ~is #".zzzzz"
   check Path.suffix("x/y.z") ~is #".z"
   check cross_p.suffix() ~is #false
-  version_guard.at_least "8.15.0.3":
+  version_meta.when_racket_at_least "8.15.0.3":
     check_annot Path.suffix(0)
 
 block:
@@ -276,7 +276,7 @@ block:
   check Path("x/y.w").add_suffix(".z", ~sep: "=") ~is Path("x/y=w.z")
   check Path.add_suffix("x/y", ".z") ~is Path("x/y.z")
   check Path.add_suffix(cross_p, ".z") ~is_a CrossPath
-  version_guard.at_least "8.15.0.3":
+  version_meta.when_racket_at_least "8.15.0.3":
     check_annot Path("x").add_suffix(#'oops)
     check Path(#'same).add_suffix(".z") ~throws values("Path.add_suffix",
                                                        "cannot add an extension")
@@ -289,7 +289,7 @@ block:
   check Path("x/y.q").replace_suffix(".z") ~is Path("x/y.z")
   check Path.replace_suffix("x/y", ".z") ~is Path("x/y.z")
   check Path.replace_suffix(cross_p, ".z") ~is_a CrossPath
-  version_guard.at_least "8.15.0.3":
+  version_meta.when_racket_at_least "8.15.0.3":
     check_annot Path("x").replace_suffix(#'oops)
     check Path(#'same).replace_suffix(".z") ~throws values("Path.replace_suffix",
                                                            "cannot add an extension")
@@ -309,7 +309,7 @@ block:
          ~is Path(match CrossPath.Convention.current()
                   | #'windows: "x/y"
                   | ~else: "X/Y")
-  version_guard.at_least "8.15.0.3":
+  version_meta.when_racket_at_least "8.15.0.3":
     check_annot Path.normal_case(0)
 
 block:

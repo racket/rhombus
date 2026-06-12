@@ -1,6 +1,6 @@
 #lang rhombus/static
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 check log.topic ~is_a maybe(Symbol)
 check log.max_at_level() ~is_a maybe(Logger.Level)
@@ -18,7 +18,7 @@ check:
 def r = LogReceiver(~logger: l,
                     ~receive: #'info)
 
-version_guard.at_least "9.1.0.2":
+version_meta.when_racket_at_least "9.1.0.2":
   check:
     r ~is_a LogReceiver
     r.sync(~timeout: 0) ~is #false

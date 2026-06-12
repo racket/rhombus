@@ -2,7 +2,7 @@
 import:
   "path.rhm"!path_help open
   rhombus/runtime_path
-  "version_guard.rhm"
+  rhombus/version_meta
 
 runtime_path.def path_rhm: "path.rhm"
 
@@ -222,7 +222,7 @@ block:
   check filesystem.size(link) ~is filesystem.size(x)
   check filesystem.size(link2) ~throws "filesystem.size:"
 
-  version_guard.at_least "8.15.0.4":
+  version_meta.when_racket_at_least "8.15.0.4":
     check filesystem.modify_seconds(tmp) ~is_a Int
     check filesystem.modify_seconds(x) ~is_a Int
     when !windows
@@ -296,7 +296,7 @@ block:
   check filesystem.write_string(x, "hello world", ~exists: #'truncate) ~is #void
   check filesystem.read_string(x) ~is "hello world"
 
-  version_guard.at_least "8.15.0.4":
+  version_meta.when_racket_at_least "8.15.0.4":
     block:
       Closeable.let tmp2_obj = filesystem.make_temporary(~as: #'directory)
       let tmp2 = tmp2_obj.path

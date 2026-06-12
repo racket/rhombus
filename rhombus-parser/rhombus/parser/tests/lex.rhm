@@ -1,9 +1,9 @@
 #lang rhombus/static/and_meta
 import:
   parser/lex open
-  rhombus/tests/version_guard open
+  rhombus/version_meta
 
-at_least "8.18.0.13":
+version_meta.when_racket_at_least "8.18.0.13":
   check:
     ~eval
     import parser/lex open
@@ -26,7 +26,7 @@ check:
   | ~eof: 2
   ~throws "second end-of-file clause not allowed"
 
-at_least "8.18.0.13":
+version_meta.when_racket_at_least "8.18.0.13":
   block:
     def none:
       lexer:
@@ -140,7 +140,7 @@ block:
   check bs(i) ~is #'da
   check bs(i) ~is Port.eof
 
-at_least "8.18.0.13":
+version_meta.when_racket_at_least "8.18.0.13":
   block:
     def none:
       lexer:
@@ -176,7 +176,7 @@ block:
   check u(i) ~is #'numeric
   check u(i) ~is Port.eof
 
-at_least "8.18.0.13":
+version_meta.when_racket_at_least "8.18.0.13":
   block:
     def u:
       lexer:

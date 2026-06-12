@@ -1,8 +1,8 @@
 #lang rhombus/scribble/manual
 @(import:
-    "../../tests/version_guard.rhm")
+    rhombus/version_meta)
 
-@(version_guard.at_least "9.0.0.11"
+@(version_meta.if_racket_at_least "9.0.0.11"
   | import:
       lib("scribblings/main/contents.rkt")
     contents.#{build-contents}(~#{main-language-family}: "Rhombus",

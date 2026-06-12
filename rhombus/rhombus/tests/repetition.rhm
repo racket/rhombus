@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 // syntax-object templates with repetitions
 block:
@@ -576,14 +576,14 @@ check:
   [index(0, a b c), ...]
   ~throws "expected a literal positive integer"
 
-version_guard.at_least "9.0.0.2":
+version_meta.when_racket_at_least "9.0.0.2":
   // requires `in-parallel-values` at the Racket level
   check:
     def [x, ...] = [1, 2, 3]
     [[index(index(index(x))), x], ...]
     ~is [[0, 1], [1, 2], [2, 3]]
 
-version_guard.at_least "9.0.0.2":
+version_meta.when_racket_at_least "9.0.0.2":
   check:
     let [x, ...] = [1, 2, 3]
     let [y, ...] = [1, 2]
@@ -601,7 +601,7 @@ block:
   check [[deepen x ~like y, ...], ...] ~is  [["a", "b"], ["a", "b"]]
   check [[deepen x ~like_inner y, ...], ...] ~is [["a", "a", "a"], ["b", "b"]]
   check [[{deepen x ~like_inner y, y}, ...], ...] ~is [[{"a", 1}, {"a", 2}, {"a", 3}], [{"b", 4}, {"b", 5}]]
-  version_guard.at_least "9.0.0.2":
+  version_meta.when_racket_at_least "9.0.0.2":
     check [[{x, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"
     check [[{deepen x ~like y, y}, ...], ...] ~throws "incompatible repetition lengths for ellipsis"
 

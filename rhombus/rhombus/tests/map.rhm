@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
   rhombus/memory
 
 block:

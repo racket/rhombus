@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -362,7 +362,7 @@ block:
 
 block:
   let who:
-    version_guard.at_least "8.14.0.2"
+    version_meta.if_racket_at_least "8.14.0.2"
     | "MutableList.to_sequence: "
     | ""
   check:
@@ -535,7 +535,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.14.0.2":
+version_meta.when_racket_at_least "8.14.0.2":
   check:
     (MutableList[1, 2, 3] :~ MutableList)["oops"]
     ~throws values(
@@ -559,7 +559,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.14.0.2":
+version_meta.when_racket_at_least "8.14.0.2":
   check:
     (MutableList[1, 2, 3] :~ MutableList)["oops"] := 0
     ~throws values(
@@ -592,7 +592,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.16.0.2":
+version_meta.when_racket_at_least "8.16.0.2":
   check:
     MutableList[1, 2, 3][5] ~throws values(
       "MutableList.get: " ++ "index is out of range",

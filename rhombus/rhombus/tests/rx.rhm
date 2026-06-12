@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
   rhombus/rx open
 
 check:
@@ -325,7 +325,7 @@ check:
   M rx'unicode.Lu' "Λ" ~is ["Λ"]
   M rx'unicode.Lu' "a" ~is #false
 
-version_guard.at_least "8.14.0.2":
+version_meta.when_racket_at_least "8.14.0.2":
   check:
     M rx'[]' "a" ~is #false
 

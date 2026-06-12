@@ -1,16 +1,16 @@
 #lang rhombus
 import:
   rhombus/serialize open
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
-  version_guard.at_least "8.15.0.3"
+  version_meta.if_racket_at_least "8.15.0.3"
   | let sixes = [6, 6, 6, 6]
   | let sixes = PairList[6, 6, 6, 6]
   let v = PairList[1, "b", #'c, #"d", Array(5, 5).snapshot(), sixes, { 7: 8 }, { 9 }, #void]
   check deserialize(serialize(v)) ~is v
 
-version_guard.at_least "8.15.0.3":
+version_meta.when_racket_at_least "8.15.0.3":
   block:
     let v = PairList[Array(1, 2, 3), Box(4), MutableList[5, 6, 7]]
     check deserialize(serialize(v)) ~is_now v

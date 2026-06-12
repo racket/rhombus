@@ -1,6 +1,6 @@
 #lang rhombus/and_meta
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -288,7 +288,7 @@ block:
     check:
       syntax_meta.error("wrong form")
       ~throws "wrong form"
-    version_guard.at_least "8.15.0.2":
+    version_meta.when_racket_at_least "8.15.0.2":
       check:
         syntax_meta.error('garbage + 2')
         ~throws values("garbage: ",  "bad syntax", "garbage + 2")

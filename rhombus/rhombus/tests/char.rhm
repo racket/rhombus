@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -164,7 +164,7 @@ check:
     "Char\"too long\"",
   )
 
-version_guard.at_least "8.14.0.7":
+version_meta.when_racket_at_least "8.14.0.7":
   block:
     let annot = @str{Int.in(@repr(0x0) ..= @repr(0x10FFFF)) && !Int.in(@repr(0xD800) ..= @repr(0xDFFF))}
     check:

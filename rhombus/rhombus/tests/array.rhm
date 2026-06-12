@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  "version_guard.rhm"
+  rhombus/version_meta
 
 block:
   import "static_arity.rhm"
@@ -578,7 +578,7 @@ check:
     error.val("oops").msg,
   )
 
-version_guard.at_least "8.14.0.7":
+version_meta.when_racket_at_least "8.14.0.7":
   check:
     Array.make("oops")
     ~throws values(
