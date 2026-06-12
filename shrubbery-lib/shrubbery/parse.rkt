@@ -342,7 +342,10 @@
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))
                          (group-state-count? sg)))
-              (define next-line? (next-line?* rest-l last-line))
+              (define next-line? (next-line?* rest-l
+                                              ;; a comma should be like whitespace, so we don't
+                                              ;; care what line it was on
+                                              (group-state-last-line sg)))
               (define bar-column
                 (if (or next-line? (null? rest-l))
                     (group-state-column sg)

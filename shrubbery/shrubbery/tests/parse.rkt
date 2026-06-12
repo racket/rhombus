@@ -289,3 +289,4 @@
 
 (check-fail "f(a, b:\n   c)" #rx"empty block not allowed after `:`")
 (check-fail "f(a, b\n   | c)" #rx"wrong indentation")
+(check-fail " (e\n,f)" #rx"wrong indentation")

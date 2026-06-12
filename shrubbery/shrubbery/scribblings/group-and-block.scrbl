@@ -448,6 +448,20 @@ group contains a block that contains a single group:
    universe)
 )
 
+For indentation purposes, @litchar{,} is treated like whitespace, so
+if it is used as the first token on a line, it does not determine the
+line's indentation. For example, the following two groups are the
+same:
+
+@rhombusblock(
+  countdown(3
+          , 2
+         ,  1)
+
+  countdown(3, 2, 1)
+)
+
+
 @section(~tag: "guillemet"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
 
 @margin_note_block{See also @secref("type-guillemet").}
