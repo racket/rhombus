@@ -1,11 +1,17 @@
 #lang at-exp racket/base
 (require racket/class
+         racket/file
          shrubbery/lex
          shrubbery/indentation
          "like-text.rkt"
          (for-syntax racket/base))
 
 (define failed? #f)
+
+(define tab-right-to-left?
+  (get-preference 'shrubbery:tab-right-to-left
+                  (lambda () #f)
+                  #:timeout-lock-there (lambda (fn) #f)))
 
 (define (check e line)
   (printf "Checking ~s\n" line)
@@ -23,7 +29,11 @@
                        [else (loop (add1 pos))])))
   (define t (new like-text% [content clean-e]))
   (define raw-candidates (shrubbery-indentation t start-pos #:multi? #t))
-  (define candidates (if (list? raw-candidates) raw-candidates (list raw-candidates)))
+  (define candidates (if (list? raw-candidates)
+                         (if tab-right-to-left?
+                             (reverse raw-candidates)
+                             raw-candidates)
+                         (list raw-candidates)))
   (unless (equal? candidates expected)
     (set! failed? #t)
     (eprintf (string-append
