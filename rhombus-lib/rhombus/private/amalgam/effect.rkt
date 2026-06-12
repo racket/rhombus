@@ -17,7 +17,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ . tail)
-        #:with e::expression #`(#,group-tag . tail)
+        #:with e::expression (datum->syntax #f (cons group-tag #'tail))
         (values #`(call-with-values
                    (lambda () #,(discard-static-infos #'e.parsed))
                    print-values)
