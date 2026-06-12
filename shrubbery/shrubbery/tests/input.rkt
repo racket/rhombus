@@ -1581,7 +1581,7 @@ a | w List(x,
 
 pick | one (
          b
-) | two
+)    | two
 
 something +
 more stuff

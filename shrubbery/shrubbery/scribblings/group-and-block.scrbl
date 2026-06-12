@@ -395,10 +395,16 @@ written with @parens. The following two groups are the same:
 @rhombusblock(
   pick | one (
     b
-  ) | two
+  ) then | two
 
-  pick | one(b) | two
+  pick | one(b) then | two
 )
+
+When a @litchar{|} is on a ``same line'' but a different physical
+line, it is still constrained to appear at a column no earlier than
+the group's starting column. That constraint avoids ambiguity for
+later lines, which might otherwise count either as continuing the
+alternative's block content or as ending the enclosing group.
 
 
 @section(~tag: "semicolon"){Separating Groups with @litchar{;} and @litchar{,}}

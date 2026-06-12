@@ -449,6 +449,14 @@
                                    (column=? column (group-state-column sg)
                                              #:incomparable (make-incomparable t))))
                      (fail t "wrong indentation")))
+                 (unless (in-block-mode? (group-state-block-mode sg))
+                   (define parent-column (group-state-column sg))
+                   (when (and (group-state-count? sg)
+                              column
+                              parent-column
+                              (column . column<? . parent-column
+                                      #:incomparable (make-incomparable t)))
+                     (fail t "alternative cannot start before group's initial column")))
                  (define pre-raw (group-state-raw sg))
                  (define commenting (or (group-state-commenting sg)
                                         (group-state-tail-commenting sg)))
@@ -623,6 +631,16 @@
                      (not (column=? (token-column t) (column-half-next (state-operator-column s))
                                     #:incomparable (make-incomparable t))))
             (fail t "wrong indentation"))
+          ;; a `|` that starts a new alternatives block for the
+          ;; enclosing group cannot be to the left of the group's
+          ;; start, even when it continues a line (e.g., after a
+          ;; multi-line opener-closer term with a dedented closer)
+          (when (and (state-count? s)
+                     (token-column t)
+                     (state-column s)
+                     ((column+ (token-column t) (cont-delta-column delta)) . column<? . (state-column s)
+                      #:incomparable (make-incomparable t)))
+            (fail t "alternative cannot start before group's initial column"))
           (parse-block #f l
                        #:count? (state-count? s)
                        #:block-mode 'inside
