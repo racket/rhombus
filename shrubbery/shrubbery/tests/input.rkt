@@ -1991,9 +1991,16 @@ tail @(«| then | else»)
                @pct(1/6) bananas
                @pct(0.5) cherries}
 
+a | w @(«x: z») | b
+
 The end
 INPUT
   )
+
+#|
+a | w @(«x:
+           z») | b
+|#
 
 (define expected3
   '(multi
@@ -2144,6 +2151,8 @@ INPUT
         (group "          ")
         (group pct (parens (group 0.5)))
         (group " cherries")))))
+    (group a (alts (block (group w x (block (group z)))) (block (group b))))
+    ;(group a (alts (block (group w x (block (group z)) (alts (block (group b)))))))
     (group The end)))
 
 (define input3b

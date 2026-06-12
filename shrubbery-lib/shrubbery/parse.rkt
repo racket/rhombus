@@ -1241,7 +1241,8 @@
                                                   rest
                                                   (move-post-raw-to-prefix* at rest)))))
    (if (null? rest)
-       (append tail-raw (list (or (syntax-raw-tail-property at) '())))
+       (append tail-raw (list (or (syntax-raw-suffix-property at) '())
+                              (or (syntax-raw-tail-property at) '())))
        tail-raw)))
 
 ;; Like `datum->syntax`, but sytheses a source location for each
