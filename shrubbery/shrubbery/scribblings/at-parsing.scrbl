@@ -169,9 +169,11 @@ and @italic{closer}:
  @item{Comment escapes are discarded. A line comment using
        @italic{escape} followed by @litchar("//") causes the
        terminating newline to be discarded along with leading
-       whitespace on the next line.},
+       whitespace on the next line.}
 
- @item{Trailing whitespace on each line is discarded.},
+ @item{Trailing whitespace on each line is discarded---except for whitespace
+       on the same line as @italic{opener} and before non-whitespace, or
+       on the same line as the @italic{closer} and after non-whitespace.}
 
  @item{The remaining content of @italic{braced_text} is split into
        lines, where escapes are treated as atomic elements of a line
@@ -185,16 +187,16 @@ and @italic{closer}:
        escaped elements are consecutive in the line, and not separated
        by an empty literal element. Escapes are never treated as
        literal text, even when the result of an escape is an immediate
-       string.},
+       string.}
 
  @item{If the first line contains only whitespace, the line is
        discarded. Similarly, if the last line contains only
        whitespace, the line is discarded. Afterward, if the remaining
-       last line ends with a newline, that trailing newline is also
-       discarded.},
+       last line ends with a newline and has any other content, that trailing newline is also
+       discarded.}
 
  @item{The newline associated with each line is split into its own
-       element, if it is not a separate element already.},
+       element, if it is not a separate element already.}
 
  @item{Leading whitespace on each line is broken out into its own
        literal element, if it is not a separate element already.
@@ -202,13 +204,13 @@ and @italic{closer}:
        Note that a line that originally contained only whitespace will
        have just a newline at this point (not even that, if it's
        the last line), since trailing whitespace was previously
-       discarded.},
+       discarded.}
 
  @item{Leading whitespace that starts every non-empty line is removed
        from that element, where a line is non-empty if it contains
        more than just a newline element. If a leading-whitespace
        element becomes an empty as a result of removing a shared
-       prefix, the element is removed.},
+       prefix, the element is removed.}
 
  @item{The elements for all lines are concatenated into a single list,
        and the elements of that list are the
