@@ -1202,7 +1202,8 @@ private.set_convert(
                           | p,
                         ~epoch: ealign,
                         ~duration: dalign)
-      anim_pict(genident(desc), for List (i in 0..p0._epochs.length()):
+      anim_pict(genident(desc),
+                for List (i in 0..p0._epochs.length()):
                   let dt = i - p0._duration_start
                   CombinePictEpoch(combine, pad_combine, dt, [p, ...], [p._sustaining, ...], [p._epochs[i], ...]),
                 p0._epoch_extents,

@@ -705,11 +705,13 @@
            (keep (state-delta s))]
           [(block-operator)
            (check-block-mode)
+           (define parent-column (or (state-bar-column s)
+                                     (state-column s)))
            (parse-block t (cdr l)
                         #:count? (state-count? s)
                         #:line line
                         #:closer (or (and (state-count? s)
-                                          (column-half-next (state-column s)))
+                                          (column-half-next parent-column))
                                      'any)
                         #:delta (state-delta s)
                         #:raw (state-raw s)
@@ -718,7 +720,7 @@
                         #:bar-closes-line (state-bar-closes-line s)
                         #:can-empty? (state-can-empty? s)
                         #:could-empty-if-start? #t
-                        #:parent-column (state-column s)
+                        #:parent-column parent-column
                         #:variant (state-variant s))]
           [(bar-operator)
            (parse-alts-block t l)]

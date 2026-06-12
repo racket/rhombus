@@ -286,3 +286,6 @@
 
 (check-fail "@@{}" #rx"invalid after `@`")
 (check-fail "@@//{}" #rx"invalid after `@`")
+
+(check-fail "f(a, b:\n   c)" #rx"empty block not allowed after `:`")
+(check-fail "f(a, b\n   | c)" #rx"wrong indentation")
