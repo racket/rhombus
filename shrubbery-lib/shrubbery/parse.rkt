@@ -293,7 +293,7 @@
               (check-column t column)
               (continue-group (struct-copy group-state sg
                                            [check-column? (next-line?* rest-l last-line)]
-                                           [column column]
+                                           [column (or (group-state-column sg) column)]
                                            [bar-column #f]))])])]
        [(less-indented?)
         ;; Next token is less indented than this group sequence

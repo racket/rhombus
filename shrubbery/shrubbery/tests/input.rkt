@@ -1454,6 +1454,9 @@ a:
 | c
 | d
 
+a; #//b
+c
+
 INPUT
   )
 
@@ -1486,7 +1489,9 @@ INPUT
     (group a (block) (alts (block (group d))))
     (group a (block (group b)))
     (group a (block (group b)) (alts (block (group d))))
-    (group a (alts (block (group c)) (block (group d))))))
+    (group a (alts (block (group c)) (block (group d))))
+    (group a)
+    (group c)))
 
 
 (define input2
