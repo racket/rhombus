@@ -1905,6 +1905,8 @@ then @{8}
 
 @one.two.three
 
+@~one.two{three}
+
 @none{}
 @«5»(3){yohoo @9(a, b, c){
                this is plain text
@@ -2038,6 +2040,7 @@ a | w @(«x:
                                (group eggplant)
                                (group ". ten{eleven}")))))
     (group one (op |.|) two (op |.|) three)
+    (group #:one (op |.|) two (braces (group three)))
     (group none (parens (group (brackets))))
     (group
      5

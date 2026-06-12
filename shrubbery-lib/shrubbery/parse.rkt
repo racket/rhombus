@@ -877,7 +877,7 @@
               (define next-t (cadr l))
               (check-same-line t next-t (state-count? s))
               (define stop-at-next-at? (and am (at-mode-stop-at-next-at? am)))
-              (case (token-name next-t)
+              (case (token-name/keyword next-t)
                 [(opener)
                  (define (normal-opener)
                    (parse-group (cdr l) (struct-copy state s
@@ -910,7 +910,7 @@
                      [(and (pair? (cdr l))
                            (pair? (cddr l))
                            (eq? 'operator (token-name (cadr l)))
-                           (eq? 'identifier (token-name (caddr l))))
+                           (eq? 'identifier (token-name/keyword (caddr l))))
                       (define id (record-raw (token-value (car l)) #f raw '()))
                       (define dot (record-raw (token-value (cadr l)) #f '() '()))
                       (loop (cddr l) (list* dot id rev-prefix) '())]
@@ -920,7 +920,7 @@
                                                   [at-mode (make-at-mode #:initial? #t
                                                                          #:rev-prefix rev-prefix
                                                                          #:stop-at-at? stop-at-next-at?)]))]))]
-                [(number literal operator opener)
+                [(number literal operator keyword opener)
                  (parse-group (cdr l) (struct-copy state s
                                                    [raw (cons t (state-raw s))]
                                                    [at-mode (make-at-mode #:initial? #t

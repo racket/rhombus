@@ -35,6 +35,7 @@
          ;;  'EOF
          ;;
          ;;  'fail
+         token-name/keyword ; adds 'keyword to above list
 
          token?
          token-value
@@ -840,7 +841,7 @@
                (values
                 (cond
                   [(and (eq? in-mode 'initial)
-                        (eq? (token-name t) 'identifier)
+                        (eq? (token-name/keyword t) 'identifier)
                         (peek-operator+identifier? in))
                    (still-in-at 'op-continue)]
                   [(eq? in-mode 'op-continue)
@@ -1235,6 +1236,15 @@
                     start-column     ; ditto
                     line-advance     ; 0 if the token is within a line
                     column-advance)) ; size of token in columns within its ending line
+
+;; the lexer categorizes keywords as identifiers,
+;; but sometimes the distinction matters
+(define (token-name/keyword t)
+  (define name (token-name t))
+  (if (and (eq? name 'identifier)
+           (keyword? (syntax-e (token-value t))))
+      'keyword
+      name))
 
 (define (token-e t)
   (syntax-e (token-value t)))
