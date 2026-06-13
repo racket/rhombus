@@ -32,7 +32,8 @@
          "syntax-wrap.rkt"
          "dotted-sequence-parse.rkt"
          "name-root-space.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "srcloc.rkt")
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -1329,25 +1330,26 @@
               [(annotation-str pattern repack . _)
                (free-identifier=? #'repack #'repack-as-multi)])])))
      #`(if (syntax*? #,(car val-ids))
-           (syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,(car val-ids))
-             #:disable-colon-notation
-             #:context '#,who
-             #,@(for/list ([parseds (in-list b-parsedss)]
-                           [rhs (in-list rhss)])
-                  (syntax-parse (car parseds)
-                    [b::binding-form
-                     #:with b-impl::binding-impl #'(b.infoer-id () b.data)
-                     #:with b-info::binding-info #'b-impl.info
-                     #:with (pattern repack tmp-ids (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)) #'b-info.data
-                     #`[#,(if (and repack-multi?
-                                   (free-identifier=? #'repack #'repack-as-term))
-                              #'((~datum multi) ((~datum group) pattern))
-                              #'pattern)
-                        (define id id-ref)
-                        ...
-                        (define-syntaxes (sid ...) sid-ref)
-                        ...
-                        (rhombus-body-expression #,rhs)]])))
+           (with-syntax-error-respan
+             (syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,(car val-ids))
+               #:disable-colon-notation
+               #:context '#,who
+               #,@(for/list ([parseds (in-list b-parsedss)]
+                             [rhs (in-list rhss)])
+                    (syntax-parse (car parseds)
+                      [b::binding-form
+                       #:with b-impl::binding-impl #'(b.infoer-id () b.data)
+                       #:with b-info::binding-info #'b-impl.info
+                       #:with (pattern repack tmp-ids (id ...) (id-ref ...) ((sid ...) ...) (sid-ref ...)) #'b-info.data
+                       #`[#,(if (and repack-multi?
+                                     (free-identifier=? #'repack #'repack-as-term))
+                                #'((~datum multi) ((~datum group) pattern))
+                                #'pattern)
+                          (define id id-ref)
+                          ...
+                          (define-syntaxes (sid ...) sid-ref)
+                          ...
+                          (rhombus-body-expression #,rhs)]]))))
            #,(make-not-stx-expr))]
     [else
      (default-k)]))
