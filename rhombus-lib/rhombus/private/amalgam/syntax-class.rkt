@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/keyword
                      syntax/parse/pre
@@ -398,7 +399,7 @@
          [(_ g) #'g]
          [(_)
           (if (and (eq? kind 'term) splicing?)
-              #'(group)
+              (regroup #'())
               (raise-syntax-error #f
                                   "no groups in pattern"
                                   orig-stx

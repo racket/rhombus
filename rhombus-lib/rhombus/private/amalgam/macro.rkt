@@ -6,7 +6,7 @@
                      "macro-rhs.rkt"
                      "operator-parse.rkt"
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "entry-point-adjustment.rkt")
          syntax/parse/pre
          "provide.rkt"

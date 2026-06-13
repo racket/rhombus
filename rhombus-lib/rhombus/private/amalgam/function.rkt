@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property
@@ -541,7 +542,7 @@
                   (~seq (~optional (_::block . _))
                         (_::alts (_::block (group (_::parens _ ...) . _)) ...+))
                   (~seq _ ... (_::alts . _))))
-         (syntax-parse #`(group . #,stx)
+         (syntax-parse (regroup stx)
            [e::expression
             (let ([e (discard-static-infos #'e.parsed)])
               (list #`(#%expression #,e)))])]))))
@@ -676,7 +677,7 @@
 
 (define-for-syntax (maybe-add-function-doc doc form-id names headers doc-kw-stx orig-stx defns)
   (define (add-form header)
-    #`(group #,form-id #,@header))
+    (regroup #`(#,form-id #,@header)))
   (define (replace-:~-ret header)
     (syntax-parse header
       #:datum-literals (parens op :~)

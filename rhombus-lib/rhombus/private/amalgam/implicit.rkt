@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
@@ -249,11 +250,11 @@
        [_
         (case op-mode
           [(prefix)
-           (syntax-parse #`(group . #,stx)
+           (syntax-parse (regroup stx)
              [(~var e (:prefix-op+expression+tail op-stx))
               (pack-immediate-callee #'e.parsed #'e.tail)])]
           [else
-           (syntax-parse #`(group . #,stx)
+           (syntax-parse (regroup stx)
              [(~var e (:infix-op+expression+tail op-stx))
               (pack-immediate-callee #'e.parsed #'e.tail)])])]))))
 

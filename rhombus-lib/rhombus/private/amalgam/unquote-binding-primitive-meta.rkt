@@ -1,4 +1,5 @@
 #lang racket/base
+(require "group.rkt")
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
@@ -56,7 +57,7 @@
   #:datum-literals (group)
   #:description (format "name bound as ~a" (shrubbery-syntax->string bound-id #:use-raw? #t))
   (pattern t::dotted-operator-or-identifier-sequence
-           #:when (syntax_meta.equal_binding bound-id #'(group . t)
+           #:when (syntax_meta.equal_binding bound-id (regroup #'t)
                                              (cond
                                                [(space-name? space-path) space-path]
                                                [else

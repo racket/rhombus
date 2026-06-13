@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      racket/keyword
                      syntax/parse/pre
-                     "tag.rkt")
+                     "group.rkt")
          "parens.rkt"
          "parse.rkt"
          "function-arity.rkt"

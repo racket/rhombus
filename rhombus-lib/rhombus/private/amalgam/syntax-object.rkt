@@ -18,7 +18,7 @@
          (submod "annotation.rkt" for-class)
          "pack.rkt"
          "realm.rkt"
-         "tag.rkt"
+         "group.rkt"
          "dotted-sequence.rkt"
          "name-equal.rkt"
          "define-arity.rkt"

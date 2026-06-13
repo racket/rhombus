@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "annot-context.rkt")
@@ -164,7 +165,7 @@
              #:attr parsed #'#f
              #:attr [eager 1] null)
     (pattern (group #:eager . tail)
-             #:with ::expression #'(group . tail)
+             #:with ::expression (regroup #'tail)
              #:attr [eager 1] (list #'#:eager))
     (pattern ::expression
              #:attr [eager 1] null)))

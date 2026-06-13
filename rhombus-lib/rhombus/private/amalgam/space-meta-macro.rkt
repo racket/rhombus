@@ -1,4 +1,5 @@
 #lang racket/base
+(require "group.rkt")
 (require (for-syntax racket/base
                      racket/symbol
                      syntax/parse/pre
@@ -456,7 +457,7 @@
      thunk
      (case-lambda
        [(form new-tail) (values form new-tail #f)]
-       [(form) (values form #'(group) (datum->syntax #f reloc-stx))])))
+       [(form) (values form (regroup #'()) (datum->syntax #f reloc-stx))])))
   (values (macro-result form
                         proc
                         reloc

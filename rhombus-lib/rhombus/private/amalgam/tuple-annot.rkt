@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
@@ -78,12 +79,12 @@
                                         (list last-annot)
                                         null)]
                   [(last-dots ...) (if last-annot
-                                       (list #'(group rhombus...))
+                                       (list (regroup #'(rhombus...)))
                                        null)]
                   [List list-id])
-      (syntax-parse #'(group List (brackets (group arg-id (op ::) (parsed #:rhombus/annot annot)) ...
+      (syntax-parse (regroup #'(List (brackets (group arg-id (op ::) (parsed #:rhombus/annot annot)) ...
                                             (group last-id (op ::) (parsed #:rhombus/annot last-annot)) ...
-                                            last-dots ...))
+                                            last-dots ...)))
         [all::binding
          (annotation-binding-form #'all.parsed
                                   #'(rhombus-expression (group List (brackets (group arg-id) ... (group last-id) ... last-dots ...)))

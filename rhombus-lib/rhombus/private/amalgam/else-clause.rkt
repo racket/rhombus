@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "group.rkt")
          "parens.rkt")
 
 (provide (for-syntax :else-clause))
@@ -14,4 +14,4 @@
     #:datum-literals (group)
     (pattern (_::block (group #:else (~and rhs (_::block . _)))))
     (pattern (_::block (group #:else t ...+))
-             #:with rhs #`(group t ...))))
+             #:with rhs (regroup #`(t ...)))))

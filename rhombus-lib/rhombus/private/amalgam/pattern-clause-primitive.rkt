@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "group.rkt")
          "pattern-clause.rkt"
          "parens.rkt"
          "parse.rkt"
@@ -50,11 +50,11 @@
      (syntax-parse stx
        #:datum-literals (op group)
        [(_ fld ... (tag::block in-block ...))
-        #:with (group field::field-lhs) #'(group fld ...)
+        #:with (group field::field-lhs) (regroup #'(fld ...))
         #'(#:field field.id field.depth (rhombus-body-at tag in-block ...)
            field.converter field.static-infos  field.annotation-str)]
        [(_ fld ... _::equal rhs ...)
-        #:with (group field::field-lhs) #'(group fld ...)
+        #:with (group field::field-lhs) (regroup #'(fld ...))
         #`(#:field field.id field.depth (rhombus-expression (group rhs ...))
            field.converter field.static-infos  field.annotation-str)]))))
 

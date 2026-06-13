@@ -7,7 +7,8 @@
                      "srcloc.rkt"
                      "syntax-map.rkt"
                      "annot-context.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "group.rkt")
          racket/unsafe/undefined
          racket/treelist
          shrubbery/print
@@ -129,17 +130,17 @@
                                   #'kw)]
              [(group kw:keyword (_::block (group name:identifier _:::-bind c ... _::equal _::_-bind)))
               (check-keyword #'kw)
-              (values (list #'kw #'name #t (syntax-parse #'(group c ...)
+              (values (list #'kw #'name #t (syntax-parse (regroup #'(c ...))
                                              [c::annotation #'c.parsed]))
                       #f)]
              [(group kw:keyword (_::block (group c ... _::equal _::_-bind)))
               (check-keyword #'kw)
-              (values (list #'kw #f #t (syntax-parse #'(group c ...)
+              (values (list #'kw #f #t (syntax-parse (regroup #'(c ...))
                                          [c::annotation #'c.parsed]))
                       #f)]
              [(group kw:keyword (_::block (group name:identifier _:::-bind c ...)))
               (check-keyword #'kw)
-              (values (list #'kw #'name #f (syntax-parse #'(group c ...)
+              (values (list #'kw #'name #f (syntax-parse (regroup #'(c ...))
                                              [c::annotation #'c.parsed]))
                       #f)]
              [(group kw:keyword (_::block c::annotation))
@@ -148,17 +149,17 @@
                       #f)]
              [(group name:identifier _:::-bind c ... eql::equal _::_-bind)
               (check-optional #'eql)
-              (values (list #f #'name #t (syntax-parse #'(group c ...)
+              (values (list #f #'name #t (syntax-parse (regroup #'(c ...))
                                            [c::annotation #'c.parsed]))
                       #t)]
              [(group c ... eql::equal _::_-bind)
               (check-optional #'eql)
-              (values (list #f #f #t (syntax-parse #'(group c ...)
+              (values (list #f #f #t (syntax-parse (regroup #'(c ...))
                                        [c::annotation #'c.parsed]))
                       #t)]
              [(group name:identifier _:::-bind c ...)
               (non-opt)
-              (values (list #f #'name #f (syntax-parse #'(group c ...)
+              (values (list #f #'name #f (syntax-parse (regroup #'(c ...))
                                            [(~var c (:annotation ctx)) #'c.parsed]))
                       #f)]
              [(~var c (:annotation ctx))
@@ -178,10 +179,10 @@
   (let loop ([args args] [non-rest-accum '()] [rest-name+ann #f] [rest-ann-whole? #f]
                          [kw-rest-name+ann #f] [kw-rest-first? #f])
     (define (parse-ann c)
-      (syntax-parse #`(group . #,c)
+      (syntax-parse (regroup c)
         #:datum-literals (group)
         [(group name:identifier _:::-bind . c)
-         (syntax-parse #'(group . c)
+         (syntax-parse (regroup #'c)
            [c::annotation (list #'name #'c.parsed)])]
         [c::annotation (list #f #'c.parsed)]))
     (syntax-parse args
@@ -247,7 +248,7 @@
         [(_ (~and p-res (_::parens res ...)) . tail)
          (multi (syntax->list #'(res ...)) #'p-res #'tail)]
         [(_ . tail)
-         #:with (~var res (:annotation-infix-op+form+tail arrow ctx)) #`(group . tail)
+         #:with (~var res (:annotation-infix-op+form+tail arrow ctx)) (regroup #`tail)
          (values (list (list #f #'res.parsed))
                  #f #f
                  (datum->syntax #f (list head arrow #'res.parsed))

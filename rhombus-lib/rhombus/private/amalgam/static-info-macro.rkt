@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/treelist
                      syntax/parse/pre
@@ -218,8 +219,8 @@
   (define/arity (statinfo_meta.unpack_group stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
-    #`(group . #,(map (lambda (stx) (unpack-static-infos who stx))
-                      (syntax->list stx))))
+    (regroup #`(#,@(map (lambda (stx) (unpack-static-infos who stx))
+                        (syntax->list stx)))))
 
   (define/arity (statinfo_meta.pack_call_result infos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "pack.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "srcloc.rkt")
          (submod "dot-macro.rkt" for-compose)
          (submod "expr-macro.rkt" for-define)
@@ -45,7 +45,7 @@
        (lambda (packed-form dot static? repetition? packed-tail)
          (syntax-parse (unpack-tail packed-form proc #f)
            [(lhs dot-op name . _)
-            (proc packed-form dot (no-srcloc #`(group lhs dot-op name)) static? repetition? packed-tail)]))
+            (proc packed-form dot (regroup #`(lhs dot-op name)) static? repetition? packed-tail)]))
        '(#:is_repet)))
     (syntax->list ids-stx))))
 
@@ -68,7 +68,7 @@
                                      dot-provider))
                           (op |.|)
                           #,name)))
-        (define call-g (no-srcloc #`(group #,self-stx p)))
+        (define call-g (regroup #`(#,self-stx p)))
         (define is-static? (is-static-context? self-stx))
         (define repetition? #false)
         (define orig-tail (pack-tail #'tail))

@@ -4,7 +4,7 @@
                      syntax/parse/pre
                      shrubbery/property
                      "annotation-string.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "keyword-sort.rkt"
                      "origin.rkt"
                      "srcloc.rkt")
@@ -59,7 +59,7 @@
                            (quasisyntax/loc #'form-id
                              (group form-id (tag a-g ...)))))]
      #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a-g ...)) stx
-                                                            #:make-missing (lambda (kw) #'(group rhombus-_)))
+                                                            #:make-missing (lambda (kw) (regroup #'(rhombus-_))))
      #:with (a-parsed::binding-form ...) #'(a.parsed ...)
      ;; `rest-a` will have either 0 items or 1 item
      #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
@@ -471,7 +471,7 @@
     [(_ id (_ ... (#:repet (sequencer ...)) _ ...))
      ;; unchecked, because this may be an internal identifier where expansion
      ;; hasn't bothered to bind the identifier as a repetition
-     (syntax-parse #'(group id)
+     (syntax-parse (regroup #'(id))
        [rep::repetition
         (let loop ([sequencers (syntax->list #'(sequencer ...))]
                    [rep #'rep.parsed])

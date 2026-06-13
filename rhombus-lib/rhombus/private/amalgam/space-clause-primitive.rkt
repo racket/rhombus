@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/symbol)
@@ -84,7 +85,7 @@
         #:when (let ([id (in-space-clause-space #'id)])
                  (or (free-identifier=? id (in-space-clause-space (quote-syntax macro_definer)))
                      (free-identifier=? id (in-space-clause-space (quote-syntax bridge_definer)))))
-        (syntax-parse #'(group id . rest)
+        (syntax-parse (regroup #'(id . rest))
           [cl::space-clause
            (syntax-parse (unwrap-clause #'cl.parsed)
              [(kw id #t . rest)

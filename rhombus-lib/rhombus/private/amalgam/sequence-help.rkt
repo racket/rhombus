@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      version/utils
@@ -41,7 +42,7 @@
     (define approx-for-old-racket? (version<? (version) "8.10.0.3"))
     (syntax-parse stx
       [[(lhs:identifier ...) (_ expr)]
-       (define s (proc #`(group lhs ... (block (group (parsed #:rhombus/expr expr))))))
+       (define s (proc (regroup #`(lhs ... (block (group (parsed #:rhombus/expr expr)))))))
        (cond
          [s
           (syntax-parse s

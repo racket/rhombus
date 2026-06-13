@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "origin.rkt")
          (only-in racket/case
                   case/equal-always)
@@ -45,7 +45,7 @@
                               (~and rhs (_::block . _)))))
     (pattern (_::block (group bind ...+
                               (~and rhs (_::block . _))))
-             #:with (bind-g ...) #`(#,(no-srcloc #`(group bind ...)))))
+             #:with (bind-g ...) #`(#,(regroup #`(bind ...)))))
 
   ;; also checks consistent arity
   (define (extract-arity stx given-arity clauses bss)
@@ -112,7 +112,7 @@
                    (values '() '() '() #f)]))
               (define arity (extract-arity stx given-arity clauses bss))]
         #:with ((b::binding ...) ...) bss
-        (define in-expr (no-srcloc #`(group in ...)))
+        (define in-expr (regroup #`(in ...)))
         (define b-parsedss (map syntax->list (syntax->list #'((b.parsed ...) ...))))
         (values
          (relocate+reraw
@@ -248,7 +248,7 @@
 (define-for-syntax (parse-matches form tail mode)
   (syntax-parse tail
     [(op . tail)
-     #:with (~var t (:infix-op+binding+tail #'matches)) #`(group . tail)
+     #:with (~var t (:infix-op+binding+tail #'matches)) (regroup #`tail)
      (values
       (syntax-parse #'t.parsed
         [b::binding-form

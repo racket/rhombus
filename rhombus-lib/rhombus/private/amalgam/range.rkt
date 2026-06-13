@@ -4,7 +4,7 @@
                               fixnum-for-every-system?)
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "group.rkt")
          racket/hash-code
          (only-in racket/unsafe/ops
                   unsafe-fx+
@@ -341,7 +341,7 @@
          (values (parse-range-binding #'Range.full)
                  #'())]
         [(_ . more)
-         #:with (~var rhs (:prefix-op+binding+tail #'..)) #`(group . more)
+         #:with (~var rhs (:prefix-op+binding+tail #'..)) (regroup #`more)
          (values (parse-range-binding #'Range.to #'rhs.parsed)
                  #'rhs.tail)])))
    (binding-infix-operator
@@ -354,7 +354,7 @@
          (values (parse-range-binding #'Range.from form1)
                  #'())]
         [(_ . more)
-         #:with (~var rhs (:infix-op+binding+tail #'..)) #`(group . more)
+         #:with (~var rhs (:infix-op+binding+tail #'..)) (regroup #`more)
          (values (parse-range-binding #'Range.from_to form1 #'rhs.parsed)
                  #'rhs.tail)]))
     'none)))
@@ -386,7 +386,7 @@
         (values (parse-range-binding #'Range.from_exclusive form1)
                 #'())]
        [(_ . more)
-        #:with (~var rhs (:infix-op+binding+tail #'<..)) #`(group . more)
+        #:with (~var rhs (:infix-op+binding+tail #'<..)) (regroup #`more)
         (values (parse-range-binding #'Range.from_exclusive_to form1 #'rhs.parsed)
                 #'rhs.tail)]))
    'none))
@@ -401,10 +401,9 @@
    'none))
 
 (define-for-syntax (parse-range-binding range . parseds)
-  (syntax-parse #`(group
-                   #,range
+  (syntax-parse (regroup #`(#,range
                    (parens #,@(for/list ([parsed (in-list parseds)])
-                                #`(group (parsed #:rhombus/bind #,parsed)))))
+                                (regroup #`((parsed #:rhombus/bind #,parsed)))))))
     [b::binding #'b.parsed]))
 
 (define-values-for-syntax (>=..-expr-infix >=..-repet-infix)

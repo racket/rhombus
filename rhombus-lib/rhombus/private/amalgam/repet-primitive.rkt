@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
@@ -128,7 +129,7 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id . tail)
-        #:with (~var e (:prefix-op+expression+tail (quote-syntax each))) #'(group . tail)
+        #:with (~var e (:prefix-op+expression+tail (quote-syntax each))) (regroup #'tail)
         (define seq-ctr-id (syntax-local-static-info #'e.parsed #'#%sequence-constructor))
         (define e-plain (discard-static-infos #'e.parsed))
         (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
@@ -159,8 +160,8 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id left ...+ (~and kw (~or* #:like #:like_inner)) right ...+)
-        #:with left-r::repetition #'(group left ...)
-        #:with (~var right-r (:prefix-op+repetition-use+tail (quote-syntax deepen))) #'(group right ...)
+        #:with left-r::repetition (regroup #'(left ...))
+        #:with (~var right-r (:prefix-op+repetition-use+tail (quote-syntax deepen))) (regroup #'(right ...))
         #:with left-i::repetition-info #'left-r.parsed
         #:with right-i::repetition-info #'right-r.parsed
         (define left-clausess (syntax->list #'left-i.for-clausess))

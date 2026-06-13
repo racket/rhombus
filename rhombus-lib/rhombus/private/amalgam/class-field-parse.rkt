@@ -2,7 +2,7 @@
 (require racket/keyword
          syntax/parse/pre
          enforest/name-parse
-         "tag.rkt"
+         "group.rkt"
          (for-template (submod "annotation.rkt" for-class)
                        "parens.rkt"
                        (submod "equal.rkt" for-parse)

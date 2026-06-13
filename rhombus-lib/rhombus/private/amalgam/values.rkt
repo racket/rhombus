@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
@@ -137,7 +138,7 @@
     #:description "accumulator with optional annotation"
     #:attributes (id e static-infos pre-defn defns checks)
     (pattern d::var-decl
-      #:with b::binding #'(group d.bind ...)
+      #:with b::binding (regroup #'(d.bind ...))
       #:with b-parsed::binding-form #'b.parsed
       #:with b-impl::binding-impl #`(b-parsed.infoer-id () b-parsed.data)
       #:with b-info::binding-info #'b-impl.info

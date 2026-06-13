@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt"
+                     "group.rkt"
                      "entry-point-adjustment.rkt")
          "provide.rkt"
          "name-root.rkt"
@@ -129,7 +129,7 @@
                 (syntax-parse b
                   #:datum-literals (group)
                   [(_::block (group bind ...+ (~and rhs (_::block . _))))
-                   #:with b::binding #`(group bind ...)
+                   #:with b::binding (regroup #`(bind ...))
                    (values #'b.parsed #'rhs)]
                   [_ (raise-syntax-error #f
                                          "expected a binding and block for `~catch` alternative"
@@ -138,7 +138,7 @@
             (define handler (build-try-handler b-parseds rhss))
             (values rev-gs (hash-set state 'handler handler))]
            [(group #:catch bind ...+ (~and rhs (_::block . _)))
-            #:with b::binding #`(group bind ...)
+            #:with b::binding (regroup #`(bind ...))
             (define handler (build-try-handler (list #'b.parsed) (list #'rhs)))
             (values rev-gs (hash-set state 'handler handler))]
            [(group #:catch . _)
@@ -151,7 +151,7 @@
      (let* ([before+res (hash-ref state 'result #f)]
             [body #`(rhombus-body-at tag #,@(reverse (if before+res
                                                          (cons
-                                                          #'(group (parsed #:rhombus/expr (void)))
+                                                          (regroup #'((parsed #:rhombus/expr (void))))
                                                           rev-gs)
                                                          rev-gs)))]
             [body (if before+res
@@ -262,7 +262,7 @@
                      [(_::block (group (_::parens arg::binding ...) (~and rhs (_::block . _))))
                       (values #'(arg ...) #'(arg.parsed ...) #'rhs)]
                      [(_::block (group bind ...+ (~and rhs (_::block . _))))
-                      #:with arg::binding #`(group bind ...)
+                      #:with arg::binding (regroup #`(bind ...))
                       (values #'(arg) #'(arg.parsed) #'rhs)]
                      [_ (raise-syntax-error #f
                                             "expected a binding and block for `~catch` alternative"
@@ -298,7 +298,7 @@
                                  g))
                (values rev-gs (hash-set state 'handler handler))]
               [(group #:catch bind ...+ (~and rhs (_::block . _)))
-               #:with arg::binding #`(group bind ...)
+               #:with arg::binding (regroup #`(bind ...))
                (define-values (handler arity)
                  (build-function no-adjustments '()
                                  #'prompt_handler #f #f

@@ -8,7 +8,8 @@
                      "class-field-parse.rkt"
                      "class-options-block.rkt"
                      "interface-parse.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "group.rkt")
          racket/private/serialize-structs
          "provide.rkt"
          "forwarding-sequence.rkt"
@@ -101,7 +102,7 @@
            [(group doc-kw . tail)
             (maybe-add-doc #'tail
                            #'(name-seq.head-id name-seq.tail-id ...)
-                           (list #'(group form-id (~@ . name-seq) fields))
+                           (list (regroup #'(form-id (~@ . name-seq) fields)))
                            #'doc-kw stxes defns)])
          defns)]))
 

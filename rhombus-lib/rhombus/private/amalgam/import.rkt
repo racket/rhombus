@@ -13,7 +13,7 @@
                      "introducer.rkt"
                      "macro-result.rkt"
                      "import-invert.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "id-binding.rkt"
                      "operator-parse.rkt"
                      "syntax-wrap.rkt"
@@ -241,7 +241,7 @@
     #:attributes (mod [imp 1])
     (pattern (group mod-id:identifier mod-arg ... (_::block imp ...))
              #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
-             #:with mod #`(group mod-id mod-arg ...))))
+             #:with mod (regroup #`(mod-id mod-arg ...)))))
 
 (define-defn-syntax import
   (definition-transformer

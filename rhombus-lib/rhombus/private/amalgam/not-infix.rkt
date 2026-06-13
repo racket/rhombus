@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
@@ -42,12 +43,12 @@
           [(in is_now)
            (cond
              [(not repet?)
-              (syntax-parse #'(group . tail)
+              (syntax-parse (regroup #'tail)
                 [(~var form2 (:infix-op+expression+tail #'self.name))
                  (values (apply-op form1 #'form2.parsed)
                          #'form2.tail)])]
              [else
-              (syntax-parse #'(group . tail)
+              (syntax-parse (regroup #'tail)
                 [(~var form2 (:infix-op+repetition-use+tail #'self.name))
                  (values (apply-op form1 #'form2.parsed)
                          #'form2.tail)])])]

@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
@@ -50,7 +51,7 @@
   (define (build-assign op op-name self-stx ref set rhs-name tail)
     (cond
       [(eq? (operator-protocol op) 'automatic)
-       (syntax-parse #`(group . #,tail)
+       (syntax-parse (regroup tail)
          [(~var e (:infix-op+expression+tail op-name))
           (values (build-assign/automatic (assign-infix-operator-assign-proc op) self-stx ref set rhs-name
                                           #`(let ([#,rhs-name #,(discard-static-infos #'e.parsed)])

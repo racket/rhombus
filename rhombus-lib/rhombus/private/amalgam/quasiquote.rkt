@@ -5,7 +5,7 @@
                      shrubbery/property
                      enforest/hier-name-parse
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "name-path-op.rkt"
                      "origin.rkt"
                      "annotation-string.rkt")
@@ -27,7 +27,7 @@
          "pattern-variable.rkt"
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
-         "tag.rkt" ; for use in `~parse`
+         "group.rkt" ; for use in `~parse`
          "sequence-pattern.rkt"
          "syntax-wrap.rkt"
          "dotted-sequence-parse.rkt"
@@ -474,7 +474,7 @@
                                        (or (syntax-property stx 'origin) null))))
   (define (handle-escape $-id e in-e ctx-kind)
     (define parsed
-      (syntax-parse #`(group #,e)
+      (syntax-parse (regroup #`(#,e))
         [(~var esc (:unquote-binding ctx-kind)) #'esc.parsed]))
     (define (track stx)
       (syntax-parse stx
@@ -731,7 +731,7 @@
                   ;; empty multi-group term is a special case that we can splice
                   ;; into a term context
                   (syntax-parse e
-                    [(_) (values #'(group) #t)]
+                    [(_) (values (regroup #'()) #t)]
                     [_ (raise-syntax-error #f
                                            (format "multi-group pattern incompatible with ~a context"
                                                    (case ctx-kind
@@ -864,13 +864,13 @@
                        ;; handle-tail-escape:
                        (lambda (name e in-e)
                          (define id (car (generate-temporaries (list e))))
-                         (syntax-parse #`(group #,e)
+                         (syntax-parse (regroup #`(#,e))
                            [rep::repetition
                             (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-tail* (quote-syntax #,name))]) null null)]))
                        ;; handle-block-tail-escape:
                        (lambda (name e in-e)
                          (define id (car (generate-temporaries (list e))))
-                         (syntax-parse #`(group #,e)
+                         (syntax-parse (regroup #`(#,e))
                            [rep::repetition
                             (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-multi-tail* (quote-syntax #,name))]) null null)]))
                        ;; handle-maybe-empty-sole-group
@@ -961,7 +961,7 @@
 ;; optimization for `'$tail ...'`
 (define-for-syntax (convert-direct-tail-template tail-id name)
   (define unpack (unwrap-static-infos
-                  (syntax-parse #`(group #,tail-id)
+                  (syntax-parse (regroup #`(#,tail-id))
                     [rep::repetition
                      (render-repetition #'for/list #'rep.parsed)])))
   (wrap-static-info*
@@ -1068,7 +1068,7 @@
       #:literals (pending-unpack)
       [[id-pat (pending-unpack e . u)]
        ;; Since `e` is under `...`, it needs to parse as a repetition
-       (syntax-parse #'(group e)
+       (syntax-parse (regroup #'(e))
          [rep::repetition
           #`[id-pat (unpacking 0 0 rep.parsed . u)]])]
       [_ idr])))

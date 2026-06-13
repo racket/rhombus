@@ -1,4 +1,5 @@
 #lang racket/base
+(require "group.rkt")
 (require enforest/proc-name
          "realm.rkt")
 
@@ -14,7 +15,7 @@
        [(form) (values form empty-tail)]
        [args (wrong-result proc args)]))]
    [(_ proc e)
-    (tail-returner #:empty-tail #'(group) proc e)]))
+    (tail-returner #:empty-tail (regroup #'()) proc e)]))
 
 (define (wrong-result proc args)
   (apply raise-result-arity-error* (proc-name proc) rhombus-realm 1 #f args))

@@ -1,4 +1,5 @@
 #lang racket/base
+(require "group.rkt")
 (require shrubbery/property)
 
 (provide normalize-syntax)
@@ -22,5 +23,5 @@
        [(block . _) s]
        [(alts . _) s]
        [(op _) s]
-       [(_ ...) #`(group . #,s)]
+       [(_ ...) (regroup s)]
        [_ s])]))

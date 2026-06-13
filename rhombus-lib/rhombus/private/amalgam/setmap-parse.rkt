@@ -4,7 +4,7 @@
                      enforest/syntax-local
                      enforest/hier-name-parse
                      shrubbery/property
-                     "tag.rkt"
+                     "group.rkt"
                      "name-path-op.rkt")
          "parse.rkt"
          "static-info.rkt"
@@ -161,7 +161,7 @@
                #:when (not (eq? init-shape 'set))
                (assert-map)
                (define-values (es e-key-static-infos e-val-static-infos)
-                 (repetition-map-arguments #`(group key-e ...) #'val extra-ellipses))
+                 (repetition-map-arguments (regroup #`(key-e ...)) #'val extra-ellipses))
                (loop (list-tail (cddr elems) extra-ellipses)
                      'map
                      '()
@@ -197,7 +197,7 @@
                  (raise-syntax-error #f
                                      (format "`& rest` is not supported on ~a" no-splice)
                                      #'and-op.name))
-               (define-values (e e-static-infos) (one-argument #'(group new-rst ...)))
+               (define-values (e e-static-infos) (one-argument (regroup #'(new-rst ...))))
                (define-values (e-key-static-infos e-val-static-infos)
                  (if e-static-infos
                      (extract-splice-static-infos e-static-infos shape (cdr elems))
@@ -214,7 +214,7 @@
               [(group key-e ... (_::block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
-               (define-values (e-k e-key-static-infos) (one-argument #'(group key-e ...)))
+               (define-values (e-k e-key-static-infos) (one-argument (regroup #'(key-e ...))))
                (define-values (e-v e-val-static-infos) (one-argument #'val))
                (loop (cdr elems)
                      'map
@@ -229,7 +229,7 @@
                (when repetition?
                  (raise-syntax-error who "repetition requires a single-group block" #'blk))
                (assert-map)
-               (define-values (e-k e-key-static-infos) (one-argument #'(group key-e ...)))
+               (define-values (e-k e-key-static-infos) (one-argument (regroup #'(key-e ...))))
                (loop (cdr elems)
                      'map
                      (list* #`(rhombus-body-at b-tag val ...)

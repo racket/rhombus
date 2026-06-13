@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/strip-context
@@ -37,7 +38,7 @@
            name:identifier
            #:lang mp ...+
            (_::block body ...))
-        #:with lang::module-path #'(group mp ...)
+        #:with lang::module-path (regroup #'(mp ...))
         (check-splicing stx)
         (list (datum->syntax
                #'name
@@ -47,7 +48,7 @@
                                    #:language #,(module-path-convert-parsed #'lang.parsed)
                                    body ...))))]
        [(_ name:identifier #:lang mp ...+ (_::block body ...))
-        #:with lang::module-path #'(group mp ...)
+        #:with lang::module-path (regroup #'(mp ...))
         #`((module name #,(module-path-convert-parsed #'lang.parsed)
              #,(datum->syntax
                 #'lang.parsed
@@ -59,7 +60,7 @@
                       #:defaults ([order #'#:early]))
            name:identifier
            #:lang mp ...+ (_::block body ...))
-        #:with lang::module-path #'(group mp ...)
+        #:with lang::module-path (regroup #'(mp ...))
         #:with module (if (eq? (syntax-e #'order) '#:late) #'module* #'module)
         (when (and (eq? 'top-level (syntax-local-context))
                    (eq? (syntax-e #'order) '#:late))

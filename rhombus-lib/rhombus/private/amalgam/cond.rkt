@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/list
@@ -73,7 +74,7 @@
                                #'els)]
           [((tag-thn::block thn ...)
             (tag-els::block els ...))
-           #:with tst-r::repetition #'(group test ...)
+           #:with tst-r::repetition (regroup #'(test ...))
            #:with (thn-r::repetition ...) #'(thn ...)
            #:with (els-r::repetition ...) #'(els ...)
            (values

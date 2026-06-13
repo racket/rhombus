@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/syntax-local
@@ -552,7 +553,7 @@
             [(_:::=-expr . tail)
              #:when (not repetition?)
              (define-values (e-parsed e-tail)
-               (syntax-parse #'(group  . tail)
+               (syntax-parse (regroup #'tail)
                  [(~var e (:infix-op+expression+tail #':=))
                   (values #'e.parsed #'e.tail)]))
              (values (relocate+reraw e-parsed

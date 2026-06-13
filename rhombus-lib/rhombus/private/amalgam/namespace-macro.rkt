@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/treelist
@@ -76,18 +77,18 @@
   (define (close-expr who stx-params form)
     (define g (unpack-group form #f #f))
     (unless g (raise-annotation-failure who form "Group"))
-    #`(group (parsed #:rhombus/expr
+    (regroup #`((parsed #:rhombus/expr
                      (with-syntax-parameters #,stx-params
-                       (rhombus-expression #,g)))))
+                       (rhombus-expression #,g))))))
 
   (define (close-defn who stx-params form)
     (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
     (with-syntax ([(defn ...) (unpack-multi form #f #f)])
-      #`(group (parsed #:rhombus/defn
+      (regroup #`((parsed #:rhombus/defn
                        ((with-syntax-parameters #,stx-params
                           (begin
                             (rhombus-definition defn)
-                            ...)))))))
+                            ...))))))))
 
   (define (call-parse parse form user-data extras)
     (define who '|interleaved parse|)
@@ -208,7 +209,7 @@
                               #,@ps
                               #,@(if (and (syntax-e #'defer-tail)
                                           (pair? (syntax-e #'rest)))
-                                     (list #'(group sentinel_declaration))
+                                     (list (regroup #'(sentinel_declaration)))
                                      null)
                               . rest)]
       [(_ (~and data ([defer-tail no-exports reflect-name effect-id . _] user-data)) form . rest)
@@ -243,15 +244,14 @@
        (define do-complete (syntax-local-value #'complete))
        (let* ([extras (hasheq)]
               [extras (if (syntax-e #'defer-tail)
-                          (hash-set extras 'tail #'(group
-                                                    (parsed
+                          (hash-set extras 'tail (regroup #'((parsed
                                                      #:rhombus/defn
                                                      ((with-syntax-parameters
                                                         post-stx-param
                                                         (rhombus-nested
                                                          reflect-name
                                                          effect-id
-                                                         . forms))))))
+                                                         . forms)))))))
                           extras)]
               [extras (if (syntax-e #'no-exports)
                           extras
@@ -292,8 +292,8 @@
                                                 [(_ name-seq::dotted-identifier-sequence)
                                                  #:with name::dotted-identifier #'name-seq
                                                  (with-syntax ([name-name (syntax-local-introduce #'name.name)])
-                                                   #`(group (parsed #:rhombus/decl/nestable
-                                                                    ((namespace-export name-name name.extends #,(force exs) forward-base-ctx forward-ctx)))))]
+                                                   (regroup #`((parsed #:rhombus/decl/nestable
+                                                                    ((namespace-export name-name name.extends #,(force exs) forward-base-ctx forward-ctx))))))]
                                                 [_
                                                  (raise-annotation-failure who name "Name")]))]
                                            [else

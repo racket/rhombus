@@ -11,7 +11,8 @@
                      "statically-str.rkt"
                      "entry-point-adjustment.rkt"
                      "maybe-as-original.rkt"
-                     "dotted-sequence.rkt")
+                     "dotted-sequence.rkt"
+                     "group.rkt")
          racket/stxparam
          "provide.rkt"
          "expression.rkt"
@@ -1137,9 +1138,9 @@
                                                                  (syntax-span #'head))
                                                              0)
                                                      stx)]))
-                                 (list #`(group pre-head ... head
+                                 (list (regroup #`(pre-head ... head
                                                 #,(relocate-all #`(parens (group self-id (op ::) #,@split-reflect-name)))
-                                                (op |.|) (~@ . seq) . tail)))
+                                                (op |.|) (~@ . seq) . tail))))
                                #'doc-kw
                                #'orig-stx
                                null)]

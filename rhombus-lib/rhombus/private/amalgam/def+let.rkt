@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt"
+                     "group.rkt"
                      "srcloc.rkt"
                      "origin.rkt")
          "definition.rkt"
@@ -51,15 +51,15 @@
            [gs (do-values #'gs #'rhs)])]
         [(_ (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
          (check-multiple-equals stx)
-         (define rhs-g (no-srcloc #`(group rhs ...)))
+         (define rhs-g (regroup #`(rhs ...)))
          (syntax-parse #'(g ...)
            [(g) (do-value #'g rhs-g)]
            [gs (do-values #'gs rhs-g)])]
         [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
-         (do-value (no-srcloc #`(group any ...)) (no-srcloc #`(group rhs ...)))]
+         (do-value (regroup #`(any ...)) (regroup #`(rhs ...)))]
         [(_ any ...+ (~and rhs (_::block body ...)))
-         (do-value (no-srcloc #`(group any ...)) #'rhs)]
+         (do-value (regroup #`(any ...)) #'rhs)]
         [(_ ... (a::alts (b::block . _) . _))
          (raise-syntax-error #f
                              "alternatives are not supported here"

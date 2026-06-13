@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
@@ -78,7 +79,7 @@
              #:attr ret-annot-str #f
              #:attr ret-annot-origins null
              #:with ret-static-infos #'()
-             #:with g #'(group op-name-seq arg)))
+             #:with g (regroup #'(op-name-seq arg))))
 
   (define-splicing-syntax-class :infix-case
     #:description "infix operator case"
@@ -120,7 +121,7 @@
              #:attr ret-annot-str #f
              #:attr ret-annot-origins null
              #:with ret-static-infos #'()
-             #:with g #'(group left op-name-seq right)))
+             #:with g (regroup #'(left op-name-seq right))))
 
   (define-splicing-syntax-class :postfix-case
     #:description "postfix operator case"
@@ -160,7 +161,7 @@
              #:attr ret-annot-str #f
              #:attr ret-annot-origins null
              #:with ret-static-infos #'()
-             #:with g #'(group arg op-name-seq)))
+             #:with g (regroup #'(arg op-name-seq))))
 
   (define (make-prefix name op-proc unsafe/s order prec static-infos)
     (with-syntax ([op-proc op-proc])
@@ -221,7 +222,7 @@
                   (rator tmp ...)))])]))
 
   (define (parse-binding arg)
-    (syntax-parse #`(group #,arg)
+    (syntax-parse (regroup #`(#,arg))
       [arg::binding #'arg.parsed]))
 
   (define stx-or
@@ -238,7 +239,7 @@
     (define arg-parseds (map parse-binding args))
     (when has-unsafe?
       (for ([arg (in-list args)])
-        (check-arg-for-unsafe orig-stx #`(group #,arg) #f)))
+        (check-arg-for-unsafe orig-stx (regroup #`(#,arg)) #f)))
     (define falses (for/list ([a (in-list args)]) #f))
     (define falsess (for/list ([a (in-list args)]) #'(#f)))
     (define use-name (stx-or (car reflect-names) name))
@@ -296,7 +297,7 @@
         (values (parse-binding left) (parse-binding right))))
     (when has-unsafe?
       (for ([arg (in-list (append lefts rights))])
-        (check-arg-for-unsafe orig-stx #`(group #,arg) #f)))
+        (check-arg-for-unsafe orig-stx (regroup #`(#,arg)) #f)))
     (define falsess (for/list ([a (in-list lefts)]) #'(#f #f)))
     (define use-name (stx-or (car reflect-names) name))
     (define (->stx l) (datum->syntax #f l))

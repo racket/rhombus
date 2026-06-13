@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "group.rkt")
          "for-clause.rkt"
          "parens.rkt"
          "parse.rkt"

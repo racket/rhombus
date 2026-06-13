@@ -1,4 +1,5 @@
 #lang racket/base
+(require "group.rkt")
 (require syntax/parse/pre
          "realm.rkt"
          "parens-sc.rkt")
@@ -12,9 +13,9 @@
      #:with (g ...) (for/list ([stx (in-list (syntax->list #'(stx ...)))])
                       (syntax-parse stx
                         [(#:repet (id ...))
-                         #'(group #:repet (parens (group (parsed #:rhombus/sequencer id)) ...))]
+                         (regroup #'(#:repet (parens (group (parsed #:rhombus/sequencer id)) ...)))]
                         [kw:keyword
-                         #'(group kw)]
+                         (regroup #'(kw))]
                         [(#:group g)
                          #'g]))
      #'(brackets g ...)]

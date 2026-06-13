@@ -13,7 +13,7 @@
                      "annotation-string.rkt"
                      "keyword-sort.rkt"
                      "macro-result.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "name-path-op.rkt"
                      "annot-context.rkt"
                      "class-parse.rkt"
@@ -175,7 +175,7 @@
       [(~or* _::annotation-predicate-form _::annotation-binding-form) form]
       [_ (raise-bad-macro-result (proc-name proc) "annotation" form)]))
 
-  (define (shrubbery-tail->string tail) (shrubbery-syntax->string #`(group . #,tail)))
+  (define (shrubbery-tail->string tail) (shrubbery-syntax->string (regroup tail)))
 
   (define (check-context who ctx)
     (unless (annotation-context? ctx)
@@ -204,12 +204,12 @@
   (define-syntax-class (:annotation-seq prec-op)
     #:attributes (parsed tail)
     (pattern stxes
-             #:with (~var || (:annotation-infix-op+form+tail prec-op)) #`(group . stxes)))
+             #:with (~var || (:annotation-infix-op+form+tail prec-op)) (regroup #`stxes)))
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos origins)
     (pattern (~seq op::annotate-op ctc ...)
-             #:with c::annotation (no-srcloc #`(group ctc ...))
+             #:with c::annotation (regroup #`(ctc ...))
              #:with (~var ca (:annotation-converted (attribute op.is_checked))) #'c.parsed
              #:do [(when (and (not (attribute op.is_checked))
                               (syntax-e #'ca.converter))
@@ -338,7 +338,7 @@
        (define new-stx #'(form-id subs))
        (define unsorted-gs (syntax->list #'(g ...)))
        (define gs (sort-with-respect-to-keywords kws unsorted-gs new-stx
-                                                 #:make-missing (lambda (kw) #'(group Any))))
+                                                 #:make-missing (lambda (kw) (regroup #'(Any)))))
        (unless (or (eq? sub-n 'any) (eqv? (length gs) sub-n))
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
@@ -1286,10 +1286,10 @@
     #:datum-literals (group)
     (pattern (group t ... #:exclusive)
              #:with comp #'<
-             #:with g #`(group t ...))
+             #:with g (regroup #`(t ...)))
     (pattern (group t ... #:inclusive)
              #:with comp #'<=
-             #:with g #`(group t ...))
+             #:with g (regroup #`(t ...)))
     (pattern g
              #:with comp #'<=))
 

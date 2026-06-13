@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "tag.rkt"
+                     "group.rkt"
                      "origin.rkt")
          "expression.rkt"
          "repetition.rkt"
@@ -55,7 +55,7 @@
                                 in-expression-space expression-relative-precedence expression-infix-operator-ref)
          (nofix-exp stx)]
         [(self . more)
-         #:with (~var rhs (:prefix-op+expression+tail #'self)) #`(group . more)
+         #:with (~var rhs (:prefix-op+expression+tail #'self)) (regroup #`more)
          (define expr (prefix-exp #'rhs.parsed #'self))
          (values expr #'rhs.tail)]))
     (define (mixfix-rep stx)
@@ -65,7 +65,7 @@
                                 in-repetition-space repetition-relative-precedence repetition-infix-operator-ref)
          (nofix-rep stx)]
         [(self . more)
-         #:with (~var rhs (:prefix-op+repetition-use+tail #'self)) #`(group . more)
+         #:with (~var rhs (:prefix-op+repetition-use+tail #'self)) (regroup #`more)
          (define expr (prefix-rep #'rhs.parsed #'self))
          (values expr #'rhs.tail)]))
     (define-values (final-exp final-rep protocol)
@@ -132,7 +132,7 @@
                                 in-expression-space expression-relative-precedence expression-infix-operator-ref)
          (postfix-exp form stx)]
         [(self . more)
-         #:with (~var rhs (:infix-op+expression+tail #'self)) #`(group . more)
+         #:with (~var rhs (:infix-op+expression+tail #'self)) (regroup #`more)
          (define expr (infix-exp form #'rhs.parsed #'self))
          (values expr #'rhs.tail)]))
     (define (mixfix-rep form stx)
@@ -142,7 +142,7 @@
                                 in-repetition-space repetition-relative-precedence repetition-infix-operator-ref)
          (postfix-rep form stx)]
         [(self . more)
-         #:with (~var rhs (:infix-op+repetition-use+tail #'self)) #`(group . more)
+         #:with (~var rhs (:infix-op+repetition-use+tail #'self)) (regroup #`more)
          (define expr (infix-rep form #'rhs.parsed #'self))
          (values expr #'rhs.tail)]))
     (define-values (final-exp final-rep protocol)

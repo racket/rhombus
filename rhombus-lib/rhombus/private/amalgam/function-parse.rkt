@@ -6,7 +6,7 @@
                      enforest/syntax-local
                      shrubbery/print
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "static-info-pack.rkt"
                      "entry-point-adjustment.rkt"
                      (only-in "annotation-string.rkt" annotation-any-string)
@@ -122,18 +122,17 @@
                    (group . _))))
 
   (define (keyword->id-group kw)
-    #`(group
-       #,(datum->syntax kw
-                        (string->symbol (keyword->immutable-string (syntax-e kw)))
-                        kw)))
+    (regroup #`(#,(datum->syntax kw
+                                 (string->symbol (keyword->immutable-string (syntax-e kw)))
+                                 kw))))
 
   (define-syntax-class :has-kw-binding
     #:attributes (kw parsed)
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a ...+)))
              #:cut
-             #:do [(disallow-default-value (no-srcloc #`(group a ...)))]
-             #:with ::binding (no-srcloc #`(group a ...)))
+             #:do [(disallow-default-value (regroup #`(a ...)))]
+             #:with ::binding (regroup #`(a ...)))
     (pattern (group kw:keyword)
              #:cut
              #:with ::binding (keyword->id-group #'kw)))
@@ -164,16 +163,16 @@
                                                (group a ...+ eq::equal e ...+))))
              #:do [(check-multiple-equals #'g)]
              #:cut
-             #:with default #`(group e ...)
+             #:with default (regroup #`(e ...))
              #:do [(check-argument-annot #'default #'eq)]
-             #:with ::binding #`(group a ...))
+             #:with ::binding (regroup #`(a ...)))
     (pattern (group kw:keyword (_::block (group a ...+ (b-tag::block b ...))))
              #:cut
-             #:with default #`(group (parsed #:rhombus/expr (rhombus-body-at b-tag b ...)))
-             #:with ::binding #`(group a ...))
+             #:with default (regroup #`((parsed #:rhombus/expr (rhombus-body-at b-tag b ...))))
+             #:with ::binding (regroup #`(a ...)))
     (pattern (group kw:keyword eq::equal e ...+)
              #:cut
-             #:with default #`(group e ...)
+             #:with default (regroup #`(e ...))
              #:do [(check-argument-annot #'default #'eq)]
              #:with ::binding (keyword->id-group #'kw))
     (pattern ::has-kw-binding
@@ -183,15 +182,15 @@
              #:do [(check-multiple-equals #'g)]
              #:cut
              #:with kw #'#f
-             #:with default #`(group e ...)
+             #:with default (regroup #`(e ...))
              #:do [(check-argument-annot #'default #'eq)]
-             #:with ::binding #`(group a ...))
+             #:with ::binding (regroup #`(a ...)))
     (pattern (group a ...+ (b-tag::block b ...))
              #:cut
              #:with (~not (_:keyword)) #'(a ...)
              #:with kw #'#f
-             #:with default #`(group (parsed #:rhombus/expr (rhombus-body-at b-tag b ...)))
-             #:with ::binding #`(group a ...))
+             #:with default (regroup #`((parsed #:rhombus/expr (rhombus-body-at b-tag b ...))))
+             #:with ::binding (regroup #`(a ...)))
     (pattern ::plain-binding
              #:with default #'#f))
 
@@ -319,9 +318,9 @@
                                  cnt))]))]
              #:with static-infos sis
              #:attr converter cvtr
-             #:attr annot-str (shrubbery-syntax->string #`(group (~? op) p)))
+             #:attr annot-str (shrubbery-syntax->string (regroup #`((~? op) p))))
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
-             #:do [(define annot #`(group ctc0 ctc ...))]
+             #:do [(define annot (regroup #`(ctc0 ctc ...)))]
              #:with (~var c (:annotation ctx)) (no-srcloc annot)
              #:attr origins (list #'c.parsed)
              #:do [(define-values (sis cvtr)
@@ -406,7 +405,7 @@
     #:description "return annotation"
     #:datum-literals (group)
     (pattern (~seq ann-op::annotate-op ctc0::not-block ctc::not-block ...)
-             #:do [(define annot #`(group ctc0 ctc ...))]
+             #:do [(define annot (regroup #`(ctc0 ctc ...)))]
              #:with (~var c (:annotation ctx)) (no-srcloc annot)
              #:with c-parsed::annotation-binding-form #'c.parsed
              #:with static-infos #'c-parsed.static-infos
@@ -419,21 +418,21 @@
     #:attributes (arg parsed)
     #:datum-literals (group)
     (pattern (~seq (group _::&-bind a ...))
-             #:with arg::non-...-binding #`(group rest-bind #,(get-treelist-static-infos)
-                                            #:annot-prefix? #f
-                                            (group a ...))
+             #:with arg::non-...-binding (regroup #`(rest-bind #,(get-treelist-static-infos)
+                                                               #:annot-prefix? #f
+                                                               (group a ...)))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (group _::...-bind))
-             #:with arg::non-...-binding #`(group rest-bind #:repetition e)
+             #:with arg::non-...-binding (regroup #`(rest-bind #:repetition e))
              #:with parsed #'arg.parsed))
 
   (define-splicing-syntax-class :kwp-rest
     #:attributes (kwarg kwparsed)
     #:datum-literals (group)
     (pattern (~seq (group _::~&-bind a ...))
-             #:with kwarg::non-...-binding #`(group rest-bind #,(get-map-static-infos)
-                                              #:annot-prefix? #f
-                                              (group a ...))
+             #:with kwarg::non-...-binding (regroup #`(rest-bind #,(get-map-static-infos)
+                                                                 #:annot-prefix? #f
+                                                                 (group a ...)))
              #:with kwparsed #'kwarg.parsed))
 
   (define-splicing-syntax-class :maybe-arg-rest
@@ -1203,7 +1202,7 @@
              #:with exp (keyword->id-group #'kw))
     (pattern (group kw:keyword (_::block exp)))
     (pattern (group kw:keyword (btag::block g ...))
-             #:with exp #`(group (parsed #:rhombus/expr (rhombus-body-at btag g ...))))
+             #:with exp (regroup #`((parsed #:rhombus/expr (rhombus-body-at btag g ...)))))
     (pattern (group kw:keyword . _)
              #:with exp #'#f
              #:do [(raise-syntax-error #f
@@ -1293,7 +1292,7 @@
               (lambda (rand id)
                 (relocate+reraw
                  rand
-                 #`(group (parsed #:rhombus/expr #,(relocate+reraw rand id))))))
+                 (regroup #`((parsed #:rhombus/expr #,(relocate+reraw rand id)))))))
              (values null rands))))
      (cond
        [(null? formals)
@@ -1802,27 +1801,26 @@
                             (arg-id arg))))
                      (for/list ([arg (in-list args)]
                                 #:when (arg-kw? arg))
-                       #`(group #,(arg-kw-kw arg)
-                                (block (group (parsed #:rhombus/expr #,(arg-id arg))))))
+                       (regroup #`(#,(arg-kw-kw arg)
+                                (block (group (parsed #:rhombus/expr #,(arg-id arg)))))))
                      (and lists?
-                          #`(group
-                             (parsed
-                              #:rhombus/expr
-                              (append
-                               #,@(for/list ([arg (in-list args)]
-                                             #:when (or (arg-pos? arg)
-                                                        (arg-list? arg)))
-                                    (cond
-                                      [(arg-pos? arg) #`(list #,(arg-id arg))]
-                                      [else (arg-id arg)]))))))
+                          (regroup #`((parsed
+                                       #:rhombus/expr
+                                       (append
+                                        #,@(for/list ([arg (in-list args)]
+                                                      #:when (or (arg-pos? arg)
+                                                                 (arg-list? arg)))
+                                             (cond
+                                               [(arg-pos? arg) #`(list #,(arg-id arg))]
+                                               [else (arg-id arg)])))))))
                      #f #f
                      (let ([maps (for/list ([arg (in-list args)]
                                             #:when (arg-map? arg))
                                    (arg-id arg))])
                        (cond
                          [(null? maps) #f]
-                         [(null? (cdr maps)) #`(group (parsed #:rhombus/expr #,(car maps)))]
-                         [else #`(group (parsed #:rhombus/expr (merge-keyword-argument-maps #,@maps)))]))
+                         [(null? (cdr maps)) (regroup #`((parsed #:rhombus/expr #,(car maps))))]
+                         [else (regroup #`((parsed #:rhombus/expr (merge-keyword-argument-maps #,@maps))))]))
                      #'#f
                      #:static? static?
                      #:repetition? repetition?

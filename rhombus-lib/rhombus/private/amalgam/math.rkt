@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre)
          racket/flonum
@@ -98,7 +99,7 @@
                                 op)
                             null
                             (list* head
-                                   (cons tag (map (lambda (e) #`(group (parsed #:rhombus/expr #,e))) args))
+                                   (cons tag (map (lambda (e) (regroup #`((parsed #:rhombus/expr #,e)))) args))
                                    tail)
                             #:static? (is-static-context? tag)
                             #:result-static-infos (and flonum?
@@ -119,7 +120,7 @@
                                  op))
                             null
                             (list* head
-                                   (cons tag (map (lambda (r) #`(group (parsed #:rhombus/repet #,r))) args))
+                                   (cons tag (map (lambda (r) (regroup #`((parsed #:rhombus/repet #,r)))) args))
                                    tail)
                             #:repetition? #t
                             #:static? (is-static-context? tag)

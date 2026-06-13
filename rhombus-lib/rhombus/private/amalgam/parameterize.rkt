@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "group.rkt")
          "expression.rkt"
          "parse.rkt"
          "parens.rkt"
@@ -15,13 +15,13 @@
     #:attributes (lhs rhs)
     #:datum-literals (group)
     (pattern (group n ... (tag::block body ...))
-             #:with lhs #`(group n ...)
+             #:with lhs (regroup #`(n ...))
              #:with rhs #'(rhombus-body-at tag body ...))
     #;
     (pattern (~and g
                    (group n ...+ _::equal expr ...+))
              #:do [(check-multiple-equals #'g)]
-             #:with lhs #`(group n ...)
+             #:with lhs (regroup #`(n ...))
              #:with rhs #`(rhombus-expression (group expr ...)))))
 
 (define-syntax rhombus-parameterize

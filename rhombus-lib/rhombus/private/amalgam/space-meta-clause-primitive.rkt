@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/symbol
-                     "tag.rkt")
+                     "group.rkt")
          "space-meta-clause.rkt"
          (submod "space-meta-clause.rkt" for-class)
          "parens.rkt"
@@ -108,7 +108,7 @@
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax infix_predicate)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_packer)))
                      (free-identifier=? id (in-space-meta-clause-space (quote-syntax parsed_unpacker)))))
-        (syntax-parse #'(group id . rest)
+        (syntax-parse (regroup #'(id . rest))
           [cl::space-meta-clause
            (syntax-parse (unwrap-clause #'cl.parsed)
              [(kw id #t . rest)

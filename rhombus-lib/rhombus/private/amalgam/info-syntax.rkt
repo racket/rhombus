@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      enforest/syntax-local
                      "pack.rkt")
@@ -19,4 +20,4 @@
            (#,@(unpack-group e who #f)
             (#,(add-call-context #'parens)
              #,@(for/list ([arg (in-list args)])
-                  #`(group (parsed #:rhombus/expr #,arg)))))))))
+                  (regroup #`((parsed #:rhombus/expr #,arg))))))))))

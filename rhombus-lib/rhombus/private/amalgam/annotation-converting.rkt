@@ -4,7 +4,7 @@
                      shrubbery/print
                      enforest/name-parse
                      "srcloc.rkt"
-                     "tag.rkt")
+                     "group.rkt")
          (submod "annotation.rkt" for-class)
          "annotation-operator.rkt"
          "parse.rkt"
@@ -47,7 +47,7 @@
         (define-values (wrapped-body static-infos)
           (cond
             [(attribute op)
-             (syntax-parse (respan #`(group result-ann ...))
+             (syntax-parse (respan (regroup #`(result-ann ...)))
                [res::annotation
                 (build-annotated-expression #'form-id #'res
                                             (attribute op.is_checked) plain-body #'() #'res.parsed

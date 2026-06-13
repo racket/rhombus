@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "pack.rkt"
@@ -38,7 +39,7 @@
       [(and repetition? (not handled-repet?)) (fail-k)]
       [else
        (define (wrap e) (if repetition?
-                            (syntax-parse #`(group #,e)
+                            (syntax-parse (regroup #`(#,e))
                               [rep::repetition #'rep.parsed]
                               [_
                                (log-error "oops ~s" e)

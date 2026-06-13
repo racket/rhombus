@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "annotation-string.rkt")
@@ -52,7 +53,7 @@
            first-rest-arg::binding
            rest-arg ...)
         #:with first-rest::binding-form #'first-rest-arg.parsed
-        #:with rest::binding #'(group constructor (brackets rest-arg ...))
+        #:with rest::binding (regroup #'(constructor (brackets rest-arg ...)))
         #:with rest-rest::binding-form #'rest.parsed
         (values
          (binding-form

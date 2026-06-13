@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
@@ -232,9 +233,9 @@
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ info data)
-                   (syntax-parse #`(group #,(unpack-static-infos 'who #'info))
+                   (syntax-parse (regroup #`(#,(unpack-static-infos 'who #'info)))
                      [#,converted-info-pattern
-                      (syntax-parse #'(group data)
+                      (syntax-parse (regroup #'(data))
                         [#,converted-data-pattern
                          (let* ([arg-id #'arg-id]
                                 [info-id info-id-ref] ...
@@ -273,7 +274,7 @@
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ data)
-                   (syntax-parse #'(group data)
+                   (syntax-parse (regroup #'(data))
                      [#,converted-pattern
                       (let* ([id id-ref] ...)
                         (let-syntaxes ([(sid ...) sid-ref] ...)
@@ -310,7 +311,7 @@
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ arg-id data IF success fail)
-                   (syntax-parse #'(group data)
+                   (syntax-parse (regroup #'(data))
                      [#,converted-pattern
                       (let* ([id id-ref] ... [arg-id #'arg-id])
                         (let-syntaxes ([(sid ...) sid-ref] ...)
@@ -528,8 +529,8 @@
 
 (define-for-syntax (unpack-evidence-tree tree)
   (syntax-parse tree
-    [_:identifier #`(group #,tree)]
-    [(tree ...) #`(group (parens #,@(map unpack-evidence-tree (syntax->list #'(tree ...)))))]))
+    [_:identifier (regroup #`(#,tree))]
+    [(tree ...) (regroup #`((parens #,@(map unpack-evidence-tree (syntax->list #'(tree ...))))))]))
 
 (define-defn-syntax binder binder-or-committer)
 (define-defn-syntax committer binder-or-committer)

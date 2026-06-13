@@ -4,7 +4,7 @@
                      racket/syntax
                      shrubbery/print
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "annot-context.rkt")
          racket/private/serialize-structs
          racket/mutability
@@ -527,7 +527,7 @@
                  (group _::...-bind))
               . tail)
      (generate-set-binding (syntax->list #`((group key-e ...) ...))
-                           #`(group elem-b ...)
+                           (regroup #`(elem-b ...))
                            #'tail
                            mode
                            #:rest-repetition? #t)]
@@ -535,8 +535,8 @@
                  (group _::&-bind rst ...))
               . tail)
      (generate-set-binding (syntax->list #`((group elem-e ...) ...))
-                           #`(group rest-bind #,(get-set-static-infos)
-                              (group rst ...))
+                           (regroup #`(rest-bind #,(get-set-static-infos)
+                              (group rst ...)))
                            #'tail
                            mode)]
     [(form-id (_ (group elem-e ...) ...) . tail)

@@ -4,7 +4,7 @@
                      syntax/parse/pre
                      shrubbery/print
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "list-last.rkt"
                      "annot-context.rkt")
          racket/unsafe/undefined
@@ -854,13 +854,13 @@
     (pattern (~and g
                    (group b ...+ eq::equal e ...+))
              #:do [(check-multiple-equals #'g)]
-             #:with bind #`(group b ...)
+             #:with bind (regroup #`(b ...))
              #:with default #`(rhombus-expression (group e ...)))
     (pattern (group b ...+ (b-tag::block e ...))
-             #:with bind #`(group b ...)
+             #:with bind (regroup #`(b ...))
              #:with default #'(rhombus-body-at b-tag e ...))
     (pattern (group b ...)
-             #:with bind #`(group b ...)
+             #:with bind (regroup #`(b ...))
              #:with default #'#f)))
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
@@ -873,7 +873,7 @@
      (generate-map-binding (syntax->list #`((group key-e ...) ...))
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
-                           #`(group Pair (parens (group key-b ...) (group val-b ...)))
+                           (regroup #`(Pair (parens (group key-b ...) (group val-b ...))))
                            #'tail
                            mode
                            #:rest-repetition? #t)]
@@ -883,8 +883,8 @@
      (generate-map-binding (syntax->list #`((group key-e ...) ...))
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
-                           #`(group rest-bind #,(get-map-static-infos)
-                              (group rst ...))
+                           (regroup #`(rest-bind #,(get-map-static-infos)
+                              (group rst ...)))
                            #'tail
                            mode)]
     [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...) . tail)

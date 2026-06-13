@@ -4,7 +4,7 @@
                      (only-in shrubbery/print
                               shrubbery-syntax->string)
                      "annotation-string.rkt"
-                     "tag.rkt")
+                     "group.rkt")
          "binding.rkt"
          (submod "quasiquote.rkt" for-pattern)
          "unquote-binding.rkt"
@@ -30,13 +30,13 @@
 (define-binding-syntax pattern
   (binding-transformer
    (lambda (stx)
-     (do-quotes-binding #`(group (quotes
+     (do-quotes-binding (regroup #`((quotes
                                   (group (op $)
                                          (parens ; needs `#%parens` binding
-                                          (group bounce-to-pattern . #,stx)))))
+                                          (group bounce-to-pattern . #,stx))))))
                         (lambda (e)
                           (syntax-parse stx
                             [(_ . tail)
                              (annotation-string-from-pattern
                               (shrubbery-syntax->string
-                               #`(group pattern . tail)))]))))))
+                               (regroup #`(pattern . tail))))]))))))

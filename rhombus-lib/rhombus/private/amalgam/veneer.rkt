@@ -8,7 +8,7 @@
                      (submod "veneer-meta.rkt" for-class)
                      "interface-parse.rkt"
                      "srcloc.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "annotation-string.rkt"
                      "origin.rkt")
          "provide.rkt"
@@ -207,7 +207,7 @@
                     ann-terms ann-op-name ann-input-statinfo-indirect]
           exports
           [option stx-params] ...)
-       #:with ann::annotation #'(group . ann-terms)
+       #:with ann::annotation (regroup #'ann-terms)
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-params ...)))
        (define parent-name (hash-ref options 'extends #f))
@@ -473,7 +473,7 @@
   (with-syntax ([(name name? name-convert check?
                        ann ann-terms ann-op-name ann-input-statinfo-indirect)
                  names])
-    (define ann-str (shrubbery-syntax->string #`(group . ann-terms)))
+    (define ann-str (shrubbery-syntax->string (regroup #`ann-terms)))
     (define all-ann-str
       (if (and super (veneer-desc-predicate-id super))
           (annotation-string-and ann-str

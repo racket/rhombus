@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/treelist
                      syntax/stx
@@ -111,11 +112,11 @@
       [_ (void)])
     (define-values (pattern idrs sidrs vars can-be-empty?)
       (if implicit-tail?
-          (convert-pattern #`(group (op $) _Term #,@tail-pattern (op $) tail (op rhombus...))
+          (convert-pattern (regroup #`((op $) _Term #,@tail-pattern (op $) tail (op rhombus...)))
                            #:as-tail? #t
                            #:splice? #t
                            #:splice-pattern values)
-          (convert-pattern #`(group (op $) _Term . #,tail-pattern)
+          (convert-pattern (regroup #`((op $) _Term . #,tail-pattern))
                            #:as-tail? #t
                            #:splice? #t
                            #:splice-pattern values)))
@@ -494,7 +495,7 @@
                                                 _
                                                 tail-pattern
                                                 rhs)
-                                    (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _Term . tail-pattern)
+                                    (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern (regroup #`((op $) _Term . tail-pattern))
                                                                                                             #:as-tail? #t
                                                                                                             #:splice? #t
                                                                                                             #:splice-pattern values))

@@ -12,7 +12,7 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"
-                     "tag.rkt"
+                     "group.rkt"
                      "macro-result.rkt"
                      "id-binding.rkt"
                      "dotted-sequence.rkt"
@@ -158,7 +158,7 @@
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
              #:with (~var || (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...))))
-             #`(group mod-id mod-arg ...))
+             (regroup #`(mod-id mod-arg ...)))
     (pattern ::export))
 
   (define (apply-modifiers mods e-parsed)
@@ -179,7 +179,7 @@
    (lambda (stx name-prefix effect-id)
      (syntax-parse stx
        [(form #:scope_like id:identifier . tail)
-        #:with (~var e (:definition name-prefix effect-id)) #'(group . tail)
+        #:with (~var e (:definition name-prefix effect-id)) (regroup #'tail)
         #`(#,(relocate+reraw
               stx
               #`(rhombus-forward
@@ -187,7 +187,7 @@
                  #,(relocate-id #'form #'id)
                  e.parsed)))]
        [(head . tail)
-        #:with (~var e (:definition name-prefix effect-id)) #'(group . tail)
+        #:with (~var e (:definition name-prefix effect-id)) (regroup #'tail)
         #`(#,(relocate+reraw
               stx
               #`(rhombus-forward
@@ -199,7 +199,7 @@
               stx
               #'(provide e.parsed ...)))]
        [(_ term ...)
-        #:with e::modified-export #`(group term ...)
+        #:with e::modified-export (regroup #`(term ...))
         #`(#,(relocate+reraw
               stx
               #'(provide e.parsed)))]))))
@@ -256,7 +256,7 @@
         (values #`(all-spaces-out [r.int-name r.ext-name] ...)
                 #'())]
        [(_ t ...)
-        #:with r::renaming #'(group t ...)
+        #:with r::renaming (regroup #'(t ...))
         (values #`(all-spaces-out [r.int-name r.ext-name])
                 #'())]))))
 
@@ -267,7 +267,7 @@
        [(_ (_::block e::modified-export ...))
         #`(except-out #,ex e.parsed ...)]
        [(_ term ...)
-        #:with e::modified-export #'(group term ...)
+        #:with e::modified-export (regroup #'(term ...))
         #`(except-out #,ex e.parsed)]))))
 
 (define-export-syntax meta
@@ -503,7 +503,7 @@
                                  form1)
                 #'tail)]
        [(_ . tail)
-        #:with (~var e (:export-infix-op+form+tail (expo-quote #%juxtapose))) #'(group . tail)
+        #:with (~var e (:export-infix-op+form+tail (expo-quote #%juxtapose))) (regroup #'tail)
         (values #`(combine-out #,form1
                                e.parsed)
                 #'e.tail)]))

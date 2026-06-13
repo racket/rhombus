@@ -1,4 +1,5 @@
 #lang racket/base
+(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/strip-context
@@ -33,10 +34,10 @@
                 (parens (group List
                                (parens
                                 #,@(for/list ([prototype (in-list prototypes)])
-                                     #`(group Syntax (op |.|) literal (quotes #,(strip-context prototype))))))
+                                     (regroup #`(Syntax (op |.|) literal (quotes #,(strip-context prototype)))))))
                         (group List
                                (parens
                                 #,@(for/list ([g (in-list (syntax->list gs))])
-                                     #`(group Syntax (op |.|) literal (quotes #,g))))))))
+                                     (regroup #`(Syntax (op |.|) literal (quotes #,g)))))))))
       defns)]
     [else defns]))

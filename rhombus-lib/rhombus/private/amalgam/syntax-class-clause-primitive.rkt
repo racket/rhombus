@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "tag.rkt")
+                     "group.rkt")
          "syntax-class-clause.rkt"
          (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
