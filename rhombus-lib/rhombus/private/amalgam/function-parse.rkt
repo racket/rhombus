@@ -132,8 +132,8 @@
     #:datum-literals (group)
     (pattern (group kw:keyword (_::block (group a ...+)))
              #:cut
-             #:do [(disallow-default-value #`(#,group-tag a ...))]
-             #:with ::binding #`(#,group-tag a ...))
+             #:do [(disallow-default-value (no-srcloc #`(#,group-tag a ...)))]
+             #:with ::binding (no-srcloc #`(#,group-tag a ...)))
     (pattern (group kw:keyword)
              #:cut
              #:with ::binding (keyword->id-group #'kw)))

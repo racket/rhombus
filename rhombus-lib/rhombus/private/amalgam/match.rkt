@@ -45,7 +45,7 @@
                               (~and rhs (_::block . _)))))
     (pattern (_::block (group bind ...+
                               (~and rhs (_::block . _))))
-             #:with (bind-g ...) #`((#,group-tag bind ...))))
+             #:with (bind-g ...) #`(#,(no-srcloc #`(#,group-tag bind ...)))))
 
   ;; also checks consistent arity
   (define (extract-arity stx given-arity clauses bss)
@@ -112,7 +112,7 @@
                    (values '() '() '() #f)]))
               (define arity (extract-arity stx given-arity clauses bss))]
         #:with ((b::binding ...) ...) bss
-        (define in-expr #`(#,group-tag in ...))
+        (define in-expr (no-srcloc #`(#,group-tag in ...)))
         (define b-parsedss (map syntax->list (syntax->list #'((b.parsed ...) ...))))
         (values
          (relocate+reraw
