@@ -93,7 +93,7 @@
        [(_ (tag::block e ...))
         #`(#:description #,stx (rhombus-body-at tag e ...))]
        [(_ e ...)
-        #`(#:description #,stx (rhombus-expression (#,group-tag e ...)))]))))
+        #`(#:description #,stx (rhombus-expression (group e ...)))]))))
 
 (begin-for-syntax
   (struct declared-field (id depth unpack*-id converter static-infos annotation-str) #:prefab)

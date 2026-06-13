@@ -14,4 +14,4 @@
     #:datum-literals (group)
     (pattern (_::block (group #:else (~and rhs (_::block . _)))))
     (pattern (_::block (group #:else t ...+))
-             #:with rhs #`(#,group-tag t ...))))
+             #:with rhs #`(group t ...))))

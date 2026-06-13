@@ -15,14 +15,14 @@
     #:attributes (lhs rhs)
     #:datum-literals (group)
     (pattern (group n ... (tag::block body ...))
-             #:with lhs #`(#,group-tag n ...)
+             #:with lhs #`(group n ...)
              #:with rhs #'(rhombus-body-at tag body ...))
     #;
     (pattern (~and g
                    (group n ...+ _::equal expr ...+))
              #:do [(check-multiple-equals #'g)]
-             #:with lhs #`(#,group-tag n ...)
-             #:with rhs #`(rhombus-expression (#,group-tag expr ...)))))
+             #:with lhs #`(group n ...)
+             #:with rhs #`(rhombus-expression (group expr ...)))))
 
 (define-syntax rhombus-parameterize
   (expression-transformer

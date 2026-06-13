@@ -51,15 +51,15 @@
            [gs (do-values #'gs #'rhs)])]
         [(_ (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
          (check-multiple-equals stx)
-         (define rhs-g (no-srcloc #`(#,group-tag rhs ...)))
+         (define rhs-g (no-srcloc #`(group rhs ...)))
          (syntax-parse #'(g ...)
            [(g) (do-value #'g rhs-g)]
            [gs (do-values #'gs rhs-g)])]
         [(_ any ...+ _::equal rhs ...+)
          (check-multiple-equals stx)
-         (do-value (no-srcloc #`(#,group-tag any ...)) (no-srcloc #`(#,group-tag rhs ...)))]
+         (do-value (no-srcloc #`(group any ...)) (no-srcloc #`(group rhs ...)))]
         [(_ any ...+ (~and rhs (_::block body ...)))
-         (do-value (no-srcloc #`(#,group-tag any ...)) #'rhs)]
+         (do-value (no-srcloc #`(group any ...)) #'rhs)]
         [(_ ... (a::alts (b::block . _) . _))
          (raise-syntax-error #f
                              "alternatives are not supported here"

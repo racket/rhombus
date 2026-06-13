@@ -57,7 +57,7 @@
     [(form-id (tag::parens a-g ...) . new-tail)
      #:do [(define stx (or stx-in
                            (quasisyntax/loc #'form-id
-                             (#,group-tag form-id (tag a-g ...)))))]
+                             (group form-id (tag a-g ...)))))]
      #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a-g ...)) stx
                                                             #:make-missing (lambda (kw) #'(group rhombus-_)))
      #:with (a-parsed::binding-form ...) #'(a.parsed ...)

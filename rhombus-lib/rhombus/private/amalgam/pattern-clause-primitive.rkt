@@ -55,7 +55,7 @@
            field.converter field.static-infos  field.annotation-str)]
        [(_ fld ... _::equal rhs ...)
         #:with (group field::field-lhs) #'(group fld ...)
-        #`(#:field field.id field.depth (rhombus-expression (#,group-tag rhs ...))
+        #`(#:field field.id field.depth (rhombus-expression (group rhs ...))
            field.converter field.static-infos  field.annotation-str)]))))
 
 (define-pattern-clause-syntax match_def
@@ -66,7 +66,7 @@
        [(_ (~and pat (_::quotes p ...)) (tag::block in-block ...))
         #'(#:also pat (rhombus-body-at tag in-block ...))]
        [(_ (~and pat (_::quotes p ...)) _::equal rhs ...)
-        #`(#:also pat (rhombus-expression (#,group-tag rhs ...)))]))))
+        #`(#:also pat (rhombus-expression (group rhs ...)))]))))
 
 (define-pattern-clause-syntax match_when
   (pattern-clause-transformer
@@ -75,7 +75,7 @@
        [(_ (tag::block g ...))
         #`(#:when (rhombus-body-at tag g ...))]
        [(_ rhs ...+)
-        #`(#:when (rhombus-expression (#,group-tag rhs ...)))]))))
+        #`(#:when (rhombus-expression (group rhs ...)))]))))
 
 (define-pattern-clause-syntax match_unless
   (pattern-clause-transformer
@@ -84,7 +84,7 @@
        [(_ (tag::block g ...))
         #`(#:when (not (rhombus-body-at tag g ...)))]
        [(_ rhs ...+)
-        #`(#:when (not (rhombus-expression (#,group-tag rhs ...))))]))))
+        #`(#:when (not (rhombus-expression (group rhs ...))))]))))
 
 (define-pattern-clause-syntax default
   (pattern-clause-transformer
@@ -94,7 +94,7 @@
        [(_ field::field-lhs (tag::block in-block ...))
         #'(#:default field.id field.depth (rhombus-body-at tag in-block ...) #,stx)]
        [(_ field::field-lhs _::equal rhs ...)
-        #`(#:default field.id field.depth (rhombus-expression (#,group-tag rhs ...)) #,stx)]))))
+        #`(#:default field.id field.depth (rhombus-expression (group rhs ...)) #,stx)]))))
 
 (define-pattern-clause-syntax description
   (pattern-clause-transformer

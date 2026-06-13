@@ -526,21 +526,21 @@
                  (group elem-b ...)
                  (group _::...-bind))
               . tail)
-     (generate-set-binding (syntax->list #`((#,group-tag key-e ...) ...))
-                           #`(#,group-tag elem-b ...)
+     (generate-set-binding (syntax->list #`((group key-e ...) ...))
+                           #`(group elem-b ...)
                            #'tail
                            mode
                            #:rest-repetition? #t)]
     [(form-id (_ (group elem-e ...) ...
                  (group _::&-bind rst ...))
               . tail)
-     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
-                           #`(#,group-tag rest-bind #,(get-set-static-infos)
-                              (#,group-tag rst ...))
+     (generate-set-binding (syntax->list #`((group elem-e ...) ...))
+                           #`(group rest-bind #,(get-set-static-infos)
+                              (group rst ...))
                            #'tail
                            mode)]
     [(form-id (_ (group elem-e ...) ...) . tail)
-     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
+     (generate-set-binding (syntax->list #`((group elem-e ...) ...))
                            #f
                            #'tail
                            mode)]))

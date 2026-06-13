@@ -204,12 +204,12 @@
   (define-syntax-class (:annotation-seq prec-op)
     #:attributes (parsed tail)
     (pattern stxes
-             #:with (~var || (:annotation-infix-op+form+tail prec-op)) #`(#,group-tag . stxes)))
+             #:with (~var || (:annotation-infix-op+form+tail prec-op)) #`(group . stxes)))
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos origins)
     (pattern (~seq op::annotate-op ctc ...)
-             #:with c::annotation (no-srcloc #`(#,group-tag ctc ...))
+             #:with c::annotation (no-srcloc #`(group ctc ...))
              #:with (~var ca (:annotation-converted (attribute op.is_checked))) #'c.parsed
              #:do [(when (and (not (attribute op.is_checked))
                               (syntax-e #'ca.converter))
@@ -1286,10 +1286,10 @@
     #:datum-literals (group)
     (pattern (group t ... #:exclusive)
              #:with comp #'<
-             #:with g #`(#,group-tag t ...))
+             #:with g #`(group t ...))
     (pattern (group t ... #:inclusive)
              #:with comp #'<=
-             #:with g #`(#,group-tag t ...))
+             #:with g #`(group t ...))
     (pattern g
              #:with comp #'<=))
 

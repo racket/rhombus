@@ -161,7 +161,7 @@
                #:when (not (eq? init-shape 'set))
                (assert-map)
                (define-values (es e-key-static-infos e-val-static-infos)
-                 (repetition-map-arguments #`(#,group-tag key-e ...) #'val extra-ellipses))
+                 (repetition-map-arguments #`(group key-e ...) #'val extra-ellipses))
                (loop (list-tail (cddr elems) extra-ellipses)
                      'map
                      '()

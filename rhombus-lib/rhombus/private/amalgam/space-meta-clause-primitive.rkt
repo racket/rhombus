@@ -81,7 +81,7 @@
        [(form-id (tag::block g ...))
         (wrap-clause #`(#,kw #,stx (rhombus-body-at tag g ...)))]
        [(form-id e ...)
-        (wrap-clause #`(#,kw #,stx (rhombus-expression (#,group-tag e ...))))]))))
+        (wrap-clause #`(#,kw #,stx (rhombus-expression (group e ...))))]))))
 
 (define-space-meta-clause-syntax description
   (make-expression-transformer '#:desc))

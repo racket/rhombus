@@ -158,7 +158,7 @@
              #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
              #:with (e::modified-export ...) #'(exp ...)
              #:with (~var || (:export-modifier #'(parsed #:rhombus/expo (combine-out e.parsed ...))))
-             #`(#,group-tag mod-id mod-arg ...))
+             #`(group mod-id mod-arg ...))
     (pattern ::export))
 
   (define (apply-modifiers mods e-parsed)
@@ -199,7 +199,7 @@
               stx
               #'(provide e.parsed ...)))]
        [(_ term ...)
-        #:with e::modified-export #`(#,group-tag term ...)
+        #:with e::modified-export #`(group term ...)
         #`(#,(relocate+reraw
               stx
               #'(provide e.parsed)))]))))

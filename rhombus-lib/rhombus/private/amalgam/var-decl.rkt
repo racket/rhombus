@@ -15,7 +15,7 @@
     #:attributes ([bind 1] default)
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::equal rhs ...+))
-             #:do [(check-multiple-equals #`(#,group-tag t ...))]
-             #:with default #`(rhombus-expression (#,group-tag rhs ...)))
+             #:do [(check-multiple-equals #`(group t ...))]
+             #:with default #`(rhombus-expression (group rhs ...)))
     (pattern (~seq bind ...+ (tag::block g ...))
              #:with default #'(rhombus-body-at tag g ...))))

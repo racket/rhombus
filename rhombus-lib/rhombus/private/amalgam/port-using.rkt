@@ -52,7 +52,7 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(_ #:file t ... (~and blk (_::block . _)))
-        (build (list #`(rhombus-expression (#,group-tag t ...)))
+        (build (list #`(rhombus-expression (group t ...)))
                (lambda (pre-ids)
                  #`(open-input-file* #,(car pre-ids)))
                #'blk
@@ -60,7 +60,7 @@
        [(_ t ... (~and blk (_::block body . _)))
         (build '()
                (lambda (pre-ids)
-                 #`(rhombus-expression (#,group-tag t ...)))
+                 #`(rhombus-expression (group t ...)))
                #'blk
                #t)]))))
 
@@ -76,7 +76,7 @@
        [(_ #:file t ... (tag::block
                          (group #:exists (xtag::block xbody ...+))
                          body ...))
-        (build (list #`(rhombus-expression (#,group-tag t ...))
+        (build (list #`(rhombus-expression (group t ...))
                      #'(rhombus-body-at xtag xbody ...))
                (lambda (pre-ids)
                  #`(open-output-file* #,(car pre-ids) #,(cadr pre-ids)))
@@ -85,14 +85,14 @@
        [(_ #:file t ... (tag::block
                          (group #:exists tx ...+)
                          body ...))
-        (build (list #`(rhombus-expression (#,group-tag t ...))
-                     #`(rhombus-expression (#,group-tag tx ...)))
+        (build (list #`(rhombus-expression (group t ...))
+                     #`(rhombus-expression (group tx ...)))
                (lambda (pre-ids)
                  #`(open-output-file* #,(car pre-ids) #,(cadr pre-ids)))
                (datum->syntax #f (syntax-e #'(tag body ...)))
                #f)]
        [(_ #:file t ... (~and blk (_::block . _)))
-        (build (list #`(rhombus-expression (#,group-tag t ...)))
+        (build (list #`(rhombus-expression (group t ...)))
                (lambda (pre-ids)
                  #`(open-output-file* #,(car pre-ids) 'error))
                #'blk
@@ -100,7 +100,7 @@
        [(_ t ... (~and blk (_::block . _)))
         (build '()
                (lambda (pre-ids)
-                 #`(rhombus-expression (#,group-tag t ...)))
+                 #`(rhombus-expression (group t ...)))
                #'blk
                #t)]))))
 

@@ -39,19 +39,19 @@
     (pattern ((_::parens (~and g (~or* (group bind ...+ _::in _ ...+)
                                        (group bind ...+ (_::block . _))))
                          ...))
-             #:with each #`(#,group-tag each (block g ...))
+             #:with each #`(group each (block g ...))
              #:attr red-parsed #f)
     (pattern ()
              #:attr each #f
              #:attr red-parsed #f)
     (pattern (red ...)
-             #:with (~var redr (:infix-op+reducer+tail #'#%call)) (no-srcloc #`(#,group-tag red ...))
+             #:with (~var redr (:infix-op+reducer+tail #'#%call)) (no-srcloc #`(group red ...))
              #:attr each (syntax-parse #'redr.tail
                            #:datum-literals (group)
                            [((_::parens (~and g (~or* (group bind ...+ _::in _ ...+)
                                                       (group bind ...+ (_::block . _))))
                                         ...))
-                            (no-srcloc #`(#,group-tag each (block g ...)))]
+                            (no-srcloc #`(group each (block g ...)))]
                            [()
                             #f])
              #:with red-parsed #'redr.parsed)))
@@ -70,7 +70,7 @@
                   (raise-syntax-error #f
                                       "cannot have both `~into` and reducer terms before block"
                                       stx))]
-          #:with redr::reducer #`(#,group-tag red ...)
+          #:with redr::reducer #`(group red ...)
           (values #'redr.parsed
                   #'((~? pre.each) body ...))]
          [(_ pre-t ... (_::block body ...))

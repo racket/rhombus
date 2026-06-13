@@ -38,11 +38,11 @@
         [(form-id (_::alts (_::block (group (_::quotes (group (_::parens) . pat)) (_::block . _)))
                            ...+))
          ;; found () in place of a defined name, so parse as an expression
-         #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+         #`((#%expression (rhombus-expression (group . #,stx))))]
         [(form-id (_::quotes (group (_::parens) . _))
                   (_::block . _))
          ;; another expression case
-         #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+         #`((#%expression (rhombus-expression (group . #,stx))))]
         [(form-id (_::alts (_::block (group q::operator-syntax-quote
                                             (~and rhs (_::block body ...))))
                            ...+))

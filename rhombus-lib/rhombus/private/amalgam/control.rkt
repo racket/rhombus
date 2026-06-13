@@ -89,7 +89,7 @@
            [(group #:initially (tag::block body ...))
             (values rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
            [(group #:initially term ...+)
-            (values rev-gs (hash-set state 'initially #`(rhombus-expression (#,group-tag term ...))))]
+            (values rev-gs (hash-set state 'initially #`(rhombus-expression (group term ...))))]
            [(group #:initially . _)
             (raise-syntax-error #f "expected block or expression after `~initially`" stx g)]
            [(group #:result . _)
@@ -104,7 +104,7 @@
                                                        #'(rhombus-body-at tag body ...))))]
            [(group #:result term ...+)
             (values null (hash-set state 'result (cons (reverse rev-gs)
-                                                       #`(rhombus-expression (#,group-tag term ...)))))]
+                                                       #`(rhombus-expression (group term ...)))))]
            [(group #:result . _)
             (raise-syntax-error #f "expected block or expression after `~result`" stx g)]
            [(group #:finally . _)
@@ -113,7 +113,7 @@
            [(group #:finally (tag::block body ...))
             (values rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
            [(group #:finally term ...+)
-            (values rev-gs (hash-set state 'finally #`(rhombus-expression (#,group-tag term ...))))]
+            (values rev-gs (hash-set state 'finally #`(rhombus-expression (group term ...))))]
            [(group #:finally . _)
             (raise-syntax-error #f "expected block or expression after `~finally`" stx g)]
            [(group #:catch . _)
@@ -129,7 +129,7 @@
                 (syntax-parse b
                   #:datum-literals (group)
                   [(_::block (group bind ...+ (~and rhs (_::block . _))))
-                   #:with b::binding #`(#,group-tag bind ...)
+                   #:with b::binding #`(group bind ...)
                    (values #'b.parsed #'rhs)]
                   [_ (raise-syntax-error #f
                                          "expected a binding and block for `~catch` alternative"
@@ -138,7 +138,7 @@
             (define handler (build-try-handler b-parseds rhss))
             (values rev-gs (hash-set state 'handler handler))]
            [(group #:catch bind ...+ (~and rhs (_::block . _)))
-            #:with b::binding #`(#,group-tag bind ...)
+            #:with b::binding #`(group bind ...)
             (define handler (build-try-handler (list #'b.parsed) (list #'rhs)))
             (values rev-gs (hash-set state 'handler handler))]
            [(group #:catch . _)
@@ -224,7 +224,7 @@
                      (define-static-info-syntax id
                        #:getter get-continuation-static-infos)
                      (rhombus-body-at tag g ...))
-                   (rhombus-expression (#,group-tag tag-expr ...)))
+                   (rhombus-expression (group tag-expr ...)))
                 #'())]))))
 
 (void (set-primitive-who! 'call-in-continuation 'Continuation.in))
@@ -234,7 +234,7 @@
      (syntax-parse stx
        [(_ cont-expr ... (tag::block g ...))
         (values #`(call-in-continuation
-                   (rhombus-expression (#,group-tag cont-expr ...))
+                   (rhombus-expression (group cont-expr ...))
                    (lambda () (rhombus-body-at tag g ...)))
                 #'())]))))
 
@@ -262,7 +262,7 @@
                      [(_::block (group (_::parens arg::binding ...) (~and rhs (_::block . _))))
                       (values #'(arg ...) #'(arg.parsed ...) #'rhs)]
                      [(_::block (group bind ...+ (~and rhs (_::block . _))))
-                      #:with arg::binding #`(#,group-tag bind ...)
+                      #:with arg::binding #`(group bind ...)
                       (values #'(arg) #'(arg.parsed) #'rhs)]
                      [_ (raise-syntax-error #f
                                             "expected a binding and block for `~catch` alternative"
@@ -298,7 +298,7 @@
                                  g))
                (values rev-gs (hash-set state 'handler handler))]
               [(group #:catch bind ...+ (~and rhs (_::block . _)))
-               #:with arg::binding #`(#,group-tag bind ...)
+               #:with arg::binding #`(group bind ...)
                (define-values (handler arity)
                  (build-function no-adjustments '()
                                  #'prompt_handler #f #f
@@ -322,7 +322,7 @@
                    (lambda () (rhombus-body-at tag #,@(reverse rev-gs)))
                    #,(if (null? (syntax-e #'(tag-expr ...)))
                          #'(default-continuation-prompt-tag)
-                         #`(rhombus-expression (#,group-tag tag-expr ...)))
+                         #`(rhombus-expression (group tag-expr ...)))
                    #,@(let ([handler (hash-ref state 'handler #f)])
                         (if handler
                             (list handler)
@@ -394,8 +394,8 @@
        [(_ lhs ...+ _::equal rhs ...+ (tag::block g ...))
         (check-multiple-equals stx)
         (values #`(with-continuation-mark
-                    (rhombus-expression (#,group-tag lhs ...))
-                    (rhombus-expression (#,group-tag rhs ...))
+                    (rhombus-expression (group lhs ...))
+                    (rhombus-expression (group rhs ...))
                     (rhombus-body-at tag g ...))
                 #'())]))))
 

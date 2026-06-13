@@ -39,4 +39,4 @@
                             [(_ . tail)
                              (annotation-string-from-pattern
                               (shrubbery-syntax->string
-                               #`(#,group-tag pattern . tail)))]))))))
+                               #`(group pattern . tail)))]))))))

@@ -33,7 +33,7 @@
              #:with (formal ...) (list #'kw #'id)
              #:with def? #'#f)
     (pattern (group id:identifier _::equal rhs ...+)
-             #:with (formal ...) (list #`[id (rhombus-expression (#,group-tag rhs ...))])
+             #:with (formal ...) (list #`[id (rhombus-expression (group rhs ...))])
              #:with kw #'#f
              #:with def? #'#t)
     (pattern (group id:identifier (tag::block body ...))
@@ -41,10 +41,10 @@
              #:with kw #'#f
              #:with def? #'#t)
     (pattern (group kw:keyword _::equal rhs ...+)
-             #:with (formal ...) (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (#,group-tag rhs ...))])
+             #:with (formal ...) (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (group rhs ...))])
              #:with def? #'#f)
     (pattern (group kw:keyword (_::block (group id:identifier _::equal rhs ...+)))
-             #:with (formal ...) (list #'kw #`[id (rhombus-expression (#,group-tag rhs ...))])
+             #:with (formal ...) (list #'kw #`[id (rhombus-expression (group rhs ...))])
              #:with def? #'#t)
     (pattern (group kw:keyword (_::block (group id:identifier (tag::block body ...))))
              #:with (formal ...) (list #'kw #'[id (rhombus-body-at tag body ...)])

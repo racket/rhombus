@@ -41,16 +41,16 @@
              #:do [(check-multiple-ins #'(t ...))]
              #:with blk (relocate+reraw
                          (respan #'(t ...))
-                         #`(block (#,group-tag expr ...))))
+                         #`(block (group expr ...))))
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
-             #:with (bind-g ...) #`((#,group-tag bind ...))
+             #:with (bind-g ...) #`((group bind ...))
              #:with blk (relocate+reraw
                          (respan #'(t ...))
-                         #`(block (#,group-tag expr ...))))
+                         #`(block (group expr ...))))
     (pattern (~seq bind ...+ (~and blk (_::block . _)))
-             #:with (bind-g ...) #`((#,group-tag bind ...)))))
+             #:with (bind-g ...) #`((group bind ...)))))
 
 (define-for-clause-syntax each
   (for-clause-transformer
@@ -71,7 +71,7 @@
     [(form-id (tag::block g ...))
      #`(#,kw (rhombus-body-at tag g ...))]
     [(form-id expr ...+)
-     #`(#,kw (rhombus-expression (#,group-tag expr ...)))]
+     #`(#,kw (rhombus-expression (group expr ...)))]
     [(form-id)
      (raise-syntax-error #f
                          "missing expression"
@@ -106,9 +106,9 @@
         #`(#:let (g ...) rhs)]
        [(form-id (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
         (check-multiple-equals stx)
-        #`(#:let (g ...) (#,group-tag rhs ...))]
+        #`(#:let (g ...) (group rhs ...))]
        [(form-id bind ...+ _::equal rhs ...+)
         (check-multiple-equals stx)
-        #`(#:let ((#,group-tag bind ...)) (#,group-tag rhs ...))]
+        #`(#:let ((group bind ...)) (group rhs ...))]
        [(form-id bind ...+ (~and rhs (_::block . _)))
-        #`(#:let ((#,group-tag bind ...)) rhs)]))))
+        #`(#:let ((group bind ...)) rhs)]))))

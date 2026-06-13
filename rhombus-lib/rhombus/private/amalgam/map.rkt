@@ -854,13 +854,13 @@
     (pattern (~and g
                    (group b ...+ eq::equal e ...+))
              #:do [(check-multiple-equals #'g)]
-             #:with bind #`(#,group-tag b ...)
-             #:with default #`(rhombus-expression (#,group-tag e ...)))
+             #:with bind #`(group b ...)
+             #:with default #`(rhombus-expression (group e ...)))
     (pattern (group b ...+ (b-tag::block e ...))
-             #:with bind #`(#,group-tag b ...)
+             #:with bind #`(group b ...)
              #:with default #'(rhombus-body-at b-tag e ...))
     (pattern (group b ...)
-             #:with bind #`(#,group-tag b ...)
+             #:with bind #`(group b ...)
              #:with default #'#f)))
 
 (define-for-syntax (parse-map-binding who stx opener+closer [mode #'("Map" immutable-hash? values)])
@@ -870,25 +870,25 @@
                  (group key-b ... (_::block (group val-b ...)))
                  (group _::...-bind))
               . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+     (generate-map-binding (syntax->list #`((group key-e ...) ...))
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
-                           #`(#,group-tag Pair (parens (#,group-tag key-b ...) (#,group-tag val-b ...)))
+                           #`(group Pair (parens (group key-b ...) (group val-b ...)))
                            #'tail
                            mode
                            #:rest-repetition? #t)]
     [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...
                  (group _::&-bind rst ...))
               . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+     (generate-map-binding (syntax->list #`((group key-e ...) ...))
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
-                           #`(#,group-tag rest-bind #,(get-map-static-infos)
-                              (#,group-tag rst ...))
+                           #`(group rest-bind #,(get-map-static-infos)
+                              (group rst ...))
                            #'tail
                            mode)]
     [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...) . tail)
-     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...))
+     (generate-map-binding (syntax->list #`((group key-e ...) ...))
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
                            #f

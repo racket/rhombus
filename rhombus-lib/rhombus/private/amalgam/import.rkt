@@ -241,7 +241,7 @@
     #:attributes (mod [imp 1])
     (pattern (group mod-id:identifier mod-arg ... (_::block imp ...))
              #:when (syntax-local-value* (in-import-space #'mod-id) import-modifier-ref)
-             #:with mod #`(#,group-tag mod-id mod-arg ...))))
+             #:with mod #`(group mod-id mod-arg ...))))
 
 (define-defn-syntax import
   (definition-transformer
@@ -250,7 +250,7 @@
        [(_ (_::block r ...))
         #`((rhombus-import #,stx () r ...))]
        [(_ r ...)
-        #`((rhombus-import #,stx () (#,group-tag r ...)))]))))
+        #`((rhombus-import #,stx () (group r ...)))]))))
 
 (define-syntax (rhombus-import stx)
   ;; handle one import group at a time, so it can import

@@ -243,7 +243,7 @@
      (syntax-parse tail
        [(form-id (tag::parens elem lst) . new-tail)
         (composite-binding-transformer #'(form-id (tag elem) . new-tail)
-                                       #:rest-arg #`(#,group-tag rest-bind #,(get-treelist-static-infos)
+                                       #:rest-arg #`(group rest-bind #,(get-treelist-static-infos)
                                                      #:annot-prefix? #f
                                                      lst)
                                        "List.cons" #'nonempty-treelist? (list #'(lambda (l) (treelist-ref l 0))) (list #'())
@@ -259,7 +259,7 @@
      (syntax-parse tail
        [(form-id (tag::parens elem lst) . new-tail)
         (composite-binding-transformer #'(form-id (tag elem) . new-tail)
-                                       #:rest-arg #`(#,group-tag rest-bind #,(get-list-static-infos)
+                                       #:rest-arg #`(group rest-bind #,(get-list-static-infos)
                                                      #:annot-prefix? #f
                                                      lst)
                                        "PairList.cons" #'nonempty-list? (list #'car) (list #'())
@@ -1428,8 +1428,8 @@
              (cond
                [(rest-simple?)
                 (generate-binding #'form-id (reverse accum) (cdr args) #'tail
-                                  #`(#,group-tag rest-bind #,static-infos
-                                     (#,group-tag rest-arg ...))
+                                  #`(group rest-bind #,static-infos
+                                     (group rest-arg ...))
                                   make-rest-selector
                                   #f #f)]
                [(and (pair? (cdr args))
@@ -1440,17 +1440,17 @@
                        [_ #f]))
                 => (lambda (rep-min+max)
                      (generate-binding #'form-id (reverse accum) null #'tail
-                                       #`(#,group-tag try-rest-bind #,static-infos form-id
+                                       #`(group try-rest-bind #,static-infos form-id
                                           #:splice-repetition #,@rep-min+max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
-                                          (#,group-tag rest-arg ...)
+                                          (group rest-arg ...)
                                           #,@(cddr args))
                                        make-rest-selector
                                        #f #f))]
                [else
                 (generate-binding #'form-id (reverse accum) null #'tail
-                                  #`(#,group-tag try-rest-bind #,static-infos form-id
+                                  #`(group try-rest-bind #,static-infos form-id
                                      #:splice 0 #f #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
-                                     (#,group-tag rest-arg ...)
+                                     (group rest-arg ...)
                                      #,@(cdr args))
                                   make-rest-selector
                                   #f #f)])]
@@ -1467,7 +1467,7 @@
                                   rep-min rep-max)]
                [else
                 (generate-binding #'form-id (reverse (cdr accum)) null #'tail
-                                  #`(#,group-tag try-rest-bind #,static-infos form-id
+                                  #`(group try-rest-bind #,static-infos form-id
                                      #:repetition #,rep-min #,rep-max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
                                      #,(car accum)
                                      #,@(cdr args))
@@ -1612,7 +1612,7 @@
             (values (cons (list-rest-rep e) content)
                     (combine-static-infos #f si elem-static-infos))]
            [((~or* (~and (group _::&-expr rand ...+)
-                         (~parse g #`(#,group-tag rand ...))
+                         (~parse g #`(group rand ...))
                          (~bind [splice? #t]))
                    g)
              . gs)

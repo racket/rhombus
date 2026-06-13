@@ -77,7 +77,7 @@
   (pattern (group keyword:keyword _::equal default-form ...+)
            #:with ann-seq #'#f
            #:with name (keyword->id #'keyword)
-           #:with default #`(rhombus-expression (#,group-tag default-form ...))
+           #:with default #`(rhombus-expression (group default-form ...))
            #:with mutable #'#f
            #:with exposure #'public))
 

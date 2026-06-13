@@ -47,7 +47,7 @@
         (define-values (wrapped-body static-infos)
           (cond
             [(attribute op)
-             (syntax-parse (respan #`(#,group-tag result-ann ...))
+             (syntax-parse (respan #`(group result-ann ...))
                [res::annotation
                 (build-annotated-expression #'form-id #'res
                                             (attribute op.is_checked) plain-body #'() #'res.parsed

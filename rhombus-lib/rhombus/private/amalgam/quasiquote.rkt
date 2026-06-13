@@ -474,7 +474,7 @@
                                        (or (syntax-property stx 'origin) null))))
   (define (handle-escape $-id e in-e ctx-kind)
     (define parsed
-      (syntax-parse #`(#,group-tag #,e)
+      (syntax-parse #`(group #,e)
         [(~var esc (:unquote-binding ctx-kind)) #'esc.parsed]))
     (define (track stx)
       (syntax-parse stx
@@ -542,7 +542,7 @@
                           (with-syntax ([(tmp) (generate-temporaries '(tail))])
                             (cond
                               [(null? (syntax-e fixed-tail-gs))
-                               (values #`(~and tmp (~parse #,p (cons group-tag #'tmp)))
+                               (values #`(~and tmp (~parse #,p (regroup #'tmp)))
                                        new-idrs new-sidrs new-vars #t)]
                               [else
                                ;; there are term patterns after this group position
@@ -550,7 +550,7 @@
                                  (handle-fixed-tail))
                                (with-syntax ([(tail-tmp ...) (generate-temporaries fixed-tail-gs)])
                                  (values #`(~and (tmp (... ...+) tail-tmp ...)
-                                                 (~parse #,p (cons group-tag #'(tmp (... ...))))
+                                                 (~parse #,p (regroup #'(tmp (... ...))))
                                                  (~parse #,(cdr (syntax-e tail-p)) #'(tail-tmp ...)))
                                          (append new-idrs tail-idrs)
                                          (append new-sidrs tail-sidrs)
