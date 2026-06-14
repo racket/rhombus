@@ -6,10 +6,7 @@ import:
 export:
   build_docs
 
-fun build_docs(racket_version, config_file):
-  def rhombus_version :: String:
-    Evaluator.instantiate(ModulePath'"rhombus-lib/rhombus/private/amalgam/version.rkt"', #'version)
-
+fun build_docs(racket_version, rhombus_version :~ String, config_file):
   repackage.#{build-docs}(
     ~version: racket_version,
     ~catalogs: PairList[to_string(url.URL.from_path(Path("compiled/repackage/build/built/catalog/").to_absolute_path()))],

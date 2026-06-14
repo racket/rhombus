@@ -6,10 +6,7 @@ import:
 export:
   build_site
 
-fun build_site(racket_version, config_file):
-  def rhombus_version :: String:
-    Evaluator.instantiate(ModulePath'"rhombus-lib/rhombus/private/amalgam/version.rkt"', #'version)
-
+fun build_site(racket_version, rhombus_version, config_file):
   repackage.#{assemble-site}(
     ~config: config_file,
     ~#{config-mode}: "release=" ++ rhombus_version ++ ";" ++ "racket_version=" ++ racket_version,

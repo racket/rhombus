@@ -5,11 +5,11 @@ import:
   "doc.rhm"
   "site.rhm"
 
-fun build(version, config):
-  catalog.build_catalog(version)
-  installer.build_installer(version, config)
-  doc.build_docs(version, config)
-  site.build_site(version, config)
+fun build(racket_version, rhombus_verion, config):
+  catalog.build_catalog(racket_version, rhombus_verion, config)
+  installer.build_installer(racket_version, rhombus_verion, config)
+  doc.build_docs(racket_version, rhombus_verion, config)
+  site.build_site(racket_version, rhombus_verion, config)
 
 module main:
   import "cmdline.rhm"

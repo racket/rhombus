@@ -6,10 +6,7 @@ import:
 export:
   build_installer
 
-fun build_installer(racket_version, config_file):
-  def rhombus_version :: String:
-    Evaluator.instantiate(ModulePath'"rhombus-lib/rhombus/private/amalgam/version.rkt"', #'version)
-
+fun build_installer(racket_version, rhombus_version :~ String, config_file):
   def log_dir = "compiled/repackage/build/log"
   filesystem.make_directory(log_dir, ~parents: #true)
 

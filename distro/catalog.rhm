@@ -3,11 +3,12 @@ import:
   lib("pkg/dirs-catalog.rkt") as pkg
   rhombus/version.Version
   lib("distro-build/repackage.rkt")
+  "merge-catalog.rkt".#{merge-dir-catalog}
 
 export:
   build_catalog
 
-fun build_catalog(racket_version, ignored_config = #false):
+fun build_catalog(racket_version, rhombus_version :~ String, config_file):
   def base_dir = Path("compiled/repackage").to_absolute_path()
   println("Output for " +& racket_version +& " to " +& base_dir)
   def local_catalog_dir = base_dir +/ "local-catalog"
@@ -38,15 +39,17 @@ fun build_catalog(racket_version, ignored_config = #false):
     PairList[src_dir +/ "no-ffi"]
   )
 
+  for (version in ["9.0", "9.1"]):
+    #{merge-dir-catalog}(version, local_catalog_dir, local_no_ffi_catalog_dir)
+
   repackage.#{build-catalog}(
     ~version: racket_version,
     ~packages: PairList[& local_packages],
-    ~catalogs: PairList[& if (racket_version :: Version) < ("9.2" :: Version)
-                        | [local_no_ffi_catalog_dir]
-                        | [],
-                        local_catalog_dir],
+    ~catalogs: PairList[local_catalog_dir],
     ~#{original-template}: "https://github.com/racket/rhombus.git?path=~a",
-    ~#{default-author}: "mflatt@racket-lang.org"
+    ~#{default-author}: "mflatt@racket-lang.org",
+    ~config: config_file,
+    ~#{config-mode}: "release=" ++ rhombus_version
   )
 
 module main:
