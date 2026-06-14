@@ -1,0 +1,40 @@
+#lang rhombus
+import:
+  rhombus/rx open
+
+def expected_more = "expected more terms starting with any term"
+
+// allow "at:", but not "in:":
+def not_end_of_group = rx'(any !lookahead("in: [end of group]"))*' 
+
+check:
+  ~eval
+  def x :: = 1
+  ~throws values(expected_more,
+                 not_end_of_group)
+
+check:
+  ~eval
+  def x = 1 ::
+  ~throws values(expected_more,
+                 not_end_of_group)
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'foo $(e :: expr_meta.Parsed) $()':
+    '"ok"'
+  foo
+  ~throws values(expected_more,
+                 not_end_of_group)
+
+check:
+  ~eval
+  import rhombus/meta open
+  expr.macro 'foo':
+    match '1'
+    | '1 $(e :: expr_meta.Parsed)':
+        '"ok"'
+  foo
+  ~throws values("expected more terms starting with any term",
+                 not_end_of_group)

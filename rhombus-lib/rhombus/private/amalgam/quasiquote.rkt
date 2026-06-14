@@ -543,7 +543,14 @@
                           (with-syntax ([(tmp) (generate-temporaries '(tail))])
                             (cond
                               [(null? (syntax-e fixed-tail-gs))
-                               (values #`(~and tmp (~parse #,p (regroup #'tmp)))
+                               (values (syntax-parse p
+                                         #:datum-literals (group)
+                                         [(group)
+                                          ;; special case for pattern created by `$()`: allow empty
+                                          #`(~and tmp (~parse #,p (regroup #'tmp)))]
+                                         [else
+                                          ;; otherwise, match must have a term
+                                          #`(~and (_ . _) tmp (~parse #,p (regroup #'tmp)))])
                                        new-idrs new-sidrs new-vars #t)]
                               [else
                                ;; there are term patterns after this group position

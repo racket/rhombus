@@ -17,7 +17,6 @@
          relocate+reraw
          relocate+reraw-shrubbery
          relocate-tail
-         respan-empty
          respan
          maybe-respan
          with-syntax-error-respan
@@ -231,28 +230,6 @@
          [else
           (define-values (pfx raw sfx) (extract (car l)))
           (loop (cdr l) (raw-cons accum (raw-cons (raw-cons pfx raw) sfx)))]))]))
-
-;; If the tail is empty, give it a source location
-;; that matches the end of `op-stx`
-(define (respan-empty op-stx tail)
-  (cond
-    [(or (null? tail)
-         (and (syntax? tail)
-              (null? tail)))
-     (define o-loc (syntax-srcloc op-stx))
-     (cond
-       [o-loc
-        (define pos (srcloc-position o-loc))
-        (define span (srcloc-span o-loc))
-        (cond
-          [(and pos span)
-           (datum->syntax #f '() (srcloc (srcloc-source o-loc)
-                                         #f #f
-                                         (+ pos span)
-                                         0))]
-          [else tail])]
-       [else tail])]
-    [else tail]))
 
 (define (maybe-respan stx)
   (cond

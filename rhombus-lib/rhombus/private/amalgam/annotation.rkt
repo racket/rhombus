@@ -202,8 +202,9 @@
     #:relative-precedence annotation-relative-precedence)
 
   (define-syntax-class (:annotation-seq prec-op)
+    #:description "an annotation sequence"
     #:attributes (parsed tail)
-    (pattern stxes
+    (pattern (~and (_ . _) stxes)
              #:with (~var || (:annotation-infix-op+form+tail prec-op)) (regroup #`stxes)))
 
   (define-splicing-syntax-class :inline-annotation

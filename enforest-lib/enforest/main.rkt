@@ -145,7 +145,7 @@
          tl-decl ...
          (define-syntax-class form-class
            #:attributes (parsed)
-           (pattern (~and all ((~datum group) . tail))
+           (pattern (~and (_ . _) all ((~datum group) . tail))
                     #:cut
                     main-check-env ...
                     ;; The calls to `transform-out` and `transform-in` here are in case
@@ -158,7 +158,7 @@
          ;; is found
          (define-syntax-class (prefix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
-           (pattern ((~datum group) . in-tail)
+           (pattern ((~datum group) . (~and (_ . _) in-tail))
                     #:with (~var op-name (:dotted-name in-name-root-space in-space name-path-op name-root-ref)) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'prefix-op+form+tail 'prefix op-stx prefix-operator-ref))
@@ -169,7 +169,7 @@
                     #:with tail (transform-in new-tail)))
          (define-syntax-class (infix-op+form+tail op-name sc-arg ...)
            #:attributes (parsed tail)
-           (pattern ((~datum group) . in-tail)
+           (pattern ((~datum group) . (~and (_ . _) in-tail))
                     #:with (~var op-name (:dotted-name in-name-root-space in-space name-path-op name-root-ref)) op-name
                     #:do [(define op-stx (in-space #'op-name.name))
                           (define op (lookup-operator 'infix-op+form+tail 'infix op-stx infix-operator-ref))
