@@ -33,6 +33,7 @@
     "actor"
     "http-easy"
     "resource-pool"
+    "rackcheck"
     "pretty-expressive"
     "version-case"))
 
