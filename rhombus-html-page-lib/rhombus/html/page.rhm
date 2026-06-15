@@ -199,6 +199,10 @@ elem i
 elem li
 elem ul
 elem ol
+elem table
+elem tr
+elem th
+elem td
 elem p
 
 fun pack_css(v :: List):

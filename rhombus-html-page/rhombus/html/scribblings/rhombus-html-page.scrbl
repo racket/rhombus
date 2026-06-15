@@ -296,6 +296,10 @@ key ways:
   expr.macro 'li $attrs_and_body'
   expr.macro 'ul $attrs_and_body'
   expr.macro 'ol $attrs_and_body'
+  expr.macro 'table $attrs_and_body'
+  expr.macro 'tr $attrs_and_body'
+  expr.macro 'td $attrs_and_body'
+  expr.macro 'th $attrs_and_body'
   expr.macro 'p $attrs_and_body'
 ){
 
@@ -337,6 +341,10 @@ key ways:
   decl.nestable_macro 'li.def $id_and_attrs'
   decl.nestable_macro 'ul.def $id_and_attrs'
   decl.nestable_macro 'ol.def $id_and_attrs'
+  decl.nestable_macro 'table.def $id_and_attrs'
+  decl.nestable_macro 'tr.def $id_and_attrs'
+  decl.nestable_macro 'th.def $id_and_attrs'
+  decl.nestable_macro 'td.def $id_and_attrs'
   decl.nestable_macro 'p.def $id_and_attrs'
 
   grammar id_and_attrs:
