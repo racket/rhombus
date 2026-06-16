@@ -2014,6 +2014,8 @@ a | w @(«x: z») | b
 a | w @(«x:
            z») | b
 
+@{} a
+
 The end
 INPUT
   )
@@ -2175,6 +2177,7 @@ a | w @(«x:
         (group " cherries")))))
     (group a (alts (block (group w x (block (group z)))) (block (group b))))
     (group a (alts (block (group w x (block (group z)))) (block (group b))))
+    (group (parens (group (brackets))) a)
     (group The end)))
 
 (define input3b

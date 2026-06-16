@@ -1615,7 +1615,7 @@
 
 (define (srcloc-spanning s-loc e-loc)
   (cond
-    [e-loc
+    [(and e-loc s-loc)
      (define s-position (srcloc-position s-loc))
      (srcloc (srcloc-source s-loc)
              (srcloc-line s-loc)
@@ -1628,7 +1628,8 @@
                    (and s e sp
                      (+ (max (- e s) 0) sp)))
                  (srcloc-span s-loc)))]
-    [else s-loc]))
+    [s-loc s-loc]
+    [else e-loc]))
 
 (define (token-raw t)
   (define value (token-value t))
