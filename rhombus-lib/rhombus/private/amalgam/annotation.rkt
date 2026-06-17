@@ -209,7 +209,7 @@
 
   (define-splicing-syntax-class :inline-annotation
     #:attributes (converter annotation-str static-infos origins)
-    (pattern (~seq op::annotate-op ctc ...)
+    (pattern (~seq op::annotate-op ctc ...+)
              #:with c::annotation (regroup #`(ctc ...))
              #:with (~var ca (:annotation-converted (attribute op.is_checked))) #'c.parsed
              #:do [(when (and (not (attribute op.is_checked))
@@ -253,7 +253,7 @@
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)
     (pattern (~seq o::annotate-op ctc ...)
-             #:with seq #'(o ctc ...)))
+             #:with seq (no-srcloc #'(o ctc ...))))
 
   (define-syntax-class :annotation-predicate-form
     (pattern (#:pred predicate static-infos)))

@@ -1424,7 +1424,7 @@
                      [(group _::...-bind #:once) #f]
                      [_ #t]))))
           (syntax-parse arg
-            [(group op::&-bind rest-arg ...)
+            [(group op::&-bind rest-arg ...+)
              (cond
                [(rest-simple?)
                 (generate-binding #'form-id (reverse accum) (cdr args) #'tail

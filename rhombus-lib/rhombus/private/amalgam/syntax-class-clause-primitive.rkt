@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "group.rkt")
+                     "group.rkt"
+                     "srcloc.rkt")
          "syntax-class-clause.rkt"
          (submod "syntax-class-clause.rkt" for-class)
          "parens.rkt"
@@ -108,8 +109,8 @@
 (define-syntax-class-clause-syntax fields
   (syntax-class-clause-transformer
    (lambda (stx)
-     (define (parse-fields field-lines-stx)
-       (define ht (for/fold ([ht #hasheq()]) ([field-line-stx (in-list (syntax->list field-lines-stx))])
+     (define (parse-fields field-line-stxes)
+       (define ht (for/fold ([ht #hasheq()]) ([field-line-stx (in-list field-line-stxes)])
                     (let loop ([field-line-stx field-line-stx] [ht ht] [head? #t])
                       (define (one id depth converter static-infos annotation-str maybe-rest)
                         (define sym (syntax-e id))
@@ -163,9 +164,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (_::block (group fld ...) ...))
-        (parse-fields #'((fld ...) ...))]
+        (parse-fields (map no-srcloc (syntax->list #'((fld ...) ...))))]
        [(_ fld ...)
-        (parse-fields #'((fld ...)))]))))
+        (parse-fields (map no-srcloc (syntax->list #'((fld ...)))))]))))
 
 (define-syntax-class-clause-syntax root_swap
   (syntax-class-clause-transformer

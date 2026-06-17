@@ -71,3 +71,74 @@ check:
     property p ::
   ~throws: values(expected_more_short,
                   not_end_of_group)
+
+// missing annotation in a `for` each binding
+check:
+  ~eval
+  for (x :: in [1, 2]):
+    x
+  ~throws: values(expected_more,
+                  not_end_of_group)
+
+// missing annotation on a constructor field
+check:
+  ~eval
+  class C(x ::)
+  ~throws: values(expected_more,
+                  not_end_of_group)
+
+// missing annotation on a class-clause field
+check:
+  ~eval
+  class C():
+    field x ::
+  ~throws: values(expected_more_short,
+                  not_end_of_group)
+
+// empty `&` rest in a list binding
+check:
+  ~eval
+  def [x, &] = [1, 2]
+  ~throws: values("misuse outside of a function formal argument or constructor pattern",
+                  not_end_of_group)
+
+// missing annotation after a list-binding rest
+check:
+  ~eval
+  def [x, & y ::] = [1, 2]
+  ~throws: values(expected_more,
+                  not_end_of_group)
+
+// empty `&` rest in a function call
+check:
+  ~eval
+  block:
+    fun g(x): x
+    g(1, &)
+  ~throws: values("misuse outside of a call or a constructor",
+                  not_end_of_group)
+
+// empty `~&` keyword rest in a function call
+check:
+  ~eval
+  block:
+    fun g(x): x
+    g(1, ~&)
+  ~throws: values("misuse outside of a call or a constructor",
+                  not_end_of_group)
+
+// missing annotation after a function-call rest
+check:
+  ~eval
+  block:
+    fun g(x): x
+    g(1, & [1] ::)
+  ~throws: values(expected_more,
+                  not_end_of_group)
+
+// empty `&` splice in a set
+check:
+  ~eval
+  { 1, & }
+  ~throws: values("misuse outside of a call or a constructor",
+                  not_end_of_group)

@@ -45,12 +45,12 @@
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
-             #:with (bind-g ...) #`((group bind ...))
+             #:with (bind-g ...) #`(#,(regroup #'(bind ...)))
              #:with blk (relocate+reraw
                          (respan #'(t ...))
                          #`(block (group expr ...))))
     (pattern (~seq bind ...+ (~and blk (_::block . _)))
-             #:with (bind-g ...) #`((group bind ...)))))
+             #:with (bind-g ...) #`(#,(regroup #'(bind ...))))))
 
 (define-for-clause-syntax each
   (for-clause-transformer

@@ -1262,19 +1262,25 @@
              #f)]
     [(_ (tag::parens rand ...
                      rep (group dots::...-expr)
-                     (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
-                                      (~parse kwrsts #'(kwrst-tag kwrst ...)))))
+                     (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...+)
+                                      (~parse kwrsts (regroup #'(kwrst ...))))))
         . tail)
      (check-complex-allowed)
      (generate (syntax->list #'(rand ...)) #'rep #f #'dots.name (attribute kwrsts) #'tag #'tail)]
+    ;; require at least one term after `&`/`~&` so that an empty rest like
+    ;; `f(x, &)` falls through to be parsed as a normal argument (reporting
+    ;; the error at `&`), and use `regroup` so the rest group's spine has no
+    ;; source location, ensuring a syntax error for a missing form at the end
+    ;; of the rest is reported in the user's program instead of at this macro
+    ;; template
     [(_ (~or* (~and (tag::parens rand ...
-                                 ((~and rst-tag group) amp::&-expr rst ...)
-                                 (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...)
-                                                  (~parse kwrsts #'(kwrst-tag kwrst ...)))))
-                    (~parse rsts #'(rst-tag rst ...)))
+                                 ((~and rst-tag group) amp::&-expr rst ...+)
+                                 (~optional (~and ((~and kwrst-tag group) _::~&-expr kwrst ...+)
+                                                  (~parse kwrsts (regroup #'(kwrst ...))))))
+                    (~parse rsts (regroup #'(rst ...))))
               (~and (tag::parens rand ...
-                                 ((~and kwrst-tag group) _::~&-expr kwrst ...))
-                    (~parse kwrsts #'(kwrst-tag kwrst ...))))
+                                 ((~and kwrst-tag group) _::~&-expr kwrst ...+))
+                    (~parse kwrsts (regroup #'(kwrst ...)))))
         . tail)
      (check-complex-allowed)
      (generate (syntax->list #'(rand ...)) (attribute rsts) (and (attribute amp) #'amp.name) #f (attribute kwrsts) #'tag #'tail)]

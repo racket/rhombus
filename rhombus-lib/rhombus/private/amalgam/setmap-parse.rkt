@@ -192,7 +192,7 @@
             (define elem (car elems))
             (syntax-parse elem
               #:datum-literals (group op)
-              [(group and-op::&-expr new-rst ...)
+              [(group and-op::&-expr new-rst ...+)
                (when no-splice
                  (raise-syntax-error #f
                                      (format "`& rest` is not supported on ~a" no-splice)
