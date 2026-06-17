@@ -3,6 +3,7 @@ import:
   rhombus/rx open
 
 def expected_more = "expected more terms starting with any term"
+def expected_more_short = "expected more terms"
 
 // allow "at:", but not "in:":
 def not_end_of_group = rx'(any !lookahead("in: [end of group]"))*' 
@@ -36,5 +37,37 @@ check:
     | '1 $(e :: expr_meta.Parsed)':
         '"ok"'
   foo
-  ~throws values("expected more terms starting with any term",
+  ~throws values(expected_more,
                  not_end_of_group)
+
+check:
+  ~eval
+  fun f(x, & y ::) (&/~& rest with │ content)
+  ~throws: values(expected_more,
+                  not_end_of_group)
+
+check:
+  ~eval
+  fun f(x, &) (empty rest)
+  ~throws: values(expected_more_short,
+                  not_end_of_group)
+
+check:
+  ~eval
+  match … | [x, & y ::] (list & rest)
+  ~throws: values("expected `~else` clause or expected pattern clause",
+                  not_end_of_group)
+
+check:
+  ~eval
+  interface I:
+    method area() ::
+  ~throws: values(expected_more_short,
+                  not_end_of_group)
+
+check:
+  ~eval
+  interface I:
+    property p ::
+  ~throws: values(expected_more_short,
+                  not_end_of_group)

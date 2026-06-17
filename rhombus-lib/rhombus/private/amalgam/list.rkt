@@ -1429,7 +1429,7 @@
                [(rest-simple?)
                 (generate-binding #'form-id (reverse accum) (cdr args) #'tail
                                   (regroup #`(rest-bind #,static-infos
-                                                        (group rest-arg ...)))
+                                                        #,(regroup #`(rest-arg ...))))
                                   make-rest-selector
                                   #f #f)]
                [(and (pair? (cdr args))
@@ -1442,7 +1442,7 @@
                      (generate-binding #'form-id (reverse accum) null #'tail
                                        (regroup #`(try-rest-bind #,static-infos form-id
                                                                  #:splice-repetition #,@rep-min+max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
-                                                                 (group rest-arg ...)
+                                                                 #,(regroup #`(rest-arg ...))
                                           #,@(cddr args)))
                                        make-rest-selector
                                        #f #f))]
@@ -1450,7 +1450,7 @@
                 (generate-binding #'form-id (reverse accum) null #'tail
                                   (regroup #`(try-rest-bind #,static-infos form-id
                                                             #:splice 0 #f #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
-                                                            (group rest-arg ...)
+                                                            #,(regroup #`(rest-arg ...))
                                                             #,@(cdr args)))
                                   make-rest-selector
                                   #f #f)])]

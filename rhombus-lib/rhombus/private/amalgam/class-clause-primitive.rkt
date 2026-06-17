@@ -280,7 +280,10 @@
     #:description "optional result annotation"
     #:attributes (seq)
     (pattern (~seq op::annotate-op ret::not-block ...)
-             #:with seq #'(op ret ...))
+             ;; build with a source-location-less spine so that a syntax
+             ;; error for a missing annotation after `op` is reported at
+             ;; `op` (via `respan`) instead of at this macro template
+             #:with seq (datum->syntax #f (syntax->list #'(op ret ...))))
     (pattern (~seq)
              #:with seq #'()))
   (define-splicing-syntax-class (:method-impl stx mode)

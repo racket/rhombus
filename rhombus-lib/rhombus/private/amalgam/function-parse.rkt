@@ -417,10 +417,10 @@
   (define-splicing-syntax-class :pos-rest
     #:attributes (arg parsed)
     #:datum-literals (group)
-    (pattern (~seq (group _::&-bind a ...))
+    (pattern (~seq (group _::&-bind a ...+))
              #:with arg::non-...-binding (regroup #`(rest-bind #,(get-treelist-static-infos)
                                                                #:annot-prefix? #f
-                                                               (group a ...)))
+                                                               #,(regroup #`(a ...))))
              #:with parsed #'arg.parsed)
     (pattern (~seq e::non-...-binding (group _::...-bind))
              #:with arg::non-...-binding (regroup #`(rest-bind #:repetition e))
@@ -429,10 +429,10 @@
   (define-splicing-syntax-class :kwp-rest
     #:attributes (kwarg kwparsed)
     #:datum-literals (group)
-    (pattern (~seq (group _::~&-bind a ...))
+    (pattern (~seq (group _::~&-bind a ...+))
              #:with kwarg::non-...-binding (regroup #`(rest-bind #,(get-map-static-infos)
                                                                  #:annot-prefix? #f
-                                                                 (group a ...)))
+                                                                 #,(regroup #`(a ...))))
              #:with kwparsed #'kwarg.parsed))
 
   (define-splicing-syntax-class :maybe-arg-rest

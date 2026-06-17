@@ -433,7 +433,13 @@
                                          #:checked-compare? [checked-compare? #t])
   (define defs
     (for/list ([added (in-list added-methods)])
-      #`(define-method-result #,(added-method-result-id added)
+      ;; relocate the constructed form to the method name, so that a
+      ;; syntax error during the trampolining `define-method-result`
+      ;; expansion (e.g. a missing result annotation) is reported in the
+      ;; user's program instead of at this macro template
+      (relocate
+       (syntax-srcloc (added-method-id added))
+       #`(define-method-result #,(added-method-result-id added)
           #,(added-method-maybe-ret added)
           #,(added-method-ret-forwards added)
           #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
@@ -487,7 +493,7 @@
                                            (box (added-method-rhs-id added))))))])])
           #,(and container?
                  (eq? 'contains (syntax-e (added-method-id added)))
-                 #`[#,contains-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
+                 #`[#,contains-statinfo-indirect-stx #,(added-method-rhs-id added)])))))
 
   ;; may need to add info for inherited `call`, etc.:
   (define (add-able which statinfo-indirect-stx able? key defs abstract-args
