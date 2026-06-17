@@ -13,6 +13,7 @@ check:
   #false?.m ~is #false
   #false?.m() ~is #false
   #false?.m.n ~throws "n: no such field or method"
+  1!! < 2!! ~is #true
   
 check:
   def [x, ...] = [#false, "abc", #false]

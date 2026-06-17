@@ -450,7 +450,7 @@
   bind.macro '$bind !!'
   repet.macro '$repet !!'
   operator_order:
-    ~order: logical_negation
+    ~order: member_access
 ){
 
  An an expression, @rhombus(expr!!) ensures that the result of
