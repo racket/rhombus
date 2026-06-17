@@ -56,20 +56,31 @@ fun convert_lib_module_path(x):
   | ~else: #false
 
 meta:
+  syntax_class NonEqlOp
+  | '$(t :: Term)':
+      match_when !(t matches '=')
+
   syntax_class ArgSeq:
     fields: name_str
             id
             kind
+            default
   | '$(id :: Identifier)':
       field name_str: to_string(id)
       field kind: 'String'
+      field default: ''
   | '$(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier)':
       field name_str: to_string(name)
       field kind: 'String'
-  | '$(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name)':
+      field default: ''
+  | '$(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind_elem :: NonEqlOp) ...':
       field name_str: to_string(id)
-  | '$(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind :: Name)':
+      field default: ''
+      field kind = '$kind_elem ...'
+  | '$(name :: Identifier) $(bound_as impo_meta.space: 'as') $(id :: Identifier) $(bound_as bind_meta.space: '::') $(kind_elem :: NonEqlOp) ...':
       field name_str: to_string(name)
+      field default: ''
+      field kind = '$kind_elem ...'
 
   syntax_class Arg:
     fields: name_str
@@ -86,16 +97,28 @@ meta:
       field kind = arg.kind
       field default: ''
 
+  syntax_class OptionalArgSeq:
+    kind: ~group
+    fields: name_str
+            id
+            kind
+            default
+  | '$(arg :: ArgSeq) $('=' && eql_op) $(default_tail :: Group)':
+      field name_str = arg.name_str
+      field id = arg.id
+      field kind = arg.kind
+      field default = '$eql_op $default_tail'
+
   syntax_class OptionalArg:
     fields: name_str
             id
             kind
             default
-  | '($(arg :: ArgSeq) $('=' && eql_op) $(default_tail :: Group))':
+  | '($(arg :: OptionalArgSeq))':
       field name_str = arg.name_str
       field id = arg.id
       field kind = arg.kind
-      field default = '$eql_op $default_tail'
+      field default = arg.default
 
   syntax_class MaybeDots
   | '$(bound_as bind_meta.space: '...')':
@@ -220,19 +243,28 @@ meta:
     | ~else:
         e
 
+meta:
+  syntax_class ArgsSeq:
+    kind: ~sequence
+  | '($(arg :: ArgSeq), ..., $(o_arg :: OptionalArgSeq), ..., $(dots_arg :: ArgSeq), $(raw_dots && (bound_as bind_meta.space: '...')))':
+      match_def '$(dots :: MaybeArgDots)' = '($dots_arg) $raw_dots'
+  | '($(arg :: ArgSeq), ..., $(o_arg :: OptionalArgSeq), ...)':
+      match_def '$(dots :: MaybeArgDots)' = ''
+  | '$(arg :: Arg) ... $(o_arg :: OptionalArg) ... $(dots :: MaybeArgDots)'
+
 expr.macro
-| 'args $(arg :: Arg) ... $(o_arg :: OptionalArg) ... $(dots :: MaybeArgDots) $()':
+| 'args $(a :: ArgsSeq) $()':
     ~all_stx: stx
     parse_handler(
       stx,
       'Handler',
-      [arg, ..., o_arg, ..., dots.arg, ...], dots,
+      [a.arg, ..., a.o_arg, ..., a.dots.arg, ...], a.dots,
       #false, fun (): '#'args', ~always_arg_list: #true,
       '{}',
       [],
       []
     )
-| 'args $(arg :: Arg) ... $(o_arg :: OptionalArg) ... $(dots :: MaybeArgDots):
+| 'args $(a :: ArgsSeq):
      $(group_option_sequence
        | '$(_ :: Key: open)'
        | '$(_ :: Init: open)':
@@ -243,7 +275,7 @@ expr.macro
     parse_handler(
       stx,
       'Handler',
-      [arg, ..., o_arg, ..., dots.arg, ...], dots,
+      [a.arg, ..., a.o_arg, ..., a.dots.arg, ...], a.dots,
       key_body, fun (): '#'args',
       init_body,
       [body, ...],

@@ -33,7 +33,19 @@ check:
 check:
   with_line ["ex", "why"]:
     parse:
+      args (x, y)
+  ~is { #'args: ["ex", "why"] }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
       args x y (z = x ++ y)
+  ~is { #'args: ["ex", "why", "exwhy"] }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
+      args (x, y, z = x ++ y)
   ~is { #'args: ["ex", "why", "exwhy"] }
 
 check:
@@ -46,6 +58,14 @@ block:
   let p:
     parser:
       args x y ...
+  check p.parse(~line: ["ex", "why"]) ~is { #'args: ["ex", "why"] }
+  check p.parse(~line: ["ex"]) ~is { #'args: ["ex"] }
+  check p.parse(~line: ["ex", "why", "more"]) ~is { #'args: ["ex", "why", "more"] }
+
+block:
+  let p:
+    parser:
+      args (x, y, ...)
   check p.parse(~line: ["ex", "why"]) ~is { #'args: ["ex", "why"] }
   check p.parse(~line: ["ex"]) ~is { #'args: ["ex"] }
   check p.parse(~line: ["ex", "why", "more"]) ~is { #'args: ["ex", "why", "more"] }
@@ -75,6 +95,13 @@ check:
 check:
   with_line ["ex", "why"]:
     parse:
+      args (x as x, x as y):
+        state := state ++ { #'x: x, #'y: y }
+  ~is { #'x: "ex", #'y: "why" }
+
+check:
+  with_line ["ex", "why"]:
+    parse:
       ~init { #'base: 7 }
       args x y
   ~is { #'args: ["ex", "why"], #'base: 7 }
@@ -94,7 +121,19 @@ check:
 check:
   with_line ["ex"]:
     parse:
+      args (x, y, z = "other")
+  ~throws "expected <x> <y> [<z>] on the command line"
+
+check:
+  with_line ["ex"]:
+    parse:
       args x y (z = "other") w ...
+  ~throws "expected <x> <y> [<z>] <w> ... on the command line"
+
+check:
+  with_line ["ex"]:
+    parse:
+      args (x, y, z = "other", w, ...)
   ~throws "expected <x> <y> [<z>] <w> ... on the command line"
 
 check:
@@ -150,6 +189,18 @@ check:
   with_line ["-n", "100.0"]:
     parse:
       flag "-n" (n :: String.to_int)
+  ~throws invalid_argument
+
+check:
+  with_line ["-n", "1"]:
+    parse:
+      flag "-n" (n :: String.to_int && Nat)
+  ~is { #'n: 1 }
+
+check:
+  with_line ["-n", "-1"]:
+    parse:
+      flag "-n" (n :: String.to_int && Nat)
   ~throws invalid_argument
 
 check:

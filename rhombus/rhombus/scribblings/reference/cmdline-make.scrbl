@@ -86,9 +86,9 @@
 
   grammar arg_seq
   | $identifier
-  | ($identifier #,(@rhombus(::, ~bind)) $annot)
-  | ($identifier #,(@rhombus(as, ~impo)) $identifier)
-  | ($identifier #,(@rhombus(as, ~impo)) $identifier #,(@rhombus(::, ~bind)) $annot)
+  | $identifier #,(@rhombus(::, ~bind)) $annot
+  | $identifier #,(@rhombus(as, ~impo)) $identifier
+  | $identifier #,(@rhombus(as, ~impo)) $identifier #,(@rhombus(::, ~bind)) $annot
 
   grammar option
   | ~alias $flag_string ...
@@ -230,20 +230,28 @@
     arg: cmdline.flag
     arg_seq: cmdline.flag
 
-  expr.macro 'cmdline.args $arg ... $opt_arg ... $maybe_arg_ellipsis'
+  expr.macro 'cmdline.args $args'
 
-  expr.macro 'cmdline.args $arg ... $opt_arg ... $maybe_arg_ellipsis:
+  expr.macro 'cmdline.args $args:
                 $option
                 ...
                 $body
                 ...'
 
-  grammar opt_arg
-  | ($arg_seq = $expr)
+  grammar args
+  | $arg ... $opt_arg ...
+  | $arg ... $opt_arg ... $arg $ellipsis
+  | ($arg_seq, ..., $opt_arg_seq, ...)
+  | ($arg_seq, ..., $opt_arg_seq, ..., $arg_seq, $ellipsis)
 
-  grammar maybe_arg_ellipsis
-  | $arg #,(dots)
-  | #,(epsilon)
+  grammar opt_arg
+  | ($opt_arg_seq)
+
+  grammar opt_arg_seq
+  | $arg_seq = $expr
+
+  grammar ellipsis
+  | #,(dots)
 
   grammar option
   | ~init $expr
@@ -254,9 +262,11 @@
  describe the handling of arguments after command-line flags for
  @rhombus(cmdline.parse) and related forms.
 
- Besides the @rhombus(arg) forms that are allowed for @rhombus(cmdline.flag),
- @rhombus(cmdline.args) allows a argument with a default-value expression,
- which makes it an optional argument.
+ Besides the @rhombus(arg) forms that are allowed for
+ @rhombus(cmdline.flag), @rhombus(cmdline.args) allows a argument with a
+ default-value expression, which makes it an optional argument. Also, an
+ argument sequence can be parenthesized, instead of written as a
+ single-line group with parentheses around individual arguments.
 
  The set of @rhombus(option)s for @rhombus(cmdline.args) is more limited
  than @rhombus(cmdline.flag), since it does not include a flag string or
