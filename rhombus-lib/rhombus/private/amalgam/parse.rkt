@@ -5,7 +5,8 @@
                      enforest/implicit
                      shrubbery/property
                      "srcloc.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "track-parsed.rkt")
          "enforest.rkt"
          "name-root-ref.rkt"
          "forwarding-sequence.rkt"
@@ -354,6 +355,10 @@
 (define-for-syntax (rhombus-local-expand stx)
   (syntax-parse stx
     #:literals (rhombus-expression)
-    [(rhombus-expression . _)
-     (rhombus-local-expand (enforest-rhombus-expression stx))]
+    [((~and rhombus-expression id) . _)
+     (rhombus-local-expand
+      (track-parsed-expression
+       (enforest-rhombus-expression stx)
+       stx
+       #'id))]
     [_ stx]))

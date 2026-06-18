@@ -44,7 +44,7 @@
    (lambda stxes
      (apply values
             (map (lambda (stx)
-                   (let ([stx (syntax-local-introduce stx)])
+                   (let loop ([stx (syntax-local-introduce stx)])
                      ;; push tracking into `parsed` forms;
                      ;; we don't go into shrubbery structure,
                      ;; though, since the syntax object does
@@ -52,7 +52,7 @@
                      (syntax-parse stx
                        #:datum-literals (parsed)
                        [((~and tag parsed) kw:keyword e)
-                        (datum->syntax stx (list #'tag #'kw (track track-origin id #'e)) stx stx)]
+                        (datum->syntax stx (list #'tag #'kw (loop #'e)) stx stx)]
                        [else
                         (track track-origin id stx)])))
                  stxes)))))

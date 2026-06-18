@@ -1,7 +1,21 @@
 #lang racket/base
 (require syntax/parse/pre)
 
-(provide track-parsed-sequence-origin)
+(provide track-parsed-expression
+         track-parsed-sequence-origin)
+
+(define (track-parsed-expression stx from-stx id)
+  (syntax-parse stx
+    #:datum-literals (parsed)
+    [((~and tag parsed) kw e)
+     (datum->syntax
+      stx
+      (list #'tag #'kw (syntax-track-origin #'e
+                                            from-stx
+                                            id))
+      stx
+      stx)]
+    [_ (syntax-track-origin stx from-stx id)]))
 
 (define (track-parsed-sequence-origin stxes from-stx id)
   (datum->syntax
