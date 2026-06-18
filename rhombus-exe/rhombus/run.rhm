@@ -27,6 +27,9 @@ enum S
 | no_make
 | version
 
+fun is_no_lib_state(state :~ Map):
+  state[S.evals] == [] && S.repl !in state
+
 def args :~ Map:
   cmdline.parse:
     ~init: { S.evals: [],
@@ -44,7 +47,7 @@ def args :~ Map:
                 "expected a module path",
                 error.text(~label: "given", path),
                 error.text(~label: "for flag", cmdline.current_flag_string()))
-        when state[S.evals] == []
+        when is_no_lib_state(state)
         | state[S.no_lib] := #true
         state[S.evals] := (state[S.evals] :~ List) ++ [mod_path]
         state[S.action] := #true
@@ -52,7 +55,7 @@ def args :~ Map:
         ~alias "--require"
         ~help (@str{Loads the module <path> exactly, without treating `!`
                     as a submodule separator.})
-        when state[S.evals] == []
+        when is_no_lib_state(state)
         | state[S.no_lib] := #true
         state[S.evals] := (state[S.evals] :~ List) ++ [ModulePath('file($path)')]
         state[S.action] := #true
@@ -104,7 +107,7 @@ def args :~ Map:
 
                    If only configuration options are provided, `-i` is added.
                    If only configuration options are before the first argument, `-f` is added.
-                   If `-f`, `-t`, `or `-l` appear before the first `-e`, `-n` is added.
+                   If `-f`, `-t`, `or `-l` appear before the first `-e` or `-i`, `-n` is added.
                    The <init-lib> library defaults to `rhombus`.
 
                  Startup sequence:
