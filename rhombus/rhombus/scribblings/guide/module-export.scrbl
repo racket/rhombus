@@ -117,9 +117,11 @@ exports @rhombus(Posn), @rhombus(Posn.x), @rhombus(Posn.y), and so on.
 @rhombusblock(
   import:
     "f2c.rhm"
+
   namespace extras:
     export: freezing_f
     def freezing_f = 32
+
   export:
     all_from(.f2c)
     all_from(.extras)

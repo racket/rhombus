@@ -23,9 +23,9 @@ not allowed to change the value of an imported binding.
 
   import self!m open
 
-  counter      // prints 0
+  counter       // prints 0
   increment()
-  counter      // prints 1
+  counter       // prints 1
   counter := -1 // not allowed
 )
 
@@ -68,11 +68,14 @@ however, and non-file modules can be re-declared in the @tech{REPL};
 in such cases, the re-declaration may fail if it involves the
 re-definition of a previously constant binding.
 
-@rhombusblock(
-  module m ~lang #,(@rhombuslangname(rhombus)):
-    def pie = 3.141597
-  import self!m open
-  module m ~lang #,(@rhombuslangname(rhombus)):
-    def pie = 3
-  // re-declaration error
+@(
+  rhombusblock_etc():
+    module m ~lang #,(@rhombuslangname(rhombus)):
+      def pie = 3.141597
+
+    import self!m open
+
+    module m ~lang #,(@rhombuslangname(rhombus)):
+      def pie = 3
+    // re-declaration error
 )

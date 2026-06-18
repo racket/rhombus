@@ -37,13 +37,16 @@ the imported name.
     export:
       color
     def color = "blue"
+
   module n ~lang #,(@rhombuslangname(rhombus)):
     export:
       size
     def size = 17
+
   import:
     self!m
     self!n
+
   [m.color, n.size]
 )
 
@@ -60,9 +63,12 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
  The @rhombus(as, ~impo) modifier changes the prefix that is bound for
  the import, instead of using the prefix derived from the module path.
 
+ @margin_note_block{See @secref("Modules") for @rhombus("f2c.rhm").}
+
 @rhombusblock(
   import:
     "f2c.rhm" as convert
+
   convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
 )
 
@@ -79,9 +85,12 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
  The @rhombus(open, ~impo) modifier imports without a prefix, so each
  imported binding can be referenced by its bare name.
 
+ @margin_note_block{See @secref("Modules") for @rhombus("f2c.rhm").}
+
 @rhombusblock(
   import:
     "f2c.rhm" open
+
   fahrenheit_to_celsius(fahrenheit_freezing)
 )
 
@@ -112,16 +121,56 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
  the prefix. The exposed bindings are imported with the prefix as well as
  without.
 
+ @margin_note_block{See @secref("Modules") for @rhombus("f2c.rhm").}
+
 @rhombusblock(
   import:
     "f2c.rhm" expose:
       fahrenheit_to_celsius
+
   fahrenheit_to_celsius(f2c.fahrenheit_freezing)
 )
 
  Combining @rhombus(as ~none, ~impo) and @rhombus(expose, ~impo) is
  similar to Racket's @rhombus(only-in, ~datum), where only the listed
  names are bound.
+
+}
+
+@doc(
+  ~nonterminal:
+    id: block
+    op: block
+    id_or_op: block
+  grammar_case "import":
+    $module_path . $name
+  grammar_case "import":
+    $module_path . $name #,(@rhombus(as, ~impo)) $id_or_op
+  grammar name
+  | $id
+  | ($op)
+  | $id . $name
+){
+
+ Following a @rhombus(module) path with a dotted name imports only the
+ @rhombus(id) or parenthesized @rhombus(op) at the end of the dotted
+ name. That's similar to using @rhombus(expose, ~impo) with one name, but
+ no intermediate names are bound. If @rhombus(as, ~impo) is present, the
+ imported name has the given name locally.
+
+ @margin_note_block{See @secref("Modules") for @rhombus("f2c.rhm"),
+  while @rhombuslangname(rhombus) in this example refers to the same
+  module as the @rhombuslangname(rhombus) language, which exports a
+  @rhombus(bits, ~datum) namespace that exports @rhombus(bits.(<<)).}
+
+@rhombusblock(
+  import:
+    "f2c.rhm".fahrenheit_to_celsius
+    "f2c.rhm".fahrenheit_freezing as freezing
+    rhombus.bits.(<<)
+
+  fahrenheit_to_celsius(freezing) << 1
+)
 
 }
 
@@ -147,9 +196,11 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
       less_filling
     def tastes_great = #true
     def less_filling = #true
+
   import:
     self!m rename:
       less_filling as lite
+
   [m.tastes_great, m.lite]
 )
 
@@ -175,6 +226,7 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
   import:
     self!m only:
       tastes_great
+
   m.tastes_great
 )
 
@@ -196,6 +248,7 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
   import:
     self!m except:
       tastes_great
+
   m.less_filling
 )
 
