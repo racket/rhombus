@@ -23,6 +23,14 @@ or
 
 @nested(~style: #'inset){@exec{racket -I rhombus}}
 
+@margin_note_block{Although @exec{racket -I rhombus} starts a REPL the
+ same as @exec{rhombus}, and either @exec{racket} or @exec{rhombus} can
+ be used to just run a Rhombus module, the two commands are not
+ interchangeable in general. For example, @exec{rhombus -e "1 + 2"}
+ evaluates @litchar{1 + 2} as a Rhombus expression and prints the result,
+ but @exec{racket -I rhombus -e "1 + 2"} tries to read @litchar{1 + 2} in
+ Racket mode, because @exec_flag{-I} does not affect @exec_flag{-e}.}
+
 If you installed the Rhombus package after installing Racket, then the
 @exec{rhombus} executable may be in a user-specific place, instead of
 the same place as the @exec{racket} executable. In case that place is
