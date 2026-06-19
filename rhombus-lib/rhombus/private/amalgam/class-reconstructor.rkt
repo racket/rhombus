@@ -17,7 +17,7 @@
 
 (define-for-syntax (extract-reconstructor-fields stxes options super reconstructor-rhs
                                                  public-field-names public-field-arguments public-name-fields)
-  (define-values (new-names new-args new-accs new-rhss)
+  (define-values (orig-id new-names new-args new-accs new-rhss stx-params)
     (cond
       [(hash-ref options 'reconstructor-fields #f)
        => (lambda (stx)
@@ -25,19 +25,23 @@
               (when (not (syntax? reconstructor-rhs))
                 (raise-syntax-error #f "reconstructor fields supplied without a reconstructor" stxes #'orig-id))
               (define ids (syntax->list #'(id ...)))
-              (values (syntax->list #'(id ...))
+              (values #'orig-id
+                      (syntax->list #'(id ...))
                       (map (lambda (id) #f) ids)
                       (generate-temporaries ids)
-                      (syntax->list #'rhss))))]
+                      (syntax->list #'rhss)
+                      (hash-ref options 'reconstructor-fields-stx-params #f))))]
       [else
-       (for/lists (names args accs rhss) ([name (in-list public-field-names)]
-                                          [arg (in-list public-field-arguments)]
-                                          [acc (in-list public-name-fields)]
-                                          #:unless (identifier? arg))
-         (values name
-                 (if (box? (syntax-e arg)) (unbox (syntax-e arg)) arg)
-                 #`(lambda (obj) (#,acc obj))
-                 #f))]))
+       (define-values (new-names new-args new-accs new-rhss)
+         (for/lists (names args accs rhss) ([name (in-list public-field-names)]
+                                            [arg (in-list public-field-arguments)]
+                                            [acc (in-list public-name-fields)]
+                                            #:unless (identifier? arg))
+           (values name
+                   (if (box? (syntax-e arg)) (unbox (syntax-e arg)) arg)
+                   #`(lambda (obj) (#,acc obj))
+                   #f)))
+       (values #f new-names new-args new-accs new-rhss #f)]))
   (define-values (super-names super-args super-accs)
     (cond
       [(not super) (values null null null)]
@@ -54,10 +58,12 @@
          (values (field-desc-name field)
                  (field-desc-constructor-arg field)
                  (field-desc-accessor-id field)))]))
-  (values (append super-names new-names)
+  (values orig-id
+          (append super-names new-names)
           (append super-args new-args)
           (append super-accs new-accs)
-          (append (map (lambda (x) #f) super-names) new-rhss)))
+          (append (map (lambda (x) #f) super-names) new-rhss)
+          stx-params))
 
 (define-for-syntax (build-class-reconstructor super final?
                                               reconstructor-rhs method-private

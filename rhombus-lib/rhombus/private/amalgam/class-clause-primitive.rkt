@@ -6,7 +6,8 @@
                      "name-path-op.rkt"
                      "class-parse.rkt"
                      "consistent.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "group.rkt")
          "provide.rkt"
          "class-clause.rkt"
          "class-clause-tag.rkt"
@@ -334,7 +335,8 @@
                                                [(parens) main-ret.seq]
                                                #f)))
     (pattern (~seq id:identifier ret::maybe-ret (~and rhs (_::block . _)))
-             #:with form (wrap-class-clause #`(#,mode id rhs #f [(parens) ret.seq] #f))))
+             #:with (_::block g) #'rhs
+             #:with form (wrap-class-clause #`(#,mode id [#:stx #,stx rhs] #f [(parens) ret.seq] #f))))
   (define-splicing-syntax-class (:method-decl stx mode)
     #:description "method declaration"
     #:attributes (id rhs maybe-ret doc forwards)
@@ -569,7 +571,7 @@
                       ...+)))
         (wrap-class-clause #`(#:reconstructor (block (group fun rhs))))]
        [(_ (~and rhs (_::block . _)))
-        (wrap-class-clause #`(#:reconstructor rhs))]))))
+        (wrap-class-clause #`(#:reconstructor [#:stx #,(regroup stx) rhs]))]))))
 
 (define-class-clause-syntax reconstructor_fields
   (class-clause-transformer

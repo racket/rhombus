@@ -152,7 +152,8 @@
               [(#:reconstructor_fields orig-id ids rhss)
                (when (hash-has-key? options 'reconstructor-fields)
                  (raise-syntax-error #f "multiple reconstructor-fields clauses" orig-stx clause))
-               (hash-set options 'reconstructor-fields #'(orig-id ids rhss))]
+               (hash-set (hash-set options 'reconstructor-fields #'(orig-id ids rhss))
+                         'reconstructor-fields-stx-params (car stx-paramss))]
               [(#:nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))

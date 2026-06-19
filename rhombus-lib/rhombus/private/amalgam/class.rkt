@@ -608,7 +608,7 @@
                                                                    0))]
                                                #:unless (eq? exposure 'public))
                                       i))
-         (define-values (recon-field-names recon-field-args recon-field-accs recon-field-rhss)
+         (define-values (recon-field-orig-id recon-field-names recon-field-args recon-field-accs recon-field-rhss recon-field-stx-params)
            (extract-reconstructor-fields stxes options super reconstructor-rhs
                                          public-field-names public-field-arguments public-name-fields))
          (with-syntax ([constructor-name (if (or constructor-rhs
@@ -694,7 +694,8 @@
               (append
                (build-methods method-results
                               added-methods method-mindex method-names method-private method-private-inherit
-                              reconstructor-rhs reconstructor-stx-params serializer-stx-params final?
+                              reconstructor-rhs reconstructor-stx-params serializer-stx-params
+                              recon-field-orig-id recon-field-stx-params final?
                               private-interfaces protected-interfaces
                               #:method-vtable method-vtable
                               #'(name reflect-name name? #f reconstructor-name serializer-name

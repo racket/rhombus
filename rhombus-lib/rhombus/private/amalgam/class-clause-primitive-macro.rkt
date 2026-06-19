@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      enforest/hier-name-parse
                      "name-path-op.rkt"
-                     "class-parse.rkt")
+                     "class-parse.rkt"
+                     "group.rkt")
          "provide.rkt"
          "class-clause.rkt"
          "class-clause-tag.rkt"
@@ -71,7 +72,7 @@
         (wrap-class-clause #`(#,key (block (named-macro #,stx rhs))))]
        [(form-name (~and (_::block . _)
                          a-block))
-        (wrap-class-clause #`(#,key a-block))]))))
+        (wrap-class-clause #`(#,key [#:stx #,(regroup stx) a-block]))]))))
 
 (define-class-clause-syntax binding
   (make-macro-clause-transformer '#:binding))

@@ -83,14 +83,16 @@
                                        #f
                                        #f)
                                  (list #'constructor-name #f #f #f))]
-                            [(_ _ _ d-rhs ds-shell ds-fill)
+                            [(form-id _ _ d-rhs ds-shell ds-fill)
                              (syntax-parse #'d-rhs
+                               #:context #'form-id
                                [(~var deserialize-rhs (:entry-point no-adjustments))
                                 (cond
                                   [(not (syntax-e #'ds-shell))
                                    (list #'deserializer-name #'deserialize-rhs.parsed #f #f)]
                                   [else
                                    (syntax-parse #'ds-shell
+                                     #:context #'form-id
                                      [(~var shell-rhs (:entry-point no-adjustments))
                                       #:with (~var fill-rhs (:entry-point no-adjustments)) #'ds-fill
                                       (list #'deserializer-name #'deserialize-rhs.parsed

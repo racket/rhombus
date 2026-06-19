@@ -13,7 +13,7 @@ check:
   | '$(term_option_sequence
        | no)':
       0
-  ~throws "bad syntax"
+  ~throws "expected a quoted pattern"
 
 check:
   ~eval

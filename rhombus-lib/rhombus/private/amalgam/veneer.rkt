@@ -317,7 +317,7 @@
                (build-methods #:veneer-vtable method-vtable
                               method-results
                               added-methods method-mindex method-names method-private method-private-inherit
-                              #f #f #f #f
+                              #f #f #f #f #f #f
                               private-interfaces protected-interfaces
                               #'(name reflect-name name?/checked name-convert #f #f
                                       prop-methods-ref

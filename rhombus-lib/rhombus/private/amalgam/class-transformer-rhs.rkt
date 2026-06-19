@@ -29,9 +29,12 @@
       #f
       #f
       #:adjustments no-adjustments)]
-    [(_ g)
-     #:with (~var lam (:entry-point no-adjustments)) #'g
-     #`lam.parsed]))
+    [(_ [#:stx stx g])
+     ;; Use `syntax-parse` instead of `#:with` so that an error is reported against
+     ;; `g` instead of the synthesized `class-transformer` form
+     (syntax-parse (respan #'g)
+       #:context #'stx
+       [(~var lam (:entry-point no-adjustments)) #'lam.parsed])]))
 
 (define (wrap-prefix order precedence protocol proc)
   (lambda (stx)

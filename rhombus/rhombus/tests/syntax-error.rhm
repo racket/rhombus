@@ -156,3 +156,83 @@ check:
     extends 112233
   ~throws values("extends: expected name",
                  "112233")
+
+check:
+  ~eval
+  class C():
+    method m: 112233
+  ~throws: values("method:",
+                  "expected entry-point form",
+                  "112233")
+
+check:
+  ~eval
+  class C():
+    private method m: 112233
+  ~throws: values("private:",
+                  "expected entry-point form",
+                  "112233")
+
+check:
+  ~eval
+  class C(x):
+    annotation: 112233
+  ~throws values("annotation:",
+                 "expected entry-point form",
+                 "112233")
+
+check:
+  ~eval
+  class C(x):
+    reconstructor: 112233
+  ~throws values("reconstructor:",
+                 "expected entry-point form",
+                 "112233")
+
+check:
+  ~eval
+  class C(x):
+    serializable:
+      ~serialize: 112233
+      ~deserialize: fun (): 1
+      ~deserialize_shell: fun (): 2
+      ~deserialize_fill: fun (): 3
+  ~throws values("serializable",
+                 "expected entry-point form",
+                 "112233")
+
+check:
+  ~eval
+  class C(x):
+    serializable:
+      ~serialize: fun (): 0
+      ~deserialize: 112233
+      ~deserialize_shell: fun (): 2
+      ~deserialize_fill: fun (): 3
+  ~throws values("serializable",
+                 "expected entry-point form",
+                 "112233")
+
+check:
+  ~eval
+  class C(x):
+    serializable:
+      ~serialize: fun (): 0
+      ~deserialize: fun (): 1
+      ~deserialize_shell: 112233
+      ~deserialize_fill: fun (): 3
+  ~throws values("serializable",
+                 "expected entry-point form",
+                 "112233")
+
+check:
+  ~eval
+  class C(x):
+    serializable:
+      ~serialize: fun (): 0
+      ~deserialize: fun (): 1
+      ~deserialize_shell: fun (): 2
+      ~deserialize_fill: 112233
+  ~throws values("serializable",
+                 "expected entry-point form",
+                 "112233")

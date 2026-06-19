@@ -9,7 +9,13 @@
   (syntax-parse b
     [#:none b]
     [#:error b]
+    [[#:stx stx (_::block g)] #'[#:stx stx g]]
+    [[#:stx stx b]
+     (raise-syntax-error #f
+                         "expected a single entry point in block body"
+                         #'stx
+                         #'b)]
     [(_::block g) #'g]
-    [_ (raise-syntax-error #f
+    [b (raise-syntax-error #f
                            "expected a single entry point in block body"
-                           b)]))
+                           #'b)]))

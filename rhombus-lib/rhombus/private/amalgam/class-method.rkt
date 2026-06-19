@@ -891,7 +891,8 @@
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private method-private-inherit
-                                  reconstructor-rhs reconstructor-stx-params serializer-stx-params in-final?
+                                  reconstructor-rhs reconstructor-stx-params serializer-stx-params
+                                  recon-field-orig-id recon-field-stx-params in-final?
                                   private-interfaces protected-interfaces
                                   names
                                   #:method-vtable [method-vtable #f]
@@ -1059,8 +1060,8 @@
                #,@(if (syntax-e #'serializer-name)
                       (list
                        (syntax-parse #'serializable
-                         [(_ _ serializer-rhs . _)
-                          #`(method-block (block serializer-rhs) #,serializer-stx-params
+                         [(form-id _ serializer-rhs . _)
+                          #`(method-block (block [#:stx form-id serializer-rhs]) #,serializer-stx-params
                                           reflect-name name #f #f
                                           #f serializer
                                           new-private-tables
@@ -1071,7 +1072,7 @@
                #,@(for/list ([acc (in-list (syntax->list #'(recon-field-accessor ...)))]
                              [rhs (in-list (syntax->list #'(recon-field-rhs ...)))]
                              #:when (syntax-e rhs))
-                    #`(method-block (block #,rhs) #f ;; FIXME
+                    #`(method-block (block [#:stx #,recon-field-orig-id #,rhs]) #,recon-field-stx-params
                                     reflect-name name #f #f
                                     #f acc
                                     new-private-tables
@@ -1157,7 +1158,7 @@
 
 (define-syntax (method-block stx)
   (syntax-parse stx
-    [(_ (_::block expr) stx-params
+    [(_ rhs stx-params
         reflect-name name name? name-convert
         result-id method-name
         private-tables-id
@@ -1171,9 +1172,15 @@
           (method-result #'vector? #t 1 "Array" #'() 1)]
          [(not (syntax-e #'result-id)) #f]
          [else (syntax-local-method-result #'result-id)]))
+     (define-values (expr stx)
+       (syntax-parse #'rhs
+         [[#:stx stx (_::block expr)] (values #'expr #'stx)]
+         [(_::block [#:stx stx expr]) (values #'expr #'stx)]
+         [(_::block expr) (values #'expr #f)]))
      (with-continuation-mark
       syntax-parameters-key #'stx-params
-      (syntax-parse #'expr
+      (syntax-parse (respan expr)
+        #:context stx
         [(~var e (:entry-point (entry-point-adjustment
                                 (syntax-e #'prefixed-method-name)
                                 (list #'this-obj)
