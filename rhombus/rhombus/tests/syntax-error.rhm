@@ -149,3 +149,10 @@ check:
   | 112233
   ~throws values("expected a quoted pattern",
                  "112233")
+
+check:
+  ~eval
+  class C(this :: Int):
+    extends 112233
+  ~throws values("extends: expected name",
+                 "112233")

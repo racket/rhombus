@@ -74,7 +74,8 @@
   (apply append
          (for/list ([line (in-list lines)])
            (let loop ([line line])
-             (syntax-parse line
+             (syntax-parse (no-srcloc line)
+               #:context stx
                [() null]
                [(~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref))
                 (cons #'id.name (loop #'id.tail))])))))
