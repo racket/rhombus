@@ -323,7 +323,7 @@
       [else
        (syntax-parse alt
          #:datum-literals (group)
-         [(_::block (group pat . _) . _)
+         [(_::block (group (~and pat (_::quotes . _)) . _) . _)
           (define-values (new-kind tail)
             (quoted-shape-dispatch #'(pattern pat)
                                    in-binding-space
@@ -379,7 +379,12 @@
        (values #'pat #'())]
       [(_::block (group (~and pat (_::quotes . _))
                         (_::block body ...)))
-       (values #'pat #'(body ...))]))
+       (values #'pat #'(body ...))]
+      [(_::block (group t . _) . _)
+       (raise-syntax-error #f
+                           "expected a quoted pattern"
+                           orig-stx
+                           #'t)]))
 
   (define in-quotes
     (cond
