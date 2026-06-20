@@ -373,7 +373,7 @@
                                        [exprs new-exprs]))))])
     (parameterize ([error-syntax->srcloc-handler
                     (lambda (s)
-                      (syntax-srcloc (maybe-respan s)))])
+                      (syntax-srcloc (maybe-respan (datum->syntax #f s))))])
       (thunk))))
 
 (define (shift-origin stx from-stx)
