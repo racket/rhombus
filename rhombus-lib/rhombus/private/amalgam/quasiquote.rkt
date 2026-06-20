@@ -817,6 +817,10 @@
                                      #:check-escape [check-escape (lambda (e) (void))]
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression]
                                      #:repetition? [repetition? #f])
+  (define (qq-reraw qq-stx)
+    ;; syntax errors from `quasiquote` are possible, such as when an
+    ;; ellipsis is misplaced, so make sure each has the source of `e`
+    (relocate+reraw e qq-stx))
   (syntax-parse (and (not repetition?) e)
     #:datum-literals (group multi)
     [(group _::$-expr tail:identifier dots::...-expr)
@@ -888,7 +892,7 @@
                          (define id (car (generate-temporaries '(group))))
                          (values (no-srcloc #`(#,tag #,id (... ...)))
                                  (cons #`[(#,id (... ...))
-                                          (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
+                                          (convert-empty-group 0 #,(qq-reraw #`(#,(quote-syntax quasisyntax) #,template)))]
                                        idrs)
                                  sidrs
                                  vars
@@ -902,7 +906,8 @@
                                      (no-srcloc #`(#,(quote-syntax ~@) #,id (... ...)))
                                      id)
                                  (cons #`[#,(if after-block? #`(#,id (... ...)) id)
-                                          (convert-empty-alts 0 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts)))
+                                          (convert-empty-alts 0 #,(qq-reraw
+                                                                   #`(#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag . #,ts))))
                                                               #,after-block?)]
                                        idrs)
                                  sidrs
@@ -925,9 +930,10 @@
                                                 #,ids
                                                 (#,check-id
                                                  0
-                                                 ;; `check-misformed-group` or `check-empty-or-misformed-group`
-                                                 ;; expects a syntax-list of three parts to check and assemble
-                                                 (#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag #,ts #,(or tail null))))))]
+                                                 #,(qq-reraw
+                                                    ;; `check-misformed-group` or `check-empty-or-misformed-group`
+                                                    ;; expects a syntax-list of three parts to check and assemble
+                                                    #`(#,(quote-syntax quasisyntax) #,(no-srcloc #`(#,tag #,ts #,(or tail null)))))))]
                                        idrs)
                                  sidrs
                                  vars
@@ -950,7 +956,7 @@
         (define new-idrs (adjust-template-sibling-depths idrs))
         (define template-e
           (wrap-bindings (unwrap-template-repetitions new-idrs depth)
-                         #`(#,(quote-syntax quasisyntax) #,template)))
+                         (qq-reraw #`(#,(quote-syntax quasisyntax) #,template))))
         (make-repetition-info (list e)
                               (for/list ([i (in-range depth)])
                                 (template-repetition-bindings new-idrs (- depth i 1)))
@@ -959,7 +965,7 @@
                               0)]
         [else
          (define template-e
-           (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
+           (wrap-bindings idrs (qq-reraw #`(#,(quote-syntax quasisyntax) #,template))))
          (wrap-static-info* template-e
                             (get-syntax-static-infos))])]))
 
