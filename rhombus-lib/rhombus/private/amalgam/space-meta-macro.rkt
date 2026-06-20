@@ -16,7 +16,8 @@
          enforest/proc-name
          "name-path-op.rkt"
          "srcloc.rkt"
-         (for-template "enforest.rkt")
+         (for-template "enforest.rkt"
+                       "name-root-ref.rkt")
          "introducer.rkt"
          "space-provide.rkt"
          "pack.rkt"
@@ -164,6 +165,7 @@
        (define identifier-transformer (hash-ref options '#:identifier_transformer #`(id-syntax-error #,(if desc
                                                                                                            #'form-desc
                                                                                                            #f))))
+       (define dotted-identifier-transformer (hash-ref options '#:dotted_identifier_transformer #f))
        (define private-kws (hash-ref options '#:private #hasheq()))
        (define post-forms (hash-ref options '#:post-forms null))
        (define expose (make-expose #'scope-stx #'base-stx))
@@ -247,7 +249,35 @@
                   #:in-space in-new-space
                   #:prefix-operator-ref new-prefix-operator-ref
                   #:infix-operator-ref new-infix-operator-ref
-                  #:make-identifier-form #,identifier-transformer)
+                  #:make-identifier-form #,(if dotted-identifier-transformer
+                                               #`(let ([id-handle #,identifier-transformer]
+                                                       [dotted-id-handle #,dotted-identifier-transformer])
+                                                   (lambda (id)
+                                                     (define components (syntax-property id dotted-name-components-key))
+                                                     (if components
+                                                         (check-id-handler-result 'dotted_identifier_transformer
+                                                                                  (dotted-id-handle
+                                                                                   (map syntax-local-introduce
+                                                                                        (reverse components))))
+                                                         (check-id-handler-result 'identifier_transformer
+                                                                                  (id-handle id)))))
+                                               #`(let ([id-handle #,identifier-transformer])
+                                                   (lambda (id)
+                                                     (check-id-handler-result 'identifier_transformer
+                                                                              (id-handle id)))))
+                  #,@(if dotted-identifier-transformer
+                         #`(#:name-root-ref (make-name-root-ref
+                                             #:binding-ref (lambda (v)
+                                                             (or (new-prefix-operator-ref v)
+                                                                 (new-infix-operator-ref v)))
+                                             #:binding-extension-combine (lambda (prefix prefixes field-id id)
+                                                                           ;; smuggle info out to the identifier transformer,
+                                                                           ;; which will use the dotted-id transformer
+                                                                           (syntax-property id dotted-name-components-key
+                                                                                            (map syntax-local-introduce
+                                                                                                 (cons field-id prefixes))))
+                                             #:quiet-fail? #t))
+                         #'()))
                 (maybe-skip
                  #,class-name
                  (define-syntax-class-syntax #,class-name (make-syntax-class #':base
@@ -568,3 +598,10 @@
      #:when (eq? (syntax-e #'kw) tag)
      #'form]
     [_ #:when fail-k (fail-k stx)]))
+
+(define (check-id-handler-result which form)
+  (unless (syntax? form)
+    (raise-bad-macro-result which "result" form))
+  form)
+
+(define dotted-name-components-key (gensym))

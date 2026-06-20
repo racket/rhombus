@@ -23,6 +23,7 @@
                     parsed_packer
                     parsed_unpacker
                     identifier_parser
+                    dotted_identifier_parser
                     private))
 
 (module+ for-space-meta-macro
@@ -91,6 +92,8 @@
   (make-expression-transformer '#:parsed_checker))
 (define-space-meta-clause-syntax identifier_parser
   (make-expression-transformer '#:identifier_transformer))
+(define-space-meta-clause-syntax dotted_identifier_parser
+  (make-expression-transformer '#:dotted_identifier_transformer))
 
 (define-space-meta-clause-syntax private
   (space-meta-clause-transformer
@@ -202,6 +205,9 @@
       [(_ (#:identifier_transformer stx e))
        (check "identifier parser expressions" #:enforest-only? #t)
        (hash-set options '#:identifier_transformer #'e)]
+      [(_ (#:dotted_identifier_transformer stx e))
+       (check "dotted identifier parser expressions" #:enforest-only? #t)
+       (hash-set options '#:dotted_identifier_transformer #'e)]
       [(_ (#:post-forms (form ...))) ; added directly in `enforest-meta-body-step`
        (hash-set options '#:post-forms (syntax->list #'(form ...)))]
       [else

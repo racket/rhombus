@@ -49,7 +49,7 @@
 ;;    be bound (so don't complain if it's not bound). This path is
 ;;    also used for exports.
 ;; * `non-portal-ref` as non-#f is similar. but for imports; we want to build
-;;    a "dotted" form
+;;    a "dotted" form.
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f] ;; see above
                                        #:non-portal-ref [non-portal-ref #f] ;; see above
                                        #:binding-extension-combine [binding-extension-combine (lambda (prefix prefixes field-id id) id)]

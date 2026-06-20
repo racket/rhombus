@@ -345,3 +345,43 @@ check:
   check_detector(ifx) ~is [#false, #true]
   check_detector(***) ~is [#false, #true]
   check_detector(other) ~is [#false, #false]
+
+space.enforest dot_ident:
+  space_path demo/dot_ident
+  macro_definer macro
+  meta_namespace dot_ident_meta:
+    parse_syntax_class Parsed
+    identifier_parser fun (x): x
+    dotted_identifier_parser fun (x): '($x)'
+
+dot_ident.macro '$a . $b':
+  '[$a, $b]'
+
+expr.macro 'dot_go $(x :: dot_ident_meta.Parsed) $()':
+  '('$x')'
+
+namespace ns1:
+  export namespace ns2:
+    export def v = 2
+  export def v = 1
+
+check dot_go hi ~matches 'hi'
+check dot_go ns1.hi ~matches '(ns1 hi)'
+check dot_go ns1.ns2.hi ~matches '(ns1 ns2 hi)'
+check dot_go ns1.hi.next ~matches '[(ns1 hi), next]'
+
+// check that namespace components delivered to `dotted_identifier_parser` are bound
+expr.macro 'dot_vs $(x :: dot_ident_meta.Parsed) $()':
+  let '($ns ... $id)' = x
+  '[$(ns).v, ...]'
+
+check [ns1.v, ns1.ns2.v] ~is [1, 2]
+check dot_vs ns1.ns2.hi ~is [1, 2]
+
+// check that id component delivered to `dotted_identifier_parser` has suitable scopes
+defn.macro 'dot_def $(x :: dot_ident_meta.Parsed) $()':
+  let '($ns ... $id)' = x
+  'def $id = 3'
+
+dot_def ns1.ns2.hiya
+check hiya ~is 3

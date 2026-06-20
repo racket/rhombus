@@ -74,6 +74,7 @@ driver and macro-definitions forms.
   | #,(@rhombus(name_start_syntax_class, ~space_meta_clause)) $id
   | #,(@rhombus(bound_name_start_syntax_class, ~space_meta_clause)) $id
   | #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(dotted_identifier_parser, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
   | #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
@@ -358,6 +359,12 @@ driver and macro-definitions forms.
   in the space and should return a parsed form for the identifier. By
   default, a syntax error is reported for unbound identifiers.}
 
+ @item{@rhombus(dotted_identifier_parser, ~space_meta_clause): Supplies
+  a compile-time function that is applied to a list of identifiers, where
+  all but the first identifier is bound as a namespace, and the last
+  identifier is not exported by the namespace. By default, a syntax error
+  is reported for a dotted reference to an unexported identifier.}
+
  @item{@rhombus(description, ~space_meta_clause): Supplies a string that
   describes the space; the string is used for reporting syntax
   errors.}
@@ -402,6 +409,7 @@ driver and macro-definitions forms.
  @rhombus(parse_prefix_more_syntax_class, ~space_meta_clause),
  @rhombus(parse_infix_more_syntax_class, ~space_meta_clause),
  @rhombus(identifier_parser, ~space_meta_clause),
+ @rhombus(dotted_identifier_parser, ~space_meta_clause),
  @rhombus(operator_description, ~space_meta_clause), or
  @rhombus(infix_predicate, ~space_meta_clause) clauses.
 
@@ -438,6 +446,7 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'name_start_syntax_class $id'
   space_meta_clause.macro 'bound_name_start_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
+  space_meta_clause.macro 'dotted_identifier_parser $expr'
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'parsed_packer $id'
   space_meta_clause.macro 'parsed_unpacker $id'
