@@ -366,13 +366,13 @@ namespace ns1:
   export def v = 1
 
 check dot_go hi ~matches 'hi'
-check dot_go ns1.hi ~matches '(ns1 hi)'
-check dot_go ns1.ns2.hi ~matches '(ns1 ns2 hi)'
-check dot_go ns1.hi.next ~matches '[(ns1 hi), next]'
+check dot_go ns1.hi ~matches '(ns1 . hi)'
+check dot_go ns1.ns2.hi ~matches '(ns1 . ns2 . hi)'
+check dot_go ns1.hi.next ~matches '[(ns1 . hi), next]'
 
 // check that namespace components delivered to `dotted_identifier_parser` are bound
 expr.macro 'dot_vs $(x :: dot_ident_meta.Parsed) $()':
-  let '($ns ... $id)' = x
+  let '($('$ns .') ... $id)' = x
   '[$(ns).v, ...]'
 
 check [ns1.v, ns1.ns2.v] ~is [1, 2]

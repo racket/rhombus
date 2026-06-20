@@ -41,7 +41,7 @@
      'origin
      (syntax-local-introduce (in-name-root-space prefix))))
 
-  (struct search-step (get prefix extends)
+  (struct search-step (get prefix extends dots)
     #:authentic))
 
 ;; * `binding-ref` as non-#f means that we're parsing a binding, so we
@@ -52,7 +52,7 @@
 ;;    a "dotted" form.
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f] ;; see above
                                        #:non-portal-ref [non-portal-ref #f] ;; see above
-                                       #:binding-extension-combine [binding-extension-combine (lambda (prefix prefixes field-id id) id)]
+                                       #:binding-extension-combine [binding-extension-combine (lambda (prefix prefixes dots field-id id) id)]
                                        #:dot-name-construction [dot-name-construction (lambda (names id) id)]
                                        #:quiet-fail? [quiet-fail? #f]
                                        #:fallback-to-expr? [fallback-to-expr? #f])
@@ -64,17 +64,18 @@
          ;; keep going as long as there are namespace bindings,
          ;; but back up if we don't find a binding in the space
          ;; indicated by `in-space`
-         (define head
+         (define-values (head init-dot)
            (syntax-parse stxes
-             [(form-id . _) #'form-id]))
+             [(form-id dot . _) (values #'form-id #'dot)]))
          (let loop ([stxes stxes]
                     [steps
                      ;; reverse order search path:
                      (list
-                      (search-step get #f null)
-                      (search-step #f head (list head)))]
+                      (search-step get #f null null)
+                      (search-step #f head (list head) (list init-dot)))]
                     [rev-dot-names (list head)]
-                    [extends null])
+                    [extends null]
+                    [dots null])
            (define (next form-id field-id field-op-parens what tail)
              (define binding-end? (and binding-ref
                                        (syntax-parse tail
@@ -111,11 +112,13 @@
                       (define last-step (car (reverse steps)))
                       (define prefix (search-step-prefix last-step))
                       (define extends (search-step-extends last-step))
+                      (define dots (search-step-dots last-step))
                       (dot-name-construction
                        (reverse (cons field-id rev-dot-names))
                        (binding-extension-combine
                         (in-name-root-space prefix)
                         (map in-name-root-space extends)
+                        dots
                         field-id
                         (relocate-field form-id
                                         field-id
@@ -126,12 +129,12 @@
                       (let ([get (search-step-get (car steps))])
                         (get form-id what field-id in-id-space fallback-to-expr?))])))
              ;; keep looking at dots?
-             (define more-dots?
+             (define-values (more-dots? dot)
                (syntax-parse tail
                  #:datum-literals (op parens group |.|)
-                 [((op |.|) _:identifier . _) #t]
-                 [((op |.|) (parens (group target (op _))) . tail) #t]
-                 [_ #f]))
+                 [((~and dot (op |.|)) _:identifier . _) (values #t #'dot)]
+                 [((~and dot (op |.|)) (parens (group target (op _))) . tail) (values #t #'dot)]
+                 [_ (values #f #f)]))
              (define ns-id (and more-dots? (get-id in-name-root-space #t #t)))
              (define v (and (or more-dots?
                                 non-portal-ref)
@@ -142,22 +145,26 @@
                 (portal-syntax->lookup (portal-syntax-content v)
                                        (lambda (self-id next-get)
                                          (if more-dots?
-                                             (let ([extends (cons field-id extends)])
+                                             (let ([extends (cons field-id extends)]
+                                                   [dots (cons dot dots)])
                                                (loop (cons ns-id tail)
                                                      (cons
-                                                      (search-step next-get #f extends)
+                                                      (search-step next-get #f extends dots)
                                                       (for/list ([step (in-list steps)])
                                                         (define get (search-step-get step))
                                                         (define prefix (search-step-prefix step))
                                                         (define extends (search-step-extends step))
+                                                        (define dots (search-step-dots step))
                                                         (search-step get
                                                                      (if prefix
                                                                          (build-name prefix field-id)
                                                                          field-id)
                                                                      (cons ns-id
-                                                                           extends))))
+                                                                           extends)
+                                                                     (cons dot dots))))
                                                      (cons field-id rev-dot-names)
-                                                     extends))
+                                                     extends
+                                                     dots))
                                              (values self-id tail))))]
                [non-portal-ref
                 (non-portal-ref form-id field-id tail)]

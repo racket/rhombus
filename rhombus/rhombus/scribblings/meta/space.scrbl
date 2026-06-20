@@ -360,8 +360,8 @@ driver and macro-definitions forms.
   default, a syntax error is reported for unbound identifiers.}
 
  @item{@rhombus(dotted_identifier_parser, ~space_meta_clause): Supplies
-  a compile-time function that is applied to a list of identifiers, where
-  all but the first identifier is bound as a namespace, and the last
+  a compile-time function that is applied to a dotted name, where all but
+  the last identifier in the name is bound as a namespace, and the last
   identifier is not exported by the namespace. By default, a syntax error
   is reported for a dotted reference to an unexported identifier.}
 

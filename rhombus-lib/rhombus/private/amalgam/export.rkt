@@ -141,7 +141,7 @@
 
   (define name-root-export-modifier-ref
     (make-name-root-ref #:binding-ref export-modifier-ref
-                        #:binding-extension-combine export-extension-combine))
+                        #:dot-name-construction export-extension-combine))
 
   (define-rhombus-transform
     #:syntax-class (:export-modifier parsed-ex)

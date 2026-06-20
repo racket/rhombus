@@ -1,5 +1,4 @@
 #lang racket/base
-(require "group.rkt")
 (require (for-syntax racket/base
                      racket/symbol
                      syntax/parse/pre
@@ -43,7 +42,8 @@
          "sentinel-declaration.rkt"
          "annotation-failure.rkt"
          "origin.rkt"
-         "lookup-space.rkt")
+         "lookup-space.rkt"
+         "group.rkt")
 
 (provide enforest-meta
          transform-meta
@@ -257,8 +257,7 @@
                                                      (if components
                                                          (check-id-handler-result 'dotted_identifier_transformer
                                                                                   (dotted-id-handle
-                                                                                   (map syntax-local-introduce
-                                                                                        (reverse components))))
+                                                                                   (regroup (datum->syntax #f (map syntax-local-introduce components)))))
                                                          (check-id-handler-result 'identifier_transformer
                                                                                   (id-handle id)))))
                                                #`(let ([id-handle #,identifier-transformer])
@@ -270,12 +269,11 @@
                                              #:binding-ref (lambda (v)
                                                              (or (new-prefix-operator-ref v)
                                                                  (new-infix-operator-ref v)))
-                                             #:binding-extension-combine (lambda (prefix prefixes field-id id)
+                                             #:binding-extension-combine (lambda (prefix prefixes dots field-id id)
                                                                            ;; smuggle info out to the identifier transformer,
                                                                            ;; which will use the dotted-id transformer
                                                                            (syntax-property id dotted-name-components-key
-                                                                                            (map syntax-local-introduce
-                                                                                                 (cons field-id prefixes))))
+                                                                                            (combine-dotted-name prefix prefixes dots field-id id)))
                                              #:quiet-fail? #t))
                          #'()))
                 (maybe-skip
@@ -603,5 +601,15 @@
   (unless (syntax? form)
     (raise-bad-macro-result which "result" form))
   form)
+
+(define (combine-dotted-name prefix prefixes dots field-id id)
+  (let loop ([ids (reverse (cons field-id prefixes))]
+             [dots (reverse dots)])
+    (cons
+     (syntax-local-introduce (car ids))
+     (cond
+       [(null? dots) null]
+       [else (cons (syntax-local-introduce (car dots))
+                   (loop (cdr ids) (cdr dots)))]))))
 
 (define dotted-name-components-key (gensym))
