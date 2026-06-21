@@ -33,14 +33,6 @@ raco pkg install rhombus
 More precisely, the `rhombus-main` package has everything that is
 included in a Rhombus distribution, but `rhombus` provides the basics.
 
-# Other Resources
-
-* [Project plan](resources/plan.md)
-
-* [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
-
-* [Older resources](resources)
-
 # Participation
 
 **Anyone can participate in Rhombus design discussions.** The Racket team's

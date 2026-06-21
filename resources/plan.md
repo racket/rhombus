@@ -172,7 +172,7 @@ approves the language for direct support, then the project fails.
 
 [Details on this transition at [https://github.com/racket/rhombus/discussions/521](https://github.com/racket/rhombus/discussions/521).]
 
-Phase 4: Stabilization (years)
+Phase 4: Stabilization (years) [Completed June 2026]
 ----------------------
 
 GOAL AND OUTPUT: Unified distribution and presentation for the new 
@@ -254,3 +254,5 @@ Revised in the transition to phase 4 to use the name "Stabilization"
 for phase 4, add "Production" as phase 5, clarify the
 breaking-change policies of each phase, and refine the description
 of Rhombus's interacton of Racket afterward.
+
+Marked phase 4 as completed and moved to phase 5: production.
