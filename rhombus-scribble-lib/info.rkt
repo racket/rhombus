@@ -16,6 +16,6 @@
 
 (define license '(Apache-2.0 OR MIT))
 
-(define version "0.3")
+(define version "1.0")
 
 (define language-families '("Rhombus"))
