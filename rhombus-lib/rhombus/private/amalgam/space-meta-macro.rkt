@@ -214,6 +214,13 @@
          (cond
            [(syntax-e #'enforest?)
             #`(begin
+                #,@(if (eq? (syntax-local-context) 'top-level)
+                       #`((define-syntaxes #,(append
+                                              (list #'macro-result)
+                                              (if (syntax-e pack-id) (list pack-id) null)
+                                              (if (syntax-e unpack-id) (list unpack-id) null))
+                            (values)))
+                       null)
                 (define-name-root #,(expose #'meta-name)
                   #:fields
                   (#,@(filter-missing-or-private
@@ -252,18 +259,27 @@
                   #:make-identifier-form #,(if dotted-identifier-transformer
                                                #`(let ([id-handle #,identifier-transformer]
                                                        [dotted-id-handle #,dotted-identifier-transformer])
-                                                   (lambda (id)
+                                                   (lambda (id . env)
                                                      (define components (syntax-property id dotted-name-components-key))
                                                      (if components
-                                                         (check-id-handler-result 'dotted_identifier_transformer
-                                                                                  (dotted-id-handle
-                                                                                   (regroup (datum->syntax #f (map syntax-local-introduce components)))))
-                                                         (check-id-handler-result 'identifier_transformer
-                                                                                  (id-handle id)))))
+                                                         (macro-result (dotted-id-handle
+                                                                        (regroup (datum->syntax #f (map syntax-local-introduce components))))
+                                                                       'dotted_identifier_transformer
+                                                                       #f
+                                                                       null
+                                                                       env)
+                                                         (macro-result (id-handle id)
+                                                                       'identifier_transformer
+                                                                       #f
+                                                                       null
+                                                                       env))))
                                                #`(let ([id-handle #,identifier-transformer])
-                                                   (lambda (id)
-                                                     (check-id-handler-result 'identifier_transformer
-                                                                              (id-handle id)))))
+                                                   (lambda (id . env)
+                                                     (macro-result (id-handle id)
+                                                                   'identifier_transformer
+                                                                   #f
+                                                                   null
+                                                                   env))))
                   #,@(if dotted-identifier-transformer
                          #`(#:name-root-ref (make-name-root-ref
                                              #:binding-ref (lambda (v)
@@ -499,7 +515,7 @@
 (define ((make-macro-result/recur name parsed-tag recur) form-in proc reloc origins env)
   (define form (syntax-unwrap form-in))
   (unless (syntax? form)
-    (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form-in
+    (raise-bad-macro-result (if (symbol? proc) proc (proc-name proc)) (symbol->immutable-string name) form-in
                             #:single-group? (and recur #t)))
   (define result
     (if recur
@@ -513,7 +529,7 @@
              [(unpack-tail form #f #f)
               => (lambda (g) (recur g env))]
              [else
-              (raise-bad-macro-result (proc-name proc) (symbol->immutable-string name) form)])])
+              (raise-bad-macro-result (if (symbol? proc) proc (proc-name proc)) (symbol->immutable-string name) form)])])
         form))
   ;; unlike expressions, we need to keep lifting origin information out, so that's
   ;; why `transfer-origins` is here while it's not in "expr-macro.rkt"
@@ -596,11 +612,6 @@
      #:when (eq? (syntax-e #'kw) tag)
      #'form]
     [_ #:when fail-k (fail-k stx)]))
-
-(define (check-id-handler-result which form)
-  (unless (syntax? form)
-    (raise-bad-macro-result which "result" form))
-  form)
 
 (define (combine-dotted-name prefix prefixes dots field-id id)
   (let loop ([ids (reverse (cons field-id prefixes))]

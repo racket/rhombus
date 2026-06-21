@@ -357,13 +357,17 @@ driver and macro-definitions forms.
  @item{@rhombus(identifier_parser, ~space_meta_clause): Supplies a
   compile-time function that is applied to an identifier that is not bound
   in the space and should return a parsed form for the identifier. By
-  default, a syntax error is reported for unbound identifiers.}
+  default, a syntax error is reported for unbound identifiers. A result
+  from an identifier parser is checked and potentially recursively
+  expanded in the same way as a result for a macro in the space.}
 
  @item{@rhombus(dotted_identifier_parser, ~space_meta_clause): Supplies
   a compile-time function that is applied to a dotted name, where all but
   the last identifier in the name is bound as a namespace, and the last
   identifier is not exported by the namespace. By default, a syntax error
-  is reported for a dotted reference to an unexported identifier.}
+  is reported for a dotted reference to an unexported identifier.  A result
+  from an identifier parser is checked and potentially recursively
+  expanded in the same way as a result for a macro in the space.}
 
  @item{@rhombus(description, ~space_meta_clause): Supplies a string that
   describes the space; the string is used for reporting syntax
