@@ -1,0 +1,56 @@
+#lang rhombus/static
+import:
+  lib("s3-sync/main.rkt").#{s3-sync}
+  lib("s3-sync/routing-rule.rkt"):
+    expose:
+      #{add-routing-rules}
+      #{redirect-prefix-routing-rule}
+  rhombus/version.Version
+  rhombus/subprocess
+  rhombus/cmdline
+
+def config:
+  cmdline.parse:
+    cmdline.flag "--current"
+
+def rhombus_version:
+  Evaluator.instantiate(ModulePath'"rhombus-lib/rhombus/private/amalgam/version.rkt"', #'version)
+
+def site_dir = "compiled/repackage/site"
+def s3_bucket = "download.rhombus-lang.org"
+def s3_path = "releases/" ++ rhombus_version
+
+fun up(dir):
+  #{s3-sync}(site_dir +/ dir,
+             s3_bucket,
+             s3_path ++ "/" ++ dir,
+             ~#{upload?}: #true,
+             ~jobs: 16,
+             ~log: println)
+
+cond
+| #'current in config:
+    #{add-routing-rules}(
+      s3_bucket,
+      PairList[
+        #{redirect-prefix-routing-rule}(
+          ~#{old-prefix}: "releases/current/",
+          ~#{new-prefix}: "releases/" ++ rhombus_version ++ "/",
+          ~#{redirect-code}: "302"
+        )
+      ],
+      ~#{log-info}: println
+    )
+| ~else:
+    up("catalog")
+    up("pkgs")
+    for (f in filesystem.files(site_dir)):
+      let name = to_string(f)
+      when name is_a Version
+      | up(name)
+
+    subprocess.run("rsync",
+                   "-avzhP",
+                   site_dir ++ "/",
+                   "shell.cs.utah.edu:/uusoc/facility/sys/www/www.cs.utah.edu/groups/plt/rhombus/" ++ rhombus_version)
+      .wait()
