@@ -500,6 +500,10 @@
        (define accessor-id (field-desc-accessor-id fld))
        (syntax-parse tail
          [(_:::=-expr #:cas from-seq ... #:to . tail)
+          (unless (syntax-e (field-desc-mutator-id fld))
+            (raise-syntax-error #f
+                                "field is not mutable"
+                                field-id))
           (with-syntax ([pos (get-pos)])
             (success #`(let ([obj #,(discard-static-infos form1)])
                          (#,(relocate field-id accessor-id) obj) ; for predicate

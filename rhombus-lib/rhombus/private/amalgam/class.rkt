@@ -710,7 +710,8 @@
                                              (quote-syntax private-name-field)
                                              (quote-syntax private-maybe-set-name-field!)
                                              (quote-syntax private-field-static-infos)
-                                             (quote-syntax private-field-argument))
+                                             (quote-syntax private-field-argument)
+                                             (quote-syntax private-field-pos))
                                        ...]
                                       super-protected-flds
                                       [super-name* ... interface-name ...]

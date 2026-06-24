@@ -127,11 +127,28 @@ block:
   check (recur loop(): (p4.w := ~cas 4 ~to 40) || loop()) ~is #true
   check p4.w ~is 40
 
+block:
+  class A(private mutable _a = 0):
+    property a: _a
+    method set_a():
+      this._a := ~cas 0 ~to 13
+  let a1 = A()
+  check (recur loop(): (a1.set_a()) || loop()) ~is #true
+  check a1.a ~is 13
+
 check:
   ~eval
   class Posn(x, y)
   Posn(1, 2).x := 2
   ~throws "left-hand argument is not a mutable identifier"
+
+check:
+  ~eval
+  class A(private _a = 0):
+    property a: _a
+    method set_a():
+      this._a := ~cas 0 ~to 13
+  ~throws "field is not mutable"
 
 check:
   ~eval
