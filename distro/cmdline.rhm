@@ -5,7 +5,7 @@ import:
 export:
   parse
 
-fun parse(build, ~no_config = #false):
+fun parse(build, ~no_config = #false, ~no_version = #false):
   def config:
     cmdline.parse:
       cmdline.flag "--version" #{racket-version}
@@ -15,6 +15,7 @@ fun parse(build, ~no_config = #false):
     Evaluator.instantiate(ModulePath'"rhombus-lib/rhombus/private/amalgam/version.rkt"', #'version)
 
   build(config.maybe[#'version]
+          || no_version
           || error("Racket verson is required"),
         rhombus_version,
         config.maybe[#'config]

@@ -1,0 +1,50 @@
+#lang rhombus/static
+import:
+  lib("pkg/lib.rkt")
+  lib("file/tar.rkt").#{tar-gzip}
+  lib("racket/base.rkt") as rkt
+  "archive-readme.rhm".make_readme
+  "archive-makefile.rhm".make_makefile
+
+export:
+  build_archive
+
+def dir = "compiled/repackage"
+
+fun build_archive(racket_version :~ String, rhombus_version :~ String, config):
+  let makefile = make_makefile(racket_version, rhombus_version)
+  let src_name = "rhombus-" ++ rhombus_version ++ "+" ++ racket_version ++ "-pkg-src"
+  let builtpkgs_name = src_name ++ "-builtpkgs"  
+  pack(builtpkgs_name, #'#{as-is}, make_readme(racket_version, rhombus_version, "built"), makefile)
+  pack(src_name, #'source, make_readme(racket_version, rhombus_version, "source"), makefile)
+
+fun pack(name :~ String, mode, readme, makefile):
+  let name_tgz = name ++ ".tgz"
+  let dest = (dir +/ "build/installers" +/ name_tgz).to_absolute_path()
+  lib.#{pkg-catalog-archive}(dir +/ name,
+                             PairList[dir +/ "build/built/catalog"],
+                             ~mode: mode,
+                             ~#{relative-sources?}: #true)
+  println("Packing to", dest)
+  Port.Output.using ~file dir +/ name +/ "README.txt":
+    ~exists: #'truncate
+    println(readme)
+  Port.Output.using ~file dir +/ name +/ "Makefile":
+    ~exists: #'truncate
+    println(makefile)
+  parameterize { Path.current_directory: dir }:
+    #{tar-gzip}(dest, name, ~#{exists-ok?}: #true)
+    #void
+  let desc = "{9} Rhombus packages only | Source" ++ (if mode == #'source | "" | " + built packages")
+  let table_rktd = dir +/ "build/installers/table.rktd"
+  let ht :~ Map = (Port.Input.using ~file table_rktd: rkt.read())
+  let ht = ht ++ { desc: name_tgz }
+  Port.Output.using ~file table_rktd:
+    ~exists: #'truncate
+    rkt.write(ht)
+
+module main:
+  import "cmdline.rhm"
+  cmdline.parse(build_archive,
+                ~no_config: #true)
+

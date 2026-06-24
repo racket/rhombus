@@ -1,0 +1,23 @@
+#lang rhombus/static
+
+export:
+  make_makefile
+
+def tab = "\t"
+
+fun make_makefile(racket_version, rhombus_version):
+  String.append(& @List.append{
+RACKET = racket
+RACKET_VERSION = @racket_version
+
+platform:
+@(tab)$(RACKET) -A build -l- raco pkg install -u --auto --skip-installed --catalog catalog/ rhombus-main-distribution
+@(tab)# For v9.3 and later, using `--built` with `raco pkg catalog-archive` would be better than `find`+`rm`:
+@(tab)find build/$(RACKET_VERSION)/pkgs -name 'synced.rktd' -exec rm {} \;
+@(tab)$(RACKET) -l- pkg/dirs-catalog build/$(RACKET_VERSION)/catalog build/$(RACKET_VERSION)/pkgs
+@(tab)$(RACKET) -l- raco pkg catalog-archive --relative build/rhombus-pkg-platform build/$(RACKET_VERSION)/catalog
+
+install:
+@(tab)$(RACKET) -l- raco pkg install -i --auto --catalog build/rhombus-pkg-platform/catalog/ rhombus-main-distribution
+}
+)

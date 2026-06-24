@@ -1,0 +1,31 @@
+#lang rhombus/static
+
+export:
+  make_readme
+
+fun make_readme(racket_version, rhombus_version, format):
+  String.append(& @List.append{
+This directory contains Rhombus packages in @format form for Racket
+v@racket_version. It is meant to be used with an installation of the non-minimal
+Racket main distribution, adding Rhombus v@rhombus_version to that installation:
+
+ raco pkg install -i --auto --catalog catalog/ rhombus-main-distribution
+
+Replace `-i` with `-u` to install in a user-specific location.
+
+
+To create a a fully compiled, platform-specific version of the
+cataloged packages, use `make`, and provide `RACKET=...` if needed to
+specify the `racket` executable to use. The result is a directory
+"build/rhombus-pkg-platform" that is like this directory, but with
+platform-specific built versions of the packages. Install it with
+`make-install` or use
+
+ raco pkg install -i --auto --catalog build/rhombus-pkg-platform/catalog/ rhombus-main-distribution
+
+The "build/rhombus-pkg-platform" directory is self-contained, so it could
+be copied or archived for later installation; the installation step
+just needs to refer to "catalog" within the copy (where "catalog"
+contains references to the sibling "pkgs" directory).
+})
+  
