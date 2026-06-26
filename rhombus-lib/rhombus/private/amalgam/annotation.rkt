@@ -63,7 +63,6 @@
          (for-space rhombus/annot
 
                     Never
-                    None
                     Boolean
                     PosInt
                     NegInt
@@ -1105,7 +1104,6 @@
 (void (set-primitive-contract! 'fixnum? "Fixnum"))
 (define-annotation-syntax Any (identifier-annotation always-satisfied ()))
 (define-annotation-syntax Never (identifier-annotation (lambda (x) #f) ((#%never #t))))
-(define-deprecated None None (rhombus/annot) "01-May-2026" Never)
 (define-annotation-syntax Boolean (identifier-annotation boolean? ()))
 (define-annotation-syntax Int (identifier-annotation exact-integer? #,(get-int-static-infos)))
 (define-annotation-syntax PosInt (identifier-annotation exact-positive-integer? #,(get-int-static-infos)))

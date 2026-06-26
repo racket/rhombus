@@ -1162,12 +1162,9 @@
      (let retry ([stx stx])
        (syntax-parse stx
          #:datum-literals (group alts block)
-         [(group grammar id)
+         [(group _ id)
           #`(paragraph plain #,(subst #'id #:as_wrap #f))]
-         [(group grammar id (block g ...))
-          (warn-deprecated! 'grammar-block-instead-of-alts "15-JAN-2026")
-          (retry #'(group grammar id (alts (block g) ...)))]
-         [(group grammar id (alts (block g) ...))
+         [(group _ id (alts (block g) ...))
           #`(typeset-grammar #,(subst #'id #:as_wrap #f)
                              #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
                                   (syntax-parse g
