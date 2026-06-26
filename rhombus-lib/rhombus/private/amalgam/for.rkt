@@ -132,9 +132,9 @@
         [(_ orig static? [finish (~optional pre-clause-form)] . bodys)
          ;; initialize state
          #`(#:splice (for-clause-step orig static?
-                                      [finish () () (void) (~? pre-clause-form (void)) (~? pre-clause-form (void)) #hasheq()]
+                                      [finish () () (void) (~? pre-clause-form (void)) (~? pre-clause-form (void)) #hasheq() origins]
                                       . bodys))]
-        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher init-binder binder stx-params])
+        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher init-binder binder stx-params origins])
          (when (null? (syntax-e #'rev-bodys))
            (raise-syntax-error #f
                                "empty body (after any clauses such as `each`)"
@@ -147,7 +147,14 @@
                    (with-syntax-parameters stx-params
                      (rhombus-body
                       . #,(reverse (syntax->list #'rev-bodys)))))])]
-        [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher init-binder binder stx-params])
+        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+            (#:with-origins new-origins new-body ...)
+            . bodys)
+         #`(#:splice (for-clause-step
+                      orig static?
+                      [finish rev-clauses rev-bodys matcher init-binder binder stx-params new-origins]
+                      new-body ... . bodys))]
+        [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins])
             body0
             . bodys)
          #:when (for-clause? #'body0)
@@ -158,7 +165,7 @@
                #:do [matcher
                      binder]
                #:splice (for-clause-step orig static?
-                                         [finish () rev-bodys (void) init-binder init-binder stx-params]
+                                         [finish () rev-bodys (void) init-binder init-binder stx-params origins]
                                          body0 . bodys))]
            [(pair? (syntax-e #'rev-bodys)) ; assert: empty rev-clauses
             ;; emit accumulated body with forward-sequence expansion
@@ -181,13 +188,15 @@
              (lambda (exprs+defns bodys stx-params)
                #`(#:do (#,@exprs+defns)
                   #:splice (for-clause-step orig static?
-                                            [finish () () (void) init-binder init-binder #,stx-params]
+                                            [finish () () (void) init-binder init-binder #,stx-params origins]
                                             . #,bodys))))]
            [else
             (define parsed
               (with-continuation-mark syntax-parameters-key #'stx-params
                                       (syntax-parse #'body0
                                         [body0::for-clause #'body0.parsed])))
+            (define (track-all stx)
+              (transfer-origin parsed (transfer-origin #'origins stx)))
             (syntax-parse parsed
               [(#:each bind-gss rhs-blks)
                #`(#:splice (for-clause-step
@@ -196,23 +205,27 @@
                                                      #'state
                                                      (syntax->list #'bind-gss)
                                                      (syntax->list #'rhs-blks)
-                                                     (syntax-e #'static?))
+                                                     (syntax-e #'static?)
+                                                     #:track track-all)
                             . bodys))]
               [((~and kw (~or* #:when #:unless #:break #:final))
                 rhs)
                #`(kw
-                  (with-syntax-parameters stx-params rhs)
+                  (with-syntax-parameters stx-params #,(track-all #'rhs))
                   #:splice (for-clause-step orig static? state . bodys))]
               [(#:let bind-gs rhs)
                (define-values (pre-defns evidence post-defns)
-                 (expand-let-clause #'stx-params #'bind-gs #'rhs))
+                 (expand-let-clause #'stx-params #'bind-gs #'rhs
+                                    #:track track-all))
                #`(#:do (#,@pre-defns)
                   #:when #,evidence
                   #:do (#,@post-defns)
                   #:splice (for-clause-step orig static? state . bodys))]
-              [(#:splice new ...)
-               #`(#:splice (for-clause-step orig static? state new ... . bodys))])])]
-        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params]
+              [(#:splice new-body ...)
+               #`(#:splice (for-clause-step orig static? state
+                                            (#:with-origins #,(transfer-origin parsed #'origins) new-body ...)
+                                            (#:with-origins origins . bodys)))])])]
+        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
             body0
             . bodys)
          #`(#:splice (for-clause-step
@@ -223,7 +236,8 @@
                        matcher
                        init-binder
                        binder
-                       stx-params]
+                       stx-params
+                       origins]
                       . bodys))]))))
 
 ;; trampoline back into `expand-forwarding-sequence-continue`, eventually
@@ -246,16 +260,17 @@
           (lambda (exprs+defns bodys stx-params)
             #`(#:do (#,@exprs+defns)
                #:splice (for-clause-step orig static?
-                                         [finish () () (void) init-binder init-binder #,stx-params]
+                                         [finish () () (void) init-binder init-binder #,stx-params origins]
                                          . #,bodys))))]))))
 
 (define-for-syntax (build-binding-clause orig-stx
                                          state-stx
                                          bind-gs-stx
                                          rhs-blk-stx
-                                         static?)
+                                         static?
+                                         #:track track)
   (syntax-parse state-stx
-    [[finish rev-clauses rev-bodys matcher init-binder binder stx-params]
+    [[finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
      #:do [(define lhs-parsed-stxes (for/list ([bind-g (in-list (syntax->list bind-gs-stx))])
                                       (syntax-parse bind-g
                                         [lhs::binding #'lhs.parsed]
@@ -284,6 +299,8 @@
                            (string-append "no specific iteration implementation available" statically-str)
                            (respan orig-stx)
                            (respan rhs-blk-stx)))
+     (define (track-all stx)
+       (transfer-origins lhs-parsed-stxes (track stx)))
      #`[finish
         ([(tmp-id ...) #,(relocate ; this helps debugging info
                           rhs-blk-stx
@@ -295,7 +312,7 @@
                                        (not (eq? (syntax-e seq-ctr-t) #t))))
                               ;; when `for` optimizes, it only attaches `seq-ctr` to
                               ;; the expansion, instead of using origin on the call
-                              (define seq-ctr/t (transfer-origin #'rhs seq-ctr))
+                              (define seq-ctr/t (track-all (transfer-origin #'rhs seq-ctr)))
                               (if (and (identifier? seq-ctr-t)
                                        (syntax-local-value* seq-ctr-t expression-prefix-operator-ref))
                                   (unwrap-static-infos
@@ -304,10 +321,9 @@
                                        (build-info-syntax-call seq-ctr/t #'rhs))))
                                   #`(#,seq-ctr/t rhs))]
                              [else
-                              (syntax-parse orig-stx
-                                [(head . _)
-                                 #`(check-sequence-for-each '#,(string->symbol (shrubbery-syntax->string #'head))
-                                                            #,(unwrap-static-infos #'rhs))])])))]
+                              (track-all #`(check-sequence-for-each
+                                            '#,(string->symbol (shrubbery-syntax->string #'form-id))
+                                            #,(discard-static-infos #'rhs)))])))]
          . rev-clauses)
         ()
         (begin
@@ -329,13 +345,15 @@
           ...
           (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
           ... ...)
-        stx-params]]))
+        stx-params
+        origins]]))
 
 (define-for-syntax (build-binding-clause* orig-stx
                                           state-stx
                                           bind-gs-stxs
                                           rhs-blk-stxs
-                                          static?)
+                                          static?
+                                          #:track track)
   (for/fold ([state-stx state-stx])
             ([bind-gs-stx (in-list bind-gs-stxs)]
              [rhs-blk-stx (in-list rhs-blk-stxs)])
@@ -343,7 +361,8 @@
                           state-stx
                           bind-gs-stx
                           rhs-blk-stx
-                          static?)))
+                          static?
+                          #:track track)))
 
 (define (rhs-binding-failure who val binding-str)
   (raise-binding-failure who "element" val binding-str))
@@ -352,7 +371,8 @@
 ;; the expansion needs to pack evidences, if any, into a vector and
 ;; unpack it only after the `#:when` test.  If there isn't any
 ;; evidence in the bindings, we use a simple boolean instead.
-(define-for-syntax (expand-let-clause stx-params bind-gs-stx rhs-stx)
+(define-for-syntax (expand-let-clause stx-params bind-gs-stx rhs-stx
+                                      #:track track)
   (define (flatten-tree t)
     (cond
       [(identifier? t) (list t)]
@@ -373,8 +393,11 @@
      (values
       #`((lhs-i.oncer-id lhs-i.data)
          ...
-         (define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
-                                       (values lhs-i.name-id ...)))
+         (define-values (tmp-id ...) #,(transfer-origins
+                                        (syntax->list #'(lhs.parsed ...))
+                                        (track
+                                         #`(let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
+                                             (values lhs-i.name-id ...)))))
          (define evidence
            (let ()
              #,(for/foldr ([success (if need-evidence?

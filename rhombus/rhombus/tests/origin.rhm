@@ -148,11 +148,39 @@ check_origins(class_rhm,
 
 check_origins(for_rhm,
               #'#{rhombus/reducer},
-              { #'List: 1 })
+              { #'List: 1,
+                #'PairList: 1,
+                #'Set: 1 })
+
+check_origins(for_rhm,
+              #'#{rhombus/for_clause},
+              { #'each: 2,
+                #'keep_when: 1,
+                #'skip_when: 1,
+                #'break_when: 1,
+                #'final_when: 1,
+                #'keep_let: 1,
+                #'splice: 4 })
 
 check_origins(for_rhm,
               #false,
-              { #'#{..}: 2 })
+              { #'#{..}: 3,
+                #'#{<}: 2,
+                #'#{==}: 2,
+                #'#{+}: 2,
+                #'#{-}: 1,
+                #'dynamic: 1 })
+
+check_origins(for_rhm,
+              #'#{rhombus/bind},
+              { #'#{_}: 1,
+                #'#{::}: 4 })
+
+check_origins(for_rhm,
+              #'#{rhombus/annot},
+              { #'Int: 1,
+                #'PosInt: 2,
+                #'NegInt: 1 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},

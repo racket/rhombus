@@ -7,3 +7,25 @@
 for List:
   each i_elem in 0..10
   i_elem + 1
+
+for_clause.macro 'splice:
+                    $clause
+                    ...':
+  '$clause
+   ...'
+
+for PairList:
+  each i :: Int in 0..10
+  splice:
+    keep_when i < 8
+    skip_when i < 2
+  splice:
+    splice:
+      break_when i == 4
+      final_when i == 6
+  keep_let _ :: PosInt = i - 5
+  i
+
+for Set (i :: PosInt in [1, 2, 3, 4, 5],
+         j :: NegInt in dynamic([-1, -2, -3, -4, -5])):
+  i + j
