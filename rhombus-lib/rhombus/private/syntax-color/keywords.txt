@@ -5,6 +5,7 @@ alias
 all
 all_defined
 all_from
+allow_dynamic
 annot
 annot_meta
 annotation
@@ -14,6 +15,7 @@ as
 assign
 assign_meta
 assignment
+assuming
 authentic
 bind
 bind_meta
@@ -26,6 +28,7 @@ bitwise_shift
 bitwise_test
 block
 bound_as
+bound_name_start_syntax_class
 break_when
 bridge_definer
 check
@@ -33,6 +36,7 @@ class
 class_and_interface_clause
 class_clause
 class_meta
+compare_to
 compares_equal
 compares_unequal
 comparison
@@ -45,6 +49,7 @@ converter
 converting
 decl
 decl_meta
+deepen
 def
 default
 defn
@@ -53,6 +58,7 @@ described_as
 description
 div
 dot
+dotted_identifier_parser
 each
 entry_point
 entry_point_meta
@@ -61,6 +67,8 @@ enumeration
 equivalence
 error_mode
 except
+except_meta
+except_meta_label
 except_space
 expo
 expo_meta
@@ -88,11 +96,14 @@ if
 immediate_callee
 immediate_callee_meta
 immutable
+implementable
 implements
 impo
 impo_meta
 import
 in
+index
+infix_predicate
 integer_division
 interface
 interface_clause
@@ -101,11 +112,13 @@ internal
 is_a
 is_now
 is_same_number_or_object
+keep_let
 keep_when
 key_comp
 kind
 let
 lib
+log
 logical_conjunction
 logical_disjunction
 logical_negation
@@ -126,11 +139,15 @@ meta_namespace
 method
 mod
 module
+module_block
+module_path
+module_path_meta
 multiplication
 mutable
 name_start_syntax_class
 names
 namespace
+namespace_meta
 nonfinal
 only
 only_meta
@@ -143,6 +160,7 @@ operator_description
 operator_order
 operator_order_meta
 order_comparison
+ostensible
 override
 parameterize
 parent
@@ -155,8 +173,8 @@ parsed_unpacker
 pattern
 pattern_clause
 pipeline
-pragma
 prefab
+prefix_predicate
 primitive_property
 private
 property
@@ -200,6 +218,7 @@ throw
 try
 unless
 unquote_bind
+unquote_bind_meta
 use_dynamic
 use_static
 values
@@ -208,4 +227,5 @@ veneer_clause
 veneer_meta
 when
 where
+while
 with

@@ -4,7 +4,6 @@
          racket/port
          racket/promise
          racket/runtime-path
-         racket/string
          shrubbery/syntax-color
          shrubbery/variant)
 

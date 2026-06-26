@@ -6,6 +6,7 @@ Boolean
 Box
 Byte
 Bytes
+BytesNoNull
 Callable
 Char
 CharCI
@@ -13,6 +14,9 @@ Closeable
 Comparable
 Continuation
 CrossPath
+DescendingListRange
+DescendingRange
+Ephemeron
 Equatable
 Evaluator
 Exact
@@ -24,6 +28,7 @@ Function
 Group
 Identifier
 IdentifierName
+IdentifierOrOperator
 ImmutableArray
 ImmutableBox
 ImmutableBytes
@@ -36,6 +41,8 @@ List
 ListRange
 Listable
 Literal
+LogReceiver
+Logger
 Map
 MapMaybe
 MembershipTestable
@@ -50,9 +57,10 @@ MutableMap
 MutableSet
 MutableString
 Name
+Nat
 NegInt
 NegReal
-None
+Never
 NonemptyList
 NonemptyPairList
 NonnegInt
@@ -85,10 +93,12 @@ Sequenceable
 Set
 SpaceMeta
 Srcloc
+Stream
 String
 StringCI
 StringLocale
 StringLocaleCI
+StringNoNull
 Symbol
 Syntax
 SyntaxPhase
@@ -96,6 +106,7 @@ Term
 TermSequence
 True
 Void
+WeakBox
 WeakMutableMap
 WeakMutableSet
 call_with_values
