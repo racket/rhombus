@@ -154,7 +154,7 @@ check_origins(for_rhm,
 
 check_origins(for_rhm,
               #'#{rhombus/for_clause},
-              { #'each: 2,
+              { #'each: 3,
                 #'keep_when: 1,
                 #'skip_when: 1,
                 #'break_when: 1,
@@ -167,20 +167,23 @@ check_origins(for_rhm,
               { #'#{..}: 3,
                 #'#{<}: 2,
                 #'#{==}: 2,
-                #'#{+}: 2,
+                #'#{+}: 3,
                 #'#{-}: 1,
-                #'dynamic: 1 })
+                #'dynamic: 1,
+                #'#{|.|}: 1 })
 
 check_origins(for_rhm,
               #'#{rhombus/bind},
               { #'#{_}: 1,
-                #'#{::}: 4 })
+                #'#{::}: 6 })
 
 check_origins(for_rhm,
               #'#{rhombus/annot},
               { #'Int: 1,
                 #'PosInt: 2,
-                #'NegInt: 1 })
+                #'NegInt: 1,
+                #'Nat: 1,
+                #'List: 1 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},

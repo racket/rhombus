@@ -29,3 +29,7 @@ for PairList:
 for Set (i :: PosInt in [1, 2, 3, 4, 5],
          j :: NegInt in dynamic([-1, -2, -3, -4, -5])):
   i + j
+
+for values(num :: Nat = 0, lst :: List = []):
+  each i in [1, 2, 3, 4, 5]
+  values(num + i, lst.add(i))

@@ -3,7 +3,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "provide.rkt"
          "binding.rkt"
          "expression.rkt"
@@ -136,7 +137,7 @@
 (begin-for-syntax
   (define-splicing-syntax-class :accum
     #:description "accumulator with optional annotation"
-    #:attributes (id e static-infos pre-defn defns checks)
+    #:attributes (id e static-infos pre-defn defns checks b-parsed)
     (pattern d::var-decl
       #:with b::binding (regroup #'(d.bind ...))
       #:with b-parsed::binding-form #'b.parsed
@@ -178,20 +179,22 @@
        #:datum-literals (group)
        [(form-id (_::parens (group accum::accum) ...) . tail)
         (values
-         (reducer/no-break #:pre-defns #'[(define who 'form-id) accum.pre-defn ...]
-                           #'build-values-check-result
-                           #'([accum.id accum.e]
-                              ...)
-                           #:pre-clause #'build-values-defns
-                           #'build-values-next
-                           (let* ([siss #'(accum.static-infos
-                                          ...)]
-                                  [siss-l (syntax->list siss)])
-                             (if (= 1 (length siss-l))
-                                 (car siss-l)
-                                 #`((#%values #,siss))))
-                           #'([accum.id accum.defns accum.checks]
-                              ...))
+         (transfer-origins
+          (syntax->list #'(accum.b-parsed ...))
+          (reducer/no-break #:pre-defns #'[(define who 'form-id) accum.pre-defn ...]
+                            #'build-values-check-result
+                            #'([accum.id accum.e]
+                               ...)
+                            #:pre-clause #'build-values-defns
+                            #'build-values-next
+                            (let* ([siss #'(accum.static-infos
+                                            ...)]
+                                   [siss-l (syntax->list siss)])
+                              (if (= 1 (length siss-l))
+                                  (car siss-l)
+                                  #`((#%values #,siss))))
+                            #'([accum.id accum.defns accum.checks]
+                               ...)))
          #'tail)]))))
 
 (define-syntax (build-values-check-result stx)
