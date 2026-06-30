@@ -106,3 +106,26 @@ block:
     A().b() ~throws "A.b: " ++ error.annot_msg("result")
     B().c() ~throws "B.c: " ++ error.annot_msg("result")
     C().a() ~throws "C.a: " ++ error.annot_msg("result")
+
+class.together:
+  class A(s :~ String):
+    nonfinal
+
+    property t: "this is t"
+
+    method u():
+      "uuuu"
+
+    protected method u2(): "u2"
+    protected field s2 = "s2"
+
+  class B():
+    extends A
+
+    protected method u3(): "u3"
+    protected field s3 = "s3"
+
+    method foo():
+      [s, s2, s3, t, u(), u2(), u3()]
+
+check B("str").foo() ~is ["str", "s2", "s3", "this is t", "uuuu", "u2", "u3"]

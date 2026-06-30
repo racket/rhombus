@@ -253,14 +253,14 @@
 
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
-                       method-names    ; index -> symbol-or-identifier
+                       method-names    ; index -> identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces
+         (extract-method-tables stxes added-methods super interfaces parent-name interface-names
                                 private-interfaces protected-interfaces
                                 final? #f))
 

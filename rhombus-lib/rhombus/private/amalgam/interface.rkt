@@ -225,19 +225,21 @@
           [option stx-param] ...)
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-param ...)))
-       (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
+       (define super-names (reverse (hash-ref options 'extends '())))
+       (define super-src-names (reverse (hash-ref options 'extends-name '())))
+       (define supers (interface-names->interfaces stxes super-names))
        (define parent-names (map interface-desc-id supers))
        (define primitive-properties (hash-ref options 'primitive-properties '()))
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
-                       method-names    ; index -> symbol-or-identifier
+                       method-names    ; index -> identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
-         (extract-method-tables stxes added-methods #f supers
+         (extract-method-tables stxes added-methods #f supers #f super-src-names
                                 #hasheq() #hasheq()
                                 #f #f))
 

@@ -618,7 +618,9 @@
  directly is the same as using @rhombus(this) and @rhombus(.) in static
  mode (which implies that a direct reference to a method name must be a
  call of the method). An argument that has the same name as a field,
- method, or property shadows the field, method, or property.
+ method, or property shadows the field, method, or property. Inherited methods
+ are bound using same scopes as the reference to the relevant superclass
+ or superinterface.
 
  A @rhombus(~doc) @rhombus(option) is similarly analogous to
  @rhombus(~doc) within a @rhombus(fun, ~defn) definition, but a

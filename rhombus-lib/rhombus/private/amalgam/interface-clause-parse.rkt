@@ -25,9 +25,12 @@
             (syntax-parse clause
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(#:extends id ...)
-               (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
-                                                  (hash-ref options 'extends '())))]
+              [(#:extends (id name) ...)
+               (hash-set
+                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
+                                                   (hash-ref options 'extends '())))
+                'extends-name (append (reverse (syntax->list #'(name ...)))
+                                      (hash-ref options 'extends-name '())))]
               [(#:annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
@@ -59,9 +62,12 @@
             (syntax-parse clause
               [(#:internal id) ; checked in `parse-annotation-options`
                (hash-set options 'internals (cons #'id (hash-ref options 'internals #'id)))]
-              [(#:extends id ...)
-               (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
-                                                  (hash-ref options 'extends '())))]
+              [(#:extends (id name) ...)
+               (hash-set
+                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
+                                                   (hash-ref options 'extends '())))
+                'extends-name (append (reverse (syntax->list #'(name ...)))
+                                      (hash-ref options 'extends-name '())))]
               [(#:implementable id) ; checked in `parse-annotation-options`
                (hash-set options 'implementable #'id)]
               [(#:expression rhs)
