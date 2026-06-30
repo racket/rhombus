@@ -86,7 +86,7 @@
 
 ;; Results:
 ;;   method-mindex   ; symbol -> mindex
-;;   method-names    ; index -> symbol-or-identifier; symbol is inherited
+;;   method-names    ; index -> identifier
 ;;   method-vtable   ; index -> function-identifier or '#:abstract
 ;;   method-results  ; symbol -> nonempty list of identifiers; first one implies others
 ;;   method-private  ; symbol -> identifier or (list identifier); list means property; non-super symbol's identifier attached as 'lhs-id
@@ -94,10 +94,11 @@
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
 
-(define-for-syntax (extract-method-tables stx added-methods super interfaces
+(define-for-syntax (extract-method-tables stx added-methods super interfaces super-src-name interface-src-names
                                           private-interfaces protected-interfaces
                                           final? prefab?)
   (define supers (if super (cons super interfaces) interfaces))
+  (define super-src-names (if super-src-name (cons super-src-name interface-src-names) interface-src-names))
   (define-values (super-str supers-str)
     (cond
       [(null? interfaces)
@@ -124,7 +125,8 @@
                   vtable-ht     ; int -> accessor-identifier or '#:abstract
                   from-ht)      ; symbol -> super
     (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [priv-inherit-ht #hasheq()] [vtable-ht #hasheqv()] [from-ht #hasheq()])
-              ([super (in-list supers)])
+              ([super (in-list supers)]
+               [super-src-name (in-list super-src-names)])
       (define super-vtable (syntax-e (objects-desc-method-vtable super)))
       (define private? (hash-ref private-interfaces super #f))
       (define i-protected? (hash-ref protected-interfaces super #f))
@@ -149,7 +151,7 @@
                           (mindex-index (car old-val))
                           (hash-count ht)))
             (values shape
-                    (cons (mindex i final? protected? property? arity #t #f) shape)
+                    (cons (mindex i final? protected? property? arity #t #f) (datum->syntax super-src-name shape))
                     i
                     old-val
                     final?
@@ -916,22 +918,16 @@
                        [(recon-field-accessor recon-field-rhs) ...]
                        serializable)
                  names])
-    (with-syntax ([(field-name ...) (for/list ([id/l (in-list (syntax->list #'(field-name ...)))])
-                                      (if (identifier? id/l)
-                                          (datum->syntax #'name (syntax-e id/l) id/l id/l)
-                                          (car (syntax-e id/l))))]
-                  [(super-protected-field-name ...) (for/list ([id (in-list (syntax->list #'(super-protected-field-name ...)))])
-                                                      (datum->syntax #'name (syntax-e id) id id))]
-                  [((method-name method-index/id method-result-id method-kind) ...)
+    (with-syntax ([((method-name method-index/id method-result-id method-kind) ...)
                    (for/list ([i (in-range (hash-count method-mindex))])
                      (define raw-m-name (hash-ref method-names i))
-                     (define m-name (if (syntax? raw-m-name)
-                                        (syntax-e raw-m-name)
-                                        raw-m-name))
+                     (define m-name (syntax-e raw-m-name))
                      (define mix (hash-ref method-mindex m-name))
                      ;; We use `raw-m-name` to support local references
-                     ;; to macro-introduced methods
-                     (list (datum->syntax #'name raw-m-name)
+                     ;; to macro-introduced methods; in the case of an
+                     ;; inherited name, it will have the scopes of the
+                     ;; named superclass or superinterface
+                     (list raw-m-name
                            (let ([idx (mindex-index mix)])
                              (cond
                                [veneer-vtable

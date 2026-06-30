@@ -79,7 +79,10 @@
                #:context stx
                [() null]
                [(~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref))
-                (cons #'id.name (loop #'id.tail))])))))
+                (syntax-parse #'id.head
+                  [(_ ... last-name)
+                   (cons #'(id.name last-name)
+                         (loop #'id.tail))])])))))
 
 (define-for-syntax parse-class-extends
   (lambda (stx data)

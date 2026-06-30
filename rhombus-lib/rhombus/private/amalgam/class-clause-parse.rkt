@@ -49,16 +49,16 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              [(#:extends id)
+              [(#:extends (id name))
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "multiple extension clauses" orig-stx #'id))
-               (hash-set options 'extends #'id)]
-              [(#:implements id ...)
-               (add-implements options 'public-implements #'(id ...))]
-              [(#:private-implements id ...)
-               (add-implements options 'private-implements #'(id ...))]
-              [(#:protected-implements id ...)
-               (add-implements options 'protected-implements #'(id ...))]
+               (hash-set (hash-set options 'extends #'id) 'extends-name #'name)]
+              [(#:implements (id name) ...)
+               (add-implements options 'public-implements #'(id ...) #'(name ...))]
+              [(#:private-implements (id name) ...)
+               (add-implements options 'private-implements #'(id ...) #'(name ...))]
+              [(#:protected-implements (id name) ...)
+               (add-implements options 'protected-implements #'(id ...) #'(name ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(#:annotation block)
@@ -109,14 +109,14 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              [(#:extends id) ; checked in `parse-annotation-options`
-               (hash-set options 'extends #'id)]
-              [(#:implements id ...)
-               (add-implements options 'public-implements #'(id ...))]
-              [(#:private-implements id ...)
-               (add-implements options 'private-implements #'(id ...))]
-              [(#:protected-implements id ...)
-               (add-implements options 'protected-implements #'(id ...))]
+              [(#:extends (id name)) ; checked in `parse-annotation-options`
+               (hash-set (hash-set options 'extends #'id) 'extends-name #'name)]
+              [(#:implements (id name) ...)
+               (add-implements options 'public-implements #'(id ...) #'(name ...))]
+              [(#:private-implements (id name) ...)
+               (add-implements options 'private-implements #'(id ...) #'(name ...))]
+              [(#:protected-implements (id name) ...)
+               (add-implements options 'protected-implements #'(id ...) #'(name ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(#:constructor id forward-rets rhs)
@@ -319,10 +319,12 @@
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
 
-(define-for-syntax (add-implements options extra-key ids-stx)
+(define-for-syntax (add-implements options extra-key ids-stx names-stx)
   (define l (reverse (syntax->list ids-stx)))
+  (define names-l (reverse (syntax->list names-stx)))
   (define new-options
-    (hash-set options 'implements (append l (hash-ref options 'implements '()))))
+    (hash-set (hash-set options 'implements (append l (hash-ref options 'implements '())))
+              'implements-name (append names-l (hash-ref options 'implements-name '()))))
   (if extra-key
       (hash-set new-options extra-key (append l (hash-ref new-options extra-key '())))
       new-options))
@@ -377,27 +379,27 @@
   (for/list ([a (in-list (reverse (syntax->list accum)))]
              #:do [(define v
                      (syntax-parse a
-                       [(#:extends id) (if (eq? key 'extends)
-                                           (list #'id)
-                                           null)]
-                       [(#:implements id ...) (case key
-                                                [(implements)
-                                                 (syntax->list #'(id ...))]
-                                                [(implements_visibilities)
-                                                 '(public)]
-                                                [else null])]
-                       [(#:private-implements id ...) (case key
-                                                        [(implements)
-                                                         (syntax->list #'(id ...))]
-                                                        [(implements_visibilities)
-                                                         '(private)]
-                                                        [else null])]
-                       [(#:protected-implements id ...) (case key
-                                                          [(implements)
-                                                           (syntax->list #'(id ...))]
-                                                          [(implements_visibilities)
-                                                           '(protected)]
-                                                          [else null])]
+                       [(#:extends (id name)) (if (eq? key 'extends)
+                                                  (list #'id)
+                                                  null)]
+                       [(#:implements (id name) ...) (case key
+                                                       [(implements)
+                                                        (syntax->list #'(id ...))]
+                                                       [(implements_visibilities)
+                                                        '(public)]
+                                                       [else null])]
+                       [(#:private-implements (id name) ...) (case key
+                                                               [(implements)
+                                                                (syntax->list #'(id ...))]
+                                                               [(implements_visibilities)
+                                                                '(private)]
+                                                               [else null])]
+                       [(#:protected-implements (id name) ...) (case key
+                                                                 [(implements)
+                                                                  (syntax->list #'(id ...))]
+                                                                 [(implements_visibilities)
+                                                                  '(protected)]
+                                                                 [else null])]
                        [(#:field mutability id rhs-id ann-seq default form-id mode)
                         (case key
                           [(field-names) (list #'id)]

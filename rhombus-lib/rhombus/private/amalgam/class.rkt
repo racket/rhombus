@@ -336,9 +336,11 @@
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-params ...)))
        (define parent-name (hash-ref options 'extends #f))
+       (define parent-src-name (hash-ref options 'extends-name #f))
        (define super (and parent-name
                           (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)))
        (define interface-names (reverse (hash-ref options 'implements '())))
+       (define interface-src-names (reverse (hash-ref options 'implements-name '())))
        (define-values (all-interfaces interfaces) (interface-names->interfaces stxes interface-names
                                                                                #:results values))
        (define-values (private-interfaces protected-interfaces)
@@ -478,14 +480,14 @@
 
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
-                       method-names    ; index -> symbol-or-identifier
+                       method-names    ; index -> identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces
+         (extract-method-tables stxes added-methods super interfaces parent-src-name interface-src-names
                                 private-interfaces protected-interfaces
                                 final? prefab?))
 
@@ -594,7 +596,9 @@
                         super-field-argument)
                        ...)
                       (if super
-                          (class-desc-fields super)
+                          (for/list ([field (in-list (class-desc-fields super))])
+                            (cons (datum->syntax parent-name (car field))
+                                  (cdr field)))
                           '())]
                      [(super-field-keyword ...) super-keywords]
                      [(export ...) exs])
@@ -686,7 +690,7 @@
                        [super-protected-flds (if (and super (class-desc-all-fields super))
                                                  (for/list ([a-field (in-list (class-desc-all-fields super))]
                                                             #:when (protect? a-field))
-                                                   (protect-v a-field))
+                                                   (datum->syntax parent-name (protect-v a-field)))
                                                  null)]
                        [serializable serializable])
            (define defns
@@ -701,7 +705,7 @@
                               #'(name reflect-name name? #f reconstructor-name serializer-name
                                       prop-methods-ref
                                       all-static-infos
-                                      [(field-name) ... super-field-name ...]
+                                      [field-name ... super-field-name ...]
                                       [field-static-infos ... super-field-static-infos ...]
                                       [name-field ... super-name-field ...]
                                       [maybe-set-name-field! ... super-maybe-set-name-field! ...]
@@ -975,7 +979,7 @@
                              ([v (in-vector method-vtable)]
                               [i (in-naturals)])
                      (define name (hash-ref method-names i))
-                     (define mix (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
+                     (define mix (hash-ref method-mindex (syntax-e name)))
                      (cond
                        [(mindex-protected? mix)
                         ;; omit from dynamic-dispatch table
