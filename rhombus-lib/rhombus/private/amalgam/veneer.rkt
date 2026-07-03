@@ -211,9 +211,11 @@
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-params ...)))
        (define parent-name (hash-ref options 'extends #f))
+       (define parent-src-name (hash-ref options 'extends-name #f))
        (define super (and parent-name
                           (syntax-local-value* (in-class-desc-space parent-name) veneer-desc-ref)))
        (define interface-names (reverse (hash-ref options 'implements '())))
+       (define interface-src-names (reverse (hash-ref options 'implements-name '())))
        (define-values (all-interfaces interfaces) (interface-names->interfaces stxes interface-names
                                                                                #:results values))
        (define-values (private-interfaces protected-interfaces)
@@ -260,7 +262,7 @@
                        method-private-inherit ; symbol -> (vector ref-id index maybe-result-id)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces parent-name interface-names
+         (extract-method-tables stxes added-methods super interfaces parent-src-name interface-src-names
                                 private-interfaces protected-interfaces
                                 final? #f))
 

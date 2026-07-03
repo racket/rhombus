@@ -529,3 +529,16 @@ block:
       "append"
   check V(#false)[#false] ~is "get"
   check V(#false) ++ V(#false) ~is "append"
+
+namespace db:
+  export: Connection Comparable
+  veneer Connection(this :~ Any):
+    method list_tables() :~ List.of(String):
+      ["a", "b"]
+veneer Connection(this :: db.Connection):
+  extends db.Connection
+  implements db.Comparable
+  method initialize():
+    def tables = list_tables()
+    tables
+  override method compare_to(o): 0
