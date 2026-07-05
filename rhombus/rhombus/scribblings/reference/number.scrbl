@@ -196,7 +196,7 @@ but the @rhombus(to_string) conversion of a complex number omits
   annot.macro 'Rational'
 ){
 
- Matches @tech{rational numbers}: the same numbers as @rhombus(Real)
+ Matches @tech{rational numbers}: the same numbers as @rhombus(Real, ~annot)
  except for @rhombus(#inf), @rhombus(#neginf), and @rhombus(#nan).
 
 @examples(
@@ -210,7 +210,7 @@ but the @rhombus(to_string) conversion of a complex number omits
   annot.macro 'Integral'
 ){
 
- Matches the same numbers as @rhombus(Int) plus @tech{real numbers} that have
+ Matches the same numbers as @rhombus(Int, ~annot) plus @tech{real numbers} that have
  no fractional component.
 
 @examples(

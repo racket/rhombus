@@ -115,14 +115,14 @@ unspecialized and flonum-specific operations.
 
 @doc(
   fun flonum.from_int(n :: Int) :: Flonum
-  fun flonum.to_int(x :: Flonum) :: Int
+  fun flonum.to_int(x :: Flonum && Integral) :: Int
 ){
 
  Converts flonums from and to integers. The @rhombus(flonum.from_int)
  function produces @rhombus(#inf) or @rhombus(#neginf) when @rhombus(n)
  has a large enough magnitude. The @rhombus(flonum.to_int) function
- truncates flonums that have a fractional component, and it reports an
- error when given @rhombus(#inf), @rhombus(#neginf), or @rhombus(#nan).
+ raises an exception when given @rhombus(#inf), @rhombus(#neginf),
+ @rhombus(#nan), or a flonum that has a fractional component.
 
 }
 
