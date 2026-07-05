@@ -292,3 +292,8 @@
 (check-fail " (e\n,f)" #rx"wrong indentation")
 (check-fail "pick | one (\n         b\n) | two" #rx"alternative cannot start before group's initial column")
 (check-fail "outer:\n    a { b\n } | c\n     d" #rx"alternative cannot start before group's initial column")
+
+(check-fail "a; b\n | 1" #rx"wrong indentation")
+(check-fail "a; b:\n1" #rx"empty block not allowed")
+(check-fail "a; b:\n 1" #rx"empty block not allowed")
+(check-fail "a; b:\n   1" #rx"empty block not allowed")

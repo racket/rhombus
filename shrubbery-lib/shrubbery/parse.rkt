@@ -413,7 +413,7 @@
                  (parse-groups rest-l (struct-copy group-state sg
                                                    [check-column? (next-line?* rest-l last-line)]
                                                    [column (or (group-state-column sg) column)]
-                                                   [bar-column #f]
+                                                   [bar-column (token-column next-t)]
                                                    [last-line last-line]
                                                    [delta delta]
                                                    [commenting (group-state-tail-commenting sg)]
@@ -544,6 +544,7 @@
                                                   [bar-closes-line (next-block-close-line (group-state-bar-closes-line sg)
                                                                                           line
                                                                                           group-end-line)]
+                                                  [bar-column #f]
                                                   [delta group-delta]
                                                   [commenting #f]
                                                   [tail-commenting group-tail-commenting]

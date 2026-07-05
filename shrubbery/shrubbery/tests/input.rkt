@@ -1588,6 +1588,12 @@ pick | one (
          b
 )    | two
 
+a; b:
+     c
+
+a; b
+   | c
+
 something +
 more stuff
 
@@ -1730,6 +1736,8 @@ INPUT
     (group a w List (parens (group x) (group z)) (alts (block (group b))))
     (group a (alts (block (group w List (parens (group x) (group z)))) (block (group b))))
     (group pick (alts (block (group one (parens (group b)))) (block (group two))))
+    (group a) (group b (block (group c)))
+    (group a) (group b (alts (block (group c))))
     (group something (op +))
     (group more stuff)
     (group something (block (group more stuff)))

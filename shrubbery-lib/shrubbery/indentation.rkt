@@ -304,7 +304,7 @@
              ;; can also indent by an extra step?
              [plus-one-more? (and as-operator
                                   ((variant-indented-operator-continue? variant) as-operator))]
-             ;; did we just skip over and armored sequence?
+             ;; did we just skip over an armored sequence?
              [armored? #f])
     ;; helper
     (define (maybe-list col [plus-one-more? #f])
@@ -378,8 +378,6 @@
                                           ;; block is empty so far, so son't go outside it
                                           null))
              (append (cond
-                       [(and #f bar-after? (not as-bar?))
-                        null]
                        [candidate
                         ;; we already have something after `:`, so
                         ;; use its indentation
@@ -474,7 +472,22 @@
                                ;; outer candidates
                                (loop (sub1 (or another-bar-start s)) #f (min* bar-column limit) #t #f #f)))])]
                [(semicolon-operator)
-                (loop (sub1 s) candidate limit bar-after? #f #f)]
+                (cond
+                  [as-bar?
+                   (define start (line-start t s))
+                   (define new-pos (skip-groups-line t s start stop-pos))
+                   (cond
+                     [new-pos
+                      (define outer-candidates (loop new-pos candidate (min* (col-of s start) limit) #f #f #f))
+                      (if candidate
+                          (cons candidate outer-candidates)
+                          outer-candidates)]
+                     [else
+                      (if candidate
+                          (list candidate)
+                          null)])]
+                  [else
+                   (loop (sub1 s) candidate limit bar-after? #f #f)])]
                [(comma-operator)
                 (cond
                   [candidate (maybe-list candidate plus-one-more?)]
@@ -498,7 +511,7 @@
 ;;     reliably if `as-bar?` and the first result is #f, or #f (all modes)
 ;;     to mean that not outer group is possible
 (define (find-bar-same-line t orig-pos at-start as-bar?)
-  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [limit-pos (sub1 orig-pos)])
+  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [limit-pos orig-pos #;(sub1 orig-pos)])
     (cond
       [(negative? pos) (values #f limit-pos)]
       [else
@@ -581,6 +594,35 @@
      (skip-block-operator t (sub1 s))]
     [(block-operator) (sub1 s)]
     [else pos]))
+
+;; skip past `;` and similar to pass groups on the same line
+(define (skip-groups-line t pos at-start limit-pos)
+  (let loop ([pos pos] [at-start at-start])
+    (cond
+      [(pos . < . limit-pos) #f]
+      [else
+       (define-values (s e) (get-token-range t pos))
+       (define category (classify-position t s))
+       (case category
+         [(whitespace comment)
+          (loop (sub1 s) at-start)]
+         [(continue-operator)
+          (loop (sub1 s) (line-start t s))]
+         [else
+          (define pos-start (line-start t pos))
+          (cond
+            [(pos-start . < . at-start) pos]
+            [else
+             (case category
+               [(opener) #f]
+               [(closer)
+                ;; Found parenthesized while walking backward
+                (define r (send t backward-match e 0))
+                (cond
+                  [(not r) #f]
+                  [else (loop (sub1 r) (line-start t r))])]
+               [(bar-operator block-operator) pos]
+               [else (loop (sub1 s) at-start)])])])])))
 
 (define (bar-after-group-comment? t pos at-start)
   (let loop ([pos pos])
