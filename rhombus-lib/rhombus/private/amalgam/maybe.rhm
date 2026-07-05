@@ -114,28 +114,27 @@ meta:
       v_tail
     )
 
-repet.macro '$e ?. $(id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
+repet.macro '$e ?. $(field_id :: Identifier) $(args && '($_, ...)') ... ~once $tail ...':
   ~order: member_access
   ~op_stx: self
   let '($src, $binds, $body, $used_depth, $staticinfos)' = repet_meta.unpack_generator(e)
-  let left = repet_meta.pack_generator('($src, $binds, $body, $used_depth, $(demaybe_statinfos(staticinfos)))')
-  let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self), ~space: repet_meta.space)
+  let de_staticinfos = demaybe_statinfos(staticinfos)
+  let id = 'v'
+  let id_expr = statinfo_meta.replace(expr_meta.pack_s_exp(id), // packing can avoid an unbound-identifier error
+                                      de_staticinfos)
+  let dot = syntax_meta.dynamic_name('.', ~as_static: syntax_meta.is_static(self))
   let dot = dot.relocate(self)
-  let '$(v :: repet_meta.Parsed)' = '$left $dot $id $args ...'
-  let '($src, $binds, $body, $used_depth, $staticinfos)' = repet_meta.unpack_generator(v)
-  match binds
-  | '($_, ..., ((($id), $_)))':
-      let new_body: 'block:
-                       if $id
-                       | $body
-                       | #false'
-      let new_staticinfos = '(($statinfo_meta.maybe_key, $staticinfos))'
-      values(repet_meta.pack_generator('($src, $binds, $new_body, $used_depth, $new_staticinfos)'),
-             '$tail ...')
-  | '()':
-      values(v, '$tail ...')
-  | ~else:
-      syntax_meta.error("repetition expansion does not have a single input", '$e $self $id $args ...')
+  let '$(v_finish :: expr_meta.Parsed)' = '$id_expr $dot $field_id $args ...'
+  let finish_staticinfos = statinfo_meta.gather(v_finish)
+  let new_body: 'block:
+                   let $id:
+                     $body
+                   if $id
+                   | $v_finish
+                   | #false'
+  let new_staticinfos = '(($statinfo_meta.maybe_key, $finish_staticinfos))'
+  values(repet_meta.pack_generator('($src, $binds, $new_body, $used_depth, $new_staticinfos)'),
+         '$tail ...')
 
 fun definitely_failed(who, srcloc):
   throw Exn.Fail.Annot(who +& ": claimed not false, but actual value is false",

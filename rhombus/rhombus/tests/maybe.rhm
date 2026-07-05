@@ -66,3 +66,14 @@ block:
   check: dynamic(#false) :: String && maybe(String)
          ~throws error.annot_msg()
 
+block:
+  syntax_class TwoTerms:
+    kind: ~sequence
+  | '$fst $snd'
+  syntax_class MaybeTwoTerms:
+    kind: ~sequence
+    fields: two_terms :~ maybe(Syntax.matched_of(TwoTerms))
+  | '$(two_terms :: TwoTerms)'
+  | '': field two_terms = #false
+  let ['$(mtt :: MaybeTwoTerms)', ...] = ['1 2', '']
+  check [mtt.two_terms?.snd, ...] ++ ["ok"] ~matches ['2', #false, "ok"]

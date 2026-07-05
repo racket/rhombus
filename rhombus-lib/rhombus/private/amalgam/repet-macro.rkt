@@ -79,7 +79,7 @@
     [_ (raise-bad-macro-result (proc-name proc) "repetition" form)]))
 
 (define-for-syntax (wrap-parsed stx)
-  #`(parsed #:rhombus/repet #,stx))
+  (no-srcloc #`(parsed #:rhombus/repet #,stx)))
 
 (define-for-syntax (make-repetition-infix-operator order prec protocol proc assc)
   (repetition-infix-operator

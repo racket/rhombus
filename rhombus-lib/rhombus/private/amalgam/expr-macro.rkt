@@ -177,9 +177,9 @@
 (begin-for-syntax
   (define/arity (expr_meta.pack_s_exp orig-s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    #`(parsed
-       #:rhombus/expr
-       #,(pack-s-exp who orig-s)))
+    (no-srcloc #`(parsed
+                  #:rhombus/expr
+                  #,(pack-s-exp who orig-s))))
 
   (define/arity (expr_meta.pack_expr s)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
