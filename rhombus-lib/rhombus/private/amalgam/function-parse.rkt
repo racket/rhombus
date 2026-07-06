@@ -1322,10 +1322,12 @@
                                        (+ (length rands) (length extra-args))
                                        null
                                        #f
-                                       get-arg-static-infos))]
+                                       get-arg-static-infos
+                                       #t))]
                                 [else #'()])
                               (and result-static-infos
-                                   (force-call-results result-static-infos get-arg-static-infos))))
+                                   (force-call-results result-static-infos get-arg-static-infos
+                                                       #:close-dependent? #t))))
         (define arity (arithmetic-shift 1 (length formals)))
         (values (let* ([fun (relocate+reraw
                              (or srcloc
@@ -1505,7 +1507,7 @@
    #f))
 
 ;; finds arity-specific result info; does not support keyword arguments, for now
-(define-for-syntax (find-call-result-at results arity kws kw-rest? get-arg-static-infos)
+(define-for-syntax (find-call-result-at results arity kws kw-rest? get-arg-static-infos [close-dependent? #f])
   (syntax-parse results
     [(#:at_arities r)
      (let loop ([r #'r])
@@ -1514,7 +1516,8 @@
           (cond
             [(not arity)
              ;; intersect all cases
-             (define res (force-call-results #'results get-arg-static-infos))
+             (define res (force-call-results #'results get-arg-static-infos
+                                             #:close-dependent? close-dependent?))
              (if (null? (syntax-e #'rest))
                  res
                  (static-infos-and res (loop #'rest)))]
@@ -1530,27 +1533,34 @@
                  (if (or (not kw-rest?)
                          (and (not (syntax-e allow-kws))
                               (sorted-list-subset? (syntax->datum req-kws) kws)))
-                     (force-call-results #'results get-arg-static-infos)
+                     (force-call-results #'results get-arg-static-infos
+                                         #:close-dependent? close-dependent?)
                      ;; we don't know whether the call matches or not, so stop searching
                      #'())
                  (loop #'rest))])]
          [_ #'()]))]
-    [_ (force-call-results results get-arg-static-infos)]))
+    [_ (force-call-results results get-arg-static-infos #:close-dependent? close-dependent?)]))
 
 ;; applies dependent-result specification to produce a specialized result
-(define-for-syntax (force-call-results static-infos get-arg-static-infos)
+(define-for-syntax (force-call-results static-infos get-arg-static-infos
+                                       #:close-dependent? [close-dependent? #f])
   (cond
     [(static-info-lookup static-infos #'#%dependent-result)
      => (lambda (d)
           (define si (static-infos-remove static-infos #'#%dependent-result))
           (syntax-parse d
             [(id:identifier data . env)
-             (define proc (get-dependent-result-proc #'id))
              (define deps (get-arg-static-infos (dependency-env-decode #'env #t)))
-             (if deps
-                 (dependency-env-capture (static-infos-and si (proc #'data deps))
-                                         (lambda (env) deps))
-                 si)]
+             (cond
+               [close-dependent?
+                (dependency-env-capture static-infos
+                                        (lambda (env) deps))]
+               [else
+                (define proc (get-dependent-result-proc #'id))
+                (if deps
+                    (dependency-env-capture (static-infos-and si (proc #'data deps))
+                                            (lambda (env) deps))
+                    si)])]
             [_ si]))]
     [(static-info-lookup static-infos #'#%values)
      => (lambda (d)

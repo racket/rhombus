@@ -16,6 +16,7 @@
                      "group.rkt"
                      "name-path-op.rkt"
                      "annot-context.rkt"
+                     (submod "annot-context.rkt" for-call-result)
                      "class-parse.rkt"
                      "origin.rkt"
                      "annotation-failure.rkt"
@@ -1687,8 +1688,3 @@
   (syntax-parse stx
     [(_ arg-id () (converted-val val))
      #'(define val converted-val)]))
-
-(begin-for-syntax
-  (define find-call-result-at (lambda (results arity kws kw-rest? get-arg-static-infos) #f))
-  (define (set-find-call-result-at! proc)
-    (set! find-call-result-at proc)))

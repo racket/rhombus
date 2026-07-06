@@ -19,3 +19,16 @@ check:
 check:
   [1, 2, 3] |> List.reverse ~is [3, 2, 1]
   100 |> (3 * _) ~is 300
+
+block:
+  use_static
+  fun ident(x) :: Any.like(x):
+    x
+  check (ident(_)("foo")).length() ~is 3
+  check ident(_)("foo").length() ~is 3
+
+  fun ident2(x, y) :: Any.like(x) && Any.like(y):
+    y
+  check ident2("x", "y").length() ~is 1
+  check ident2(_, "y")("x").length() ~is 1
+  check ident2("x", _)("y").length() ~is 1

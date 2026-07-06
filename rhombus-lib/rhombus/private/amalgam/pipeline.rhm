@@ -33,11 +33,17 @@ meta:
          $func $call (arg)'
     // Propagate static information, if any, for the call result:
     let ress = statinfo_meta.lookup(func, statinfo_meta.call_result_key)
-    let ress: if ress | statinfo_meta.unpack_call_result(ress) | []
-    let [_, unpacked_res]:
-      ress.find(fun ([mask, unpacked_info]): mask bits.and 2)
-        || [-1, '()']
-    values(statinfo_meta.wrap(expr, unpacked_res),
+    let res_si: if ress
+                | statinfo_meta.unpack_call_result_for(
+                    ress,
+                    annot_meta.Dependencies(PairList[arg_si],
+                                            {},
+                                            {},
+                                            #false,
+                                            #false)
+                  )
+                | '()'
+    values(statinfo_meta.wrap(expr, res_si),
            tail)
 
 operator_order.def pipeline:

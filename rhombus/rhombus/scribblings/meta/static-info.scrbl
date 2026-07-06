@@ -138,7 +138,8 @@
  @rhombus(statinfo_meta.unpack), but for information that represents
  function-call results, where a result may be specific to different
  numbers of arguments. Information of this shape is used with
- @rhombus(statinfo_meta.call_result_key).
+ @rhombus(statinfo_meta.call_result_key). See also
+ @rhombus(statinfo_meta.unpack_call_result_for).
 
  Each @rhombus(arity_mask) has a bit set for each number of arguments
  where the associated @rhombus(statinfo_stx) describes the function
@@ -153,6 +154,23 @@
  @rhombus(statinfo_meta.dependent_result_key) mapping can be included
  in a @rhombus(statinfo_stx) to implement that dependency, where the
  value is packed by @rhombus(statinfo_meta.pack_dependent_result).
+}
+
+@doc(
+  fun statinfo_meta.unpack_call_result_for(
+    call_stx :: Syntax,
+    args :: annot_meta.Dependencies
+  ) :: Syntax
+){
+
+ Similar to @rhombus(statinfo_meta.unpack_call_result), but further
+ processes the result based on the argument description in
+ @rhombus(args). The number of by-position arguments and the keyword
+ arguments described in @rhombus(args) determine the arity-specific
+ result that is used, and a @rhombus(statinfo_meta.dependent_result_key)
+ mapping is further resolved to compute dependent static information.
+ The result is unpacked static information.
+
 }
 
 @doc(
@@ -397,7 +415,8 @@
   @item{@rhombus(statinfo_meta.dependent_result_key): Packed ``closure''
         to represent result static information within a @rhombus(statinfo_meta.call_result_key)
         that depends on static information from actual-argument expressions;
-        see @rhombus(statinfo_meta.unpack_call_result).}
+        see @rhombus(statinfo_meta.unpack_call_result). See also
+        @rhombus(statinfo_meta.unpack_call_result_for).}
 
   @item{@rhombus(statinfo_meta.index_result_key): Packed static information
         for the result value if the expression is used with

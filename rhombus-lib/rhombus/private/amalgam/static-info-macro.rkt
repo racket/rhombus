@@ -23,6 +23,7 @@
                      (submod "list.rkt" for-compound-repetition)
                      "syntax-wrap.rkt"
                      "annot-context.rkt"
+                     (submod "annot-context.rkt" for-call-result)
                      (submod "map.rkt" for-info)
                      "number.rkt"
                      (for-syntax racket/base))
@@ -68,6 +69,7 @@
      [unpack_group statinfo_meta.unpack_group]
      [pack_call_result statinfo_meta.pack_call_result]
      [unpack_call_result statinfo_meta.unpack_call_result]
+     [unpack_call_result_for statinfo_meta.unpack_call_result_for]
      [pack_dependent_result statinfo_meta.pack_dependent_result]
      [unpack_dependent_result statinfo_meta.unpack_dependent_result]
      [check_function_arity statinfo_meta.check_function_arity]
@@ -245,7 +247,7 @@
              `(,(treelist-ref i 0)
                ,(pack-static-infos who (treelist-ref i 1))))))]))
 
-  (define/arity (statinfo_meta.unpack_call_result stx)
+  (define/arity (statinfo_meta.unpack_call_result stx #:args [args #f])
     #:static-infos ((#%call-result ((#%index-result
                                      ((#%index-result (#:at_index #f
                                                        (0 #,(get-int-static-infos))
@@ -266,6 +268,19 @@
                                     "syntax object" stx)]))]
       [_
        (treelist (treelist -1 (unpack-static-infos who stx)))]))
+
+  (define/arity (statinfo_meta.unpack_call_result_for stx args)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (unless (annotation-dependencies? args)
+      (raise-annotation-failure who args "annot_meta.Dependencies"))
+    (define res-si
+      (find-call-result-at stx
+                           (length (annotation-dependencies-args args))
+                           (hash-keys (annotation-dependencies-kw-args args))
+                           (annotation-dependencies-kw-rest? args)
+                           (lambda (env) args)))
+    (unpack-static-infos who res-si))
 
   (define/arity (statinfo_meta.pack_dependent_result id-stx data [env (hasheq)])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

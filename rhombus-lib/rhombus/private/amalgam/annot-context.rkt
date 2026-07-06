@@ -9,7 +9,11 @@
          empty-annot-context
          (struct-out annotation-dependencies)
          dependency-env-encode
-         dependency-env-decode)
+         dependency-env-decode
+         set-find-call-result-at!)
+
+(module+ for-call-result
+  (provide find-call-result-at))
 
 ;; An `annotation-context` holds information analogous to a compile-time
 ;; environment: it reports what argument names can be used in
@@ -56,7 +60,7 @@
   #:guard (lambda (args kw-args env rest? kw-rest? info)
             (define who 'annot_meta.Dependencies)
             (unless (list? args)
-              (raise-annotation-failure who args "List"))
+              (raise-annotation-failure who args "PairList"))
             (unless (immutable-hash? kw-args)
               (raise-annotation-failure who kw-args "Map"))
             (unless (immutable-hash? env)
@@ -92,3 +96,7 @@
          [else (and (not only-si?) (syntax->datum #'enc-v))]))
      (dependency-env-decode #'rest only-si? (if v (hash-set ht #'k v) ht))]
     [_ ht]))
+
+(define find-call-result-at (lambda (results arity kws kw-rest? get-arg-static-infos) #f))
+(define (set-find-call-result-at! proc)
+  (set! find-call-result-at proc))
