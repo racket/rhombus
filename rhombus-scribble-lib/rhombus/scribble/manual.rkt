@@ -11,14 +11,16 @@
          "private/example.rhm"
          "private/rhombus-doc.rkt"
          "private/rhombus-spacer.rhm"
-         "private/manual-text.rhm")
+         "private/manual-text.rhm"
+         "private/history.rhm")
 
 (provide (all-from-out rhombus/scribble
                        "private/rhombus.rhm"
                        "private/rhombus_typeset.rhm"
                        "private/rhombus_using_var.rhm"
                        "private/rhombus-doc.rkt"
-                       "private/manual-text.rhm")
+                       "private/manual-text.rhm"
+                       "private/history.rhm")
          (rename-out [rhombus:if if])
          (for-space rhombus/decl
                     (rename-out

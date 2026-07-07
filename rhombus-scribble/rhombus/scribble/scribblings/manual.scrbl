@@ -20,3 +20,4 @@ typesetting and documenting Rhombus programs.
 @include_section("examples.scrbl")
 @include_section("spacer.scrbl")
 @include_section("doc_meta.scrbl")
+@include_section("history.scrbl")

@@ -1,0 +1,34 @@
+#lang rhombus/static/and_meta
+
+import:
+  "util.rhm" open
+  lib("racket/base.rkt").quote
+  lib("scribble/manual.rkt").history as rkt_history
+  meta:
+    rhombus/version.Version
+
+export:
+  history
+
+meta:
+  syntax_class VersionString
+  | '$(s :: String)':
+      match_when s.unwrap() is_a Version
+  syntax_class HistoryClause:
+    fields: [form, ...]
+  | '~added $(vers :: VersionString)':
+      field [form, ...] = ['~added',
+                           expr_meta.pack_s_exp(['quote', vers])]
+  | '~changed $(vers :: VersionString): $(e :: expr_meta.Parsed)':
+      field [form, ...] = ['~changed',
+                           expr_meta.pack_s_exp(['quote', vers]),
+                           expr_meta.pack_expr('convert($e)')]
+
+expr.macro 'history:
+              $(clause  :: HistoryClause)
+              ...':
+  expr_meta.pack_s_exp(['rkt_history', clause.form, ..., ...])
+
+fun convert(v :: PreContent):
+  ~name: history
+  v
