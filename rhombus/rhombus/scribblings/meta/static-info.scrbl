@@ -171,6 +171,9 @@
  mapping is further resolved to compute dependent static information.
  The result is unpacked static information.
 
+@(history:
+    ~added "1.0.0.1")
+
 }
 
 @doc(
