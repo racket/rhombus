@@ -171,7 +171,8 @@
         "srcloc-object.rkt"
         "stream.rkt"
         "weak-box.rkt"
-        "ephemeron.rkt")
+        "ephemeron.rkt"
+        "annot.rkt")
 
 (module reader racket/base
   (require (submod rhombus/private/core reader))

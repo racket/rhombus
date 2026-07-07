@@ -35,6 +35,39 @@
 
 @doc(
   ~nonterminal:
+    as_annot: :: annot
+  defn.macro 'annot.def $id_name = $as_annot'
+  defn.macro 'annot.def $id_name: $as_annot'
+){
+
+ Defines @rhombus(id_name) as equivalent to @rhombus(as_annot).
+
+ Unlike @rhombus(annot.macro '$id_name' = '$as_annot'), @rhombus(as_annot) is
+ parsed once at the definition, instead of delayed until each use of
+ @rhombus(id_name), and only one copy of each run-time component of
+ @rhombus(as_annot) is generated.
+
+ The @rhombus(annot, ~defn) form provided by @rhombuslangname(rhombus) is an
+ alias of @rhombus(annot.def)
+
+@examples(
+  ~eval: macro_eval
+  ~defn:
+    annot.def TwoInt = [Int, Int]
+  ~repl:
+    [1, 2] :: TwoInt
+    ~error:
+      [1, 2, 3] :: TwoInt
+)
+
+@(history:
+    ~added "1.0.0.1")
+
+}
+
+
+@doc(
+  ~nonterminal:
     macro_patterns: expr.macro ~defn
     option: macro ~defn
 
@@ -47,18 +80,27 @@
 
  Like @rhombus(expr.macro), but defines an identifier or operator as an
  annotation form in the @rhombus(annot, ~space) @tech{space}.
- The result of the macro expansion can be a result
- created with @rhombus(annot_meta.pack_predicate).
+ The result of the macro expansion can be a syntax object to
+ further expand, or it can be a result created with
+ @rhombus(annot_meta.pack_predicate) or
+ @rhombus(annot_meta.pack_converter).
+
+ Use @rhombus(annot.def, ~defn) when possible, instead of
+ @rhombus(annot.macro, ~defn), since @rhombus(annot.def, ~defn) avoids
+ duplicating implementation. The @rhombus(annot.macro, ~defn) form is
+ more general, however.
 
 @examples(
   ~eval: macro_eval
-  annot.macro 'two_of($ann)':
-    'matching(List[_ :: $ann, _ :: $ann])'
-  [1, 2] :: two_of(Number)
-  ~error:
-    [1, 2, 3] :: two_of(Number)
-  ~error:
-    [1, "x"] :: two_of(Number)
+  ~defn:
+    annot.macro 'two_of($ann)':
+      'matching(List[_ :: $ann, _ :: $ann])'
+  ~repl:
+    [1, 2] :: two_of(Number)
+    ~error:
+      [1, 2, 3] :: two_of(Number)
+    ~error:
+      [1, "x"] :: two_of(Number)
 )
 
  See @secref("stxobj-track") for information about expansion tracking,
@@ -76,7 +118,6 @@
  be passed along.
 
 }
-
 
 @doc(
   ~meta

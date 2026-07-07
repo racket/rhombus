@@ -84,6 +84,34 @@
 }
 
 @doc(
+  ~nonterminal:
+    as_annot: :: annot
+  defn.macro 'annot $id_name = $as_annot'
+  defn.macro 'annot $id_name: $as_annot'
+){
+
+ Defines @rhombus(id_name) as equivalent to @rhombus(as_annot).
+
+ The @rhombusmodname(rhombus/meta) module provides
+ @rhombus(annot.def, ~defn), which is equivalent to
+ @rhombus(annot, ~defn), and @rhombus(annot.macro, ~defn), which is more
+ general.
+
+@examples(
+  ~defn:
+    annot TwoInt = [Int, Int]
+  ~repl:
+    [1, 2] :: TwoInt
+    ~error:
+      [1, 2, 3] :: TwoInt
+)
+
+@(history:
+    ~added "1.0.0.1")
+
+}
+
+@doc(
   annot.macro 'Any'
   annot.macro 'Any.of($expr, ...)'
   annot.macro 'Any.to_boolean'

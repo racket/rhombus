@@ -39,10 +39,10 @@ annotations.
 @rhombusblock(
   use_static
 
-  annot.macro 'PosnList': 'List.of(Posn)'
+  annot.macro 'PosnOfList($x, $y)': 'List.of(Posn.of($x, $y))'
 
-  fun nth_x(ps :~ PosnList, n):
-    ps[n].x
+  fun nth_x(ps :~ PosnOfList(Flonum, Flonum), n, scale :: Flonum):
+    ps[n].x * scale
 )
 
 Annotations and binding patterns serve similar and interacting purposes.
@@ -61,9 +61,9 @@ specialization, but the @rhombus(Map) binding pattern can.
   ~hidden:
     class Posn(x, y)
   ~defn:
-    annot.macro 'PersonList':
-      'List.of(matching({"name": (_ :: String),
-                         "location": (_ :: Posn)}))'
+    annot PersonList:
+      List.of(matching({"name": (_ :: String),
+                        "location": (_ :: Posn)}))
 
     def players :: PersonList:
       [{"name": "alice", "location": Posn(1, 2)},
@@ -76,7 +76,7 @@ could be implemented if @rhombus(List.of, ~annot) did not exist already:
 @examples(
   ~eval: macro_eval
   ~defn:
-    annot.macro 'ListOf ($ann ...)':
+    annot.macro 'ListOf($ann ...)':
       'matching([_ :: ($ann ...), $('...')])'
 )
 

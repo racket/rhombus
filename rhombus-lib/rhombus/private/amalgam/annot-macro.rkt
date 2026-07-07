@@ -29,7 +29,8 @@
          "macro-macro.rkt"
          "wrap-expression.rkt"
          "annot-delayed.rkt"
-         "operator-compare.rkt")
+         "operator-compare.rkt"
+         "annot-def.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 annot_meta)))
@@ -40,6 +41,8 @@
 (define+provide-space annot rhombus/annot
   #:fields
   (macro
+   ;; "annot-def.rkt"
+   [def annot.def]
    ;; "annot-delayed.rkt"
    delayed_declare
    delayed_complete))

@@ -61,9 +61,9 @@ sorted.
 @examples(
   ~eval: bind_eval
   ~defn:
-    annot.macro 'AscendingIntList':
-      'converting(fun (ints :: List.of(Int)) :: List:
-                    ints.sort())'
+    annot AscendingIntList:
+      converting(fun (ints :: List.of(Int)) :: List:
+                   ints.sort())
   ~repl:
     [3, 1, 2] :: AscendingIntList
     fun descending(ints :: AscendingIntList):
@@ -91,9 +91,9 @@ elements, rather than checking and converting separately.
 @examples(
   ~eval: bind_eval
   ~defn:
-    annot.macro 'UTF8BytesAsString_oops':
-      'converting(fun (s :: Bytes):
-                    Bytes.utf8_string(s))'
+    annot UTF8BytesAsString_oops:
+      converting(fun (s :: Bytes):
+                   Bytes.utf8_string(s))
 
   ~repl:
     #"\316\273" :: UTF8BytesAsString_oops
@@ -102,21 +102,21 @@ elements, rather than checking and converting separately.
       #"\316" :: UTF8BytesAsString_oops
 
   ~defn:
-    annot.macro 'MaybeUTF8BytesAsString':
-      'converting(fun (s :: Bytes):
-                    try:
-                      Bytes.utf8_string(s)
-                      ~catch _: #false)'
+    annot MaybeUTF8BytesAsString:
+      converting(fun (s :: Bytes):
+                   try:
+                     Bytes.utf8_string(s)
+                     ~catch _: #false)
 
   ~repl:
     #"\316\273" :: MaybeUTF8BytesAsString
     #"\316" :: MaybeUTF8BytesAsString
 
   ~defn:
-    annot.macro 'UTF8BytesAsString':
+    annot UTF8BytesAsString:
       // matches only when `MaybeUTF8BytesAsString` produces a string
-      'converting(fun (str :: (MaybeUTF8BytesAsString && String)):
-                    str)'
+      converting(fun (str :: (MaybeUTF8BytesAsString && String)):
+                   str)
   ~repl:
     #"\316\273" :: UTF8BytesAsString
     #"\316" is_a UTF8BytesAsString

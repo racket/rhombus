@@ -1,0 +1,57 @@
+#lang rhombus
+
+block:
+  annot Digit = Int.in(0..=9)
+  check:
+    0 is_a Digit ~is #true
+    10 is_a Digit ~is #false
+    0 :: Digit ~is 0
+    -1 :: Digit ~throws error.annot_msg()
+  check:
+    use_static
+    fun f(x :: Digit, y :: Digit):
+      x < y
+    f(1, 2)
+    ~is #true
+
+block:
+  annot Evened = converting(fun (x :: Int): (x div 2) * 2)
+  check 4 :: Evened ~is 4
+  check 3 :: Evened ~is 2
+  check:
+    match 5
+    | x :: Evened: x
+    | ~else: 0
+    ~is 4
+  check:
+    match "5"
+    | x :: Evened: x
+    | ~else: 0
+    ~is 0
+
+block:
+  def mutable recent_count = 0
+  annot Even = satisfying(block:
+                            def mutable count = 0
+                            fun (x :: Int):
+                              count := count + 1
+                              recent_count := count
+                              x mod 2 == 0)
+  check 4 :: Even ~is 4
+  check 3 :: Even ~throws error.annot_msg()
+  check recent_count ~is 2
+  check 4 :~ Even ~is 4
+  check recent_count ~is 2
+  check:
+    match 7
+    | x :: Even: x
+    | ~else: "no"
+    ~is "no"
+  check recent_count ~is 3
+
+namespace ~open:
+  import:
+    rhombus/meta
+  meta.annot.def Even = satisfying(fun (x): x is_a Int && x mod 2 == 0)
+  check 10 :: Even ~is 10
+  check "10" is_a Even ~is #false
