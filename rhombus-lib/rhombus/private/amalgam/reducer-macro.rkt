@@ -8,7 +8,7 @@
                      "macro-result.rkt"
                      "static-info-pack.rkt"
                      "name-root.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "operator-syntax-class.rkt"
                      "realm.rkt"
                      "annotation-failure.rkt"
                      "define-arity.rkt"

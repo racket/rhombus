@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "name-root.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class))
+                     "operator-syntax-class.rkt")
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          (submod "module-path.rkt" for-import-export)

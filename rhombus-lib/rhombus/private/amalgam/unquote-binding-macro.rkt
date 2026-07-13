@@ -5,7 +5,7 @@
                      "name-root.rkt"
                      "pack.rkt"
                      "macro-result.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "operator-syntax-class.rkt"
                      (submod "class-meta.rkt" for-static-info)
                      (submod "symbol.rkt" for-static-info)
                      "define-arity.rkt"

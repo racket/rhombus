@@ -7,7 +7,7 @@
                      "srcloc.rkt"
                      "pack.rkt"
                      "pack-s-exp.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "operator-syntax-class.rkt"
                      "tail-returner.rkt"
                      "name-root.rkt"
                      "annotation-failure.rkt"

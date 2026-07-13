@@ -10,9 +10,7 @@
                      "parens.rkt"
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     (only-in (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
-                              define-syntax-class-syntax)
+                     "operator-syntax-class.rkt"
                      (submod "quasiquote.rkt" convert)
                      "op-literal.rkt"
                      "binding.rkt"

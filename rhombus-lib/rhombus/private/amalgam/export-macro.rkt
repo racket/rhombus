@@ -8,7 +8,7 @@
                      "tail-returner.rkt"
                      "name-root.rkt"
                      "syntax-wrap.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "operator-syntax-class.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)

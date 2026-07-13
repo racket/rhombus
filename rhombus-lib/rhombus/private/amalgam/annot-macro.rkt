@@ -6,8 +6,7 @@
                      "name-root.rkt"
                      "pack.rkt"
                      "static-info-pack.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
+                     "operator-syntax-class.rkt"
                      "tail-returner.rkt"
                      "macro-result.rkt"
                      "realm.rkt"

@@ -5,7 +5,7 @@
                      "pack.rkt"
                      "macro-result.rkt"
                      "name-root.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "operator-syntax-class.rkt"
                      "entry-point-adjustment-meta.rkt"
                      "macro-result.rkt"
                      "realm.rkt"
