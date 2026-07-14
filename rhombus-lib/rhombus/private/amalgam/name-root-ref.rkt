@@ -9,9 +9,6 @@
                      shrubbery/print
                      "srcloc.rkt"
                      "id-binding.rkt")
-         ;; to support `Syntax.same_binding` and `Syntax.meta_value`, this
-         ;; module is instantiated in phase 0 as well as 1, so keep the
-         ;; imports suitably limited
          "name-root-space.rkt")
 
 ;; convert a hierarchical layer implemented as portal syntax to a name-root

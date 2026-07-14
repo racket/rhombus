@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
-         racket/provide-syntax)
+                     syntax/parse/pre
+                     racket/provide-transform))
 
 ;; The `property` form is useful for defining a new structure-type
 ;; property for operators or transformers that apply to a specific
@@ -59,16 +59,18 @@
              (define-syntax name (make-rename-transformer #'convenience-name))
              define-accessor ...)))]))
 
-(define-provide-syntax (property-out stx)
-  (syntax-parse stx
-    [(_ name:identifier)
-     (with-syntax ([prop:name (format-id "prop:~a" #'name)]
-                   [name-ref (format-id "~a-ref" #'name)]
-                   [name? (format-id "~a?" #'name)])
-       #'(combine-out prop:name
-                      name
-                      name?
-                      name-ref))]))
+(define-syntax property-out
+  (make-provide-pre-transformer
+   (lambda (stx modes)
+     (syntax-parse stx
+       [(_ name:identifier)
+        (with-syntax ([prop:name (format-id "prop:~a" #'name)]
+                      [name-ref (format-id "~a-ref" #'name)]
+                      [name? (format-id "~a?" #'name)])
+          #'(combine-out prop:name
+                         name
+                         name?
+                         name-ref))]))))
 
 (define-for-syntax (format-id str ctx)
   (datum->syntax ctx

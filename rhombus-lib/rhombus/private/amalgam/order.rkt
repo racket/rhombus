@@ -4,7 +4,6 @@
                      enforest/operator
                      enforest/syntax-local
                      "introducer.rkt"
-                     "name-root.rkt"
                      (for-syntax racket/base)))
 
 (provide define-order-syntax
