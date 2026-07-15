@@ -316,3 +316,39 @@ block:
   check foo("ok!")("str").length() ~is 3
   check foo2("ok!")("str").length() ~is 3
   check foo3("ok!")("str", "str").length() ~is 3
+
+block:
+  fun foo(x :: Any) :: ((y :: Any) -> (Any.like(x) && Any.like(y))):
+    fun (y):
+      x
+  fun foo2(x :: Any) :: ((y :: Any) -> (Any.like(y) && Any.like(x))):
+    fun (y):
+      x
+  fun foo3(x :: Any) :: ((y :: Any) -> (Any.like(x) || Any.like(y))):
+    fun (y):
+      x
+  fun foo4(x :: Any) :: ((y :: Any) -> (Any.like(y) || Any.like(x))):
+    fun (y):
+      x
+  check foo("ok!")("str").length() ~is 3
+  check foo2("ok!")("str").length() ~is 3
+  check foo3("ok!")("str").length() ~is 3
+  check foo4("ok!")("str").length() ~is 3
+
+block:
+  fun foo(x :: String, y :: String) :: (() -> Any.like(x)) && (() -> Any.like(y)):
+    fun ():
+      x
+  fun foo2(x :: String, y :: String) :: (() -> Any.like(x)) && (() -> String):
+    fun ():
+      x
+  fun foo3(x :: String, y :: String) :: (() -> String) && (() -> Any.like(y)):
+    fun ():
+      x
+  fun foo4(x :: String, y :: String) :: (() -> String) && (() -> String):
+    fun ():
+      x
+  check foo("ok!", "str")().length() ~is 3
+  check foo2("ok!", "str")().length() ~is 3
+  check foo3("ok!", "str")().length() ~is 3
+  check foo4("ok!", "str")().length() ~is 3

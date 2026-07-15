@@ -463,30 +463,29 @@
   (static-info-key static-infos-or
                    static-infos-and))
 
-(define-for-syntax (merge-dependent-results as bs merge-dependent-id merge)
+(define-for-syntax (static-infos-maybe-dependent-result-merge as bs merge-dependent-id merge)
   (syntax-parse as
     #:literals (#%dependent-result)
-    [((#%dependent-result (~and a-clos (_ _ . a-env))))
+    [((#%dependent-result a-clos))
      (syntax-parse bs
        #:literals (#%dependent-result)
-       [((#%dependent-result (~and b-clos (_ _ . b-env))))
-        (define env (dependency-env-decode #'b-env #f
-                                           (dependency-env-decode #'a-env #f)))
-        #`((#%dependent-result (#,merge-dependent-id (a-clos b-clos) . #,(dependency-env-encode env))))]
+       [((#%dependent-result b-clos))
+        #`((#%dependent-result #,(static-infos-dependent-result-merge #'a-clos #'b-clos merge-dependent-id)))]
        [_
-        #`((#%dependent-result (#,merge-dependent-id (a-clos (independent #,bs)) . a-env)))])]
+        #`((#%dependent-result #,(static-infos-dependent-result-merge #'a-clos #`(independent #,bs) merge-dependent-id)))])]
     [_
      (syntax-parse bs
        #:literals (#%dependent-result)
-       [((#%dependent-result (~and b-clos (_ _ b-env))))
-        #`((#%dependent-result (#,merge-dependent-id ((independent #,as) b-clos) . b-env)))]
-       [_ (merge as bs)])]))
+       [((#%dependent-result b-clos))
+        #`((#%dependent-result #,(static-infos-dependent-result-merge #`(independent #,as) #'b-clos merge-dependent-id)))]
+       [_
+        (merge as bs)])]))
 
 (define-for-syntax (static-infos-maybe-dependent-result-and as bs)
-  (merge-dependent-results as bs #'merge-dependent-and static-infos-and))
+  (static-infos-maybe-dependent-result-merge as bs #'merge-dependent-and static-infos-and))
 
 (define-for-syntax (static-infos-maybe-dependent-result-or as bs)
-  (merge-dependent-results as bs #'merge-dependent-or static-infos-or))
+  (static-infos-maybe-dependent-result-merge as bs #'merge-dependent-or static-infos-or))
 
 (define-syntax independent
   (lambda (data deps)
@@ -502,27 +501,35 @@
                         id))
   proc)
 
+(define-for-syntax (static-infos-dependent-result-merge a-clos b-clos merge-dependent-id)
+  (syntax-parse a-clos
+    [(a-proc-id a-data . a-env)
+     (syntax-parse b-clos
+       [(b-proc-id b-data . b-env)
+        (define env (dependency-env-decode #'b-env #f
+                                           (dependency-env-decode #'a-env #f)))
+        #`(#,merge-dependent-id ((a-proc-id a-data) (b-proc-id b-data)) . #,(dependency-env-encode env))])]))
+
+(define-for-syntax (do-merge-dependent data deps merge)
+  (syntax-parse data
+    [((a-proc-id a-data) (b-proc-id b-data))
+     (define a-proc (get-dependent-result-proc #'a-proc-id))
+     (define b-proc (get-dependent-result-proc #'b-proc-id))
+     (merge (a-proc #'a-data deps) (b-proc #'b-data deps))]))
+
 (define-syntax merge-dependent-and
   (lambda (data deps)
-    (syntax-parse data
-      [((a-proc-id a-data) (b-proc-id b-data))
-       (define a-proc (get-dependent-result-proc #'a-proc-id))
-       (define b-proc (get-dependent-result-proc #'b-proc-id))
-       (static-infos-and (a-proc #'a-data deps) (b-proc #'b-data deps))])))
+    (do-merge-dependent data deps static-infos-and)))
 
 (define-syntax merge-dependent-or
   (lambda (data deps)
-    (syntax-parse data
-      [((a-proc-id a-data) (b-proc-id b-data))
-       (define a-proc (get-dependent-result-proc #'a-proc-id))
-       (define b-proc (get-dependent-result-proc #'b-proc-id))
-       (static-infos-or (a-proc #'a-data deps) (b-proc #'b-data deps))])))
+    (do-merge-dependent data deps static-infos-or)))
 
 (define-for-syntax (static-infos-dependent-result-and a-clos b-clos)
-  #`(merge-dependent-and (#,a-clos #,b-clos)))
+  (static-infos-dependent-result-merge a-clos b-clos #'merge-dependent-and))
 
 (define-for-syntax (static-infos-dependent-result-or a-clos b-clos)
-  #`(merge-dependent-or (#,a-clos #,b-clos)))
+  (static-infos-dependent-result-merge a-clos b-clos #'merge-dependent-or))
 
 (define-static-info-key-syntax/provide #%dependent-result
   (static-info-key static-infos-dependent-result-or
