@@ -406,3 +406,4 @@ meta:
                                        ['b b; b'.ephemeral_sequence().ephemeral_property(#'origin, 'c'),
                                         'b2 b2; b2'.ephemeral_sequence().ephemeral_property(#'origin, 'c2')])
       .ephemeral_sequence() ~matches 'a a; a'
+    syntax_meta.track_origin('foo', ~add: 'bar.baz') ~matches 'foo'

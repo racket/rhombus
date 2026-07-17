@@ -206,7 +206,8 @@
 
   (define (unpack-ids who id-stx-in sp)
     (unless (space-name? sp) (raise-annotation-failure who sp "SpaceMeta"))
-    (define names (or (let ([t (unpack-term/maybe id-stx-in)])
+    (define names (or (let ([t (and (syntax? id-stx-in)
+                                    (unpack-group id-stx-in #f #f))])
                         (and t
                              (list t)))
                       (to-list #f id-stx-in)))
