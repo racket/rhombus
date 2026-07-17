@@ -44,9 +44,14 @@
                                       ;; key and its wrapped key:
                                       (let ([keys (make-ephemeron-hasheq)])
                                         (lambda (ht key val)
-                                          (define x-key (x key))
-                                          (hash-set! keys x-key key)
-                                          (values x-key val))))
+                                          (cond
+                                            [(hash-ref keys key #f)
+                                             => (lambda (x-key)
+                                                  (values x-key val))]
+                                            [else
+                                             (define x-key (x key))
+                                             (hash-set! keys key x-key)
+                                             (values x-key val)]))))
                                   ;; remove
                                   (lambda (ht key)
                                     (x key))

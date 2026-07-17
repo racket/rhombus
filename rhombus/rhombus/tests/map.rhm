@@ -1666,3 +1666,21 @@ check:
   let [[x, ...], ...] = [[1], [2], [3]]
   [Map{x: x+1, ...}, ...]
   ~is [{1: 2}, {2: 3}, {3: 4}]
+
+check:
+  import: rhombus/meta open
+  class Wrapper(inner)
+  key_comp.def 'equal_inner':
+    ~equals:
+      fun(x :~ Wrapper, y :~ Wrapper, rec):
+        rec(x.inner, y.inner)
+    ~hash_code:
+      fun(w :~ Wrapper, rec):
+        rec(w.inner)
+
+  let m = WeakMutableMap.by(equal_inner){}
+  let w = Wrapper(42)
+  m[w] := #true
+  memory.gc()
+  m[w]
+  ~is #true
