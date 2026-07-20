@@ -726,3 +726,102 @@ check:
     method bottom(v):
       (if v | this | Top()).top()
   ~completes
+
+// check generated wrapper functions for methods
+block:
+  use_dynamic
+  class A():
+    method posn(x, y):
+      @str{posn: @x, @y}
+    method kw(~x, ~y):
+      @str{kw: @x, @y}
+    method posn_opt(x = "x", y = "y"):
+      @str{posn_opt: @x, @y}
+    method kw_opt(~x = "x", ~y = "y"):
+      @str{kw_opt: @x, @y}
+    method
+    | case1(): @str{case1}
+    | case1(x): @str{case1: @x}
+    | case1(x, y): @str{case1: @x, @y}
+    method
+    | case2(): @str{case2}
+    | case2(x, y): @str{case2: @x, @y}
+    method
+    | case3(): @str{case3}
+    | case3(x, y, & rst): @str{case3: @x, @y, @rst}
+    method
+    | kw_case1(~x): @str{kw_case1: @x}
+    | kw_case1(~y): @str{kw_case1: @y}
+    method
+    | kw_case2(~x): @str{kw_case2: @x}
+    | kw_case2(x, ~y): @str{kw_case2: @x, @y}
+    method
+    | kw_case3(~x): @str{kw_case3: @x}
+    | kw_case3(x, y): @str{kw_case3: @x, @y}
+    method
+    | kw_case4(~x): @str{kw_case4: @x}
+    | kw_case4(~y): @str{kw_case4: @y}
+    | kw_case4(~& kwrst): @str{kw_case4: @kwrst}
+    method
+    | kw_case5(~x): @str{kw_case5: @x}
+    | kw_case5(~x, ~& kwrst): @str{kw_case5: @x, @kwrst}
+  block:
+    import rhombus/meta open
+    expr.macro 'check_name_realm:
+                  $(name :: Name) ...
+                  ...':
+      let [[sym, ...], ...] = [[name.name_to_symbol(), ...], ...]
+      'block:
+         block:
+           check:
+             $(name).name() ~is #' $sym
+             $(name).realm() ~is #'rhombus
+           ...
+         ...'
+    check_name_realm:
+      A.posn A.kw
+      A.posn_opt A.kw_opt
+      A.case1 A.case2 A.case3
+      A.kw_case1 A.kw_case2 A.kw_case3 A.kw_case4 A.kw_case5
+  block:
+    let a = A()
+    check A.posn(a) ~throws "wrong number of arguments"
+    check A.posn(a, "x", "y") ~is "posn: x, y"
+    check A.kw(a) ~throws "required keyword argument not supplied"
+    check A.kw(a, ~x: "x", ~y: "y") ~is "kw: x, y"
+    check A.posn_opt(a) ~is "posn_opt: x, y"
+    check A.posn_opt(a, "a") ~is "posn_opt: a, y"
+    check A.posn_opt(a, "a", "b") ~is "posn_opt: a, b"
+    check A.kw_opt(a) ~is "kw_opt: x, y"
+    check A.kw_opt(a, ~x: "a") ~is "kw_opt: a, y"
+    check A.kw_opt(a, ~x: "a", ~y: "b") ~is "kw_opt: a, b"
+    check A.case1(a) ~is "case1"
+    check A.case1(a, "a") ~is "case1: a"
+    check A.case1(a, "a", "b") ~is "case1: a, b"
+    check A.case2(a) ~is "case2"
+    check A.case2(a, "a") ~throws "wrong number of arguments"
+    check A.case2(a, "a", "b") ~is "case2: a, b"
+    check A.case3(a) ~is "case3"
+    check A.case3(a, "a") ~throws "wrong number of arguments"
+    check A.case3(a, "a", "b") ~is @str{case3: a, b, @([])}
+    check A.case3(a, "a", "b", "c") ~is @str{case3: a, b, @(["c"])}
+    check A.kw_case1(a) ~throws "no matching case for arguments"
+    check A.kw_case1(a, ~x: "a") ~is "kw_case1: a"
+    check A.kw_case1(a, ~y: "b") ~is "kw_case1: b"
+    check A.kw_case1(a, ~x: "a", ~y: "b") ~throws "no matching case for arguments"
+    check A.kw_case2(a) ~throws "no matching case for arguments"
+    check A.kw_case2(a, ~x: "a") ~is "kw_case2: a"
+    check A.kw_case2(a, ~y: "b") ~throws "no matching case for arguments"
+    check A.kw_case2(a, "a", ~y: "b") ~is "kw_case2: a, b"
+    check A.kw_case3(a) ~throws "no matching case for arguments"
+    check A.kw_case3(a, ~x: "a") ~is "kw_case3: a"
+    check A.kw_case3(a, ~y: "b") ~throws "function does not expect an argument with given keyword"
+    check A.kw_case3(a, "a", "b") ~is "kw_case3: a, b"
+    check A.kw_case4(a) ~is @str{kw_case4: @({})}
+    check A.kw_case4(a, ~x: "a") ~is "kw_case4: a"
+    check A.kw_case4(a, ~y: "b") ~is "kw_case4: b"
+    check A.kw_case4(a, ~x: "a", ~y: "b") ~is @str{kw_case4: @({#'~x: "a", #'~y: "b"})}
+    check A.kw_case5(a) ~throws "required keyword argument not supplied"
+    check A.kw_case5(a, ~x: "a") ~is "kw_case5: a"
+    check A.kw_case5(a, ~y: "b") ~throws "required keyword argument not supplied"
+    check A.kw_case5(a, ~x: "a", ~y: "b") ~is @str{kw_case5: a, @({#'~y: "b"})}

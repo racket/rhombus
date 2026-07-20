@@ -10,7 +10,6 @@
                      "class-method-result.rkt"
                      "statically-str.rkt"
                      "maybe-as-original.rkt")
-         racket/unsafe/undefined
          (only-in racket/unsafe/ops
                   unsafe-struct*-cas!)
          "class-method.rkt"
@@ -28,7 +27,6 @@
                   identifier-repetition-use
                   :repetition-info
                   :infix-op+repetition-use+tail)
-         "compound-repetition.rkt"
          (submod "assign.rkt" for-assign) (only-in "assign.rkt" :=)
          "op-literal.rkt"
          "name-root.rkt"
@@ -400,6 +398,8 @@
     (if maybe-name?-id
         #`(unless (#,maybe-name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id))
         #'(void)))
+  (define (add-name proc)
+    (syntax-property proc 'inferred-name (syntax-e reflect-name)))
   (cond
     [(null? allowed-kws)
      (define proc #`(case-lambda
@@ -420,39 +420,15 @@
                                     (loop (- mask (arithmetic-shift 1 n)) (add1 n)))]
                              [else
                               (loop mask (add1 n))]))))
-     (syntax-property proc 'inferred-name (syntax-e reflect-name))]
-    [(or (not allowed-kws)
-         ;; implemented with multiple keyword cases?
-         (not (zero? (bitwise-and mask (sub1 (arithmetic-shift 1 (sub1 (integer-length mask))))))))
+     (add-name proc)]
+    [else
      #`(procedure-reduce-keyword-arity-mask (make-keyword-procedure
-                                             (lambda (kws kw-args obj . args)
-                                               #,(check #'obj)
-                                               (keyword-apply #,(make-rator #'obj) kws kw-args obj args)))
+                                             #,(add-name #`(lambda (kws kw-args obj . args)
+                                                             #,(check #'obj)
+                                                             (keyword-apply #,(make-rator #'obj) kws kw-args obj args))))
                                             #,mask
                                             '#,(if a (cadr a) '())
-                                            '#,allowed-kws
-                                            '#,reflect-name)]
-    [else
-     (define args (n-args (- (integer-length mask) (if (negative? mask) 0 1))))
-     (define reqd-kw (for/hash ([kw (in-list (cadr a))])
-                       (values kw #t)))
-     (define kw-formal-args (apply append
-                                   (for/list ([kw (in-list allowed-kws)]
-                                              [i (in-naturals)])
-                                     (define arg (string->symbol (format "kw~a" i)))
-                                     (list kw (if (hash-ref reqd-kw kw #f)
-                                                  arg
-                                                  (list arg #'unsafe-undefined))))))
-     (define kw-args (for/list ([kw/arg (in-list kw-formal-args)])
-                       (if (pair? kw/arg) (car kw/arg) kw/arg)))
-     (define proc (if (negative? mask)
-                      #`(lambda (#,@args #,@kw-formal-args . rest)
-                          #,(check (car args))
-                          (apply #,(make-rator (car args)) #,@args #,@kw-args rest))
-                      #`(lambda (#,@args #,@kw-formal-args)
-                          #,(check (car args))
-                          (#,(make-rator (car args)) #,@args #,@kw-args))))
-     (syntax-property proc 'inferred-name (syntax-e reflect-name))]))
+                                            '#,allowed-kws)]))
 
 (define-for-syntax (check-static stx)
   (unless (is-static-context/tail? stx)
