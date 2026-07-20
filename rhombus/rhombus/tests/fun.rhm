@@ -1,8 +1,4 @@
 #lang rhombus
-import:
-  lib("racket/base.rkt").#{object-name}
-  lib("racket/base.rkt").#{procedure-arity-mask}
-  lib("racket/base.rkt").#{procedure-keywords}
 
 class Posn(x, y)
 
@@ -271,12 +267,8 @@ check:
   check defaults(0, 0, ~arg3: 0) ~is values(0, 0, 0, 4, 5)
   check defaults(0, 0, ~arg3: 0, ~arg4: 0) ~is values(0, 0, 0, 0, 5)
   check defaults(0, 0, ~arg3: 0, ~arg4: 0, ~arg5: 0) ~is values(0, 0, 0, 0, 0)
-  check #{object-name}(defaults) ~is #'defaults
-  check #{procedure-arity-mask}(defaults) ~is 7
-  check:
-    #{procedure-keywords}(defaults)
-    ~is values(PairList[],
-               PairList[#'~arg3, #'~arg4, #'~arg5])
+  check defaults.name() ~is #'defaults
+  check defaults.arity() ~is values(0b111, [], [#'~arg3, #'~arg4, #'~arg5])
   ~prints "arg2\narg5\narg2\narg5\narg5\narg5\narg5\n"
 
 check:
@@ -297,12 +289,8 @@ check:
   check:
     more_defaults(0, 0, 0, ~arg4: 0, ~arg5: 0, ~arg6: 0, 7, 8, ~arg9: 9, ~arg10: 10)
     ~is values(0, 0, 0, 0, 0, 0, [7, 8], {#'~arg9: 9, #'~arg10: 10})
-  check #{object-name}(more_defaults) ~is #'more_defaults
-  check #{procedure-arity-mask}(more_defaults) ~is -2
-  check:
-    #{procedure-keywords}(more_defaults)
-    ~is values(PairList[#'~arg4],
-               #false)
+  check more_defaults.name() ~is #'more_defaults
+  check more_defaults.arity() ~is values(-0b10, [#'~arg4], #false)
   ~prints "arg2\narg5\narg5\narg5\narg5\n"
 
 // check constraint on optional by-position arguments
@@ -353,21 +341,19 @@ check:
 
 // check object names of anonymous functions
 check:
-  #{object-name}(fun (): #false)
+  (fun (): #false).name()
   ~is #'fun
 
 check:
-  #{object-name}(fun (~& _): #false)
+  (fun (~& _): #false).name()
   ~is #'fun
 
 check:
-  #{object-name}(fun
-                 | (): #false)
+  (fun | (): #false).name()
   ~is #'fun
 
 check:
-  #{object-name}(fun
-                 | (~& _): #false)
+  (fun | (~& _): #false).name()
   ~is #'fun
 
 // check argument bindings
