@@ -391,44 +391,99 @@
                  [(not a) -2]
                  [(integer? a) a]
                  [else (car a)]))
-  (define allowed-kws (and a (if (integer? a) null (caddr a))))
+  (define required-kws (if (or (not a) (integer? a)) null (cadr a)))
+  (define allowed-kws (if (or (not a) (integer? a)) null (caddr a)))
   (define (n-args n) (for/list ([i (in-range n)])
                        (string->symbol (format "arg~a" i))))
-  (define (check obj-id)
+  (define (maybe-check obj-id)
     (if maybe-name?-id
-        #`(unless (#,maybe-name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id))
-        #'(void)))
+        (list #`(unless (#,maybe-name?-id #,obj-id) (raise-not-an-instance '#,reflect-name #,obj-id)))
+        null))
   (define (add-name proc)
     (syntax-property proc 'inferred-name (syntax-e reflect-name)))
   (cond
-    [(null? allowed-kws)
-     (define proc #`(case-lambda
-                      #,@(let loop ([mask mask] [n 0])
-                           (cond
-                             [(= mask 0) '()]
-                             [(= mask (bitwise-not (sub1 (arithmetic-shift 1 n))))
-                              ;; accept n or more
-                              (define args (n-args n))
-                              #`([(#,@args . rest)
-                                  #,(check (car args))
-                                  (apply #,(make-rator (car args)) #,@args rest)])]
-                             [(not (zero? (bitwise-and mask (arithmetic-shift 1 n))))
-                              (define args (n-args n))
-                              (cons #`[#,args
-                                       #,(check (car args))
-                                       (#,(make-rator (car args)) . #,args)]
-                                    (loop (- mask (arithmetic-shift 1 n)) (add1 n)))]
-                             [else
-                              (loop mask (add1 n))]))))
-     (add-name proc)]
+    [(let ([n (- (integer-length mask) (if (negative? mask) 0 1))])
+       (and (zero? (bitwise-and mask (sub1 (arithmetic-shift 1 n))))
+            (equal? required-kws allowed-kws)
+            n))
+     ;; shortcut: single positional argument count + all required keyword arguments
+     ;; must be a `lambda` with required keyword arguments (if any)
+     => (lambda (n)
+          (define args (n-args (sub1 n)))
+          (define kw-args (apply append
+                                 (for/list ([kw (in-list allowed-kws)]
+                                            [i (in-naturals)])
+                                   (define arg (string->symbol (format "kw~a" i)))
+                                   (list kw arg))))
+          (add-name (if (negative? mask)
+                        #`(lambda (obj #,@args #,@kw-args . rest)
+                            #,@(maybe-check #'obj)
+                            (apply #,(make-rator #'obj) obj #,@args #,@kw-args rest))
+                        #`(lambda (obj #,@args #,@kw-args)
+                            #,@(maybe-check #'obj)
+                            (#,(make-rator #'obj) obj #,@args #,@kw-args)))))]
     [else
-     #`(procedure-reduce-keyword-arity-mask (make-keyword-procedure
-                                             #,(add-name #`(lambda (kws kw-args obj . args)
-                                                             #,(check #'obj)
-                                                             (keyword-apply #,(make-rator #'obj) kws kw-args obj args))))
-                                            #,mask
-                                            '#,(if a (cadr a) '())
-                                            '#,allowed-kws)]))
+     (define (make-proc make-app make-apply)
+       (add-name #`(case-lambda
+                     #,@(let loop ([mask mask] [n 0])
+                          (cond
+                            [(= mask 0) '()]
+                            [(= mask (bitwise-not (sub1 (arithmetic-shift 1 n))))
+                             ;; accept n or more
+                             (list (make-apply n))]
+                            [(not (zero? (bitwise-and mask (arithmetic-shift 1 n))))
+                             (cons (make-app n)
+                                   (loop (- mask (arithmetic-shift 1 n)) (add1 n)))]
+                            [else
+                             (loop mask (add1 n))])))))
+     (define plain-proc
+       (if (null? required-kws)
+           (make-proc (lambda (n)
+                        (define args (n-args (sub1 n)))
+                        #`[(obj #,@args)
+                           #,@(maybe-check #'obj)
+                           (#,(make-rator #'obj) obj #,@args)])
+                      (lambda (n)
+                        (define args (n-args (sub1 n)))
+                        #`[(obj #,@args . rest)
+                           #,@(maybe-check #'obj)
+                           (apply #,(make-rator #'obj) obj #,@args rest)]))
+           (make-proc (lambda (n)
+                        (define args (n-args (sub1 n)))
+                        #`[(obj #,@args)
+                           (raise-should-not-reach-error '#,reflect-name)])
+                      (lambda (n)
+                        (define args (n-args (sub1 n)))
+                        #`[(obj #,@args . rest)
+                           (raise-should-not-reach-error '#,reflect-name)]))))
+     (define kw-proc
+       (and (not (null? allowed-kws))
+            (make-proc (lambda (n)
+                         (define args (n-args (sub1 n)))
+                         #`[(kws kw-args obj #,@args)
+                            #,@(maybe-check #'obj)
+                            (keyword-apply #,(make-rator #'obj) kws kw-args obj #,@args null)])
+                       (lambda (n)
+                         (define args (n-args (sub1 n)))
+                         #`[(kws kw-args obj #,@args . rest)
+                            #,@(maybe-check #'obj)
+                            (keyword-apply #,(make-rator #'obj) kws kw-args obj #,@args rest)]))))
+     (if (not kw-proc)
+         plain-proc
+         (let* ([proc #`(make-keyword-procedure #,kw-proc #,plain-proc)]
+                [proc (if (and (null? required-kws)
+                               (not allowed-kws))
+                          proc
+                          #`(procedure-reduce-keyword-arity-mask #,proc
+                                                                 '#,mask
+                                                                 '#,required-kws
+                                                                 '#,allowed-kws))])
+           proc))]))
+
+(define (raise-should-not-reach-error name)
+  (raise-arguments-error name
+                         (string-append "should not reach this path"
+                                        ";\n procedure requires keyword arguments")))
 
 (define-for-syntax (check-static stx)
   (unless (is-static-context/tail? stx)
