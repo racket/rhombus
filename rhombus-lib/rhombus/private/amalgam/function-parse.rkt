@@ -54,7 +54,8 @@
          (submod "values.rkt" for-parse)
          "rhombus-primitive.rkt"
          "function-count.rkt"
-         (submod "arithmetic.rkt" static-infos))
+         (submod "arithmetic.rkt" static-infos)
+         "simple-default.rkt")
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -617,24 +618,25 @@
               #:with kwrest-info::binding-info #'kwrest-impl.info
               #`((#:kwrest kwrest-tmp) ((kwrest-tmp kwrest-info #,kwrest-arg #f)))])
            #'(() ()))
-       #:with (((arg-form ...) arg-default) ...)
+       #:with (((arg-form ...) arg-rhs) ...)
        (for/list ([kw (in-list (syntax->list kws))]
                   [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
                   [default (in-list (syntax->list defaults))])
-         ;; FIXME: if `default` is simple enough, then
-         ;; use it instead of `unsafe-undefined`, and
-         ;; then `define` has the opportunity to inline it
-         (define arg+default
+         (define-values (arg+default arg-rhs)
            (cond
              [(not (syntax-e default))
-              tmp-id]
+              (values tmp-id #f)]
+             [(parse-simple-default default)
+              => (lambda (default/rkt)
+                   (values #`[#,tmp-id #,default/rkt] #f))]
              [else
-              #`[#,tmp-id unsafe-undefined]]))
+              (values #`[#,tmp-id unsafe-undefined]
+                      #`(rhombus-expression #,default))]))
          (cond
            [(not (syntax-e kw))
-            (list (list arg+default) default)]
+            (list (list arg+default) arg-rhs)]
            [else
-            (list (list kw arg+default) default)]))
+            (list (list kw arg+default) arg-rhs)]))
        (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))
        (define shifted-arity
          (shift-arity arity (treelist-length (entry-point-adjustment-prefix-arguments adjustments))))
@@ -651,7 +653,7 @@
                     #f ; try-next
                     #t ; eager-bind?
                     argument-binding-failure
-                    (tmp-id arg-info arg arg-default)
+                    (tmp-id arg-info arg arg-rhs)
                     ...
                     maybe-match-rest ...
                     maybe-match-kwrest ...

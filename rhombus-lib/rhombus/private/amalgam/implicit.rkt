@@ -3,7 +3,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     shrubbery/property
                      "srcloc.rkt"
                      "injected.rkt"
                      "origin.rkt")
@@ -15,6 +14,7 @@
          "immediate-callee.rkt"
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
+         (submod "simple-default.rkt" normal-literal)
          (submod "indexable.rkt" for-ref)
          (submod "list.rkt" for-binding)
          "simple-call.rkt"
@@ -26,8 +26,7 @@
          "is-static.rkt"
          "ends-parse.rkt"
          (only-in "op-literal.rkt"
-                  :_-expr)
-         "arrow-annotation.rkt")
+                  :_-expr))
 
 (provide (for-space #f
                     #%block
@@ -63,7 +62,8 @@
                        normal-call-repetition?)))
 
 (module+ normal-literal
-  (provide (for-syntax normal-literal?)))
+  (provide (for-syntax normal-literal?
+                       normal-literal-id?)))
 
 (module+ check-literal
   (provide (for-syntax check-literal-term)))
@@ -117,19 +117,23 @@
        [(form-id raw-datum . tail)
         (define datum (uninject #'raw-datum))
         (check-literal-term #'form-id datum)
-        (define quoted-datum
-          ;; but reraw here
-          (reraw (list #'form-id datum)
-                 ;; copies all props, including originalness
-                 (relocate datum
-                           #`(quote #,(no-srcloc datum))
-                           datum)))
+        (define quoted-datum (quote-implicit-literal #'form-id datum))
         (values (cond
                   [(literal-static-infos datum)
                    => (lambda (si)
                         (wrap-static-info* quoted-datum si))]
                   [else quoted-datum])
                 #'tail)]))))
+
+(define-for-syntax (quote-implicit-literal form-id datum)
+  ;; but reraw here
+  (reraw (if form-id
+             (list form-id datum)
+             (list datum))
+         ;; copies all props, including originalness
+         (relocate datum
+                   #`(quote #,(no-srcloc datum))
+                   datum)))
 
 (define-binding-syntax #%literal
   (binding-transformer
@@ -399,8 +403,13 @@
   (free-identifier=? (datum->syntax lit '#%literal)
                      (expr-quote #%literal)))
 
+(define-for-syntax (normal-literal-id? id)
+  (free-identifier=? id
+                     (expr-quote #%literal)))
+
 (define-for-syntax (add-call-context stx)
   (datum->syntax #'here (syntax-e stx) stx stx))
 
 (begin-for-syntax
-  (install-normal-call?! normal-call? normal-call-repetition? add-call-context))
+  (install-normal-call?! normal-call? normal-call-repetition? add-call-context)
+  (install-normal-literal?! normal-literal? normal-literal-id? quote-implicit-literal))

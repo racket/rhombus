@@ -29,7 +29,8 @@
      (define error-str
        (string-append (srcloc->string (syntax-srcloc stx)) ": module content does not satisfy predicate"
                       "\n  name: ~s"
-                      "\n  predicate: ~s"))
+                      "\n  predicate: ~s"
+                      "\n"))
      (define module-str
        (apply string-append "#lang rhombus\n" (syntax->datum #'(str ...))))
      #`(let ([mod-stx (get-module 'name '#,module-str)])
@@ -401,8 +402,6 @@
   (define def (extract-def mod-stx 'f))
   (syntax-parse def
     #:literals ([#%app #%plain-app]
-                let-values
-                [lambda #%plain-lambda]
                 case-lambda
                 procedure-reduce-keyword-arity-mask
                 make-keyword-procedure)
@@ -472,4 +471,86 @@
  fun
  | f(_, & rest): rest
  | f(~& kwrest): kwrest
+}
+
+(define ((lambda/simple-enough-literal? expected) mod-stx)
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                case-lambda
+                quote)
+    [(~and fe
+           (~parse (case-lambda
+                     [() (#%app f1 (quote lit))]
+                     [(x1) (#%app f2 x2)])
+                   (let-body #'fe)))
+     (and (equal? (syntax-e #'lit) expected)
+          (bound-identifier=? #'f1 #'f2)
+          (bound-identifier=? #'x1 #'x2))]
+    [_ #f]))
+
+@check-module[lambda/implicit-lit1
+              #:is (lambda/simple-enough-literal? 1)]{
+  fun f(x = 1):
+    x
+}
+
+@check-module[lambda/implicit-lit2
+              #:is (lambda/simple-enough-literal? #t)]{
+  fun f(x = #true):
+    x
+}
+
+@check-module[lambda/implicit-lit3
+              #:is (lambda/simple-enough-literal? "a")]{
+  fun f(x = "a"):
+    x
+}
+
+@check-module[lambda/implicit-lit4
+              #:is (lambda/simple-enough-literal? #"a")]{
+  fun f(x = #"a"):
+    x
+}
+
+@check-module[lambda/explicit-lit1
+              #:is (lambda/simple-enough-literal? 1)]{
+  fun f(x = #%literal 1):
+    x
+}
+
+@check-module[lambda/explicit-lit2
+              #:is (lambda/simple-enough-literal? #t)]{
+  fun f(x = #%literal #true):
+    x
+}
+
+@check-module[lambda/explicit-lit3
+              #:is (lambda/simple-enough-literal? "a")]{
+  fun f(x = #%literal "a"):
+    x
+}
+
+@check-module[lambda/explicit-lit4
+              #:is (lambda/simple-enough-literal? #"a")]{
+  fun f(x = #%literal #"a"):
+    x
+}
+
+@check-module[lambda/apostrophe-lit1
+              #:is (lambda/simple-enough-literal? 'a)]{
+  fun f(x = #'a):
+    x
+}
+
+@check-module[lambda/char-lit1
+              #:is (lambda/simple-enough-literal? #\a)]{
+  fun f(x = Char"a"):
+    x
+}
+
+@check-module[lambda/byte-lit1
+              #:is (lambda/simple-enough-literal? 97)]{
+  fun f(x = Byte#"a"):
+    x
 }

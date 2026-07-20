@@ -1,0 +1,10 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+fun (a = "a",
+     b = #%literal "b",
+     c = #'c,
+     d = Char"d",
+     e = Byte#"e"):
+  #void
