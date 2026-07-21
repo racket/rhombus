@@ -20,7 +20,7 @@ check:
   use_dynamic
   fun f(x): x
   f()
-  ~throws values("arity mismatch", "expected: 1")
+  ~throws values("wrong number of arguments", "expected: 1")
 
 static check:
   fun f(x): x
@@ -78,7 +78,7 @@ check:
   class Posn(x, y):
     method m(): x
   Posn(1, 2).m(1)
-  ~throws values("arity mismatch",
+  ~throws values("wrong number of arguments",
                  "expected: 0")
 
 check:
@@ -86,7 +86,7 @@ check:
   class Posn(x, y):
     method m(): x
   Posn.m(1, 2)
-  ~throws values("arity mismatch",
+  ~throws values("wrong number of arguments",
                  "expected: 1")
 
 static check:
@@ -109,7 +109,7 @@ check:
     nonfinal
     method m(): x
   Posn(1, 2).m(1)
-  ~throws values("arity mismatch",
+  ~throws values("wrong number of arguments",
                  "expected: 0")
 
 check:
@@ -118,7 +118,7 @@ check:
     nonfinal
     method m(): x
   Posn.m(Posn(1, 2), 2)
-  ~throws values("arity mismatch",
+  ~throws values("wrong number of arguments",
                  "expected: 1")
 static check:
   class Posn(x, y):
@@ -256,10 +256,10 @@ block:
   class Posn(x, y):
     method m(~kw: k = #false): x
   check: Posn.m()
-         ~throws values("arity mismatch",
+         ~throws values("wrong number of arguments",
                         "expected: 1 plus")
   check: Posn(1, 2).m(1)
-         ~throws values("arity mismatch",
+         ~throws values("wrong number of arguments",
                         "expected: 0 plus")
 
 block:
@@ -270,5 +270,5 @@ block:
          ~throws values("wrong number of arguments",
                         "expected: 1 plus")
   check: Posn(1, 2).m(1)
-         ~throws values("arity mismatch",
+         ~throws values("wrong number of arguments",
                         "expected: 0 plus")

@@ -284,7 +284,7 @@ block:
         1
   check print(ns.f) ~prints "#<function:ns.f>"
   check ns.f("x") ~throws values("ns.f:", error.annot_msg("argument"))
-  check ns.f(1, 2, 3) ~throws values("ns.f:", "arity")
+  check ns.f(1, 2, 3) ~throws values("ns.f:", "wrong number of arguments")
   check print(ns.Posn) ~prints "#<function:ns.Posn>"
   check print(ns.Posn(1, 2).d) ~prints "#<function:alt_d>"
   check print(ns.Posn(1, 2).h) ~prints "#<function:alt_h>"
@@ -305,10 +305,10 @@ block:
         x
   check print(ns.sub.f) ~prints "#<function:ns.sub.f>"
   check ns.sub.f("x") ~throws values("ns.sub.f:", error.annot_msg("argument"))
-  check ns.sub.f(1, 2, 3) ~throws values("ns.sub.f:", "arity")
+  check ns.sub.f(1, 2, 3) ~throws values("ns.sub.f:", "wrong number of arguments")
   check print(ns.sub.g) ~prints "#<function:gee>"
   check ns.sub.g("x") ~throws values("gee:", error.annot_msg("argument"))
-  check ns.sub.g(1, 2, 3) ~throws values("gee:", "arity")
+  check ns.sub.g(1, 2, 3) ~throws values("gee:", "wrong number of arguments")
 
 // check that static info is propagated for namespace extensions
 block:

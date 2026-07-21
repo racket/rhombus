@@ -74,7 +74,7 @@ check:
   block:
     use_static
     (fun (x, y): x) x 2
-  ~throws "arity mismatch"
+  ~throws "wrong number of arguments"
 
 // Index
 

@@ -21,7 +21,7 @@ check: (fun (x, y, ...): x) :: Int -> Int
        ~completes
 
 check: ((fun (x, y, ...): x) :: Int -> Int)(1, 2)
-       ~throws "arity mismatch"
+       ~throws "wrong number of arguments"
 
 check: (fun (x): #false) :: Int -> Int -> Int
        ~completes
@@ -159,7 +159,7 @@ check: ((fun (x, y = -3, z, ...): math.sum(x, y, z, ...)) :: (Int, & List.of(Int
        ~is -2
 
 check: ((fun (x, y = -3, z, ...): math.sum(x, y, z, ...)) :: (Int, & List.of(Int)) -> Int)()
-       ~throws "arity mismatch"
+       ~throws "wrong number of arguments"
 
 check: ((fun (x, y, ...): math.sum(x, y, ...)) :: (Int, Int, ...) -> Int)(1, "no", 3)
        ~throws error.annot_msg("argument")
@@ -505,8 +505,8 @@ block:
 
 block:
   let f :: Function.all_of(): math.sum
-  check f() ~throws "arity mismatch"
-  check f(1, 2, 3) ~throws "arity mismatch"
+  check f() ~throws "wrong number of arguments"
+  check f(1, 2, 3) ~throws "wrong number of arguments"
 
 check:
   ~eval
@@ -529,8 +529,8 @@ block:
   check f("x") ~throws error.annot_msg("argument")
   check f(0) ~throws error.annot_msg("result")
   check f(0, 0) ~throws error.annot_msg("result")
-  check f() ~throws "arity mismatch"
-  check f(1, 2, 3) ~throws "arity mismatch"
+  check f() ~throws "wrong number of arguments"
+  check f(1, 2, 3) ~throws "wrong number of arguments"
   check f(~x: 1) ~throws "does not accept keyword arguments"
 
 check:
@@ -703,7 +703,7 @@ block:
   check f("a") ~is "a"
   check f(1.0) ~throws error.annot_msg("result")
   check f(1, 2) ~is values(1, 2)
-  check f(1, 2, 3) ~throws "arity mismatch"
+  check f(1, 2, 3) ~throws "wrong number of arguments"
 
 block:
   import rhombus/meta open

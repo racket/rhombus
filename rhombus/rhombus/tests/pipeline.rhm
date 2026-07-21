@@ -28,7 +28,7 @@ check:
   class Posn(x, y)
   fun get(n, m) :~ Posn: Posn(1, 2)
   (0 |> get).x
-  ~throws "arity mismatch"
+  ~throws "wrong number of arguments"
 
 check:
   ~eval
@@ -90,7 +90,7 @@ check:
   List <| (1, 2, & [3, 4]) ~is [1, 2, 3, 4]
   math.abs <| 0 - 4 ~is 4
   math.sin <| 1 |> math.sin ~is math.sin(math.sin(1))
-  math.sin <| (1, 2) ~throws "arity mismatch"
+  math.sin <| (1, 2) ~throws "wrong number of arguments"
 
 check:
   ~eval
