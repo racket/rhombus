@@ -24,7 +24,6 @@
                      (only-in "syntax-map.rkt"
                               empty-equal_name_and_scopes-map))
          "provide.rkt"
-         "deprecated.rkt"
          "enforest.rkt"
          "annotation-operator.rkt"
          "expression.rkt"
@@ -131,10 +130,6 @@
            define-annotation-constructor
 
            raise-annotation-failure))
-
-(module+ for-arrow
-  (provide (for-space rhombus/annot
-                      ::)))
 
 (module+ for-map-function
   (provide (for-syntax extract-call-result)))

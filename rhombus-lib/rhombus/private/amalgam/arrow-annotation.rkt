@@ -14,7 +14,6 @@
          shrubbery/print
          (only-in "annotation.rkt" ::)
          (submod "annotation.rkt" for-class)
-         (submod "annotation.rkt" for-arrow)
          "binding.rkt"
          (submod "equal.rkt" for-parse)
          "op-literal.rkt"
@@ -548,7 +547,7 @@
                                 name
                                 default-id))
      #:with (check-not-undefined ...) (for/list ([opt (in-list (syntax->list #'(lhs-opt ...)))])
-                                        (if (syntax-e #'p)
+                                        (if (syntax-e opt)
                                             #'(lambda (v) (not (eq? v unsafe-undefined)))
                                             #'(lambda (v) #t)))
      #:with fail-k fail-k
@@ -571,18 +570,27 @@
                       (if (syntax-e kw)
                           (list kw left-id)
                           (list left-id)))])
-       (define (generate-rest rest kw-rest success-k fail-k raise-rest-argument-annotation-failure check-always?)
+       (define all-required-kw?
+         (for/and ([kw (in-list (syntax->list #'(lhs-kw ...)))]
+                   [opt (in-list (syntax->list #'(lhs-opt ...)))]
+                   #:when (syntax-e kw))
+           (not (syntax-e opt))))
+       (define-values (apply-id keyword-apply-id)
+         (if all-required-kw?
+             (values #'apply/optimize #'keyword-apply)
+             (values #'apply/unsafe-undefined #'keyword-apply/unsafe-undefined)))
+       (define (generate-rest rest success-k fail-k raise-rest-argument-annotation-failure check-always?)
          (define (add-normal-cwv l)
            (if check-always? (cons #'call-with-values l) l))
          (with-syntax ([success-k success-k]
                        [fail-k fail-k]
                        [raise-rest-argument-annotation-failure raise-rest-argument-annotation-failure])
-           (define (any-result) (list #'call-with-unchanged-values #'#%app '() '() '()))
+           (define (any-result) (list #'call-with-unchanged-values '() #'null '()))
            (syntax-parse rest
-             [#f (add-normal-cwv (list #'#%app '() (if (syntax-e kw-rest) '(null) '()) '()))]
+             [#f (add-normal-cwv (list '() #'null '()))]
              [#:any (if check-always?
                         (any-result)
-                        (list #'apply #'rest-arg-id #'(rest-id) #'([(rest-id) () (success-k rest-arg-id)])))]
+                        (list #'rest-arg-id #'rest-id #'([(rest-id) () (success-k rest-arg-id)])))]
              [(name a::binding-info a-body a-static-infos whole? a-str)
               #:with ((a-bind-id a-bind-use . a-bind-static-infos) ...) #'a.bind-infos
               #:with rest-list-id (or (and (syntax-e #'name) #'name) #'rest-list)
@@ -608,7 +616,7 @@
                                       (lambda ()
                                         (raise-rest-argument-annotation-failure (who) rest-arg-id 'a-str whole?))))))
                  (add-normal-cwv
-                  (list #'apply #'rest-arg-id #'(rest-id)
+                  (list #'rest-arg-id #'rest-id
                         (if (syntax-e #'whole?)
                             #`([(rest-list-id)
                                 a-static-infos
@@ -625,13 +633,13 @@
                                                (loop (cdr args) (cons v accum)))]
                                             [rest-arg-id (car args)])
                                         #,a-block)))]))))])])))
-       (with-syntax ([(f-apply rest-arg-id rest-id (rest-bind ...))
-                      (generate-rest #'rest #'kw-rest #'success-k #'fail-k #'raise-rest-argument-annotation-failure #f)])
+       (with-syntax ([(rest-arg-id rest-id (rest-bind ...))
+                      (generate-rest #'rest #'success-k #'fail-k #'raise-rest-argument-annotation-failure #f)])
          (with-syntax ([((maybe-make-keyword-procedure ...) (kw-arg-id ...) (kw-id ...) f/kw-apply (kw-preamble ...) (kw-rest-bind ...))
                         (syntax-parse #'kw-rest
-                          [#f (list #'(begin) '() '() #'f-apply '() '())]
+                          [#f (list #'(begin) '() '() apply-id '() '())]
                           [#:any (list #'(make-keyword-procedure/reduce-arity-like f)
-                                       #'(kws-arg-id kw-vals-arg-id) #'(kws-id kw-vals-id) #'keyword-apply
+                                       #'(kws-arg-id kw-vals-arg-id) #'(kws-id kw-vals-id) keyword-apply-id
                                        #'()
                                        #'([(kws-id kw-vals-id) () (success-k kws-arg-id kw-vals-arg-id)]))]
                           [(name a::binding-info a-body a-static-infos a-str)
@@ -647,7 +655,7 @@
                                              kw))
                            (define arity-mask (car (syntax-e #'arity)))
                            (list #`(make-keyword-procedure/reduce-arity #,req-kws #,arity-mask)
-                                 #'(kws-arg-id kw-vals-arg-id) #'(kws-id kw-vals-id) #'keyword-apply
+                                 #'(kws-arg-id kw-vals-arg-id) #'(kws-id kw-vals-id) keyword-apply-id
                                  (if (null? kws)
                                      (list #'(define kw-map (keywords->map kws-arg-id kw-vals-arg-id)))
                                      (append
@@ -658,7 +666,9 @@
                                                  ;; If there's a keyword-rest arg, we'll have to
                                                  ;; extract arguments manually
                                                  #:when (syntax-e kw))
-                                        #`(define #,arg-id (hash-ref kw-map/all '#,kw unsafe-undefined)))
+                                        #`(define #,arg-id #,(if (syntax-e opt)
+                                                                 #`(hash-ref kw-map/all '#,kw unsafe-undefined)
+                                                                 #`(hash-ref kw-map/all '#,kw))))
                                       (list #`(define kw-map (drop-keywords kw-map/all '#,kws)))))
                                  #'([(kw-rest-map-id)
                                      a-static-infos
@@ -682,8 +692,8 @@
            (with-syntax ([(rest-bind ...) (if (syntax-e #'kw-rest-first?)
                                               #'(kw-rest-bind ... rest-bind ...)
                                               #'(rest-bind ... kw-rest-bind ...))]
-                         [(call-with-values/rest r-apply res-rest-arg-id res-rest-id (res-rest-bind ...))
-                          (generate-rest #'res-rest #'#f #'values #'#%app #'raise-rest-result-annotation-failure #t)])
+                         [(call-with-values/rest res-rest-arg-id res-rest-id (res-rest-bind ...))
+                          (generate-rest #'res-rest #'values #'#%app #'raise-rest-result-annotation-failure #t)])
              (define inner-proc
                (no-srcloc
                 #`(lambda (kw-arg-id ... lhs-arg ... ... . rest-arg-id)
@@ -734,10 +744,10 @@
                                                                             [kw (in-list (cdr kws))]
                                                                             #:when (syntax-e kw))
                                                                    arg))])
-                                            #`(f/kw-apply f kw-id ... left-kw+id ... ... . rest-id))]
+                                            #`(f/kw-apply f kw-id ... left-kw+id ... ... rest-id))]
                                      (loop (cdr args) (cdr kws) (cdr opts) (cons (car args) accum)))]))
                             [else
-                             (f/kw-apply f kw-id ... left-kw+id ... ... . rest-id)]))
+                             (f/kw-apply f kw-id ... left-kw+id ... ... rest-id)]))
                         (case-lambda
                           [(res-in-id ... . res-rest-arg-id)
                            (let*-values-with-static-infos
@@ -755,7 +765,7 @@
                                 rhs-body)]
                              ...
                              res-rest-bind ...)
-                            (r-apply values res-id ... . res-rest-id))]
+                            (apply/optimize values res-id ... res-rest-id))]
                           [args
                            (raise-result-arity-error (who) '#,(length (syntax->list #'(res-in-id ...))) args)])))))))
              (if (not arg-id)
@@ -1137,3 +1147,108 @@
            args)
        (if kw i (add1 i)))))
   (annotation-context args #f))
+
+(define-syntax (apply/optimize stx)
+  (syntax-parse stx
+    #:literals (null)
+    [(_ proc arg/kw ... (~or* null rest))
+     #'(~? (apply proc arg/kw ... rest)
+           (proc arg/kw ...))]))
+
+;; A version of `(keyword-)apply` that uses `unsafe-undefined` for
+;; unsupplied keyword arguments.  This is needed to avoid leaking
+;; `unsafe-undefined` to the applied function, because it doesn't
+;; necessarily check for it when the default value is simple enough.
+(define-syntax (apply/unsafe-undefined stx)
+  (syntax-parse stx
+    #:literals (null)
+    [(_ proc (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
+     (syntax-parse #'((~? kw) ...)
+       [()
+        #'(~? (apply proc (~? arg) ... rest)
+              (proc (~? arg) ...))]
+       [(kw ...)
+        (define-values (kws/unsafe-undefined kw-args/unsafe-undefined)
+          (sort-kws+kw-args #'(kw ...) #'((~? kw-arg) ...)))
+        #`(do-apply/unsafe-undefined proc
+                                     '(#,@kws/unsafe-undefined) (list #,@kw-args/unsafe-undefined)
+                                     (~? (list* (~? arg) ... rest)
+                                         (list (~? arg) ...)))])]))
+
+(define-syntax (keyword-apply/unsafe-undefined stx)
+  (syntax-parse stx
+    #:literals (null)
+    [(_ proc kws kw-args (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
+     (syntax-parse #'((~? kw) ...)
+       [()
+        #'(keyword-apply proc kws kw-args (~? arg) ... (~? rest null))]
+       [(kw ...)
+        (define-values (kws/unsafe-undefined kw-args/unsafe-undefined)
+          (sort-kws+kw-args #'(kw ...) #'((~? kw-arg) ...)))
+        #`(do-keyword-apply/unsafe-undefined proc
+                                             kws kw-args
+                                             '(#,@kws/unsafe-undefined) (list #,@kw-args/unsafe-undefined)
+                                             (~? (list* (~? arg) ... rest)
+                                                 (list (~? arg) ...)))])]))
+
+(define-for-syntax (sort-kws+kw-args kws-stx kw-args-stx)
+  (define sorted-kws
+    (sort (syntax->list kws-stx) keyword<? #:key syntax-e))
+  (define kw-args-map
+    (for/hasheq ([kw (in-list (syntax->list kws-stx))]
+                 [kw-args (in-list (syntax->list kw-args-stx))])
+      (values (syntax-e kw) kw-args)))
+  (define sorted-kw-args
+    (for/list ([kw (in-list sorted-kws)])
+      (hash-ref kw-args-map (syntax-e kw))))
+  (values sorted-kws sorted-kw-args))
+
+(define (do-apply/unsafe-undefined proc
+                                   kws/unsafe-undefined kw-args/unsafe-undefined
+                                   args)
+  (define-values (kws kw-args)
+    (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined))
+  (keyword-apply proc kws kw-args args))
+
+(define (do-keyword-apply/unsafe-undefined proc
+                                           kws kw-args
+                                           kws/unsafe-undefined kw-args/unsafe-undefined
+                                           args)
+  (define-values (kws2 kw-args2)
+    (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined))
+  ;; borrowed from `racket/private/pre-base`
+  (define-values (combined-kws combined-kw-args)
+    (let loop ([kws kws]
+               [kw-args kw-args]
+               [kws2 kws2]
+               [kw-args2 kw-args2]
+               [swapped? #f])
+      (cond
+        [(null? kws)
+         (values kws2 kw-args2)]
+        [(null? kws2)
+         (values kws kw-args)]
+        [(keyword<? (car kws) (car kws2))
+         (define-values (res-kws res-kw-args)
+           (loop (cdr kws) (cdr kw-args) kws2 kw-args2 #f))
+         (values (cons (car kws) res-kws)
+                 (cons (car kw-args) res-kw-args))]
+        [swapped?
+         (error "should not get duplicate keyword")]
+        [else
+         (loop kws2 kw-args2 kws kw-args #t)])))
+  (keyword-apply proc combined-kws combined-kw-args args))
+
+(define (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined)
+  (let loop ([kws kws/unsafe-undefined]
+             [kw-args kw-args/unsafe-undefined])
+    (cond
+      [(null? kws)
+       (values kws kw-args)]
+      [(eq? (car kw-args) unsafe-undefined)
+       (loop (cdr kws) (cdr kw-args))]
+      [else
+       (define-values (res-kws res-kw-args)
+         (loop (cdr kws) (cdr kw-args)))
+       (values (cons (car kws) res-kws)
+               (cons (car kw-args) res-kw-args))])))
