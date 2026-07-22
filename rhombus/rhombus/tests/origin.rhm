@@ -214,8 +214,8 @@ check_origins(annot_delayed_rhm,
 
 check_origins(fun_def_val_rhm,
               #false,
-              { #'fun: 1,
-                #'#%literal: 1,
-                #'#{|#'|}: 1,
-                #'Char: 1,
-                #'Byte: 1 })
+              { #'fun: 2,
+                #'#%literal: 2,
+                #'#{|#'|}: 2,
+                #'Char: 2,
+                #'Byte: 2 })

@@ -8,6 +8,8 @@
                      "injected.rkt")
          "name-root-space.rkt"
          "name-root-ref.rkt"
+         "parse.rkt"
+         "parens.rkt"
          "expression.rkt"
          (only-in "apostrophe.rkt"
                   |#'|)
@@ -42,9 +44,15 @@
            (eqv? (hash-count v) 0))))
 
 (define-for-syntax (parse-simple-default stx)
-  (define-values (parsed-e form-id)
+  (define inner-g
     (syntax-parse stx
       #:datum-literals (group parsed)
+      #:literals (rhombus-body-at)
+      [(group (parsed #:rhombus/expr (rhombus-body-at _::block g))) #'g]
+      [_ stx]))
+  (define-values (parsed-e form-id)
+    (syntax-parse inner-g
+      #:datum-literals (group)
       [(group datum)
        (define v (syntax-e (uninject #'datum)))
        (if (and (simple-literal? v)

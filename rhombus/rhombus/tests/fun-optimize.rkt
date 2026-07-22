@@ -554,3 +554,218 @@
   fun f(x = Byte#"a"):
     x
 }
+
+@check-module[lambda/implicit-lit/block1
+              #:is (lambda/simple-enough-literal? 1)]{
+  fun f(x: 1):
+    x
+}
+
+@check-module[lambda/implicit-lit/block2
+              #:is (lambda/simple-enough-literal? #t)]{
+  fun f(x: #true):
+    x
+}
+
+@check-module[lambda/implicit-lit/block3
+              #:is (lambda/simple-enough-literal? "a")]{
+  fun f(x: "a"):
+    x
+}
+
+@check-module[lambda/implicit-lit/block4
+              #:is (lambda/simple-enough-literal? #"a")]{
+  fun f(x: #"a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/block1
+              #:is (lambda/simple-enough-literal? 1)]{
+  fun f(x: #%literal 1):
+    x
+}
+
+@check-module[lambda/explicit-lit/block2
+              #:is (lambda/simple-enough-literal? #t)]{
+  fun f(x: #%literal #true):
+    x
+}
+
+@check-module[lambda/explicit-lit/block3
+              #:is (lambda/simple-enough-literal? "a")]{
+  fun f(x: #%literal "a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/block4
+              #:is (lambda/simple-enough-literal? #"a")]{
+  fun f(x: #%literal #"a"):
+    x
+}
+
+@check-module[lambda/apostrophe-lit/block1
+              #:is (lambda/simple-enough-literal? 'a)]{
+  fun f(x: #'a):
+    x
+}
+
+@check-module[lambda/char-lit/block1
+              #:is (lambda/simple-enough-literal? #\a)]{
+  fun f(x: Char"a"):
+    x
+}
+
+@check-module[lambda/byte-lit/block1
+              #:is (lambda/simple-enough-literal? 97)]{
+  fun f(x: Byte#"a"):
+    x
+}
+
+(define ((lambda/simple-enough-literal/kw? expected) mod-stx)
+  (define def (extract-def mod-stx 'f))
+  (syntax-parse def
+    #:literals ([#%app #%plain-app]
+                [lambda #%plain-lambda]
+                quote
+                let-values
+                if)
+    [(~and fe
+           (~parse (lambda (x1)
+                     (let-values ([(_) (if (quote #f) (quote lit) x2)])
+                       _))
+                   (let-body #'fe)))
+     (and (equal? (syntax-e #'lit) expected)
+          (bound-identifier=? #'x1 #'x2))]
+    [_ #f]))
+
+@check-module[lambda/implicit-lit/kw1
+              #:is (lambda/simple-enough-literal/kw? 1)]{
+  fun f(~x: x = 1):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw2
+              #:is (lambda/simple-enough-literal/kw? #t)]{
+  fun f(~x: x = #true):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw3
+              #:is (lambda/simple-enough-literal/kw? "a")]{
+  fun f(~x: x = "a"):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw4
+              #:is (lambda/simple-enough-literal/kw? #"a")]{
+  fun f(~x: x = #"a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw1
+              #:is (lambda/simple-enough-literal/kw? 1)]{
+  fun f(~x: x = #%literal 1):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw2
+              #:is (lambda/simple-enough-literal/kw? #t)]{
+  fun f(~x: x = #%literal #true):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw3
+              #:is (lambda/simple-enough-literal/kw? "a")]{
+  fun f(~x: x = #%literal "a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw4
+              #:is (lambda/simple-enough-literal/kw? #"a")]{
+  fun f(~x: x = #%literal #"a"):
+    x
+}
+
+@check-module[lambda/apostrophe-lit/kw1
+              #:is (lambda/simple-enough-literal/kw? 'a)]{
+  fun f(~x: x = #'a):
+    x
+}
+
+@check-module[lambda/char-lit/kw1
+              #:is (lambda/simple-enough-literal/kw? #\a)]{
+  fun f(~x: x = Char"a"):
+    x
+}
+
+@check-module[lambda/byte-lit/kw1
+              #:is (lambda/simple-enough-literal/kw? 97)]{
+  fun f(~x: x = Byte#"a"):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw/block1
+              #:is (lambda/simple-enough-literal/kw? 1)]{
+  fun f(~x: x: 1):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw/block2
+              #:is (lambda/simple-enough-literal/kw? #t)]{
+  fun f(~x: x: #true):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw/block3
+              #:is (lambda/simple-enough-literal/kw? "a")]{
+  fun f(~x: x: "a"):
+    x
+}
+
+@check-module[lambda/implicit-lit/kw/block4
+              #:is (lambda/simple-enough-literal/kw? #"a")]{
+  fun f(~x: x: #"a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw/block1
+              #:is (lambda/simple-enough-literal/kw? 1)]{
+  fun f(~x: x: #%literal 1):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw/block2
+              #:is (lambda/simple-enough-literal/kw? #t)]{
+  fun f(~x: x: #%literal #true):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw/block3
+              #:is (lambda/simple-enough-literal/kw? "a")]{
+  fun f(~x: x: #%literal "a"):
+    x
+}
+
+@check-module[lambda/explicit-lit/kw/block4
+              #:is (lambda/simple-enough-literal/kw? #"a")]{
+  fun f(~x: x: #%literal #"a"):
+    x
+}
+
+@check-module[lambda/apostrophe-lit/kw/block1
+              #:is (lambda/simple-enough-literal/kw? 'a)]{
+  fun f(~x: x: #'a):
+    x
+}
+
+@check-module[lambda/char-lit/kw/block1
+              #:is (lambda/simple-enough-literal/kw? #\a)]{
+  fun f(~x: x: Char"a"):
+    x
+}
+
+@check-module[lambda/byte-lit/kw/block1
+              #:is (lambda/simple-enough-literal/kw? 97)]{
+  fun f(~x: x: Byte#"a"):
+    x
+}

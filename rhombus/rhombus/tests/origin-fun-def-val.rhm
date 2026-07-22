@@ -8,3 +8,10 @@ fun (a = "a",
      d = Char"d",
      e = Byte#"e"):
   #void
+
+fun (a: "a",
+     b: #%literal "b",
+     c: #'c,
+     d: Char"d",
+     e: Byte#"e"):
+  #void
