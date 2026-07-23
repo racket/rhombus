@@ -129,7 +129,9 @@ fun magic_move(all_pre :: Pict, post :: Pict,
   )
 
 fun translate_drawing(child :~ Pict, dx, dy, sx, sy):
-  overlay.center(child.ghost(),
+  let g = child.ghost()
+  overlay.center(g,
                  child.launder()
                    .scale(sx, sy)
                    .translate(dx, dy))
+    .refocus(g)
