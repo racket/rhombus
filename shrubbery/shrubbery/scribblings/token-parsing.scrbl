@@ -154,7 +154,7 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
     [no_lex, @nonterm{sign}, bis, @elem{@italic{one of} @litchar{+} @italic{or} @litchar{-}}, ""],
     empty_line,
-    [no_lex, @nonterm{nonneg}, bis, bseq(@nonterm{decimal}, kleeneplus(@nonterm{usdecimal})), ""],
+    [no_lex, @nonterm{nonneg}, bis, bseq(@nonterm{decimal}, kleenestar(@nonterm{usdecimal})), ""],
     empty_line,
     [no_lex, @nonterm{decimal}, bis, @elem{@italic{one of} @litchar{0} @italic{through} @litchar{9}}, ""],
     empty_line,
