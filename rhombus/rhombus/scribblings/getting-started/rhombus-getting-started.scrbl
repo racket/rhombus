@@ -57,7 +57,7 @@
 
  @item{@seclink("top", ~doc: top_doc){Rhombus Documentation}: If you're
  reading this in your local installation, then it's all documentation
- that you have installed. If you're reading from @doc_site, it
+ that you have installed. If you're reading from @doc_site, it's
  documentation for all registered Rhombus and Racket packages, including
  third-party packages.}
 
