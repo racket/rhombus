@@ -121,7 +121,7 @@ supply an explicit prefix, use the @rhombus(as, ~impo) modifier:
 )
 
 Use the @rhombus(open, ~impo) modifier to import without a prefix,
-albeit at the risk of creating import conflicts of obscuring the origin
+albeit at the risk of creating import conflicts or of obscuring the origin
 of a binding.
 
 @rhombusblock(
