@@ -99,7 +99,7 @@
 ){
 
  IEEE floating-point number @tech{scalar} types. On the C side, a
- @rhombus_t(float_t) is 8 bytes, and a @rhombus_t(double_t) is 16 bytes.
+ @rhombus_t(float_t) is 4 bytes, and a @rhombus_t(double_t) is 8 bytes.
  On the Rhombus side, both are represented as
  @tech(~doc: ref_doc){flonums}.
 
