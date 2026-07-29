@@ -23,6 +23,8 @@ block:
   check o.unobserve(save_f) ~is #void
   check o.value := #false ~is #void
   check save ~is #true
+  check o.throttle().value ~is #false
+  check o.debounce().value ~is #false
 
 block:
   let orig_o = Obs(["1"])

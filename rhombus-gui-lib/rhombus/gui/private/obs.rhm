@@ -194,10 +194,10 @@ class Obs(private _handle, private _converter = #false):
     _Obs(easy.#{obs-map}(handle, wrap_convert(f)))
 
   method debounce(~duration: duration :: Nat = 200) :: Obs:
-    _Obs(easy.#{obs-debounce}(~duration: duration))
+    _Obs(easy.#{obs-debounce}(handle, ~duration: duration))
 
   method throttle(~duration: duration :: Nat = 200) :: Obs:
-    _Obs(easy.#{obs-throttle}(~duration: duration))
+    _Obs(easy.#{obs-throttle}(handle, ~duration: duration))
 
   export:
     combine
