@@ -223,6 +223,9 @@ def_unquote field: #'#{datum}
 
 def_unquote unquote_bind:
   PairList[#'#{rhombus/unquote_bind}, #'#{rhombus/bind}]
+namespace ~extend unquote_bind:
+  export: full
+  def_unquote full: #'#{rhombus/unquote_bind}
 
 def_unquote operator_order_or_expr:
   PairList[#'#{rhombus/operator_order}, #false]
@@ -233,6 +236,7 @@ def_unquote.full expr
 def_unquote.full bind
 def_unquote.full annot
 def_unquote.full class
+def_unquote.full stxclass
 def_unquote.full class_clause
 def_unquote.full interface_clause
 def_unquote.full veneer_clause
@@ -821,6 +825,43 @@ check_spacer:
          $(pattern_clause.full) $expr . $field() $expr $datum
          $(pattern_clause.full) $none = $datum):
       $body
+
+check_spacer:
+  match stx
+  | '$(group_option_sequence
+       | '~min_args: $(min :: Int)':
+           default min = '1'
+       | '~max_args: $(max :: Int)')':
+      min.unwrap() ..= (max || min).unwrap()
+  $(expr.full) $expr
+  | '$(bind.full) (
+       $(unquote_bind.full)
+       | '$datum: $(bind.full) ($none $(unquote_bind.full) $stxclass)':
+           $(pattern_clause.full) $none $expr '$datum'
+       | '$datum: $(bind.full) ($none $(unquote_bind.full) $stxclass)'
+     )':
+      $body . $field() $(expr.full) ($body $body $body) . $field()
+
+check_spacer:
+  match stx
+  | '$(term_option_sequence
+       | '$(int :: Int)'
+       | '$(str :: String)':
+            let maybe_int = str.unwrap().maybe_to_int()
+            match_when maybe_int
+            default int = Syntax.make(maybe_int))':
+      math.sum(int.unwrap(), ...)
+  $(expr.full) $expr
+  | '$(bind.full) (
+       $(unquote_bind.full)
+       | '$(bind.full) ($none $(unquote_bind.full) $stxclass)'
+       | '$(bind.full) ($none $(unquote_bind.full) $stxclass)':
+           $(defn.full) $bind $expr $expr . $field() . $field()
+           $(pattern_clause.full) $expr
+           $(pattern_clause.full) $none $expr $expr . $field($expr)
+     )':
+      $body . $field($body . $field(), $body)
+
 
 check_spacer:
   Parameter.def color = "red"

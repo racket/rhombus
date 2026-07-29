@@ -36,6 +36,8 @@ meta:
       | ~else:
           context
     match stx
+    | '':
+        stx
     | '$(_ :: Term)':
         Syntax.property(stx, #'#{typeset-space-name}, context, #true)
     | '$(t :: Term) ...':

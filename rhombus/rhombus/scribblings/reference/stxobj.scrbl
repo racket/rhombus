@@ -736,6 +736,8 @@ or adjusted in any way
     syntax_pattern: #%quotes pattern
     pattern_body: syntax_class ~defn
     id_maybe_rep: field ~pattern_clause
+    def_expr: block expr
+    def_body: block body
 
   unquote_bind.macro 'group_option_sequence
                       | $pattern_case
@@ -752,8 +754,8 @@ or adjusted in any way
 
   grammar option_pattern_body
   | pattern_body
-  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep = $expr
-  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep: $body; ...
+  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep = $def_expr
+  | #,(@rhombus(default, ~pattern_clause)) $id_maybe_rep: $def_body; ...
   | #,(@rhombus(description, ~pattern_clause)) $string
   | #,(@rhombus(description, ~pattern_clause)): $string
 ){
@@ -777,12 +779,12 @@ or adjusted in any way
  repetition. A @rhombus(default, ~pattern_clause) clause within a
  @rhombus(pattern_case) can specify a different default; each
  @rhombus(id_maybe_rep) names a variable with its depth in the same way
- as for @rhombus(field, ~pattern_clause). The @rhombus(expr) or
- @rhombus(body) sequence within a @rhombus(default, ~pattern_clause)
+ as for @rhombus(field, ~pattern_clause). The @rhombus(def_expr) or
+ @rhombus(def_body) sequence within a @rhombus(default, ~pattern_clause)
  clause has the scope of the enclosing
  @rhombus(group_option_sequence, ~unquote_bind) or
  @rhombus(term_option_sequence, ~unquote_bind) form; it is not in the
- scope of definitions within the @rhombus(pattern_case)  body, because it is used
+ scope of definitions within the @rhombus(pattern_case) body, because it is used
  for non-matches instead of matches.
 
  A @rhombus(description, ~pattern_clause) clause can provide a string
@@ -799,12 +801,13 @@ or adjusted in any way
                     | '~min_args: $(min :: Int)':
                         default min = '1'
                     | '~max_args: $(max :: Int)')':
-      'fun $(Syntax.make(
-               [#'alts,
-                & for List (i in min.unwrap() ..= (max || min).unwrap()):
-                  let [var, ...] = for List (j in 0..i): Syntax.make_temp_id()
-                  ': ($var, ...): [$var, ...]']
-             ))'
+      let [[var, ...], ...]:
+        for List (i in min.unwrap() ..= (max || min).unwrap()):
+          for List (j in 0..i):
+            Syntax.make_temp_id()
+      'fun
+       | ($var, ...): [$var, ...]
+       | ...'
   ~repl:
     def f_2:
       list_proc:
@@ -824,7 +827,7 @@ or adjusted in any way
         ~min_args: 2
         ~min_args: 3
 )
-<
+
 }
 
 @doc(
