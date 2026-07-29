@@ -30,7 +30,7 @@ class Label(private _at_label :: Obs):
       fun (mixin):
         let mixin = mix_window_child_callbacks(mixin, wcb)
         super(easy.text(obs.unwrap(at_label),
-                        ~color: obs.unwrap(color),
+                        ~color: obs.unwrap_convert(color, fun (c): c && (c :~ draw.Color).handle),
                         ~font: font.handle,
                         ~margin: obs.unwrap_list(margin, values),
                         ~#{min-size}: obs.unwrap_list(min_size, values),

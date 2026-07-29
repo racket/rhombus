@@ -50,7 +50,7 @@ class Input(private _at_content :: Obs):
                          ~label: obs.unwrap(label),
                          ~choices: choices && obs.unwrap_list(choices, values),
                          ~#{enabled?}: obs.unwrap(enable),
-                         ~#{background-color}: obs.unwrap(bg_color),
+                         ~#{background-color}: obs.unwrap_convert(bg_color, fun (c): c && (c :~ draw.Color).handle),
                          ~style: obs.unwrap_list(style, convert_style, make_check_styles(! !choices)),
                          ~font: obs.unwrap_convert(font, fun (f): f && (f :~ Font).handle),
                          ~margin: obs.unwrap_list(margin, values),
