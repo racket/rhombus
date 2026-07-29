@@ -134,11 +134,13 @@ garbage collector is independent of its tags.
 @doc(
   ~nonterminal:
     field_expr: block expr
+    element_expr: block expr
     variant_id: block id
     type: * type ~at rhombus/ffi/type
   expr.macro 'new $maybe_mode $type'
   expr.macro 'new $maybe_mode $type($field_expr, ...)'
   expr.macro 'new $maybe_mode $type($variant_id: $field_expr)'
+  expr.macro 'new $maybe_mode $type { $element_expr, ...}'
   grammar maybe_mode
   | ~manual
   | ~gcable
@@ -155,10 +157,14 @@ garbage collector is independent of its tags.
 
  The amount of allocated memory depends on @rhombus(type), where the
  allocated memory spans as many bytes as the C representation of
- @rhombus(type). A type of the form
+ @rhombus(type), times eiher @rhombus(1) or the number of
+ @rhombus(element_expr)s provided. A type of the form
  @rhombus(#,(@rhombus(elem_type, ~var))[#,(@rhombus(expr, ~var))]) is
  allowed with a non-literal @rhombus(expr, ~var) to allocate the
- indicated multiple of the C size of @rhombus(elem_type, ~var) in bytes.
+ indicated multiple of the C size of @rhombus(elem_type, ~var) in bytes,
+ instead of providing the corresponding number of @rhombus(element_expr)s.
+ If @rhombus(element_expr)s are provided, they are installed into the
+ allocated memory as by @rhombus(mem .... := ....).
 
  By default, allocation uses @rhombus(~gcable) mode, but a
  @rhombus(maybe_mode) specification can pick any of the supported modes:
@@ -192,6 +198,10 @@ garbage collector is independent of its tags.
 
 )
 
+ Unless @rhombus(element_expr)s are provided, the initial content of
+ allocated memory is unspecified, except that it is safe (effectively
+ zeroed) in @rhombus(~traced) and @rhombus(~traced_immobile) modes.
+
 @examples(
   ~eval: ffi_eval,
   ~repl:
@@ -206,6 +216,9 @@ garbage collector is independent of its tags.
     def p3 = new int_t[1+2]
     p3[2] := 20
     p3[2]
+  ~repl:
+    def p4 = new int_t { 101, 102, 103, 104 }
+    p4[2]
   ~repl:
     def p1_imm = new ~immobile int_t
     def i1_imm = ptr_to_uintptr(p1_imm)

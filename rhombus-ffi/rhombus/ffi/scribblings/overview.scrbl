@@ -955,7 +955,8 @@ when it is no longer needed.
 @examples(
   ~eval: ffi_eval
   ~defn:
-    def the_counter = new ~manual int_t
+    :
+      def the_counter = new ~manual int_t { 0 } // allocate and initialize
     :
       // ...
       def end_count = the_counter[0]
@@ -970,7 +971,7 @@ not allowed to relocate the object as long as it is live.
 @examples(
   ~eval: ffi_eval
   ~defn:
-    def the_counter = new ~immobile int_t
+    def the_counter = new ~immobile int_t { 0 }
 )
 
 The constructor created by @rhombus(foreign.struct) uses @rhombus(new),

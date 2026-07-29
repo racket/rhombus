@@ -56,3 +56,10 @@ block:
   foreign.type Size_t
   check r.size is_a foreign.type Size_t* ~is #false
   check r2.size is_a foreign.type Size_t* ~is #true
+
+block:
+  let ps = new Point_t { new Point_t(1, 2), new Point_t(3, 4) }
+  check ps[0].x ~is 1
+  check ps[0].y ~is 2
+  check ps[1].x ~is 3
+  check ps[1].y ~is 4

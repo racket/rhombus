@@ -16,6 +16,9 @@ block:
   let p_is = new int_t[5+5]
   check p_is ~is_a ptr_t
 
+  let p_is_init = new int_t { 1, 2, 3, 4 }
+  check p_is_init ~is_a ptr_t
+
   check mem *(int_t*)p_i := 10 ~is #void
   check mem *(int_t*)p_i ~is 10
 
@@ -35,6 +38,9 @@ block:
 
   check mem p_is[1] := 345 ~is #void
   check mem (mem &p_is[1])[0] ~is 345
+
+  check p_is_init[0] ~is 1
+  check p_is_init[3] ~is 4
 
   check mem *(p_i) := 20 + 30 ~is #void
   check mem *(p_i) ~is 50
