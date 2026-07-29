@@ -275,7 +275,7 @@ class Pict():
   abstract protected method _time_pad(before :: Int, after :: Int) :~ Pict
   abstract method time_clip(~keep: keep :: maybe(TimeOrder) = #false,
                             ~nonsustaining: nonsustaining = keep != #'after) :~ Pict
-  method delay(n :: Nat) :~ Pict: time_clip(~keep: #'after).time_pad(~before: 1)
+  method delay(n :: Nat) :~ Pict: time_clip(~keep: #'after).time_pad(~before: n)
   abstract method sustain(n :: Int = 1) :~ Pict
   abstract method nonsustaining() :~ Pict
   abstract method epoch_set_extent(i :: Int, extent :: NonnegReal) :~ Pict
