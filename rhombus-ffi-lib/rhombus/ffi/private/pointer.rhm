@@ -7,6 +7,7 @@ import:
   lib("ffi2/main.rkt")!unsafe as ffi2_unsafe:
     expose:
       #{unsafe-ffi2-malloc} as ffi2_malloc
+      #{unsafe-ffi2-new} as ffi2_new
       #{unsafe-ffi2-ref} as #{|mem reference|}
       #{unsafe-ffi2-set!} as #{|mem assignment|}
       #{unsafe-ffi2-add} as #{|mem shift|}
@@ -182,8 +183,7 @@ expr.macro 'new $(m :: MallocMode) $(t :: type_meta.AfterPrefixParsed('int_t')) 
       | add_annot(m_e, 'PointerOf($(type_meta.unpack_annot(t)),
                                   $(type_meta.unpack_type(t)),
                                   $(type_meta.unpack_array_length(t)))')
-    values(m_e,
-           tail)
+    values(m_e, tail)
   match tail
   | '($(field_id :: Identifier): $e) $tail ...' when type_meta.unpack_union_proc_ids(t):
       match type_meta.unpack_union_proc_ids(t)
@@ -201,6 +201,17 @@ expr.macro 'new $(m :: MallocMode) $(t :: type_meta.AfterPrefixParsed('int_t')) 
                     type_meta.unpack_annot(t))
       | ~else:
           default()
+  | '{$e, ...} $tail ...':
+      let m_e:
+        expr_meta.pack_s_exp(['ffi2_new',
+                              m.mode,
+                              type_meta.s_exp(type_meta.unpack_type(t)),
+                              expr_meta.pack_expr(e), ...])
+      let m_e:
+        add_annot(m_e, 'PointerOf($(type_meta.unpack_annot(t)),
+                                  $(type_meta.unpack_type(t)),
+                                  $(type_meta.unpack_array_length(t)))')
+      values(m_e, '$tail ...')
   | ~else:
       default()
 
