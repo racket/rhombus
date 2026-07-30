@@ -179,3 +179,11 @@ check:
      | inside':
       "yes"
   ~is "yes"
+
+check:
+  // make sure rhs is not mismused in a way that prevents a match
+  def '$(group_option_sequence
+         | '$stx': default stx = #false)':
+    'hi'
+  stx
+  ~matches 'hi'

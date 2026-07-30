@@ -529,9 +529,8 @@
                                         orig-stx
                                         #'clause-stx))
                   (loop (cdr body)
-                        null
-                        (list* #'rhs '#:when
-                               (accum-do))
+                        rev-do
+                        rev-body
                         rev-attrs
                         desc
                         (cons (list #'id (syntax-e #'depth) #'rhs)
