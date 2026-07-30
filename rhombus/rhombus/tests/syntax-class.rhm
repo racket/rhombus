@@ -1808,3 +1808,11 @@ check:
   let '$(_ :: Wrapper)' = 'x y'
   "done"
   ~prints "['x y'] ['x'] ['y']\n"
+
+// check that `stx` has static info as a repetition
+block:
+  syntax_class Test:
+  | '$stx':
+      def [xs, ...] = [1, 2, 3]
+      [xs && stx.unwrap(), ...]
+  #void

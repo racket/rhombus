@@ -123,12 +123,14 @@
     [no-repetition?
      (if (null? (syntax-e attributes))
          (expression-repeatable-transformer
-          id-handler)
+          id-handler
+          statinfos)
          (expression-repeatable-transformer
           (lambda (stx)
             (expr-handler stx
                           (lambda ()
-                            (id-handler stx))))))]
+                            (id-handler stx))))
+          statinfos))]
     [else
      (define attrs (syntax->list attributes))
      (define attr-tmps (generate-temporaries attrs))

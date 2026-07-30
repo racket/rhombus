@@ -117,14 +117,19 @@
     (when (syntax-local-value* id (lambda (v)
                                     (and (or (expression-prefix-operator-ref v)
                                              (expression-infix-operator-ref v))
-                                         (not (expression-repeatable-prefix-operator? v)))))
+                                         (not (expression-repeatable-prefix-operator? v))
+                                         v)))
       (raise-syntax-error #f
                           "expression form does not support use as a repetition"
                           id))
     (make-repetition-info (list id)
                           null
                           (relocate id #`(rhombus-expression (group #,id)))
-                          #`((#%indirect-static-info #,id))
+                          (let ([t (syntax-local-value* id (lambda (v) (and (expression-repeatable-prefix-operator? v) v)))])
+                            (if (and (expression-repeatable-prefix-operator? t)
+                                     (expression-repeatable-prefix-operator-statinfos t))
+                                (expression-repeatable-prefix-operator-statinfos t)
+                                #`((#%indirect-static-info #,id))))
                           0))
 
   ;; Form in a repetition context:
