@@ -15,6 +15,7 @@
 (provide (for-space rhombus/bind
                     &&
                     \|\|
+                    as
                     !
                     is_now))
 
@@ -163,6 +164,34 @@
   (syntax-parse stx
     [(_ arg-id () (lhs rhs))
      #'(begin)]))
+
+;; ----------------------------------------
+;; as
+
+(define-binding-syntax as
+  (binding-prefix+infix-operator
+   (binding-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        [(form-id . tail)
+         (values (make-identifier-binding #'form-id)
+                 #'tail)])))
+   (binding-infix-operator
+    (lambda () (order-quote logical_conjunction))
+    null
+    'macro
+    (lambda (lhs stx)
+      (syntax-parse stx
+        [(form-id name:id . tail)
+         (define rhs (make-identifier-binding #'name))
+         (values
+          (transfer-origins
+           (list lhs rhs)
+           (binding-form
+            #'and-infoer
+            #`(#,lhs #,rhs)))
+          #'tail)]))
+    'left)))
 
 ;; ----------------------------------------
 ;; !
