@@ -156,3 +156,31 @@ check:
     "expected: 1",
     "received: 2",
   )
+
+check:
+  def _ as _ = 10
+  _
+  ~is 10
+
+check:
+  def as = ["a", "a", "a"]
+  as
+  ~is ["a", "a", "a"]
+
+check:
+  use_static
+  def _ as x = 10
+  x < x
+  ~is #false
+
+check:
+  use_static
+  def _ as x :: Int = dynamic(10)
+  x < x
+  ~is #false
+
+check:
+  use_static
+  def _ :: Int as x = dynamic(10)
+  x < x
+  ~is #false

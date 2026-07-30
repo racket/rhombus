@@ -107,3 +107,39 @@
 )
 
 }
+
+@doc(
+  bind.macro '$bind as $id'
+  bind.macro 'as'
+){
+
+ A binding @rhombus(bind as id, ~bind) is essentially the same as
+ @rhombus(bind && id, ~bind): it binds according the left-hand
+ @rhombus(bind) as well as binding its right-hand @rhombus(id) as a match
+ to anything. The difference is that @rhombus(as, ~bind) always treats
+ its right-hand @rhombus(id) as a pattern variable, and never as a
+ (prefix) binding operator, so it could be used to bind names like
+ @rhombus(_, ~datum) (which would otherwise refer to the
+ @rhombus(_, ~bind) binding form) and @rhombus(mutable, ~datum) (which
+ would otherwise refer to the @rhombus(mutable, ~bind) binding form).
+ Even when @rhombus(id) is not already bound, using @rhombus(as, ~bind)
+ is potentially clearer than using @rhombus(&&) when giving a name to a
+ value whose components are matched in the left-hand @rhombus(bind).
+
+ By itself, @rhombus(as, ~bind) binds the name @rhombus(as, ~datum).
+ That is, @rhombus(as, ~bind) by itself is equivalent to
+ @rhombus(_ as as, ~bind).
+
+@examples(
+  block:
+    let _ as x = 10
+    x
+  block:
+    let _ as _ = 10
+    _
+  block:
+    let as = ["a", "a", "a"]
+    as
+)
+
+}
