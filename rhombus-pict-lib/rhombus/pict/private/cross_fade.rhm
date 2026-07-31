@@ -6,10 +6,15 @@ import:
 export:
   cross_fade
   CrossFit
+  CrossAlpha
 
 enum CrossFit
 | none
 | scale
+
+enum CrossAlpha
+| parallel
+| sequential
 
 // Interpolation on `from` and `to` picts at fraction `n`
 // (ranges 0 to 1) assuming that `from` and `to` are not
@@ -23,7 +28,8 @@ fun static_interpolate(from :: Pict, to :: Pict, n,
                        ~scale: do_scale,
                        ~horiz: horiz,
                        ~vert: vert,
-                       ~order: order):
+                       ~order: order,
+                       ~fade: fade):
   fun interpolate(a, b): a * (1-n) + b * n
   let (adx, ady, aw, ah, aa, ad) = from.paragraph_end_bounds()
   let (bdx, bdy, bw, bh, ba, bd) = to.paragraph_end_bounds()
@@ -49,8 +55,8 @@ fun static_interpolate(from :: Pict, to :: Pict, n,
                 if h .= 0 | h | height/h)
     | p
   overlay(b,
-          maybe_scale(from).alpha(1 - n),
-          maybe_scale(to).alpha(n),
+          maybe_scale(from).alpha(if fade == #'sequential | math.max(0, 1-2*n) | 1 - n),
+          maybe_scale(to).alpha(if fade == #'sequential | math.max(0, 2*n - 1) | n),
           ~horiz: horiz,
           ~vert: vert,
           ~order: order)
@@ -63,7 +69,8 @@ fun cross_fade(from :: StaticPict, to :: StaticPict,
                ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1)) = bend.fast_middle,
                ~horiz: horiz :: HorizAlignment = #'center,
                ~vert: vert :: VertAlignment = #'center,
-               ~order: order :: OverlayOrder = #'front):
+               ~order: order :: OverlayOrder = #'front,
+               ~fade: fade :: CrossAlpha = #'parallel):
   animate(
     ~bend: bender,
     ~extent: extent,
@@ -91,6 +98,7 @@ fun cross_fade(from :: StaticPict, to :: StaticPict,
                                  ~scale: fit == #'scale,
                                  ~horiz: horiz,
                                  ~vert: vert,
-                                 ~order: order)
+                                 ~order: order,
+                                 ~fade: fade)
           )
   )

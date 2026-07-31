@@ -111,7 +111,7 @@ See also @secref("Equatables").
   key_comp.def 'is_now'
 ){
 
- Th @rhombus(is_now) operator reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
+ The @rhombus(is_now) operator reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
  in the sense that mutable fields of objects have the same values. The
  operator combination @rhombus(!is_now) inverts the test.
 
@@ -124,7 +124,7 @@ See also @secref("Equatables").
  As a binding operator, @rhombus(is_now, ~bind) matches values that are
  equal by the @rhombus(is_now) operator to a @rhombus(literal), where
  @rhombus(literal) is typically a @tech{string} or @tech{byte string}.
- See @rhombus(#%literal, ~bind) for information on the allow forms of
+ See @rhombus(#%literal, ~bind) for information on the allowed forms of
  @rhombus(literal).
 
  The @rhombus(is_now, ~key_comp) @tech(~doc: meta_doc){map configuration} can be used with forms

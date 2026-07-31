@@ -422,6 +422,7 @@
     ~vert: vert_align :: VertAlignment = (if dx || dy | #'top | #'center),
     ~order: order :: OverlayOrder = #'front,
     ~extent: extent :: NonnegReal = 0.5,
+    ~fade: fade :: CrossAlpha = #'parallel,
     ~bend: bender :: (Real.in(0, 1) -> Real.in(0, 1))
              = bend.fast_middle,                 
   ) :: Pict
@@ -444,7 +445,11 @@
  
  The cross fade takes @rhombus(extent) seconds. The @rhombus(bender)
  argument maps time within the epoch to an interpolation point, the same
- as with @rhombus(animate).
+ as with @rhombus(animate). If @rhombus(fade) is @rhombus(#'parallel),
+ then @rhombus(from)'s drawing is faded out at the same time that
+ @rhombus(to)'s drawing is faded in, while @rhombus(#'sequential) mode
+ fades out @rhombus(from)'s drawing completely before fading in
+ @rhombus(to)'s drawing.
 
  When using @rhombus(cross_fade) plus @rhombus(Pict.snapshot) to compute
  an interpolation between two picts, then @rhombus(bender) should
@@ -460,6 +465,9 @@
     explain_anim(cross_fade(circle(~size: 15), square(~size: 25),
                             ~horiz: #'left))
 )
+
+@(history:
+    ~changed "1.1": @elem{Added the @rhombus(#:fade) argument.})
 
 }
 
@@ -527,6 +535,18 @@
 ){
 
  Fit mode for @rhombus(cross_fade).
+
+}
+
+@doc(
+  enum CrossAlpha
+  | parallel
+  | sequential
+){
+
+ Alpha-fading mode for @rhombus(cross_fade).
+
+@(history: ~added "1.1")
 
 }
 

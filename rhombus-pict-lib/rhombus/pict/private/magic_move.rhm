@@ -40,7 +40,7 @@ fun magic_move(all_pre :: Pict, post :: Pict,
             let exists = tx
             let moves:
               exists && block:
-                let (fx, fy) = Find.top_left(child).in(start_p)
+                let (fx, fy) = Find.top_left(child).in(start_p, ~nth: 0)
                 fx .!= (tx + dx) || fy .!= (ty + dy) || block:
                   let (tx2, ty2) = Find.bottom_right(child).maybe_in(other_p)
                   let (fx2, fy2) = Find.bottom_right(child).maybe_in(start_p)
@@ -59,14 +59,16 @@ fun magic_move(all_pre :: Pict, post :: Pict,
       let post_w = post.width
       let pre_h = pre.height
       let post_h = post.height
+      let (pre_p_dx, pre_p_dy, pre_p_w, pre_p_h, pre_p_a, pre_p_d) = pre.paragraph_end_bounds()
+      let (post_p_dx, post_p_dy, post_p_w, post_p_h, post_p_a, post_p_d) = post.paragraph_end_bounds()
       fun interpolate(pre, post, n): ((1 - n) * pre + n * post)
       fun move(child :~ Pict, dir, other_common :~ Map) :~ Pict:
-        let (fx, fy) = Find.top_left(child).in(pre)
-        let (fx2, fy2) = Find.bottom_right(child).in(pre)
+        let (fx, fy) = Find.top_left(child).in(pre, ~nth: 0)
+        let (fx2, fy2) = Find.bottom_right(child).in(pre, ~nth: 0)
         let fdx = (fx + fx2 - pre_w)/2
         let fdy = (fy + fy2 - pre_h)/2
-        let (tx, ty) = Find.top_left(child).in(post)
-        let (tx2, ty2) = Find.bottom_right(child).in(post)
+        let (tx, ty) = Find.top_left(child).in(post, ~nth: 0)
+        let (tx2, ty2) = Find.bottom_right(child).in(post, ~nth: 0)
         let tdx = (tx + tx2 - post_w)/2
         let tdy = (ty + ty2 - post_h)/2
         let fsx = (fx2 - fx) / child.width
@@ -119,6 +121,12 @@ fun magic_move(all_pre :: Pict, post :: Pict,
                   let p:
                     p.pad(~horiz: (w - p.width) / 2,
                           ~vert: (h - p.height) / 2)
+                  let p = p.set_paragraph_end_bounds(interpolate(pre_p_dx, post_p_dx, n),
+                                                     interpolate(pre_p_dy, post_p_dy, n),
+                                                     interpolate(pre_p_w, post_p_w, n),
+                                                     interpolate(pre_p_h, post_p_h, n),
+                                                     interpolate(pre_p_a, post_p_a, n),
+                                                     interpolate(pre_p_d, post_p_d, n))
                   p,
                 ~bend: bender,
                 ~extent: extent)
