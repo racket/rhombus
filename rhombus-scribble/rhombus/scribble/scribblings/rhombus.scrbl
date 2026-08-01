@@ -10,7 +10,7 @@
   expr.macro 'rhombus($group)'
   expr.macro 'rhombus($group, $builtin_space)'
   expr.macro 'rhombus($group, ~at $space_name)'
-  expr.macro 'rhombus($group, ~at: $space_name)'
+  expr.macro 'rhombus($group, ~at: $space_name; ...)'
   grammar builtin_space
   | ~var
   | ~datum
@@ -58,7 +58,9 @@
 
  A @rhombus(builtin_space) or space name after @rhombus(~at) supplies
  the initial space to use for creating hyperlinks in @rhombus(group)
- based on @rhombus(meta_label, ~impo) imports.
+ based on @rhombus(meta_label, ~impo) imports. Each @rhombus(space_name)
+ is formed by concatenating the @rhombus(to_string) forms of
+ @rhombus(id_or_op)s in a sequence.
 
  Typesetting and hyperlinking can be adjusted via @tech{spacers}, which
  can select an alternative space for components of @rhombus(group) for
@@ -73,6 +75,9 @@
  is bound as a transformer that adds the @rhombus(~var) space to the
  identifier.
 
+@(history:
+    ~changed "1.2": @elem{Allow multiple @rhombus(space_name)s in a
+                          block after @rhombus(~at).})
 }
 
 @doc(
