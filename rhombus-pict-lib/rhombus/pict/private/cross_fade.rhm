@@ -70,7 +70,7 @@ fun cross_fade(from :: StaticPict, to :: StaticPict,
                ~horiz: horiz :: HorizAlignment = #'center,
                ~vert: vert :: VertAlignment = #'center,
                ~order: order :: OverlayOrder = #'front,
-               ~fade: fade :: CrossAlpha = #'parallel):
+               ~fade: fade :: CrossAlpha = #'parallel) :~ Pict:
   animate(
     ~bend: bender,
     ~extent: extent,

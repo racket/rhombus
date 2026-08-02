@@ -3,7 +3,9 @@
 import:
   draw
   pict:
-    expose Pict
+    expose:
+      Pict
+      StaticPict
   pict/text
   rhombus/pict/text!ly.ly
   slideshow/config
@@ -32,6 +34,7 @@ export:
   slide
   slide_pict
   slide_content_pict
+  slide_transition
 
   nonarchival
   continued
@@ -77,6 +80,9 @@ fun titlet(a, ...) :~ Pict:
 
 // ----------------------------------------
 
+def mutable previous_slide_data = #false
+def mutable pending_transition = #false
+
 enum SlideLayout
 | auto
 | center
@@ -103,6 +109,12 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
                              flatten_slide_content(#'slide, [content, ...]))
   let name = if name is_a String | name | to_string(name)
   let p: assemble_slide(title, layout, aspect, p, ~lead_in: lead_in)
+  let (p, lead_in):
+    if pending_transition
+    | apply_pending_transition(p, { #'name: name,
+                                    #'lead_in: lead_in,
+                                    #'aspect: aspect })
+    | values(p, lead_in)
   when lead_in && !rkt.#{condense?}
   | rkt_play.#{play-n}(~name: name,
                        ~#{skip-first?}: #true,
@@ -132,6 +144,9 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
                            | { #'~#{page-mode}: if continued | #'none | #'epoch }
                            | {},
                            fun (n): p.snapshot(i, n).draw_handle)
+  previous_slide_data := p.duration > 0 && { #'pict: p.snapshot(p.duration-1, 0),
+                                             #'prev_name: name,
+                                             #'prev_aspect: aspect }
 
 fun slide_pict(~title: title :: maybe(String || Pict) = #false,
                ~full: full = title && #true,
@@ -205,6 +220,19 @@ fun blank_client(~aspect: aspect :: Aspect = #'widescreen,
 
 // ----------------------------------------
 
+fun slide_transition(transition :: (StaticPict, Pict, Map) -> (Pict, Boolean)):
+  pending_transition := transition
+
+fun apply_pending_transition(p, data :~ Map) :~ values(Pict, Boolean):
+  let prev_data :~ Map = previous_slide_data
+  unless prev_data
+  | error("no previous slide for transition")
+  let transition = pending_transition
+  pending_transition := #false
+  transition(prev_data[#'pict], p, data ++ prev_data.remove(#'pict))
+
+// ----------------------------------------
+
 fun interactive(p :: Pict, callback :: Function.of_arity(1)) :~ Pict:
   Pict.from_handle(rkt.interactive(p.snapshot().handle, callback))
 
@@ -219,12 +247,14 @@ fun start_at_recent():
 
 // ----------------------------------------
 
-class Slide(private _handle):
+class Slide(private _handle, private _slide_data):
   internal _Slide
   constructor ~none
   property handle: _handle
   method reissue():
+    previous_slide_data := _slide_data
     rkt.#{re-slide}(_handle)
 
 fun retract_recent() :~ Slide:
-  _Slide(rkt.#{retract-most-recent-slide}())
+  _Slide(rkt.#{retract-most-recent-slide}(),
+         previous_slide_data)

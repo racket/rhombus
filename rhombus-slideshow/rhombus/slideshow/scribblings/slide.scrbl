@@ -4,6 +4,8 @@
     meta_label:
       rhombus open
       slideshow open
+      pict.Pict
+      pict.StaticPict
       draw.Font)
 
 @title(~tag: "slide"){Creating Slides}
@@ -41,6 +43,8 @@
 
  The @rhombus(title), @rhombus(layout), and @rhombus(aspect) arguments are used to combine
  content picts via the @rhombus(current_assembler) parameter's value.
+ See also @rhombus(slide_pict), which performs that combination
+ without registering a slide.
 
  Besides immediate picts, the @rhombus(content) values can produce
  descriptions of slides to construct using lists, @rhombus(slide.next), @rhombus(slide.sync),
@@ -236,6 +240,66 @@
 }
 
 @doc(
+  fun slide_transition(
+    transition :: (StaticPict, Pict, Map) -> (Pict, Boolean)
+  ) :: Void
+){
+
+ Registers @rhombus(transition) to be invoked on the next call to
+ @rhombus(slide). The @rhombus(transition) function is called with a an
+ assembled @rhombus(StaticPict, ~annot) for the previous slide, an
+ assembled @rhombus(Pict, ~annot) for the new slide, and a
+ @rhombus(Map, ~annot) describing extra properties of the old an new
+ slide. The result is a @rhombus(Pict, ~annot) to be used in place of the
+ given one for a new slide, plus a @rhombus(Boolean, ~annot) that is used
+ in place of the @rhombus(~lead_in) argument for the new slide (see
+ @rhombus(slide)). A @rhombus(transition) function is used only once
+ per registration via @rhombus(slide_transition).
+
+ The @rhombus(StaticPict, ~annot) for the previous slide corresponds to
+ a snapshot at the end of the last epoch for the previous slide. The
+ @rhombus(Pict, ~annot) for the new slide can be animated with multiple
+ epochs, reflecting the case that a single call to @rhombus(slide)
+ generates a animated or multi-epoch @rhombus(Pict, ~annot). Both the
+ @rhombus(StaticPict, ~annot) and @rhombus(Pict, ~annot) are assembled in
+ the sense that they have been combined along with their titles, if any,
+ as by @rhombus(slide_pict).
+
+ The @rhombus(Map, ~annot) argument to @rhombus(transition) provides
+ additional information through the following keys (with more
+ potentially added in the future):
+
+@itemlist(
+
+ @item{@rhombus(#'prev_name): The name (defaults to the title) for the
+  previous slide.}
+
+ @item{@rhombus(#'name): The name (defaults to the title) that will be
+  used for the new slide.}
+
+ @item{@rhombus(#'lead_in): The value of the @rhombus(~lead_in) argument
+  for the @rhombus(slide) call that triggered a new slide.}
+
+ @item{@rhombus(#'prev_aspect): An aspect ration as an
+  @rhombus(Aspect, ~annot) for the previous slide.}
+
+ @item{@rhombus(#'aspect): An aspect ration as an
+  @rhombus(Aspect, ~annot) for the new slide.}
+
+)
+
+ A @rhombus(transition) function can call @rhombus(slide) and/or
+ @rhombus(slide_transition). If it calls @rhombus(slide), then newly
+ created slides will appear before the result of @rhombus(transition). If
+ it calls @rhombus(slide_transition), then the registered function is
+ invoked on the next call to @rhombus(slide) and not to the result of the
+ @rhombus(transition) function.
+
+@(history: ~added "1.1")
+
+}
+
+@doc(
   fun retract_recent() :: Slide
   class Slide():
     constructor ~none
@@ -244,10 +308,10 @@
 ){
 
  The @rhombus(retract_recent) function unregisters the most recently
- registered slide and returns a representation of that slide as a
+ registered slide instant and returns a representation of that slide as a
  @rhombus(Slide, ~class) object. The @rhombus(Slide.reissue) method
  registers a copy of the slide. Together, the function and method provide
  limited support for post-hoc reordering of slides, but beware that each
- step of an animation counts as a different slide for these operations.
+ step of an animation counts as a different slide instant.
 
 }
