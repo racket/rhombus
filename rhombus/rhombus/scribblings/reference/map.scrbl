@@ -206,6 +206,7 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   expr.macro 'Map.by($key_comp){$key_val_or_splice, ...}'
   expr.macro 'Map.by($key_comp)'
   repet.macro 'Map.by($key_comp){$key_repet_or_splice, ...}'
+  repet.macro 'Map.by($key_comp)'
 ){
 
  Constructs an immutable map containing given keys mapped to the given
@@ -214,8 +215,10 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
  The @braces form works as a repetition, where @rhombus(key_repet_or_splice)
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
- The @rhombus(Map.by) variants create a map that uses the equality and
- hashing functions specified by @rhombus(key_comp) for keys.
+ The @rhombus(Map.by(key_comp){key_val_or_splice}) form creates a map
+ that uses the equality and hashing functions specified by
+ @rhombus(key_comp), while @rhombus(Map.by(key_comp)) by itself
+ returns a function like @rhombus(Map) that will produce such maps.
 
 @examples(
   def m = Map{"x": 1, "y": 2}
@@ -375,11 +378,16 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
+    key_repet: block repet
+    val_repet: block repet
   expr.macro 'MutableMap{$key_expr: $val_expr, ...}'
+  repet.macro 'MutableMap{$key_repet: $val_repet, ...}'
   fun MutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: MutableMap
   expr.macro 'MutableMap.by($key_comp){$key_expr: $val_expr, ...}'
   expr.macro 'MutableMap.by($key_comp)'
+  repet.macro 'MutableMap.by($key_comp){$key_repet: $val_repet, ...}'
+  repet.macro 'MutableMap.by($key_comp)'
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
@@ -403,11 +411,16 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   ~nonterminal:
     key_expr: block expr
     val_expr: block expr
+    key_repet: block repet
+    val_repet: block repet
   expr.macro 'WeakMutableMap{$key_expr: $val_expr, ...}'
+  repet.macro 'WeakMutableMap{$key_repet: $val_repet, ...}'
   fun WeakMutableMap([key :: Any, val :: Any] :: Listable.to_list, ...)
     :: WeakMutableMap
   expr.macro 'WeakMutableMap.by($key_comp){$key_expr: $val_expr, ...}'
   expr.macro 'WeakMutableMap.by($key_comp)'
+  repet.macro 'WeakMutableMap.by($key_comp){$key_repet: $val_repet, ...}'
+  repet.macro 'WeakMutableMap.by($key_comp)'
 ){
 
  Like @rhombus(MutableMap), but creates a map where a key is removed

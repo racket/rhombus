@@ -85,9 +85,10 @@ elements strongly or both weakly, and have the same elements.
  annotation, but an @rhombus(MutableSet.later_of, ~annot) annotation can
  imply static information for elements.
 
- The @rhombus(Set.by, ~annot) and @rhombus(MutableSet.by, ~annot)
- annotation variants match only sets that use the hash and equality
- functions specified by @rhombus(key_comp).
+ The @rhombus(Set.by, ~annot), @rhombus(MutableSet.by, ~annot), and
+ @rhombus(WeakMutableSet.by, ~annot) annotation variants match only sets
+ that use the hash and equality functions specified by
+ @rhombus(key_comp).
 
  Static information associated by @rhombus(Set, ~annot), etc., makes
  an expression acceptable to @rhombus(for) in static mode.
@@ -116,6 +117,7 @@ elements strongly or both weakly, and have the same elements.
   expr.macro 'Set.by($key_comp){$expr_or_splice, ...}'
   expr.macro 'Set.by($key_comp)'
   repet.macro 'Set.by($key_comp){$repet_or_splice, ...}'
+  repet.macro 'Set.by($key_comp)'
 ){
 
  Constructs an immutable set containing given values, equivalent to
@@ -126,8 +128,10 @@ elements strongly or both weakly, and have the same elements.
  while @rhombus({}) does not, since @rhombus({}) produces an empty map
  instead.
 
- The @rhombus(Set.by) variants create a set that uses the equality and
- hashing functions specified by @rhombus(key_comp).
+ The @rhombus(Set.by(key_comp){expr_or_splice}) form creates a set
+ that uses the equality and hashing functions specified by
+ @rhombus(key_comp), while @rhombus(Set.by(key_comp)) by itself
+ returns a function like @rhombus(Set) that will produce such sets.
 
 @examples(
   def s = Set{"x", 1, "y", 2}
@@ -217,10 +221,14 @@ elements strongly or both weakly, and have the same elements.
 @doc(
   ~nonterminal:
     val_expr: block expr
+    val_repet: block repet
   expr.macro 'MutableSet{$val_expr, ...}'
+  repet.macro 'MutableSet{$val_repet, ...}'
   fun MutableSet(val :: Any, ...) :: MutableSet
   expr.macro 'MutableSet.by($key_comp){$val_expr, ...}'
   expr.macro 'MutableSet.by($key_comp)'
+  repet.macro 'MutableSet.by($key_comp){$val_repet, ...}'
+  repet.macro 'MutableSet.by($key_comp)'
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
@@ -243,10 +251,14 @@ elements strongly or both weakly, and have the same elements.
 @doc(
   ~nonterminal:
     val_expr: block expr
+    val_repet: block repet
   expr.macro 'WeakMutableSet{$val_expr, ...}'
-  fun WeakMutableSet(val :: Any, ...) :: MutableSet
+  repet.macro 'WeakMutableSet{$val_repet, ...}'
+  fun WeakMutableSet(val :: Any, ...) :: WeakMutableSet
   expr.macro 'WeakMutableSet.by($key_comp){$val_expr, ...}'
   expr.macro 'WeakMutableSet.by($key_comp)'
+  repet.macro 'WeakMutableSet.by($key_comp){$val_repet, ...}'
+  repet.macro 'WeakMutableSet.by($key_comp)'
 ){
 
 
