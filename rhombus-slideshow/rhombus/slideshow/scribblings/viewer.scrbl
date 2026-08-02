@@ -47,6 +47,20 @@
 }
 
 @doc(
+  fun continued(pict ::Pict) :: Pict
+  fun continued(pict ::Pict, epoch :: Int) :: Pict
+){
+
+ Returns a pict that is like @rhombus(pict), but with metadata that
+ indicates that the pict should not trigger a new page number. Metadata is
+ installed via @rhombus(Pict.epoch_set_metadata) using the key
+ @rhombus(#'continued).
+
+@(history: ~added "1.1")
+
+}
+
+@doc(
   fun interactive(pict :: Pict,
                   callback :: Function.of_arity(1)) :: Pict
 ){

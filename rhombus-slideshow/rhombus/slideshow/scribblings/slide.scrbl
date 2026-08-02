@@ -115,6 +115,14 @@
  for that epoch is skipped in @tech{condensed mode}---as are any slides for
  transitions in the epoch. See also @rhombus(nonarchival).
 
+ When a pict representing a slide has the @rhombus(#'continued) key
+ mapped to a true value in its metadata for some epoch, then the slide
+ for that epoch does not increment the page number that the slideshow
+ viewer or printer displays.
+
+@(history:
+    ~changed "1.1": @elem{Added @rhombus(#'continued) support.})
+
 }
 
 @doc(
@@ -138,10 +146,57 @@
 }
 
 @doc(
-  def slide.next
-  def slide.sync
+  def slide.next :: slide.Next
+  def slide.sync :: slide.Next
+  class slide.Next():
+    constructor ~none
+  method (n :: slide.Next).continued() :: slide.Next
+){
+
+ The @rhombus(slide.next) and @rhombus(slide.sync) descriptions are
+ recognized by @rhombus(slide) and @rhombus(slide_pict). See
+ @rhombus(slide) for more information.
+
+ The last epoch of the pict created for the step before
+ @rhombus(slide.next) or @rhombus(slide.sync) is suppressed for condensed
+ mode (including printing) via @rhombus(nonarchival). The
+ @rhombus(slide.Next.continued) method creates a variant of
+ @rhombus(slide.next) or @rhombus(slide.sync) that also suppresses a new
+ page number for the last epoch by using @rhombus(continued).
+
+@(history:
+    ~changed "1.1": @elem{Added @rhombus(slide.Next, ~class)
+                          and the @rhombus(slide.Next.continued) method.})
+
+}
+
+@doc(
   fun slide.alts(~vert: vert :: pict.VertAlignment = #'top,
                  [content :: SlideContent, ...], ...)
+    :: slide.Alts
+
+  class slide.Alts():
+    constructor ~none
+
+  method (a :: slide.Alts).continued() :: slide.Alts
+){
+
+ The @rhombus(slide.alts) function constructs a description that is
+ recognized by @rhombus(slide) and @rhombus(slide_pict). See
+ @rhombus(slide) for more information.
+
+ The @rhombus(slide.Alts.continued) method produces an adjusted
+ description that suppress a new page number of the last epoch of all but
+ the last alternative pict in @rhombus(content) by using
+ @rhombus(continued).
+
+@(history:
+    ~changed "1.1": @elem{Added @rhombus(slide.Alts, ~class)
+                          and the @rhombus(slide.Alts.continued) method.})
+
+}
+
+@doc(
   fun slide.align(~sep: sep :: slide.Sep = #'inherit,
                   ~horiz: horiz :: slide.HorizAlignment = #'left,
                   ~local: local :: Any.to_boolean = #true,
@@ -167,9 +222,8 @@
   | inherit
 ){
 
- Constructors for slide descriptions that are recognized by
- @rhombus(slide) and @rhombus(slide_pict). See @rhombus(slide) for
- more information.
+ Constructors for descriptions that are recognized by @rhombus(slide)
+ and @rhombus(slide_pict). See @rhombus(slide) for more information.
 
  The @rhombus(slide.horiz) functions is a shorthand for
  @rhombus(slide.align) with @rhombus(~local: #false).
