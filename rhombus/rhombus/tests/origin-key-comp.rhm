@@ -1,0 +1,40 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+def Map.by(is_now){1: _, 2: _} = Map.by(is_now){1: "1", 2: "2"} :: Map.by(is_now)
+
+Map.by(is_now)([1, "1"], [2, "2"]) :: Map.by(is_now).of(Int, String)
+
+def Set.by(is_now){1, 2} = Set.by(is_now){1, 2} :: Set.by(is_now)
+
+Set.by(is_now)(1, 2) :: Set.by(is_now).of(Int)
+
+block:
+  let [x, ...] = [1]
+  values(Map.by(is_now){x: to_string(x)}, ...,
+         Set.by(is_now){x}, ...)
+
+for Map.by(is_now) (i in 1..=3):
+  values(i, to_string(i))
+
+for Set.by(is_now) (i in 1..=3):
+  i
+
+MutableMap.by(is_now){1: "1", 2: "2"} :: MutableMap.by(is_now)
+
+MutableSet.by(is_now){1, 2} :: MutableSet.by(is_now)
+
+block:
+  let [x, ...] = [1]
+  values(MutableMap.by(is_now){x: to_string(x)}, ...,
+         MutableSet.by(is_now){x}, ...)
+
+WeakMutableMap.by(===){1: "1", 2: "2"} :: WeakMutableMap.by(===)
+
+WeakMutableSet.by(===){1, 2} :: WeakMutableSet.by(===)
+
+block:
+  let [x, ...] = [1]
+  values(WeakMutableMap.by(===){x: to_string(x)}, ...,
+         WeakMutableSet.by(===){x}, ...)

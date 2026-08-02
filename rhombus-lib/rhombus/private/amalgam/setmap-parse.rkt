@@ -5,7 +5,8 @@
                      enforest/hier-name-parse
                      shrubbery/property
                      "group.rkt"
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     "origin.rkt")
          "parse.rkt"
          "static-info.rkt"
          "repetition.rkt"
@@ -327,17 +328,21 @@
 (define-for-syntax (parse-key-comp stx k)
   (syntax-parse stx
     #:datum-literals (group)
-    [(form (~and args (p-tag::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
-     #:with (~var name(:hier-name-seq in-name-root-space in-key-comp-space name-path-op name-root-ref)) #'name-seq
+    [(form-id (~and args (p-tag::parens (group . name-seq::dotted-operator-or-identifier))) . tail)
+     #:with (~var name (:hier-name-seq in-name-root-space in-key-comp-space name-path-op name-root-ref)) #'name-seq
      (define mapper (syntax-local-value* (in-key-comp-space #'name.name) key-comp-ref))
      (unless mapper (raise-syntax-error #f "not bound to a map configuration" stx #'name))
-     (define str (format "~a(~a)" (syntax-e #'form) (syntax-e #'name.name)))
-     (define new-form (syntax-raw-suffix-property
-                       (syntax-raw-property
-                        (datum->syntax #'form
-                                       (string->symbol str)
-                                       #'form
-                                       #'form)
-                        str)
-                       (syntax-raw-suffix-property #'p-tag)))
-     (k #`(#,new-form . tail) (list #'args) str mapper)]))
+     (define str (format "~a(~a)" (syntax-e #'form-id) (syntax-e #'name.name)))
+     (define new-form-id (syntax-raw-suffix-property
+                          (syntax-raw-property
+                           (datum->syntax #'form-id
+                                          (string->symbol str)
+                                          #'form-id
+                                          #'form-id)
+                           str)
+                          (syntax-raw-suffix-property #'p-tag)))
+     (define-values (form new-tail)
+       (k #`(#,new-form-id . tail) (list #'args) str mapper))
+     (values (add-origin (in-key-comp-space (syntax-local-introduce #'name.name))
+                         form)
+             new-tail)]))

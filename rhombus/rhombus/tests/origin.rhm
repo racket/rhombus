@@ -17,6 +17,7 @@ runtime_path.def space_rhm: "origin-space.rhm"
 runtime_path.def fun_count_rhm: "origin-fun-count.rhm"
 runtime_path.def annot_delayed_rhm: "origin-annot-delayed.rhm"
 runtime_path.def fun_def_val_rhm: "origin-fun-def-val.rhm"
+runtime_path.def key_comp_rhm: "origin-key-comp.rhm"
 
 fun check_origins(o_rhm, space_sym, expect :: Map):
   Closeable.let inp = Port.Input.open_file(o_rhm)
@@ -219,3 +220,8 @@ check_origins(fun_def_val_rhm,
                 #'#{|#'|}: 2,
                 #'Char: 2,
                 #'Byte: 2 })
+
+check_origins(key_comp_rhm,
+              #'#{rhombus/key_comp},
+              { #'is_now: 20,
+                #'#{===}: 6 })
