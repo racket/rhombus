@@ -262,20 +262,22 @@
                                                    (lambda (id . env)
                                                      (define components (syntax-property id dotted-name-components-key))
                                                      (if components
-                                                         (macro-result (dotted-id-handle
-                                                                        (regroup (datum->syntax #f (map syntax-local-introduce components))))
+                                                         (macro-result (apply
+                                                                        dotted-id-handle
+                                                                        (regroup (datum->syntax #f (map syntax-local-introduce components)))
+                                                                        env)
                                                                        'dotted_identifier_transformer
                                                                        #f
                                                                        null
                                                                        env)
-                                                         (macro-result (id-handle id)
+                                                         (macro-result (apply id-handle id env)
                                                                        'identifier_transformer
                                                                        #f
                                                                        null
                                                                        env))))
                                                #`(let ([id-handle #,identifier-transformer])
                                                    (lambda (id . env)
-                                                     (macro-result (id-handle id)
+                                                     (macro-result (apply id-handle id env)
                                                                    'identifier_transformer
                                                                    #f
                                                                    null

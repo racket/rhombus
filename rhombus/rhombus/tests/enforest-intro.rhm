@@ -385,3 +385,18 @@ defn.macro 'dot_def $(x :: dot_ident_meta.Parsed) $()':
 
 dot_def ns1.ns2.hiya
 check hiya ~is 3
+
+// check syntax-class argument and `identifier_parser` consistency
+space.enforest env_widget:
+  space_path my/env_widget
+  macro_definer macro: ~env
+  meta_namespace env_widget_meta:
+    parse_syntax_class Parsed(env)
+    parsed_packer pack
+    parsed_unpacker unpack
+    identifier_parser: fun (id, env): pack('[$id, $env]')
+expr.macro 'env_widget_show $(b :: env_widget_meta.Parsed('top')) $()':
+  '('$(env_widget_meta.unpack(b))')'
+check:
+  env_widget_show free
+  ~matches '[free, top]'
