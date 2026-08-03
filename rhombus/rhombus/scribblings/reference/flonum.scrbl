@@ -108,8 +108,15 @@ unspecialized and flonum-specific operations.
   fun flonum.to_single(x :: Flonum) :: Flonum
 ){
 
- Potentially reduces the precision of a flonum so that it matches a
- number that has a IEEE 32-bit floating-point representation.
+ Returns a value like @rhombus(x), but potentially discards precision
+ and range so that the result could be represented as a 32-bit
+ single-precision IEEE floating-point number (but the result is still a
+ @tech{flonum}).
+
+ Using @rhombus(flonum.to_single) on the arguments and results of flonum
+ arithmetic---that is, performing double-precision operations on values
+ representable in single precision and then rounding the result to single
+ precision---is consistent with performing single-precision arithmetic.
 
 }
 
