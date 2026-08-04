@@ -128,7 +128,7 @@ elements strongly or both weakly, and have the same elements.
  while @rhombus({}) does not, since @rhombus({}) produces an empty map
  instead.
 
- The @rhombus(Set.by(key_comp){expr_or_splice}) form creates a set
+ The @rhombus(Set.by(key_comp){expr_or_splice, ...}) form creates a set
  that uses the equality and hashing functions specified by
  @rhombus(key_comp), while @rhombus(Set.by(key_comp)) by itself
  returns a function like @rhombus(Set) that will produce such sets.
@@ -140,6 +140,8 @@ elements strongly or both weakly, and have the same elements.
   1 in s
   42 in s
   Set("x", 1, "y", 2)
+  Set{"a", "b", & s}
+  Set.by(===){"x".copy(), "x".copy()}
 )
 
 }

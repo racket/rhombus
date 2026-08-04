@@ -215,7 +215,7 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
  The @braces form works as a repetition, where @rhombus(key_repet_or_splice)
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
- The @rhombus(Map.by(key_comp){key_val_or_splice}) form creates a map
+ The @rhombus(Map.by(key_comp){key_val_or_splice, ...}) form creates a map
  that uses the equality and hashing functions specified by
  @rhombus(key_comp), while @rhombus(Map.by(key_comp)) by itself
  returns a function like @rhombus(Map) that will produce such maps.
@@ -226,7 +226,7 @@ like @tech{lists} and @tech{mutable lists}, but unlike @tech{arrays} and
   m["x"]
   Map(["x", 1], ["y", 2])
   Map{"a": 4, "b": 4, & m}
-  Map.by(===){"x" +& "": 1, "" +& "x": 2}
+  Map.by(===){"x".copy(): 1, "x".copy(): 2}
 )
 
 }
