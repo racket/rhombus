@@ -24,6 +24,8 @@ fun magic_move(all_pre :: Pict, post :: Pict,
     fun (~deps: [all_pre :: Pict, post :: Pict]):
       let pre:
         all_pre.snapshot(all_pre.duration - 1)
+      let post0:
+        post.snapshot(0)
       fun get_common(start_p :~ Pict, other_p :~ Pict, intro :~ List) :~ values(Map, Set):
         if common
         | values(for Map (p in common!!):
@@ -53,14 +55,14 @@ fun magic_move(all_pre :: Pict, post :: Pict,
               | values(accum, if exists | tops | tops ++ { child })
               | values(new_accum, tops ++ new_tops)
           search_child(start_p, {}, Set{})
-      let (common_via_pre, pre_tops) = get_common(pre, post, depart)
-      let (common_via_post, post_tops) = get_common(post, pre, intro)
+      let (common_via_pre, pre_tops) = get_common(pre, post0, depart)
+      let (common_via_post, post_tops) = get_common(post0, pre, intro)
       let pre_w = pre.width
-      let post_w = post.width
+      let post_w = post0.width
       let pre_h = pre.height
-      let post_h = post.height
+      let post_h = post0.height
       let (pre_p_dx, pre_p_dy, pre_p_w, pre_p_h, pre_p_a, pre_p_d) = pre.paragraph_end_bounds()
-      let (post_p_dx, post_p_dy, post_p_w, post_p_h, post_p_a, post_p_d) = post.paragraph_end_bounds()
+      let (post_p_dx, post_p_dy, post_p_w, post_p_h, post_p_a, post_p_d) = post0.paragraph_end_bounds()
       fun interpolate(pre, post, n): ((1 - n) * pre + n * post)
       fun move(child :~ Pict, dir, other_common :~ Map) :~ Pict:
         let (fx, fy) = Find.top_left(child).in(pre, ~nth: 0)
