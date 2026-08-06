@@ -23,5 +23,5 @@
        [(block . _) s]
        [(alts . _) s]
        [(op _) s]
-       [(_ ...) (regroup s)]
+       [(_ ...) (regroup (datum->syntax #f s))]
        [_ s])]))

@@ -50,7 +50,8 @@
            apply-prefix-direct-operator
            apply-infix-direct-operator
            apply-prefix-transformer-operator
-           apply-infix-transformer-operator))
+           apply-infix-transformer-operator
+           apply-name-transformer))
 
 (struct order (precedences assoc))
 
@@ -327,3 +328,16 @@
        (values (apply checker form proc env)
                new-tail))))
   (check-transformer-result form new-tail proc))
+
+(define (apply-name-transformer proc head env track-origin use-site-scopes? checker)
+  (define result-form
+    (call-as-transformer #f
+                         (list head)
+                         (lambda (stx props false)
+                           (track-origin stx props head))
+                         use-site-scopes?
+                         (lambda (head)
+                           (apply proc head env))))
+  (define form (apply checker result-form proc env))
+  (check-transformer-result form null proc)
+  form)

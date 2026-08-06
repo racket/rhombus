@@ -96,7 +96,16 @@
     (cond
       [(syntax-property id namespace-syntax-property-key)
        => (lambda (dot-names)
-            #`(all-spaces-dots-out #,id #,@(map syntax-local-introduce dot-names)))]
+            ;; since `dot-names` were in a property, they did not get the same
+            ;; scope treatment as `id`; make sure the last name gets that
+            ;; treatment
+            (define rev-dot-names (reverse dot-names))
+            (define last-id (car rev-dot-names))
+            (define fixed-dot-names (reverse
+                                     (cons (datum->syntax id (syntax-e last-id) last-id last-id)
+                                           (map syntax-local-introduce
+                                                (cdr rev-dot-names)))))
+            #`(all-spaces-dots-out #,id #,@fixed-dot-names))]
       [else #`(all-spaces-out #,id)]))
 
   (define (export-extension-combine dot-names id)

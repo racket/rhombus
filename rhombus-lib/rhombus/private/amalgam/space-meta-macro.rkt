@@ -143,6 +143,7 @@
        (define parsed-tag (string->keyword (symbol->immutable-string (syntax-e #'space-path-name))))
        (define pack-id (hash-ref options '#:parsed_packer #'#f))
        (define unpack-id (hash-ref options '#:parsed_unpacker #'#f))
+       (define use-site-scopes? (hash-ref options '#:use-site-scopes #f))
        (define pack-and-unpack? (or (syntax-e pack-id) (syntax-e unpack-id)))
        (define make-macro-result (or (let ([e (hash-ref options '#:parsed_checker #f)])
                                        (and e
@@ -261,20 +262,31 @@
                                                        [dotted-id-handle #,dotted-identifier-transformer])
                                                    (lambda (id . env)
                                                      (define components (syntax-property id dotted-name-components-key))
-                                                     (if components
-                                                         (macro-result (apply
-                                                                        dotted-id-handle
-                                                                        (regroup (datum->syntax #f (map syntax-local-introduce components)))
-                                                                        env)
-                                                                       'dotted_identifier_transformer
-                                                                       #f
-                                                                       null
+                                                     (cond
+                                                       [components
+                                                        ;; since `components` were in a property, they did not get the same
+                                                        ;; scope treatment as `id`; make sure the last component gets that
+                                                        ;; treatment
+                                                        (define rev-components (reverse components))
+                                                        (define last-id (car rev-components))
+                                                        (define fixed-components (reverse
+                                                                                  (cons (datum->syntax id (syntax-e last-id) last-id last-id)
+                                                                                        (map syntax-local-introduce
+                                                                                             (cdr rev-components)))))
+                                                        (macro-result (apply
+                                                                       dotted-id-handle
+                                                                       (regroup (datum->syntax #f fixed-components))
                                                                        env)
-                                                         (macro-result (apply id-handle id env)
-                                                                       'identifier_transformer
+                                                                      'dotted_identifier_transformer
                                                                        #f
                                                                        null
-                                                                       env))))
+                                                                       env)]
+                                                       [else
+                                                        (macro-result (apply id-handle id env)
+                                                                      'identifier_transformer
+                                                                      #f
+                                                                      null
+                                                                      env)])))
                                                #`(let ([id-handle #,identifier-transformer])
                                                    (lambda (id . env)
                                                      (macro-result (apply id-handle id env)
@@ -282,6 +294,7 @@
                                                                    #f
                                                                    null
                                                                    env))))
+                  #:use-site-scopes? #,use-site-scopes?
                   #,@(if dotted-identifier-transformer
                          #`(#:name-root-ref (make-name-root-ref
                                              #:binding-ref (lambda (v)

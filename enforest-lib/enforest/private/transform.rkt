@@ -24,9 +24,11 @@
             proc
             (meta-if-version-at-least
              "8.18.0.15"
-             (list id
-                   (variable-reference->module-declaration-inspector
-                    (#%variable-reference)))
+             (let ([insp (variable-reference->module-declaration-inspector
+                          (#%variable-reference))])
+               (if id
+                   (list id insp)
+                   insp))
              id)
             (cond
               [use-site-scopes?

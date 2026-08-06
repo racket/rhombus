@@ -256,12 +256,19 @@
                 [(infix-operator? v)
                  (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
                 [(identifier? #'head)
-                 (enforest-step env (apply make-identifier-form #'head env) #'tail current-op current-op-stx
-                                (id-next flags #'head))]
+                 (define new-head (apply-name-transformer make-identifier-form
+                                                          #'head env
+                                                          track-origin use-site-scopes? check-result))
+                 (enforest-step env new-head #'tail current-op current-op-stx (id-next flags #'head))]
                 [else
-                 (if make-operator-form
-                     (enforest-step env (apply make-operator-form #'head.name env) #'tail current-op current-op-stx (next flags))
-                     (raise-unbound-operator #'head.name))])])]
+                 (cond
+                   [make-operator-form
+                    (define new-head (apply-name-transformer make-operator-form
+                                                             #'head.name env
+                                                             track-origin use-site-scopes? check-result))
+                    (enforest-step env new-head #'tail current-op current-op-stx (next flags))]
+                   [else
+                    (raise-unbound-operator #'head.name)])])])]
           [(((~datum parsed) tag inside) . tail)
            (unless (eq? (syntax-e #'tag) parsed-tag) (parsed-wrong-context-error form-kind-str (car (syntax-e stxes))))
            (enforest-step env #'inside #'tail current-op current-op-stx (next flags))]

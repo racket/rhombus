@@ -85,6 +85,11 @@
     (syntax-case stx ()
       [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/reducer) #'id))]))
 
+  (define (raise-not-a-reducer id)
+    (raise-syntax-error #f
+                        "not bound as a reducer"
+                        id))
+
   (define-rhombus-enforest
     #:syntax-class :reducer
     #:prefix-more-syntax-class :prefix-op+reducer+tail
@@ -94,7 +99,8 @@
     #:in-space in-reducer-space
     #:prefix-operator-ref reducer-prefix-operator-ref
     #:infix-operator-ref reducer-infix-operator-ref
-    #:check-result check-reducer-result))
+    #:check-result check-reducer-result
+    #:make-identifier-form raise-not-a-reducer))
 
 (define-syntax (define-reducer-syntax stx)
   (syntax-parse stx

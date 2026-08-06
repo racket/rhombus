@@ -24,6 +24,7 @@
                     parsed_unpacker
                     identifier_parser
                     dotted_identifier_parser
+                    use_site_scopes
                     private))
 
 (module+ for-space-meta-macro
@@ -74,6 +75,13 @@
   (make-identifier-transformer '#:parsed_packer))
 (define-space-meta-clause-syntax parsed_unpacker
   (make-identifier-transformer '#:parsed_unpacker))
+
+(define-space-meta-clause-syntax use_site_scopes
+  (space-meta-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_)
+        (wrap-clause #`(#:use-site-scopes #,stx))]))))
 
 (define-for-syntax (make-expression-transformer kw)
   (space-meta-clause-transformer
@@ -210,5 +218,8 @@
        (hash-set options '#:dotted_identifier_transformer #'e)]
       [(_ (#:post-forms (form ...))) ; added directly in `enforest-meta-body-step`
        (hash-set options '#:post-forms (syntax->list #'(form ...)))]
+      [(_ (#:use-site-scopes stx))
+       (check "use-site scopes declaration" #:enforest-only? #t)
+       (hash-set options '#:use-site-scopes #t)]
       [else
        (error "unhandled" option)])))

@@ -45,7 +45,7 @@ check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").ExList open
   for ExList: "oops, no ExList"
-  ~throws "expected reducer"
+  ~throws "not bound as a reducer"
 
 check:
   ~eval

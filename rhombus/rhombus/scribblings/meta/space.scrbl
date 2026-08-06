@@ -75,6 +75,7 @@ driver and macro-definitions forms.
   | #,(@rhombus(bound_name_start_syntax_class, ~space_meta_clause)) $id
   | #,(@rhombus(identifier_parser, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(dotted_identifier_parser, ~space_meta_clause)) $meta_expr
+  | #,(@rhombus(use_site_scopes, ~space_meta_clause))
   | #,(@rhombus(parse_checker, ~space_meta_clause)) $meta_expr
   | #,(@rhombus(parsed_packer, ~space_meta_clause)) $id
   | #,(@rhombus(parsed_unpacker, ~space_meta_clause)) $id
@@ -369,6 +370,11 @@ driver and macro-definitions forms.
   from an identifier parser is checked and potentially recursively
   expanded in the same way as a result for a macro in the space.}
 
+ @item{@rhombus(use_site_scopes, ~space_meta_clause): Indicates that
+  enforestation should apply a @tech(~doc: model_doc){use-site scope} to
+  macro inputs that appear in the expansion result (in addition to a
+  @tech(~doc: model_doc){macro scope} for macro-introduced forms).}
+
  @item{@rhombus(description, ~space_meta_clause): Supplies a string that
   describes the space; the string is used for reporting syntax
   errors.}
@@ -392,6 +398,11 @@ driver and macro-definitions forms.
   the space as accessed via @rhombus(syntax_meta.value).}
 
 )
+
+@(history:
+    ~changed "1.0.0.2": @elem{Added @rhombus(use_site_scopes, ~space_meta_clause)
+                              and changed identifier-parser invokcation to apply
+                              scopes in the same way as macro invocations.})
 
 }
 
@@ -451,6 +462,7 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'bound_name_start_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
   space_meta_clause.macro 'dotted_identifier_parser $expr'
+  space_meta_clause.macro 'use_site_scopes'
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'parsed_packer $id'
   space_meta_clause.macro 'parsed_unpacker $id'
@@ -464,6 +476,9 @@ driver and macro-definitions forms.
  Clause forms for use within a @rhombus(meta_namespace, ~space_clause)
  clause within a @rhombus(space.enforest) or @rhombus(space.transform)
  form. See @rhombus(space.enforest) for more information.
+
+@(history:
+    ~changed "1.0.0.2": @elem{Added @rhombus(use_site_scopes, ~space_meta_clause).})
 
 }
 
