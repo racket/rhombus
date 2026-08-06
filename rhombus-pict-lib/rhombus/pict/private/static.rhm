@@ -304,18 +304,23 @@ class Pict():
                  ~post: adjuster :: Function.of_arity(1) described_as Pict -> Pict
                           = fun (p): p,
                  ~config: config_adjuster :: Function.of_arity(1) described_as Map -> Map
-                            = fun (config): config) :~ Pict:
+                            = fun (config): config,
+                 ~as_rebuilt = #true) :~ Pict:
     let (p, _) = _replace(pre_adjuster,
                           adjuster,
                           config_adjuster,
-                          Map.by(===){})
+                          Map.by(===){},
+                          as_rebuilt)
     p
 
-  method replace(from :: Pict, to :: Pict) :~ Pict:
+  method replace(from :: Pict, to :: Pict, ~as_rebuilt = #true) :~ Pict:
     let (p, _) = _replace(fun (p): p,
                           fun (p): p,
                           fun (c): c,
-                          Map.by(===){ from.identity : to })
+                          Map.by(===){ from.identity: if as_rebuilt
+                                                      | Pict._identify_as(to, from.identity)
+                                                      | to },
+                          as_rebuilt)
     p
 
   method configure(key, val) :~ Pict:
@@ -324,10 +329,10 @@ class Pict():
                        | config ++ { key: val }
                        | config)
 
-  abstract protected method _replace(pre_adjuster, adjuster, config_adjuster, subst) :~ (Pict, Map)
+  abstract protected method _replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt) :~ (Pict, Map)
 
   protected method _do_replace(pre_adjuster, adjuster, config_adjuster,
-                               subst :~ Map,
+                               subst :~ Map, as_rebuilt,
                                _children, _dependencies, _config,
                                _rebuild):
     cond
@@ -344,7 +349,7 @@ class Pict():
                     error.annot("Pict"),
                     error.val(~label: "function", pre_adjuster),
                     error.val(~label: "result", new))
-            let new = Pict._identify_as(new, identity)
+            let new = (if as_rebuilt | Pict._identify_as(new, identity) | new)
             values(new, subst ++ { identity: new })
         | ~else:
             let (new, subst :~ Map):
@@ -356,8 +361,8 @@ class Pict():
                     for values(new_deps :~ List = [], subst = subst) (dep in [dep, ...]):
                       let (new_dep, new_subst):
                         match dep
-                        | dep :: Pict: dep._replace(pre_adjuster, adjuster, config_adjuster, subst)
-                        | dep :: _Find: dep._replace(pre_adjuster, adjuster, config_adjuster, subst)
+                        | dep :: Pict: dep._replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt)
+                        | dep :: _Find: dep._replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt)
                       values(new_deps.add(new_dep), new_subst)
                   let new_config:
                     _config && (block:
@@ -378,7 +383,7 @@ class Pict():
                                  ++ (if new_config | [new_config] | []))
                   values(new, subst)
               | child :~ _StaticPict:
-                  let (new_child, subst :~ Map) = child._replace(pre_adjuster, adjuster, config_adjuster, subst)
+                  let (new_child, subst :~ Map) = child._replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt)
                   let new_config: _config && adjuster(_config)
                   if (new_child === child
                         && new_config == _config)
@@ -588,8 +593,8 @@ class StaticPict(private _handle,
     | sustain(n_epochs)
     | this
 
-  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
-    _do_replace(pre_adjuster, adjuster, config_adjuster, subst,
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map, as_rebuilt):
+    _do_replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt,
                 _children, _dependencies, _config,
                 _rebuild)
 
@@ -707,7 +712,7 @@ class NothingPict():
 
   override method freeze(~scale: scale :: Real = 2.0): this
 
-  override method _replace(pre_adjuster, adjuster, config_adjuster, subst): this
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt): this
 
   override method _identify_as(identity): this
 
@@ -1553,10 +1558,10 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
             #true)
     | this
 
-  private method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
+  private method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map, as_rebuilt):
     cond
     | q:
-        let (new_q, subst) = _Pict._replace(q, pre_adjuster, adjuster, config_adjuster, subst)
+        let (new_q, subst) = _Pict._replace(q, pre_adjuster, adjuster, config_adjuster, subst, as_rebuilt)
         if new_q === q
         | values(this, subst)
         | values(_Find(new_q, find, t_find_or_dt, is_animated),

@@ -845,8 +845,8 @@ class AnimPict(private _identity_f :~ PictIdentity,
     | ~else:
         reify_epochs(i, i).epoch_set_metadata(i, metadata)
 
-  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map):
-    _do_replace(pre_adjuster, adjuster, config_adjuster, subst,
+  override method _replace(pre_adjuster, adjuster, config_adjuster, subst :~ Map, as_rebuilt):
+    _do_replace(pre_adjuster, adjuster, config_adjuster, subst,  as_rebuilt,
                 _children, _dependencies, _config,
                 _rebuild)
 

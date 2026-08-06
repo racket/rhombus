@@ -14,6 +14,7 @@
 @doc(
   method (pict :: Pict).rebuild(
     ~pre: pre_adjust :: Function.of_arity(1),
+    ~as_rebuilt: as_rebuilt :: Any.to_boolean = #true,
     ~post: post_adjust :: Function.of_arity(1),
     ~config: config_adjust :: Function.of_arity(1)
                = fun(config): config
@@ -50,9 +51,11 @@
  cached, so @rhombus(pre_adjust) and @rhombus(post_adjust) are each
  applied at most once to a pict within a call to @rhombus(Pict.rebuild).
 
- A rebuilt pict--either @rhombus(pict) itself or a rebuilt
- dependency---shares the identity of the original pict, so the rebuilt
- pict can be located via @rhombus(Find, ~class) objects, replaced via
+ If @rhombus(as_rebuilt) is true, then any replacement provided by
+ @rhombus(pre_adjust) is wrapped to share an identify with the pict that
+ it replaces. Any other rebuilt pict---either @rhombus(pict) itself or a rebuilt
+ dependency---always shares the identity of the original pict, so the rebuilt
+ pict can be located via @rhombus(Find, ~annot) objects, replaced via
  @rhombus(Pict.replace), or extracted using @rhombus(Pict.find_rebuilt).
  See also @secref("identity").
 
@@ -67,11 +70,18 @@
                      rectangle(~around: q.pad(2), ~line: "red"))
 )
 
+@(history:
+    ~changed "1.2": @elem{Added the @rhombus(as_rebuilt) argument, keeping
+                          the default behavior as @rhombus(#true).})
+
 }
 
 @doc(
-  method (pict :: Pict).replace(orig :: Pict,
-                                replacement :: Pict) :: Pict
+  method (pict :: Pict).replace(
+    orig :: Pict,
+    replacement :: Pict,
+    ~as_rebuilt: as_rebuilt :: Any.to_boolean = #true
+  ) :: Pict
 ){
 
  Returns a @tech{pict} that is like @rhombus(pict), but replays
@@ -84,7 +94,8 @@
   pict.rebuild(~pre: fun (p):
                        if p == orig
                        | replacement
-                       | p)
+                       | p,
+               ~as_rebuilt: as_rebuilt)
 )
 
 @examples(
@@ -95,6 +106,10 @@
   p
   p.replace(s, c)
 )
+
+@(history:
+    ~changed "1.2": @elem{Added the @rhombus(as_rebuilt) argument and
+                          changed the default behavior to @rhombus(#true).})
 
 }
 
