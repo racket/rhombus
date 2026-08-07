@@ -37,17 +37,28 @@ fun rkt_last_box(handle):
   let last_handle = rkt.#{pict-last}(handle)
   if last_handle
   | let (x, y) = rkt.#{lt-find}(handle, last_handle)
+    let (x2, y2) = rkt.#{rb-find}(handle, last_handle)
     let handle = path_end(last_handle)
+    let h = rkt.#{pict-height}(handle)
+    let ys = (y2 - y) / (if h .= 0 | 1 | h)
     values(x, y,
-           rkt.#{pict-width}(handle), rkt.#{pict-height}(handle),
-           rkt.#{pict-ascent}(handle), rkt.#{pict-descent}(handle))
+           x2-x, y2-y,
+           ys * rkt.#{pict-ascent}(handle), ys * rkt.#{pict-descent}(handle))
   | values(0, 0,
            rkt.#{pict-width}(handle), rkt.#{pict-height}(handle),
            rkt.#{pict-ascent}(handle), rkt.#{pict-descent}(handle))
 
 fun rkt_set_last_box(handle, dx, dy, width, height, ascent, descent):
-  let blank = rkt.blank(width, height, ascent, descent)
-  rkt_set_pict_last(rkt.#{pin-over}(handle, dx, dy, blank), blank)
+  if (#false
+        && dx .= 0
+        && dy .= 0
+        && width .= rkt.#{pict-width}(handle)
+        && height .= rkt.#{pict-height}(handle)
+        && ascent .= rkt.#{pict-ascent}(handle)
+        && descent .= rkt.#{pict-descent}(handle))
+  | rkt_set_pict_last(handle, #false)
+  | let blank = rkt.blank(width, height, ascent, descent)
+    rkt_set_pict_last(rkt.#{pin-over}(handle, dx, dy, blank), blank)
 
 // ensure that last handle is unique so that automatic
 // `pict-last` support in append operations isn't broken by
@@ -80,11 +91,11 @@ fun
       let new_h = rkt.#{lt-superimpose}(if x >= 0 && y >= 0
                                         | h1
                                         | rkt.inset(h1, math.max(0, -x), math.max(0, -y), 0, 0),
-                                        rkt.inset(h2, math.max(0, x), math.max(0, y), 0, 0))
+                                        rkt.inset(h2_distinct, math.max(0, x), math.max(0, y), 0, 0))
       let last_handle2 = rkt.#{pict-last}(h2)
       if last_handle2
-      | rkt_set_pict_last(new_h, handle_path(h2, last_handle2))
-      | rkt_set_pict_last(new_h, h2)
+      | rkt_set_pict_last(new_h, handle_path(h2_distinct, last_handle2))
+      | rkt_set_pict_last(new_h, h2_distinct)
     | rkt_append(sep, h1, h2)
 | rkt_last_append(rkt_append, sep, [h1, h2, h3, ...]):
     rkt_last_append(rkt_append, sep, [rkt_last_append(rkt_append, sep, [h1, h2]), h3, ...])
