@@ -119,7 +119,9 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
   | rkt_play.#{play-n}(~name: name,
                        ~#{skip-first?}: #true,
                        ~#{skip-last?}: #true,
-                       ~#{page-mode}: #'none,
+                       ~& if can_page_mode
+                       | { #'~#{page-mode}: #'none }
+                       | {},
                        fun (n): p.snapshot(-1, n).draw_handle)
   for (i in 0..p.duration):
     let continued = p.epoch_metadata(i).get(#'continued, #false)
