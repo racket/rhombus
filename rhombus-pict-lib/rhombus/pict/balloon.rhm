@@ -78,7 +78,7 @@ fun pin(content :: Pict,
             | p
         | ~else:
             let fill_color = (color && as_color(color)) || Color(0, 0, 0, 0.0).handle
-            let outline_color = line_color || Color(0, 0, 0, 0.0).handle
+            let outline_color = (line_color && as_color(line_color)) || Color(0, 0, 0, 0.0).handle
             let outline_width: if line_color
                                | if line_width == #'inherit
                                  | 1
@@ -158,7 +158,7 @@ fun note(content :: Pict,
     | [_ :: pict.NothingPict]:
         nothing
     | [content :: pict.StaticPict]:
-        let color = (color && as_color(color)) || current_color()
+        let color = as_color(color || current_color())
         fun build([content_handle]):
           bln.#{balloon-note}(content.handle,
                               ~#{x-margin}: hmargin,
@@ -166,7 +166,7 @@ fun note(content :: Pict,
                               ~#{corner-radius}: corner_radius,
                               ~#{thought?}: thought,
                               ~color: color,
-                              ~#{line-color}: line_color,
+                              ~#{line-color}: line_color && as_color(line_color),
                               ~#{line-width}: line_width)
         Pict.from_handle(build([content.handle]), [content], build)
     | ~else:
