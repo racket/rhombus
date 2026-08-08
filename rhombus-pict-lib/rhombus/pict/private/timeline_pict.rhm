@@ -10,6 +10,7 @@ export:
 module private:
   export:
     time_at
+    secs_at
     epoch_dot_size
     epoch_dot_color
     duration_box_color
@@ -17,15 +18,35 @@ module private:
     stackx
     tl_arrows
 
-fun time_at(t) :~ Pict:
+fun num_str(t):
+  if t == math.floor(t)
+  | math.exact(t)       // also covers `Int`, and drops a float's ".0"
+  | let s = str.f(t, ~precision: 2)
+    if s[s.length()-1] == Char"0"
+    | s.substring(0, s.length()-1)
+    | s
+
+fun labeled(name :: String, v) :~ Pict:
   beside(~vert: #'baseline,
-         text("t", ~font: draw.Font(~style: #'italic)),
-         text(" = " +& (if t is_a Int
-                        | t
-                        | let s = str.f(t, ~precision: 2)
-                          if s[s.length()-1] == Char"0"
-                          | s.substring(0, s.length()-1)
-                          | s)))
+         text(name, ~font: draw.Font(~style: #'italic)),
+         text(" = " +& num_str(v)))
+
+fun time_at(t) :~ Pict:
+  labeled("t", t)
+
+// Real time at epoch-time `t`: the extents of the whole epochs before it, plus
+// the fraction into the one it lands in. Every epoch has an extent, zero by
+// default, so this needs no special case -- it simply stops accumulating
+// wherever no time passes.
+fun seconds_at(p :~ Pict, t) :~ Real:
+  let whole = math.exact(math.floor(t))
+  let before:
+    for values(acc = 0.0) (i in 0..math.max(0, whole)):
+      acc + p.epoch_extent(i)
+  before + (t - whole) * p.epoch_extent(whole)
+
+fun secs_at(p :~ Pict, t) :~ Pict:
+  labeled("s", seconds_at(p, t))
 
 def epoch_dot_size = 10
 def epoch_dot_color = "red"
@@ -49,7 +70,10 @@ fun timeline(p_in :~ Pict, [t, ...],
              ~post: post = 0,
              ~label: label = #false,
              ~balance_label = #false,
+             ~mode: mode = #'epochs,
              ~show_timebox = #false) :~ Pict:
+  fun stamp(t) :~ Pict:
+    if mode == #'extents | secs_at(p_in, t) | time_at(t)
   let sep = 20
   fun p_at_time(t, keep) :~ Pict:
     if keep
@@ -67,7 +91,7 @@ fun timeline(p_in :~ Pict, [t, ...],
     | p
     | overlay(p.ghost(), line(~dx: p.width))
   let [t_dot, ...]: [mk_dot(t), ...]
-  let [lt_dot, ...]: [stackx(time_at(t), epochly(t_dot, t)), ...]
+  let [lt_dot, ...]: [stackx(stamp(t), epochly(t_dot, t)), ...]
   let p :~ Pict:
     let sep = sep + w - dot.width
     fun keep(p, keep): if keep | p | nothing

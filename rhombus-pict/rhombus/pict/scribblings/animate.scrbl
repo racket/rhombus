@@ -570,6 +570,7 @@
     ~steps_before: steps_before :: Nat = 0,
     ~steps_after: steps_after :: Nat = 0,
     ~show_timebox: show_timebox = #true,
+    ~mode: mode :: TimelineMode = #'epochs,
     ~pad_before: pad_before :: Nat = 0,
     ~pad_after: pad_after :: Nat = 0
   ) :: Pict
@@ -586,6 +587,9 @@
  If @rhombus(show_timebox) is a true value, then a box is drawn around
  points on the timeline that are within @rhombus(pict)'s @tech{time box}.
 
+ The @rhombus(mode) argument selects how each point on the timeline is
+ labeled; see @rhombus(TimelineMode, ~annot).
+
  If @rhombus(pad_before) or @rhombus(pad_after) are not @rhombus(0),
  then space is added to the left or right of the timeline, respectively,
  corresponding to @rhombus(pad_before) or @rhombus(pad_after) epochs.
@@ -596,6 +600,40 @@
   ~eval: pict_eval
   explain_anim(animate(fun (n): circle(~fill: "blue").alpha(1-n)),
                ~steps: 5)
+  ~repl:
+    def slow = animate(~extent: 2, fun (n): circle(~fill: "blue").alpha(1-n))
+    explain_anim(switch(slow, slow), ~steps: 2)
+    explain_anim(switch(slow, slow), ~steps: 2, ~mode: #'extents)
 )
+
+}
+
+@doc(
+  enum TimelineMode
+  | epochs
+  | extents
+){
+
+ Selects how @rhombus(explain_anim) labels each point on a timeline.
+
+@itemlist(
+
+ @item{@rhombus(#'epochs): labels read @rhombus(t) @litchar{=} followed by a
+  time in @tech{epochs}, so a whole number marks an epoch boundary. This is
+  the default.}
+
+ @item{@rhombus(#'extents): labels read @rhombus(s) @litchar{=} followed by a
+  time in seconds, obtained by accumulating each epoch's @tech{extent}. Since
+  an epoch whose extent is not @rhombus(1) covers more or less than a second,
+  this mode distinguishes a pict that merely has many epochs from one that
+  takes a long time to play.}
+
+)
+
+ Every epoch of a pict has an extent, which is @rhombus(0) unless the epoch
+ animates. A @tech{sustain}ed epoch, a static pict, and every epoch beyond a
+ pict's last one all have an extent of @rhombus(0). With
+ @rhombus(#'extents), then, labels stop advancing wherever no time passes, so
+ a run of equal labels marks epochs that are advanced through instantly.
 
 }
