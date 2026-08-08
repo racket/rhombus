@@ -11,6 +11,7 @@ module private:
   export:
     time_at
     secs_at
+    seconds_at
     epoch_dot_size
     epoch_dot_color
     duration_box_color
