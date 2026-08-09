@@ -407,3 +407,61 @@ meta:
                                         'b2 b2; b2'.ephemeral_sequence().ephemeral_property(#'origin, 'c2')])
       .ephemeral_sequence() ~matches 'a a; a'
     syntax_meta.track_origin('foo', ~add: 'bar.baz') ~matches 'foo'
+
+meta:
+  check:
+    syntax_meta.track_origin('a', "oops")
+    ~throws values(
+      "syntax_meta.track_origin: " ++ error.annot_msg(),
+      error.annot("Term || (Listable.to_list && List.of(Term))").msg,
+      error.val("oops").msg,
+    )
+  check:
+    syntax_meta.track_origin('a', ["oops"])
+    ~throws values(
+      "syntax_meta.track_origin: " ++ error.annot_msg(),
+      error.annot("Term || (Listable.to_list && List.of(Term))").msg,
+      error.val(["oops"]).msg,
+    )
+  check:
+    syntax_meta.track_origin('a', ['a b'])
+    ~throws values(
+      "syntax_meta.track_origin: " ++ error.annot_msg(),
+      error.annot("Term || (Listable.to_list && List.of(Term))").msg,
+      error.val(['a b']).msg,
+    )
+  check:
+    syntax_meta.track_group_origin('a', "oops")
+    ~throws values(
+      "syntax_meta.track_group_origin: " ++ error.annot_msg(),
+      error.annot("Group || (Listable.to_list && List.of(Group))").msg,
+      error.val("oops").msg,
+    )
+  check:
+    syntax_meta.track_group_origin('a', ["oops"])
+    ~throws values(
+      "syntax_meta.track_group_origin: " ++ error.annot_msg(),
+      error.annot("Group || (Listable.to_list && List.of(Group))").msg,
+      error.val(["oops"]).msg,
+    )
+  check:
+    syntax_meta.track_group_origin('a', ['a; b'])
+    ~throws values(
+      "syntax_meta.track_group_origin: " ++ error.annot_msg(),
+      error.annot("Group || (Listable.to_list && List.of(Group))").msg,
+      error.val(['a; b']).msg,
+    )
+  check:
+    syntax_meta.track_ephemeral_origin('a', "oops")
+    ~throws values(
+      "syntax_meta.track_ephemeral_origin: " ++ error.annot_msg(),
+      error.annot("Syntax || (Listable.to_list && List.of(Syntax))").msg,
+      error.val("oops").msg,
+    )
+  check:
+    syntax_meta.track_ephemeral_origin('a', ["oops"])
+    ~throws values(
+      "syntax_meta.track_ephemeral_origin: " ++ error.annot_msg(),
+      error.annot("Syntax || (Listable.to_list && List.of(Syntax))").msg,
+      error.val(["oops"]).msg,
+    )

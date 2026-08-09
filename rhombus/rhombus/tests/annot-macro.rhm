@@ -176,3 +176,75 @@ block:
         values('(fun (x :: $ann): x)',
                '$ann.tail ...')
   check 0 identity_at Int (1) ~is 1
+
+meta:
+  check:
+    annot_meta.pack_predicate('fun (_): #true',
+                              ~track: "oops")
+    ~throws values(
+      "annot_meta.pack_predicate: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val("oops").msg,
+    )
+  check:
+    annot_meta.pack_predicate('fun (_): #true',
+                              ~track: ["oops"])
+    ~throws values(
+      "annot_meta.pack_predicate: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(["oops"]).msg,
+    )
+  check:
+    annot_meta.pack_predicate('fun (_): #true',
+                              ~track: ['a b'])
+    ~throws values(
+      "annot_meta.pack_predicate: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(['a b']).msg,
+    )
+  block:
+    let old_stx = 'old'
+    let new_stx = 'new'.property(#'origin, old_stx)
+    check:
+      annot_meta.pack_predicate('fun (_): #true',
+                                ~track: [new_stx])
+        .property(#'origin)
+      ~is old_stx
+
+meta:
+  check:
+    let '$(b :: bind_meta.Parsed)' = 'x'
+    annot_meta.pack_converter(b, 'x',
+                              ~track: "oops")
+    ~throws values(
+      "annot_meta.pack_converter: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val("oops").msg,
+    )
+  check:
+    let '$(b :: bind_meta.Parsed)' = 'x'
+    annot_meta.pack_converter(b, 'x',
+                              ~track: ["oops"])
+    ~throws values(
+      "annot_meta.pack_converter: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(["oops"]).msg,
+    )
+  check:
+    let '$(b :: bind_meta.Parsed)' = 'x'
+    annot_meta.pack_converter(b, 'x',
+                              ~track: ['a b'])
+    ~throws values(
+      "annot_meta.pack_converter: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(['a b']).msg,
+    )
+  block:
+    let old_stx = 'old'
+    let new_stx = 'new'.property(#'origin, old_stx)
+    check:
+      let '$(b :: bind_meta.Parsed)' = 'x'
+      annot_meta.pack_converter(b, 'x',
+                                ~track: [new_stx])
+        .property(#'origin)
+      ~is old_stx

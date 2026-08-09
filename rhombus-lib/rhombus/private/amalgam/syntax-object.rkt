@@ -1015,37 +1015,6 @@
                                      null)
                        (loop (cdr stxes)))]))))]))
 
-(define/method (Syntax.track_origin stx-in ctx-stx-in)
-  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-  (define stx (unpack-term/maybe stx-in))
-  (unless stx (raise-annotation-failure who stx-in "Term"))
-  (define ctx-stxes (or (let ([t (unpack-term/maybe ctx-stx-in)])
-                          (and t (list t)))
-                        (check-origins #f ctx-stx-in)
-                        (raise-annotation-failure who ctx-stx-in "Term || (Listable.to_list && List.of(Term))")))
-  (transfer-origins ctx-stxes stx))
-
-(define/method (Syntax.track_group_origin stx-in ctx-stx-in)
-  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-  (define stx (unpack-group stx-in who #f))
-  (define ctx-stxes (or (let ([g (unpack-group ctx-stx-in #f #f)])
-                          (and g (list g)))
-                        (check-group-origins #f ctx-stx-in)
-                        (raise-annotation-failure who ctx-stx-in "Group || (Listable.to_list && List.of(Group))")))
-  (transfer-origins ctx-stxes stx))
-
-(define/method (Syntax.track_ephemeral_origin stx ctx-stx-in)
-  #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-  (unless (syntax? stx) (raise-annotation-failure who stx "Syntax"))
-  (define ctx-stxes (cond
-                      [(syntax? ctx-stx-in) (list ctx-stx-in)]
-                      [else
-                       (define lst (to-list #f ctx-stx-in))
-                       (if (and lst (andmap syntax? lst))
-                           lst
-                           (raise-annotation-failure who ctx-stx-in "Syntax || (Listable.to_list && List.of(Syntax))"))]))
-  (transfer-origins ctx-stxes stx))
-
 (define/method (Syntax.to_source_string stx
                                         #:keep_prefix [keep-prefix? #f]
                                         #:keep_suffix [keep-suffix? #f]

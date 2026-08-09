@@ -172,7 +172,7 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (define components (check-origins who components-in))
     (pack-term #`(parsed #:rhombus/bind/info #,(transfer-origins
-                                                components-in
+                                                components
                                                 (pack-info who stx)))))
 
   (define/arity (bind_meta.get_info stx unpacked-static-infos)
