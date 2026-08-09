@@ -27,7 +27,7 @@ bind.macro '$a <> $b':
   bind_meta.pack('(build_reverse_cons_infoer,
                    ($a, $b))')
 
-bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
+bind.infoer 'build_reverse_cons_infoer($si_in, ($a_in, $b_in))':
   def a = bind_meta.get_info(a_in, '()')
   def b = bind_meta.get_info(b_in, '()')
   match bind_meta.unpack_info(a)
@@ -110,7 +110,7 @@ check:
 bind.macro 'simple $(id :: Identifier)':
   bind_meta.pack('(simple_infoer, $id)')
 
-bind.infoer 'simple_infoer($in_id, $id)':
+bind.infoer 'simple_infoer($si_in, $id)':
   '($(to_string(id)),
     $id,
     (),
@@ -160,7 +160,7 @@ check:
 bind.macro 'simple2 $(id :: Identifier)':
   bind_meta.pack('(simple2_infoer, $id)')
 
-bind.infoer 'simple2_infoer($in_id, $id)':
+bind.infoer 'simple2_infoer($si_in, $id)':
   '($(to_string(id)),
     $id,
     (),
@@ -197,7 +197,7 @@ check:
 bind.macro 'simple3 $(id :: Identifier)':
   bind_meta.pack('(simple3_infoer, $id)')
 
-bind.infoer 'simple3_infoer($in_id, $id)':
+bind.infoer 'simple3_infoer($si_in, $id)':
   '($(to_string(id)),
     $id,
     (),
@@ -263,3 +263,168 @@ check:
   is_immediate x :~ Int ~is #true
   is_immediate x :~ Set.later_of(Any) ~is #true
   is_immediate x :: assuming(Set) ~is #true
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop':
+    bind_meta.pack('(noop_infoer, ())')
+
+  bind.infoer 'noop_infoer($si_in, ())':
+    '"oops"'
+
+  meta block:
+    let '$(noop :: bind_meta.Parsed)' = 'noop'
+    bind_meta.get_info(noop, '()')
+  ~throws "noop_infoer: ill-formed unpacked binding info"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop $b':
+    bind_meta.pack('(noop_infoer, $b)')
+
+  bind.infoer 'noop_infoer($si_in, $b_in)':
+    let b = bind_meta.get_info(b_in, '()')
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '($b_ann, $b_id, $b_info, $b_bind_infos, noop_once, noop_match, $b_evidence, noop_commit, noop_bind, $b)'
+
+  bind.oncer 'noop_once($b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
+        class Oops()
+        Oops()
+
+  bind.matcher 'noop_match($in_id, $b,
+                           $IF, $success, $fail)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_matcher($in_id, $b_data,
+                    $IF, $success, $fail)'
+
+  bind.committer 'noop_commit($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_committer($in_id, $b_evidence, $b_data)'
+
+  bind.binder 'noop_bind($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_binder($in_id, $b_evidence, $b_data)'
+
+  def noop x = 1
+  ~throws "noop_once: cannot coerce value to syntax"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop $b':
+    bind_meta.pack('(noop_infoer, $b)')
+
+  bind.infoer 'noop_infoer($si_in, $b_in)':
+    let b = bind_meta.get_info(b_in, '()')
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '($b_ann, $b_id, $b_info, $b_bind_infos, noop_once, noop_match, $b_evidence, noop_commit, noop_bind, $b)'
+
+  bind.oncer 'noop_once($b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
+        '$b_oncer($b_data)'
+
+  bind.matcher 'noop_match($in_id, $b,
+                           $IF, $success, $fail)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        class Oops()
+        Oops()
+
+  bind.committer 'noop_commit($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_committer($in_id, $b_evidence, $b_data)'
+
+  bind.binder 'noop_bind($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_binder($in_id, $b_evidence, $b_data)'
+
+  def noop x = 1
+  ~throws "noop_match: cannot coerce value to syntax"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop $b':
+    bind_meta.pack('(noop_infoer, $b)')
+
+  bind.infoer 'noop_infoer($si_in, $b_in)':
+    let b = bind_meta.get_info(b_in, '()')
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '($b_ann, $b_id, $b_info, $b_bind_infos, noop_once, noop_match, $b_evidence, noop_commit, noop_bind, $b)'
+
+  bind.oncer 'noop_once($b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
+        '$b_oncer($b_data)'
+
+  bind.matcher 'noop_match($in_id, $b,
+                           $IF, $success, $fail)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_matcher($in_id, $b_data,
+                    $IF, $success, $fail)'
+
+  bind.committer 'noop_commit($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        class Oops()
+        Oops()
+
+  bind.binder 'noop_bind($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_binder($in_id, $b_evidence, $b_data)'
+
+  def noop x = 1
+  ~throws "noop_commit: cannot coerce value to syntax"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop $b':
+    bind_meta.pack('(noop_infoer, $b)')
+
+  bind.infoer 'noop_infoer($si_in, $b_in)':
+    let b = bind_meta.get_info(b_in, '()')
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '($b_ann, $b_id, $b_info, $b_bind_infos, noop_once, noop_match, $b_evidence, noop_commit, noop_bind, $b)'
+
+  bind.oncer 'noop_once($b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $_, $b_committer, $b_binder, $b_data)':
+        '$b_oncer($b_data)'
+
+  bind.matcher 'noop_match($in_id, $b,
+                           $IF, $success, $fail)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_matcher($in_id, $b_data,
+                    $IF, $success, $fail)'
+
+  bind.committer 'noop_commit($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        '$b_committer($in_id, $b_evidence, $b_data)'
+
+  bind.binder 'noop_bind($in_id, $b_evidence, $b)':
+    match bind_meta.unpack_info(b)
+    | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_oncer, $b_matcher, $b_evidence, $b_committer, $b_binder, $b_data)':
+        class Oops()
+        Oops()
+
+  def noop x = 1
+  ~throws "noop_bind: cannot coerce value to syntax"

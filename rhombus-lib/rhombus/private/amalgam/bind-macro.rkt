@@ -255,12 +255,12 @@
                   . _)
          (list
           #`(define-syntax builder-id
-              (oncer-rhs #,stx)))]))))
+              (oncer-rhs builder-id #,stx)))]))))
 
 (begin-for-syntax
   (define-syntax (oncer-rhs stx)
     (syntax-parse stx
-      [(_ orig-stx)
+      [(_ who orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
@@ -277,6 +277,7 @@
                       (let* ([id id-ref] ...)
                         (let-syntaxes ([(sid ...) sid-ref] ...)
                           (unwrap-block
+                           'who
                            (rhombus-body-at block-tag body ...))))])])))])])))
 
 (define-defn-syntax matcher
@@ -288,12 +289,12 @@
                   . _)
          (list
           #`(define-syntax builder-id
-              (matcher-rhs #,stx)))]))))
+              (matcher-rhs builder-id #,stx)))]))))
 
 (begin-for-syntax
   (define-syntax (matcher-rhs stx)
     (syntax-parse stx
-      [(_ orig-stx)
+      [(_ who orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
@@ -319,6 +320,7 @@
                                   ;; helps make sure it's used correctly
                                   [fail-id #'(parsed #:rhombus/expr (maybe-definition (if-bridge IF fail)))])
                               (unwrap-block
+                               'who
                                (rhombus-body-at block-tag body ...))))))])])))])])))
 
 (define-for-syntax (parse-if-bridge stx)
@@ -459,7 +461,7 @@
                   . _)
          (list
           #`(define-syntax builder-id
-              (binder-or-committer-rhs #,stx)))]))))
+              (binder-or-committer-rhs builder-id #,stx)))]))))
 
 (define-for-syntax (pack-info who stx)
   (check-syntax who stx)
@@ -536,7 +538,7 @@
 (begin-for-syntax
   (define-syntax (binder-or-committer-rhs stx)
     (syntax-parse stx
-      [(_ orig-stx)
+      [(_ who orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
@@ -560,10 +562,11 @@
                       (let* ([data-id data-id-ref] ...)
                         (let-syntaxes ([(data-sid ...) data-sid-ref] ...)
                           (unwrap-block
+                           'who
                            (rhombus-body-at block-tag body ...))))])])))])])))
 
-(define-for-syntax (unwrap-block stx)
-  #`(rhombus-body-sequence #,@(unpack-multi stx 'bin.binder #f)))
+(define-for-syntax (unwrap-block who stx)
+  #`(rhombus-body-sequence #,@(unpack-multi stx who #f)))
 
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #:rhombus/bind #,stx))
