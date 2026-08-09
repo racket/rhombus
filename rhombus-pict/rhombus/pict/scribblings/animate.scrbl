@@ -598,8 +598,9 @@
 
 @examples(
   ~eval: pict_eval
-  explain_anim(animate(fun (n): circle(~fill: "blue").alpha(1-n)),
-               ~steps: 5)
+  ~repl:
+    explain_anim(animate(fun (n): circle(~fill: "blue").alpha(1-n)),
+                 ~steps: 5)
   ~repl:
     def slow = animate(~extent: 2, fun (n): circle(~fill: "blue").alpha(1-n))
     explain_anim(switch(slow, slow), ~steps: 2)
