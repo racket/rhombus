@@ -570,7 +570,8 @@
     ~steps_before: steps_before :: Nat = 0,
     ~steps_after: steps_after :: Nat = 0,
     ~show_timebox: show_timebox = #true,
-    ~mode: mode :: TimelineMode = #'epochs,
+    ~label_as: label_as :: TimelineLabel = #'epochs,
+    ~pad: pad_amt :: Real = 10,
     ~pad_before: pad_before :: Nat = 0,
     ~pad_after: pad_after :: Nat = 0
   ) :: Pict
@@ -587,8 +588,11 @@
  If @rhombus(show_timebox) is a true value, then a box is drawn around
  points on the timeline that are within @rhombus(pict)'s @tech{time box}.
 
- The @rhombus(mode) argument selects how each point on the timeline is
- labeled; see @rhombus(TimelineMode, ~annot).
+ The @rhombus(label_as) argument selects how each point on the timeline
+ is labeled; see @rhombus(TimelineLabel, ~annot).
+
+ The @rhombus(pad_amt) argument adds space around all four sides of the
+ result.
 
  If @rhombus(pad_before) or @rhombus(pad_after) are not @rhombus(0),
  then space is added to the left or right of the timeline, respectively,
@@ -604,13 +608,13 @@
   ~repl:
     def slow = animate(~extent: 2, fun (n): circle(~fill: "blue").alpha(1-n))
     explain_anim(switch(slow, slow), ~steps: 2)
-    explain_anim(switch(slow, slow), ~steps: 2, ~mode: #'extents)
+    explain_anim(switch(slow, slow), ~steps: 2, ~label_as: #'extents)
 )
 
 }
 
 @doc(
-  enum TimelineMode
+  enum TimelineLabel
   | epochs
   | extents
 ){
@@ -623,11 +627,11 @@
   time in @tech{epochs}, so a whole number marks an epoch boundary. This is
   the default.}
 
- @item{@rhombus(#'extents): labels read @rhombus(s) @litchar{=} followed by a
-  time in seconds, obtained by accumulating each epoch's @tech{extent}. Since
-  an epoch whose extent is not @rhombus(1) covers more or less than a second,
-  this mode distinguishes a pict that merely has many epochs from one that
-  takes a long time to play.}
+ @item{@rhombus(#'extents): labels read @rhombus(t) @litchar{=} followed by a
+  time in seconds with an @litchar{s} suffix, obtained by accumulating each
+  epoch's @tech{extent}. Since an epoch whose extent is not @rhombus(1) covers
+  more or less than a second, this labeling distinguishes a pict that merely
+  has many epochs from one that takes a long time to play.}
 
 )
 

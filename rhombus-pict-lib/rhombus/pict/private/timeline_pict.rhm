@@ -27,10 +27,11 @@ fun num_str(t):
     | s.substring(0, s.length()-1)
     | s
 
-fun labeled(name :: String, v) :~ Pict:
+fun labeled(name :: String, v, ~unit: unit :: String = "") :~ Pict:
   beside(~vert: #'baseline,
          text(name, ~font: draw.Font(~style: #'italic)),
-         text(" = " +& num_str(v)))
+         // the unit is not italic: it is a unit, not a variable
+         text(" = " +& num_str(v) +& unit))
 
 fun time_at(t) :~ Pict:
   labeled("t", t)
@@ -46,8 +47,9 @@ fun seconds_at(p :~ Pict, t) :~ Real:
       acc + p.epoch_extent(i)
   before + (t - whole) * p.epoch_extent(whole)
 
+// still `t`, with an `s` on the number to mark the units
 fun secs_at(p :~ Pict, t) :~ Pict:
-  labeled("s", seconds_at(p, t))
+  labeled("t", seconds_at(p, t), ~unit: "s")
 
 def epoch_dot_size = 10
 def epoch_dot_color = "red"
@@ -71,10 +73,10 @@ fun timeline(p_in :~ Pict, [t, ...],
              ~post: post = 0,
              ~label: label = #false,
              ~balance_label = #false,
-             ~mode: mode = #'epochs,
+             ~label_as: label_as = #'epochs,
              ~show_timebox = #false) :~ Pict:
   fun stamp(t) :~ Pict:
-    if mode == #'extents | secs_at(p_in, t) | time_at(t)
+    if label_as == #'extents | secs_at(p_in, t) | time_at(t)
   let sep = 20
   fun p_at_time(t, keep) :~ Pict:
     if keep

@@ -58,11 +58,11 @@ check:
 // Both modes draw a timeline, over any range of epochs.
 check:
   explain_anim(two, ~steps: 2) ~matches _ :: Pict
-  explain_anim(two, ~steps: 2, ~mode: #'epochs) ~matches _ :: Pict
-  explain_anim(two, ~steps: 2, ~mode: #'extents) ~matches _ :: Pict
-  explain_anim(stat, ~mode: #'extents) ~matches _ :: Pict
-  explain_anim(two, ~start: -2, ~end: 4, ~mode: #'extents) ~matches _ :: Pict
+  explain_anim(two, ~steps: 2, ~label_as: #'epochs) ~matches _ :: Pict
+  explain_anim(two, ~steps: 2, ~label_as: #'extents) ~matches _ :: Pict
+  explain_anim(stat, ~label_as: #'extents) ~matches _ :: Pict
+  explain_anim(two, ~start: -2, ~end: 4, ~label_as: #'extents) ~matches _ :: Pict
 
 check:
-  explain_anim(two, ~mode: #'seconds)
-  ~throws values("explain_anim", "TimelineMode")
+  explain_anim(two, ~label_as: #'seconds)
+  ~throws values("explain_anim", "TimelineLabel")
