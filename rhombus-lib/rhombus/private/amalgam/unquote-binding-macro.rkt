@@ -6,18 +6,16 @@
                      "pack.rkt"
                      "macro-result.rkt"
                      "operator-syntax-class.rkt"
-                     (submod "class-meta.rkt" for-static-info)
                      (submod "symbol.rkt" for-static-info)
                      "define-arity.rkt"
                      "annotation-failure.rkt"
                      "realm.rkt"
+                     "tail-returner.rkt"
                      (for-syntax racket/base))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
          "unquote-binding.rkt"
-         "name-root.rkt"
-         "macro-macro.rkt"
-         "sequence-pattern.rkt")
+         "macro-macro.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 unquote_bind_meta)))
@@ -79,7 +77,7 @@
                  ctx-kind)))))
 
 (define-for-syntax (make-unquote-binding-infix-operator order prec protocol proc assc)
-  (unquote-binding-prefix-operator
+  (unquote-binding-infix-operator
    order
    prec
    protocol
@@ -96,24 +94,19 @@
            [(syntax-e form1)
             (finish (lambda ()
                       (syntax-parse stx
-                        [(head . tail) (proc form1 (pack-tail #'tail) #'head ctx-kind)]))
+                        [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail) #'head ctx-kind)]))
                     proc
                     ctx-kind)]
-           [else (values #'f #'())])))
+           [else (values #'#f #'())])))
    assc))
 
 (define-for-syntax (finish-auto thunk proc ctx-kind)
   (finish-binds (thunk) proc ctx-kind))
 
 (define-for-syntax (finish thunk proc ctx-kind)
-  (define-values (binds tail)
-    (call-with-values
-     thunk
-     (case-lambda
-       [(binds tail) (values binds (unpack-tail tail proc #f))]
-       [(binds) (values binds #'())])))
+  (define-values (binds tail) (tail-returner proc (thunk)))
   (values (finish-binds binds proc ctx-kind)
-          tail))
+          (unpack-tail tail proc #f)))
 
 (define-for-syntax (finish-binds binds proc ctx-kind)
   (unless (syntax? binds)

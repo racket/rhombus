@@ -248,6 +248,78 @@ check:
   ~matches ['x', 'y', 'z']
 
 block:
+  unquote_bind.macro 'the $right':
+    right
+  check '1 2' matches '$(the '1 2')' ~is #true
+  check '1 2' matches '$(the '$_ ...')' ~is #true
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'invalid':
+    unquote_bind_meta.pack_invalid()
+  unquote_bind.macro 'the $right':
+    right
+  '1 2' matches '$(the invalid)'
+  ~throws "incompatible with this context"
+
+block:
+  unquote_bind.macro 'the($right_in)':
+    ~kind: kind
+    let '$(right :: unquote_bind_meta.Parsed(kind))' = right_in
+    right
+  check '1 2' matches '$(the('1 2'))' ~is #true
+  check '1 2' matches '$(the('$_ ...'))' ~is #true
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'invalid':
+    unquote_bind_meta.pack_invalid()
+  unquote_bind.macro 'the($right_in)':
+    ~kind: kind
+    let '$(right :: unquote_bind_meta.Parsed(kind))' = right_in
+    right
+  '1 2' matches '$(the(invalid))'
+  ~throws "incompatible with this context"
+
+block:
+  unquote_bind.macro '$left and $right':
+    '$left && $right'
+  check '1 2' matches '$('1 2' and (_ :: Group))' ~is #true
+  check '1 2' matches '$('$_ ...' and (_ :: Group))' ~is #true
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'invalid':
+    unquote_bind_meta.pack_invalid()
+  unquote_bind.macro '$left and $right':
+    '$left && $right'
+  '1 2' matches '$(invalid and invalid)'
+  ~throws "incompatible with this context"
+
+block:
+  unquote_bind.macro '$left and($right_in)':
+    ~kind: kind
+    let '$(right :: unquote_bind_meta.Parsed(kind))' = right_in
+    '$left && $right'
+  check '1 2' matches '$('1 2' and(_ :: Group))' ~is #true
+  check '1 2' matches '$('$_ ...' and(_ :: Group))' ~is #true
+
+check:
+  ~eval
+  import rhombus/meta open
+  unquote_bind.macro 'invalid':
+    unquote_bind_meta.pack_invalid()
+  unquote_bind.macro '$left and($right_in)':
+    ~kind: kind
+    let '$(right :: unquote_bind_meta.Parsed(kind))' = right_in
+    '$left && $right'
+  '1 2' matches '$(invalid and(invalid))'
+  ~throws "incompatible with this context"
+
+block:
   fun get_area_code('$('+ 1' || '') ($code) $_ - $_'):
     code
   check:
