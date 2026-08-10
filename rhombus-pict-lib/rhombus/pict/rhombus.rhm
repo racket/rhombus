@@ -94,7 +94,10 @@ def (render_line,
                           intern(p.width / len))
                ~render_indentation:
                  fun (n, off, m, s, style):
-                   if s
+                   // if we want to indent all the way past `p`, then use
+                   // the width of `p`, otherwise assume that we want to
+                   // indent in characters
+                   if s && (n == m)
                    | let p = rtt(" ")
                      p.scale(s * n / m / p.width, 1)
                    | tt(String.make(n, Char" "))
