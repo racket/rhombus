@@ -1,0 +1,68 @@
+#lang rhombus
+import:
+  pict open
+  lib("rhombus/pict/private/timeline_pict.rhm")!private as tl
+
+def stat = circle(~size: 20)
+def anim = animate(~extent: 2, fun (n): circle(~size: 20))
+def two = switch(anim, anim)             // 2 epochs, extent 2 each
+def held = anim.sustain(2)               // 3 epochs, extents [2, 0, 0]
+
+// Every epoch has an extent, zero unless the epoch animates. There is no
+// out-of-range case: indices before and after a pict's own epochs read 0.
+check:
+  stat.epoch_extent(0) ~is 0
+  anim.epoch_extent(0) ~is 2
+  two.epoch_extent(0) ~is 2
+  two.epoch_extent(1) ~is 2
+  two.epoch_extent(2) ~is 0
+  two.epoch_extent(-1) ~is 0
+
+// A sustained epoch is a hold: inside the pict, but passing no time.
+check:
+  held.duration ~is 3
+  held.epoch_extent(0) ~is 2
+  held.epoch_extent(1) ~is 0
+  held.epoch_extent(2) ~is 0
+
+// `seconds_at` accumulates whole epochs and interpolates within one.
+check:
+  tl.seconds_at(two, 0) ~is 0.0
+  tl.seconds_at(two, 0.5) ~is 1.0
+  tl.seconds_at(two, 1) ~is 2.0
+  tl.seconds_at(two, 1.5) ~is 3.0
+  tl.seconds_at(two, 2) ~is 4.0
+
+// Zero-extent epochs pass no time, so seconds saturate at both ends -- whether
+// that is a sustain inside the pict or an epoch beyond its last.
+check:
+  tl.seconds_at(two, 3) ~is 4.0
+  tl.seconds_at(two, 10) ~is 4.0
+  tl.seconds_at(two, -1) ~is 0.0
+  tl.seconds_at(two, -5) ~is 0.0
+  tl.seconds_at(held, 1) ~is 2.0
+  tl.seconds_at(held, 2) ~is 2.0
+  tl.seconds_at(held, 3) ~is 2.0
+  tl.seconds_at(stat, 0) ~is 0.0
+  tl.seconds_at(stat, 1) ~is 0.0
+
+// Epochs with differing extents accumulate each in turn, rather than assuming
+// a uniform one.
+def mixed = switch(animate(~extent: 1, fun (n): stat),
+                   animate(~extent: 3, fun (n): stat))
+check:
+  tl.seconds_at(mixed, 1) ~is 1.0
+  tl.seconds_at(mixed, 1.5) ~is 2.5
+  tl.seconds_at(mixed, 2) ~is 4.0
+
+// Both modes draw a timeline, over any range of epochs.
+check:
+  explain_anim(two, ~steps: 2) ~matches _ :: Pict
+  explain_anim(two, ~steps: 2, ~label_as: #'epochs) ~matches _ :: Pict
+  explain_anim(two, ~steps: 2, ~label_as: #'extents) ~matches _ :: Pict
+  explain_anim(stat, ~label_as: #'extents) ~matches _ :: Pict
+  explain_anim(two, ~start: -2, ~end: 4, ~label_as: #'extents) ~matches _ :: Pict
+
+check:
+  explain_anim(two, ~label_as: #'seconds)
+  ~throws values("explain_anim", "TimelineLabel")

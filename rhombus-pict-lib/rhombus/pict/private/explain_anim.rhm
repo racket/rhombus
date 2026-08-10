@@ -5,6 +5,11 @@ import:
 
 export:
   explain_anim
+  TimelineLabel
+
+enum TimelineLabel
+| epochs
+| extents
 
 fun explain_anim(p :: Pict,
                  ~start: start :: Int = 0,
@@ -13,6 +18,7 @@ fun explain_anim(p :: Pict,
                  ~steps_before: steps_before :: Nat = 0,
                  ~steps_after: steps_after :: Nat = 0,
                  ~show_timebox: show_timebox = #true,
+                 ~label_as: label_as :: TimelineLabel = #'epochs,
                  ~pad: pad_amt :: Real = 10,
                  ~pad_before: pad_before :: Nat = 0,
                  ~pad_after: pad_after :: Nat = 0) :~ Pict:
@@ -26,6 +32,7 @@ fun explain_anim(p :: Pict,
            gen_times(start, end, steps, steps_before, steps_after),
            ~pre: pad_before,
            ~post: pad_after,
+           ~label_as: label_as,
            ~show_timebox: show_timebox).pad(pad_amt)
 
 fun gen_times(start, end, steps, pre_extra, post_extra):
