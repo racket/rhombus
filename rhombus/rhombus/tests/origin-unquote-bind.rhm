@@ -1,0 +1,8 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+unquote_bind.macro 'the $right':
+  right
+
+'1' matches '$(the (the (the _)))'

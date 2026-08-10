@@ -68,7 +68,7 @@
             (finish-auto (lambda () (proc (wrap-parsed form1) stx ctx-kind))
                          proc
                          ctx-kind)]
-           [else #'#f]))
+           [else form1]))
        (lambda (stx ctx-kind)
          (finish (lambda ()
                    (syntax-parse stx
@@ -88,7 +88,7 @@
             (finish-auto (lambda () (proc (wrap-parsed form1) (wrap-parsed form2) stx ctx-kind))
                          proc
                          ctx-kind)]
-           [else #'#f]))
+           [else form1]))
        (lambda (form1 stx ctx-kind)
          (cond
            [(syntax-e form1)
@@ -97,7 +97,7 @@
                         [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail) #'head ctx-kind)]))
                     proc
                     ctx-kind)]
-           [else (values #'#f #'())])))
+           [else (values form1 #'())])))
    assc))
 
 (define-for-syntax (finish-auto thunk proc ctx-kind)
@@ -114,16 +114,20 @@
   (define result-g (unpack-group binds proc binds))
   (syntax-parse result-g
     #:datum-literals (group parsed)
-    [(group (parsed #:rhombus/unquote_bind #f))
-     ;; failure is always compatible
-     #'#f]
-    [(group (parsed #:rhombus/unquote_bind (kind pat idrs sidrs vars)))
-     (unless (eq? (syntax-e #'kind) ctx-kind)
-       (raise-bad-macro-result (proc-name proc)
-                               (format "unquote binding `~a` context" ctx-kind)
-                               result-g))
-     #'(kind pat idrs sidrs vars)]
-    [(~var esc (:unquote-binding ctx-kind)) #'esc.parsed]))
+    [(group (parsed #:rhombus/unquote_bind form))
+     (syntax-parse #'form
+       [(~or* #f
+              _:identifier)
+        ;; failure or identifier pattern is always compatible
+        (void)]
+       [(kind pat idrs sidrs vars)
+        (unless (eq? (syntax-e #'kind) ctx-kind)
+          (raise-bad-macro-result (proc-name proc)
+                                  (format "unquote binding `~a` context" ctx-kind)
+                                  result-g))])
+     #'form]
+    [(~var esc (:unquote-binding ctx-kind))
+     #'esc.parsed]))
 
 (begin-for-syntax
   (define/arity (unquote_bind_meta.unpack_kind stx)
