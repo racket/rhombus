@@ -34,7 +34,7 @@
   #:transparent #:no-primitive
   #:fields
   ([(arguments args) #,(get-list-static-infos)]
-   [(keyword_arguments args) #,(get-map-static-infos)]
+   [(keyword_arguments kw-args) #,(get-map-static-infos)]
    [(has_more_arguments rest?)]
    [(has_more_keyword_arguments kw-rest?)])
   #:namespace-fields

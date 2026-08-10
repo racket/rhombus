@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+
+export:
+  maybe_or_definitely
+
+annot.macro 'maybe_or_definitely($(a :: annot_meta.Parsed), $(kw :: Keyword))':
+  let (pred, si) = annot_meta.unpack_predicate(a)
+  annot_meta.pack_predicate(pred,
+                            '(($statinfo_meta.dependent_result_key,
+                               $(statinfo_meta.pack_dependent_result(
+                                   'decide_maybe',
+                                   '[$kw, $si]',
+                                   {}
+                                 ))))')
+
+meta.bridge decide_maybe:
+  fun ('[$kw, $si]', deps :: annot_meta.Dependencies):
+    if (deps.has_more_keyword_arguments == #false
+          && kw.unwrap() !in deps.keyword_arguments)
+    | statinfo_meta.pack(si)
+    | statinfo_meta.pack('(($statinfo_meta.maybe_key, $(statinfo_meta.pack(si))))')
+

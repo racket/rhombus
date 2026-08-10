@@ -1,9 +1,10 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 import:
   lib("ffi2/main.rkt") as ffi2
   lib("setup/dirs.rkt").#{get-lib-search-dirs}
   rhombus/custodian open
   "pointer.rhm" open
+  "maybe_or_definitely.rhm" open
 
 export:
   Lib
@@ -32,7 +33,7 @@ fun load(
   ~fail: fail :: maybe(() -> maybe(Lib)) = #false,
   ~as_global: as_global :: Any.to_boolean = #false,
   ~custodian: cust :: maybe(Custodian || Any.of(#'place)) = #false,
-) :: maybe(Lib):
+) :: maybe_or_definitely(Lib, ~fail):
   ~name: Lib.load
   let handle:
     ffi2.#{ffi2-lib}(path,

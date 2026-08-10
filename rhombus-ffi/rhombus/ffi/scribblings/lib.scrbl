@@ -107,7 +107,9 @@
  library file may exist but fail to load for some reason; the eventual
  error message will unfortunately name the fallback from the second or
  third bullet, since some operating systems offer no way to determine why
- a given library path failed.
+ a given library path failed. If no @rhombus(~fail) argument is provided,
+ then the static information for the result of @rhombus(Lib.load) is
+ refined to @rhombus(Lib, ~annot) instead of @rhombus(maybe(Lib), ~annot).
 
  If @rhombus(path) is not @rhombus(#false), @rhombus(as_global) is true,
  and the operating system supports opening a library in ``global'' mode
@@ -143,6 +145,11 @@
  @rhombus(#'{ffi-lib}). In particular, on failure it logs the paths
  attempted according to the rules above, but it cannot report the paths
  tried due to the operating system's library search path.
+
+@(history:
+    ~changed "1.1":
+      @elem{Refined result static information to @rhombus(Lib, ~annot)
+            in the case that no @rhombus(~fail) argument is provided.})
 
 }
 
