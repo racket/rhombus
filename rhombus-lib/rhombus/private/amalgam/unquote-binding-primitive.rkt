@@ -179,10 +179,9 @@
          [_ (values #f tail)]))
      (define match-id (car (generate-temporaries (list form1))))
      (define (track stx-class-id stx)
-       (define new-stx-class-id
-         (add-origin (in-syntax-class-space (syntax-local-introduce stx-class-id))
-                     stx-class-id))
-       (transfer-origins (list form1 new-stx-class-id) stx))
+       (add-origin
+        (in-syntax-class-space (syntax-local-introduce stx-class-id))
+        (transfer-origin form1 stx)))
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and sc (_::parens (group . rest))) . tail)

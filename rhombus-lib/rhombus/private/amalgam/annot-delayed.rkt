@@ -100,15 +100,14 @@
                                #'name.name))
          (syntax-parse #'ap.parsed
            [a::annotation-predicate-form
-            #`(#,(transfer-origins
-                  (list (add-origin (in-annotation-space (syntax-local-introduce #'name.name))
-                                    #'name.name)
-                        #'ap.parsed)
-                  #`(begin
-                      (define-syntaxes ()
+            (list (add-origin
+                   (in-annotation-space (syntax-local-introduce #'name.name))
+                   (transfer-origin
+                    #'ap.parsed
+                    #`(define-syntaxes ()
                         (delayed-annotation-complete-compiletime (quote-syntax name.name)
-                                                                 (quote-syntax a.static-infos)))
-                      (void (#,(delayed-annotation-complete!-id dp) a.predicate)))))]
+                                                                 (quote-syntax a.static-infos)))))
+                  #`(void (#,(delayed-annotation-complete!-id dp) a.predicate)))]
            [a::annotation-binding-form
             (raise-syntax-error #f
                                 "supported only for predicate-based annotations"

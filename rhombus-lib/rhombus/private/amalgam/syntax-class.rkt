@@ -4,7 +4,8 @@
                      racket/keyword
                      syntax/parse/pre
                      enforest/name-parse
-                     "attribute-name.rkt")
+                     "attribute-name.rkt"
+                     "origin.rkt")
          racket/treelist
          syntax/parse/pre
          "provide.rkt"
@@ -261,13 +262,12 @@
         (define define-class (if splicing?
                                  #'define-splicing-syntax-class
                                  #'define-syntax-class))
-        (define (track-all stx) (for/fold ([stx stx]) ([track-stx (in-list track-stxes)])
-                                  (syntax-track-origin stx track-stx #'none)))
         ;; return a list of definitions;
         ;; in `for-together?` mode, expects a list of 2 definitions:
         (append
          (list
-          (track-all
+          (transfer-origins
+           track-stxes
            (build-syntax-definition/maybe-extension
             'rhombus/stxclass class-name name-extends
             #`(rhombus-syntax-class '#,kind

@@ -470,9 +470,7 @@
       [(quotes) #'(~var _ :quotes)]
       [else #`(~datum #,d)]))
   (define (add-escape-origin $-id stx)
-    (syntax-property stx 'origin (cons (in-binding-space
-                                        (syntax-local-introduce $-id))
-                                       (or (syntax-property stx 'origin) null))))
+    (add-origin (in-binding-space (syntax-local-introduce $-id)) stx))
   (define (handle-escape $-id e in-e ctx-kind)
     (define parsed
       (syntax-parse (regroup #`(#,e))

@@ -258,7 +258,7 @@
                         . forms))]
          [(begin form-in ...)
           #:with (form ...) (map (lambda (form)
-                                   (shift-origin form exp-form))
+                                   (transfer-origin exp-form form))
                                  (syntax->list #'(form-in ...)))
           (define seq #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] form ... . forms))
           (if (null? accum)

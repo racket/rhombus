@@ -18,6 +18,7 @@
                      "operator-parse.rkt"
                      "syntax-wrap.rkt"
                      "realm.rkt"
+                     "origin.rkt"
                      (for-syntax racket/base))
          "enforest.rkt"
          "name-root.rkt"
@@ -268,14 +269,14 @@
      (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
                                        #'r.parsed))
      (define-values (mod-path-stx r-stx lifted-nss) (import-invert r-parsed #'orig #'r))
-     (shift-origin
+     (transfer-origin
+      #'r.parsed
       #`(begin
           #,@(for/list ([lifted-ns (in-list lifted-nss)])
                (syntax-parse lifted-ns
                  [(name body) #'(rhombus-definition (group namespace name body))]))
           (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
-          (rhombus-import orig mods . more))
-      #'r.parsed)]))
+          (rhombus-import orig mods . more)))]))
 
 (begin-for-syntax
   ;; for nested contexts where the unrolling that `rhombus-import`

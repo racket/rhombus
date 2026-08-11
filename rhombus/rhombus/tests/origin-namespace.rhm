@@ -1,0 +1,17 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "origin.rhm"
+
+namespace ns1:
+  export:
+    x
+    ns2
+  def x = 1
+  namespace ns2:
+    export:
+      y
+    def y = 2
+
+ns1.x
+
+ns1.ns2.y

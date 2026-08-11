@@ -4,11 +4,11 @@
                      racket/symbol
                      (prefix-in enforest: enforest/name-root)
                      enforest/syntax-local
-                     enforest/transformer
                      shrubbery/property
                      shrubbery/print
                      "srcloc.rkt"
-                     "id-binding.rkt")
+                     "id-binding.rkt"
+                     "origin.rkt")
          "name-root-space.rkt")
 
 ;; convert a hierarchical layer implemented as portal syntax to a name-root
@@ -27,16 +27,15 @@
 
 (begin-for-syntax
   (define (build-name prefix field-id #:ctx [ctx prefix])
-    (syntax-property
+    (add-origin
+     (syntax-local-introduce (in-name-root-space prefix))
      (datum->syntax ctx
                     (string->symbol
                      (string-append (symbol->immutable-string (syntax-e prefix))
                                     "."
                                     (symbol->immutable-string (syntax-e field-id))))
                     field-id
-                    field-id)
-     'origin
-     (syntax-local-introduce (in-name-root-space prefix))))
+                    field-id)))
 
   (struct search-step (get prefix extends dots)
     #:authentic))
@@ -289,7 +288,22 @@
              (shrubbery-syntax->string root-id)
              (shrubbery-syntax->string (or field-op-parens field-id)))))
   (define op-parens-head (and field-op-parens (car (syntax-e field-op-parens))))
-  (syntax-property
+  (add-origins
+   (let* ([ids (list (syntax-local-introduce (in-name-root-space root-id)))]
+          [ids (if (syntax-original? (syntax-local-introduce field-id))
+                   ;; enable arrows, etc., from `new-field-id` based on its binding
+                   (cons (syntax-property (datum->syntax new-field-id
+                                                         (syntax-e new-field-id)
+                                                         field-id
+                                                         field-id)
+                                          ;; `new-field-id` is non-original, since it's
+                                          ;; introduced by expansion, and it may have other
+                                          ;; scopes from its definition site:
+                                          'original-for-check-syntax
+                                          #t)
+                         ids)
+                   ids)])
+     ids)
    (syntax-raw-property
     (datum->syntax new-field-id
                    (syntax-e new-field-id)
@@ -299,22 +313,7 @@
                         field-id
                         (syntax-raw-suffix-property op-parens-head))
                        field-id))
-    name)
-   'origin
-   (let ([root (syntax-local-introduce (in-name-root-space root-id))])
-     (if (syntax-original? (syntax-local-introduce field-id))
-         ;; enable arrows, etc., from `new-field-id` based on its binding
-         (cons (syntax-property (datum->syntax new-field-id
-                                               (syntax-e new-field-id)
-                                               field-id
-                                               field-id)
-                                ;; `new-field-id` is non-original, since it's
-                                ;; introduced by expansion, and it may have other
-                                ;; scopes from its definition site:
-                                'original-for-check-syntax
-                                #t)
-               root)
-         root))))
+    name)))
 
 (define-for-syntax (name-root-all-out ns-id name space-syms)
   (define v (syntax-local-value* (in-name-root-space ns-id)

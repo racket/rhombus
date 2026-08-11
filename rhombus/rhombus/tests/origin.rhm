@@ -5,6 +5,7 @@ import:
   lib("syntax/modread.rkt")
 
 runtime_path.def def_rhm: "origin-def.rhm"
+runtime_path.def namespace_rhm: "origin-namespace.rhm"
 runtime_path.def annot_rhm: "origin-annot.rhm"
 runtime_path.def bind_rhm: "origin-bind.rhm"
 runtime_path.def repet_rhm: "origin-repet.rhm"
@@ -80,6 +81,10 @@ check_origins(def_rhm,
                 #'x2: 2,
                 #'x3: 2,
                 #'x4: 3 })
+
+check_origins(namespace_rhm,
+              #'#{rhombus/namespace},
+              { #'ns1: 3 })
 
 check_origins(annot_rhm,
               #'#{rhombus/annot},

@@ -19,8 +19,7 @@
          relocate-tail
          respan
          maybe-respan
-         with-syntax-error-respan
-         shift-origin)
+         with-syntax-error-respan)
 
 ;; Source locations and 'raw properties for shrubbery forms as syntax
 ;; objects:
@@ -375,10 +374,3 @@
                     (lambda (s)
                       (syntax-srcloc (maybe-respan (datum->syntax #f s))))])
       (thunk))))
-
-(define (shift-origin stx from-stx)
-  (let ([o (syntax-property from-stx 'origin)])
-    (if o
-        (let ([o2 (syntax-property stx 'origin)])
-          (syntax-property stx 'origin (if o2 (cons o o2) o)))
-        stx)))
