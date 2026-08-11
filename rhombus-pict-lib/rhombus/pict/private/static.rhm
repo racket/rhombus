@@ -317,9 +317,9 @@ class Pict():
     let (p, _) = _replace(fun (p): p,
                           fun (p): p,
                           fun (c): c,
-                          Map.by(===){ from.identity: if as_rebuilt
-                                                      | Pict._identify_as(to, from.identity)
-                                                      | to },
+                          Map.by(===){ from: if as_rebuilt
+                                             | Pict._identify_as(to, from.identity)
+                                             | to },
                           as_rebuilt)
     p
 
@@ -336,8 +336,8 @@ class Pict():
                                _children, _dependencies, _config,
                                _rebuild):
     cond
-    | identity in subst:
-        values(subst[identity], subst)
+    | this in subst:
+        values(subst[this], subst)
     | ~else:
         let new = pre_adjuster(this)
         cond
@@ -350,7 +350,7 @@ class Pict():
                     error.val(~label: "function", pre_adjuster),
                     error.val(~label: "result", new))
             let new = (if as_rebuilt | Pict._identify_as(new, identity) | new)
-            values(new, subst ++ { identity: new })
+            values(new, subst ++ { this: new })
         | ~else:
             let (new, subst :~ Map):
               match  _dependencies || _children:
@@ -401,7 +401,7 @@ class Pict():
                       error.val(~label: "function", adjuster),
                       error.val(~label: "result", new))
               let new = Pict._identify_as(new, identity)
-              values(new, subst ++ { identity: new })
+              values(new, subst ++ { this: new })
 
   abstract protected method _identify_as(identity)
 
