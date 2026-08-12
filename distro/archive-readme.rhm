@@ -19,13 +19,13 @@ cataloged packages, use `make`, and provide `RACKET=...` if needed to
 specify the `racket` executable to use. The result is a directory
 "build/rhombus-pkg-platform" that is like this directory, but with
 platform-specific built versions of the packages. Install it with
-`make-install` or use
+`make install` or use
 
  raco pkg install -i --auto --catalog build/rhombus-pkg-platform/catalog/ rhombus-main-distribution
 
 The "build/rhombus-pkg-platform" directory is self-contained, so it could
 be copied or archived for later installation; the installation step
 just needs to refer to "catalog" within the copy (where "catalog"
-contains references to the sibling "pkgs" directory).
+contains references to the sibling "pkgs" directory). See the makefile
+for `DESTDIR` support.
 })
-  

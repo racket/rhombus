@@ -3,6 +3,7 @@ import:
   "catalog.rhm"
   "installer.rhm"
   "doc.rhm"
+  "archive.rhm"
   "site.rhm"
 
 fun build(racket_version, rhombus_version, config):

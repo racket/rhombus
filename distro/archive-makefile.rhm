@@ -1,23 +1,83 @@
 #lang rhombus/static
 
+import:
+  lib("racket/base.rkt") as rkt
+
 export:
   make_makefile
 
 def tab = "\t"
 
 fun make_makefile(racket_version, rhombus_version):
+  let pkg_names :~ List:
+    Map.keys(
+      Port.Input.using ~file "compiled/repackage/build/built/catalog/pkgs-all":
+        rkt.read()
+    ).map(to_string)
   String.append(& @List.append{
+
+MAIN_PKG = rhombus-main
+PKGS = @(String.append(
+           & for List (name in pkg_names.sort(fun (a :: String, b :: String): a < b)):
+             @str{ \@"\n"  @name})
+         )
+
 RACKET = racket
-RACKET_VERSION = @racket_version
+
+DESTDIR =
+DESTDIR_DOC =
+
+FORCE =
+
+DEST = build/rhombus-pkg-platform
 
 platform:
-@(tab)$(RACKET) -A build -l- raco pkg install -u --auto --skip-installed --catalog catalog/ rhombus-main-distribution
-@(tab)# For v9.3 and later, using `--built` with `raco pkg catalog-archive` would be better than `find`+`rm`:
-@(tab)find build/$(RACKET_VERSION)/pkgs -name 'synced.rktd' -exec rm {} \;
-@(tab)$(RACKET) -l- pkg/dirs-catalog build/$(RACKET_VERSION)/catalog build/$(RACKET_VERSION)/pkgs
-@(tab)$(RACKET) -l- raco pkg catalog-archive --relative build/rhombus-pkg-platform build/$(RACKET_VERSION)/catalog
+@(tab)"$(RACKET)" -A build -l- raco pkg install -u --auto --catalog catalog/ --adjacent-deps $(MAIN_PKG)
+@(tab)"$(RACKET)" -A build -l- raco pkg create --dest $(DEST)/pkgs --built --format dir --from-install --adjacent-deps $(MAIN_PKG)
+@(tab)"$(RACKET)" -l- pkg/dirs-catalog -q $(DEST)/catalog $(DEST)/pkgs
+
+# For a Racket that already has packages in `PKGS` installed
+# --- not recommended, and there will be warnings to ignore
+platform-force:
+@(tab)"$(RACKET)" -A build -l- raco pkg install $(FORCE) -u --auto --catalog catalog/ $(PKGS)
+@(tab)"$(RACKET)" -A build -l- raco pkg create --dest $(DEST)/pkgs --built --format dir --from-install $(PKGS)
+@(tab)"$(RACKET)" -l- pkg/dirs-catalog -q $(DEST)/catalog $(DEST)/pkgs
+
 
 install:
-@(tab)$(RACKET) -l- raco pkg install -i --auto --catalog build/rhombus-pkg-platform/catalog/ rhombus-main-distribution
+@(tab)if [ -z "$(DESTDIR)" ]; then $(MAKE) install-no-destdir; else $(MAKE) install-destdir; fi
+
+install-no-destdir:
+@(tab)"$(RACKET)" -l- raco pkg install -i --auto --catalog $(DEST)/catalog/ $(MAIN_PKG)
+
+install-destdir:
+@(tab)"$(RACKET)" -l- raco pkg install -i --auto --catalog $(DEST)/catalog --destdir "$(DESTDIR)" $(MAIN_PKG)
+@(tab)if [ -n "$(DESTDIR_DOC)" ]; then $(MAKE) install-destdir-doc; fi
+
+# Use with `platform-force`
+install-destdir-force:
+@(tab)"$(RACKET)" -l- raco pkg install -i --force --catalog $(DEST)/catalog --destdir "$(DESTDIR)" $(PKGS)
+@(tab)if [ -n "$(DESTDIR_DOC)" ]; then $(MAKE) install-destdir-doc; fi
+
+install-destdir-doc:
+@(tab)"$(RACKET)" -l- setup/doc-to-destdir "$(DESTDIR_DOC)" "$(DESTDIR)"
+
+
+# Not in this makefile: move `($DESTDIR)` and `$(DESTDIR_DOC)` contents into place
+
+
+# This makefile isn't meant to be available in the final installation context,
+# but here's the intended attach command
+attach:
+@(tab)"$(RACKET)" -l- raco pkg install -i --attach --deps search-auto --adjacent-deps $(MAIN_PKG)
+
+# Like `attach` mode, the makefile isn't meant to be available,
+# but here's the intended link command
+LINK_DIR = $(DEST)/pkgs
+link:
+@(tab)cd $(LINK_DIR) && "$(RACKET)" -l- raco pkg install -i --link --deps search-auto --adjacent-deps $(MAIN_PKG)
+
+pkg-list:
+@(tab)@"@" echo $(PKGS)
 }
 )

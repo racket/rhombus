@@ -23,6 +23,7 @@ fun build_installer(racket_version, rhombus_version :~ String, config_file):
         ~#{skip-notarize?}: #false,
         ~catalogs: PairList[to_string(url.URL.from_path(Path("compiled/repackage/build/built/catalog/").to_absolute_path()))],
         ~#{dist-catalogs}: PairList["https://download.rhombus-lang.org/releases/" ++ rhombus_version ++ "/catalog/"],
+        ~#{remove-catalogs}: PairList["https://download.rhombus-lang.org/releases/current/catalog/"],
         ~config: config_file,
         ~#{config-mode}: "release=" ++ rhombus_version
       )

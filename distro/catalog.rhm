@@ -46,6 +46,8 @@ fun build_catalog(racket_version, rhombus_version :~ String, config_file):
     ~version: racket_version,
     ~packages: PairList[& local_packages],
     ~catalogs: PairList[local_catalog_dir],
+    ~#{remove-catalogs}: PairList["https://download.rhombus-lang.org/releases/current/catalog/"],
+    ~#{check-package-implies}: "main-distribution",
     ~#{original-template}: "https://github.com/racket/rhombus.git?path=~a",
     ~#{default-author}: "mflatt@racket-lang.org",
     ~config: config_file,
