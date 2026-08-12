@@ -276,6 +276,29 @@ check:
   f(1, ~y: 2)
   ~is 1
 
+check:
+  ~eval
+  1 :: (~x: Int, ~x: Int) -> Int
+  ~throws values("->: duplicate keyword for argument",
+                 "~x")
+
+check:
+  ~eval
+  1 :: (~x: Int, ~x: x :: Int) -> Int
+  ~throws values("->: duplicate keyword for argument",
+                 "~x")
+check:
+  ~eval
+  1 :: (~x: Int, ~x: Int = _) -> Int
+  ~throws values("->: duplicate keyword for argument",
+                 "~x")
+
+check:
+  ~eval
+  1 :: (~x: Int, ~x: x :: Int = _) -> Int
+  ~throws values("->: duplicate keyword for argument",
+                 "~x")
+
 // Keyword rest arguments
 
 check: ((fun (x, ~& kws): kws) :: (Int, ~& Map) -> Map)(1, ~y: 2)

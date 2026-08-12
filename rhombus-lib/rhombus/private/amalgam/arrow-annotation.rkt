@@ -96,9 +96,13 @@
 (define-for-syntax (parse-annotation-sequence arrow-name args as-result? #:ctx [ctx empty-annot-context])
   (define-values (non-rest-args rest-name+ann rest-ann-whole? kw-rest-name+ann kw-rest-first?)
     (extract-rest-args arrow-name args as-result?))
-  (define (check-keyword kw)
+  (define (check-keyword kw seen-kws)
     (when as-result?
       (raise-syntax-error #f "keywords are not allowed on result annotations"
+                          arrow-name
+                          kw))
+    (when (hash-ref seen-kws (syntax-e kw) #f)
+      (raise-syntax-error #f "duplicate keyword for argument"
                           arrow-name
                           kw)))
   (define (check-optional eql)
@@ -107,7 +111,7 @@
                           arrow-name
                           eql)))
   (define multi-kw+name+opt+lhs
-    (let loop ([args non-rest-args] [has-opt? #f])
+    (let loop ([args non-rest-args] [has-opt? #f] [seen-kws #hasheq()])
       (cond
         [(null? args) null]
         [else
@@ -117,7 +121,7 @@
              (raise-syntax-error #f "non-optional argument follows an optional by-position argument"
                                  arrow-name
                                  arg)))
-         (define-values (a opt?)
+         (define-values (a opt? new-seen-kws)
            (syntax-parse arg
              #:datum-literals (group op)
              [(group (~and kw #:any))
@@ -128,44 +132,52 @@
                                   arrow-name
                                   #'kw)]
              [(group kw:keyword (_::block (group name:identifier _:::-bind c ... _::equal _::_-bind)))
-              (check-keyword #'kw)
+              (check-keyword #'kw seen-kws)
               (values (list #'kw #'name #t (syntax-parse (regroup #'(c ...))
                                              [c::annotation #'c.parsed]))
-                      #f)]
+                      #f
+                      (hash-set seen-kws (syntax-e #'kw) #t))]
              [(group kw:keyword (_::block (group c ... _::equal _::_-bind)))
-              (check-keyword #'kw)
+              (check-keyword #'kw seen-kws)
               (values (list #'kw #f #t (syntax-parse (regroup #'(c ...))
                                          [c::annotation #'c.parsed]))
-                      #f)]
+                      #f
+                      (hash-set seen-kws (syntax-e #'kw) #t))]
              [(group kw:keyword (_::block (group name:identifier _:::-bind c ...)))
-              (check-keyword #'kw)
+              (check-keyword #'kw seen-kws)
               (values (list #'kw #'name #f (syntax-parse (regroup #'(c ...))
                                              [c::annotation #'c.parsed]))
-                      #f)]
+                      #f
+                      (hash-set seen-kws (syntax-e #'kw) #t))]
              [(group kw:keyword (_::block c::annotation))
-              (check-keyword #'kw)
+              (check-keyword #'kw seen-kws)
               (values (list #'kw #f #f #'c.parsed)
-                      #f)]
+                      #f
+                      (hash-set seen-kws (syntax-e #'kw) #t))]
              [(group name:identifier _:::-bind c ... eql::equal _::_-bind)
               (check-optional #'eql)
               (values (list #f #'name #t (syntax-parse (regroup #'(c ...))
                                            [c::annotation #'c.parsed]))
-                      #t)]
+                      #t
+                      seen-kws)]
              [(group c ... eql::equal _::_-bind)
               (check-optional #'eql)
               (values (list #f #f #t (syntax-parse (regroup #'(c ...))
                                        [c::annotation #'c.parsed]))
-                      #t)]
+                      #t
+                      seen-kws)]
              [(group name:identifier _:::-bind c ...)
               (non-opt)
               (values (list #f #'name #f (syntax-parse (regroup #'(c ...))
                                            [(~var c (:annotation ctx)) #'c.parsed]))
-                      #f)]
+                      #f
+                      seen-kws)]
              [(~var c (:annotation ctx))
               (non-opt)
               (values (list #f #f #f #'c.parsed)
-                      #f)]))
-         (cons a (loop (cdr args) (or has-opt? opt?)))])))
+                      #f
+                      seen-kws)]))
+         (cons a (loop (cdr args) (or has-opt? opt?) new-seen-kws))])))
   (if as-result?
       (values (map (lambda (l) (list (cadr l) (cadddr l))) multi-kw+name+opt+lhs) rest-name+ann rest-ann-whole?)
       (values multi-kw+name+opt+lhs rest-name+ann rest-ann-whole? kw-rest-name+ann kw-rest-first?)))
