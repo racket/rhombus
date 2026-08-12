@@ -91,8 +91,8 @@
  This operation is equivalent to a use of @rhombus(Pict.rebuild):
 
 @rhombusblock(
-  pict.rebuild(~pre: fun (p):
-                       if p == orig
+  pict.rebuild(~pre: fun (p :: Pict):
+                       if p.identity == orig.identity
                        | replacement
                        | p,
                ~as_rebuilt: as_rebuilt)
