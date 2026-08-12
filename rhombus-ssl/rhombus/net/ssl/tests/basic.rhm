@@ -1,14 +1,15 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
   net/ssl
   rhombus/thread open
   rhombus/collect
+  rhombus/runtime_path
 
-def server_key = collect.file_path(~collect: "tests/openssl", ~file: "server_key.pem")
-def server_cert = collect.file_path(~collect: "tests/openssl", ~file: "server_crt.pem")
-def client_key = collect.file_path(~collect: "tests/openssl", ~file: "client_key.pem")
-def client_cert = collect.file_path(~collect: "tests/openssl", ~file: "client_crt.pem")
-def ca_cert = collect.file_path(~collect: "tests/openssl", ~file: "cacert.pem")
+runtime_path.def server_key: "server_key.pem"
+runtime_path.def server_cert: "server_crt.pem"
+runtime_path.def client_key: "client_key.pem"
+runtime_path.def client_cert: "client_crt.pem"
+runtime_path.def ca_cert: "cacert.pem"
 
 def (r_ci, r_so) = Port.Pipe.make()
 def (r_si, r_co) = Port.Pipe.make()

@@ -8,9 +8,7 @@
 
 (define build-deps
   '("rhombus"
-    "rhombus-scribble-lib"
-    ;; for PEM files in "tests/openssl", used in "..../tests/basic.rhm"
-    "racket-test"))
+    "rhombus-scribble-lib"))
 
 (define pkg-desc "Rhombus SSL library")
 
