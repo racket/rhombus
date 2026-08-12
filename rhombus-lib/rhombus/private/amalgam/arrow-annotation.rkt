@@ -1167,55 +1167,79 @@
        [()
         #'(~? (apply proc (~? arg) ... rest)
               (proc (~? arg) ...))]
-       [(kw ...)
-        (define-values (kws/unsafe-undefined kw-args/unsafe-undefined)
-          (sort-kws+kw-args #'(kw ...) #'((~? kw-arg) ...)))
-        #`(do-apply/unsafe-undefined proc
-                                     '(#,@kws/unsafe-undefined) (list #,@kw-args/unsafe-undefined)
-                                     (~? (list* (~? arg) ... rest)
-                                         (list (~? arg) ...)))])]))
+       [kws
+        (define vals (generate-temporaries #'((~? kw-arg arg) ...)))
+        (define-values (pos-vals kw-vals)
+          (for/foldr ([pos-vals null]
+                      [kw-vals null])
+                     ([kw (in-list (attribute kw))]
+                      [val (in-list vals)])
+            (if kw
+                (values pos-vals (cons val kw-vals))
+                (values (cons val pos-vals) kw-vals))))
+        (define-values (kws/unsafe-undef/rev kw-vals/unsafe-undef/rev)
+          (sort-kw-stxs+kw-arg-stxs/rev (syntax->list #'kws) kw-vals))
+        (with-syntax ([(val ...) vals])
+          #`(let ([val (~? kw-arg arg)]
+                  ...)
+              (do-apply/unsafe-undefined proc
+                                         '(#,@kws/unsafe-undef/rev) (list #,@kw-vals/unsafe-undef/rev)
+                                         (~? (list* #,@pos-vals rest)
+                                             (list #,@pos-vals)))))])]))
 
 (define-syntax (keyword-apply/unsafe-undefined stx)
   (syntax-parse stx
     #:literals (null)
-    [(_ proc kws kw-args (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
+    [(_ proc given-kws given-kw-args (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
      (syntax-parse #'((~? kw) ...)
        [()
-        #'(keyword-apply proc kws kw-args (~? arg) ... (~? rest null))]
-       [(kw ...)
-        (define-values (kws/unsafe-undefined kw-args/unsafe-undefined)
-          (sort-kws+kw-args #'(kw ...) #'((~? kw-arg) ...)))
-        #`(do-keyword-apply/unsafe-undefined proc
-                                             kws kw-args
-                                             '(#,@kws/unsafe-undefined) (list #,@kw-args/unsafe-undefined)
-                                             (~? (list* (~? arg) ... rest)
-                                                 (list (~? arg) ...)))])]))
+        #'(keyword-apply proc given-kws given-kw-args (~? arg) ... (~? rest null))]
+       [kws
+        (define vals (generate-temporaries #'((~? kw-arg arg) ...)))
+        (define-values (pos-vals kw-vals)
+          (for/foldr ([pos-vals null]
+                      [kw-vals null])
+                     ([kw (in-list (attribute kw))]
+                      [val (in-list vals)])
+            (if kw
+                (values pos-vals (cons val kw-vals))
+                (values (cons val pos-vals) kw-vals))))
+        (define-values (kws/unsafe-undef/rev kw-vals/unsafe-undef/rev)
+          (sort-kw-stxs+kw-arg-stxs/rev (syntax->list #'kws) kw-vals))
+        (with-syntax ([(val ...) vals])
+          #`(let ([val (~? kw-arg arg)]
+                  ...)
+              (do-keyword-apply/unsafe-undefined proc
+                                                 given-kws given-kw-args
+                                                 '(#,@kws/unsafe-undef/rev) (list #,@kw-vals/unsafe-undef/rev)
+                                                 (~? (list* #,@pos-vals rest)
+                                                     (list #,@pos-vals)))))])]))
 
-(define-for-syntax (sort-kws+kw-args kws-stx kw-args-stx)
-  (define sorted-kws
-    (sort (syntax->list kws-stx) keyword<? #:key syntax-e))
-  (define kw-args-map
-    (for/hasheq ([kw (in-list (syntax->list kws-stx))]
-                 [kw-args (in-list (syntax->list kw-args-stx))])
-      (values (syntax-e kw) kw-args)))
-  (define sorted-kw-args
-    (for/list ([kw (in-list sorted-kws)])
-      (hash-ref kw-args-map (syntax-e kw))))
-  (values sorted-kws sorted-kw-args))
+(define-for-syntax (sort-kw-stxs+kw-arg-stxs/rev kw-stxs kw-arg-stxs)
+  (define sorted-kw-stxs/rev
+    (sort kw-stxs (lambda (a b) (b . keyword<? . a)) #:key syntax-e))
+  (define kw-arg-stx-map
+    (for/hasheq ([kw-stx (in-list kw-stxs)]
+                 [kw-arg-stx (in-list kw-arg-stxs)])
+      (values (syntax-e kw-stx) kw-arg-stx)))
+  (define sorted-kw-arg-stxs/rev
+    (for/list ([kw-stx (in-list sorted-kw-stxs/rev)])
+      (hash-ref kw-arg-stx-map (syntax-e kw-stx))))
+  (values sorted-kw-stxs/rev sorted-kw-arg-stxs/rev))
 
 (define (do-apply/unsafe-undefined proc
-                                   kws/unsafe-undefined kw-args/unsafe-undefined
+                                   kws/unsafe-undef/rev kw-args/unsafe-undef/rev
                                    args)
   (define-values (kws kw-args)
-    (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined))
+    (filter-kws+kw-args/rev kws/unsafe-undef/rev kw-args/unsafe-undef/rev))
   (keyword-apply proc kws kw-args args))
 
 (define (do-keyword-apply/unsafe-undefined proc
                                            kws kw-args
-                                           kws/unsafe-undefined kw-args/unsafe-undefined
+                                           kws/unsafe-undef/rev kw-args/unsafe-undef/rev
                                            args)
   (define-values (kws2 kw-args2)
-    (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined))
+    (filter-kws+kw-args/rev kws/unsafe-undef/rev kw-args/unsafe-undef/rev))
   ;; borrowed from `racket/private/pre-base`
   (define-values (combined-kws combined-kw-args)
     (let loop ([kws kws]
@@ -1239,16 +1263,11 @@
          (loop kws2 kw-args2 kws kw-args #t)])))
   (keyword-apply proc combined-kws combined-kw-args args))
 
-(define (filter-kws+kw-args kws/unsafe-undefined kw-args/unsafe-undefined)
-  (let loop ([kws kws/unsafe-undefined]
-             [kw-args kw-args/unsafe-undefined])
-    (cond
-      [(null? kws)
-       (values kws kw-args)]
-      [(eq? (car kw-args) unsafe-undefined)
-       (loop (cdr kws) (cdr kw-args))]
-      [else
-       (define-values (res-kws res-kw-args)
-         (loop (cdr kws) (cdr kw-args)))
-       (values (cons (car kws) res-kws)
-               (cons (car kw-args) res-kw-args))])))
+(define (filter-kws+kw-args/rev kws/unsafe-undef/rev kw-args/unsafe-undef/rev)
+  (for/fold ([kws null]
+             [kw-args null])
+            ([kw (in-list kws/unsafe-undef/rev)]
+             [kw-arg (in-list kw-args/unsafe-undef/rev)])
+    (if (eq? kw-arg unsafe-undefined)
+        (values kws kw-args)
+        (values (cons kw kws) (cons kw-arg kw-args)))))
