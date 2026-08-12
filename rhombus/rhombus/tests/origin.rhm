@@ -194,18 +194,23 @@ check_origins(for_rhm,
                 #'List: 1 })
 
 check_origins(stxclass_rhm,
+              #false,
+              { #'ns: 6 })
+
+check_origins(stxclass_rhm,
+              #'#{rhombus/bind},
+              { #'#{$}: 8 })
+
+check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},
               { #'Int: 3,
                 #'NumStr: 2,
-                #'NumStrGroup: 2 })
+                #'NumStrGroup: 2,
+                #'Group: 1 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},
-              { #'#{::}: 7 })
-
-check_origins(stxclass_rhm,
-              #false,
-              { #'ns: 6 })
+              { #'#{::}: 8 })
 
 check_origins(space_rhm,
               #false,
@@ -239,6 +244,10 @@ check_origins(key_comp_rhm,
                 #'#{===}: 6 })
 
 check_origins(unquote_bind_rhm,
+              #'#{rhombus/bind},
+              { #'#{$}: 3 })
+
+check_origins(unquote_bind_rhm,
               #'#{rhombus/unquote_bind},
-              { #'the: 4,
+              { #'the: 10,
                 #'#{_}: 1 })

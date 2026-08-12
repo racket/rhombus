@@ -1,14 +1,16 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     "origin.rkt")
          "pack.rkt"
-         "pattern-variable.rkt"
-         "unquote-binding.rkt")
+         "pattern-variable.rkt")
 
 (provide (for-syntax identifier-as-unquote-binding))
 
 (define-for-syntax (identifier-as-unquote-binding id ctx-kind
-                                                  #:result [result list]
+                                                  #:result [result (lambda (kind pat idrs sidrs vars)
+                                                                     (transfer-origin
+                                                                      id
+                                                                      #`(#,kind #,pat #,idrs #,sidrs #,vars)))]
                                                   #:pattern-variable [pattern-variable list])
   (define-values (pack* unpack*)
     (case ctx-kind

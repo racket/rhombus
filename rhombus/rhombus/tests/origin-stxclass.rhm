@@ -22,3 +22,7 @@ syntax_class NumStrGroup:
 match '1 "two"'
 | '$(ns :: NumStrGroup)':
     ns.x +& ns.y
+
+match '1 "two"'
+| '1 $(g :: Group)':
+    g

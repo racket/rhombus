@@ -6,3 +6,7 @@ unquote_bind.macro 'the $right':
   right
 
 '1' matches '$(the (the (the _)))'
+
+'1' matches '$(the (the (the x)))'
+
+'1' matches '$(the (the (the '1')))'

@@ -163,7 +163,7 @@
                                    #:improve-repetition-constraints [improve-repetition-constraints (lambda (ps gs) ps)])
   (let convert ([e orig-e] [empty-ok? splice?] [as-tail? as-tail?] [splice? splice?] [outer-gs #f] [handle-gs #f] [after-block? #f])
     (syntax-parse e
-      #:datum-literals (group parens brackets braces block quotes multi alts)
+      #:datum-literals (group parens brackets braces block quotes multi alts op)
       ;; `$esc` as a group at the non-tail of a group sequence
       [(group
         (~var $-id (:$ in-space)) (~var esc (:esc tail-any-escape? #f)))
@@ -445,7 +445,7 @@
        #:when (eq? (void) (syntax-e #'void-val))
        (values (make-void e) null null null #f)]
       [_
-       (values e null null null #f)])))
+       (values (make-datum e) null null null #f)])))
 
 ;; Conversion produces a `syntax-parse` pattern, a list of identifiers
 ;; and right-hand sides to be `define`d (= "idrs"), and a list of
@@ -477,19 +477,20 @@
         [(~var esc (:unquote-binding ctx-kind)) #'esc.parsed]))
     (define (track stx)
       (syntax-parse stx
-        #:datum-literals (~var ~seq)
-        [((~and var-tag ~var) id . rest)
-         #`(var-tag #,(track #'id) . rest)]
-        [((~and seq-tag ~seq) pat . rest)
-         #`(seq-tag #,(track #'pat) . rest)]
-        [_ (add-escape-origin $-id (transfer-origin parsed stx))]))
+        [(head . rest)
+         #`(#,(track #'head) . rest)]
+        ;; either a pattern keyword or a pattern variable (including `_`)
+        ;; pattern keywords are recorded as 'disappeared-use by `syntax-parse`
+        [_:identifier
+         (add-escape-origin $-id (transfer-origin parsed stx))]))
     (syntax-parse parsed
       [#f (values #f #f #f #f)]
       [id:identifier
        (if (eq? ctx-kind 'grouplet)
            (values #f #f #f #f)
-           (identifier-as-unquote-binding (track #'id) ctx-kind
-                                          #:result (lambda (kind . rest) (apply values rest))
+           (identifier-as-unquote-binding #'id ctx-kind
+                                          #:result (lambda (kind pat idrs sidrs vars)
+                                                     (values (track pat) idrs sidrs vars))
                                           #:pattern-variable pattern-variable))]
       [(kind pat idrs sidrs vars)
        (values (track #'pat)
