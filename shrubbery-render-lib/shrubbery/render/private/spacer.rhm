@@ -197,15 +197,25 @@ meta:
   fun implicit(symbol, stx):
     Syntax.make(symbol, stx)
 
+meta:
+  syntax_class SpacePiece:
+    fields: name
+  | '$(id :: Identifier)':
+      field name = id.unwrap()
+  | '$(op :: Operator)':
+      field name = op.unwrap_op()
+  | '$(kw :: Keyword)':
+      field name = kw.unwrap()
+
 defn.macro 'bridge $(name :: Name)(~left: $(left :: Identifier), ... ~once,
                                    $(self :: Identifier),
                                    $(tail :: Identifier),
                                    $(mode :: Identifier),
                                    $(esc :: Identifier)):
-              ~in: $space ...
+              ~in: $(space :: SpacePiece) ...
               $body
               ...':
-  let PairList[space_name, ...] = PairList.append(#{full-space-names}(space.unwrap()), ...)
+  let PairList[space_name, ...] = PairList.append(#{full-space-names}(space.name), ...)
   fun quote(s): if s | '#' $s' | '#false'
   def can_infix = [left, ...].length() > 0
   'meta.bridge $(typeset_meta.in_space(name)):

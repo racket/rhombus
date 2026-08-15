@@ -1427,7 +1427,7 @@ spacer.bridge space.enforest(self, tail, context, esc):
   match tail
   | '$(n :: Name(esc)):
        $(body :: Block)':
-      '$self $n $(spacer.adjust_term(body, #'~space_clause, esc))'
+      '$self $n $(spacer.adjust_term(body, [#'space_clause, #'defn, #'decl, #'expr], esc))'
   | ~else:
       '$self $tail'
 
@@ -1436,7 +1436,7 @@ spacer.bridge meta_namespace(self, tail, context, esc):
   match tail
   | '$(n :: Name(esc)):
        $(body :: Block)':
-      '$self $n $(spacer.adjust_term(body, #'~space_meta_clause, esc))'
+      '$self $n $(spacer.adjust_term(body, [#'space_meta_clause, #'defn, #'decl, #'expr], esc))'
   | ~else:
       '$self $tail'
 

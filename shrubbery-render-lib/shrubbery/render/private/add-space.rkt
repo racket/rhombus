@@ -12,7 +12,10 @@
      (full-space-names (string->symbol (keyword->immutable-string space-name)))]
     [(and (pair? space-name)
           (list? space-name))
-     space-name]
+     (apply
+      append
+      (for/list ([space-name (in-list space-name)])
+        (full-space-names space-name)))]
     [(treelist? space-name)
      (full-space-names (treelist->list space-name))]
     [else
