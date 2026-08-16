@@ -148,12 +148,19 @@
                      (rhombus-body
                       . #,(reverse (syntax->list #'rev-bodys)))))])]
         [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
-            (#:with-origins new-origins new-body ...)
+            (#:push-origins new-origins new-body ...)
             . bodys)
          #`(#:splice (for-clause-step
                       orig static?
                       [finish rev-clauses rev-bodys matcher init-binder binder stx-params new-origins]
-                      new-body ... . bodys))]
+                      new-body ...
+                      (#:pop-origins origins . bodys)))]
+        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params new-origins]
+            (#:pop-origins origins . bodys))
+         #`(#:splice (for-clause-step
+                      orig static?
+                      [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+                      . bodys))]
         [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins])
             body0
             . bodys)
@@ -223,8 +230,8 @@
                   #:splice (for-clause-step orig static? state . bodys))]
               [(#:splice new-body ...)
                #`(#:splice (for-clause-step orig static? state
-                                            (#:with-origins #,(transfer-origin parsed #'origins) new-body ...)
-                                            (#:with-origins origins . bodys)))])])]
+                                            (#:push-origins #,(transfer-origin parsed #'origins) new-body ...)
+                                            . bodys))])])]
         [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
             body0
             . bodys)
