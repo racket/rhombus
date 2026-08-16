@@ -314,7 +314,10 @@ check: (fun (x, ~y: y = 10): #false) :: (Int, ~& Map) -> Map
        ~throws error.annot_msg()
 
 check: ((fun (x, ~y: y = 10, ~& kws): kws) :: (Int, ~& Map) -> Map)(1, ~y: 2)
-       ~completes
+       ~is {}
+
+check: ((fun (x, ~y: y = 10, ~& kws): kws) :: (Int, ~y: Int = _, ~& Map) -> Map)(1, ~y: 2)
+       ~is {}
 
 check: ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int) -> Map)(1, ~y: 2)
        ~is {}
@@ -328,7 +331,13 @@ check: ((fun (x, ~y: y, ~& kws): kws) :: (Int, ~y: Int, ~& Map.of(Keyword, Int -
 check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3)
        ~is [{ #'~z: 3 }]
 
+check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~y: Int = _, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3)
+       ~is [{ #'~z: 3 }]
+
 check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3, 4, 5)
+       ~is [{ #'~z: 3 }, 4, 5]
+
+check: ((fun (x, ~y: y = "ok", ~& kws, z, ...): [kws, z, ...]) :: (Int, ~y: Int = _, ~& Map, & List.of(Int)) -> Any)(1, ~y: 2, ~z: 3, 4, 5)
        ~is [{ #'~z: 3 }, 4, 5]
 
 check:

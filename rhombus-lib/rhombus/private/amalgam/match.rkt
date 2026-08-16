@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "group.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "split-at.rkt")
          (only-in racket/case
                   case/equal-always)
          "expression.rkt"
@@ -201,13 +202,6 @@
 (define-for-syntax (handle-literal-case-dispatch val-ids
                                                  b-parsedss rhss
                                                  fallback-k)
-  (define (split-at lst idx)
-    (cond
-      [(eqv? idx 0)
-       (values '() lst)]
-      [else
-       (define-values (l-lst r-lst) (split-at (cdr lst) (sub1 idx)))
-       (values (cons (car lst) l-lst) r-lst)]))
   (define (literal-binding? parsed)
     (syntax-parse parsed
       [b::binding-form

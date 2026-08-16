@@ -8,7 +8,8 @@
                      "syntax-map.rkt"
                      "annot-context.rkt"
                      "origin.rkt"
-                     "group.rkt")
+                     "group.rkt"
+                     "split-at.rkt")
          racket/unsafe/undefined
          racket/treelist
          shrubbery/print
@@ -417,7 +418,7 @@
 
 (define-for-syntax (parse-arrow-assume stx ctx)
   (syntax-parse stx
-    [(form-id (p-tag::parens (~var a (:annotation ctx))) . tail)    
+    [(form-id (p-tag::parens (~var a (:annotation ctx))) . tail)
      (syntax-parse #'a.parsed
        [a::annotation-binding-form
         #:with arg-parsed::binding-form #'a.binding
@@ -1171,61 +1172,44 @@
 ;; unsupplied keyword arguments.  This is needed to avoid leaking
 ;; `unsafe-undefined` to the applied function, because it doesn't
 ;; necessarily check for it when the default value is simple enough.
-(define-syntax (apply/unsafe-undefined stx)
+(define-for-syntax (parse-apply/unsafe-undefined stx req-n apply/unsafe-undef-id)
   (syntax-parse stx
     #:literals (null)
     [(_ proc (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
-     (syntax-parse #'((~? kw) ...)
-       [()
-        #'(~? (apply proc (~? arg) ... rest)
-              (proc (~? arg) ...))]
-       [kws
-        (define vals (generate-temporaries #'((~? kw-arg arg) ...)))
-        (define-values (pos-vals kw-vals)
-          (for/foldr ([pos-vals null]
-                      [kw-vals null])
-                     ([kw (in-list (attribute kw))]
-                      [val (in-list vals)])
-            (if kw
-                (values pos-vals (cons val kw-vals))
-                (values (cons val pos-vals) kw-vals))))
-        (define-values (kws/unsafe-undef/rev kw-vals/unsafe-undef/rev)
-          (sort-kw-stxs+kw-arg-stxs/rev (syntax->list #'kws) kw-vals))
-        (with-syntax ([(val ...) vals])
-          #`(let ([val (~? kw-arg arg)]
-                  ...)
-              (do-apply/unsafe-undefined proc
-                                         '(#,@kws/unsafe-undef/rev) (list #,@kw-vals/unsafe-undef/rev)
-                                         (~? (list* #,@pos-vals rest)
-                                             (list #,@pos-vals)))))])]))
+     #:do [(define kws (syntax->list #'((~? kw) ...)))
+           (when (null? kws)
+             (error "should not be used without keywords"))]
+     #:with proc-val (car (generate-temporaries (list #'proc)))
+     #:do [(define vals (generate-temporaries #'((~? kw-arg arg) ...)))]
+     #:with (val ...) vals
+     #:attr rest-val (and (attribute rest)
+                          (car (generate-temporaries (list #'rest))))
+     (define-values (pos-vals kw-vals)
+       (for/foldr ([pos-vals null]
+                   [kw-vals null])
+                  ([kw (in-list (attribute kw))]
+                   [val (in-list vals)])
+         (if kw
+             (values pos-vals (cons val kw-vals))
+             (values (cons val pos-vals) kw-vals))))
+     (define-values (req-pos-vals opt-pos-vals)
+       (split-at pos-vals req-n))
+     (define-values (kws/unsafe-undef/rev kw-vals/unsafe-undef/rev)
+       (sort-kw-stxs+kw-arg-stxs/rev kws kw-vals))
+     #`(let ([proc-val proc]
+             [val (~? kw-arg arg)]
+             ...
+             (~? [rest-val rest]))
+         (#,apply/unsafe-undef-id proc-val #,@req-pos-vals
+                                  '(#,@kws/unsafe-undef/rev) (list #,@kw-vals/unsafe-undef/rev)
+                                  (~? (list* #,@opt-pos-vals rest-val)
+                                      (list #,@opt-pos-vals))))]))
+
+(define-syntax (apply/unsafe-undefined stx)
+  (parse-apply/unsafe-undefined stx 0 #'do-apply/unsafe-undefined))
 
 (define-syntax (keyword-apply/unsafe-undefined stx)
-  (syntax-parse stx
-    #:literals (null)
-    [(_ proc given-kws given-kw-args (~or* (~seq kw:keyword kw-arg) arg) ... (~or* null rest))
-     (syntax-parse #'((~? kw) ...)
-       [()
-        #'(keyword-apply proc given-kws given-kw-args (~? arg) ... (~? rest null))]
-       [kws
-        (define vals (generate-temporaries #'((~? kw-arg arg) ...)))
-        (define-values (pos-vals kw-vals)
-          (for/foldr ([pos-vals null]
-                      [kw-vals null])
-                     ([kw (in-list (attribute kw))]
-                      [val (in-list vals)])
-            (if kw
-                (values pos-vals (cons val kw-vals))
-                (values (cons val pos-vals) kw-vals))))
-        (define-values (kws/unsafe-undef/rev kw-vals/unsafe-undef/rev)
-          (sort-kw-stxs+kw-arg-stxs/rev (syntax->list #'kws) kw-vals))
-        (with-syntax ([(val ...) vals])
-          #`(let ([val (~? kw-arg arg)]
-                  ...)
-              (do-keyword-apply/unsafe-undefined proc
-                                                 given-kws given-kw-args
-                                                 '(#,@kws/unsafe-undef/rev) (list #,@kw-vals/unsafe-undef/rev)
-                                                 (~? (list* #,@pos-vals rest)
-                                                     (list #,@pos-vals)))))])]))
+  (parse-apply/unsafe-undefined stx 2 #'do-keyword-apply/unsafe-undefined))
 
 (define-for-syntax (sort-kw-stxs+kw-arg-stxs/rev kw-stxs kw-arg-stxs)
   (define sorted-kw-stxs/rev
