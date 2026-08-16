@@ -1,0 +1,37 @@
+These notes report only the most prominent changes in each Rhombus
+release, typically not including bug fixes. All language and API
+changes are reflected in the documentation through version-history
+notes. Bug fixes are detailed in commit messages for the Rhombus Git
+repository.
+
+Version 1.1 (August 2026)
+------------------------
+
+* Add `annot` and `annot.def` as ways to define an annotation without
+  directly writing meta-time (i.e., macro) code.
+
+* Add `as` as a binding form, which is sometimes more readable for
+  naming than using `&&` and provides a way to shadow an identifier
+  that is bound as a binding form.
+
+* Change `class` to bind inherited names using the corresponding
+  superclass or interface reference.
+
+* Change `space.enforest` to adjust scopes in the same way as for a
+  macro transformer when applying an identifier handler.
+
+* ffi: Add an initialized-array variant of `new`.
+
+* pict: Change `explain_anim` to add a `~label_as` argument. Change
+  `Pict.rebuilt` to replace as rebuilt, and also add a `~as_rebuilt`
+  argument to select the old or new bevavior. The `Pict.rebuild`
+  method also supports `~as_rebuilt`. Improve `magic_move` and
+  `cross_fade` to better handle paragraph points and multiple
+  instances of a child pict.
+
+* slideshow: Add `slide_transition` and `continued` page numbering.
+
+Version 1.0 (June 2026)
+-----------------------
+
+Initial release.
