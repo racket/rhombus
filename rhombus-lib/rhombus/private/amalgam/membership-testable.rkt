@@ -102,10 +102,14 @@
   (relocate+reraw
    (respan (datum->syntax #f orig-stxes))
    (datum->syntax (quote-syntax here)
-                  (let ([r (build-info-syntax-call '#%contains contains-expr form2 form1)])
-                    (if (eq? mode 'invert)
-                        `(not ,r)
-                        r)))))
+                  `(,#'let ([a1 ,(discard-static-infos form1)]
+                            [a2 ,(discard-static-infos form2)])
+                           ,(let ([r (build-info-syntax-call '#%contains contains-expr
+                                                             (transfer-static-infos form2 #'a2)
+                                                             (transfer-static-infos form1 #'a1))])
+                              (if (eq? mode 'invert)
+                                  `(not ,r)
+                                  r))))))
 
 (begin-for-syntax
   (define-syntax-class :in

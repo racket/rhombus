@@ -85,3 +85,25 @@ check:
     error.annot("MembershipTestable").msg,
     "#'apple",
   )
+
+check:
+  (block: println("one"); 1) in ((block: println("two"); { 1 }) :: Set)
+  ~prints "one\ntwo\n"
+  ~is #true
+
+check:
+  (block: println("one"); 1) !in ((block: println("two"); { 1 }) :: Set)
+  ~prints "one\ntwo\n"
+  ~is #false
+
+check:
+  use_dynamic
+  (block: println("one"); 1) in (block: println("two"); { 1 })
+  ~prints "one\ntwo\n"
+  ~is #true
+
+check:
+  use_dynamic
+  (block: println("one"); 1) !in (block: println("two"); { 1 })
+  ~prints "one\ntwo\n"
+  ~is #false

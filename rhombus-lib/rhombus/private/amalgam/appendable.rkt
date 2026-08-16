@@ -130,8 +130,8 @@
                                 [a2 ,(discard-static-infos form2)])
                                (,#'check-appendable a1 a2)
                                ,(build-info-syntax-call '#%append append-expr
-                                                        (wrap-static-info* #'a1 (extract-static-infos form1))
-                                                        (wrap-static-info* #'a2 (extract-static-infos form2))))))))
+                                                        (transfer-static-infos form1 #'a1)
+                                                        (transfer-static-infos form2 #'a2)))))))
 
 (define-syntax ++
   (expression-infix-operator

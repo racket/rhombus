@@ -29,6 +29,7 @@
            :static-info
            syntax-local-static-info
            extract-static-infos
+           transfer-static-infos
            normalize-static-infos
            normalize-static-infos/values
            unwrap-static-infos
@@ -123,6 +124,9 @@
         [(begin (quote-syntax (~and form (_:identifier _))) e)
          (cons #'form (loop #'e))]
         [_ null])))
+
+  (define (transfer-static-infos from-e to-e)
+    (wrap-static-info* to-e (extract-static-infos from-e)))
 
   (define (normalize-static-infos infos)
     (car (normalize-static-infos/values 1 infos)))
