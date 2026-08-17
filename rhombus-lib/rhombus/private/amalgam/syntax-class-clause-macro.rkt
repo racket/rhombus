@@ -2,14 +2,12 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
-                     "srcloc.rkt"
                      "pack.rkt"
-                     "macro-result.rkt")
+                     "macro-result.rkt"
+                     "origin.rkt")
          "space-provide.rkt"
-         "name-root.rkt"
          "syntax-class-clause.rkt"
          "macro-macro.rkt"
-         "parse.rkt"
          "parens.rkt")
 
 (define+provide-space syntax_class_clause rhombus/syntax_class_clause
@@ -31,7 +29,11 @@
        [(_ (_::alts alt ...))
         #`(#:splice/alts #,stx (alt ...))]
        [(_ (_::block clause::syntax-class-clause ...))
-        #`(#:splice #,stx (clause.parsed ...))]
+        (transfer-origins
+         (syntax->list #'(clause.parsed ...))
+         #`(#:splice #,stx (clause.parsed ...)))]
        [(_ (_::block clause::syntax-class-clause ...)
            (_::alts alt ...))
-        #`(#:splice/alts #,stx (clause.parsed ...) (alt ...))]))))
+        (transfer-origins
+         (syntax->list #'(clause.parsed ...))
+         #`(#:splice/alts #,stx (clause.parsed ...) (alt ...)))]))))

@@ -14,7 +14,6 @@ match '1 "two" !'
 | '$(ns :: NumStr) !':
     ns.x +& ns.y
 
-
 syntax_class NumStrGroup:
   kind: ~group
 | '$(x :: Int) $(y :: String)'
@@ -26,3 +25,42 @@ match '1 "two"'
 match '1 "two"'
 | '1 $(g :: Group)':
     g
+
+syntax_class_clause.macro 'splice:
+                             $clause
+                             ...':
+  ': $clause
+     ...'
+
+syntax_class JustTerm:
+  splice:
+    kind: ~term
+  splice:
+    splice:
+      fields: t
+    root_swap: t match
+    description: "just a term"
+  error_mode: ~opaque
+| '$t'
+
+syntax_class_clause.macro 'splice_alt:
+                             $clause
+                             ...
+                           | $pat
+                           | ...':
+  ': $clause
+     ...
+   | $pat
+     ...'
+
+syntax_class JustTermToo:
+  splice_alt:
+    splice:
+      kind: ~term
+    splice:
+      splice:
+        fields: t
+      root_swap: t match
+      description: "just a term too"
+    error_mode: ~opaque
+  | '$t'

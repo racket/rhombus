@@ -5,12 +5,8 @@
                      "introducer.rkt")
          syntax/parse/pre
          enforest/name-parse
-         "provide.rkt"
          "operator-parse.rkt"
-         "dotted-sequence.rkt"
-         "name-root.rkt"
-         "definition.rkt"
-         "pack.rkt")
+         "dotted-sequence.rkt")
 
 (provide (for-space rhombus/stxclass
                     Term

@@ -199,7 +199,7 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 8 })
+              { #'#{$}: 11 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},
@@ -207,6 +207,16 @@ check_origins(stxclass_rhm,
                 #'NumStr: 2,
                 #'NumStrGroup: 2,
                 #'Group: 1 })
+
+check_origins(stxclass_rhm,
+              #'#{rhombus/syntax_class_clause},
+              { #'splice: 7,
+                #'splice_alt: 2,
+                #'kind: 4,
+                #'fields: 2,
+                #'root_swap: 2,
+                #'description: 2,
+                #'error_mode: 2 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},
