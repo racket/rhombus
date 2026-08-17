@@ -199,7 +199,7 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 11 })
+              { #'#{$}: 12 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},
@@ -217,6 +217,13 @@ check_origins(stxclass_rhm,
                 #'root_swap: 2,
                 #'description: 2,
                 #'error_mode: 2 })
+
+check_origins(stxclass_rhm,
+              #'#{rhombus/pattern_clause},
+              { #'splice: 4,
+                #'match_when: 1,
+                #'match_unless: 1,
+                #'match_def: 1 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},

@@ -440,11 +440,12 @@
          (define-syntaxes (stx-id ...) stx-rhs)
          ...]))
 
-  (define-values (pattern-body all-attrs desc defaults)
+  (define-values (pattern-body all-attrs parseds desc defaults)
     (let loop ([body (syntax->list body)]
                [rev-do null]
                [rev-body (list (bindings->defns idrs sidrs) '#:do)]
                [rev-attrs (reverse vars)]
+               [rev-parseds null]
                [desc #f]
                [defaults '()])
       (define (accum-do [end? #f])
@@ -457,103 +458,124 @@
                    '#:do
                    rev-body)))
       (cond
-        [(null? body) (values (reverse (accum-do #t))
-                              (reverse rev-attrs)
-                              desc
-                              (reverse defaults))]
+        [(null? body)
+         (values (reverse (accum-do #t))
+                 (reverse rev-attrs)
+                 (reverse rev-parseds)
+                 desc
+                 (reverse defaults))]
         [else
          (define g (car body))
-         (cond
-           [(pattern-clause? g)
-            (syntax-parse g
-              [c::pattern-clause
-               (syntax-parse #'c.parsed
-                 [(#:splice g ...)
-                  (loop (append (syntax->list #'(g ...))
-                                (cdr body))
-                        rev-do
-                        rev-body
-                        rev-attrs
-                        desc
-                        defaults)]
-                 [(#:field id depth rhs converter static-infos annotation-str)
-                  #:with (tmp-id) (or (and tmp-id-ht
-                                           (let ([id (hash-ref tmp-id-ht (syntax-e #'id) #f)])
-                                             (and id (list id))))
-                                      (generate-temporaries #'(id)))
-                  #:with (pat-ids pat-rhs . pat-statinfos) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
-                                                                                       (syntax-e #'depth)
-                                                                                       #:statinfos #'static-infos)
-                  (loop (cdr body)
-                        null
-                        (list* #`[(define tmp-id #,(let ([e (if (syntax-e #'converter)
-                                                                #`(apply-converter rhs 'id depth converter (quote annotation-str))
-                                                                #'rhs)])
-                                                     (define c (hash-ref declared-converter-ht (syntax-e #'id) #f))
-                                                     (let ([e (if c
-                                                                  #`(#,c #,e)
-                                                                  e)])
-                                                       (if (and swap-root (eq? (syntax-e #'id) (syntax-e (car swap-root))))
-                                                           #`(ensure-syntax-for-root #,e 'id)
-                                                           e))))
-                                  (define-syntaxes pat-ids pat-rhs)] '#:do
-                               (accum-do))
-                        (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*) #'pat-statinfos)
-                              rev-attrs)
-                        desc
-                        defaults)]
-                 [(#:also (_ pat-g ...) rhs)
-                  (define-values (p idrs sidrs vars can-be-empty?)
-                    (convert-pattern #'(multi pat-g ...)))
-                  (loop (cdr body)
-                        null
-                        (list* (bindings->defns idrs sidrs) '#:do
-                               #' (repack-as-multi rhs) p '#:with
-                               (accum-do))
-                        (append (reverse vars)
-                                rev-attrs)
-                        desc
-                        defaults)]
-                 [(#:when rhs)
-                  (loop (cdr body)
-                        null
-                        (list* #'rhs '#:when
-                               (accum-do))
-                        rev-attrs
-                        desc
-                        defaults)]
-                 [(#:default id depth rhs clause-stx)
-                  (unless for-option?
-                    (raise-syntax-error #f
-                                        "default clause can be used only for option sequences"
-                                        orig-stx
-                                        #'clause-stx))
-                  (loop (cdr body)
-                        rev-do
-                        rev-body
-                        rev-attrs
-                        desc
-                        (cons (list #'id (syntax-e #'depth) #'rhs)
-                              defaults))]
-                 [(#:description str clause-stx)
-                  (unless for-option?
-                    (raise-syntax-error #f
-                                        "description clause can be used only for option sequences"
-                                        orig-stx
-                                        #'clause-stx))
-                  (when desc
-                    (raise-syntax-error #f
-                                        "multiple description clauses not allowed"
-                                        orig-stx
-                                        #'clause-stx))
-                  (loop (cdr body)
-                        rev-do
-                        rev-body
-                        rev-attrs
-                        (syntax-e #'str)
-                        defaults)])])]
-           [else
-            (loop (cdr body) (cons g rev-do) rev-body rev-attrs desc defaults)])])))
+         (syntax-parse g
+           [c::pattern-clause
+            (syntax-parse #'c.parsed
+              [(#:splice g ...)
+               (loop (append (syntax->list #'(g ...))
+                             (cdr body))
+                     rev-do
+                     rev-body
+                     rev-attrs
+                     (cons #'c.parsed
+                           rev-parseds)
+                     desc
+                     defaults)]
+              [(#:field id depth rhs converter static-infos annotation-str)
+               #:with tmp-id (or (and tmp-id-ht
+                                      (hash-ref tmp-id-ht (syntax-e #'id) #f))
+                                 (car (generate-temporaries #'(id))))
+               #:with (pat-ids pat-rhs . pat-statinfos) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
+                                                                                    (syntax-e #'depth)
+                                                                                    #:statinfos #'static-infos)
+               (define do-body
+                 #`[(define tmp-id #,(let ([e (if (syntax-e #'converter)
+                                                  #`(apply-converter rhs 'id depth converter (quote annotation-str))
+                                                  #'rhs)])
+                                       (define c (hash-ref declared-converter-ht (syntax-e #'id) #f))
+                                       (let ([e (if c
+                                                    #`(#,c #,e)
+                                                    e)])
+                                         (if (and swap-root (eq? (syntax-e #'id) (syntax-e (car swap-root))))
+                                             #`(ensure-syntax-for-root #,e 'id)
+                                             e))))
+                    (define-syntaxes pat-ids pat-rhs)])
+               (define attr
+                 (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*) #'pat-statinfos))
+               (loop (cdr body)
+                     null
+                     (list* do-body '#:do
+                            (accum-do))
+                     (cons attr
+                           rev-attrs)
+                     (cons #'c.parsed
+                           rev-parseds)
+                     desc
+                     defaults)]
+              [(#:also (_ pat-g ...) rhs)
+               (define-values (p idrs sidrs vars can-be-empty?)
+                 (convert-pattern #'(multi pat-g ...)))
+               (loop (cdr body)
+                     null
+                     (list* (bindings->defns idrs sidrs) '#:do
+                            #'(repack-as-multi rhs) p '#:with
+                            (accum-do))
+                     (append (reverse vars)
+                             rev-attrs)
+                     (cons #'c.parsed
+                           rev-parseds)
+                     desc
+                     defaults)]
+              [(#:when rhs)
+               (loop (cdr body)
+                     null
+                     (list* #'rhs '#:when
+                            (accum-do))
+                     rev-attrs
+                     (cons #'c.parsed
+                           rev-parseds)
+                     desc
+                     defaults)]
+              [(#:default id depth rhs clause-stx)
+               (unless for-option?
+                 (raise-syntax-error #f
+                                     "default clause can be used only for option sequences"
+                                     orig-stx
+                                     #'clause-stx))
+               (loop (cdr body)
+                     rev-do
+                     rev-body
+                     rev-attrs
+                     (cons #'c.parsed
+                           rev-parseds)
+                     desc
+                     (cons (list #'id (syntax-e #'depth) #'rhs)
+                           defaults))]
+              [(#:description str clause-stx)
+               (unless for-option?
+                 (raise-syntax-error #f
+                                     "description clause can be used only for option sequences"
+                                     orig-stx
+                                     #'clause-stx))
+               (when desc
+                 (raise-syntax-error #f
+                                     "multiple description clauses not allowed"
+                                     orig-stx
+                                     #'clause-stx))
+               (loop (cdr body)
+                     rev-do
+                     rev-body
+                     rev-attrs
+                     (cons #'c.parsed
+                           rev-parseds)
+                     (syntax-e #'str)
+                     defaults)])]
+           [_
+            (loop (cdr body)
+                  (cons g rev-do)
+                  rev-body
+                  rev-attrs
+                  rev-parseds
+                  desc
+                  defaults)])])))
 
   (with-syntax ([((attr ...) ...)
                  (map (lambda (var)
@@ -571,15 +593,16 @@
                             #,(pattern-variable-depth var))))
                       all-attrs)]
                 [(body-form ...) pattern-body])
-    (values #`(pattern #,(if (and (eq? kind 'group)
-                                  can-be-empty?)
-                             ;; make sure the pattern only matches a non-empty
-                             ;; sequence, since it's supposed to match a group
-                             #`(~and (_ _ . _)
-                                     #,p)
-                             p)
-                       #,@pattern-body
-                       attr ... ...)
+    (values #`(#,(transfer-origins parseds #'pattern) ; only `pattern` is attached as 'disappeared-use
+               #,(if (and (eq? kind 'group)
+                          can-be-empty?)
+                     ;; make sure the pattern only matches a non-empty
+                     ;; sequence, since it's supposed to match a group
+                     #`(~and (_ _ . _)
+                             #,p)
+                     p)
+               #,@pattern-body
+               attr ... ...)
             all-attrs
             desc
             defaults)))

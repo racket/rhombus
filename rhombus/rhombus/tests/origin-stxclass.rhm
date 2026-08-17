@@ -64,3 +64,19 @@ syntax_class JustTermToo:
       description: "just a term too"
     error_mode: ~opaque
   | '$t'
+
+pattern_clause.macro 'splice:
+                        $clause
+                        ...':
+  '$clause
+   ...'
+
+syntax_class Converting(fn):
+| '$t ...':
+    splice:
+      def converted = fn('$t ...')
+    splice:
+      splice:
+        match_when converted
+      match_unless !converted
+    match_def '$new_t ...' = converted

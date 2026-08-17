@@ -2,15 +2,13 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
-                     "srcloc.rkt"
                      "pack.rkt"
                      "macro-result.rkt")
          "provide.rkt"
          "name-root.rkt"
          "pattern-clause.rkt"
          "space.rkt"
-         "macro-macro.rkt"
-         "parse.rkt")
+         "macro-macro.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/space)
