@@ -252,7 +252,15 @@
                                 #f
                                 (if (null? attributes)
                                     #f
-                                    (gensym (if class/inline-name (syntax-e class/inline-name) 'sc-dot)))))
+                                    (gensym (if class/inline-name (syntax-e class/inline-name) 'sc-dot)))
+                                (transfer-origins
+                                 track-stxes
+                                 (transfer-origins
+                                  (for/list ([pat (in-list patterns)])
+                                    (syntax-parse pat
+                                      #:literals (pattern)
+                                      [((~and tag pattern) . _) #'tag]))
+                                  #'#f))))
         (if for-option?
             (values rsc descs defaultss)
             rsc)]
@@ -280,7 +288,8 @@
                                     #f
                                     #,(if (null? attributes)
                                           #f
-                                          #`(gensym '#,class-name))))))
+                                          #`(gensym '#,class-name))
+                                    (quote-syntax #f)))))
          declared-converter-defs
          (list
           #`(#,define-class #,(if (syntax-e class-formals)

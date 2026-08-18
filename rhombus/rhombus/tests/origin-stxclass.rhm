@@ -80,3 +80,55 @@ syntax_class Converting(fn):
         match_when converted
       match_unless !converted
     match_def '$new_t ...' = converted
+
+match '1'
+| '$(x :: (syntax_class:
+             splice:
+               kind: ~term
+             splice:
+               splice:
+                 fields: t
+               root_swap: t match
+               description: "just a term"
+             error_mode: ~opaque
+           | '$t'))':
+    x
+
+match '1'
+| '$(_ :: (syntax_class:
+             splice:
+               kind: ~term
+             splice:
+               splice:
+                 fields: t
+               root_swap: t match
+               description: "just a term"
+             error_mode: ~opaque
+           | '$t'))' as x:
+    x
+
+match '1'
+| '$(pattern:
+       splice:
+         kind: ~term
+       splice:
+         splice:
+           fields: t
+         root_swap: t match
+         description: "just a term"
+       error_mode: ~opaque
+     | '$t')' as x:
+    x
+
+match '1'
+| (pattern:
+     splice:
+       kind: ~term
+     splice:
+       splice:
+         fields: t
+       root_swap: t match
+       description: "just a term"
+     error_mode: ~opaque
+   | '$t') as x:
+    x

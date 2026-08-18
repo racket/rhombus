@@ -51,7 +51,7 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
-  (struct rhombus-syntax-class (kind class attributes splicing? arity-mask root-swap auto-args key))
+  (struct rhombus-syntax-class (kind class attributes splicing? arity-mask root-swap auto-args key origins))
   (define (syntax-class-ref v) (and (rhombus-syntax-class? v) v))
 
   ;; used to communicate `syntax.parse` as a anonymous-class form
@@ -96,7 +96,7 @@
                              #:key [key (if (null? (syntax-e fields))
                                             #f
                                             (gensym 'sc))])
-    (rhombus-syntax-class kind pat fields splicing? arity-mask root-swap auto-args key)))
+    (rhombus-syntax-class kind pat fields splicing? arity-mask root-swap auto-args key #'#f)))
 
 (define-splicing-syntax-class :sequence
   (pattern (~seq _ ...)))

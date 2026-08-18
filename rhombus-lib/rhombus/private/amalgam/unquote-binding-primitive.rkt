@@ -178,9 +178,9 @@
            #'())]
          [_ (values #f tail)]))
      (define match-id (car (generate-temporaries (list form1))))
-     (define (track stx-class-id stx)
+     (define (track stx-class-id stx in-space)
        (add-origin
-        (in-syntax-class-space (syntax-local-introduce stx-class-id))
+        (in-space (syntax-local-introduce stx-class-id))
         (transfer-origin form1 stx)))
      (syntax-parse stx
        #:datum-literals (group)
@@ -197,7 +197,8 @@
                                                        #'sc-hier.tail))
         (if rsc
             (values (track #'sc-hier.name
-                           (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 ctx-kind match-id #f))
+                           (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 ctx-kind match-id #f)
+                           in-defn-space)
                     end-tail)
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
@@ -206,22 +207,22 @@
         (syntax-parse #'stx-class-hier.tail
           [(args::syntax-class-args . args-tail)
            (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
-           (values (track
-                    #'stx-class-hier.name
-                    (build-syntax-class-pattern #'stx-class-hier.name
-                                                (lookup-syntax-class #'stx-class-hier.name)
-                                                #'args.args
-                                                open-attributes
-                                                form1 ctx-kind
-                                                match-id
-                                                #f))
+           (values (track #'stx-class-hier.name
+                          (build-syntax-class-pattern #'stx-class-hier.name
+                                                      (lookup-syntax-class #'stx-class-hier.name)
+                                                      #'args.args
+                                                      open-attributes
+                                                      form1 ctx-kind
+                                                      match-id
+                                                      #f)
+                          in-syntax-class-space)
                    tail)])]))
    'none))
 
 (define-for-syntax (parse-pattern stx ctx-kind)
   (syntax-parse stx
     [(form-id
-      (~optional (~seq form1:identifier
+      (~optional (~seq name:identifier
                        (~optional (~and #:open (~bind [open? #t])))))
       . tail)
      (parameterize ([inline-attr-depth (cond
@@ -238,10 +239,10 @@
                    (build-syntax-class-pattern stx
                                                rsc
                                                #'#f
-                                               (and (or (not (attribute form1))
+                                               (and (or (not (attribute name))
                                                         (attribute open?))
                                                     #'form-id)
-                                               (attribute form1)
+                                               (attribute name)
                                                ctx-kind
                                                #f
                                                #t)
@@ -254,12 +255,13 @@
 (begin-for-syntax
   (struct open-attrib (sym bind-id var)))
 
-;; used for `::` and for `pattern`, returns a parsed binding form that takes advantage
-;; of a syntax class --- possibly an inlined syntax class and/or one with exposed fields
+;; used for `::`, `pattern`, and `{group,term}_option_sequence`
+;; returns a parsed binding form that takes advantage of a syntax
+;; class --- possibly an inlined syntax class and/or one with exposed fields
 (define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
                                                form1 ctx-kind match-id bind-dot?)
   (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
-    (define (compat pack* unpack* #:splice? [splice? #f])
+    (define (do-compat pack* unpack* #:splice? splice?)
       (define sc (rhombus-syntax-class-class rsc))
       (define sc-call (parse-syntax-class-args stx-class
                                                sc
@@ -405,7 +407,7 @@
          #,(let ([bindings (cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
                                                                      #`(#,instance-id (... ...))
                                                                      instance-id))
-                                               #,pack-depth)]
+                                                       #,pack-depth)]
                                  attribute-bindings)])
              ;; Find root representative and wrap it to hold the other fields
              (define root-index (if swap-root-to
@@ -441,7 +443,7 @@
                                                                   (normalize-pvar-statinfos root-statinfos))
                                                   #:attribs all-attribs
                                                   #:key (rhombus-syntax-class-key rsc)))
-                 null)
+                null)
             (if (not open-attributes)
                 null
                 (for/list ([oa (in-list open-attributes)]
@@ -471,6 +473,10 @@
                        (pattern-variable (open-attrib-sym oa) #f temp-id pack-depth unpack* root-statinfos))
                       (pattern-variable->list (struct-copy pattern-variable var
                                                            [sym (open-attrib-sym oa)]))))))))
+    (define (compat pack* unpack* #:splice? [splice? #f])
+      (transfer-origin
+       (rhombus-syntax-class-origins rsc)
+       (do-compat pack* unpack* #:splice? splice?)))
     (define (incompat)
       (raise-syntax-error #f
                           "syntax class incompatible with this context"
@@ -537,14 +543,16 @@
              (raise-syntax-error (syntax-e stx)
                                  "mismatched kinds of unquote bindings"
                                  (respan (datum->syntax #f (list form1 stx form2)))))
-           #`(kind1
-              #,(norm-seq2 #`(~and #,(norm-seq #'pat1 #'pat2)
-                                   #,(norm-seq #'pat2 #'pat1))
-                           #'pat1
-                           #'pat2)
-              (idr1 ... . idrs2)
-              (sidr1 ... . sidrs2)
-              (var1 ... . vars2))])]))
+           (transfer-origins
+            (list form1 form2)
+            #`(kind1
+               #,(norm-seq2 #`(~and #,(norm-seq #'pat1 #'pat2)
+                                    #,(norm-seq #'pat2 #'pat1))
+                            #'pat1
+                            #'pat2)
+               (idr1 ... . idrs2)
+               (sidr1 ... . sidrs2)
+               (var1 ... . vars2)))])]))
    'left))
 
 (define-unquote-binding-syntax \|\|
@@ -563,14 +571,16 @@
              (raise-syntax-error (syntax-e stx)
                                  "mismatched kinds of unquote bindings"
                                  (datum->syntax #f (list form1 stx form2))))
-           #`(kind1
-              #,(norm-seq2 #`(~or* #,(norm-seq #'pat1 #'pat2)
-                                   #,(norm-seq #'pat2 #'pat1))
-                           #'pat1
-                           #'pat2)
-              ()
-              ()
-              ())])]))
+           (transfer-origins
+            (list form1 form2)
+            #`(kind1
+               #,(norm-seq2 #`(~or* #,(norm-seq #'pat1 #'pat2)
+                                    #,(norm-seq #'pat2 #'pat1))
+                            #'pat1
+                            #'pat2)
+               ()
+               ()
+               ()))])]))
    'left))
 
 (define-unquote-binding-syntax !
@@ -585,7 +595,9 @@
        [(kind pat _ _ _)
         (when (is-sequence-pattern? #'pat)
           (raise-syntax-error #f "only allowed before a term pattern" stx))
-        #`(kind (~not (~delimit-cut pat)) () () ())]))))
+        (transfer-origin
+         form
+         #`(kind (~not (~delimit-cut pat)) () () ()))]))))
 
 (define-for-syntax (make-match-operator stxparse-op)
   (unquote-binding-prefix-operator
@@ -597,12 +609,15 @@
                         (normalize-id form ctx-kind))
        [#f #'#f]
        [(kind pat idrs sidrs vars)
-        (with-syntax ([stxparse-op stxparse-op])
-          #`(#,ctx-kind
-             #,(if (is-sequence-pattern? #'pat)
-                   #'(~seq (stxparse-op pat))
-                   #'(stxparse-op pat))
-             idrs sidrs vars))]))))
+        (transfer-origin
+         form
+         #`(#,ctx-kind
+            #,(if (is-sequence-pattern? #'pat)
+                  #`(~seq (#,stxparse-op pat))
+                  #`(#,stxparse-op pat))
+            idrs
+            sidrs
+            vars))]))))
 
 (define-unquote-binding-syntax delimit
   (make-match-operator #'~delimit-cut))
@@ -658,14 +673,16 @@
                (if desc
                    (format "multiple ~a not allowed" desc)
                    "mulitple uses of option not allowed")))
-           (syntax-parse (build-syntax-class-pattern stx
-                                                     rsc
-                                                     #'#f
-                                                     #'form-id
-                                                     #f
-                                                     ctx-kind
-                                                     options-id
-                                                     #t)
+           (define pat-form
+             (build-syntax-class-pattern stx
+                                         rsc
+                                         #'#f
+                                         #'form-id
+                                         #f
+                                         ctx-kind
+                                         options-id
+                                         #t))
+           (syntax-parse pat-form
              [(kind pat idrs sidrs vars)
               (define default-name-map ; sym -> expression
                 (for*/hash  ([defaults (in-list defaultss)]
@@ -698,16 +715,19 @@
                                       [[lhs (pack-nothing* attr depth)]
                                        #`[lhs ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth)]]
                                       [[lhs ((~and msw maybe-syntax-wrap) (pack-nothing* attr depth) . tail)]
-                                       #`[lhs (msw ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth) . tail)]]))])
-                (with-syntax ([pat (with-syntax ([(option-tag ...) option-tags]
-                                                 [(duplicate-message ...) duplicate-messages])
-                                     #'(~delimit-cut
-                                        (~and (~seq pat (... ...))
-                                              ~!
-                                              (~fail #:when (check-duplicate-matches (attribute option-tag))
-                                                     duplicate-message)
-                                              ...)))])
-                  (values #`(#,ctx-kind pat idrs sidrs vars) #'())))])]
+                                       #`[lhs (msw ((pack-success* #,(get-default #'lhs #'depth) depth) attr depth) . tail)]]))]
+                            [pat (with-syntax ([(option-tag ...) option-tags]
+                                               [(duplicate-message ...) duplicate-messages])
+                                   #'(~delimit-cut
+                                      (~and (~seq pat (... ...))
+                                            ~!
+                                            (~fail #:when (check-duplicate-matches (attribute option-tag))
+                                                   duplicate-message)
+                                            ...)))])
+                (values (transfer-origin
+                         pat-form
+                         #`(#,ctx-kind pat idrs sidrs vars))
+                        #'()))])]
           [else
            (when (memq ctx-kind fail-contexts)
              (raise-syntax-error #f

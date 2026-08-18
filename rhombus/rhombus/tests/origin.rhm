@@ -198,8 +198,14 @@ check_origins(stxclass_rhm,
               { #'ns: 6 })
 
 check_origins(stxclass_rhm,
+              #'#{rhombus/defn},
+              { #'syntax_class: 7 })
+
+check_origins(stxclass_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 16 })
+              { #'#{$}: 23,
+                #'pattern: 1,
+                #'as: 3 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},
@@ -210,13 +216,13 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/syntax_class_clause},
-              { #'splice: 7,
+              { #'splice: 19,
                 #'splice_alt: 2,
-                #'kind: 4,
-                #'fields: 2,
-                #'root_swap: 2,
-                #'description: 2,
-                #'error_mode: 2 })
+                #'kind: 8,
+                #'fields: 6,
+                #'root_swap: 6,
+                #'description: 6,
+                #'error_mode: 6 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/pattern_clause},
@@ -227,8 +233,9 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},
-              { #'#{::}: 8,
-                #'#{_}: 1 })
+              { #'#{::}: 10,
+                #'#{_}: 2,
+                #'pattern: 1 })
 
 check_origins(space_rhm,
               #false,
@@ -263,13 +270,25 @@ check_origins(key_comp_rhm,
 
 check_origins(unquote_bind_rhm,
               #'#{rhombus/namespace},
-              { #'match: 1 })
+              { #'match: 4 })
 
 check_origins(unquote_bind_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 8 })
+              { #'#{$}: 22 })
 
 check_origins(unquote_bind_rhm,
               #'#{rhombus/unquote_bind},
-              { #'the: 10,
-                #'#{_}: 3 })
+              { #'the: 13,
+                #'#{_}: 6,
+                #'#{&&}: 1,
+                #'#{\|\|}: 1,
+                #'#{!}: 1,
+                #'group_option_sequence: 1,
+                #'term_option_sequence: 1 })
+
+check_origins(unquote_bind_rhm,
+              #'#{rhombus/pattern_clause},
+              { #'splice: 5,
+                #'default: 1,
+                #'description: 2,
+                #'bool: 5 })

@@ -11,6 +11,12 @@ unquote_bind.macro 'the $right':
 
 '1' matches '$(the (the (the '1')))'
 
+'1' matches '$(_ && (the '1'))'
+
+'1' matches '$(_ || (the '1'))'
+
+'1' matches '$(!(the '1'))'
+
 '1 2' matches '$x ...'
 
 '1 2' matches '$_ ...'
@@ -20,3 +26,42 @@ unquote_bind.macro 'the $right':
 '1 2' matches ': $_; ...'
 
 '1 2' matches '1 $match.cut 2'
+
+'1 2' matches '$(match.delimit '1 $match.cut 2')'
+
+'1 2' matches '$(match.commit '$_ ...') $x'
+
+pattern_clause.macro 'splice:
+                        $clause
+                        ...':
+  '$clause
+   ...'
+
+match '~max: 2'
+| '$(group_option_sequence
+     | '~min: $(min :: Int)':
+         splice:
+           splice:
+             default min = '1'
+         splice:
+           description: "minimum options"
+     | '~max: $(max :: Int)':
+         splice:
+           description: "maximum options")':
+    [min, max]
+
+pattern_clause.macro 'bool $id':
+  'field $id = #true
+   default $id = #false'
+
+match '~left ~right'
+| '$(term_option_sequence
+     | '~left':
+         bool left
+     | '~right':
+         bool right
+     | '~up':
+         bool up
+     | '~down':
+         bool down)':
+    [left, right, up, down]

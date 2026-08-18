@@ -1,5 +1,4 @@
 #lang racket/base
-(require "introducer.rkt")
 
 (provide in-expression-space
          out-of-expression-space)
