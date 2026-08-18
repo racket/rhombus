@@ -738,3 +738,41 @@ check:
   | ': $wildcard; $wildcard; ...':
       '$wildcard; ...'
   ~throws "wildcard: not a repetition"
+
+// check error reporting with `$`
+block:
+  class Oops()
+  block:
+    let x = Oops()
+    check:
+      '$x' ~throws "$: cannot coerce value to syntax"
+      ': $x' ~throws "$: cannot coerce value to syntax"
+      '| $x' ~throws "$: cannot coerce value to syntax"
+      '($x)' ~throws "$: cannot coerce value to syntax"
+      '[$x]' ~throws "$: cannot coerce value to syntax"
+      '{ $x }' ~throws "$: cannot coerce value to syntax"
+    check:
+      '1 $x' ~throws "$: cannot coerce value to syntax"
+      ': 1 2; $x' ~throws "$: cannot coerce value to syntax"
+      '| 1 2 | $x' ~throws "$: cannot coerce value to syntax"
+      '(1 2, $x)' ~throws "$: cannot coerce value to syntax"
+      '[1 2, $x]' ~throws "$: cannot coerce value to syntax"
+      '{ 1 2, $x }' ~throws "$: cannot coerce value to syntax"
+  block:
+    let [x, ...] = [Oops(), Oops(), Oops()]
+    check:
+      '$x ...' ~throws "$: cannot coerce value to syntax"
+      '$x; ...' ~throws "$: cannot coerce value to syntax"
+      ': $x; ...' ~throws "$: cannot coerce value to syntax"
+      '| $x | ...' ~throws "$: cannot coerce value to syntax"
+      '($x, ...)' ~throws "$: cannot coerce value to syntax"
+      '[$x, ...]' ~throws "$: cannot coerce value to syntax"
+      '{ $x, ... }' ~throws "$: cannot coerce value to syntax"
+    check:
+      '1 $x ...' ~throws "$: cannot coerce value to syntax"
+      '1 2; $x; ...' ~throws "$: cannot coerce value to syntax"
+      ': 1 2; $x; ...' ~throws "$: cannot coerce value to syntax"
+      '| 1 2 | $x | ...' ~throws "$: cannot coerce value to syntax"
+      '(1 2, $x, ...)' ~throws "$: cannot coerce value to syntax"
+      '[1 2, $x, ...]' ~throws "$: cannot coerce value to syntax"
+      '{ 1 2, $x, ... }' ~throws "$: cannot coerce value to syntax"

@@ -119,13 +119,17 @@
                                        (unquote-bind-quote cut)))
     (pattern (_::parens (group (~var _ (:cut dotted?))))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
-    #:attributes (name term)
-    (pattern (~seq (~var _ (:$ in-space)) (~var || (:esc dotted? #f)) (~var || (:... in-space)))))
+    #:attributes ($-name ...-name term)
+    (pattern (~seq (~var $-id (:$ in-space)) (~var || (:esc dotted? #f)) (~var ...-id (:... in-space)))
+             #:with $-name #'$-id.name
+             #:with ...-name #'...-id.name))
   (define-splicing-syntax-class (:block-tail-repetition in-space dotted?)
-    #:attributes (name term)
+    #:attributes ($-name ...-name term)
     #:datum-literals (group)
-    (pattern (~seq (group (~var _ (:$ in-space)) (~var || (:esc dotted? #f)))
-                   (group (~var || (:... in-space))))))
+    (pattern (~seq (group (~var $-id (:$ in-space)) (~var || (:esc dotted? #f)))
+                   (group (~var ...-id (:... in-space))))
+             #:with $-name #'$-id.name
+             #:with ...-name #'...-id.name))
 
   (define (replace-...1 ps)
     (syntax-parse ps
@@ -290,12 +294,12 @@
                     really-can-be-empty?
                     needs-group-check?)]
            ;; `$var ...` at end of a sequence (of terms or groups) => tail repetition
-           [((~var op (:tail-repetition in-space tail-any-escape?)))
+           [((~var rep (:tail-repetition in-space tail-any-escape?)))
             #:when (and (or tail-any-escape?
-                            (identifier? #'op.term))
+                            (identifier? #'rep.term))
                         (or (not splice?)
                             as-tail?))
-            (define-values (id new-idrs new-sidrs new-vars) (handle-tail-escape #'op.name #'op.term e))
+            (define-values (id new-idrs new-sidrs new-vars) (handle-tail-escape #'rep.$-name #'rep....-name #'rep.term e))
             (loop #'() #f #f #f
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
@@ -305,11 +309,11 @@
                   needs-group-check?
                   splice?
                   #f)]
-           ;; `$var ...` as a whole group within a sequence of groups => block tail repetition
-           [((~var op (:block-tail-repetition in-space tail-any-escape?)))
+           ;; `$var; ...` as a whole group within a sequence of groups => block tail repetition
+           [((~var rep (:block-tail-repetition in-space tail-any-escape?)))
             #:when (or tail-any-escape?
-                       (identifier? #'op.term))
-            (define-values (id new-idrs new-sidrs new-vars) (handle-block-tail-escape #'op.name #'op.term e))
+                       (identifier? #'rep.term))
+            (define-values (id new-idrs new-sidrs new-vars) (handle-block-tail-escape #'rep.$-name #'rep....-name #'rep.term e))
             (loop #'() #f #f #f
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
@@ -624,7 +628,7 @@
                   (lambda (sidr)
                     (deepen-pattern-variable-bind sidr))
                   ;; handle-tail-escape:
-                  (lambda (name e in-e)
+                  (lambda ($-id ...-id e in-e)
                     (if (free-identifier=? (in-unquote-binding-space e)
                                            (unquote-bind-quote rhombus_))
                         (values #'_ null null null)
@@ -635,7 +639,7 @@
                                   (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
                                   (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))))
                   ;; handle-block-tail-escape:
-                  (lambda (name e in-e)
+                  (lambda ($-id ...-id e in-e)
                     (if (free-identifier=? (in-unquote-binding-space e)
                                            (unquote-bind-quote rhombus_))
                         (values #'_ null null null)
@@ -819,10 +823,10 @@
     (relocate+reraw e qq-stx))
   (syntax-parse (and (not repetition?) e)
     #:datum-literals (group multi)
-    [(group _::$-expr tail:identifier dots::...-expr)
-     (convert-direct-tail-template #'tail #'dots)]
-    [(multi (group _::$-expr tail:identifier dots::...-expr))
-     (convert-direct-tail-template #'tail #'dots)]
+    [(group $-id::$-expr tail:identifier _::...-expr)
+     (convert-direct-tail-template #'tail #'$-id.name)]
+    [(multi (group $-id::$-expr tail:identifier _::...-expr))
+     (convert-direct-tail-template #'tail #'$-id.name)]
     [_
      (define-values (template idrs sidrs vars can-be-empty?)
        (convert-syntax e
@@ -870,17 +874,17 @@
                        (lambda (sidr)
                          (error "should have no sidrs for template"))
                        ;; handle-tail-escape:
-                       (lambda (name e in-e)
+                       (lambda ($-id ...-id e in-e)
                          (define id (car (generate-temporaries (list e))))
                          (syntax-parse (regroup #`(#,e))
                            [rep::repetition
-                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-tail* (quote-syntax #,name))]) null null)]))
+                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-tail* (quote-syntax #,$-id))]) null null)]))
                        ;; handle-block-tail-escape:
-                       (lambda (name e in-e)
+                       (lambda ($-id ...-id e in-e)
                          (define id (car (generate-temporaries (list e))))
                          (syntax-parse (regroup #`(#,e))
                            [rep::repetition
-                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-multi-tail* (quote-syntax #,name))]) null null)]))
+                            (values id (list #`[#,id (unpacking 1 0 rep.parsed unpack-multi-tail* (quote-syntax #,$-id))]) null null)]))
                        ;; handle-maybe-empty-sole-group
                        (lambda (tag template idrs sidrs vars)
                          ;; if `template` generates `(group)`, then instead of `(tag (group))`,
@@ -978,7 +982,7 @@
    (syntax-parse unpack
      #:datum-literals (unpack-tail-list*)
      [(unpack-tail-list* _ id 1) #'id]
-     [_ #`(pack-tail (unpack-list-tail* (quote-syntax name) #,unpack 0))])
+     [_ #`(pack-tail (unpack-list-tail* (quote-syntax #,name) #,unpack 0))])
    (get-syntax-static-infos)))
 
 (define-for-syntax (deepen-template-escapes idrs)
