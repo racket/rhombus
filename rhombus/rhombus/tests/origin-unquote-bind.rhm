@@ -10,3 +10,13 @@ unquote_bind.macro 'the $right':
 '1' matches '$(the (the (the x)))'
 
 '1' matches '$(the (the (the '1')))'
+
+'1 2' matches '$x ...'
+
+'1 2' matches '$_ ...'
+
+'1 2' matches ': $x; ...'
+
+'1 2' matches ': $_; ...'
+
+'1 2' matches '1 $match.cut 2'

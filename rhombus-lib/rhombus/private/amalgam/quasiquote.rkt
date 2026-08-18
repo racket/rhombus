@@ -111,13 +111,14 @@
                         (free-identifier=? (in-unquote-binding-space #'term)
                                            (unquote-bind-quote rhombus_)))))
   (define-splicing-syntax-class (:cut dotted?)
+    #:attributes (name)
     #:datum-literals (op)
     (pattern seq::dotted-operator-or-identifier-sequence
              #:when (not dotted?)
-             #:with (~var name (:hier-name-seq in-name-root-space in-unquote-binding-space name-path-op name-root-ref)) #'seq
-             #:when (free-identifier=? (in-unquote-binding-space #'name.name)
+             #:with (~var || (:hier-name-seq in-name-root-space in-unquote-binding-space name-path-op name-root-ref)) #'seq
+             #:when (free-identifier=? (in-unquote-binding-space #'name)
                                        (unquote-bind-quote cut)))
-    (pattern (_::parens (group (~var _ (:cut dotted?))))))
+    (pattern (_::parens (group (~var || (:cut dotted?))))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes ($-name ...-name term)
     (pattern (~seq (~var $-id (:$ in-space)) (~var || (:esc dotted? #f)) (~var ...-id (:... in-space)))
@@ -363,12 +364,18 @@
                         splice?
                         #f)))]
            ;; `$ cut` within a sequence
-           [((op (~var $-id (:$ in-space))) (~var _ (:cut tail-any-escape?)) . gs)
+           [((op (~var $-id (:$ in-space))) (~var cut-id (:cut tail-any-escape?)) . gs)
             (loop #'gs #f #f #f
                   (append (or pend-idrs '()) idrs)
                   (append (or pend-sidrs '()) sidrs)
                   (append (or pend-vars '()) vars)
-                  (cons #'~! ps) really-can-be-empty? #f #f
+                  (cons (add-origin
+                         (in-space (syntax-local-introduce #'$-id.name))
+                         (add-origin
+                          (in-unquote-binding-space (syntax-local-introduce #'cut-id.name))
+                          #'~!))
+                        ps)
+                  really-can-be-empty? #f #f
                   needs-group-check?
                   splice?
                   #f)]
@@ -629,26 +636,50 @@
                     (deepen-pattern-variable-bind sidr))
                   ;; handle-tail-escape:
                   (lambda ($-id ...-id e in-e)
-                    (if (free-identifier=? (in-unquote-binding-space e)
-                                           (unquote-bind-quote rhombus_))
-                        (values #'_ null null null)
-                        (let ([temp0-id (car (generate-temporaries (list e)))]
-                              [temp-id (car (generate-temporaries (list e)))])
-                          (values temp0-id
-                                  (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
-                                  (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
-                                  (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))))
+                    (define-values (pat idrs sidrs vars)
+                      (if (free-identifier=? (in-unquote-binding-space e)
+                                             (unquote-bind-quote rhombus_))
+                          (values (add-origin
+                                   (in-unquote-binding-space (syntax-local-introduce e))
+                                   #'_)
+                                  null
+                                  null
+                                  null)
+                          (let ([temp0-id (car (generate-temporaries (list e)))]
+                                [temp-id (car (generate-temporaries (list e)))])
+                            (values temp0-id
+                                    (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
+                                    (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
+                                    (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))))
+                    (values (add-origin
+                             (in-binding-space (syntax-local-introduce $-id))
+                             pat)
+                            idrs
+                            sidrs
+                            vars))
                   ;; handle-block-tail-escape:
                   (lambda ($-id ...-id e in-e)
-                    (if (free-identifier=? (in-unquote-binding-space e)
-                                           (unquote-bind-quote rhombus_))
-                        (values #'_ null null null)
-                        (let ([temp0-id (car (generate-temporaries (list e)))]
-                              [temp-id (car (generate-temporaries (list e)))])
-                          (values temp0-id
-                                  (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
-                                  (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*) 1))
-                                  (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*) 'stx))))))
+                    (define-values (pat idrs sidrs vars)
+                      (if (free-identifier=? (in-unquote-binding-space e)
+                                             (unquote-bind-quote rhombus_))
+                          (values (add-origin
+                                   (in-unquote-binding-space (syntax-local-introduce e))
+                                   #'_)
+                                  null
+                                  null
+                                  null)
+                          (let ([temp0-id (car (generate-temporaries (list e)))]
+                                [temp-id (car (generate-temporaries (list e)))])
+                            (values temp0-id
+                                    (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
+                                    (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*) 1))
+                                    (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*) 'stx))))))
+                    (values (add-origin
+                             (in-binding-space (syntax-local-introduce $-id))
+                             pat)
+                            idrs
+                            sidrs
+                            vars))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,

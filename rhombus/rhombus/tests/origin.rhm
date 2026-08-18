@@ -199,7 +199,7 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 12 })
+              { #'#{$}: 16 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/stxclass},
@@ -227,7 +227,8 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},
-              { #'#{::}: 8 })
+              { #'#{::}: 8,
+                #'#{_}: 1 })
 
 check_origins(space_rhm,
               #false,
@@ -261,10 +262,14 @@ check_origins(key_comp_rhm,
                 #'#{===}: 6 })
 
 check_origins(unquote_bind_rhm,
+              #'#{rhombus/namespace},
+              { #'match: 1 })
+
+check_origins(unquote_bind_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 3 })
+              { #'#{$}: 8 })
 
 check_origins(unquote_bind_rhm,
               #'#{rhombus/unquote_bind},
               { #'the: 10,
-                #'#{_}: 1 })
+                #'#{_}: 3 })
