@@ -713,3 +713,28 @@ check:
   def '$' = 'oops'
   #void
   ~throws "matching('$')"
+
+// check special cases of `_`
+check:
+  ~eval
+  import:
+    rhombus/meta.unquote_bind
+    rhombus only_space unquote_bind:
+      expose:
+        _ as wildcard
+  match '1 2 3'
+  | '$wildcard $wildcard ...':
+      '$wildcard ...'
+  ~throws "wildcard: not a repetition"
+
+check:
+  ~eval
+  import:
+    rhombus/meta.unquote_bind
+    rhombus only_space unquote_bind:
+      expose:
+        _ as wildcard
+  match ': 1; 2; 3'
+  | ': $wildcard; $wildcard; ...':
+      '$wildcard; ...'
+  ~throws "wildcard: not a repetition"

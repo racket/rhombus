@@ -41,11 +41,11 @@
                       rhombus/unquote_bind)
                      #%quotes)
          (for-space rhombus/unquote_bind
-                    _))
+                    (rename-out [rhombus_ _])))
 
 (module+ for-match-ns
- (provide (for-space rhombus/unquote_bind
-                     cut)))
+  (provide (for-space rhombus/unquote_bind
+                      cut)))
 
 (module+ convert
   (begin-for-syntax
@@ -109,7 +109,7 @@
                         (not (identifier? #'term))
                         (not (unquote-binding-id? #'term))
                         (free-identifier=? (in-unquote-binding-space #'term)
-                                           (unquote-bind-quote _)))))
+                                           (unquote-bind-quote rhombus_)))))
   (define-splicing-syntax-class (:cut dotted?)
     #:datum-literals (op)
     (pattern seq::dotted-operator-or-identifier-sequence
@@ -625,28 +625,26 @@
                     (deepen-pattern-variable-bind sidr))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
-                    (syntax-parse e
-                      [_::_-bind
-                       (values #'_ null null null)]
-                      [_
-                       (let ([temp0-id (car (generate-temporaries (list e)))]
-                             [temp-id (car (generate-temporaries (list e)))])
-                         (values temp0-id
-                                 (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
-                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
-                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))]))
+                    (if (free-identifier=? (in-unquote-binding-space e)
+                                           (unquote-bind-quote rhombus_))
+                        (values #'_ null null null)
+                        (let ([temp0-id (car (generate-temporaries (list e)))]
+                              [temp-id (car (generate-temporaries (list e)))])
+                          (values temp0-id
+                                  (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
+                                  (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*) 1))
+                                  (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*) 'stx))))))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
-                    (syntax-parse e
-                      [_::_-bind
-                       (values #'_ null null null)]
-                      [_
-                       (let ([temp0-id (car (generate-temporaries (list e)))]
-                             [temp-id (car (generate-temporaries (list e)))])
-                         (values temp0-id
-                                 (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
-                                 (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*) 1))
-                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*) 'stx))))]))
+                    (if (free-identifier=? (in-unquote-binding-space e)
+                                           (unquote-bind-quote rhombus_))
+                        (values #'_ null null null)
+                        (let ([temp0-id (car (generate-temporaries (list e)))]
+                              [temp-id (car (generate-temporaries (list e)))])
+                          (values temp0-id
+                                  (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
+                                  (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*) 1))
+                                  (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*) 'stx))))))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
@@ -797,7 +795,7 @@
                                (syntax-e name)))
                  #,e)))
 
-(define-unquote-binding-syntax _
+(define-unquote-binding-syntax rhombus_
   (unquote-binding-transformer
    (lambda (stx ctx-kind)
      (syntax-parse stx
@@ -814,7 +812,6 @@
 
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]
-                                     #:rhombus-expression [rhombus-expression #'rhombus-expression]
                                      #:repetition? [repetition? #f])
   (define (qq-reraw qq-stx)
     ;; syntax errors from `quasiquote` are possible, such as when an

@@ -318,7 +318,6 @@
     [(_ template ids)
      (let ([ids (syntax->list #'ids)])
        (convert-template #'(multi template)
-                         #:rhombus-expression #'rhombus-expression
                          #:check-escape (lambda (e)
                                           (unless (or (and (identifier? e)
                                                            (for/or ([id (in-list ids)])

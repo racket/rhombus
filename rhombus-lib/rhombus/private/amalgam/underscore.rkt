@@ -8,9 +8,9 @@
 
 (provide (for-spaces (#f
                       rhombus/bind)
-                     (rename-out [rhombus-_ _])))
+                     (rename-out [rhombus_ _])))
 
-(define-syntax rhombus-_
+(define-syntax rhombus_
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -21,7 +21,7 @@
                                            " and use isn't an allowed position to create a function")
                             #'form-id)]))))
 
-(define-binding-syntax rhombus-_
+(define-binding-syntax rhombus_
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
