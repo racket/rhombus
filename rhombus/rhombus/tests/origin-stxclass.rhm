@@ -132,3 +132,11 @@ match '1'
      error_mode: ~opaque
    | '$t') as x:
     x
+
+syntax_class.together:
+  syntax_class A
+  | ''
+  | 'a $(_ :: B)'
+  syntax_class B
+  | ''
+  | 'b $(_ :: A)'

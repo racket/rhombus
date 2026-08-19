@@ -144,10 +144,28 @@ check_origins(defctx_rhm,
               { #'my_example_macro: 2 })
 
 check_origins(class_rhm,
-              #false,
+              #'#{rhombus/namespace},
+              { #'class: 1 })
+
+check_origins(class_rhm,
+              #'#{rhombus/defn},
+              { #'class: 6,
+                #'interface: 1,
+                #'veneer: 1 })
+
+check_origins(class_rhm,
+              #'#{rhombus/class_clause},
               { #'method: 5,
                 #'field: 2,
                 #'property: 1 })
+
+check_origins(class_rhm,
+              #'#{rhombus/interface_clause},
+              { #'method: 1 })
+
+check_origins(class_rhm,
+              #'#{rhombus/veneer_clause},
+              { #'method: 1 })
 
 check_origins(class_rhm,
               #'#{rhombus/annot},
@@ -182,7 +200,7 @@ check_origins(for_rhm,
 
 check_origins(for_rhm,
               #'#{rhombus/bind},
-              { #'#{_}: 1,
+              { #'_: 1,
                 #'#{::}: 6 })
 
 check_origins(for_rhm,
@@ -194,16 +212,20 @@ check_origins(for_rhm,
                 #'List: 1 })
 
 check_origins(stxclass_rhm,
+              #'#{rhombus/namespace},
+              { #'syntax_class: 1 })
+
+check_origins(stxclass_rhm,
               #false,
               { #'ns: 6 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/defn},
-              { #'syntax_class: 7 })
+              { #'syntax_class: 10 })
 
 check_origins(stxclass_rhm,
               #'#{rhombus/bind},
-              { #'#{$}: 23,
+              { #'#{$}: 25,
                 #'pattern: 1,
                 #'as: 3 })
 
@@ -233,8 +255,8 @@ check_origins(stxclass_rhm,
 
 check_origins(stxclass_rhm,
               #'#{rhombus/unquote_bind},
-              { #'#{::}: 10,
-                #'#{_}: 2,
+              { #'#{::}: 12,
+                #'_: 4,
                 #'pattern: 1 })
 
 check_origins(space_rhm,
@@ -279,7 +301,7 @@ check_origins(unquote_bind_rhm,
 check_origins(unquote_bind_rhm,
               #'#{rhombus/unquote_bind},
               { #'the: 13,
-                #'#{_}: 6,
+                #'_: 6,
                 #'#{&&}: 1,
                 #'#{\|\|}: 1,
                 #'#{!}: 1,

@@ -28,3 +28,11 @@ class Boo():
   method
   | m() :: String:
       "hello"
+
+class.together:
+  class A():
+    method b() :: B:
+      B()
+  class B():
+    method a() :: A:
+      A()

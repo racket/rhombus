@@ -121,11 +121,16 @@
         #:datum-literals (group)
         [(_ (_::block (group op::syntax-class-id . rest) ...))
          (define decls
-           (for/list ([g (in-list (syntax->list #'((op . rest) ...)))])
+           (for/list ([g (in-list (syntax->list #'((op.name . rest) ...)))])
              (parse-syntax-class g #:for-together? #t)))
          (append
-          (map car decls)
-          (map (lambda (stx) #`(finish-together-syntax-class #,stx)) (map cadr decls)))]))))
+          (for/list ([decl (in-list decls)]
+                     [op (in-list (syntax->list #'(op.name ...)))])
+            (add-origin
+             (in-defn-space (syntax-local-introduce op))
+             (car decl)))
+          (for/list ([decl (in-list decls)])
+            #`(finish-together-syntax-class #,(cadr decl))))]))))
 
 ;; returns a `rhombus-syntax-class`
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail
