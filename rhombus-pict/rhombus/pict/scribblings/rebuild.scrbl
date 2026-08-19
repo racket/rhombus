@@ -147,6 +147,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    id: block id
+    body: block
   fun rebuildable(
     rebuild
       :: (~deps: List.of(Pict)) -> Pict
@@ -155,9 +158,13 @@
     ~deps: deps :: List.of(Pict) = [],
     ~config: config :: maybe(Map) = #false
   ) :: Pict
+  expr.macro 'as_rebuildable ($id, ...):
+                $body
+                ...'
 ){
 
- Creates a pict that is the same as the result of
+ The @rhombus(rebuildable) function
+ creates a pict that is the same as the result of
  @rhombus(rebuild(~deps: deps)), @rhombus(rebuild(~config: config)) or
  @rhombus(rebuild(~deps: deps, ~config: config)), but where
  @rhombus(deps) contains picts that can be adjusted via
@@ -167,8 +174,22 @@
  the result of @rhombus(rebuildable) itself; see also
  @secref("identity").
 
- The given @rhombus(deps) list determines the @tech{replaceable dependencies} of the
- result pict, but the result from @rhombus(proc) determines the
+ The given @rhombus(deps) list for @rhombus(rebuildable) determines the @tech{replaceable dependencies} of the
+ result pict, but the result from @rhombus(build) determines the
  @tech{findable children}.
+
+ The @rhombus(as_rebuildable) form is a shorthand for calling
+ @rhombus(rebuildable) with @rhombus([id, ...]) as @rhombus(deps) and the
+ @rhombus(body) sequence as the body of the @rhombus(rebuild) function:
+
+@rhombusblock(
+  rebuildable(~deps: [id :: Pict, ...],
+              fun (id :: Pict, ...):
+                body
+                ...)
+)
+
+@(history:
+    ~added "1.3")
 
 }

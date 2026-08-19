@@ -35,6 +35,7 @@ export:
 
   animate
   rebuildable
+  as_rebuildable
   animate_map
   sequential
   concurrent
@@ -106,6 +107,11 @@ fun rebuildable(~deps: children :: List.of(Pict) = [],
                                   || (~config: maybe(Map)) -> Pict
                                   || (~deps: List.of(Pict), ~config: maybe(Map)) -> Pict)) :~ Pict:
   rebuildable_anim(children, config, proc)
+
+expr.macro 'as_rebuildable ($(id :: Identifier), ...): $body':
+  'rebuildable(~deps: [$id :: Pict, ...],
+               fun (~deps: [$id :~ Pict, ...]):
+                 $body)'
 
 fun rebuildable_anim(children :~ List, config, proc):
   let p:
