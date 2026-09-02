@@ -1,6 +1,6 @@
 #lang rhombus/static
 
-// Exercises:
+// Exercises (start the first and last by writing an initially-failing test case):
 //  * Add a subtraction operation
 //  * Change `let` to rewrite to an immediately called `fun`
 //  * Add an `if` (conditional) form

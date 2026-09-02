@@ -139,8 +139,17 @@ order that @rhombus(++) adopts.
 @margin_note_block{Precedence relationships are pairwise, and they are
  not required to form an @defterm{order} in the mathematical sense, much
  less fit on a numerical scale. Operator orders like
- @rhombus(concatenation, ~operator_order) provide an indirection to
- specify pairwise relationships among groups of operators.}
+ @rhombus(concatenation, ~operator_order) and @rhombus(arithmetic, ~operator_order)
+ provide an indirection to
+ specify pairwise relationships among groups of operators.
+
+ There are a number of other options available in the
+ @rhombus(macro) documentation; one useful one is
+ @rhombus(~weaker_than ~other), which means that this
+ operator is weaker than all others (signaling an error if
+ two such operators are used without parentheses to
+ disambiguate them).
+}
 
 @examples(
   ~eval: op_eval
