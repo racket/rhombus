@@ -308,7 +308,7 @@ Drawing operations are methods on a @rhombus(DC, ~class). See
 ){
 
  Draws a text string at a specified point @rhombus(dpt) plus
- @rhombus(dx) and 2rhombus(dy). Text is drawn using the
+ @rhombus(dx) and @rhombus(dy). Text is drawn using the
  @rhombuslink(DC.font){current font} and
  @rhombuslink(DC.text_color){current text color}. The
  @rhombuslink(DC.pen){current pen} and @rhombuslink(DC.brush){current
