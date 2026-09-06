@@ -14,6 +14,8 @@
                      "dotted-sequence.rkt"
                      "group.rkt")
          racket/stxparam
+         racket/unsafe/ops
+         "../version-case.rkt"
          "provide.rkt"
          "expression.rkt"
          (only-in "annotation.rkt"
@@ -64,19 +66,40 @@
                      this)
          super
 
-         prop:methods
-         prop-methods-ref
+         make-class-struct-type
+         class-methods-ref
          method-ref
          method-curried-ref
 
          raise-not-an-instance)
 
-(define-values (prop:methods prop-methods? prop-methods-ref)
-  (make-struct-type-property 'methods))
+(meta-if-version-at-least
+ "9.3.0.6"
+ (begin
+   (define-values (struct:class-struct-type make-class-struct-type class-struct-type? class-type-methods-ref)
+     (let-values ([(struct:class-struct-type make-class-struct-type class-struct-type? class-struct-type-ref)
+                   (make-struct-metatype 'class #f 1)])
+       (values struct:class-struct-type make-class-struct-type class-struct-type?
+               (make-struct-field-metaaccessor class-struct-type-ref 0))))
+   (define (class-methods-ref o)
+     (class-type-methods-ref o #f)))
+ (begin
+   (define-values (prop:methods prop-methods? prop-methods-ref)
+     (make-struct-type-property 'methods))
+   (define class-methods-ref prop-methods-ref)
+   (define-syntax (make-class-struct-type stx)
+     (syntax-parse stx
+       [(_ name super-type init-field-cnt auto-field-cnt auto-v
+           (list prop ...) inspector proc-spec immutables guard constructor-name
+           vtable)
+        #'(make-struct-type
+           name super-type init-field-cnt auto-field-cnt auto-v
+           (list prop ... (cons prop:methods vtable)) inspector proc-spec immutables guard constructor-name)]))))
 
 (define-syntax (method-ref stx)
   (syntax-parse stx
-    [(_ ref obj pos) #`(vector-ref (ref obj) pos)]))
+    [(_ ref obj pos)
+     #`(unsafe-vector*-ref (ref obj) pos)]))
 
 (define (method-curried-ref ref obj pos)
   (curry-method (method-ref ref obj pos) obj))
@@ -808,9 +831,9 @@
                            [(identifier? index/id/intf) index/id/intf]
                            [(vector? (syntax-e index/id/intf))
                             (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
-                            #`(vector-ref (#,ref-id obj-id) #,pos)]
+                            #`(method-ref #,ref-id obj-id #,pos)]
                            [else
-                            #`(vector-ref (#,methods-ref-id obj-id) #,index/id/intf)]))
+                            #`(method-ref #,methods-ref-id obj-id #,index/id/intf)]))
            (syntax-parse stx
              [(head . tail)
               #:with assign::assign-op-seq #'tail
@@ -857,9 +880,9 @@
                                index/id/intf]
                               [(vector? (syntax-e index/id/intf))
                                (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
-                               #`(vector-ref (#,ref-id id) #,pos)]
+                               #`(method-ref #,ref-id id #,pos)]
                               [else
-                               #`(vector-ref (#,methods-ref-id id) #,index/id/intf)]))
+                               #`(method-ref #,methods-ref-id id #,index/id/intf)]))
               (define rator* (if repet?
                                  (make-repetition-info (list #'head)
                                                        null

@@ -322,7 +322,7 @@
                               #f #f #f #f #f #f
                               private-interfaces protected-interfaces
                               #'(name reflect-name name?/checked name-convert #f #f
-                                      prop-methods-ref
+                                      class-methods-ref
                                       representation-static-infos ;; instead of `all-static-infos`
                                       []
                                       []
@@ -399,7 +399,7 @@
                                      method-mindex method-vtable method-private
                                      method-results
                                      final?
-                                     #'prop-methods-ref
+                                     #'class-methods-ref
                                      #f #f
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?

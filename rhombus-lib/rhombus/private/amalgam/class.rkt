@@ -703,7 +703,7 @@
                               private-interfaces protected-interfaces
                               #:method-vtable method-vtable
                               #'(name reflect-name name? #f reconstructor-name serializer-name
-                                      prop-methods-ref
+                                      class-methods-ref
                                       all-static-infos
                                       [field-name ... super-field-name ...]
                                       [field-static-infos ... super-field-static-infos ...]
@@ -893,7 +893,7 @@
                                      method-mindex method-vtable method-private
                                      method-results
                                      final?
-                                     #'prop-methods-ref
+                                     #'class-methods-ref
                                      #'call-statinfo-indirect callable?
                                      #'index-statinfo-indirect indexable?
                                      #'index-set-statinfo-indirect setable?
@@ -1046,112 +1046,115 @@
          (list
           #`(define-values (class:name primitive-make-name name? name-field ... set-name-field!/unchecked ...)
               (let-values ([(class:name name name? name-ref name-set!)
-                            (make-struct-type 'reflect-name
-                                              #,(and super (class-desc-class:id super))
-                                              #,(length fields) 0 #f
-                                              #,(if prefab?
-                                                    #'null
-                                                    #`(list #,@(if abstract-name
-                                                                   null
-                                                                   #`((cons prop:field-name->accessor
-                                                                            (list* '(public-field-name ...)
-                                                                                   (hasheq (~@ 'super-field-name super-name-field)
-                                                                                           ...
-                                                                                           (~@ 'property-name property-proc)
-                                                                                           ...
-                                                                                           (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
-                                                                                           ...)
-                                                                                   (hasheq (~@ 'method-name method-proc)
-                                                                                           ...)))))
-                                                            #,@(if (or (syntax-e #'reconstructor-name)
-                                                                       (and super
-                                                                            (not (memq 'no-recon (objects-desc-flags super)))))
-                                                                   #`((cons prop:reconstructor
-                                                                            #,(and (syntax-e #'reconstructor-name)
-                                                                                   #`(cons (list
-                                                                                            #,@(for/list ([name (in-list (syntax->list #'(recon-field-name ...)))]
-                                                                                                          [acc (in-list (syntax->list #'(recon-field-acc ...)))])
-                                                                                                 #`(cons '#,name #,acc)))
-                                                                                           reconstructor-name))))
-                                                                   null)
-                                                            #,@(able-method-as-property 'call #'prop:procedure here-callable?
-                                                                                        method-mindex method-vtable method-private)
-                                                            #,@(able-method-as-property 'get #'prop:indexable here-indexable?
-                                                                                        method-mindex method-vtable method-private)
-                                                            #,@(able-method-as-property 'set #'prop:setable here-setable?
-                                                                                        method-mindex method-vtable method-private)
-                                                            #,@(able-method-as-property 'append #'prop:appendable here-appendable?
-                                                                                        method-mindex method-vtable method-private)
-                                                            #,@(able-method-as-property 'contains #'prop:contains here-container?
-                                                                                        method-mindex method-vtable method-private)
-                                                            #,@(if (or abstract-name
-                                                                       (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
-                                                                              (not (syntax-e maybe-name)))
-                                                                            (null? (syntax-e #'(property-proc ...)))))
-                                                                   null
-                                                                   #`((cons prop:field-name->mutator
-                                                                            (list* '(maybe-public-mutable-field-name ...)
-                                                                                   (hasheq (~@ 'property-name property-proc)
-                                                                                           ...)))))
-                                                            #,@(cond
-                                                                 [(and (or opaque? has-private-fields?)
-                                                                       (or (not super)
-                                                                           (eq? (class-desc-opaque super) 'opaque)))
-                                                                  #`((cons prop:print-field-shapes 'opaque))]
-                                                                 [else
-                                                                  (define field-print-shapes
-                                                                    (print-field-shapes super fields constructor-keywords exposures (or opaque? has-private-fields?)))
-                                                                  (if (or abstract-name
-                                                                          (and (andmap symbol? field-print-shapes)
-                                                                               (not has-extra-fields?)))
-                                                                      null
-                                                                      #`((cons prop:print-field-shapes
-                                                                               '#,field-print-shapes)))])
-                                                            #,@(if final?
-                                                                   (list #'(cons prop:sealed #t))
-                                                                   '())
-                                                            #,@(if authentic?
-                                                                   (list #'(cons prop:authentic #t))
-                                                                   '())
-                                                            #,@(if (or (zero? (vector-length method-vtable))
-                                                                       abstract-name)
-                                                                   '()
-                                                                   (list #`(cons prop:methods
-                                                                                 (vector #,@(vector->list method-vtable)))))
-                                                            #,@(for/list ([pp (in-list primitive-properties)])
-                                                                 #`(cons #,(car pp) #,(cdr pp)))
-                                                            #,@(for*/list ([intf (in-list all-prim-prop-interfaces)]
-                                                                           [pp (in-list (interface-desc-primitive-properties intf))])
-                                                                 #`(cons #,(car pp) #,(cdr pp)))
-                                                            #,@(for/list ([intf (in-list all-interfaces)])
-                                                                 #`(cons #,(interface-desc-prop:id intf)
-                                                                         (vector #,@(build-interface-vtable intf
-                                                                                                            method-mindex method-vtable method-names
-                                                                                                            method-private))))
-                                                            #,@(syntax-parse #'serializable
-                                                                 [(form-id vers s-rhs d-rhs ds-rhs df-rhs)
-                                                                  (define top? (eq? 'top-level (syntax-local-context)))
-                                                                  (list #`(cons prop:serializable
-                                                                                (make-class-serialize-info
-                                                                                 #,(if (syntax-e #'serializer-name)
-                                                                                       #'serializer-name
-                                                                                       #'(default-serializer [super-name-field ... public-name-field ...]))
-                                                                                 #,(if top?
-                                                                                       #'(quote-syntax deserialize-submodule-name)
-                                                                                       #'(quote deserialize-submodule-name))
-                                                                                 #,(if top?
-                                                                                       #'#f
-                                                                                       #'(#%variable-reference))
-                                                                                 #,(and (syntax-e #'ds-rhs) #t))))]
-                                                                 [_ null])))
-                                              #,(cond
-                                                  [prefab? (quote-syntax 'prefab)]
-                                                  [(or opaque? has-private-fields?) #'(current-inspector)]
-                                                  [else #f])
-                                              #f
-                                              '(immutable-field-index ...)
-                                              #f
-                                              'reflect-name)])
+                            (#,(if prefab? #'make-struct-type #'make-class-struct-type)
+                             'reflect-name
+                             #,(and super (class-desc-class:id super))
+                             #,(length fields) 0 #f
+                             #,(if prefab?
+                                   #'null
+                                   #`(list #,@(if abstract-name
+                                                  null
+                                                  #`((cons prop:field-name->accessor
+                                                           (list* '(public-field-name ...)
+                                                                  (hasheq (~@ 'super-field-name super-name-field)
+                                                                          ...
+                                                                          (~@ 'property-name property-proc)
+                                                                          ...
+                                                                          (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
+                                                                          ...)
+                                                                  (hasheq (~@ 'method-name method-proc)
+                                                                          ...)))))
+                                           #,@(if (or (syntax-e #'reconstructor-name)
+                                                      (and super
+                                                           (not (memq 'no-recon (objects-desc-flags super)))))
+                                                  #`((cons prop:reconstructor
+                                                           #,(and (syntax-e #'reconstructor-name)
+                                                                  #`(cons (list
+                                                                           #,@(for/list ([name (in-list (syntax->list #'(recon-field-name ...)))]
+                                                                                         [acc (in-list (syntax->list #'(recon-field-acc ...)))])
+                                                                                #`(cons '#,name #,acc)))
+                                                                          reconstructor-name))))
+                                                  null)
+                                           #,@(able-method-as-property 'call #'prop:procedure here-callable?
+                                                                       method-mindex method-vtable method-private)
+                                           #,@(able-method-as-property 'get #'prop:indexable here-indexable?
+                                                                       method-mindex method-vtable method-private)
+                                           #,@(able-method-as-property 'set #'prop:setable here-setable?
+                                                                       method-mindex method-vtable method-private)
+                                           #,@(able-method-as-property 'append #'prop:appendable here-appendable?
+                                                                       method-mindex method-vtable method-private)
+                                           #,@(able-method-as-property 'contains #'prop:contains here-container?
+                                                                       method-mindex method-vtable method-private)
+                                           #,@(if (or abstract-name
+                                                      (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
+                                                             (not (syntax-e maybe-name)))
+                                                           (null? (syntax-e #'(property-proc ...)))))
+                                                  null
+                                                  #`((cons prop:field-name->mutator
+                                                           (list* '(maybe-public-mutable-field-name ...)
+                                                                  (hasheq (~@ 'property-name property-proc)
+                                                                          ...)))))
+                                           #,@(cond
+                                                [(and (or opaque? has-private-fields?)
+                                                      (or (not super)
+                                                          (eq? (class-desc-opaque super) 'opaque)))
+                                                 #`((cons prop:print-field-shapes 'opaque))]
+                                                [else
+                                                 (define field-print-shapes
+                                                   (print-field-shapes super fields constructor-keywords exposures (or opaque? has-private-fields?)))
+                                                 (if (or abstract-name
+                                                         (and (andmap symbol? field-print-shapes)
+                                                              (not has-extra-fields?)))
+                                                     null
+                                                     #`((cons prop:print-field-shapes
+                                                              '#,field-print-shapes)))])
+                                           #,@(if final?
+                                                  (list #'(cons prop:sealed #t))
+                                                  '())
+                                           #,@(if authentic?
+                                                  (list #'(cons prop:authentic #t))
+                                                  '())
+                                           #,@(for/list ([pp (in-list primitive-properties)])
+                                                #`(cons #,(car pp) #,(cdr pp)))
+                                           #,@(for*/list ([intf (in-list all-prim-prop-interfaces)]
+                                                          [pp (in-list (interface-desc-primitive-properties intf))])
+                                                #`(cons #,(car pp) #,(cdr pp)))
+                                           #,@(for/list ([intf (in-list all-interfaces)])
+                                                #`(cons #,(interface-desc-prop:id intf)
+                                                        (vector #,@(build-interface-vtable intf
+                                                                                           method-mindex method-vtable method-names
+                                                                                           method-private))))
+                                           #,@(syntax-parse #'serializable
+                                                [(form-id vers s-rhs d-rhs ds-rhs df-rhs)
+                                                 (define top? (eq? 'top-level (syntax-local-context)))
+                                                 (list #`(cons prop:serializable
+                                                               (make-class-serialize-info
+                                                                #,(if (syntax-e #'serializer-name)
+                                                                      #'serializer-name
+                                                                      #'(default-serializer [super-name-field ... public-name-field ...]))
+                                                                #,(if top?
+                                                                      #'(quote-syntax deserialize-submodule-name)
+                                                                      #'(quote deserialize-submodule-name))
+                                                                #,(if top?
+                                                                      #'#f
+                                                                      #'(#%variable-reference))
+                                                                #,(and (syntax-e #'ds-rhs) #t))))]
+                                                [_ null])))
+                             #,(cond
+                                 [prefab? (quote-syntax 'prefab)]
+                                 [(or opaque? has-private-fields?) #'(current-inspector)]
+                                 [else #f])
+                             #f
+                             '(immutable-field-index ...)
+                             #f
+                             'reflect-name
+                             #,@(cond
+                                  [prefab? '()]
+                                  [(or (zero? (vector-length method-vtable))
+                                       abstract-name)
+                                   (list #'#f)]
+                                  [else
+                                   (list #`(vector #,@(vector->list method-vtable)))]))])
                 (values class:name name name?
                         (make-struct-field-accessor name-ref field-index 'reflect-name-field 'reflect-name 'rhombus)
                         ...
@@ -1171,7 +1174,7 @@
            def)
          (list
           #`(define (name-ref v)
-              (define vtable (prop-methods-ref v #f))
+              (define vtable (class-methods-ref v))
               (or vtable
                   (raise-not-an-instance 'name v))))
          (for/list ([def (in-list (syntax->list
