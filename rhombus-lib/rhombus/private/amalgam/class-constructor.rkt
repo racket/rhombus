@@ -61,7 +61,7 @@
 ;; wrong case).
 ;;
 ;; For an arbitrary custom constructor, arity information may be
-;; available. If the arity is imple enough (e.g., no optional
+;; available. If the arity is simple enough (e.g., no optional
 ;; arguments), then the outer wrapper to take <super-args> can be
 ;; synthesized precisely. Otherwise, `make-keyword-procedure-like` is
 ;; used dynamically to create a function that claims the same arity as
