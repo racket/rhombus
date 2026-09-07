@@ -9,6 +9,7 @@
                      enforest/syntax-local
                      "introducer.rkt"
                      "annotation-string.rkt"
+                     "syntax-closure.rkt"
                      (for-syntax racket/base)
                      "macro-result.rkt")
          "realm.rkt"
@@ -38,7 +39,6 @@
 
            binding-extension-combine
            disallow-binding-as-namespace-extension
-
            (struct-out binding-prefix+infix-operator)))
 
 (provide define-binding-syntax
@@ -55,22 +55,15 @@
   ;; To call an infoer:
   (define-syntax-class :binding-impl
     (pattern (~and form (infoer-id . _))
-             #:do [(define proc (syntax-local-value* #'infoer-id (lambda (v)
-                                                                   (and (procedure? v)
-                                                                        v))))
-                   (unless proc
-                     (raise-syntax-error #f
-                                         "cannot find a transformer for an infoer"
-                                         #'infoer-id))]
-             #:with info (check-binding-info-result
-                          (let ([form #'form])
-                            (syntax-local-introduce
-                             (call-as-transformer
-                              #'infoer-id
-                              (list (syntax-local-introduce form))
-                              syntax-track-origin #f
-                              proc)))
-                          proc)))
+      #:with info (check-binding-info-result
+                   (call-syntax-closure #'infoer-id #'form
+                                        "cannot find a transformer for an infoer")
+                   (λ ()
+                     (proc-name
+                      (syntax-local-value*
+                       #'infoer-id
+                       (λ (v) (and (procedure? v) v))))))))
+
 
   (define-syntax-class :evidence-id-tree
     (pattern _:identifier)
@@ -125,10 +118,10 @@
       [_::binding-form form]
       [_ (raise-bad-macro-result (proc-name proc) "binding" form)]))
 
-  (define (check-binding-info-result form proc)
+  (define (check-binding-info-result form get-proc-name)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::binding-info form]
-      [_ (raise-bad-macro-result (proc-name proc) "binding-info" form)]))
+      [_ (raise-bad-macro-result (get-proc-name) "binding-info" form)]))
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
   (define-syntax (bind-quote stx)
