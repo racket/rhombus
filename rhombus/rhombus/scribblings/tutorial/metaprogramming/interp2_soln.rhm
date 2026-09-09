@@ -80,3 +80,8 @@ check: interp(Tuple([Literal(0),
                      Plus(Literal(10), Literal(1))]),
               { #'x: 5 })
        ~is [0, 10, 11]
+
+check: interp(Tuple([Equals(Id(#'x), Id(#'y)),
+                     Plus(Id(#'x), Id(#'y))]),
+              { #'x: 11, #'y: 12 })
+       ~is [#false, 23]

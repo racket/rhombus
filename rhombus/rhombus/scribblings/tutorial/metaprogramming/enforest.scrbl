@@ -144,8 +144,8 @@ order that @rhombus(++) adopts.
  specify pairwise relationships among groups of operators.
 
  There are a number of other options available in the
- @rhombus(macro) documentation; one useful one is
- @rhombus(~weaker_than ~other), which means that this
+ @rhombus(operator, ~defn) form; a useful one
+ is @rhombus(~weaker_than: ~other), which means that this
  operator is weaker than all others (signaling an error if
  two such operators are used without parentheses to
  disambiguate them).
