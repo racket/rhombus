@@ -10,7 +10,7 @@
   (unless proc
     (raise-syntax-error #f
                         fail-string
-                        #'infoer-id))
+                        proc-id))
   (syntax-local-introduce
    (call-as-transformer
     proc-id

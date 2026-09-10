@@ -39,6 +39,7 @@
 
            binding-extension-combine
            disallow-binding-as-namespace-extension
+
            (struct-out binding-prefix+infix-operator)))
 
 (provide define-binding-syntax
