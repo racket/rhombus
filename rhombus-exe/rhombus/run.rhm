@@ -144,7 +144,7 @@ when S.program in args
 | cmdline.current_program(args[S.program])
 
 when S.version in args || S.action !in args
-| println(@str{Welcome to Rhombus v@(system.version())})
+| println(@str{Welcome to Rhombus v@(system.version())}); println("Type ,? followed by enter key for help")
 
 when S.no_make !in args && (S.repl in args || S.no_lib !in args || args[S.evals] != [])
 | let make:
