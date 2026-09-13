@@ -936,7 +936,7 @@
                              (list #`(#%function-arity #,arity))
                              null)]
                         [(maybe-unsafe-info ...)
-                         (if arity
+                         (if unsafe-id
                              (list #`(#%unsafe #,unsafe-id))
                              null)])
             #'(define-static-info-syntax/maybe/maybe-extension name extends
@@ -1344,10 +1344,10 @@
                                                            #,rator-arity)
                                     extra-args)))]
                        [fun (wrap-static-info* fun (indirect-get-function-static-infos))]
+                       [fun (wrap-static-info fun #'#%function-arity arity)]
                        [fun (if (static-infos-empty? static-infos)
                                 fun
-                                (wrap-static-info fun #'#%call-result static-infos))]
-                       [fun (wrap-static-info fun #'#%function-arity arity)])
+                                (wrap-static-info fun #'#%call-result static-infos))])
                   fun)
                 #'tail
                 #t)])]))
@@ -1963,10 +1963,10 @@
                #`(lambda (#,@prefix-args #,@formals)
                    #,(discard-static-infos body)))]
          [fun (wrap-static-info* fun (indirect-get-function-static-infos))]
+         [fun (wrap-static-info fun #'#%function-arity shifted-arity)]
          [fun (if (static-infos-empty? static-infos)
                   fun
-                  (wrap-static-info fun #'#%call-result static-infos))]
-         [fun (wrap-static-info fun #'#%function-arity shifted-arity)])
+                  (wrap-static-info fun #'#%call-result static-infos))])
     fun))
 
 (define-for-syntax (convert-wildcards stxs convert? convert-one)
