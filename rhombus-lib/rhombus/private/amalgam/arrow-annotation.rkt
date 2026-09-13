@@ -467,7 +467,7 @@
           (binding-info "function"
                         #'function
                         #'immed-static-infos
-                        #'((result (0) . static-infos))
+                        #'((result-id (0) . static-infos))
                         #'arrow-oncer
                         #'arrow-matcher
                         #'()
@@ -795,7 +795,7 @@
      (binding-info "function"
                    #'function
                    #'immed-static-infos
-                   #'((result (0) . static-infos))
+                   #'((result-id (0) . static-infos))
                    #'empty-oncer
                    #'all-of-matcher
                    #'()
