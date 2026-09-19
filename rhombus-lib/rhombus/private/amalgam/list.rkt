@@ -1534,7 +1534,10 @@
                                    (null? #,check)]
                                   [else
                                    (let ([tail #,check])
-                                     (and tail (maybe-list-tail tail (- max-len min-len)) #t))]))))))
+                                     (and tail
+                                          (let ([tail (maybe-list-tail tail (- max-len min-len))])
+                                            ;; too short to drop more is fine, but too long is not
+                                            (or (not tail) (null? tail)))))]))))))
   (composite-binding-transformer  #`(#,form-id (parens . #,args) . #,tail)
                                   #:rest-arg rest-arg
                                   '(#:list "PairList")

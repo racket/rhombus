@@ -537,6 +537,114 @@ check:
   PairList[PairList[x, ...], PairList[y, ...]]
   ~is PairList[PairList[1], PairList[3, 4]]
 
+// leading repetition matches zero elements
+check:
+  def PairList[x, ..., 2, y, ...] = PairList[2]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[]]
+
+check:
+  def PairList[x, ..., 2, y, ...] = PairList[2, 3, 4]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[3, 4]]
+
+check:
+  def PairList[1, x, ..., 3, y, ...] = PairList[1, 3]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[]]
+
+check:
+  def PairList[1, x, ..., 3, y, ...] = PairList[1, 3, 4, 5]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[4, 5]]
+
+check:
+  def PairList[x, ... ~once, 3, y, ...] = PairList[3]
+  PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[]]
+
+check:
+  def PairList[x, ..., 2, y, ..., 4, z, ...] = PairList[2, 4]
+  PairList[PairList[x, ...], PairList[y, ...], PairList[z, ...]]
+  ~is PairList[PairList[], PairList[], PairList[]]
+
+check:
+  def PairList[x, ..., 2, y, ..., 4, z, ...] = PairList[1, 2, 4, 5]
+  PairList[PairList[x, ...], PairList[y, ...], PairList[z, ...]]
+  ~is PairList[PairList[1], PairList[], PairList[5]]
+
+check:
+  def PairList[& PairList[x, ...], ..., 3, y, ...] = PairList[3, 4]
+  PairList[PairList[PairList[x, ...], ...], PairList[y, ...]]
+  ~is PairList[PairList[], PairList[4]]
+
+check:
+  def PairList[& PairList[x, ...], ..., 3, y, ...] = PairList[1, 2, 3, 4]
+  PairList[PairList[PairList[x, ...], ...], PairList[y, ...]]
+  ~is PairList[PairList[PairList[1, 2]], PairList[4]]
+
+check:
+  match PairList[3]
+  | PairList[x, ... ~nonempty, 3, y, ...]: #false
+  | ~else: #true
+  ~is #true
+
+check:
+  match PairList[1, 1, 3]
+  | PairList[x, ... ~once, 3, y, ...]: #false
+  | ~else: #true
+  ~is #true
+
+check:
+  match PairList[1, 3, 3]
+  | PairList[x, ... ~once, 3, y, ...]: PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[1], PairList[3]]
+
+check:
+  match PairList[1, 3]
+  | PairList[1, 2, ... ~once, 3, 4, ... ~once]: #true
+  | ~else: #false
+  ~is #true
+
+check:
+  match PairList[1, 2, 3, 4]
+  | PairList[1, x, ... ~once, 3, y, ... ~once]: PairList[PairList[x, ...], PairList[y, ...]]
+  ~is PairList[PairList[2], PairList[4]]
+
+// length bounds with a `~once` tail
+check:
+  match PairList[1, 3]
+  | PairList[1, 3, x, ... ~once]: PairList[x, ...]
+  ~is PairList[]
+
+check:
+  match PairList[1, 3, 4]
+  | PairList[1, 3, x, ... ~once]: PairList[x, ...]
+  ~is PairList[4]
+
+check:
+  match PairList[1, 3, 4, 4]
+  | PairList[1, 3, x, ... ~once]: #false
+  | ~else: #true
+  ~is #true
+
+check:
+  match PairList[1]
+  | PairList[1, 3, x, ... ~once]: #false
+  | ~else: #true
+  ~is #true
+
+// wildcard repetition followed by another repetition
+check:
+  def PairList[_, ..., 3, y, ...] = PairList[1, 2, 3, 4]
+  PairList[y, ...]
+  ~is PairList[4]
+
+check:
+  def PairList[_, ..., 3, y, ...] = PairList[3, 4]
+  PairList[y, ...]
+  ~is PairList[4]
+
 check:
   def PairList[& x, y, ...] = PairList[1, 2]
   PairList[x, PairList[y, ...]]

@@ -139,7 +139,7 @@
                                                                             #'first-i.evidence-ids
                                                                             #'())
                                                                       rest-i.evidence-ids))
-                        [#,head-min #,head-max #,sr-head-min #,sr-head-max #,rest-min #,rest-max]
+                        [#,head-min #,head-max #,sr-head-min #,sr-head-max #,rest-min #,rest-max rep-min rep-max]
                         first-i.oncer-id first-i.matcher-id first-i.evidence-ids first-i.committer-id first-i.binder-id first-i.data
                         first-i.bind-infos #,(and (memq (syntax-e #'head-mode)
                                                         '(#:repetition #:splice-repetition))
@@ -164,7 +164,7 @@
     [(_ val-id (head-mode
                 as-treelist? rest-to-repetition no-rest-map?
                 evidence _ _ _
-                [head-min head-max sr-head-min sr-head-max rest-min rest-max]
+                [head-min head-max sr-head-min sr-head-max rest-min rest-max rep-min rep-max]
                 first-oncer-id first-matcher-id first-evidence-ids first-committer-id first-binder-id first-data
                 first-bind-infos first-seq-tmp-ids
                 rest-oncer-id rest-matcher-id rest-evidence-ids rest-committer-id rest-binder-id rest-data)
@@ -221,7 +221,7 @@
                         next-sub-state
                         ;; state
                         state-first
-                        state-rest
+                        state-remaining
                         state-next
                         ;; accum
                         accum-next
@@ -246,13 +246,11 @@
                                  (if splice-repetition?
                                      #'(lambda (i j) (treelist-sublist val-id i (+ i j)))
                                      #'(lambda (i j) (treelist-ref val-id i)))
-                                 (if splice-repetition?
-                                     #'(lambda (i j) (treelist-sublist val-id (+ i j) (treelist-length val-id)))
-                                     #'(lambda (i j) (treelist-sublist val-id (add1 i) (treelist-length val-id))))
+                                 #'(lambda (i) (treelist-sublist val-id i len))
                                  #'+
                                  ;; accum
                                  #'(lambda (accum i) null)
-                                 #'(lambda (accum i) (treelist-sublist val-id 0 (add1 i))))
+                                 #'(lambda (accum i) (treelist-sublist val-id 0 i)))
                            (list #`([stop-at #,(if (eqv? 0 (syntax-e #'rest-min))
                                                    #'null
                                                    #'(if (len . > . rest-min)
@@ -279,61 +277,69 @@
                                  (if splice-repetition?
                                      #'(lambda (lst j) (pairlist-sublist lst 0 j))
                                      #'(lambda (lst j) (car lst)))
-                                 (if splice-repetition?
-                                     #'(lambda (lst j) (list-tail lst j))
-                                     #'(lambda (lst j) (cdr lst)))
+                                 #'(lambda (lst) lst)
                                  (if splice-repetition?
                                      #'(lambda (lst j) (list-tail lst j))
                                      #'(lambda (lst j) (cdr lst)))
                                  ;; accum
                                  #'(lambda (accum lst) (cons (car lst) accum))
-                                 #'(lambda (accum lst) (reverse (cons (car lst) accum)))))])
+                                 #'(lambda (accum lst) (reverse accum))))])
           #`(begin
               (define evidence
                 (let* ([len (list-length val-id)]
                        bind ...)
                   (and
                    (check-length len)
-                   (let loop ([state init] [accum null])
-                     (cond
-                       [(state-done? state)
-                        #f]
+                   (let loop ([state init] [accum null] [n 0])
+                     ;; Greedy: try to consume more for `first`, and if that
+                     ;; fails, try matching `rest` against everything remaining
+                     ;; (which covers the case of zero `first` matches);
+                     ;; `n` counts `first` matches so far, to enforce `rep-min`
+                     ;; and `rep-max`
+                     (or
+                      (and
+                       (not (state-done? state))
+                       #,(if (syntax-e #'rep-max)
+                             #'(n . < . rep-max)
+                             #t)
                        #,(if (and (not splice-repetition?)
                                   (syntax-e #'no-rest-map?))
-                             #`[else
-                                (or (loop (state-next state 1) (accum-next accum state))
-                                    (let ([suffix (state-rest state 1)])
-                                      (rest-matcher-id suffix rest-data
-                                                       if/blocked
-                                                       (let ([result (accum-result accum state)])
-                                                         (vector (lambda () result) suffix #,@(flatten-tree #'rest-evidence-ids)))
-                                                       #f)))]
-                             #`[else
-                                (let sub-loop ([sub-state (init-sub-state state)])
-                                  (and
-                                   (substate-can? state sub-state)
-                                   (let ()
-                                     (define elem (state-first state sub-state))
-                                     (first-matcher-id elem first-data
-                                                       if/blocked
-                                                       (let* ([elem-evidence (lambda ()
-                                                                               (first-committer-id elem first-evidence-ids first-data)
-                                                                               (first-binder-id elem first-evidence-ids first-data)
-                                                                               (values (maybe-repetition-as-list first-bind-id first-bind-uses)
-                                                                                       ...))]
-                                                              [accum-evidence (cons elem-evidence accum)])
-                                                         (or (loop (state-next state sub-state) accum-evidence)
-                                                             (let ([suffix (state-rest state sub-state)])
-                                                               (rest-matcher-id suffix rest-data
-                                                                                if/blocked
-                                                                                (let ([getter (build-overall-rest-getter '(first-bind-id ...)
-                                                                                                                         accum-evidence)])
-                                                                                  (vector getter suffix #,@(flatten-tree #'rest-evidence-ids)))
-                                                                                #f))
-                                                             (and (substate-continue? state sub-state)
-                                                                  (sub-loop (next-sub-state state sub-state)))))
-                                                       (and (substate-continue? state sub-state)
-                                                            (sub-loop (next-sub-state state sub-state)))))))]))))))
+                             #`(loop (state-next state 1) (accum-next accum state) (add1 n))
+                             #`(let sub-loop ([sub-state (init-sub-state state)])
+                                 (and
+                                  (substate-can? state sub-state)
+                                  (let ()
+                                    (define elem (state-first state sub-state))
+                                    (first-matcher-id elem first-data
+                                                      if/blocked
+                                                      (let* ([elem-evidence (lambda ()
+                                                                              (first-committer-id elem first-evidence-ids first-data)
+                                                                              (first-binder-id elem first-evidence-ids first-data)
+                                                                              (values (maybe-repetition-as-list first-bind-id first-bind-uses)
+                                                                                      ...))]
+                                                             [accum-evidence (cons elem-evidence accum)])
+                                                        (or (loop (state-next state sub-state) accum-evidence (add1 n))
+                                                            (and (substate-continue? state sub-state)
+                                                                 (sub-loop (next-sub-state state sub-state)))))
+                                                      (and (substate-continue? state sub-state)
+                                                           (sub-loop (next-sub-state state sub-state)))))))))
+                      (and
+                       #,(if (eqv? 0 (syntax-e #'rep-min))
+                             #t
+                             #'(n . >= . rep-min))
+                       (let ([suffix (state-remaining state)])
+                         (rest-matcher-id suffix rest-data
+                                          if/blocked
+                                          (let ([getter #,(if (and (not splice-repetition?)
+                                                                   (syntax-e #'no-rest-map?))
+                                                              (if (null? (syntax-e #'(first-bind-id ...)))
+                                                                  #`(lambda () (values))
+                                                                  #`(let ([result (accum-result accum state)])
+                                                                      (lambda () result)))
+                                                              #`(build-overall-rest-getter '(first-bind-id ...)
+                                                                                           accum))])
+                                            (vector getter suffix #,@(flatten-tree #'rest-evidence-ids)))
+                                          #f))))))))
               (IF evidence success fail)))])]))
 
 (define-syntax (try-rest-committer stx)
