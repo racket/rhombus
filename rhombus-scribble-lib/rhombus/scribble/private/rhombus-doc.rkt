@@ -883,22 +883,11 @@
   "syntax class"
   rhombus/stxclass
   (lambda (stx space-name)
-    (syntax-parse stx
-      #:datum-literals (group)
-      [(group _ (~var id (identifier-target space-name)) . _) (attribute id.name)]))
-  (lambda (stx space-name vars)
-    (syntax-parse stx
+    (syntax-parse (unpack-group stx #f #f)
       #:datum-literals (group parens)
-      [(group _ (~var _ (identifier-target space-name)) (parens g ...) . _)
-       (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
-         (extract-binding-metavariables g vars))]
-      [_ vars]))
-  (lambda (stx space-name subst)
-    (syntax-parse stx
-      #:datum-literals (group)
-      [(group tag (~var id (identifier-target space-name)) e ...)
-       (rb #:at stx
-           #`(group tag #,@(subst (attribute id.name)) e ...))])))
+      [(group _::doc-form (~var id (identifier-target space-name)) . _) (attribute id.name)]))
+  parens-extract-metavariables
+  head-extract-typeset)
 
 (define-for-syntax (class-extract-descs stx)
   (syntax-parse stx

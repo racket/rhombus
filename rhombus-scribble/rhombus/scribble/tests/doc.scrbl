@@ -19,6 +19,7 @@
       rhombus/meta:
         expose:
           expr
+          expr_meta
           syntax_meta
       rhombus/scribble/tests/string_ext open
       rhombus/draw
@@ -326,5 +327,22 @@ Starting example:
 ){
 
  Actually a function.
+
+}
+
+@doc(
+  syntax_class expr_meta.Parsed(
+    pos,
+    pos_opt_a = 1 + 2,
+    pos_opt_b: println("2"); 1,
+    ~kw: kw,
+    ~kw_opt_a: kw_opt_a = 1 + 2,
+    ~kw_opt_b: kw_opt_b: println("2"); 1,
+  )
+){
+
+ A syntax class with complex arguments. Metavariables: @rhombus(pos),
+ @rhombus(pos_opt_a), @rhombus(pos_opt_b), @rhombus(kw),
+ @rhombus(kw_opt_a), and @rhombus(kw_opt_b).
 
 }

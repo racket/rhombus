@@ -799,6 +799,28 @@ check_spacer:
   | '($(bind.full) $unquote_bind, $bind)'
 
 check_spacer:
+  syntax_class Complex(
+    pos,
+    pos_opt_a = 1 + 2,
+    pos_opt_b: println("2"); 1,
+    ~kw: kw,
+    ~kw_opt_a = 1 + 2,
+    ~kw_opt_b: kw_opt_b = 1 + 2,
+    ~kw_opt_c: kw_opt_b: println("2"); 1,
+  )
+  | '$_'
+  $(defn.full) $none(
+    $bind,
+    $bind = $datum $expr $datum,
+    $bind: $body($datum); $datum,
+    $datum: $bind,
+    $datum = $datum $expr $datum,
+    $datum: $bind = $datum $expr $datum,
+    $datum: $bind: $body($datum); $datum,
+  )
+  | '$(bind.full) $unquote_bind'
+
+check_spacer:
   match stx
   | (pattern:
        kind ~group

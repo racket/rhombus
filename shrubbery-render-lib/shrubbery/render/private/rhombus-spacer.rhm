@@ -1227,16 +1227,6 @@ meta:
 
 spacer.bridge syntax_class(self, tail, context, esc):
   ~in: ~defn
-  fun adjust_bind(arg_bind):
-    match arg_bind
-    | (pattern:
-         kind ~group
-       | '$bind ... $(rhs :: Rhs)'
-       | '$bind ...: $(rhs :: Block)'):
-        let new_bind = spacer.adjust_sequence('$bind ...', #'~bind, esc)
-        let new_rhs = adjust_rhs(rhs, esc)
-        '$new_bind $new_rhs'.relocate_group(arg_bind)
-    | ~else: spacer.adjust_group(arg_bind, #'~bind, esc)
   fun adjust_name(name):
     match name
     | '$(name :: Name(esc))
@@ -1244,9 +1234,11 @@ spacer.bridge syntax_class(self, tail, context, esc):
              kind ~sequence
            | '$(args :: Args)'
            | '': field args = #false)':
+        fun adjust_bind(bind):
+          adjust_def(bind, esc).relocate_group(bind)
+        fun adjust_arg(arg):
+          adjust_kw_opt_arg(arg, esc, adjust_bind)
         let new_args:
-          fun adjust_arg(arg):
-            adjust_kw_opt_arg(arg, esc, adjust_bind)
           if args | adjust_args(args, adjust_arg) | ''
         '$name $new_args'
     | ~else: #false
