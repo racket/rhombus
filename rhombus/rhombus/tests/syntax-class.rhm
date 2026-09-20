@@ -759,6 +759,80 @@ block:
     x.stuff
     ~matches '"straw!"'
 
+block:
+  syntax_class House(material = "wood")
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House)' = '< < > >'
+    x.stuff
+    ~matches '"wood!"'
+  check:
+    def '$(x :: House("straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
+block:
+  syntax_class House(material: "wood")
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House)' = '< < > >'
+    x.stuff
+    ~matches '"wood!"'
+  check:
+    def '$(x :: House("straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
+block:
+  syntax_class House(~material: material)
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House(~material: "straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
+block:
+  syntax_class House(~material = "wood")
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House)' = '< < > >'
+    x.stuff
+    ~matches '"wood!"'
+  check:
+    def '$(x :: House(~material: "straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
+block:
+  syntax_class House(~material: material = "wood")
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House)' = '< < > >'
+    x.stuff
+    ~matches '"wood!"'
+  check:
+    def '$(x :: House(~material: "straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
+block:
+  syntax_class House(~material: material: "wood")
+  | '< < > >':
+      field stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House)' = '< < > >'
+    x.stuff
+    ~matches '"wood!"'
+  check:
+    def '$(x :: House(~material: "straw"))' = '< < > >'
+    x.stuff
+    ~matches '"straw!"'
+
 check:
   ~eval
   syntax_class House(material) | '< < > >'
@@ -767,8 +841,20 @@ check:
 
 check:
   ~eval
+  syntax_class House(~material: material) | '< < > >'
+  def '$(x :: House)' = #false
+  ~throws "syntax class expects arguments"
+
+check:
+  ~eval
   syntax_class Horse | '!!!'
   def '$(x :: Horse(1))' = #false
+  ~throws "syntax class does not expect arguments"
+
+check:
+  ~eval
+  syntax_class Horse | '!!!'
+  def '$(x :: Horse(~number: 1))' = #false
   ~throws "syntax class does not expect arguments"
 
 // field value does not have to be syntax

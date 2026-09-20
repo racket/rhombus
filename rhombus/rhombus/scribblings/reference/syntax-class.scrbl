@@ -53,8 +53,8 @@
 ){
 
  Defines a @deftech{syntax class} @rhombus(stxclass_id_name) that can be used in syntax patterns with
- @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments; unless all arguments are
- have devault values, every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
+ @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments; unless all arguments
+ have default values, every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
  arguments. An @rhombus(bind_id_maybe_kw_opt) is like a @rhombus(bind_maybe_kw_opt) for
  @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments

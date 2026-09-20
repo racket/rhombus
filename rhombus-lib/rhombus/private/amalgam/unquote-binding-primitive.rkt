@@ -85,7 +85,10 @@
   (define (parse-syntax-class-args stx-class rator-in arity-mask class-args auto-args)
     (cond
       [(or (not arity-mask)
-           (and (bitwise-bit-set? arity-mask 0)
+           (and (if (pair? arity-mask)
+                    (and (bitwise-bit-set? (car arity-mask) 0)
+                         (null? (cadr arity-mask)))
+                    (bitwise-bit-set? arity-mask 0))
                 (not (syntax-e class-args))))
        (when (syntax-e class-args)
          (raise-syntax-error #f

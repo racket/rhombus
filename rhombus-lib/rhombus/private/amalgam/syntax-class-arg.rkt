@@ -42,7 +42,7 @@
              #:with def? #'#t)
     (pattern (group kw:keyword _::equal rhs ...+)
              #:with (formal ...) (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (group rhs ...))])
-             #:with def? #'#f)
+             #:with def? #'#t)
     (pattern (group kw:keyword (_::block (group id:identifier _::equal rhs ...+)))
              #:with (formal ...) (list #'kw #`[id (rhombus-expression (group rhs ...))])
              #:with def? #'#t)
