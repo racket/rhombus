@@ -1,8 +1,4 @@
 #lang rhombus
-import:
-  lib("racket/base.rkt").#{object-name}
-  lib("racket/base.rkt").#{procedure-arity-mask}
-  lib("racket/base.rkt").#{procedure-keywords}
 
 class Posn(x, y)
 
@@ -204,12 +200,8 @@ block:
   check pythag(~c: 5, ~b: 4) ~is 3
   check pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
   check pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
-  check #{object-name}(pythag) ~is #'pythag
-  check #{procedure-arity-mask}(pythag) ~is 1
-  check:
-    #{procedure-keywords}(pythag)
-    ~is values(PairList[],
-               PairList[#'~a, #'~b, #'~c])
+  check pythag.name() ~is #'pythag
+  check pythag.arity() ~is values(1, [], [#'~a, #'~b, #'~c])
 
 block:
   fun
@@ -221,12 +213,8 @@ block:
   check rectangle_area(~width: 8.5, ~height: 11) ~is 93.5
   check rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
   check rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
-  check #{object-name}(rectangle_area) ~is #'rectangle_area
-  check #{procedure-arity-mask}(rectangle_area) ~is 1
-  check:
-    #{procedure-keywords}(rectangle_area)
-    ~is values(PairList[],
-               PairList[#'~aspect_ratio, #'~diagonal, #'~height, #'~width])
+  check rectangle_area.name() ~is #'rectangle_area
+  check rectangle_area.arity() ~is values(1, [], [#'~aspect_ratio, #'~diagonal, #'~height, #'~width])
 
 block:
   fun
@@ -238,12 +226,8 @@ block:
   check weird(1, ~arg2: 2) ~is values(1, 2)
   check weird(1, 2, ~arg3: 3, ~arg4: 4) ~is values(1, 2, 3, 4)
   check weird(5, 6, ~arg7: 7, ~arg8: 8) ~is values([5, 6], {#'~arg7: 7, #'~arg8: 8})
-  check #{object-name}(weird) ~is #'weird
-  check #{procedure-arity-mask}(weird) ~is -1
-  check:
-    #{procedure-keywords}(weird)
-    ~is values(PairList[],
-               #false)
+  check weird.name() ~is #'weird
+  check weird.arity() ~is values(-1, [], #false)
 
 block:
   fun
@@ -251,12 +235,8 @@ block:
   | overlap(arg1, ~arg1: also_arg1, ~arg2: arg2): values(arg1, also_arg1, arg2)
   check overlap(~arg1: 1) ~is 1
   check overlap(1, ~arg1: 1, ~arg2: 2) ~is values(1, 1, 2)
-  check #{object-name}(overlap) ~is #'overlap
-  check #{procedure-arity-mask}(overlap) ~is 3
-  check:
-    #{procedure-keywords}(overlap)
-    ~is values(PairList[#'~arg1],
-               PairList[#'~arg1, #'~arg2])
+  check overlap.name() ~is #'overlap
+  check overlap.arity() ~is values(3, [#'~arg1], [#'~arg1, #'~arg2])
 
 // check rest arguments
 block:
