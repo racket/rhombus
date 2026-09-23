@@ -9,6 +9,7 @@
          "parse.rkt"
          "static-info.rkt"
          "sequence-constructor-key.rkt"
+         "sequence-element-key.rkt"
          "index-result-key.rkt"
          "annotation-failure.rkt"
          "parens.rkt"
@@ -137,7 +138,8 @@
                                                          #`(#,seq-ctr-id #,e-plain)
                                                          #`(check-sequence-for-each 'form-id #,e-plain))]))
                                       #'repet
-                                      (or (extract-index-uniform-result
+                                      (or (syntax-local-static-info #'e.parsed #'#%sequence-element)
+                                          (extract-index-uniform-result
                                            (syntax-local-static-info #'e.parsed #'#%index-result))
                                           #'())
                                       0)

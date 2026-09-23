@@ -693,7 +693,11 @@ block:
     method bork():
       println("woof! " +& name)
   check:
-    let lst :: PairList.of(Doggo) = PairList[Doggo("Spot"), Doggo("Rover")]
+    let lst = PairList[Doggo("Spot"), Doggo("Rover")]
+    Function.pass((each lst).bork(), ...)
+    ~prints "woof! Spot\nwoof! Rover\n"
+  check:
+    let lst :: PairList.of(Doggo) = dynamic(PairList[Doggo("Spot"), Doggo("Rover")])
     Function.pass((each lst).bork(), ...)
     ~prints "woof! Spot\nwoof! Rover\n"
 

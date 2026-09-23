@@ -885,7 +885,11 @@ block:
     method bork():
       println("woof! " +& name)
   check:
-    let lst :: List.of(Doggo) = [Doggo("Spot"), Doggo("Rover")]
+    let lst = [Doggo("Spot"), Doggo("Rover")]
+    Function.pass((each lst).bork(), ...)
+    ~prints "woof! Spot\nwoof! Rover\n"
+  check:
+    let lst :: List.of(Doggo) = dynamic([Doggo("Spot"), Doggo("Rover")])
     Function.pass((each lst).bork(), ...)
     ~prints "woof! Spot\nwoof! Rover\n"
 

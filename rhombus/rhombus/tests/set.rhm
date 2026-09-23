@@ -1385,3 +1385,21 @@ check:
   ~throws values("length",
                  "no such field or method",
                  "based on static information")
+
+check:
+  { each { 1, 2, 3 }, ... } ~is { 1, 2, 3 }
+
+// check element static info in `each`
+block:
+  use_static
+  class Doggo(name):
+    method bork():
+      "woof! " +& name
+  check:
+    let st = { Doggo("Spot"), Doggo("Rover") }
+    { (each st).bork(), ... }
+    ~is { "woof! Spot", "woof! Rover" }
+  check:
+    let st :: Set.of(Doggo) = dynamic({ Doggo("Spot"), Doggo("Rover") })
+    { (each st).bork(), ... }
+    ~is { "woof! Spot", "woof! Rover" }
