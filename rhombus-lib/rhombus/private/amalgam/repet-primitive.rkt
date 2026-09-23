@@ -134,7 +134,8 @@
         (define seq-ctr-id (syntax-local-static-info #'e.parsed #'#%sequence-constructor))
         (define e-plain (discard-static-infos #'e.parsed))
         (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
-                                      #`(([(repet) #,(if seq-ctr-id
+                                      #`(([(repet) #,(if (and seq-ctr-id
+                                                              (not (eq? (syntax-e seq-ctr-id) #t)))
                                                          #`(#,seq-ctr-id #,e-plain)
                                                          #`(check-sequence-for-each 'form-id #,e-plain))]))
                                       #'repet
