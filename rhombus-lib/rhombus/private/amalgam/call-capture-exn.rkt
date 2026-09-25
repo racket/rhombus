@@ -22,7 +22,9 @@
                                (cond
                                  [use-error-display?
                                   (define o (open-output-string))
-                                  (parameterize ([current-error-port o])
+                                  (parameterize ([current-error-port o]
+                                                 [error-print-context-length 0]
+                                                 [error-print-source-location #f])
                                     ((error-display-handler) (exn-message exn) exn))
                                   (get-output-string o)]
                                  [else

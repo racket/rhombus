@@ -178,3 +178,17 @@ check:
 check:
   check 10 ~prints values("ok", #'oops)
   ~throws values(error.annot_msg("`~prints` clause result"))
+
+// check that a stack traces and source locations
+// don't leak into error-message matching
+block:
+  fun interp(x :: Int) :: Int:
+    error(~who: #'oops, "bad") + 1
+  check_check:
+    Function.black_box(interp)(1)
+    ~success:
+      ~throws "oops"
+      ~throws "bad"
+    ~failure:
+      ~throws "interp" ~expected "exception \"interp\""
+      ~throws "check" ~expected "exception \"check\""
