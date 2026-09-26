@@ -184,7 +184,7 @@
 
 @doc(
   property (lib :: Lib).handle :: Any
-  fun Lib.from_handle(lib :: Any) :: Lib
+  fun Lib.from_handle(name :: maybe(PathString), lib :: Any) :: Lib
 ){
 
  Converts to and from a representation of a foreign library that is

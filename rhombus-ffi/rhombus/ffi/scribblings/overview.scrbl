@@ -138,7 +138,11 @@ versions to try (where @rhombus(#false) tries omitting the version):
     import:
       ffi open
   ~defn:
-    def cairo_lib = Lib.load("libcairo", ["2", #false])
+    ~fake:
+      def cairo_lib = Lib.load("libcairo", ["2", #false])
+      :
+        import lib("racket/draw/unsafe/cairo-lib.rkt").#{cairo-lib}
+        def cairo_lib = Lib.from_handle("libcairo", #{cairo-lib})
 )
 
 Knowing the library's name and/or path is often the trickiest part of
@@ -152,13 +156,8 @@ Using the base file name @filepath{libcairo} with version @filepath{2}
 is likely to find the library as bundled with Racket or as supplied by
 the operating system---usually something like
 @filepath{/usr/lib/libcairo.2.so} on a Unix installation.
-
-On Windows, if you are not running in DrRacket, then
-@filepath{libcairo-2.dll} will be found, but loading it may fail
-because its dependencies cannot be found; the DLLs bundled with Racket
-are not in the operating system's search path. The easy solution is to
-import @rhombus(lib("racket/draw/unsafe/cairo-lib.rkt")), which will
-load all dependencies.
+See also @racketmodname(lib("racket/draw/unsafe/cairo-lib.rkt"), ~indirect)
+and @rhombus(Lib.from_handle).
 
 @// --------------------------------------------------
 
@@ -380,7 +379,11 @@ code and the result that DrRacket shows:
       pict
       rhombus/rkt_obj
   ~defn:
-    def cairo_lib = Lib.load("libcairo", ["2", #false])
+    ~fake:
+      def cairo_lib = Lib.load("libcairo", ["2", #false])
+      :
+        import lib("racket/draw/unsafe/cairo-lib.rkt").#{cairo-lib}
+        def cairo_lib = Lib.from_handle("libcairo", #{cairo-lib})
     foreign.linker cairo:
       ~lib: cairo_lib
   ~defn:
