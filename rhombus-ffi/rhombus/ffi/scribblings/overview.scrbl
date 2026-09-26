@@ -788,7 +788,8 @@ write out bytes of the PNG encoding:
 @examples(
   ~eval: ffi_eval
   ~defn:
-    def png_out = Port.Output.open_file("/tmp/img.png", ~exists: #'truncate)
+    def img_png = system.path(#'temp_dir) +/ "img.png"
+    def png_out = Port.Output.open_file(img_png, ~exists: #'truncate)
   ~defn:
     cairo_surface_write_to_png_stream(
       cast (cairo_surface_t*) bt_surface,
@@ -914,7 +915,8 @@ invocation:
       def the_counter = new ~immobile int_t
     the_counter[0] := 0
   ~defn:
-    def png_out = Port.Output.open_file("/tmp/img.png", ~exists: #'truncate)
+    def img_png = system.path(#'temp_dir) +/ "img.png"
+    def png_out = Port.Output.open_file(img_png, ~exists: #'truncate)
   ~defn:
     :
       // CAUTION: maybe do not run, because this may crash!
