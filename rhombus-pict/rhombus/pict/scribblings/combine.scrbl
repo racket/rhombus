@@ -207,12 +207,12 @@
     to :: Find,
     ~find: find_mode :: FindMode = #'always,
     ~style: style :: ConnectStyle = #'line,
-    ~line: color :: ColorMode = #'inherit,
-    ~line_width: width :: LineWidth = #'inherit,
-    ~line_width: width :: ConnectLineStyle = #'solid,
+    ~line: line :: ColorMode = #'inherit,
+    ~line_width: line_width :: LineWidth = #'inherit,
+    ~line_style: line_style :: ConnectLineStyle = #'solid,
     ~order: order :: OverlayOrder = #'front,
     ~arrow_size: arrow_size :: Real = 16,
-    ~arrow_solid: solid = #true,
+    ~arrow_solid: arrow_solid = #true,
     ~arrow_hidden: hidden = #false,
     ~start_angle: start_angle :: maybe(Real) = #false,
     ~start_pull: start_pull :: maybe(Real) = #false,
@@ -226,7 +226,7 @@
   ) :: Pict
 ){
 
- Returns a @tech{pict} like @rhombus(on_pict), but with a line added to
+ Returns a @tech{pict} like @rhombus(on_pict), but with a curve added to
  connect @rhombus(from) to @rhombus(to).
 
  If @rhombus(find_mode) is @rhombus(#'always), then if @rhombus(form) or
@@ -234,6 +234,34 @@
  then an exception is thrown. If @rhombus(find_mode) is
  @rhombus(#'maybe), then when @rhombus(from) or @rhombus(to) fails to
  find a position, a line is not added.
+
+ The @rhombus(style) argument determines which ends of the connecting
+ line have an arrow: neither, the starting end, or both ends. The
+ @rhombus(line) color, @rhombus(line_width), and @rhombus(line_style)
+ arguments configure the connecting curve's drawing. The
+ @rhombus(arrow_size) and @rhombus(arrow_solid) argument configure each
+ arrow's drawing. If @rhombus(arrow_hidden) is true, then space for the
+ arrow is kept at a line end, but the arrow is not drawn.
+
+ The @rhombus(start_angle) and @rhombus(start_pull) arguments determine
+ how a connecting curve is drawn going out from the starting point, where
+ @rhombus(start_angle) is in radians going out and @rhombus(start_pull)
+ corresponds to a fraction of the distance between the start and end
+ points. A @rhombus(#false) for @rhombus(start_angle) corresponds to a
+ straight line from the starting to ending position. A @rhombus(#false)
+ value for @rhombus(start_pull) corresponds to @rhombus(0.25), and other
+ values make the starting angle bend more or less slowly. The
+ @rhombus(end_angle) and @rhombus(end_pull) arguments similarly determine
+ the shape of the connection going into the ending point.
+
+ If @rhombus(label) is not @rhombus(#false), it is used as a label for
+ the connection drawn half-way between the starting and ending point, and
+ @rhombus(label_dx) and @rhombus(label_dy) move the label relative to
+ its default position.
+
+ The given pict and @tech{finders} are first made concurrent in the same
+ sense as by @rhombus(concurrent) using @rhombus(duration_align) and
+ @rhombus(epoch_align).
 
 @examples(
   ~eval: pict_eval
@@ -245,6 +273,15 @@
           ~style: #'arrow,
           ~line: "red",
           ~arrow_size: 8)
+  connect(~on: beside(~sep: 32, sq, circ),
+          Find.right(sq),
+          Find.left(circ),
+          ~style: #'arrow,
+          ~line: "red",
+          ~arrow_size: 8,
+          ~start_angle: 1/4 * math.pi,
+          ~start_pull: 0.5,
+          ~end_angle: -1/4 * math.pi)
 )
 
 
