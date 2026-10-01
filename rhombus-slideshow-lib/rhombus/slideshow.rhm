@@ -103,7 +103,7 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
           ~sep: sep :: Real = gap,
           ~horiz: horiz :: pict.HorizAlignment = #'center,
           ~lead_in: lead_in = #false,
-          ~aspect: aspect :: Aspect= #'widescreen,
+          ~aspect: aspect :: Aspect = #'widescreen,
           content :: SlideContent, ...):
   let p = slide_content_pict(~sep: sep, ~horiz: horiz,
                              flatten_slide_content(#'slide, [content, ...]))
@@ -116,9 +116,12 @@ fun slide(~title: title :: maybe(String || Pict) = #false,
                                     #'aspect: aspect })
     | values(p, lead_in)
   when lead_in && !rkt.#{condense?}
-  | rkt_play.#{play-n}(~name: name,
+  | let extent = p.epoch_extent(-1)
+    rkt_play.#{play-n}(~name: name,
                        ~#{skip-first?}: #true,
                        ~#{skip-last?}: #true,
+                       ~aspect: aspect,
+                       ~steps: math.exact(math.round(10 * extent / 0.5)),
                        ~& if can_page_mode
                        | { #'~#{page-mode}: #'none }
                        | {},
