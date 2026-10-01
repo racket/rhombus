@@ -5,12 +5,12 @@
 (define deps
   '(["base" #:version "9.2"]
     "rhombus-lib"
-    ["ffi2-lib" #:version "1.1"]))
+    ["ffi2-lib" #:version "1.2"]))
 
 (define pkg-desc "implementation (no documentation) part of \"rhombus-ffi\"")
 
 (define license '(Apache-2.0 OR MIT))
 
-(define version "1.1")
+(define version "1.2")
 
 (define language-families '("Rhombus"))

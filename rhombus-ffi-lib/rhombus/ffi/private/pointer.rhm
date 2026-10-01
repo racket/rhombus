@@ -24,6 +24,8 @@ import:
       #{ptr_t->cpointer}
       #{cpointer->ptr_t}
       #{ptr_t/gcable?}
+      #{ptr_t/gcable->ptr_t}
+      #{ptr_t->ptr_t/gcable}
 
 export:
   ptr_t
@@ -43,6 +45,8 @@ export:
   uintptr_to_ptr
   ptr_to_cpointer
   cpointer_to_ptr
+  gcable_ptr_to_ptr
+  ptr_to_gcable_ptr
   GCable_ptr_t
 
 module mode:
@@ -395,6 +399,12 @@ fun ptr_to_cpointer(p :: ptr_t):
 
 fun cpointer_to_ptr(cp) :~ ptr_t:
   #{cpointer->ptr_t}(cp)
+
+fun gcable_ptr_to_ptr(p :: ptr_t) :~ ptr_t:
+  #{ptr_t/gcable->ptr_t}(p)
+
+fun ptr_to_gcable_ptr(p :: ptr_t) :~ ptr_t:
+  #{ptr_t->ptr_t/gcable}(p)
 
 annot.macro 'GCable_ptr_t':
   annot_meta.pack_predicate('#{ptr_t/gcable?}',

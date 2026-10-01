@@ -16,6 +16,9 @@ block:
   let p_is = new int_t[5+5]
   check p_is ~is_a ptr_t
 
+  check p_i ~is_a GCable_ptr_t
+  check ptr_to_gcable_ptr(p_i) ~is_a GCable_ptr_t
+
   let p_is_init = new int_t { 1, 2, 3, 4 }
   check p_is_init ~is_a ptr_t
 
@@ -89,6 +92,8 @@ block:
   let p = new ~manual int_t[1]
   check p is_a ptr_t ~is #true
   check p is_a ptr_t/gcable ~is #false
+  check gcable_ptr_to_ptr(p) is_a GCable_ptr_t ~is #false
+  check ptr_to_gcable_ptr(p) ~is_a GCable_ptr_t
   free(p)
 
 check:

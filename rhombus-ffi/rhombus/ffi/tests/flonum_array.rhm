@@ -1,0 +1,21 @@
+#lang rhombus/static
+import:
+  ffi open
+  rhombus/flonum
+
+block:
+  let flv = flonum.Array(1.0, 2.0)
+  let p :~ foreign.type double_t* = cast ~from (flonum_array_ptr_t) ~to (ptr_t) flv
+  check p ~is_a ptr_t
+  check p ~is_a GCable_ptr_t
+  check p[0] ~is 1.0
+  check p[1] ~is 2.0
+  check p[0] := 10.0 ~is #void
+  check flv[0] ~is 10.0
+  check:
+    cast ~from (flonum_array_ptr_t) ~to (ptr_t) #'not_me
+    ~throws: values("does not match",
+                    "type: flonum_array_ptr_t")
+  check:
+    cast ~from (ptr_t) ~to (flonum_array_ptr_t) p
+    ~throws: "cannot convert"

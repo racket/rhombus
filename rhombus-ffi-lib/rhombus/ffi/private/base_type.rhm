@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "type.rhm" open
+  "flonum_array.rkt".flonum_array_ptr_t as rkt_flonum_array_ptr_t
 
 meta:
   namespace ffi2:
@@ -85,3 +86,8 @@ module string:
   export type.macro 'mutable_string_utf16_t':
     ~all_stx: stx
     type_meta.pack_pointable(ffi2.pack('string_utf16_t'), 'String').relocate(stx)
+
+export type.macro 'flonum_array_ptr_t':
+  ~all_stx: stx
+  type_meta.pack_pointable(ffi2.pack('rkt_flonum_array_ptr_t'), 'Flonum').relocate(stx)
+export annot.macro 'flonum_array_ptr_t': 'Flonum'

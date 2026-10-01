@@ -57,7 +57,7 @@ garbage collector is independent of its tags.
  The @as_indexed{@rhombus_t(/gcable)} type operator (more precisely, a
  @rhombus_t(/) operator that expects a subsequent literal
  @rhombus_t(gcable) always) requires that the argument @rhombus(type) is
- a pointer type, and it describes a type that is the same, but that
+ a pointer type, and it describes a type that is the same, but for a @tech{gcable pointer}
  represents an address within memory that is managed by Rhombus's garbage
  collector. The Rhombus-to-C conversion of a @rhombus_t(/gcable) pointer
  is no different that for the original pointer type (i.e., it is not
@@ -65,7 +65,7 @@ garbage collector is independent of its tags.
  handling of a C address representation to a Rhombus representation.
 
  The @rhombus(GCable_ptr_t, ~annot) annotation is satisfied only by
- pointer objects that are allowed to reference memory that is managed
+ @tech{gcable pointer} objects that are allowed to reference memory that is managed
  Racket's garbage collector. In contrast,
  @rhombus(foreign.type ptr_t/gcable, ~annot) as an annotation is
  satisified by any pointer object, since @rhombus_t(ptr_t/gcable) accepts any
@@ -172,7 +172,7 @@ garbage collector is independent of its tags.
 @itemlist(
 
  @item{@rhombus(~gcable): Allocates in Rhombus's garbage-collected
-  space. The allocated memory becomes eligible for garbage collection when
+  space and returns a @tech{gcable pointer}. The allocated memory becomes eligible for garbage collection when
   it is not referenced by any reachable pointer object or @tech{traced}
   allocated memory. Even before collection, the memory manager may relocate
   the object, but garbage collection or relocation cannot happen with a
@@ -192,7 +192,8 @@ garbage collector is independent of its tags.
   memory manager as long as it is not collected.}
 
  @item{@rhombus(~manual): Allocates outside of Rhombus's
-  garbage-collected space. The allocated memory is never relocated by the
+  garbage-collected space and returns a non-gcable pointer.
+  The allocated memory is never relocated by the
   garbage collection, and it must be freed explicitly with
   @rhombus(free).}
 
@@ -373,7 +374,7 @@ garbage collector is independent of its tags.
     expr: block
   expr.macro 'cast $maybe_from_type $maybe_to ($to_type) $maybe_offset $expr'
   grammar maybe_from_type
-  | ~from $from_type
+  | ~from ($from_type)
   | ϵ
   grammar maybe_to
   | ~to
@@ -392,12 +393,17 @@ garbage collector is independent of its tags.
  or the converted result (based on @rhombus(to_type)) of the cast
  address.
 
+ The @rhombus(to_type) must not be a @rhombus_t(/gcable) type, because
+ conversion of a @tech{gcable pointer} is managed automatically. The
+ result of @rhombus(cast) is a gcable pointer if and only if the
+ result of @rhombus(expr) is a gcable pointer.
+
  If @rhombus(~offset (offset_expr)) is specified, then the
  (pre-conversion) address produced by the cast is @rhombus(offset_expr)
  bytes after the address represented by the converted result of
  @rhombus(expr). A @rhombus(~offset (offset_expr)) is allowed only when
  @rhombus(to_type) has an address representation.
-
+ See @secref("gcable-pointers") for more information about using offset pointers.
 
 @examples(
   ~eval: ffi_eval
@@ -489,8 +495,21 @@ garbage collector is independent of its tags.
 }
 
 @doc(
+  fun ptr_to_gcable_ptr(ptr :: ptr_t) :: ptr_t
+  fun gcable_ptr_to_ptr(ptr :: ptr_t) :: ptr_t
+){
+
+ Conversions between @tech{gcable pointers} and non-gcable pointers. See
+ also @secref("gcable-pointers").
+
+@(history:
+    ~added "1.2")
+
+}
+
+@doc(
   fun ptr_to_cpointer(ptr :: ptr_t) :: Any
-  fun cpointer_to_ptr(addr :: uintptr_t) :: ptr_t
+  fun cpointer_to_ptr(cptr :: Any) :: ptr_t
 ){
 
  Conversions between addresses represented as @tech{pointer} objects and

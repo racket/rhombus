@@ -15,5 +15,6 @@ abbreviated @defterm{FFI}.
 @table_of_contents()
 
 @include_section("overview.scrbl")
+@include_section("memory.scrbl")
 @include_section("api.scrbl")
 @include_section("more.scrbl")

@@ -198,6 +198,24 @@
 
 }
 
+@doc(
+  foreign.type flonum_array_ptr_t
+){
+
+ For Rhombus-to-C conversion, @rhombus_t(flonum_array_ptr_t) converts a
+ @tech(~doc: ref_doc){flonum array} to a pointer that refers to the array
+ content like @rhombus_t(double_t*) and where mutation of pointer content
+ on the C side is reflected as changes to the flonum array content.
+
+ The @rhombus_t(flonum_array_ptr_t) type does not support C-to-Rhombus
+ conversion. Attempting a conversion in that direction raises an
+ exception.
+
+@(history:
+    ~added "1.2")
+
+}
+
 
 @doc(
   foreign.type racket_t
