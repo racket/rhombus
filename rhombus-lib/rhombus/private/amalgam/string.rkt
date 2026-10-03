@@ -481,19 +481,23 @@
                                 (loop (+ i 1))
                                 i)]))
                        0))
-      (define right (if end?
-                        (let loop ([i len])
-                          (cond
-                            [(= i 0) i]
-                            [else
-                             (define ch (string-ref s1 (- i 1)))
-                             (if (space? ch)
-                                 (loop (- i 1))
-                                 i)]))
-                        len))
-      (if (and (= left 0) (= right len))
-          s1
-          (substring s1 left right))]
+      ;; If left reached len, entire string is whitespace
+      (cond
+        [(= left len) ""]
+        [else
+         (define right (if end?
+                           (let loop ([i len])
+                             (cond
+                               [(= i 0) i]
+                               [else
+                                (define ch (string-ref s1 (- i 1)))
+                                (if (space? ch)
+                                    (loop (- i 1))
+                                    i)]))
+                           len))
+         (if (and (= left 0) (= right len))
+             s1
+             (substring s1 left right))])]
      [else
       (unless (or (string? sep) (rx? sep))
         (raise-annotation-failure who sep "ReadableString || RX"))
