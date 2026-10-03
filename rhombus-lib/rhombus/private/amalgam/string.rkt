@@ -493,7 +493,9 @@
                         len))
       (if (and (= left 0) (= right len))
           s1
-          (substring s1 left right))]
+          (if (>= left right)
+              ""
+              (substring s1 left right)))]
      [else
       (unless (or (string? sep) (rx? sep))
         (raise-annotation-failure who sep "ReadableString || RX"))

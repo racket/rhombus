@@ -145,6 +145,8 @@ block:
     "_Hello__".trim("_", ~repeat: #true) ~is "Hello"
     "_Hello__".trim("_", ~start: #false) ~is "_Hello_"
     "_Hello__".trim("_", ~end: #false) ~is "Hello__"
+    "    ".trim() ~is ""
+    "".trim() ~is ""
     "Hello".copy() ~is_now "Hello"
     "Hello".copy() == "Hello" ~is #false
     "Hello".snapshot() ~is_now "Hello"
@@ -212,6 +214,8 @@ check:
   dynamic("Hello World").split() ~is ["Hello", "World"]
   dynamic("Hello World").split("l", ~repeat: #true) ~is ["He", "o Wor", "d"]
   dynamic(" Hello  ").trim() ~is "Hello"
+    dynamic("    ").trim() ~is ""
+    dynamic("").trim() ~is ""
   dynamic("_Hello__").trim("_", ~start: #false) ~is "_Hello_"
   dynamic("Hello").copy() ~is_now "Hello"
   dynamic("Hello").snapshot() ~is "Hello"
