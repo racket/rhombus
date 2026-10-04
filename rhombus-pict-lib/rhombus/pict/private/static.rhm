@@ -1518,7 +1518,7 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
     | values(x, y)
     | error(~who: #'#{Find.in},
             if y
-            | "pict location is ambigious"
+            | "pict location is ambiguous"
             | "cannot find pict",
             error.val(~label: "pict", q),
             error.val(~label: "in pict", p))
@@ -1619,7 +1619,7 @@ fun offset(proc, dx, dy, dx_w, dy_h):
             values((r - l) * dx_w, (b - t) * dy_h)
         fun fail(x :: Exn.Fail):
           if x.message.contains("ambiguous")
-          | values(#false, #'ambigious)
+          | values(#false, #'ambiguous)
           | values(#false, #false)
         match q
         | q :: StaticPict:
@@ -1851,11 +1851,11 @@ fun connect(~on: p :: Pict,
                     if from_x
                     | let (to_x, to_y) = to.maybe_in(p, dt, n, ~nth: 0)
                       if to_x
-                      | "ambigious \"to\" pict"
+                      | "ambiguous \"to\" pict"
                       | "cannot find \"to\" pict"
                     | let (from_x, from_y) = from.maybe_in(p, dt, n, ~nth: 0)
                       if from_x
-                      | "ambigious \"from\" pict"
+                      | "ambiguous \"from\" pict"
                       | "cannot find \"from\" pict",
                     error.val(~label: "finder", if from_x | from | to),
                     error.val(~label: "in pict", p))
@@ -1932,7 +1932,7 @@ fun pin(q :: Pict,
               when !at_x && (at_y || find_mode == #'always)
               | error(~who: #'pin,
                       if at_y
-                      | "pict location is ambigious"
+                      | "pict location is ambiguous"
                       | "cannot find pict",
                       error.val(~label: "finder", at),
                       error.val(~label: "in pict", p))

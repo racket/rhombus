@@ -13,7 +13,7 @@
 ;;  * identifer             ; equivalent to (list identifier)
 ;;  * (list identifier ...) ; created by "or"; try each `identifier` until success
 ;;
-;; It's possible for the search through on alts list to be ambigious, especially
+;; It's possible for the search through on alts list to be ambiguous, especially
 ;; if a non-checking `:~` is used with a `&&` annotation. Absent a good idea on
 ;; how to check that, the strategy here is to just try left-to-right.
 

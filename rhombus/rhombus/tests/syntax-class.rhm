@@ -1212,8 +1212,8 @@ block:
     matcher x
     ~matches '1'
 
-// field names are recognized symbolically, so  make
-// sure they're not ambigious
+// field names are recognized symbolically, so make
+// sure they're not ambiguous
 check:
   ~eval
   import rhombus/meta open
