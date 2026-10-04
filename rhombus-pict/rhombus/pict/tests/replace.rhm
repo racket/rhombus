@@ -59,7 +59,7 @@ check:
   image_of(build3(r).replace(r, c)) ~is image_of(build3(c))
   image_of(build3(r).snapshot(1, 0).replace(r, c)) ~is image_of(build3(c).snapshot(1, 0))
   image_of(build3(r).replace(r, c).snapshot(1, 0)) ~is image_of(build3(c).snapshot(1, 0))
-  swell(r).snapshot(0, 0.5).replace(r, c).find_rebuilt(r) ~is #false
+  image_of(swell(r).snapshot(0, 0.5).replace(r, c).find_rebuilt(r)) ~is image_of(c)
   image_of(swell(big_r).snapshot(0, 0.5).replace(r, c).find_rebuilt(big_r)) ~is image_of(big_c)
   image_of(swell(big_r).snapshot(0, 0.5, ~rebuild_prompt: #false).replace(r, c).find_rebuilt(big_r)) ~is image_of(big_c)
   swell(r).snapshot(0, 0.5).replace(r, c).find_rebuilt(c) ~is c
