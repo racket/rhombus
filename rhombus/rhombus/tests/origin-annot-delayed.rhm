@@ -6,4 +6,12 @@ annot.delayed_declare Forward
 
 annot.delayed_complete Forward: Int
 
+
+// Test that error message suggests delayed annotations (issue #539)
+block:
+  annot.macro 'E': 'Int || C || D'
+  class.together:
+    class C(c :: List.of(E))
+    class D(d :: E)
+  ~throws "annot.delayed_declare"
 10 :: Forward

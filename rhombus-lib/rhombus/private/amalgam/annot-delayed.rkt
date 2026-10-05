@@ -55,7 +55,8 @@
      (case-lambda
        [()
         (or static-infos
-            (raise-syntax-error who "annotation static information needed before completed"))]
+            (raise-syntax-error who
+                                "annotation static information needed before completed; consider using `annot.delayed_declare` and `annot.delayed_complete` to handle mutually recursive annotations"))]
        [(si)
         (set! static-infos si)]))))
 
