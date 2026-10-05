@@ -504,12 +504,14 @@ class StaticPict(private _handle,
         static_pict(rkt.refocus(_handle, to_p.handle), this, _instances,
                     ~dependencies: [this, to_p], retry)
     | ~else:
-        let to_handle = find_instance(this, to_p)
-        if to_handle
+        let (to_handle, ambiguous) = find_instance(this, to_p)
+        if to_handle && !ambiguous
         | static_pict(rkt.refocus(handle, to_handle), this, _instances,
                       ~dependencies: [this, to_p], retry)
         | error(~who: #'refocus,
-                "pict not found",
+                if ambiguous
+                | "pict location is ambiguous"
+                | "pict not found",
                 error.val(~label: "pict", to_p),
                 error.val(~label: "within pict", this))
 
@@ -745,13 +747,20 @@ fun static_instance([p :: Pict, ...], as_p :: _StaticPict,
                 ~config: config)
 
 fun find_instance(p :: _StaticPict, q :~ Pict):
-  recur loop (instances :: List = p._instances):
-    for any (inst in instances):
-      match inst
-      | Pair(key, handle):
-          key === q.identity && handle
-      | ~else:
-          loop(inst)
+  recur loop (instances :: List = p._instances, count = 0, found = #false):
+    match instances
+    | []:
+        values(found, count > 1)  // return handle and whether multiple found
+    | [inst, ...rest]:
+        match inst
+        | Pair(key, handle):
+            if key === q.identity
+            | loop(rest, count + 1, handle || found)
+            | loop(rest, count, found)
+        | ~else:
+            // nested list, recurse into it
+            let (nested_found, nested_count) = loop(inst, 0, #false)
+            loop(rest, count + nested_count, nested_found || found)
 
 def default_font = draw.Font()
 
@@ -1511,6 +1520,8 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
           t_find_or_dt,
           is_animated)
 
+  method to_string():
+    "Find(" ++ q.to_string() ++ ")"
   method in(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
             ~nth: nth :: Nat || matching(#'unique) = #'unique) :~ values(Real, Real):
     let (x, y) = find(p, q, epoch, n, nth)
@@ -1624,18 +1635,21 @@ fun offset(proc, dx, dy, dx_w, dy_h):
         match q
         | q :: StaticPict:
             try:
-              let q_handle = find_instance(p, q) || q.handle
-              let (x, y):
-                if nth_ok
-                | proc(p.handle, q_handle, ~nth: nth)
-                | proc(p.handle, q_handle)
-              let (dx_w, dy_h) = size_shift(p.handle, q_handle)
-              values(x + dx + dx_w, y + dy + dy_h)
+              let (q_handle, ambiguous) = find_instance(p, q)
+              if ambiguous
+              | values(#false, #'ambiguous)
+              | let actual_handle = q_handle || q.handle
+                let (x, y):
+                  if nth_ok
+                  | proc(p.handle, actual_handle, ~nth: nth)
+                  | proc(p.handle, actual_handle)
+                let (dx_w, dy_h) = size_shift(p.handle, actual_handle)
+                values(x + dx + dx_w, y + dy + dy_h)
               ~catch x :: Exn.Fail:
                 fail(x)
         | ~else:
-            let q_handle = find_instance(p, q)
-            if q_handle
+            let (q_handle, ambiguous) = find_instance(p, q)
+            if q_handle && !ambiguous
             | try:
                 let (x, y):
                   if nth_ok
@@ -1645,7 +1659,9 @@ fun offset(proc, dx, dy, dx_w, dy_h):
                 values(x + dx + dx_w, y + dy + dy_h)
                 ~catch x :: Exn.Fail:
                   fail(x)
-            | values(#false, #false)
+            | if ambiguous
+              | values(#false, #'ambiguous)
+              | values(#false, #false)
 
 fun abs(dx :: Real, dy :: Real, ~dt: dt :: Int = 0) :: Find:
   fun find (p, q, epoch, n, nth):

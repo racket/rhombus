@@ -12,3 +12,15 @@ check:
   Find.top_left(rect).in(circ_rect) ~is values(0,50)
   Find(circ).in(circ) ~is values(circ.width/2, circ.height/2)
   Find.top_left(circ).translate(2,3).in(circ) ~is values(2,3)
+
+// Test that ambiguous pict detection works (issue #759)
+block:
+  let par_bars = square()
+  let combined = stack(par_bars, par_bars)
+  let ell = circle()
+  pin(ell, ~on: combined, ~at: Find.center(par_bars))
+  ~throws "ambiguous"
+
+// Test that Find displays the pict (issue #759)
+check:
+  Find.center(circ).to_string() ~is_a String
