@@ -1530,6 +1530,15 @@ class Find(private q :~ Pict, private find, private t_find_or_dt, private is_ani
     | values(x, y)
     | values(#false, #false)
 
+  // internal protocol lets us return `#false` and `#'ambigious`;
+  // externally, ambiguity currently can be determined by checking whether
+  // `~nth: 0`, and `~nth: #'ambiguous` produce different results, but
+  // we take advantage of a more awkward protocol internally
+  private method in_or_ambiguous(p :: Pict, epoch :: Int = 0, n :: Real.in(0, 1) = 0,
+                                 ~nth: nth :: Nat || matching(#'unique) = #'unique)
+    :~ values(maybe(Real), maybe(Real) || matching(#'ambigious)):
+      find(p, q, epoch, n, nth)
+
   method start_in(p :: Pict) :~ Int:
     fun loop (p :~ Pict, delta):
       if p.identity == q.identity
@@ -1697,8 +1706,8 @@ fun interpolate(from :: Find,
           | i_n .= 0: from.in(p, epoch, n, ~nth: nth)
           | i_n .= 1: to.in(p, epoch, n, ~nth: nth)
           | ~else:
-              let (from_x, from_y) = from.maybe_in(p, epoch, n, ~nth: nth)
-              let (to_x, to_y) = to.maybe_in(p, epoch, n, ~nth: nth)
+              let (from_x, from_y) = _Find.in_or_ambiguous(from, p, epoch, n, ~nth: nth)
+              let (to_x, to_y) = _Find.in_or_ambiguous(to, p, epoch, n, ~nth: nth)
               if from_x && to_x
               | values(from_x * (1 - i_n) + to_x * i_n,
                        from_y * (1 - i_n) + to_y * i_n)
@@ -1798,8 +1807,8 @@ fun connect(~on: p :: Pict,
     | (_ :: NothingPict, _):
         nothing
     | (p :: _StaticPict, _ :: maybe(_StaticPict)):
-        let (from_x, from_y) = from.maybe_in(p, dt, n)
-        let (to_x, to_y) = to.maybe_in(p, dt, n)
+        let (from_x, from_y) = _Find.in_or_ambiguous(from, p, dt, n)
+        let (to_x, to_y) = _Find.in_or_ambiguous(to, p, dt, n)
         cond
         | from_x && to_x:
             let (proc, [pre, ...], kw_args):
@@ -1849,12 +1858,10 @@ fun connect(~on: p :: Pict,
             | p
             | error(~who: #'connect,
                     if from_x
-                    | let (to_x, to_y) = to.maybe_in(p, dt, n, ~nth: 0)
-                      if to_x
+                    | if to_y
                       | "ambiguous \"to\" pict"
                       | "cannot find \"to\" pict"
-                    | let (from_x, from_y) = from.maybe_in(p, dt, n, ~nth: 0)
-                      if from_x
+                    | if from_y
                       | "ambiguous \"from\" pict"
                       | "cannot find \"from\" pict",
                     error.val(~label: "finder", if from_x | from | to),
@@ -1928,7 +1935,7 @@ fun pin(q :: Pict,
               p
           | [p :: _StaticPict, q :: _StaticPict]:
               let desc = ["pin", p.identity, q.identity]
-              let (at_x, at_y): at.maybe_in(p, dt, n)
+              let (at_x, at_y): _Find.in_or_ambiguous(at, p, dt, n)
               when !at_x && (at_y || find_mode == #'always)
               | error(~who: #'pin,
                       if at_y

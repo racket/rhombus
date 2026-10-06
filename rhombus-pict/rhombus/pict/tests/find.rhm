@@ -12,3 +12,17 @@ check:
   Find.top_left(rect).in(circ_rect) ~is values(0,50)
   Find(circ).in(circ) ~is values(circ.width/2, circ.height/2)
   Find.top_left(circ).translate(2,3).in(circ) ~is values(2,3)
+
+block:
+  let par_bars = square()
+  let combined = stack(par_bars, par_bars)
+  check: Find.center(par_bars).in(combined, ~nth: 0)
+         ~matches values(Number, Number)
+  check: Find.center(par_bars).in(combined, ~nth: 1)
+         ~matches values(Number, Number)
+  check: Find.center(par_bars).in(combined, ~nth: 2)
+         ~throws "cannot find"
+  check: Find.center(par_bars).maybe_in(combined, ~nth: 2)
+         ~matches values(#false, #false)
+  check: pin(blank(), ~on: combined, ~at: Find.center(par_bars))
+         ~throws "ambiguous"
