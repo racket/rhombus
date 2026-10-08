@@ -88,3 +88,18 @@ block:
     | [& Two(p), ...]:
         [p, ...]
     ~is [[1, 2], [3, 4], [5, 6]]
+
+check:
+  def ((nk where n = nk - 3) where m = n + 1) = 10
+  [m, n, nk]
+  ~is [8, 7, 10]
+
+check:
+  def ((nk where n = nk - 3) when n >= 0) = 10
+  [n, nk]
+  ~is [7, 10]
+
+check:
+  def ((nk when nk >= 0) where n = nk - 7) = 11
+  [n, nk]
+  ~is [4, 11]

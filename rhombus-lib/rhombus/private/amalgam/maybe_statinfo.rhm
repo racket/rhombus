@@ -1,0 +1,10 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+
+export:
+  maybe_statinfo_macro
+
+defn.macro
+| '«maybe_statinfo_macro $_: '()'»': ''
+| 'maybe_statinfo_macro $lhs: $rhs': 'statinfo.macro $lhs: $rhs'

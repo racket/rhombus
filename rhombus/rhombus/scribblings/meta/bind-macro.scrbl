@@ -179,6 +179,10 @@
  associated uses through @rhombus(var_use, ~var) values, and each
  identifier has ``downward'' static information through the
  @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pairs.
+ Each @rhombus(defined_id, ~var) is bound in the @rhombus(statinfo, ~space)
+ space only when at least one
+ @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pair
+ is present.
  Like @rhombus(var_static_key, ~var)s, the meaning of
  @rhombus(var_use, ~var)s is up to cooperating parts in general, but
  some shapes are recognized by built-in forms:

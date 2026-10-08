@@ -1,6 +1,7 @@
 #lang rhombus/private/amalgam/core
 import:
   "core-meta.rkt" open
+  "maybe_statinfo.rhm" open
 
 use_static
 
@@ -47,7 +48,7 @@ bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
   '«$a_matcher($in_id, $a_data, $IF,
                : $a_committer($in_id, $a_evidence, $a_data)
                  $a_binder($in_id, $a_evidence, $a_data)
-                 statinfo.macro '$a_var_id': '$a_statinfo'
+                 maybe_statinfo_macro '$a_var_id': '$a_statinfo'
                  ...
                  $IF $expr_g
                  | $success
