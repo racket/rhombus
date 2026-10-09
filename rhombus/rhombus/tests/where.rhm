@@ -103,3 +103,32 @@ check:
   def ((nk when nk >= 0) where n = nk - 7) = 11
   [n, nk]
   ~is [4, 11]
+
+check:
+  let ((nk where n = nk - 3) where m = n + 1) = 10
+  [m, n, nk]
+  ~is [8, 7, 10]
+
+check:
+  ~eval
+  module m ~lang rhombus:
+    fun f(): n
+    let ((nk where n = nk - 3) where m = n + 1) = 10
+    "ok"
+  ~throws "unbound identifier"
+  
+check:
+  ~eval
+  module m ~lang rhombus:
+    fun f(): nk
+    let ((nk where n = nk - 3) where m = n + 1) = 10
+    "ok"
+  ~throws "unbound identifier"
+  
+check:
+  ~eval
+  module m ~lang rhombus:
+    fun f(): m
+    let ((nk where n = nk - 3) where m = n + 1) = 10
+    "ok"
+  ~throws "unbound identifier"

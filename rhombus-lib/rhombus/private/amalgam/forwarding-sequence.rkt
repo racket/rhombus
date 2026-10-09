@@ -201,22 +201,45 @@
                 #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params #f ex-id] . forms)]
                [_
                 (raise-syntax-error #f "bad binding-mode nesting")])]
-            [(_ #:suspend sub-form ...)
+            [(_ #:suspend let? sub-form ...)
              ;; Used by expansion of `def` to turn off `let` mode, needed when a binder
              ;; used with `let` produces a `def` form, so it's patterns are effectively nested
              (syntax-parse #'saved
                [#f
                 ;; no `let` to suspend
-                #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] sub-form ... . forms)]
+                (if (syntax-e #'let?)
+                    ;; need to track suspend region for binding `let` cooperation
+                    #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id]
+                                sub-form ...
+                                (rhombus-forward #:resume #t #f)
+                                . forms)
+                    #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id]
+                                sub-form ...
+                                . forms))]
                [(saved-add-ctx saved-remove-ctx)
                 #`(sequence [state base-ctx saved-add-ctx saved-remove-ctx all-ctx stx-params #f ex-id]
                             sub-form ...
-                            (rhombus-forward #:resume add-ctx remove-ctx)
+                            (rhombus-forward #:resume let? add-ctx remove-ctx)
                             . forms)])]
-            [(_ #:resume fwd-add-ctx fwd-remove-ctx)
+            [(_ #:resume _ fwd-add-ctx fwd-remove-ctx)
              (syntax-parse #'saved
                [#f
                 #`(sequence [state base-ctx fwd-add-ctx fwd-remove-ctx all-ctx stx-params (add-ctx remove-ctx) ex-id] . forms)])]
+            [(_ #:resume _ #f)
+             #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params #f ex-id] . forms)]
+            [(_ #:maybe-enter sub-form ...)
+             (syntax-parse #'(saved forms)
+               #:literals (rhombus-forward)
+               [(#f ((~and pre (~not (rhombus-forward (~or #:suspend #:resume) . _)))
+                     ...
+                     (rhombus-forward #:resume #t . _)
+                     . post))
+                #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params #f ex-id]
+                            (rhombus-forward #:enter sub-form ...)
+                            . forms)]
+               [_
+                ;; no suspend to resume or `let` to implement
+                #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] sub-form ... . forms)])]
             [(_ #:export new-ex-id (defn ...))
              (syntax-parse #'state
                [(#:module . _) (void)]
@@ -417,7 +440,9 @@
 
 (define-syntax (rhombus-forward stx)
   (syntax-parse stx
-    [(_ #:suspend . forms)
+    [(_ #:suspend _ . forms)
+     #`(begin . forms)]
+    [(_ #:maybe-enter . forms)
      #`(begin . forms)]
     [(_ #:export new-ex-id . _)
      (raise-syntax-error #f

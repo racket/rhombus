@@ -34,8 +34,27 @@ check:
   ~throws "value does not satisfy annotation"
 
 check:
+  let x when x > 0 = 1
+  x
+  ~is 1
+
+check:
+  let x unless x < 0 = 1
+  x
+  ~is 1
+
+check:
   ~eval
-  block:
-    let x when #true = 1
-    x
-  ~throws "pattern requires early binding of its names"
+  module m ~lang rhombus:
+    fun f(): x
+    let x when x > 0 = 1
+    "ok"
+  ~throws "unbound identifier"
+  
+check:
+  ~eval
+  module m ~lang rhombus:
+    fun f(): x
+    let x unless x < 0 = 1
+    "ok"
+  ~throws "unbound identifier"
