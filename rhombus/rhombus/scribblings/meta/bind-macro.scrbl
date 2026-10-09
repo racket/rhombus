@@ -195,8 +195,8 @@
   as an expression if the number @rhombus(sequencer, ~var)s is zero;}
 
   @item{@rhombus(~no_let) indicates that the variable's is not
-  compatible with @rhombus(let), because it needs to be bound early (such
-  as through @rhombus(when, ~bind)); and}
+  compatible with @rhombus(let), because it needs to be bound early and
+  @rhombus(bind.forward_sequence) is not used to compensate for early binding; and}
 
   @item{@rhombus(~extends #,(@rhombus(ns_id, ~var) )) indicates that the
   variable is bound as an extension of the namespace
@@ -296,10 +296,14 @@
  @rhombus(data_pattern) is whatever data the infoer included at the end
  of its result.
 
- The definitions produced by a oncer should not use identifiers
- supplied by a user of the binding form, because those names will not be
- adjusted by @rhombus(let). Instead, those definitions should be deferred
- to the binder function's result.
+ The definitions produced by a oncer should not define identifiers
+ supplied by a user of the binding form, because those names would not be
+ adjusted by @rhombus(let). Instead, such definitions should be deferred
+ to the binder function's result. If early binding is unavoidable (as in
+ @rhombus(where, ~bind) or @rhombus(when, ~bind), for example, where
+ some binding is needed in the process of matching), using
+ @rhombus(bind.forward_sequence) around definitions may restore
+ cooperation with @rhombus(let).
 
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
@@ -334,6 +338,16 @@
  groups of the block are spliced into a definition context where the
  binding is used.
 
+ Any definitions produced by a matcher should not define identifiers
+ supplied by a user of the binding form, because those names would not be
+ adjusted by @rhombus(let). Instead, such definitions should be deferred
+ to the binder function's result.  If early binding is unavoidable (as in
+ @rhombus(where, ~bind) or @rhombus(when, ~bind), for example, where
+ some binding is needed in the process of matching), using
+ @rhombus(bind.forward_sequence) around definitions may restore
+ cooperation with @rhombus(let).
+
+
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
 
@@ -361,10 +375,14 @@
  @rhombus(data_pattern) is whatever data the infoer included at the
  end of its result.
 
- The definitions produced by a committer should not use identifiers
- supplied by a user of the binding form, because those names will not be
- adjusted by @rhombus(let). Instead, those definitions should be deferred
- to the binder function's result.
+ The definitions produced by a committer should not define identifiers
+ supplied by a user of the binding form, because those names would not be
+ adjusted by @rhombus(let). Instead, such definitions should be deferred
+ to the binder function's result.  If early binding is unavoidable (as in
+ @rhombus(where, ~bind) or @rhombus(when, ~bind), for example, where
+ some binding is needed in the process of matching), using
+ @rhombus(bind.forward_sequence) around definitions may restore
+ cooperation with @rhombus(let).
 
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
@@ -401,6 +419,30 @@
 
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
+
+}
+
+
+@doc(
+  defn.macro '«bind.forward_sequence:
+                 $defn
+                 ...»'
+){
+
+ Splices the @rhombus(defn) sequence in place of the
+ @rhombus(bind.forward_sequence) form.
+
+ In the case of a definition sequence produced by a
+ @rhombus(bind.oncer), @rhombus(bind.matcher), or @rhombus(bind.committer)
+ step, if the step was driven by a use of @rhombus(let), then the
+ definitions are expanded with @rhombus(let)-style binding instead of
+ @rhombus(def)-style binding, which means that they are visible only to later
+ expressions and definitions within the enclosing definition context.
+ This form is intended for use by those forms when they need to bind
+ identifiers early.
+
+@(history:
+    ~added "1.1.0.2")
 
 }
 

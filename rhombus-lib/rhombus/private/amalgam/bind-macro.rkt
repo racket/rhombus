@@ -28,6 +28,7 @@
                                  syntax/parse/pre))
          (only-in "space.rkt" space-syntax)
          "space-provide.rkt"
+         "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
          "macro-macro.rkt"
@@ -52,7 +53,8 @@
    oncer
    matcher
    committer
-   binder))
+   binder
+   forward_sequence))
 
 (begin-for-syntax
   (define-name-root bind_meta
@@ -627,3 +629,11 @@
                  'rhombus/bind
                  binding-relative-precedence
                  binding-infix-operator-ref)))
+
+(define-defn-syntax forward_sequence
+  (definition-transformer
+    (lambda (stx name-prefix effect-id)
+      (syntax-parse stx
+        [(_ (_::block g ...))
+         (list
+          #'(rhombus-forward #:maybe-enter (rhombus-definition g) ...))]))))
