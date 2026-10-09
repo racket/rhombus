@@ -1,7 +1,7 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     "group.rkt"
                      "pack.rkt"
                      (submod "syntax-object.rkt" for-quasiquote)
                      (only-in "static-info.rkt"

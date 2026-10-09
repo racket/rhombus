@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      version/utils
+                     "group.rkt"
                      "parse.rkt")
          "definition.rkt"
          "parse.rkt"

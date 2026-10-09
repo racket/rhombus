@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
+                     "group.rkt"
                      "srcloc.rkt"
                      "injected.rkt"
                      "origin.rkt")

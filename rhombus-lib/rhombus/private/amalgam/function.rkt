@@ -1,11 +1,10 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property
                      "consistent.rkt"
                      "entry-point-adjustment.rkt"
-                     "dotted-sequence.rkt"
+                     "group.rkt"
                      "srcloc.rkt"
                      "annot-context.rkt")
          racket/keyword

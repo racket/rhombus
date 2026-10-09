@@ -1,10 +1,10 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
                      enforest/transformer-result
                      "name-root.rkt"
+                     "group.rkt"
                      "pack.rkt"
                      "parse.rkt"
                      "parens.rkt"

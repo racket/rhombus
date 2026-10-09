@@ -1,5 +1,4 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/treelist
@@ -8,6 +7,7 @@
                      "realm.rkt"
                      "binding-failure.rkt"
                      "annotation-failure.rkt"
+                     "group.rkt"
                      "pack.rkt"
                      "parse.rkt"
                      "expose.rkt"

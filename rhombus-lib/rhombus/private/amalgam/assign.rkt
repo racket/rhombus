@@ -1,5 +1,4 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
@@ -8,6 +7,7 @@
                      enforest/operator
                      "name-path-op.rkt"
                      "annotation-string.rkt"
+                     "group.rkt"
                      "srcloc.rkt")
          "binding.rkt"
          "expression.rkt"

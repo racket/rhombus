@@ -1,6 +1,6 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     "group.rkt")
          "static-info.rkt")
 
 (define-for-syntax (bounds-union b1 b2)

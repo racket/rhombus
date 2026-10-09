@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/strip-context
+                     "group.rkt"
                      "dotted-sequence.rkt")
          (submod "module.rkt" for-module+)
          "parens.rkt")

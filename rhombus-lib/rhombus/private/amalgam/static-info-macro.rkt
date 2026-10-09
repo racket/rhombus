@@ -1,11 +1,11 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/treelist
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/hier-name-parse
                      "name-root.rkt"
+                     "group.rkt"
                      "parse.rkt"
                      "pack.rkt"
                      "static-info-pack.rkt"

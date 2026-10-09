@@ -1,7 +1,7 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     "group.rkt"
                      "srcloc.rkt"
                      "consistent.rkt"
                      "entry-point-adjustment.rkt")

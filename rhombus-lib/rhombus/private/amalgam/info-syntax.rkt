@@ -1,7 +1,7 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      enforest/syntax-local
+                     "group.rkt"
                      "pack.rkt")
          "parse.rkt"
          "expression.rkt"

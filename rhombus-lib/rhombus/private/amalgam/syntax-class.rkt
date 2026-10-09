@@ -1,10 +1,10 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/keyword
                      syntax/parse/pre
                      enforest/name-parse
                      "attribute-name.rkt"
+                     "group.rkt"
                      "origin.rkt")
          racket/treelist
          syntax/parse/pre

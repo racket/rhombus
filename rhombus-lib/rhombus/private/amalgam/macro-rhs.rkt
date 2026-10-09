@@ -1,9 +1,9 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      racket/treelist
                      syntax/stx
                      syntax/parse/pre
+                     "group.rkt"
                      "pack.rkt"
                      "entry-point-adjustment.rkt"
                      "srcloc.rkt")

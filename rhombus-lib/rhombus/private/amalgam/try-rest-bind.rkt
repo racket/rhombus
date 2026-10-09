@@ -1,7 +1,7 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     "group.rkt"
                      "annotation-string.rkt")
          racket/treelist
          "provide.rkt"

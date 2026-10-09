@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/list
+                     "group.rkt"
                      "srcloc.rkt")
          "expression.rkt"
          "repetition.rkt"

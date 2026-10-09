@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/strip-context
+                     "group.rkt"
                      "module-path-parse.rkt")
          (submod "module-path.rkt" for-import-export)
          "declaration.rkt"

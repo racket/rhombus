@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/symbol)
+                     racket/symbol
+                     "group.rkt")
          "space-clause.rkt"
          "parens.rkt")
 

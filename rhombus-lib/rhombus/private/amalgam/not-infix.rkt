@@ -1,11 +1,11 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
                      enforest/hier-name-parse
                      enforest/syntax-local
                      enforest/operator
+                     "group.rkt"
                      "name-path-op.rkt")
          "expression.rkt"
          "repetition.rkt"

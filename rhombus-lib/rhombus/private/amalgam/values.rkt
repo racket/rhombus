@@ -1,8 +1,8 @@
 #lang racket/base
-(require (for-syntax "group.rkt"))
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
+                     "group.rkt"
                      "srcloc.rkt"
                      "origin.rkt")
          "provide.rkt"
