@@ -462,6 +462,7 @@ block:
   check f(2) ~is values(2, 2)
   check f(3) ~throws error.annot_msg("result")
   check f(4) ~is values(3, 3, 3, 3)
+  check f.name() ~is #'f
 
 block:
   let f :: (Int) -> (Int, & List.of(Int)):
@@ -564,6 +565,7 @@ block:
   check f() ~throws "wrong number of arguments"
   check f(1, 2, 3) ~throws "wrong number of arguments"
   check f(~x: 1) ~throws "does not accept keyword arguments"
+  check f.name() ~is #'f
 
 check:
   ~eval
@@ -597,6 +599,7 @@ block:
   check f(#true) ~is #true
   check f([]) ~throws "no matching case"
   check f(#false) ~throws error.annot_msg("result")
+  check f.name() ~is #'f
 
 block:
   let f :: Function.all_of((Int, Real, ...) -> Real,
@@ -606,6 +609,7 @@ block:
   check f(1, 2.0) ~is 3.0
   check f(1.0) ~is 1.0
   check f("a") ~throws "no matching case"
+  check f.name() ~is #'f
 
 block:
   // distinct arities
@@ -616,6 +620,7 @@ block:
   check f(1, 2) ~is 3
   check f(1.0, 2) ~throws error.annot_msg("argument")
   check f(1, 2.0) ~throws error.annot_msg("result")
+  check f.name() ~is #'f
 
 block:
   // overlapping arities
@@ -626,6 +631,7 @@ block:
   check f(1, 2) ~is 3
   check f(1.0, 2) ~throws "no matching case"
   check f(1, 2.0) ~throws error.annot_msg("result")
+  check f.name() ~is #'f
 
 block:
   let f :: Function.all_of((Int, Real = _, ~x: Any) -> Real,
@@ -635,6 +641,7 @@ block:
   check f(1, ~x: #false) ~is 1
   check f(1, 2.0, ~x: #false) ~is 3.0
   check f(1.0, ~x: #false) ~is 1.0
+  check f.name() ~is #'f
 
 block:
   let f :: Function.all_of((Int, Real = _) -> Real,
@@ -645,6 +652,7 @@ block:
   check f(1, 2.0) ~is 3.0
   check f(1.0, ~x: #false) ~is 1.0
   check f(1, 2.0, ~x: #false) ~throws "no matching case for arguments"
+  check f.name() ~is #'f
 
 block:
   let f :: Function.all_of((Int, Real = _) -> Real,
@@ -655,6 +663,7 @@ block:
   check f(1, 2.0) ~is 3.0
   check f(1.0, ~x: #false) ~is 1.0
   check f(1, 2.0, ~x: #false) ~throws "no matching case for arguments"
+  check f.name() ~is #'f
 
 block:
   use_static
@@ -669,6 +678,7 @@ block:
   // note that static mode can't rule this out, due to the way
   // that multi-case keyword information is represented
   check f(#false, ~x: 2, ~y: "b") ~throws "no matching case"
+  check f.name() ~is #'f
 
 block:
   use_static
@@ -683,6 +693,7 @@ block:
   // note that static mode can't rule this out, due to the way
   // that multi-case keyword information is represented
   check f(#false, ~x: 2, ~y: "b") ~throws "no matching case"
+  check f.name() ~is #'f
 
 check:
   ~eval
@@ -706,6 +717,7 @@ block:
   check f(1, 1) ~is [1, 1]
   check f(1, 2) ~throws error.annot_msg("argument")
   check f(#false) ~throws error.annot_msg("result")
+  check f.name() ~is #'f
 
 block:
   use_static
@@ -715,6 +727,7 @@ block:
         | (v): { #'val: v }
   check f()[0] ~is 0
   check f(1)[#'val] ~is 1
+  check f.name() ~is #'f
 
 block:
   use_static
@@ -724,6 +737,7 @@ block:
         | (~y: y): { #'val: y }
   check f(~x: 10)[0] ~is 10
   check f(~y: 11)[#'val] ~is 11
+  check f.name() ~is #'f
 
 block:
   use_static
@@ -736,6 +750,7 @@ block:
   check f(1.0) ~throws error.annot_msg("result")
   check f(1, 2) ~is values(1, 2)
   check f(1, 2, 3) ~throws "wrong number of arguments"
+  check f.name() ~is #'f
 
 block:
   import rhombus/meta open

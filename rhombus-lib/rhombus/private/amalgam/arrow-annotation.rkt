@@ -279,8 +279,6 @@
      #:with (lhs-i::binding-form ...) #'(l.binding ...)
      #:with (lhs-impl::binding-impl ...) #'((lhs-i.infoer-id () lhs-i.data) ...)
      #:with (lhs::binding-info ...) #'(lhs-impl.info ...)
-     #:with (arg-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs.name-id ...)))])
-                           ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id))))
      #:with (lhs-str ...) (map shrubbery-syntax->string multi-lhs)
      #:with (rhs-str ...) (map shrubbery-syntax->string multi-rhs)
      #:with (lhs-kw ...) multi-kws
@@ -310,43 +308,58 @@
        (append (syntax->list #'(l ... r ...)) rest-as)
        (relocate+reraw
         loc
-        (annotation-binding-form
-         (binding-form
-          #'arrow-infoer
-          #`[who #,arity
-                 'who
-                 ([lhs l.body l.static-infos lhs-str lhs-kw lhs-name lhs-opt] ...)
-                 #,(and rest-name+ann
-                        (syntax-parse rest-name+ann
-                          [#:any rest-name+ann]
-                          [(name a::annotation-binding-form)
-                           #`(name a.binding a.body a.static-infos #,rest-ann-whole? #,(shrubbery-syntax->string #'a))]
-                          [_ #f]))
-                 #,(and kw-rest-name+ann
-                        (syntax-parse kw-rest-name+ann
-                          [#:any kw-rest-name+ann]
-                          [(name a::annotation-binding-form)
-                           #`(name a.binding a.body a.static-infos #,(shrubbery-syntax->string #'a))]
-                          [_ #f]))
-                 #,kw-rest-first?
-                 ([r.binding r.body r.static-infos rhs-name rhs-str] ...)
-                 #,(and res-rest-name+ann
-                        (syntax-parse res-rest-name+ann
-                          [#:any res-rest-name+ann]
-                          [(name a::annotation-binding-form)
-                           #`(name a.binding a.body a.static-infos #,res-rest-ann-whole? #,(shrubbery-syntax->string #'a))]))
-                 #,static-infos
-                 #,immed-static-infos])
-         (if (and (andmap not multi-kws)
-                  (andmap not multi-opts)
-                  (not rest-name+ann)
-                  (not kw-rest-name+ann))
-             ;; simple case, indirection through `lambda` to get name from context
-             #'(lambda (arg-id ...) (who arg-id ...))
-             ;; complex case:
-             #'who)
+        (annotation-binding-name-form
+         #'name-to-binding-and-body-arrow-form
+         #`(who #,arity ((lhs l.body l.static-infos lhs-str lhs-kw lhs-name lhs-opt) ...)
+                #,rest-name+ann #,rest-ann-whole? #,kw-rest-name+ann #,kw-rest-first?
+                ((r rhs-name rhs-str) ...)
+                #,res-rest-name+ann #,res-rest-ann-whole?
+                #,static-infos #,immed-static-infos)
          static-infos)))
       tail)]))
+
+(define-syntax (name-to-binding-and-body-arrow-form stx)
+  (syntax-parse stx
+    [(_ wrapper-name
+        (who arity ((lhs l-body l-static-infos lhs-str lhs-kw lhs-name lhs-opt) ...)
+             rest-name+ann-stx rest-ann-whole?-stx kw-rest-name+ann-stx kw-rest-first?-stx
+             ((r::annotation-binding-form rhs-name rhs-str) ...)
+             res-rest-name+ann-stx res-rest-ann-whole?-stx
+             static-infos immed-static-infos))
+     (define rest-name+ann (syntax-e #'rest-name+ann-stx))
+     (define rest-ann-whole? (syntax-e #'rest-ann-whole?-stx))
+     (define kw-rest-name+ann (syntax-e #'kw-rest-name+ann-stx))
+     (define kw-rest-first? #'kw-rest-first?-stx)
+     (define res-rest-name+ann (syntax-e #'res-rest-name+ann-stx))
+     (define res-rest-ann-whole? (syntax-e #'res-rest-ann-whole?-stx))
+     #`(#,(binding-form
+           #'arrow-infoer
+           #`[who arity
+                  'who
+                  ([lhs l-body l-static-infos lhs-str lhs-kw lhs-name lhs-opt] ...)
+                  #,(and rest-name+ann
+                         (syntax-parse rest-name+ann
+                           [#:any rest-name+ann]
+                           [(name a::annotation-binding-form)
+                            #`(name a.binding a.body a.static-infos #,rest-ann-whole? #,(shrubbery-syntax->string #'a))]
+                           [_ #f]))
+                  #,(and kw-rest-name+ann
+                         (syntax-parse kw-rest-name+ann
+                           [#:any kw-rest-name+ann]
+                           [(name a::annotation-binding-form)
+                            #`(name a.binding a.body a.static-infos #,(shrubbery-syntax->string #'a))]
+                           [_ #f]))
+                  #,kw-rest-first?
+                  ([r.binding r.body r.static-infos rhs-name rhs-str] ...)
+                  #,(and res-rest-name+ann
+                         (syntax-parse res-rest-name+ann
+                           [#:any res-rest-name+ann]
+                           [(name a::annotation-binding-form)
+                            #`(name a.binding a.body a.static-infos #,res-rest-ann-whole? #,(shrubbery-syntax->string #'a))]))
+                  static-infos
+                  immed-static-infos
+                  wrapper-name])
+        who)]))
 
 (define-for-syntax (parse-arrow-all-of stx ctx)
   (syntax-parse stx
@@ -409,12 +422,18 @@
              (syntax->list #'(a.parsed ...))
              (relocate+reraw
               loc
-              (annotation-binding-form
-               (binding-form #'all-of-infoer
-                             #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos #,immed-static-infos))
-               #'who
+              (annotation-binding-name-form
+               #'name-to-binding-and-body-allof-form
+               #`(who #,all-arity who-expr ([ab.infoer-id ab.data] ...) #,static-infos #,immed-static-infos)
                static-infos)))
             #'tail)])])]))
+
+(define-syntax (name-to-binding-and-body-allof-form stx)
+  (syntax-parse stx
+    [(_ wrapper-name (who all-arity who-expr ((ab-infoer-id ab-data) ...) static-infos immed-static-infos))
+     #`(#,(binding-form #'all-of-infoer
+                        #`(who all-arity who-expr ([ab-infoer-id ab-data] ...) static-infos immed-static-infos wrapper-name))
+        who)]))
 
 (define-for-syntax (parse-arrow-assume stx ctx)
   (syntax-parse stx
@@ -445,7 +464,7 @@
 
 (define-syntax (arrow-infoer stx)
   (syntax-parse stx
-    [(_ in-static-infos (result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest static-infos immed-static-infos))
+    [(_ in-static-infos (result-id arity who-expr lhss rest kw-rest kw-rest-first? rhs res-rest static-infos immed-static-infos wrapper-name))
      (syntax-parse #'rhs
        [([rhs-i::binding-form . rhs-tail] ...)
         #:with (rhs-impl::binding-impl ...) #`((rhs-i.infoer-id () rhs-i.data) ...)
@@ -473,17 +492,18 @@
                         #'()
                         #'arrow-committer
                         #'arrow-binder
-                        #'(result-id arity who-expr lhss rest kw-rest kw-rest-first? ([rhs-impl.info . rhs-tail] ...) res-rest)))])]))
+                        #'((result-id arity who-expr lhss rest kw-rest kw-rest-first? ([rhs-impl.info . rhs-tail] ...) res-rest) wrapper-name)))])]))
 
 (define-syntax (arrow-oncer stx)
   (syntax-parse stx
-    [(_ (result-id arity who-expr
-                   ([lhs::binding-info . _] ...)
-                   rest
-                   kw-rest
-                   kw-rest-first?
-                   ([rhs::binding-info . _] ...)
-                   res-rest))
+    [(_ ((result-id arity who-expr
+                    ([lhs::binding-info . _] ...)
+                    rest
+                    kw-rest
+                    kw-rest-first?
+                    ([rhs::binding-info . _] ...)
+                    res-rest)
+         wrapper-name))
      (with-syntax ([(rest-once ...)
                     (syntax-parse #'rest
                       [(name a::binding-info . a-rest)
@@ -510,7 +530,7 @@
 
 (define-syntax (arrow-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (result-id arity _ lhss _ _ _ _ _) IF success fail)
+    [(_ arg-id ((result-id arity _ lhss _ _ _ _ _) _) IF success fail)
      #`(IF (and (procedure? arg-id)
                 #,(let ([a (syntax-e #'arity)])
                     (cond
@@ -526,15 +546,16 @@
 
 (define-syntax (arrow-committer stx)
   (syntax-parse stx
-    [(_ arg-id () data)
+    [(_ arg-id () _)
      #'(begin)]))
 
 (define-syntax (arrow-binder stx)
   (syntax-parse stx
-    [(_ arg-id () data)
-     (do-arrow-binder #'arg-id #'data #'#%app #f)]))
+    [(_ arg-id () (data wrapper-name))
+     (do-arrow-binder #'arg-id #'data (and (syntax-e #'wrapper-name) #'wrapper-name) #'#%app #f)]))
 
-(define-for-syntax (do-arrow-binder arg-id data fail-k who-stx)
+;; if `wrapper-name` is #f and arg-id is #f generate an argument suitable for `case-lambda`
+(define-for-syntax (do-arrow-binder arg-id data wrapper-name fail-k who-stx)
   (syntax-parse data
     [(result-id arity who-expr
                 ([lhs::binding-info lhs-body lhs-static-infos lhs-str lhs-kw lhs-name lhs-opt] ...)
@@ -785,13 +806,14 @@
                  inner-proc
                  #`(define result-id
                      (let ([f #,arg-id])
-                       (maybe-make-keyword-procedure
-                        ...
-                        #,inner-proc))))))))]))
+                       #,(if wrapper-name
+                             #`(let ([#,wrapper-name (maybe-make-keyword-procedure ... #,inner-proc)])
+                                 #,wrapper-name)
+                             #`(maybe-make-keyword-procedure ... #,inner-proc)))))))))]))
 
 (define-syntax (all-of-infoer stx)
   (syntax-parse stx
-    [(_ in-static-infos (result-id all-arity who-expr cases static-infos immed-static-infos))
+    [(_ in-static-infos (result-id all-arity who-expr cases static-infos immed-static-infos wrapper-name))
      (binding-info "function"
                    #'function
                    #'immed-static-infos
@@ -801,11 +823,11 @@
                    #'()
                    #'all-of-committer
                    #'all-of-binder
-                   #'(result-id all-arity who-expr cases))]))
+                   #'(result-id all-arity who-expr cases wrapper-name))]))
 
 (define-syntax (all-of-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...)) IF success fail)
+    [(_ arg-id (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...) _) IF success fail)
      #`(IF (and (procedure? arg-id)
                 #,@(for/list ([arity (in-list (syntax->list #'(arity ...)))]
                               [a-infoer (in-list (syntax->list #'(a-infoer ...)))]
@@ -827,9 +849,14 @@
     [(_ arg-id () data)
      #'(begin)]))
 
+(define-for-syntax (maybe-add-let-name wrapper-name stx)
+  (if (syntax-e wrapper-name)
+      #`(let ([#,wrapper-name #,stx]) #,wrapper-name)
+      stx))
+
 (define-syntax (all-of-binder stx)
   (syntax-parse stx
-    [(_ arg-id () (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...)))
+    [(_ arg-id () (result-id all-arity who-expr ([a-infoer (~and a-data (_ arity . _))] ...) wrapper-name))
      (define arities (syntax->list #'(arity ...)))
      (define no-keywords? (andmap (lambda (a) (integer? (syntax-e a))) arities))
      (cond
@@ -850,32 +877,36 @@
                   [who (lambda () #,(if (syntax-e #'who-expr)
                                         #'who-expr
                                         #'(quote result-id)))])
-              (case-lambda
-                #,@(for/list ([arity (in-list arities)]
-                              [infoer (in-list (syntax->list #'(a-infoer ...)))]
-                              [data (in-list (syntax->list #'(a-data ...)))])
-                     (syntax-parse #`(#,infoer () #,data)
-                       [a-impl::binding-impl
-                        #:with a::binding-info #'a-impl.info
-                        #:with ((a-bind-id a-bind-use . a-bind-static-infos) ...) #'a.bind-infos
-                        ;; Since we started with `->` annotations, we know that we can
-                        ;; skip the matcher and committer
-                        (define mask (syntax-e arity))
-                        (define args (let loop ([a mask] [n 0])
-                                       (cond
-                                         [(= a 1) '()]
-                                         [(= a -1) 'rest-args]
-                                         [else (cons (string->symbol (format "arg~a" n))
-                                                     (loop (arithmetic-shift a -1)
-                                                           (add1 n)))])))
-                        (if (mask . < . 0)
-                            #`[#,args (apply #,(do-arrow-binder #f #'a.data #'#%app #'(who))
-                                             #,@(let loop ([args args])
-                                                  (if (pair? args)
-                                                      (cons (car args) (loop (cdr args)))
-                                                      (list args))))]
-                            #`[#,args (#,(do-arrow-binder #f #'a.data #'#%app #'(who))
-                                       #,@args)])])))))]
+              #,(maybe-add-let-name
+                 #'wrapper-name
+                 #`(case-lambda
+                     #,@(for/list ([arity (in-list arities)]
+                                   [infoer (in-list (syntax->list #'(a-infoer ...)))]
+                                   [data (in-list (syntax->list #'(a-data ...)))])
+                          (syntax-parse #`(#,infoer () #,data)
+                            [a-impl::binding-impl
+                             #:with a::binding-info #'a-impl.info
+                             #:with ((a-bind-id a-bind-use . a-bind-static-infos) ...) #'a.bind-infos
+                             ;; Since we started with `->` annotations, we know that we can
+                             ;; skip the matcher and committer
+                             (define mask (syntax-e arity))
+                             (define args (let loop ([a mask] [n 0])
+                                            (cond
+                                              [(= a 1) '()]
+                                              [(= a -1) 'rest-args]
+                                              [else (cons (string->symbol (format "arg~a" n))
+                                                          (loop (arithmetic-shift a -1)
+                                                                (add1 n)))])))
+                             (syntax-parse #'a.data
+                               [(a-data binding-name)
+                                (if (mask . < . 0)
+                                    #`[#,args (apply #,(do-arrow-binder #f #'a-data #f #'#%app #'(who))
+                                                     #,@(let loop ([args args])
+                                                          (if (pair? args)
+                                                              (cons (car args) (loop (cdr args)))
+                                                              (list args))))]
+                                    #`[#,args (#,(do-arrow-binder #f #'a-data #f #'#%app #'(who))
+                                               #,@args)])])]))))))]
        [else
         ;; Some keywords, optional arguments, or overlapping arities that
         ;; might be decided by argument annotations
@@ -923,21 +954,23 @@
                                            #'#t
                                            #`(sorted-list-subset? kws '#,allowed-kws)))
                                 (let ([esc-next (lambda (err) (next))])
-                                  #,(let ([proc (do-arrow-binder #f #'a.data #'esc-next #'(who))])
-                                      (cond
-                                        [no-keywords?
-                                         #`(apply #,proc args)]
-                                        [has-kw-rest?
-                                         ;; `do-arrow-binder` skips the `make-keyword-proc` wrapper
-                                         #`(apply #,proc kws kw-args args)]
-                                        [else
-                                         #`(keyword-apply #,proc kws kw-args args)])))
+                                  #,(syntax-parse #'a.data
+                                      [(a-data binding-name)
+                                       (let ([proc (do-arrow-binder #f #'a-data #f #'esc-next #'(who))])
+                                         (cond
+                                           [no-keywords?
+                                            #`(apply #,proc args)]
+                                           [has-kw-rest?
+                                            ;; `do-arrow-binder` skips the `make-keyword-proc` wrapper
+                                            #`(apply #,proc kws kw-args args)]
+                                           [else
+                                            #`(keyword-apply #,proc kws kw-args args)]))]))
                                 (next)))])])))))
         (if no-keywords?
             #`(define result-id
                 (let ([f arg-id])
                   (procedure-reduce-arity-mask
-                   (lambda args #,body)
+                   #,(maybe-add-let-name #'wrapper-name #`(lambda args #,body))
                    'all-arity)))
             (syntax-parse #'all-arity
               [#false
@@ -945,12 +978,12 @@
                    (let ([f arg-id])
                      (procedure-reduce-arity-like
                       f
-                      (make-keyword-procedure (lambda (kws kw-args . args) #,body)))))]
+                      (make-keyword-procedure #,(maybe-add-let-name #'wrapper-name #`(lambda (kws kw-args . args) #,body))))))]
               [(mask req allow)
                #`(define result-id
                    (let ([f arg-id])
                      (procedure-reduce-keyword-arity-mask
-                      (make-keyword-procedure (lambda (kws kw-args . args) #,body))
+                      (make-keyword-procedure #,(maybe-add-let-name #'wrapper-name #`(lambda (kws kw-args . args) #,body)))
                       'mask
                       'req
                       'allow)))]))])]))
