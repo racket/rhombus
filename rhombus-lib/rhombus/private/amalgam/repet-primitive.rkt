@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "group.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "origin.rkt")
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -73,21 +74,23 @@
                            (format "expected a repetition of at least depth ~a" depth)
                            (respan (datum->syntax #f (list #'form-id #'args)))
                            #'r.rep-expr))
-     (make-repetition-info (respan (datum->syntax #f (list form-id args)))
-                           (reverse
-                            (let loop ([rev-clausess (reverse for-clausess)]
-                                       [depth depth])
-                              (cond
-                                [(= depth 1)
-                                 (cons
-                                  (add-indexing-to-clause #'pos (syntax->list (car rev-clausess)))
-                                  (cdr rev-clausess))]
-                                [else
-                                 (cons (car rev-clausess)
-                                       (loop (cdr rev-clausess) (sub1 depth)))])))
-                           #'pos
-                           (get-int-static-infos)
-                           #'r.used-depth)]))
+     (transfer-origin
+      rep-parsed
+      (make-repetition-info (respan (datum->syntax #f (list form-id args)))
+                            (reverse
+                             (let loop ([rev-clausess (reverse for-clausess)]
+                                        [depth depth])
+                               (cond
+                                 [(= depth 1)
+                                  (cons
+                                   (add-indexing-to-clause #'pos (syntax->list (car rev-clausess)))
+                                   (cdr rev-clausess))]
+                                 [else
+                                  (cons (car rev-clausess)
+                                        (loop (cdr rev-clausess) (sub1 depth)))])))
+                            #'pos
+                            (get-int-static-infos)
+                            #'r.used-depth))]))
 
 (define-for-syntax (add-indexing-to-clause pos-id clauses)
   ;; use `in-indexed` instead of adding a parallel `in-naturals` so that
@@ -186,15 +189,17 @@
         (define like-clausess (if inner?
                                   (list-tail right-clausess left-depth)
                                   (reverse (list-tail (reverse right-clausess) left-depth))))
-        (values (make-repetition-info src
-                                      (if inner?
-                                          (append (for/list ([left-clauses (in-list left-clausess)]
-                                                             [right-clauses (in-list right-clausess)])
-                                                    (append (syntax->list left-clauses)
-                                                            (syntax->list right-clauses)))
-                                                  like-clausess)
-                                          (append like-clausess left-clausess))
-                                      #'left-i.body
-                                      #'left-i.element-static-infos
-                                      #'left-i.used-depth)
+        (values (transfer-origins
+                 (list #'left-r.parsed #'right-r.parsed)
+                 (make-repetition-info src
+                                       (if inner?
+                                           (append (for/list ([left-clauses (in-list left-clausess)]
+                                                              [right-clauses (in-list right-clausess)])
+                                                     (append (syntax->list left-clauses)
+                                                             (syntax->list right-clauses)))
+                                                   like-clausess)
+                                           (append like-clausess left-clausess))
+                                       #'left-i.body
+                                       #'left-i.element-static-infos
+                                       #'left-i.used-depth))
                 #'right-r.tail)]))))

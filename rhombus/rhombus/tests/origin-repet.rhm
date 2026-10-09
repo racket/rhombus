@@ -19,3 +19,6 @@ def '$(a_t :: Term) ...' = '1 2 3'
 match '(m, 1, 2, 3)'
 | '($m_name, $m_arg, ...)':
     '$m_name($m_arg, ...)'
+
+[[deepen index(each ["a", "b"]) ~like a_y, ...], ...]
+[[deepen index(each ["a", "b"]) ~like_inner a_y, ...], ...]

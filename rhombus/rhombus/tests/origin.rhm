@@ -126,9 +126,12 @@ check_origins(bind_rhm,
 check_origins(repet_rhm,
               #'#{rhombus/repet},
               { #'an_x: 4,
-                #'a_y: 3,
+                #'a_y: 5,
                 #'a_t: 2,
-                #'m_arg: 2 })
+                #'m_arg: 2,
+                #'deepen: 2,
+                #'index: 2,
+                #'each: 2 })
 
 check_origins(rx_rhm,
               #'#{rhombus/rx},
