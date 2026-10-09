@@ -25,7 +25,8 @@
 
 (define-for-syntax (make-def #:make-wrap-definition [make-wrap-definition (lambda (stx) values)]
                              #:check-context [check-context void]
-                             #:check-bind-uses [check-bind-uses void])
+                             #:check-bind-uses [check-bind-uses void]
+                             #:let? [let? #f])
   (definition-transformer
     (lambda (stx name-prefix effect-id)
       (check-context stx)
@@ -36,13 +37,15 @@
                                  g rhs
                                  wrap-definition
                                  #:check-bind-uses check-bind-uses
-                                 #:stx stx))
+                                 #:stx stx
+                                 #:let? let?))
       (define (do-values gs rhs)
         (build-values-definitions form-id
                                   gs rhs
                                   wrap-definition
                                   #:check-bind-uses check-bind-uses
-                                  #:stx stx))
+                                  #:stx stx
+                                  #:let? let?))
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block body ...)))
@@ -78,6 +81,7 @@
                                                           #`(#,(relocate-id #'head #'rhombus-forward)
                                                              #:enter
                                                              #,defn))])))
+            #:let? #t
             #:check-context (lambda (stx)
                               (when (eq? (syntax-local-context) 'top-level)
                                 (raise-syntax-error #f
@@ -93,7 +97,8 @@
 
 (define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition
                                             #:check-bind-uses [check-bind-uses void]
-                                            #:stx [stx form-id])
+                                            #:stx [stx form-id]
+                                            #:let? [let? #f])
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
@@ -110,7 +115,7 @@
        (check-bind-uses form-id #'lhs id uses))
      (list
       #`(rhombus-forward
-         #:suspend
+         #:suspend #,let?
          #,@(top-level-decls #'(lhs-i.bind-id ...))
          (lhs-i.oncer-id lhs-i.data)
          (define tmp-id #,(transfer-origin
@@ -132,7 +137,8 @@
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition
                                              #:check-bind-uses [check-bind-uses void]
-                                             #:stx [stx form-id])
+                                             #:stx [stx form-id]
+                                             #:let? [let? #f])
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
@@ -159,7 +165,7 @@
          (check-bind-uses form-id lhs id uses)))
      (list
       #`(rhombus-forward
-         #:suspend
+         #:suspend #,let?
          #,@(top-level-decls #'(lhs-i.bind-id ... ...))
          (lhs-i.oncer-id lhs-i.data)
          ...

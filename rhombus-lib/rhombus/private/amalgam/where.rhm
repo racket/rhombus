@@ -61,8 +61,8 @@ bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
   '($ann,
     $a_name,
     $a_static_info,
-    (($a_var_id, [$a_var_use, ..., ~no_let], ()), ..., // drop static info, because we bind it manually
-     ($b_var_id, [$b_var_use, ..., ~no_let], $b_keep_statinfo), ..., ...),
+    (($a_var_id, [$a_var_use, ...], ()), ..., // drop static info, because we bind it manually
+     ($b_var_id, [$b_var_use, ...], $b_keep_statinfo), ..., ...),
     where_oncer,
     where_matcher,
     ($last_b_evidence, $last_b_tmp_id),
@@ -86,9 +86,10 @@ bind.matcher 'where_matcher($in_id, ($a_info, ($b_info, $b_tmp_id, $b_expr), ...
   let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
   '«$a_matcher($in_id, $a_data, $IF,
                : $a_committer($in_id, $a_evidence, $a_data)
-                 $a_binder($in_id, $a_evidence, $a_data)
-                 maybe_statinfo_macro '$a_var_id': '$a_statinfo'
-                 ...
+                 bind.forward_sequence:
+                   $a_binder($in_id, $a_evidence, $a_data)
+                   maybe_statinfo_macro '$a_var_id': '$a_statinfo'
+                   ...
                  $(block:
                      fun
                      | loop([], [], []):
