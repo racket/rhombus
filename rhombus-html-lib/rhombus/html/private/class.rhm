@@ -88,9 +88,11 @@ fun repack(v):
   | d :: parser.Document:
       let children = d.children.map(repack)
       Document(~content:
-                 if children.length() > 0 && children[0] is_a DocumentType
-                 | children.rest
-                 | children,
+                 match children
+                 | [c :: Comment, ..., _ :: DocumentType, & rest]:
+                     [c, ..., & rest]
+                 | ~else:
+                     children,
                ~doctype: d.doctype,
                ~quirks_mode: d.quirks_mode)
   | e :: parser.Element:
