@@ -1,9 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/syntax-local
                      "group.rkt"
                      "srcloc.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "pack.rkt"
+                     "statically-str.rkt")
          "provide.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -14,7 +17,9 @@
          "index-result-key.rkt"
          "annotation-failure.rkt"
          "parens.rkt"
-         "number.rkt")
+         "number.rkt"
+         "is-static.rkt"
+         "info-syntax.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -94,7 +99,7 @@
 
 (define-for-syntax (add-indexing-to-clause pos-id clauses)
   ;; use `in-indexed` instead of adding a parallel `in-naturals` so that
-  ;; rendering the repeition with `#:on-length-mismatch` will be ok;
+  ;; rendering the repetition with `#:on-length-mismatch` will be ok;
   ;; in the common case, that will be optimized to a parallel `in-naturals`
   (define (index-clause clause)
     (syntax-parse clause
@@ -130,17 +135,34 @@
   (repetition-prefix-operator
    #f '((default . weaker)) 'macro
    (lambda (stx)
+     (define static? (is-static-context/tail? stx))
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id . tail)
         #:with (~var e (:prefix-op+expression+tail (quote-syntax each))) (regroup #'tail)
-        (define seq-ctr-id (syntax-local-static-info #'e.parsed #'#%sequence-constructor))
+        (define seq-ctr (syntax-local-static-info #'e.parsed #'#%sequence-constructor))
+        (when (and static? (not seq-ctr))
+          (raise-syntax-error #f
+                              (string-append "no specific iteration implementation available" statically-str)
+                              (respan stx)
+                              #'e.parsed))
+        (define seq-ctr-t (unpack-term seq-ctr #f #f))
         (define e-plain (discard-static-infos #'e.parsed))
         (values (make-repetition-info (respan (datum->syntax #f (list #'form-id #'args)))
-                                      #`(([(repet) #,(if (and seq-ctr-id
-                                                              (not (eq? (syntax-e seq-ctr-id) #t)))
-                                                         #`(#,seq-ctr-id #,e-plain)
-                                                         #`(check-sequence-for-each 'form-id #,e-plain))]))
+                                      #`(([(repet) #,(relocate ; this helps debugging info
+                                                      #'e.parsed
+                                                      (cond
+                                                        [(and seq-ctr
+                                                              (or (not seq-ctr-t)
+                                                                  (not (eq? (syntax-e seq-ctr-t) #t))))
+                                                         (if (and (identifier? seq-ctr-t)
+                                                                  (syntax-local-value* seq-ctr-t expression-prefix-operator-ref))
+                                                             (unwrap-static-infos
+                                                              (rhombus-local-expand
+                                                               (build-info-syntax-call '#%sequence seq-ctr e-plain)))
+                                                             #`(#,seq-ctr #,e-plain))]
+                                                        [else
+                                                         #`(check-sequence-for-each 'form-id #,e-plain)]))]))
                                       #'repet
                                       (or (syntax-local-static-info #'e.parsed #'#%sequence-element)
                                           (extract-index-uniform-result

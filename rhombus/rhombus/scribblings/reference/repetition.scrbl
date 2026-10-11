@@ -241,7 +241,7 @@ positions.
  @rhombus(~like) or @rhombus(~like_inner) is used:
 
  @itemlist(
-  
+
   @item{With @rhombus(~like), the overall repetition
   @rhombus(shallow_repet) is repeated as many times as needed to match the
   outermost layers of @rhombus(deep_repet). This is the same kind of
@@ -305,5 +305,17 @@ positions.
  @rhombus(each, ~for_clause) form for @rhombus(for). They use the same
  name, because they are both related to extracting elements from a
  sequence.
+
+ When @rhombus(each, ~repet) is static (see @rhombus(use_static)),
+ static information for @rhombus(seq_expr) must indicate a static
+ sequence implementation that may specialize iteration over the
+ sequence; see also @rhombus(Sequence, ~annot) and
+ @rhombus(statinfo_meta.sequence_constructor_key). Regardless of
+ whether @rhombus(each, ~repet) is static, the static sequence
+ implementation is used when available.
+
+@(history:
+    ~changed "1.1.0.2":
+      @elem{Changed to check for static sequence implementation in static mode.})
 
 }

@@ -643,7 +643,7 @@ check:
   for:
     each x in dynamic([1])
     x
-  ~throws "no specific iteration implementation available"
+  ~throws "for: no specific iteration implementation available (based on static information)"
 
 check:
   for Set:
