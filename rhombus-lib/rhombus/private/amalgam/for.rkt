@@ -300,17 +300,17 @@
      #:with (tmp-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs-i.name-id ...)))])
                            ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id) name-id)))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
-     (define seq-ctr-t (unpack-term seq-ctr #f #f))
      (when (and static? (not seq-ctr))
        (raise-syntax-error #f
                            (string-append "no specific iteration implementation available" statically-str)
                            (respan orig-stx)
                            (respan rhs-blk-stx)))
+     (define seq-ctr-t (unpack-term seq-ctr #f #f))
      (define (track-all stx)
        (transfer-origins lhs-parsed-stxes (track stx)))
      #`[finish
         ([(tmp-id ...) #,(relocate ; this helps debugging info
-                          rhs-blk-stx
+                          (respan rhs-blk-stx)
                           (add-with-syntax-parameters
                            #'stx-params
                            (cond
@@ -324,8 +324,8 @@
                                        (syntax-local-value* seq-ctr-t expression-prefix-operator-ref))
                                   (unwrap-static-infos
                                    (with-continuation-mark syntax-parameters-key #'stx-params
-                                      (rhombus-local-expand
-                                       (build-info-syntax-call seq-ctr/t #'rhs))))
+                                     (rhombus-local-expand
+                                      (build-info-syntax-call '#%sequence seq-ctr/t #'rhs))))
                                   #`(#,seq-ctr/t rhs))]
                              [else
                               (track-all #`(check-sequence-for-each

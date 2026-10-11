@@ -951,3 +951,38 @@ check:
     final_when #false
     count + 1
   ~is 6
+
+// regression test: handling of `#%sequence-constructor`
+block:
+  expr.macro 'as_seq $expr':
+    expr
+      |> statinfo_meta.replace(_, '()')
+      |> statinfo_meta.wrap(_, '(($statinfo_meta.sequence_constructor_key, #true))')
+  check:
+    for List (x in as_seq [1, 2, 3]):
+      x
+    ~is [1, 2, 3]
+
+block:
+  expr.macro 'as_seq $expr':
+    expr
+      |> statinfo_meta.replace(_, '()')
+      |> statinfo_meta.wrap(_, '(($statinfo_meta.sequence_constructor_key, noop))')
+  fun noop(seq):
+    seq
+  check:
+    for List (x in as_seq [1, 2, 3]):
+      x
+    ~is [1, 2, 3]
+
+block:
+  expr.macro 'as_seq $expr':
+    expr
+      |> statinfo_meta.replace(_, '()')
+      |> statinfo_meta.wrap(_, '(($statinfo_meta.sequence_constructor_key, noop))')
+  expr.macro 'noop($expr)':
+    expr
+  check:
+    for List (x in as_seq [1, 2, 3]):
+      x
+    ~is [1, 2, 3]
