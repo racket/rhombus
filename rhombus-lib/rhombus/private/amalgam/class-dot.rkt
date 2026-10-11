@@ -674,6 +674,9 @@
                               #:can-anon-function? (not repetition?)))
        (success call-stx
                 new-tail)]
+      [repetition?
+       ;; let dot-provider dispatcher handle repetition construction:
+       (failure)]
       [else
        (when (and more-static?
                   (not property?))

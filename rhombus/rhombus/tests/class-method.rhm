@@ -47,7 +47,7 @@ check:
   class Posn3D(z):
     extends Posn
     method x(): 0
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -56,7 +56,7 @@ check:
   class Posn3D(z):
     extends Posn
     private method x(): 0
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -66,7 +66,7 @@ check:
   class Posn3D(z):
     extends Posn
     method q(): 0
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -75,7 +75,7 @@ check:
     method z(): 0
   class Posn3D(z):
     extends Posn
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -85,7 +85,7 @@ check:
   class Posn3D(z):
     extends Posn
     field q: 1
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -95,7 +95,7 @@ check:
   class Posn3D(z):
     extends Posn
     private field q: 1
-  ~throws "identifier used as both a field name and method name"    
+  ~throws "identifier used as both a field name and method name"
 
 check:
   ~eval
@@ -447,19 +447,19 @@ block:
     override method call():
       super.call() ++ "B"
     override method next(s :: String):
-      s ++ ".b"  
+      s ++ ".b"
   class revB():
     extends A
     implements: D C
     override method call():
       super.call() ++ "B"
     override method next(s :: String):
-      s ++ ".b"  
+      s ++ ".b"
   check:
     A(1).indirect() ~is "intf.a"
     A.indirect(A(1)) ~is "intf.a"
     (A(1) :: _A).call() ~is "intf.a"
-    (A(1) :: _A).next("x") ~is "x.a"    
+    (A(1) :: _A).next("x") ~is "x.a"
     (A(1) :: _A).direct() ~is "direct"
     B(1).direct() ~is "direct"
     D.direct(B(1)) ~is "direct"
@@ -639,7 +639,7 @@ check:
     extends Base
     implements Dummy
     override hello():
-      super.hello()    
+      super.hello()
   ~completes
 
 check:
@@ -836,10 +836,19 @@ block:
       [1, 2, 3].map(this.hello)
     method world3():
       [(hello)(each [1, 2, 3]), ...]
+    method world4():
+      [(this.hello)(each [1, 2, 3]), ...]
+    method wrong1():
+      hello()
+    method wrong2():
+      this.hello()
   check:
     Apple().world1() ~is [42, 42, 42]
     Apple().world2() ~is [42, 42, 42]
     Apple().world3() ~is [42, 42, 42]
+    Apple().world4() ~is [42, 42, 42]
+    Apple().wrong1() ~throws "wrong number of arguments in function call"
+    Apple().wrong2() ~throws "wrong number of arguments in function call"
 
 block:
   use_dynamic
@@ -855,10 +864,19 @@ block:
       [1, 2, 3].map(this.hello)
     method world3():
       [(hello)(each [1, 2, 3]), ...]
+    method world4():
+      [(this.hello)(each [1, 2, 3]), ...]
+    method wrong1():
+      hello()
+    method wrong2():
+      this.hello()
   check:
     Apple().world1() ~is [42, 42, 42]
     Apple().world2() ~is [42, 42, 42]
     Apple().world3() ~is [42, 42, 42]
+    Apple().world4() ~is [42, 42, 42]
+    Apple().wrong1() ~throws "wrong number of arguments in function call"
+    Apple().wrong2() ~throws "wrong number of arguments in function call"
 
 block:
   use_dynamic
@@ -874,7 +892,16 @@ block:
       [1, 2, 3].map(this.hello)
     method world3():
       [(hello)(each [1, 2, 3]), ...]
+    method world4():
+      [(this.hello)(each [1, 2, 3]), ...]
+    method wrong1():
+      hello()
+    method wrong2():
+      this.hello()
   check:
     Apple().world1() ~is [42, 42, 42]
     Apple().world2() ~is [42, 42, 42]
     Apple().world3() ~is [42, 42, 42]
+    Apple().world4() ~is [42, 42, 42]
+    Apple().wrong1() ~throws "wrong number of arguments in function call"
+    Apple().wrong2() ~throws "wrong number of arguments in function call"
