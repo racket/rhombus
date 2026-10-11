@@ -259,11 +259,14 @@ fun
     unwrap_list(o, convert, Function.pass)
 
 fun
-| unwrap_maybe_list(o :: Obs, convert :: Function): unwrap(o.map(fun
-                                                                 | ([e, ...]): PairList[convert(e), ...]
-                                                                 | (v): convert(v)))
-| unwrap_maybe_list([e, ...], convert, convert_lone): PairList[convert(e), ...]
-| unwrap_maybe_list(v, convert, convert_lone): convert_lone(v)
+| unwrap_maybe_list(o :: Obs, convert :: Function, convert_lone :: Function):
+    unwrap(o.map(fun
+                 | ([e, ...]): PairList[convert(e), ...]
+                 | (v): convert_lone(v)))
+| unwrap_maybe_list([e, ...], convert :: Function, convert_lone :: Function):
+    PairList[convert(e), ...]
+| unwrap_maybe_list(v, convert :: Function, convert_lone :: Function):
+    convert_lone(v)
 
 fun
 | to_obs(o :: Obs) :: Obs: o

@@ -46,7 +46,7 @@ class Dialog():
         super(easy.dialog(~title: obs.unwrap(title),
                           ~size: obs.unwrap_list(size, values),
                           ~alignment: obs.unwrap_list(alignment, values),
-                          ~position: obs.unwrap(position),
+                          ~position: obs.unwrap_maybe_list(position, values, values),
                           ~#{min-size}: obs.unwrap_list(min_size, values),
                           ~stretch: obs.unwrap_list(stretch, values),
                           ~style: obs.unwrap_list(style, convert_style),
