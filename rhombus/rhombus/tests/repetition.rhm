@@ -536,11 +536,24 @@ block:
     )
 
 check:
+  [each dynamic([1, 2, 3]), ...] ~is [1, 2, 3]
   [each #'oops, ...] ~throws values(
     "each: " ++ error.annot_msg(),
     error.annot("Sequence").msg,
     error.val(#'oops).msg,
   )
+
+check:
+  ~eval
+  use_static
+  [each dynamic([1, 2, 3]), ...]
+  ~throws "each: no specific iteration implementation available (based on static information)"
+
+check:
+  ~eval
+  use_static
+  [each #'oops, ...]
+  ~throws "each: no specific iteration implementation available (based on static information)"
 
 block:
   use_static

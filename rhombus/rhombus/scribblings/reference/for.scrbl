@@ -70,7 +70,9 @@ forms of iteration, including list comprehensions and other folds.
  a @tech{sequence}. When @rhombus(for) is static (see
  @rhombus(use_static)), static information for the expression or block must indicate
  a static sequence implementation that may specialize iteration over the
- sequence; see also @rhombus(Sequence, ~annot) and @rhombus(statinfo_meta.sequence_constructor_key).
+ sequence; see also @rhombus(Sequence, ~annot) and
+ @rhombus(statinfo_meta.sequence_constructor_key). Regardless of whether
+ @rhombus(for) is static, the static sequence implementation is used when available.
  A fresh @tech{instantiation} of the sequence is used each
  time the @rhombus(for) form is evaluated. Each element of that sequence is bound in turn to
  the @rhombus(values_bind) bindings of the @rhombus(each, ~for_clause). If a sequence

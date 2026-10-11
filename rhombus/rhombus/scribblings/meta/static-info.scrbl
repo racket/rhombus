@@ -470,10 +470,10 @@
         a shared tail, while union (``and'') of overall sequences combines elements pairwise.}
 
   @item{@rhombus(statinfo_meta.sequence_constructor_key): A @tech{function-like term}
-        to call to specialize a sequence for @rhombus(for), or @rhombus(#true) to
-        indicate that no wrapper is needed. A term is combined with
-        one argument, which is the expression for a sequence to be traversed
-        b ya @rhombus(for) clause.}
+        to call to specialize a sequence for forms like @rhombus(for), or @rhombus(#true) to
+        indicate that no wrapper is needed, in which case the expression is
+        assumed to be a sequence on its own. The term is combined with
+        one argument, which is the expression for a sequence to be traversed.}
 
   @item{@rhombus(statinfo_meta.sequence_element_key): Packed static information
         for the elements of the expression as a sequence used with
@@ -528,7 +528,9 @@
  @rhombus(#,(@rhombus(t, ~var))(#,(@rhombus(arg, ~var)), ...)) form,
  which is a function call when @rhombus(t, ~var) is an expression, but
  can be a macro invocation if @rhombus(t, ~var) is an identifier that is
- bound as an expression macro.
+ bound as an expression macro. This can be useful when, e.g.,
+ @rhombus(t, ~var) needs to inspect the static information for
+ @rhombus(arg, ~var)s and expand into more efficient implementations.
 
 }
 
