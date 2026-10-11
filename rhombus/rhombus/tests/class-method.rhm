@@ -1,6 +1,4 @@
-#lang rhombus
-
-use_static
+#lang rhombus/static
 
 check:
   ~eval
@@ -825,3 +823,58 @@ block:
     check A.kw_case5(a, ~x: "a") ~is "kw_case5: a"
     check A.kw_case5(a, ~y: "b") ~throws "required keyword argument not supplied"
     check A.kw_case5(a, ~x: "a", ~y: "b") ~is @str{kw_case5: a, @({#'~y: "b"})}
+
+// check method closure in dynamic mode
+block:
+  use_dynamic
+  class Apple():
+    method hello(_):
+      42
+    method world1():
+      [1, 2, 3].map(hello)
+    method world2():
+      [1, 2, 3].map(this.hello)
+    method world3():
+      [(hello)(each [1, 2, 3]), ...]
+  check:
+    Apple().world1() ~is [42, 42, 42]
+    Apple().world2() ~is [42, 42, 42]
+    Apple().world3() ~is [42, 42, 42]
+
+block:
+  use_dynamic
+  interface Fruit:
+    method hello(_):
+      42
+  class Apple():
+    nonfinal
+    implements Fruit
+    method world1():
+      [1, 2, 3].map(hello)
+    method world2():
+      [1, 2, 3].map(this.hello)
+    method world3():
+      [(hello)(each [1, 2, 3]), ...]
+  check:
+    Apple().world1() ~is [42, 42, 42]
+    Apple().world2() ~is [42, 42, 42]
+    Apple().world3() ~is [42, 42, 42]
+
+block:
+  use_dynamic
+  interface Fruit:
+    method hello(_):
+      42
+  class Apple():
+    nonfinal
+    private implements Fruit
+    method world1():
+      [1, 2, 3].map(hello)
+    method world2():
+      [1, 2, 3].map(this.hello)
+    method world3():
+      [(hello)(each [1, 2, 3]), ...]
+  check:
+    Apple().world1() ~is [42, 42, 42]
+    Apple().world2() ~is [42, 42, 42]
+    Apple().world3() ~is [42, 42, 42]

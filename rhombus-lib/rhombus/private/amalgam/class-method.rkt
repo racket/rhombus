@@ -18,10 +18,6 @@
          "../version-case.rkt"
          "provide.rkt"
          "expression.rkt"
-         (only-in "annotation.rkt"
-                  :~)
-         (only-in (submod "annotation.rkt" for-class)
-                  annotation-predicate-form)
          "parse.rkt"
          "expression.rkt"
          "repetition.rkt"
@@ -36,7 +32,6 @@
          "static-info.rkt"
          "indirect-static-info-key.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "dot-provider-key.rkt"
          (submod "assign.rkt" for-assign)
          "parens.rkt"
          (submod "function-parse.rkt" for-call)
@@ -871,47 +866,67 @@
     [else
      (expression-and-repetition-transformer
       (lambda (stx repet?)
+        (define static? (is-static-context/tail? stx))
         (syntax-parse stx
           [(head (~and args (tag::parens arg ...)) . tail)
-           (syntax-parse (syntax-parameter-value #'this-id)
-             [(id . _)
-              (define rator (cond
-                              [(identifier? index/id/intf)
-                               index/id/intf]
-                              [(vector? (syntax-e index/id/intf))
-                               (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
-                               #`(method-ref #,ref-id id #,pos)]
-                              [else
-                               #`(method-ref #,methods-ref-id id #,index/id/intf)]))
-              (define rator* (if repet?
-                                 (make-repetition-info (list #'head)
-                                                       null
-                                                       rator
-                                                       #'()
-                                                       0)
-                                 rator))
-              (define obj-id (if repet?
-                                 (identifier-repetition-use #'id)
-                                 #'id))
-              (define r (and (syntax-e result-id)
-                             (syntax-local-method-result result-id)))
-              (define-values (call new-tail to-anon-function?)
-                (parse-function-call rator* (list obj-id) #'(head args)
-                                     #:repetition? repet?
-                                     #:static? (is-static-context? #'tag)
-                                     #:rator-stx #'head
-                                     #:rator-arity (and r (method-result-arity r))
-                                     #:rator-kind 'method
-                                     #:can-anon-function? #t))
-              (define wrapped-call (if (or to-anon-function?
-                                           repet?)
-                                       call
-                                       (add-method-result call r)))
-              (values wrapped-call #'tail)])]
-          [(head . _)
-           (raise-syntax-error #f
-                               (string-append "method must be called" statically-str)
-                               #'head)])))]))
+           #:with (id . _) (syntax-parameter-value #'this-id)
+           (define rator (cond
+                           [(identifier? index/id/intf)
+                            index/id/intf]
+                           [(vector? (syntax-e index/id/intf))
+                            (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
+                            #`(method-ref #,ref-id id #,pos)]
+                           [else
+                            #`(method-ref #,methods-ref-id id #,index/id/intf)]))
+           (define rator* (if repet?
+                              (make-repetition-info (list #'head)
+                                                    null
+                                                    rator
+                                                    #'()
+                                                    0)
+                              rator))
+           (define obj-id (if repet?
+                              (identifier-repetition-use #'id)
+                              #'id))
+           (define r (and (syntax-e result-id)
+                          (syntax-local-method-result result-id)))
+           (define-values (call new-tail to-anon-function?)
+             (parse-function-call rator* (list obj-id) #'(head args)
+                                  #:repetition? repet?
+                                  #:static? (is-static-context? #'tag)
+                                  #:rator-stx #'head
+                                  #:rator-arity (and r (method-result-arity r))
+                                  #:rator-kind 'method
+                                  #:can-anon-function? #t))
+           (define wrapped-call (if (or to-anon-function?
+                                        repet?)
+                                    call
+                                    (add-method-result call r)))
+           (values wrapped-call #'tail)]
+          [(head . tail)
+           #:with (id . _) (syntax-parameter-value #'this-id)
+           (when static?
+             (raise-syntax-error #f
+                                 (string-append "method must be called" statically-str)
+                                 #'head))
+           (define call (relocate+reraw
+                         #'head
+                         (cond
+                           [(identifier? index/id/intf)
+                            #`(curry-method #,index/id/intf id)]
+                           [(vector? (syntax-e index/id/intf))
+                            (define-values (ref-id pos result-id) (unpack-intf-ref index/id/intf))
+                            #`(method-curried-ref #,ref-id id #,pos)]
+                           [else
+                            #`(method-curried-ref #,methods-ref-id id #,index/id/intf)])))
+           (values (if repet?
+                       (make-repetition-info #'head
+                                             null
+                                             call
+                                             #'()
+                                             0)
+                       call)
+                   #'tail)])))]))
 
 
 (define-for-syntax (build-methods method-results
