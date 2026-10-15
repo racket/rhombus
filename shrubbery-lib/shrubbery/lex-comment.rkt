@@ -112,7 +112,8 @@
                  (finish pending new-stack))]
             [(bar-operator)
              (if (and (eq? (pending-comment-so-far pending) 'running-bar)
-                      (or (not (not-line-sensitive?))
+                      (null? stack)
+                      (or (not-line-sensitive?)
                           (= line (pending-comment-line pending))))
                  (finish #f (pending-comment-stack pending))
                  (finish pending new-stack))]
