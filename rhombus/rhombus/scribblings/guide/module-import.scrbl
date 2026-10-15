@@ -108,8 +108,9 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
     id: block
     local_id: block id
   grammar_case "import":
-    $module_path #,(@rhombus(expose, ~impo)):
-      $id_or_rename_as
+    $module_path:
+      #,(@rhombus(expose, ~impo)):
+        $id_or_rename_as
       ...
   grammar id_or_rename_as
   | $id
@@ -125,8 +126,8 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
 
 @rhombusblock(
   import:
-    "f2c.rhm" expose:
-      fahrenheit_to_celsius
+    "f2c.rhm":
+      expose: fahrenheit_to_celsius
 
   fahrenheit_to_celsius(f2c.fahrenheit_freezing)
 )
@@ -179,8 +180,9 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
     id: block
     local_id: block id
   grammar_case "import":
-    $module_path #,(@rhombus(rename, ~impo)):
-      $id #,(@rhombus(as, ~impo)) $local_id
+    $module_path:
+      #,(@rhombus(rename, ~impo)):
+        $id #,(@rhombus(as, ~impo)) $local_id
       ...
 ){
 
@@ -198,8 +200,8 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
     def less_filling = #true
 
   import:
-    self!m rename:
-      less_filling as lite
+    self!m:
+      rename: less_filling as lite
 
   [m.tastes_great, m.lite]
 )
@@ -211,8 +213,9 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
     id: block
     local_id: block id
   grammar_case "import":
-    $module_path #,(@rhombus(only, ~impo)):
-      $id_or_rename_as
+    $module_path:
+      #,(@rhombus(only, ~impo)):
+        $id_or_rename_as
       ...
   grammar id_or_rename_as
   | $id
@@ -224,8 +227,8 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
 
 @rhombusblock(
   import:
-    self!m only:
-      tastes_great
+    self!m:
+      only: tastes_great
 
   m.tastes_great
 )
@@ -236,9 +239,10 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
   ~nonterminal:
     id: block
   grammar_case "import":
-    $module_path #,(@rhombus(except, ~impo)):
-      $id ...
-      ...
+    $module_path:
+      #,(@rhombus(except, ~impo)):
+        $id ...
+        ...
 ){
 
  The @rhombus(except, ~impo) modifier is the complement of
@@ -246,8 +250,8 @@ The @rhombus(import_clause, ~var) shape can be adjusted by attaching
 
 @rhombusblock(
   import:
-    self!m except:
-      tastes_great
+    self!m:
+      except: tastes_great
 
   m.less_filling
 )
@@ -262,8 +266,8 @@ imported bindings. For example,
 
 @rhombusblock(
   import:
-    self!m as my_m except:
-      tastes_great
+    self!m as my_m:
+      except: tastes_great
 )
 
 imports all bindings that @rhombus(m, ~datum) exports, except for
