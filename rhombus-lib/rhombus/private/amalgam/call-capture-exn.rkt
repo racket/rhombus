@@ -29,6 +29,7 @@
                                   (get-output-string o)]
                                  [else
                                   (exn-message exn)])
+                               exn
                                (get-output)))])
       (values (call-with-values
                (lambda ()
@@ -36,6 +37,7 @@
                   thunk
                   (default-continuation-prompt-tag)))
                treelist)
+              #f
               #f
               (get-output)))))
 
@@ -67,13 +69,21 @@
   #:property prop:exn:srclocs (lambda (e)
                                 (list (exn:fail:test-srcloc e))))
 
-(define (display_as_exn msg loc)
-  (if loc
-      ((error-display-handler) msg
-                               (exn:fail:test msg
-                                              (current-continuation-marks)
-                                              loc))
-      (displayln msg (current-error-port))))
+(define (display_as_exn msg loc exn)
+  (cond
+    [loc
+     ((error-display-handler) msg
+                              (exn:fail:test msg
+                                             (if (exn? exn)
+                                                 (exn-continuation-marks exn)
+                                                 (current-continuation-marks))
+                                             loc))]
+    [(exn? exn)
+     ((error-display-handler) msg
+                              (exn:fail msg
+                                        (exn-continuation-marks exn)))]
+    [else
+     (displayln msg (current-error-port))]))
 
 (define (reindent_exn_msg msg len)
   (define newline (string-append "\n" (make-string len #\space)))
