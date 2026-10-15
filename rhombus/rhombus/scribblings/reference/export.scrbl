@@ -7,6 +7,9 @@
 @title{Export}
 
 @doc(
+  ~nonterminal:
+    modifier_without_block: export modifier ~decl
+
   decl.nestable_macro 'export:
                          $export_clause
                          ...'
@@ -22,7 +25,7 @@
   | $export_item:
       $modifier
       ...
-  | $modifier:
+  | $modifier_without_block:
       $export_clause
       ...
 
@@ -66,9 +69,9 @@
 
  Similar to @rhombus(import), an @rhombus(export_item) can be modified
  either through a subsequent block containing @rhombus(modifier)s or
- by a preceding @rhombus(modifier) with the @rhombus(export_item)s in
- a block. The latter order works only if the @rhombus(modifier) itself
- does not need a block.
+ by a preceding @rhombus(modifier_without_block) with the @rhombus(export_item)s in
+ a block. A @rhombus(modifier_without_block) is a @rhombus(modifier) without
+ a block argument.
 
  An @rhombus(id_or_op_name) export can be
  an immediate identifier or operator, or it can be dotted name, such as

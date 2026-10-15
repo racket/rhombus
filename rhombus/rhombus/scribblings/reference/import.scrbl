@@ -6,6 +6,9 @@
 @title{Import}
 
 @doc(
+  ~nonterminal:
+    modifier_without_block: import modifier ~defn
+
   defn.macro 'import:
                 $import_clause
                 ...'
@@ -17,11 +20,11 @@
   | $import_item:
       $modifier
       ...
-  | $import_item $modifier
-  | $import_item $modifier:
+  | $import_item $modifier_without_block
+  | $import_item $modifier_without_block:
       $modifier
       ...
-  | $modifier:
+  | $modifier_without_block:
       $import_clause
       ...
 
@@ -76,27 +79,24 @@
 
 @itemlist(
 
- @item{@rhombus(import_item modifier) is the same as
-   @rhombus(import_item: modifier), where @rhombus(modifier) cannot include
+ @item{@rhombus(import_item modifier_without_block) is the same as
+   @rhombus(import_item: modifier_without_block), where @rhombus(modifier_without_block)
+   is a @rhombus(modifier) that does not include
    a block argument. This form is handy when only a simple modifier is needed.},
 
- @item{@rhombus(import_item modifier: modifier; ...) is the same as
-   @rhombus(import_item: modifier; modifier; ...) where the initial
-   @rhombus(modifier) does not include a block argument. This form is
-   especially handy when the initial @rhombus(modifier) is @rhombus(open, ~impo)
+ @item{@rhombus(import_item modifier_without_block: modifier; ...) is the same as
+   @rhombus(import_item: modifier_without_block; modifier; ...) where the initial
+   @rhombus(modifier_without_block) is a @rhombus(modifier) that does not include a block argument. This form is
+   especially handy when the initial @rhombus(modifier_without_block) is @rhombus(open, ~impo)
    or @rhombus(as #,(@rhombus(id, ~var)), ~impo) and additional modifiers
    are needed.},
 
- @item{@rhombus(modifier: import_clause; ...) is the same as the
-   sequence of @rhombus(import_clause)s with @rhombus(modifier) add to the
+ @item{@rhombus(modifier_without_block: import_clause; ...) is the same as the
+   sequence of @rhombus(import_clause)s with @rhombus(modifier_without_block) added to the
    @emph{end} of each @rhombus(import_clause). This form is especially handy
-   when @rhombus(modifier) is @rhombus(meta).}
+   when @rhombus(modifier_without_block) is @rhombus(meta).}
 
 )
-
- Note that a @rhombus(modifier) used immediately before a
- @rhombus(import_item) or as the start of an @rhombus(import_clause)
- can never include a block as part of the @rhombus(modifier).
 
  An @rhombus(import_item) is typically a @rhombus(module_path), but it
  can be an inline namespace declaration via @rhombus(namespace, ~impo), a
