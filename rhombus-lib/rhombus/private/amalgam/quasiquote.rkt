@@ -1248,7 +1248,7 @@
                                       #'syntax-infoer
                                       #`(#,(make-annot-str e)
                                          #,(syntax-parse e
-                                             [((~datum op) id) #`((~datum op) (~literal id))])
+                                             [((~datum op) id) #`((~datum op) (~datum id))])
                                          repack-as-term
                                          ()
                                          ()

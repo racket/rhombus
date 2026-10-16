@@ -776,3 +776,8 @@ block:
       '(1 2, $x, ...)' ~throws "$: cannot coerce value to syntax"
       '[1 2, $x, ...]' ~throws "$: cannot coerce value to syntax"
       '{ 1 2, $x, ... }' ~throws "$: cannot coerce value to syntax"
+
+check:
+  match '$(Syntax.make_op(#'#{$}))'
+  | '$': "ok"
+  ~is "ok"
