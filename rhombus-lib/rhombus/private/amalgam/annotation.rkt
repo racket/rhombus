@@ -20,6 +20,7 @@
                      "class-parse.rkt"
                      "origin.rkt"
                      "annotation-failure.rkt"
+                     "syntax-closure.rkt"
                      (for-syntax racket/base)
                      (only-in "syntax-map.rkt"
                               empty-equal_name_and_scopes-map))
@@ -106,6 +107,7 @@
              :annotation
              :annotation-predicate-form
              :annotation-binding-form
+             :annotation-binding-name-form
              :inline-annotation
              :unparsed-inline-annotation
              :annotation-infix-op+form+tail
@@ -114,6 +116,7 @@
 
              annotation-predicate-form
              annotation-binding-form
+             annotation-binding-name-form
 
              parse-annotation-of
              parse-annotation-of/chaperone
@@ -255,11 +258,17 @@
   (define-syntax-class :annotation-binding-form
     #:attributes (binding body static-infos)
     (pattern (#:bind binding body static-infos)) ; binding is `:binding-impl`, but the annotation-str of eventual `:binding-info` is not used
+    (pattern (#:bind-name name-to-binding-and-body data static-infos)
+      #:with (binding body) (call-syntax-closure #'name-to-binding-and-body #'(name-to-binding-and-body #f data)
+                                                 "cannot find a transformer for annotation converter name-to-binding-and-body form"))
     (pattern (#:pred predicate static-infos)
              ;; coerce to the more general binding form (so all annotations kinds can be handled this way)
              #:with binding (binding-form #'annotation-predicate-binding-infoer
                                           #'(result predicate static-infos))
              #:with body #'result))
+  (define-syntax-class :annotation-binding-name-form
+    #:attributes (name-to-binding-and-body data static-infos)
+    (pattern (#:bind-name name-to-binding-and-body data static-infos)))
 
   (define-syntax-class :annotate-op
     #:attributes (name is_checked)
@@ -278,6 +287,8 @@
     #`(#:pred #,predicate #,static-infos))
   (define (annotation-binding-form binding body static-infos)
     #`(#:bind #,binding #,body #,static-infos))
+  (define (annotation-binding-name-form name-to-binding-and-body data static-infos)
+    #`(#:bind-name #,name-to-binding-and-body #,data #,static-infos))
 
   (define-syntax (identifier-annotation stx)
     (syntax-case stx (unquote-syntax)
@@ -532,6 +543,11 @@
        (define info-maker (syntax-local-value info-maker-id))
        (info-maker info-maker-data c-static-infoss)])))
 
+(define-syntax (binding-name-form-to-binding-form stx)
+  (syntax-parse stx
+    [(_ name (binding body))
+     #'(binding body)]))
+
 (define-syntax (dependent-compound-static-infos data deps)
   (syntax-parse data
     [(info-maker-id info-maker-data c-static-infoss-stx)
@@ -682,26 +698,9 @@
         (values
          (transfer-origins
           (list #'t.parsed form)
-          (syntax-parse #'t.parsed
-            [c-parsed::annotation-predicate-form
-             (binding-form
-              #'annotation-predicate-infoer
-              #`(#,(shrubbery-syntax->string #'t.parsed)
-                 #,(and checked? #'c-parsed.predicate)
-                 c-parsed.static-infos
-                 left.infoer-id
-                 left.data))]
-            [c-parsed::annotation-binding-form
-             #:do [(unless checked?
-                     (raise-unchecked-disallowed #'op.name #'t))]
-             (binding-form
-              #'annotation-binding-infoer
-              #`(#,(shrubbery-syntax->string #'t.parsed)
-                 c-parsed.binding
-                 c-parsed.body
-                 c-parsed.static-infos
-                 left.infoer-id
-                 left.data))]))
+          (binding-form
+           #'annotation-infoer
+           #`(t.parsed left #,checked?)))
          #'t.tail)]))
    'none))
 
@@ -775,27 +774,79 @@
             new-tail)])]))
    'none))
 
-(define-syntax (annotation-predicate-infoer stx)
+(define-syntax (annotation-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (annotation-str predicate implied-static-infos left-infoer-id left-data))
-     #:with left-impl::binding-impl #`(left-infoer-id #,(static-infos-and #'implied-static-infos #'static-infos) left-data)
-     #:with left::binding-info #'left-impl.info
-     (if (syntax-e #'predicate)
-         (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
-                       #'left.name-id
-                       #'left.static-infos ; presumably includes `implied-static-infos` as passed to `left-infoer-id`
-                       #'left.bind-infos
-                       #'left-oncer
-                       (if (and (identifier? #'predicate)
-                                (free-identifier=? #'predicate #'always-satisfied)
-                                (free-identifier=? #'always-succeed #'left.matcher-id))
-                           #'always-succeed
-                           #'check-predicate-matcher)
-                       #'left.evidence-ids
-                       #'commit-nothing-new
-                       #'bind-nothing-new
-                       #'(predicate predicate-id left.oncer-id left.matcher-id left.committer-id left.binder-id left.data))
-         #'left)]))
+    [(_ static-infos (t-parsed left::binding-form checked?:boolean))
+     (syntax-parse #'t-parsed
+       [c-parsed::annotation-predicate-form
+        #:with predicate (and (syntax-e #'checked?) #'c-parsed.predicate)
+        #:with left-impl::binding-impl #`(left.infoer-id #,(static-infos-and #'c-parsed.static-infos #'static-infos) left.data)
+        #:with left::binding-info #'left-impl.info
+        (if (syntax-e #'predicate)
+            (binding-info (annotation-string-and (shrubbery-syntax->string #'t-parsed) (syntax-e #'left.annotation-str))
+                          #'left.name-id
+                          #'left.static-infos ; presumably includes `implied-static-infos` as passed to `left-infoer-id`
+                          #'left.bind-infos
+                          #'left-oncer
+                          (if (and (identifier? #'predicate)
+                                   (free-identifier=? #'predicate #'always-satisfied)
+                                   (free-identifier=? #'always-succeed #'left.matcher-id))
+                              #'always-succeed
+                              #'check-predicate-matcher)
+                          #'left.evidence-ids
+                          #'commit-nothing-new
+                          #'bind-nothing-new
+                          #'(predicate predicate-id left.oncer-id left.matcher-id left.committer-id left.binder-id left.data))
+            #'left)]
+       [(~or* c-parsed::annotation-binding-name-form
+              c-parsed::annotation-binding-form)
+        #:do [(unless (syntax-e #'checked?)
+                (raise-unchecked-disallowed #'op.name #'t))]
+        #:with left-impl::binding-impl #'(left.infoer-id c-parsed.static-infos left.data)
+        #:with left::binding-info #'left-impl.info
+        #:with (arg-parsed::binding-form body)
+        (cond
+          [(attribute c-parsed.name-to-binding-and-body)
+           (call-syntax-closure #'c-parsed.name-to-binding-and-body
+                                #'(c-parsed.name-to-binding-and-body left.name-id c-parsed.data)
+                                "cannot find a transformer for annotation converter name-to-binding-and-body form")]
+          [else #'(c-parsed.binding c-parsed.body)])
+        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id static-infos arg-parsed.data)
+        #:with arg-info::binding-info #'arg-impl.info
+        #:with converted-id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'left.name-id)))
+
+        (define (build-binding-info matcher-id evidence-ids committer-id binder-id converted-as-evidence?)
+          (binding-info (annotation-string-and (shrubbery-syntax->string #'t-parsed) (syntax-e #'left.annotation-str))
+                        #'left.name-id
+                        #'arg-info.static-infos ; this is about the value coming in, not the converted value
+                        #'left.bind-infos
+                        #'binding-oncer
+                        matcher-id
+                        (if converted-as-evidence?
+                            #`(converted-id #,evidence-ids)
+                            evidence-ids)
+                        committer-id
+                        binder-id
+                        #'([left.oncer-id left.matcher-id left.committer-id left.binder-id left.data]
+                           converted-id
+                           [arg-info.oncer-id arg-info.matcher-id arg-info.evidence-ids arg-info.committer-id arg-info.binder-id arg-info.data
+                                              arg-info.bind-infos body])))
+        (cond
+          [(free-identifier=? #'always-succeed #'left.matcher-id)
+           ;; in this case, we can commit and bind lazily for the annotation's binding
+           (build-binding-info #'check-binding-check-convert
+                               #'arg-info.evidence-ids
+                               #'commit-convert-then-via-converted
+                               #'bind-after-converted
+                               #f)]
+          [else
+           ;; in this case, we have to apply the annotation's binding's conversion before
+           ;; we can apply the left-hand's matcher
+           (build-binding-info #'check-binding-convert
+                               #'left.evidence-ids
+                               #'commit-via-converted
+                               #'bind-via-converted
+                               #t)])])]))
 
 (define-syntax (left-oncer stx)
   (syntax-parse stx
@@ -825,48 +876,6 @@
   (syntax-parse stx
     [(_ arg-id evidence-ids (predicate predicate-id left-oncer-id left-matcher-id left-committer-id left-binder-id left-data))
      #'(left-binder-id arg-id evidence-ids left-data)]))
-
-(define-syntax (annotation-binding-infoer stx)
-  (syntax-parse stx
-    [(_ static-infos (annotation-str binding body body-static-infos left-infoer-id left-data))
-     #:with arg-parsed::binding-form #'binding
-     #:with arg-impl::binding-impl #'(arg-parsed.infoer-id static-infos arg-parsed.data)
-     #:with arg-info::binding-info #'arg-impl.info
-     #:with left-impl::binding-impl #'(left-infoer-id body-static-infos left-data)
-     #:with left::binding-info #'left-impl.info
-     #:with converted-id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'left.name-id)))
-     (define (build-binding-info matcher-id evidence-ids committer-id binder-id converted-as-evidence?)
-       (binding-info (annotation-string-and (syntax-e #'annotation-str) (syntax-e #'left.annotation-str))
-                     #'left.name-id
-                     #'arg-info.static-infos ; this is about the value coming in, not the converted value
-                     #'left.bind-infos
-                     #'binding-oncer
-                     matcher-id
-                     (if converted-as-evidence?
-                         #`(converted-id #,evidence-ids)
-                         evidence-ids)
-                     committer-id
-                     binder-id
-                     #'([left.oncer-id left.matcher-id left.committer-id left.binder-id left.data]
-                        converted-id
-                        [arg-info.oncer-id arg-info.matcher-id arg-info.evidence-ids arg-info.committer-id arg-info.binder-id arg-info.data
-                                           arg-info.bind-infos body])))
-     (cond
-       [(free-identifier=? #'always-succeed #'left.matcher-id)
-        ;; in this case, we can commit and bind lazily for the annotation's binding
-        (build-binding-info #'check-binding-check-convert
-                            #'arg-info.evidence-ids
-                            #'commit-convert-then-via-converted
-                            #'bind-after-converted
-                            #f)]
-       [else
-        ;; in this case, we have to apply the annotation's binding's conversion before
-        ;; we can apply the left-hand's matcher
-        (build-binding-info #'check-binding-convert
-                            #'left.evidence-ids
-                            #'commit-via-converted
-                            #'bind-via-converted
-                            #t)])]))
 
 (define-syntax (binding-oncer stx)
   (syntax-parse stx
