@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre)
          racket/interaction-info
+         racket/syntax-srcloc
          shrubbery/print
          shrubbery/property
          racket/lazy-require
@@ -11,6 +12,7 @@
          (submod "print.rkt" redirect)
          "rhombus-primitive.rkt"
          "normalize-syntax.rkt"
+         "respan.rkt"
          "../version-case.rkt")
 
 ;; For `current-read-interaction` callback:
@@ -193,6 +195,10 @@
           (for/fold ([s (loop (cadr mp))]) ([p (in-list (cddr mp))])
             (format "~a!~a" s (substring (to-string p) 2)))]
          [else (to-string mp)]))))
+
+  (error-syntax->srcloc-handler
+   (lambda (s)
+     (syntax-srcloc (maybe-respan (datum->syntax #f s)))))
 
   (current-report-configuration
    (hasheq 'literal-to-what (lambda (v)
