@@ -8,7 +8,23 @@ check:
 
 check:
   use_static
+  def (x when:
+         let one = 1
+         x.length() > one) = "Hello"
+  x.length()
+  ~is 5
+
+check:
+  use_static
   def x unless x.length() > 10 = "Hello"
+  x.length()
+  ~is 5
+
+check:
+  use_static
+  def (x unless:
+         x.length() > 10):
+    "Hello"
   x.length()
   ~is 5
 
@@ -58,3 +74,13 @@ check:
     let x unless x < 0 = 1
     "ok"
   ~throws "unbound identifier"
+
+check:
+  ~eval
+  def (x when) = 10
+  ~throws "when: expected more terms"
+
+check:
+  ~eval
+  def (x unless) = 10
+  ~throws "unless: expected more terms"

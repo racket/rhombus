@@ -144,21 +144,26 @@
 
 @doc(
   bind.macro '$bind when $expr'
+  bind.macro '$bind when:
+                $body
+                ...'
   bind.macro '$bind unless $expr'
+  bind.macro '$bind unless:
+                $body
+                ...'
 ){
 
  As binding forms, @rhombus(when, ~bind) and @rhombus(unless, ~bind)
  impose side conditions on a match. These forms match and bind the
- same as the given @rhombus(bind), but only when @rhombus(expr)
- produces a true value for @rhombus(when, ~bind) or @rhombus(#false)
- for @rhombus(unless), and the binding does not match otherwise. The
+ same as the given @rhombus(bind), but only when a @rhombus(expr)
+ or a @rhombus(body) sequence produces a true value for @rhombus(when, ~bind) or @rhombus(#false)
+ for @rhombus(unless); otherwise, the binding does not match. The
  bindings created by a match to @rhombus(bind) are available for use
- in @rhombus(expr).
+ in @rhombus(expr) or @rhombus(body).
 
- Because the bindings of @rhombus(bind) must be made available for
- @rhombus(expr), a @rhombus(when, ~bind) or @rhombus(unless, ~bind)
- binding is not compatible for use with @rhombus(let), unless the set
- of names from @rhombus(bind) is empty.
+ A @rhombus(when) or @rhombus(unless) may need to be used with
+ parentheses around it, especially when using a @rhombus(body) sequence,
+ since parsing may otherwise interact badly with the enclosing context.
 
  See also @rhombus(where, ~bind).
 
@@ -168,7 +173,8 @@
       match v
       | n :: Integral when n mod 2 .= 0:
           "even"
-      | n :: Integral when n mod 2 .= 1:
+      | (n :: Integral when:
+           n mod 2 .= 1):
           "odd"
       | _ :: Real:
           "other number"
@@ -179,5 +185,9 @@
     classify(2)
     classify([1, 2])
 )
+
+@(history:
+    ~changed "1.1.0.2":
+      @elem{Add a block @rhombus(body) form.})
 
 }

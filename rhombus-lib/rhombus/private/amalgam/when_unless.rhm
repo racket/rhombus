@@ -10,13 +10,21 @@ export:
     when
     unless
 
-bind.macro '$bind when $expr ...':
-  bind_meta.pack('(when_infoer,
-                   ($bind, $expr ...))')
-
-bind.macro '$bind unless $expr ...':
-  bind_meta.pack('(when_infoer,
-                   ($bind, !($expr ...)))')
+bind.macro
+| '$bind when: $body':
+    bind_meta.pack('(when_infoer,
+                     ($bind, block: $body))')
+| '$bind when $expr ... ~nonempty':
+    bind_meta.pack('(when_infoer,
+                     ($bind, $expr ...))')
+    
+bind.macro
+| '$bind unless: $body':
+    bind_meta.pack('(when_infoer,
+                     ($bind, !(block: $body)))')
+| '$bind unless $expr ... ~nonempty':
+    bind_meta.pack('(when_infoer,
+                     ($bind, !($expr ...)))')
 
 bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
   let a_info = bind_meta.get_info(bind, static_info)
