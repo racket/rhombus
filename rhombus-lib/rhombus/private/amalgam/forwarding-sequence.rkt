@@ -9,7 +9,6 @@
                      "origin.rkt")
          "syntax-parameter.rkt"
          "static-info.rkt"
-         "../version-case.rkt"
          "export-check.rkt"
          "maybe-provide.rkt")
 
@@ -146,7 +145,6 @@
                                  (local-expand #'form
                                                (get-expand-context)
                                                (list #'rhombus-forward
-                                                     #'rhombus-forward-export-all
                                                      #'define-values
                                                      #'define-syntaxes
                                                      #'define-syntax-parameter
