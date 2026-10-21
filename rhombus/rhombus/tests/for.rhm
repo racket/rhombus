@@ -817,6 +817,23 @@ block:
     ~is [[["1", "Friday"], ["2", "Friday"], ["3", "Friday"]],
          ["Friday", "Friday", "Friday", "Friday", "Friday", "Friday"]]
 
+  check:
+    def mutable accum = []
+    [for List:
+       each num_str in ["1","2","3"]
+       syntax_parameter.relet today_name:
+         "Friday"
+       def now = today
+       accum := List.cons(today, accum)
+       skip_when !num_str
+       accum := List.cons(today, accum)
+       keep_when num_str
+       accum := List.cons(today, accum)
+       [num_str, now],
+     accum]
+    ~is [[["1", "Friday"], ["2", "Friday"], ["3", "Friday"]],
+         ["Friday", "Friday", "Friday", "Friday", "Friday", "Friday", "Friday", "Friday", "Friday"]]
+
   // check syntax parameter used in sequence expression
   check:
     for List:
@@ -910,6 +927,16 @@ block:
       each_a_range j
       i+j
     ~is [0, 1, 2, 1, 2, 3]
+
+  check:
+    for List:
+      syntax_parameter.relet a_range_stx:
+        '0..2'
+      each_a_range i
+      #void
+      each_a_range j
+      i+j
+    ~is [0, 1, 1, 2]
 
 check:
   use_static

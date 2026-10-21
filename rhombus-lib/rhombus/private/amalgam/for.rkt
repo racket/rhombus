@@ -180,7 +180,7 @@
              #`((rhombus-body-sequence
                  . #,(reverse (syntax->list #'rev-bodys))))
              #'(body0 . bodys)
-             #'#hasheq()
+             #'stx-params
              syntax-local-splicing-for-clause-introduce
              ;; continue when some expr+defns are ready:
              (lambda (exprs+defns state)
