@@ -133,14 +133,15 @@
         [(_ orig static? [finish (~optional pre-clause-form)] . bodys)
          ;; initialize state
          #`(#:splice (for-clause-step orig static?
-                                      [finish () () (void) (~? pre-clause-form (void)) (~? pre-clause-form (void)) #hasheq() origins]
+                                      [finish () () (begin) (begin) (~? pre-clause-form (begin)) (~? pre-clause-form (begin)) #hasheq() origins]
                                       . bodys))]
-        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys matcher init-binder binder stx-params origins])
+        [(_ orig static? [(body-wrapper data) rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins])
          (when (null? (syntax-e #'rev-bodys))
            (raise-syntax-error #f
                                "empty body (after any clauses such as `each`)"
                                (respan #'orig)))
-         #`(#,@(reverse (syntax->list #'rev-clauses))
+         #`(#:do [oncer]
+            #,@(reverse (syntax->list #'rev-clauses))
             #:do [matcher
                   binder
                   (body-wrapper
@@ -148,32 +149,33 @@
                    (with-syntax-parameters stx-params
                      (rhombus-body
                       . #,(reverse (syntax->list #'rev-bodys)))))])]
-        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+        [(_ orig static? [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins]
             (#:push-origins new-origins new-body ...)
             . bodys)
          #`(#:splice (for-clause-step
                       orig static?
-                      [finish rev-clauses rev-bodys matcher init-binder binder stx-params new-origins]
+                      [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params new-origins]
                       new-body ...
                       (#:pop-origins origins . bodys)))]
-        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params new-origins]
+        [(_ orig static? [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params new-origins]
             (#:pop-origins origins . bodys))
          #`(#:splice (for-clause-step
                       orig static?
-                      [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+                      [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins]
                       . bodys))]
-        [(_ orig static? (~and state [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins])
+        [(_ orig static? (~and state [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins])
             body0
             . bodys)
          #:when (for-clause? #'body0)
          (cond
            [(pair? (syntax-e #'rev-clauses))
             ;; emit clauses and bind before processing a (potentially non-empty) body
-            #`(#,@(reverse (syntax->list #'rev-clauses))
+            #`(#:do [oncer]
+               #,@(reverse (syntax->list #'rev-clauses))
                #:do [matcher
                      binder]
                #:splice (for-clause-step orig static?
-                                         [finish () rev-bodys (void) init-binder init-binder stx-params origins]
+                                         [finish () rev-bodys (begin) (begin) init-binder init-binder stx-params origins]
                                          body0 . bodys))]
            [(pair? (syntax-e #'rev-bodys)) ; assert: empty rev-clauses
             ;; emit accumulated body with forward-sequence expansion
@@ -196,7 +198,7 @@
              (lambda (exprs+defns bodys stx-params)
                #`(#:do (#,@exprs+defns)
                   #:splice (for-clause-step orig static?
-                                            [finish () () (void) init-binder init-binder #,stx-params origins]
+                                            [finish () () (begin) (begin) init-binder init-binder #,stx-params origins]
                                             . #,bodys))))]
            [else
             (define parsed
@@ -233,7 +235,7 @@
                #`(#:splice (for-clause-step orig static? state
                                             (#:push-origins #,(transfer-origin parsed #'origins) new-body ...)
                                             . bodys))])])]
-        [(_ orig static? [finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+        [(_ orig static? [finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins]
             body0
             . bodys)
          #`(#:splice (for-clause-step
@@ -241,6 +243,7 @@
                       [finish
                        rev-clauses
                        (body0 . rev-bodys)
+                       oncer
                        matcher
                        init-binder
                        binder
@@ -268,7 +271,7 @@
           (lambda (exprs+defns bodys stx-params)
             #`(#:do (#,@exprs+defns)
                #:splice (for-clause-step orig static?
-                                         [finish () () (void) init-binder init-binder #,stx-params origins]
+                                         [finish () () (begin) (begin) init-binder init-binder #,stx-params origins]
                                          . #,bodys))))]))))
 
 (define-for-syntax (build-binding-clause orig-stx
@@ -278,7 +281,7 @@
                                          static?
                                          #:track track)
   (syntax-parse state-stx
-    [[finish rev-clauses rev-bodys matcher init-binder binder stx-params origins]
+    [[finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins]
      #:do [(define lhs-parsed-stxes (for/list ([bind-g (in-list (syntax->list bind-gs-stx))])
                                       (syntax-parse bind-g
                                         [lhs::binding #'lhs.parsed]
@@ -335,9 +338,11 @@
          . rev-clauses)
         ()
         (begin
-          matcher
+          oncer
           (lhs-i.oncer-id lhs-i.data)
-          ...
+          ...)
+        (begin
+          matcher
           (lhs-i.matcher-id tmp-id
                             lhs-i.data
                             if/flattened

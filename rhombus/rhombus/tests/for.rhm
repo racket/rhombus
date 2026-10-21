@@ -1013,3 +1013,17 @@ block:
     for List (x in as_seq [1, 2, 3]):
       x
     ~is [1, 2, 3]
+
+// check evaluation order of oncers
+check:
+  for:
+    println("1")
+    let _ :: satisfying(block: println("2"); fun (_): #true) = println("3")
+    println("4")
+    each _ :: satisfying(block: println("5"); fun (_): #true) in [println("6")]
+    println("7")
+    keep_let _ :: satisfying(block: println("8"); fun (_): #true) = println("9")
+    println("10")
+    each _ :: satisfying(block: println("11"); fun (_): #true) in [println("12")]
+    println("13")
+  ~prints "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n"
