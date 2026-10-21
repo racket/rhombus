@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "group.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "flatten-id-tree.rkt")
          racket/treelist
          "provide.rkt"
          "expression.rkt"
@@ -203,7 +204,7 @@
                                           (let ([suffix (list-sublist val-id i len)])
                                             (rest-matcher-id suffix rest-data
                                                              if/blocked
-                                                             (vector prefix suffix #,@(flatten-tree #'(first-evidence-ids rest-evidence-ids)))
+                                                             (vector prefix suffix #,@(flatten-id-tree #'(first-evidence-ids rest-evidence-ids)))
                                                              (loop (sub1 i))))
                                           (loop (sub1 i)))])))))
               (IF evidence success fail)))]
@@ -338,7 +339,7 @@
                                                                       (lambda () result)))
                                                               #`(build-overall-rest-getter '(first-bind-id ...)
                                                                                            accum))])
-                                            (vector getter suffix #,@(flatten-tree #'rest-evidence-ids)))
+                                            (vector getter suffix #,@(flatten-id-tree #'rest-evidence-ids)))
                                           #f))))))))
               (IF evidence success fail)))])]))
 
@@ -352,7 +353,7 @@
                          first-bind-infos first-seq-tmp-ids
                          rest-oncer-id rest-matcher-id _ rest-committer-id rest-binder-id rest-data))
      #`(begin
-         (define-values (prefix suffix #,@(flatten-tree #'evidence-ids)) (vector->values evidence))
+         (define-values (prefix suffix #,@(flatten-id-tree #'evidence-ids)) (vector->values evidence))
          #,(if (eq? (syntax-e #'head-mode) '#:splice)
                #`(first-committer-id prefix first-evidence-ids first-data)
                #'(define-values first-seq-tmp-ids (prefix)))
@@ -378,11 +379,6 @@
                                       (syntax-e #'no-rest-map?)
                                       #'rest-to-repetition))
          (rest-binder-id suffix rest-evidence-ids rest-data))]))
-
-(define-for-syntax (flatten-tree t)
-  (cond
-    [(identifier? t) (list t)]
-    [else (apply append (map flatten-tree (syntax->list t)))]))
 
 (define-for-syntax (generate-temporaries-tree t)
   (cond

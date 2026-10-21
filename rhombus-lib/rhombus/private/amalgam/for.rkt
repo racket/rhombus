@@ -8,7 +8,8 @@
                      "srcloc.rkt"
                      "statically-str.rkt"
                      "origin.rkt"
-                     "pack.rkt")
+                     "pack.rkt"
+                     "flatten-id-tree.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -380,10 +381,6 @@
 ;; evidence in the bindings, we use a simple boolean instead.
 (define-for-syntax (expand-let-clause stx-params bind-gs-stx rhs-stx
                                       #:track track)
-  (define (flatten-tree t)
-    (cond
-      [(identifier? t) (list t)]
-      [else (apply append (map flatten-tree (syntax->list t)))]))
   (syntax-parse bind-gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
@@ -395,7 +392,7 @@
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
-     #:with (lhs-i-evidence-id ...) (flatten-tree #'(lhs-i.evidence-ids ...))
+     #:with (lhs-i-evidence-id ...) (flatten-id-tree #'(lhs-i.evidence-ids ...))
      (define need-evidence? (not (null? (syntax-e #'(lhs-i-evidence-id ...)))))
      (values
       #`((lhs-i.oncer-id lhs-i.data)

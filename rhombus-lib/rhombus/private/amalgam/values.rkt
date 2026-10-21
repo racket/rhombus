@@ -4,7 +4,8 @@
                      enforest/name-parse
                      "group.rkt"
                      "srcloc.rkt"
-                     "origin.rkt")
+                     "origin.rkt"
+                     "flatten-id-tree.rkt")
          "provide.rkt"
          "binding.rkt"
          "expression.rkt"
@@ -147,14 +148,7 @@
       #:with e #'d.default
       #:with id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'b-info.name-id)))
       #:with static-infos #'b-info.static-infos
-      #:with (evidence-id ...) (let loop ([evidence #'b-info.evidence-ids]
-                                          [accum null])
-                                 (cond
-                                   [(identifier? evidence) (cons evidence accum)]
-                                   [(syntax? evidence)
-                                    (for/fold ([accum accum]) ([evidence (in-list (or (syntax->list evidence) null))])
-                                      (loop evidence accum))]
-                                   [else accum]))
+      #:with (evidence-id ...) (flatten-id-tree #'b-info.evidence-ids)
       #:with matcher-id ((make-syntax-introducer) #'matcher)
       #:with pre-defn #'(define (matcher-id id)
                           (b-info.oncer-id b-info.data)
