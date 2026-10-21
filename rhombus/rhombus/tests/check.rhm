@@ -156,12 +156,13 @@ check:
   ~completes
 
 check:
-  parameterize { Port.Output.current_error: Port.Output.current(),
+  parameterize { Port.Output.current_error: stdout,
                  testing.#{test-log-enabled?}: #false }:
     check 10/0 ~throws rx'"by zero"'
-  ~prints values("got: exception",
-                 "/: division by zero",
-                 "expected: exception rx '\"by zero\"'")
+  ~prints rx'any+ ": failed\n"
+               ++ "  got: exception /: division by zero\n"
+               ++ "  expected: exception rx '\"by zero\"'"
+               ++ any+'
 
 check:
   check 10 ~throws #'oops

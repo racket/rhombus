@@ -85,6 +85,9 @@
     [else
      (displayln msg (current-error-port))]))
 
-(define (reindent_exn_msg msg len)
-  (define newline (string-append "\n" (make-string len #\space)))
-  (string-join (regexp-split #rx"\n" msg) newline))
+(define (reindent_exn_msg msg prefix-len)
+  (define newline (string-append "\n" (make-string prefix-len #\space)))
+  (define len (string-length msg))
+  (define end (and (eqv? (string-ref msg (sub1 len)) #\newline)
+                   (sub1 len)))
+  (string-join (regexp-split #rx"\n" msg 0 end) newline))
