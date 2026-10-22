@@ -98,6 +98,20 @@ internal state, and the state can even be specific to a particular
 
 }
 
+@doc(
+  fun Sequence.batch(seq :: Sequence, k :: PosInt)
+    :: Sequence.assume_of(List.of(Any.like_element(seq)))
+){
+
+Returns a @tech{sequence} whose elements are @tech{lists}
+with the first batch of @rhombus(k) elements of @rhombus(seq),
+then the next batch of @rhombus(k), and so on.
+
+@examples(
+  for List (e: Sequence.batch(0..8, 3)): e
+)
+
+}
 
 @doc(
   fun Sequence.make(
