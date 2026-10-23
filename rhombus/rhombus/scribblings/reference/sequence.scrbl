@@ -107,7 +107,7 @@ Returns a @tech{sequence} whose elements are @tech{lists}
 with the first batch of @rhombus(k) elements of @rhombus(seq),
 then the next batch of @rhombus(k), and so on.
 The last batch will have less than @rhombus(k) elements if
-@racket(seq) has a length not a multiple of @rhombus(k).
+@rhombus(seq) has a length not a multiple of @rhombus(k).
 
 @examples(
   for List (e: Sequence.batch(0..8, 3)): e
