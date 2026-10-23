@@ -161,9 +161,12 @@
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
     (syntax-parse (unpack-term stx who #f)
-      #:datum-literals (group)
-      [(_::parens (group infoer-id:identifier)
-                  (group data))
+      #:literals (chain-to-infoer)
+      #:datum-literals (group parsed)
+      [(~or* (_::parens (group chain-to-infoer) ; shortcut: remove indirection
+                        (group (parsed #:rhombus/bind/chain (infoer-id data))))
+             (_::parens (group infoer-id:identifier)
+                        (group data)))
        (pack-term #`(parsed #:rhombus/bind #,(binding-form #'infoer-id
                                                            #'data)))]
       [_ (raise-arguments-error* who rhombus-realm
@@ -349,9 +352,16 @@
   (definition-transformer
     (lambda (stx name-prefix effect-id) (list (parse-if-bridge stx)))))
 
+(define-syntax (chain-to-infoer stx)
+  (syntax-parse stx
+    #:datum-literals (group parsed)
+    [(_ up-static-infos (parsed #:rhombus/bind/chain (infoer-id data)))
+     #:with impl::binding-impl #'(infoer-id up-static-infos data)
+     #'impl.info]))
+
 (define-for-syntax (parse-chain-to-oncer rhombus stx)
   (syntax-parse stx
-    #:datum-literals (group)
+    #:datum-literals (group parsed)
     [(_ (_::parens (group (parsed #:rhombus/bind/info/chain
                                   (oncer-id matcher-id committer-id binder-id data)))))
      #'(oncer-id data)]))
@@ -367,7 +377,7 @@
 (define-for-syntax (parse-chain-to-matcher rhombus stx)
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
-    #:datum-literals (group)
+    #:datum-literals (group parsed)
     [(_ (_::parens (group arg-id:identifier)
                    (group (parsed #:rhombus/bind/info/chain
                                   (oncer-id matcher-id committer-id binder-id data)))

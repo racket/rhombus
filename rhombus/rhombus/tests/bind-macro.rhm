@@ -462,3 +462,17 @@ meta:
                           ~track: [new_stx])
         .property(#'origin)
       ~is old_stx
+
+// check that `bind_meta.{unpack,pack}` round-trips
+bind.macro 'noop $b':
+  bind_meta.pack(bind_meta.unpack(b))
+
+check:
+  let noop x = 10
+  x
+  ~is 10
+
+check:
+  let noop [x, y, z] = [1, 2, 3]
+  x+y+z
+  ~is 6
