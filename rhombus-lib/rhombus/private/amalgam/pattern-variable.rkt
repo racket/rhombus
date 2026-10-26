@@ -134,39 +134,40 @@
     [else
      (define attrs (syntax->list attributes))
      (define attr-tmps (generate-temporaries attrs))
-     (make-expression+repetition
-      (cond
-        [(= depth 0)
-         #'()]
-        [(null? attrs)
-         #`(([(elem) (in-list (#,unpack* #'$ #,temp-id #,depth))])
-            #,@(for/list ([i (in-range (sub1 depth))])
-                 #`([(elem) (in-list elem)])))]
-        [else
-         #`(([(elem) (in-list (#,unpack* #'$ #,temp-id #,depth))]
-             #,@(for/list ([var (in-list attrs)]
-                           [tmp (in-list attr-tmps)])
-                  (define attr (syntax-list->pattern-variable var))
-                  #`[(#,tmp) (in-list #,(pattern-variable-val-id attr))]))
-            #,@(for/list ([i (in-range (sub1 depth))])
-                 #`([(elem) (in-list elem)]
-                    #,@(for/list ([tmp (in-list attr-tmps)])
-                         #`[(#,tmp) (in-list #,tmp)]))))])
-      (cond
-        [(= depth 0)
-         (let-values ([(e tail) (id-handler #'(x))])
-           e)]
-        [(null? attrs)
-         #'elem]
-        [else
-         #`(maybe-syntax-wrap
-            elem
-            0
-            (quote #,key)
-            #,(build-attribute-hash (datum->syntax #f attrs) #:vars attr-tmps))])
-      (lambda () statinfos)
-      #:repet-handler (lambda (stx next) (next))
-      #:expr-handler expr-handler)]))
+     (with-syntax ([(elem) (generate-temporaries '(elem))])
+       (make-expression+repetition
+        (cond
+          [(= depth 0)
+           #'()]
+          [(null? attrs)
+           #`(([(elem) (in-list (#,unpack* #'$ #,temp-id #,depth))])
+              #,@(for/list ([i (in-range (sub1 depth))])
+                   #`([(elem) (in-list elem)])))]
+          [else
+           #`(([(elem) (in-list (#,unpack* #'$ #,temp-id #,depth))]
+               #,@(for/list ([var (in-list attrs)]
+                             [tmp (in-list attr-tmps)])
+                    (define attr (syntax-list->pattern-variable var))
+                    #`[(#,tmp) (in-list #,(pattern-variable-val-id attr))]))
+              #,@(for/list ([i (in-range (sub1 depth))])
+                   #`([(elem) (in-list elem)]
+                      #,@(for/list ([tmp (in-list attr-tmps)])
+                           #`[(#,tmp) (in-list #,tmp)]))))])
+        (cond
+          [(= depth 0)
+           (let-values ([(e tail) (id-handler #'(x))])
+             e)]
+          [(null? attrs)
+           #'elem]
+          [else
+           #`(maybe-syntax-wrap
+              elem
+              0
+              (quote #,key)
+              #,(build-attribute-hash (datum->syntax #f attrs) #:vars attr-tmps))])
+        (lambda () statinfos)
+        #:repet-handler (lambda (stx next) (next))
+        #:expr-handler expr-handler))]))
 
 (define-for-syntax (build-wrap-syntax-for-attributes base-stx key attributes)
   (cond
