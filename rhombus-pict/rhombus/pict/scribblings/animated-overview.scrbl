@@ -179,7 +179,7 @@ how fast the presenter advances each slide:
 @centered(stretched_timeline)
 
 The red dots to start epochs become ovals to represent a slide at rest.
-The right end end of a red oval is the start of a transition to a new
+The right end of a red oval is the start of a transition to a new
 slide, and the new slide arrives fully at the left edge of the next red
 oval. The space between between red ovals for epoch @rhombus(1) is twice
 as large as the other spaces, because that epoch's extent is twice as
