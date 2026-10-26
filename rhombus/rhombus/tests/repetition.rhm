@@ -676,3 +676,24 @@ check:
   ~matches [[['1', '1'], ['a', 'b']],
             [['2'], ['c']],
             [['3', '3', '3'], ['d', 'e', 'f']]]
+
+check:
+  ~eval
+  [["a", ...], ...]
+  ~throws "not a repetition"
+
+check:
+  ~eval
+  [["a", ..., "b"], ...]
+  ~throws "not a repetition"
+
+check:
+  ~eval
+  [{"a", ...}, ...]
+  ~throws "not a repetition"
+
+check:
+  ~eval
+  [{"a", ..., "b"}, ...]
+  ~throws "not a repetition"
+

@@ -39,6 +39,8 @@
             repetition-as-length
             render-repetition
 
+            check-is-repetition
+
             flatten-repetition
             consume-repetition
             unwrap-repetition
@@ -265,6 +267,12 @@
         (if (static-infos-empty? infos)
             seq-expr
             (wrap-static-info seq-expr #'#%index-result infos))])]))
+
+(define-for-syntax (check-is-repetition rep-parsed)
+  (syntax-parse rep-parsed
+    [rep-info::repetition-info
+     (when (null? (syntax-e #'rep-info.for-clausess))
+       (raise-syntax-error #f "not a repetition" (maybe-respan rep-parsed) #f null))]))
 
 (define-for-syntax (flatten-repetition rep-parsed count
                                        #:pack-element [pack-element values]

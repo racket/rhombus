@@ -194,6 +194,7 @@
            (transfer-origin rep-parsed stx))
          (cond
            [(is-sequence? form)
+            (check-is-repetition rep-parsed)
             (define rev-for-clausess (reverse for-clausess))
             (values (reverse (cdr rev-for-clausess))
                     (add-origin

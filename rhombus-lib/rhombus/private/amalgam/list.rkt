@@ -1663,7 +1663,9 @@
           ;; special case, originally especially to expose static info on rest elements
           (define seq (list-rest-syntax (car content)))
           (cond
-            [repetition? (consume-repetition seq rep-solo-for-form static-infos)]
+            [repetition?
+             (check-is-repetition seq)
+             (consume-repetition seq rep-solo-for-form static-infos)]
             [else (wrap-static-info* seq static-infos)])]
          [(not repetition?)
           (wrap-static-info*
