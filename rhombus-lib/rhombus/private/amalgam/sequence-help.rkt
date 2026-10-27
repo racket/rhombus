@@ -39,7 +39,6 @@
 
 (define-for-syntax (make_sequence_constructor proc)
   (lambda (stx)
-    (define approx-for-old-racket? (version<? (version) "8.10.0.3"))
     (syntax-parse stx
       [[(lhs:identifier ...) (_ expr)]
        (define s (proc (regroup #`(lhs ... (block (group (parsed #:rhombus/expr expr)))))))
@@ -111,19 +110,11 @@
                    (rhombus-body-at* outer-tag outer-check-g ...))
                  ([loop-id (rhombus-expression (group loop-rhs ...))] ...)
                  (rhombus-body-at* head-tag head-guard-g ...)
-                 #,(if (and (attribute inner)
-                            approx-for-old-racket?)
-                       #`([(inner.bind ...) (rhombus-expression (group inner.rhs ...))]
-                          ...)
-                       #'())
-                 #,@(if (and (attribute inner)
-                             (not approx-for-old-racket?))
-                        (list
-                         #'(begin
-                             (rhombus-body-sequence
-                              (group def inner.bind ... rhombus= inner.rhs ...)
-                              ...)))
-                        null)
+                 ()
+                 (begin
+                   (rhombus-body-sequence
+                    (group def inner.bind ... rhombus= inner.rhs ...)
+                    ...))
                  (rhombus-body-at* pre-tag pre-guard-g ...)
                  (rhombus-body-at* post-tag post-guard-g ...)
                  ((rhombus-expression recur-g) ...))]])]
