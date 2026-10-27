@@ -33,3 +33,10 @@ for Set (i :: PosInt in [1, 2, 3, 4, 5],
 for values(num :: Nat = 0, lst :: List = []):
   each i in [1, 2, 3, 4, 5]
   values(num + i, lst.add(i))
+
+for List:
+  splice:
+    let i = 1
+    each j in i ..= i+3
+    let k = j+1
+  k

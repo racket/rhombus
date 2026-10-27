@@ -74,10 +74,13 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
       ~is [sym, n]
 
 check_origins(def_rhm,
-              #false,
+              #'#{rhombus/defn},
               { #'let: 2,
-                #'def: 2,
-                #'x1: 2,
+                #'def: 2 })
+
+check_origins(def_rhm,
+              #false,
+              { #'x1: 2,
                 #'x2: 2,
                 #'x3: 2,
                 #'x4: 3 })
@@ -177,26 +180,30 @@ check_origins(class_rhm,
 
 check_origins(for_rhm,
               #'#{rhombus/reducer},
-              { #'List: 1,
+              { #'List: 2,
                 #'PairList: 1,
                 #'Set: 1 })
 
 check_origins(for_rhm,
               #'#{rhombus/for_clause},
-              { #'each: 3,
+              { #'each: 4,
                 #'keep_when: 1,
                 #'skip_when: 1,
                 #'break_when: 1,
                 #'final_when: 1,
                 #'keep_let: 1,
-                #'splice: 4 })
+                #'splice: 5 })
+
+check_origins(for_rhm,
+              #'#{rhombus/defn},
+              { #'let: 2 })
 
 check_origins(for_rhm,
               #false,
               { #'#{..}: 3,
                 #'#{<}: 2,
                 #'#{==}: 2,
-                #'#{+}: 3,
+                #'#{+}: 5,
                 #'#{-}: 1,
                 #'dynamic: 1,
                 #'#{|.|}: 1 })

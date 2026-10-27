@@ -192,7 +192,7 @@
                   ;; `expand-forwarding-sequence-continue`
                   ;; and eventually get back to `for-clause-step` mode:
                   #:splice (for-clause-forwarding-step
-                            orig static? finish init-binder
+                            orig static? finish init-binder origins
                             #,state)))
              ;; continue when no more exprs and defns:
              (lambda (exprs+defns bodys stx-params)
@@ -257,7 +257,8 @@
   (lambda (stx)
     (with-syntax-error-respan
       (syntax-parse stx
-        [(_ orig static? finish init-binder state)
+        [(_ orig static? finish init-binder origins
+            state)
          (expand-forwarding-sequence-continue
           #'state
           syntax-local-splicing-for-clause-introduce
@@ -265,7 +266,7 @@
           (lambda (exprs+defns state)
             #`(#:do (#,@exprs+defns)
                #:splice (for-clause-forwarding-step
-                         orig static? finish init-binder
+                         orig static? finish init-binder origins
                          #,state)))
           ;; continue when no more exprs and defns:
           (lambda (exprs+defns bodys stx-params)

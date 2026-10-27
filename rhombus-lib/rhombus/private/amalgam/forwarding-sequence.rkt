@@ -189,7 +189,7 @@
                                    sub-form ...
                                    (rhombus-forward #:pop . #,(intro #'forms)))))]
                [_
-                ;; already in `let` mode; this shouldnt' happen, but a binder might expand to `let`
+                ;; already in `let` mode; this shouldn't happen, but a binder might expand to `let`
                 (transfer-origin
                  exp-form
                  #`(sequence [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] sub-form ... . forms))])]
@@ -458,7 +458,9 @@
       ;; bodys:
       (#,@bodys (quote-syntax (expanded-accum . #,accum-scopes) #:local))
       ;; expand-context:
-      #,(list (gensym 'expand))]
+      #,(list (gensym 'expand))
+      ;; origins:
+      #f]
    local-introduce
    ;; should lead to `expand-forwarding-sequence-continue`:
    expr-k
@@ -467,22 +469,30 @@
 
 (define-for-syntax (expand-forwarding-sequence-continue all-state local-introduce expr-k done-k)
   (syntax-parse all-state
-    [(state bodys expand-context)
+    [[state bodys expand-context origins]
      (define step-stx (forwarding-sequence-step #`(sequence state . bodys)
                                                 #f (lambda () (syntax->datum #'expand-context))
                                                 local-introduce))
-     (syntax-parse step-stx
-       #:literals (begin expanded)
+     (define-values (s-bodys s-form)
+       (syntax-parse step-stx
+         #:literals (begin)
+         [(begin s-body ... s-form)
+          (values (map (lambda (stx)
+                         (transfer-origin #'origins stx))
+                       (syntax->list #'(s-body ...)))
+                  #'s-form)]
+         [_
+          (values null step-stx)]))
+     (syntax-parse s-form
+       #:literals (expanded)
        [(expanded [(-expanded-accum . accum-scopes) stx-params])
-        (done-k null #'accum-scopes #'stx-params)]
-       [(begin s-body ... (expanded [(-expanded-accum . accum-scopes) stx-params]))
-        (done-k (syntax->list #'(s-body ...)) #'accum-scopes #'stx-params)]
-       [(begin s-body ... (_ state . bodys))
-        ;; should lead to `expand-forwarding-sequence-continue`:
-        (expr-k (syntax->list #'(s-body ...))
-                #`[state bodys expand-context])]
+        (done-k s-bodys #'accum-scopes #'stx-params)]
        [(_ state . bodys)
-        (expand-forwarding-sequence-continue #`[state bodys expand-context] local-introduce expr-k done-k)])]))
+        (define new-all-state #`[state bodys expand-context #,(transfer-origin s-form #'origins)])
+        (if (null? s-bodys)
+            (expand-forwarding-sequence-continue new-all-state local-introduce expr-k done-k)
+            ;; should lead to `expand-forwarding-sequence-continue`:
+            (expr-k s-bodys new-all-state))])]))
 
 (define-for-syntax (expand-bridge-definition-sequence defs def-ctx expand-context params-box track-box)
   (define seq #`(sequence [(#:bridge) base-ctx add-ctx remove-ctx all-ctx #,(unbox params-box) #f #f] #,defs))
