@@ -799,6 +799,24 @@ check_spacer:
   | '($(bind.full) $unquote_bind, $bind)'
 
 check_spacer:
+  syntax_class Something:
+    fields:
+      i :: Int
+      [[j :~ Int, ...], ...]
+  | '$_':
+      field i :: Int = 5
+      field [[j :: Int, ...], ...] = [[1, 2], [3, 4, 5]]
+  $(defn.full) $none:
+    $(syntax_class_clause.full):
+      $none $bind $annot
+      [[$none $bind $annot, $bind], $bind]
+  | '$(bind.full) $unquote_bind':
+      $(pattern_clause.full) $none $bind $annot
+        $expr $datum
+      $(pattern_clause.full) [[$none $bind $annot, $bind], $bind]
+        $expr [[$datum, $datum], [$datum, $datum, $datum]]
+
+check_spacer:
   syntax_class Complex(
     pos,
     pos_opt_a = 1 + 2,
@@ -883,7 +901,6 @@ check_spacer:
            $(pattern_clause.full) $none $expr $expr . $field($expr)
      )':
       $body . $field($body . $field(), $body)
-
 
 check_spacer:
   Parameter.def color = "red"

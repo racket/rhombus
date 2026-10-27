@@ -1262,20 +1262,29 @@ meta:
   syntax_class.together:
     syntax_class NameRepet(esc):
       kind ~sequence
-    | '[$(_ :: NameRepet(esc)), $('...')]'
-    | '$(_ :: Name(esc))'
-  fun adjust_name_repet(repet, esc):
+    | '[$(_ :: NameRepet(esc): open), $('...')]'
+    | '$(_ :: Name(esc)) $(colon && '::') $(ann :: Sequence)'
+    | '$(_ :: Name(esc)) $(colon && ':~') $(ann :: Sequence)'
+    | '$(_ :: Name(esc))': field colon = #false; field ann = #false
+  fun adjust_name_repet(repet, esc) :~ Syntax:
     match repet
     | '$(outer :: Term
            && '[$(g1 && inner), $(g2 && '$(dots :: Term)')]')':
         let new_g1:
           let new_inner = adjust_name_repet(inner, esc)
-          Syntax.make_group([new_inner]).relocate_group(g1)
+          new_inner.relocate_group(g1)
         let new_g2:
           let new_dots = spacer.set(dots, #'~bind)
           Syntax.make_group([new_dots]).relocate_group(g2)
         '[$new_g1, $new_g2]'.relocate(outer)
-    | ~else: repet
+    | (pattern
+       | '$(name :: Name(esc)) $(colon && '::') $(ann :: Sequence)'
+       | '$(name :: Name(esc)) $(colon && ':~') $(ann :: Sequence)'):
+        let new_colon = spacer.set(colon, #'bind)
+        let new_ann = spacer.adjust_sequence(ann, #'annot, esc)
+        '$name $new_colon $new_ann'
+    | ~else:
+        repet
 
 spacer.bridge fields(self, tail, context, esc):
   ~in: ~syntax_class_clause
@@ -1319,11 +1328,12 @@ meta:
          $(pattern:
              kind ~sequence
            | '$(rhs :: Rhs)'
-           | ': $(rhs :: Block)'
-           | '': field rhs = #false)':
+           | ': $(rhs :: Block)')':
         let new_spec = adjust_name_repet(spec, esc)
         let new_rhs = if rhs | adjust_rhs(rhs, esc) | ''
         '$new_spec $new_rhs'.relocate_group(fld)
+    | '$(spec :: NameRepet(esc))':
+        adjust_name_repet(spec, esc).relocate_group(fld)
     | ~else: fld
 
 spacer.bridge match_def(self, tail, context, esc):
