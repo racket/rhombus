@@ -618,7 +618,7 @@
                    #'(let ()
                        (a.matcher-id rest-arg-id a.data
                                      if/blocked
-                                     (let ()
+                                     (begin
                                        (a.committer-id rest-arg-id a.evidence-ids a.data)
                                        (a.binder-id rest-arg-id a.evidence-ids a.data)
                                        (define-static-info-syntax/maybe a-bind-id . a-bind-static-infos)
@@ -688,7 +688,7 @@
                                      (let ()
                                        (a.matcher-id kw-map a.data
                                                      if/blocked
-                                                     (let ()
+                                                     (begin
                                                        (a.committer-id kw-map a.evidence-ids a.data)
                                                        (a.binder-id kw-map a.evidence-ids a.data)
                                                        (define-static-info-syntax/maybe a-bind-id . a-bind-static-infos)
@@ -721,7 +721,7 @@
                            [(check-not-undefined lhs-arg-id)
                             (lhs.matcher-id lhs-arg-id lhs.data
                                             if/blocked
-                                            (let ()
+                                            (begin
                                               (lhs.committer-id lhs-arg-id lhs.evidence-ids lhs.data)
                                               (lhs.binder-id lhs-arg-id lhs.evidence-ids lhs.data)
                                               (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
@@ -769,7 +769,7 @@
                               (let ()
                                 (rhs.matcher-id res-in-id rhs.data
                                                 if/flattened
-                                                (void)
+                                                (begin)
                                                 (raise-result-annotation-failure (who) res-in-id 'rhs-str))
                                 (rhs.committer-id res-in-id rhs.evidence-ids rhs.data)
                                 (rhs.binder-id res-in-id rhs.evidence-ids rhs.data)

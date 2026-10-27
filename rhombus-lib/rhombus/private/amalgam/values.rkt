@@ -138,7 +138,7 @@
 (begin-for-syntax
   (define-splicing-syntax-class :accum
     #:description "accumulator with optional annotation"
-    #:attributes (id e static-infos pre-defn defns checks b-parsed)
+    #:attributes (id e static-infos pre-defn defns check b-parsed)
     (pattern d::var-decl
       #:with b::binding (regroup #'(d.bind ...))
       #:with b-parsed::binding-form #'b.parsed
@@ -149,22 +149,26 @@
       #:with id ((make-syntax-introducer) (datum->syntax #f (syntax-e #'b-info.name-id)))
       #:with static-infos #'b-info.static-infos
       #:with (evidence-id ...) (flatten-id-tree #'b-info.evidence-ids)
+      #:do [(define need-evidence? (not (null? (syntax-e #'(evidence-id ...)))))]
       #:with matcher-id ((make-syntax-introducer) #'matcher)
-      #:with pre-defn #'(define (matcher-id id)
+      #:with pre-defn #`(define (matcher-id id)
                           (b-info.oncer-id b-info.data)
                           (b-info.matcher-id id
                                              b-info.data
                                              if/flattened
                                              (begin)
                                              (values-binding-failure who id 'b-info.annotation-str))
-                          (values evidence-id ...))
-      #:attr defns #`((define-values (evidence-id ...) (matcher-id id))
+                          #,(if need-evidence?
+                                #'(values evidence-id ...)
+                                #'(void)))
+      #:attr defns #`(#,(if need-evidence?
+                            #'(define-values (evidence-id ...) (matcher-id id))
+                            #'(matcher-id id))
                       (b-info.committer-id id b-info.evidence-ids b-info.data)
                       (b-info.binder-id id b-info.evidence-ids b-info.data)
                       (define-static-info-syntax/maybe bind-id . bind-static-infos)
                       ...)
-      #:attr checks #`((matcher-id id)
-                       (void)))))
+      #:attr check #'(matcher-id id))))
 
 (define-reducer-syntax values
   (reducer-transformer
@@ -187,16 +191,15 @@
                               (if (= 1 (length siss-l))
                                   (car siss-l)
                                   #`((#%values #,siss))))
-                            #'([accum.id accum.defns accum.checks]
+                            #'([accum.id accum.defns accum.check]
                                ...)))
          #'tail)]))))
 
 (define-syntax (build-values-check-result stx)
   (syntax-parse stx
-    [(_ ([id defns (check ...)] ...) e)
+    [(_ ([id defns check] ...) e)
      #'(let-values ([(id ...) e])
          check
-         ...
          ...
          (values id ...))]))
 
@@ -210,7 +213,7 @@
 
 (define-syntax (build-values-next stx)
   (syntax-parse stx
-    [(_ ([id defns checks] ...) e)
+    [(_ ([id defns check] ...) e)
      #'(let-values ([(id ...) e])
          (values id ...))]))
 

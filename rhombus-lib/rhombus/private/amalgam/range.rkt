@@ -1882,7 +1882,7 @@
                                          (#,check-step-stx '#,step-who step))
                                        step)])
                      '()))
-             (void)
+             (begin)
              ([pos start])
              (if end (pos . #,<?-id . end) #t)
              ([(#,id) pos])

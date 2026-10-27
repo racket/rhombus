@@ -181,7 +181,7 @@
 (define-syntax (empty-oncer stx)
   (syntax-parse stx
     [(_ _)
-     #'(void)]))
+     #'(begin)]))
 
 (define-syntax (always-succeed stx)
   (syntax-parse stx
