@@ -331,7 +331,8 @@
                     (constructor-name-field ...)]
           exports
           [option stx-params] ...)
-       #:with [(constructor-field-converter constructor-field-annotation-str constructor-field-static-infos)
+       #:with [(constructor-field-converter constructor-field-annotation-str constructor-field-static-infos
+                                            constructor-field-origins)
                ...] (parse-field-annotations #'(constructor-field-ann-seq ...))
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...) #'(stx-params ...)))
@@ -908,7 +909,9 @@
                                                deserializer-name
                                                constructor-name)))))
            (transfer-origins
-            (syntax->list #'(option ...))
+            (append (syntax->list #'(option ...))
+                    (apply append
+                           (map syntax->list (syntax->list #'(constructor-field-origins ...)))))
             #`(begin
                 #,@defns
                 #,@post-forms))))])))

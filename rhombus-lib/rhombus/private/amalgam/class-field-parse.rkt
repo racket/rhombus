@@ -84,5 +84,5 @@
 (define (parse-field-annotations ann-seqs-stx)
   (for/list ([seq (in-list (syntax->list ann-seqs-stx))])
     (syntax-parse seq
-      [#f (list #'#f #'#f #'())]
-      [(c::inline-annotation) (list #'c.converter #'c.annotation-str #'c.static-infos)])))
+      [#f (list #'#f #'#f #'() null)]
+      [(c::inline-annotation) (list #'c.converter #'c.annotation-str #'c.static-infos (attribute c.origins))])))
