@@ -30,12 +30,18 @@ bind.macro
      $(bind_right_expr :: Bind_Right_Expr)
      ...':
     let ['$(bind_r :: bind_meta.Parsed)', ...] = ['$bind_right_expr.bind ...', ...]
-    bind_meta.pack('(where_infoer,
-                     ($bind_left, ($bind_r, $bind_right_expr.expr), ...))')
+    syntax_meta.track_origin(
+      bind_meta.pack('(where_infoer,
+                       ($bind_left, ($bind_r, $bind_right_expr.expr), ...))'),
+      [bind_r, ...]
+    )
 | '$bind_left where $bind_right ... = $expr ...':
     let '$(bind_r :: bind_meta.Parsed)' = '$bind_right ...'
-    bind_meta.pack('(where_infoer,
-                     ($bind_left, ($bind_r, $expr ...)))')
+    syntax_meta.track_origin(
+      bind_meta.pack('(where_infoer,
+                       ($bind_left, ($bind_r, $expr ...)))'),
+      [bind_r]
+    )
 
 bind.infoer 'where_infoer($static_info, ($bind_a, ($bind_b, $b_expr), ...))':
   let a_info = bind_meta.get_info(bind_a, static_info)
