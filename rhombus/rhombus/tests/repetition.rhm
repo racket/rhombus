@@ -697,3 +697,10 @@ check:
   [{"a", ..., "b"}, ...]
   ~throws "not a repetition"
 
+check:
+  let [f, ...]:
+    match 'a b c'
+    |'$(a :: Identifier) ...':
+       [a.unwrap, ...]
+  [f(), ...]
+  ~is [#'a, #'b, #'c]

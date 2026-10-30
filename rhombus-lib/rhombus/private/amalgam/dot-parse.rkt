@@ -6,7 +6,9 @@
          "parens.rkt"
          (submod "assign.rkt" for-assign)
          (only-in "repetition.rkt"
-                  identifier-repetition-use)
+                  identifier-repetition-use
+                  :repetition-info
+                  make-repetition-info)
          "op-literal.rkt"
          "function-arity.rkt"
          "static-info.rkt")
@@ -79,7 +81,16 @@
              proc)
            ;; return partially applied method
            (lambda (reloc)
-             (reloc #`(#,id #,(discard-static-infos lhs))))))
+             (reloc (cond
+                      [repetition?
+                       (syntax-parse lhs
+                         [e::repetition-info
+                          (make-repetition-info #'e.rep-expr
+                                                #'e.for-clausess
+                                                #`(#,id e.body)
+                                                #'e.element-static-infos
+                                                #'e.used-depth)])]
+                      [else #`(#,id #,(discard-static-infos lhs))])))))
 
     (define (field direct-id mutable?)
       (define rator (make-rator direct-id))
