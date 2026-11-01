@@ -161,9 +161,10 @@
                   (group (parsed #:rhombus/bind/info/chain
                                  (b.oncer-id b.matcher-id b.committer-id b.binder-id b.data)))))]))
 
-  (define/arity (bind_meta.pack stx)
+  (define/arity (bind_meta.pack stx #:track [components-in null])
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
+    (define components (check-origins who components-in))
     (syntax-parse (unpack-term stx who #f)
       #:literals (chain-to-infoer)
       #:datum-literals (group parsed)
@@ -171,18 +172,17 @@
                         (group (parsed #:rhombus/bind/chain (infoer-id data))))
              (_::parens (group infoer-id:identifier)
                         (group data)))
-       (pack-term #`(parsed #:rhombus/bind #,(binding-form #'infoer-id
-                                                           #'data)))]
+       (pack-term #`(parsed #:rhombus/bind #,(transfer-origins
+                                              components
+                                              (binding-form #'infoer-id
+                                                            #'data))))]
       [_ (raise-arguments-error* who rhombus-realm
                                  "ill-formed unpacked binding"
                                  "syntax object" stx)]))
 
-  (define/arity (bind_meta.pack_info stx #:track [components-in null])
+  (define/arity (bind_meta.pack_info stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
-    (define components (check-origins who components-in))
-    (pack-term #`(parsed #:rhombus/bind/info #,(transfer-origins
-                                                components
-                                                (pack-info who stx)))))
+    (pack-term #`(parsed #:rhombus/bind/info #,(pack-info who stx))))
 
   (define/arity (bind_meta.get_info stx unpacked-static-infos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))

@@ -146,7 +146,7 @@
  The optional @rhombus(track_stxes) argument is passed along to
  @rhombus(syntax_meta.track_origin) on the resulting syntax object to connect
  expansion tracking from the @rhombus(track_stxes) members to the packed
- binding expansion; see also @secref("stxobj-track").
+ annotation expansion; see also @secref("stxobj-track").
 
  The @rhombus(annot_meta.unpack_predicate) function is
  the inverse of @rhombus(annot_meta.pack_predicate), returning two
