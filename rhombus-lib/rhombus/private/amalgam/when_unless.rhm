@@ -13,18 +13,22 @@ export:
 bind.macro
 | '$bind when: $body':
     bind_meta.pack('(when_infoer,
-                     ($bind, block: $body))')
+                     ($bind, block: $body))',
+                   ~track: [bind])
 | '$bind when $expr ... ~nonempty':
     bind_meta.pack('(when_infoer,
-                     ($bind, $expr ...))')
-    
+                     ($bind, $expr ...))',
+                   ~track: [bind])
+
 bind.macro
 | '$bind unless: $body':
     bind_meta.pack('(when_infoer,
-                     ($bind, !(block: $body)))')
+                     ($bind, !(block: $body)))',
+                   ~track: [bind])
 | '$bind unless $expr ... ~nonempty':
     bind_meta.pack('(when_infoer,
-                     ($bind, !($expr ...)))')
+                     ($bind, !($expr ...)))',
+                   ~track: [bind])
 
 bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
   let a_info = bind_meta.get_info(bind, static_info)

@@ -38,3 +38,16 @@ match 1
 | y && x :: Int: #void
 
 1 matches ((_ :: PosInt) || (_ :: NegInt) && !2)
+
+List[1, 2, 3] matches (List[x, y, z] where #%literal 6 = x + y + z)
+List[1, 2, 3] matches (List[x, y, z] where:
+                         k = x + y + z
+                         #%literal 6 = k)
+
+List[1, 2, 3] matches (List[x, y, z] when x + y + z == 6)
+List[1, 2, 3] matches (List[x, y, z] when:
+                         x + y + z == 6)
+
+List[1, 2, 3] matches (List[x, y, z] unless x + y + z != 6)
+List[1, 2, 3] matches (List[x, y, z] unless:
+                         x + y + z != 6)
