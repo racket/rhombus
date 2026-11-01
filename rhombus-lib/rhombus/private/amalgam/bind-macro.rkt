@@ -359,8 +359,12 @@
 (define-syntax (chain-to-infoer stx)
   (syntax-parse stx
     #:datum-literals (group parsed)
-    [(_ up-static-infos (parsed #:rhombus/bind/chain (infoer-id data)))
-     #:with impl::binding-impl #'(infoer-id up-static-infos data)
+    [(_ (_::parens (group up-static-infos)
+                   (group (parsed #:rhombus/bind/chain (infoer-id data)))))
+     #:with impl::binding-impl #`(infoer-id
+                                  #,(pack-static-infos (syntax-e #'infoer-id)
+                                                       #'up-static-infos)
+                                  data)
      #'impl.info]))
 
 (define-for-syntax (parse-chain-to-oncer rhombus stx)
