@@ -24,6 +24,7 @@ namespace Sequence:
     instantiate
     generate
     to_stream
+    batch
     assume_of
   annot.macro 'assume_of($(ann :: Group), ...)':
     ~all_stx: stx
@@ -90,3 +91,19 @@ fun generate(seq :: Sequence) :~ values(Function.of_arity(0), Function.of_arity(
 
 fun to_stream(seq :: Sequence) :~ Stream.assume_of(Any.like_element(seq)):
   base.#{sequence->stream}(seq)
+
+fun batch(seq :: Sequence, k :: PosInt) :~ Sequence.assume_of(List.of(Any.like_element(seq))):
+  ~name: Sequence.batch
+  Sequence.instantiable(
+    fun ():
+      let values(more, get): Sequence.generate(seq)
+      Sequence.instantiate(
+        ~position_to_element:
+          fun (_):
+            for List (i: 0..k):
+              break_when: !more()
+              get(),
+        ~position_to_next: values,
+        ~initial_position: #false,
+        ~continue_at_value:
+          fun (val :: List): val.length() > 0))
