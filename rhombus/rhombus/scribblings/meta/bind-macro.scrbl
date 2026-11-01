@@ -65,7 +65,10 @@
 
 @doc(
   ~meta
-  fun bind_meta.pack(stx :: Syntax) :: Syntax
+  fun bind_meta.pack(
+    stx :: Syntax,
+    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
+  ) :: Syntax
 ){
 
  Packs binding information that is represented by a syntax object with
@@ -80,11 +83,20 @@
  that transformer to get initial binding information and further
  ``continuations'' for generating matching and variable-defining forms.
 
+ The optional @rhombus(track_stxes) argument is passed along to
+ @rhombus(syntax_meta.track_origin) on the resulting syntax object to connect
+ expansion tracking from the @rhombus(track_stxes) members to the packed
+ binding expansion; see also @secref("stxobj-track").
+
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
 
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
+
+@(history:
+    ~changed "1.1.0.2":
+      @elem{Added the @rhombus(~track) argument.})
 
 }
 
@@ -128,10 +140,7 @@
 
 @doc(
   ~meta
-  fun bind_meta.pack_info(
-    stx :: Syntax,
-    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
-  ) :: Syntax
+  fun bind_meta.pack_info(stx :: Syntax) :: Syntax
   grammar evidence_id_tree
   | $id
   | ($evidence_id_tree, ...)
@@ -221,13 +230,13 @@
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
 
- The optional @rhombus(track_stxes) argument is passed along to
- @rhombus(syntax_meta.track_origin) on the resulting syntax object to connect
- expansion tracking from the @rhombus(track_stxes) members to the packed
- binding expansion.
-
  See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
  examples.
+
+@(history:
+    ~changed "1.1.0.2":
+      @elem{Removed the @rhombus(~track) argument.})
+
 }
 
 @doc(

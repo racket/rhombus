@@ -124,7 +124,9 @@ check_origins(bind_rhm,
               { #'#{&&}: 2,
                 #'#{\|\|}: 1,
                 #'#{!}: 1,
-                #'#{::}: 8 })
+                #'#{::}: 8,
+                #'List: 6,
+                #'#%literal: 2 })
 
 check_origins(repet_rhm,
               #'#{rhombus/repet},

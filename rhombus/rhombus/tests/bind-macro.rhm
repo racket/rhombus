@@ -431,26 +431,26 @@ check:
 
 meta:
   check:
-    bind_meta.pack_info('("", name, (), (), oncer, matcher, evidence, committer, binder, ())',
-                        ~track: "oops")
+    bind_meta.pack('(infoer, ())',
+                   ~track: "oops")
     ~throws values(
-      "bind_meta.pack_info: " ++ error.annot_msg(),
+      "bind_meta.pack: " ++ error.annot_msg(),
       error.annot("Listable.to_list && List.of(Term)").msg,
       error.val("oops").msg,
     )
   check:
-    bind_meta.pack_info('("", name, (), (), oncer, matcher, evidence, committer, binder, ())',
-                        ~track: ["oops"])
+    bind_meta.pack('(infoer, ())',
+                   ~track: ["oops"])
     ~throws values(
-      "bind_meta.pack_info: " ++ error.annot_msg(),
+      "bind_meta.pack: " ++ error.annot_msg(),
       error.annot("Listable.to_list && List.of(Term)").msg,
       error.val(["oops"]).msg,
     )
   check:
-    bind_meta.pack_info('("", name, (), (), oncer, matcher, evidence, committer, binder, ())',
-                        ~track: ['a b'])
+    bind_meta.pack('(infoer, ())',
+                   ~track: ['a b'])
     ~throws values(
-      "bind_meta.pack_info: " ++ error.annot_msg(),
+      "bind_meta.pack: " ++ error.annot_msg(),
       error.annot("Listable.to_list && List.of(Term)").msg,
       error.val(['a b']).msg,
     )
@@ -458,8 +458,8 @@ meta:
     let old_stx = 'old'
     let new_stx = 'new'.property(#'origin, old_stx)
     check:
-      bind_meta.pack_info('("", name, (), (), oncer, matcher, evidence, committer, binder, ())',
-                          ~track: [new_stx])
+      bind_meta.pack('(infoer, ())',
+                     ~track: [new_stx])
         .property(#'origin)
       ~is old_stx
 
