@@ -91,6 +91,8 @@
   | #,(@rhombus(&, ~bind)) $id #,(@rhombus(::, ~bind)) $list_annot
   grammar ellipsis
   | #,(dots)
+  operator_order:
+    ~associativity: ~right
 ){
 
  A @tech(~doc: model_doc){converter annotation} that is immediately satisfied by a
@@ -202,6 +204,25 @@
       values(& 0..n)
   n_values(1)
   n_values(3)
+)
+
+ The @rhombus(->, ~annot) operator is right associative, which is the
+ conventional associativity that makes it easier to write functions
+ that return functions. To write an argument annotation that it itself
+ is @rhombus(->, ~annot), write it in parentheses instead.
+
+@examples(
+  ~repl:
+    def curried_add :: Int -> Int -> Int:
+      fun (x):
+        fun (y):
+          x + y
+    curried_add(1)(2)
+  ~repl:
+    def do_something_with_int :: (Int -> Int) -> Int:
+      fun (f):
+        f(1)
+    do_something_with_int(fun (x): x + 2)
 )
 
  To accept multiple argument annotations in parentheses,
