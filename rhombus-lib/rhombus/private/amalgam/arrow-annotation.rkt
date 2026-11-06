@@ -29,7 +29,8 @@
          "parens.rkt"
          "realm.rkt"
          "sorted-list-subset.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "ends-parse.rkt")
 
 (provide (for-space rhombus/annot
                     ->
@@ -233,6 +234,7 @@
                                      kw-rest-name+ann kw-rest-first?
                                      head stx prev-ctx)
   (define arrow (syntax-parse stx [(a . _) #'a]))
+  (define arrow-id (syntax-parse arrow [::name #'name]))
   (define ctx (make-arg-context multi-kw+name+opt+lhs prev-ctx))
   (define-values (multi-name+rhs res-rest-name+ann res-rest-ann-whole? loc tail)
     (let ()
@@ -248,23 +250,37 @@
                 '#:any #t
                 (datum->syntax #f (list head arrow any-res))
                 tail))
+      (define (ends-parse? tail)
+        (do-ends-parse? 'infix arrow-id tail
+                        in-annotation-space annotation-relative-precedence annotation-infix-operator-ref))
+      (define (parse-more tail)
+        (syntax-parse (regroup tail)
+          [(~var res (:annotation-infix-op+form+tail arrow ctx))
+           (values (list (list #f #'res.parsed))
+                   #f #f
+                   (datum->syntax #f (list head arrow #'res.parsed))
+                   #'res.tail)]))
       (syntax-parse stx
         #:datum-literals (group)
         [(_ (~and any-res #:any) . tail)
-         (any-result #'any-res #'tail)]
+         (if (ends-parse? #'tail)
+             (any-result #'any-res #'tail)
+             (parse-more #'(any-res . tail)))]
         [(_ (~and any-res (_::parens (group #:any))) . tail)
-         (any-result #'any-res #'tail)]
+         (if (ends-parse? #'tail)
+             (any-result #'any-res #'tail)
+             (parse-more #'(any-res . tail)))]
         [(_ vals (~and p-res (_::parens res ...)) . tail)
          #:when (free-identifier=? (in-annotation-space #'vals) (annot-quote rhombus:values))
-         (multi (syntax->list #'(res ...)) #'p-res #'tail)]
+         (if (ends-parse? #'tail)
+             (multi (syntax->list #'(res ...)) #'p-res #'tail)
+             (parse-more #'(vals p-res . tail)))]
         [(_ (~and p-res (_::parens res ...)) . tail)
-         (multi (syntax->list #'(res ...)) #'p-res #'tail)]
+         (if (ends-parse? #'tail)
+             (multi (syntax->list #'(res ...)) #'p-res #'tail)
+             (parse-more #'(p-res . tail)))]
         [(_ . tail)
-         #:with (~var res (:annotation-infix-op+form+tail arrow ctx)) (regroup #`tail)
-         (values (list (list #f #'res.parsed))
-                 #f #f
-                 (datum->syntax #f (list head arrow #'res.parsed))
-                 #'res.tail)])))
+         (parse-more #'tail)])))
   (define multi-kws (map car multi-kw+name+opt+lhs))
   (define multi-names (map cadr multi-kw+name+opt+lhs))
   (define multi-opts (map caddr multi-kw+name+opt+lhs))

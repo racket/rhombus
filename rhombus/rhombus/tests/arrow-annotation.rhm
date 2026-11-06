@@ -831,3 +831,42 @@ block:
 
   check f().length() ~is 4
   check f(#false).length() ~is 3
+
+// check right associativity with specially recognized result annotations
+block:
+  def f :: Int -> Int -> Int = fun (x): fun (y): x + y
+  check f(1)(2) ~is 3
+
+block:
+  def f :: Int -> (Int) -> Int = fun (x): fun (y): x + y
+  check f(1)(2) ~is 3
+
+check:
+  ~eval
+  def f :: Int -> values(Int) -> Int = fun (x): fun (y): x + y
+  ~throws "values: not allowed as an annotation"
+
+block:
+  def f :: Int -> (Int, ...) -> Int = fun (x): fun (y, ...): math.sum(x, y, ...)
+  check f(1)(2, 3) ~is 6
+
+block:
+  def f :: Int -> (& List.of(Int)) -> Int = fun (x): fun (y, ...): math.sum(x, y, ...)
+  check f(1)(2, 3) ~is 6
+
+block:
+  def f :: Int -> (~y: Int) -> Int = fun (x): fun (~y: y): x + y
+  check f(1)(~y: 2) ~is 3
+
+block:
+  def f :: Int -> (~& Map.of(Keyword, Int)) -> Int = fun (x): fun (~& {_: y, ...}): math.sum(x, y, ...)
+  check f(1)(~y: 2, ~z: 3) ~is 6
+
+check:
+  ~eval
+  def f :: Int -> ~any -> Int = fun (x): fun (y): x
+  ~throws "misplaced keyword as an annotation"
+
+block:
+  def f :: Int -> (~any) -> Int = fun (x): fun (y): x
+  check f(1)(2) ~is 1
