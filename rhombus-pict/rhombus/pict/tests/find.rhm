@@ -17,9 +17,9 @@ block:
   let par_bars = square()
   let combined = stack(par_bars, par_bars)
   check: Find.center(par_bars).in(combined, ~nth: 0)
-         ~matches values(Number, Number)
+         ~matches values(_ :: Number, _ :: Number)
   check: Find.center(par_bars).in(combined, ~nth: 1)
-         ~matches values(Number, Number)
+         ~matches values(_ :: Number, _ :: Number)
   check: Find.center(par_bars).in(combined, ~nth: 2)
          ~throws "cannot find"
   check: Find.center(par_bars).maybe_in(combined, ~nth: 2)

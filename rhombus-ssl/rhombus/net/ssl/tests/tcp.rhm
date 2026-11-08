@@ -34,8 +34,8 @@ def (c2i, c2o) = ssl.connect(~host: host2,
                              ~port: portno2,
                              ~context: ssl.Context.Client(~secure: #false))
 
-check c1i.addresses() ~matches values(String, Int, String, Int)
-check c2o.addresses() ~matches values(String, Int, String, Int)
+check c1i.addresses() ~matches values(_ :: String, _ :: Int, _ :: String, _ :: Int)
+check c2o.addresses() ~matches values(_ :: String, _ :: Int, _ :: String, _ :: Int)
 
 def (s1i, s1o) = s1t.wait()
 def (s2i, s2o) = s2t.wait()
