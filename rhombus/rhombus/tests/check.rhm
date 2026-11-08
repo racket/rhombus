@@ -193,3 +193,18 @@ block:
     ~failure:
       ~throws "interp" ~expected "exception \"interp\""
       ~throws "check" ~expected "exception \"check\""
+
+// check multiple-value bindings support
+block:
+  import:
+    rhombus/meta open
+  bind.macro 'noop $b':
+    b
+  check_check:
+    values(1, 2, 3)
+    ~success:
+      ~matches values(x, y, z)
+      ~matches noop (x, y, z)
+    ~failure:
+      ~matches values(x, y) ~expected "matching values (x, y)"
+      ~matches noop (x, y) ~expected "matching noop (x, y)"

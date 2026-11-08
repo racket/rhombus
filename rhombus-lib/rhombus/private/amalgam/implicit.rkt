@@ -26,7 +26,8 @@
          "is-static.rkt"
          "ends-parse.rkt"
          (only-in "op-literal.rkt"
-                  :_-expr))
+                  :_-expr)
+         "values-binding.rkt")
 
 (provide (for-space #f
                     #%block
@@ -205,7 +206,7 @@
             [(null? args)
              (raise-syntax-error #f "empty entry point" #'head)]
             [(pair? (cdr args))
-             (raise-syntax-error #f "too many expressions" #'head)]
+             (raise-syntax-error #f "too many entry points" #'head)]
             [else
              (syntax-parse (car args)
                ;; check for anonymous-function shorthand:
@@ -265,17 +266,7 @@
 (define-binding-syntax #%parens
   (binding-transformer
    (lambda (stxes)
-     (syntax-parse stxes
-       [(_ (~and head (_::parens . args)) . tail)
-        (let ([args (syntax->list #'args)])
-          (cond
-            [(null? args)
-             (raise-syntax-error #f "empty pattern" #'head)]
-            [(pair? (cdr args))
-             (raise-syntax-error #f "too many patterns" #'head)]
-            [else
-             (syntax-parse (car args)
-               [b::binding (values (transfer-origin #'head #'b.parsed) #'tail)])]))]))))
+     (parse-values-binding stxes #t))))
 
 (define-repetition-syntax #%parens
   (repetition-transformer

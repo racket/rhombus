@@ -31,9 +31,40 @@ block:
 check:
   ~eval
   "hello" :: values(String)
-  ~throws "not allowed as an annotation"
+  ~throws "values: not allowed as an annotation"
 
 check:
   ~eval
+  values("hello", "world") :: values(String, String)
+  ~throws "values: not allowed as an annotation"
+
+check:
   "hello" matches values("hello")
-  ~throws "not allowed as a pattern"
+  ~is #true
+
+check:
+  "hello" matches values(values("hello"))
+  ~is #true
+
+check:
+  ~eval
+  values("hello", "world") matches values("hello", "world")
+  ~throws "values: multiple-value binding not allowed in single-value context"
+
+check:
+  ~eval
+  values("hello", "world") matches values(values("hello", "world"))
+  ~throws "values: multiple-value binding not allowed in single-value context"
+
+check:
+  match values("hello", "world")
+  | values("hello", "world"): #true
+  | ~else: #false
+  ~is #true
+
+check:
+  ~eval
+  match values("hello", "world")
+  | values(values("hello", "world")): #true
+  | ~else: #false
+  ~throws "values: multiple-value binding not allowed in single-value context"

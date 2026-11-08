@@ -117,7 +117,7 @@ expr.macro
      $(body :: BodyGroup)
      ...
      $(result_g0 :: ResultSequence)
-     $result_g     
+     $result_g
      ...':
     ~op_stx: check_id
     ~all_stx: stx
@@ -190,16 +190,38 @@ meta:
     | ~else:
         syntax_meta.error("invalid check line", stx, bad)
 
+expr.macro 'if_blocked $expr ...
+            | $success
+            | $failure':
+  let success:
+    match success
+    | ': $b': b
+    | ~else: success
+  'if $expr ...
+   | $success
+   | $failure'
+
+expr.macro 'values_matcher $(bind :: bind_meta.Parsed) $()':
+  fun make_empty_sis(b):
+    for List (_ in 0..bind_meta.get_arity(b)):
+      '()'
+  let info = bind_meta.get_values_info(bind, make_empty_sis(bind))
+  let '($_, ($name, ...), $_, $_, $oncer, $matcher, $_, $_, $_, $data)':
+    bind_meta.unpack_info(info)
+  let [arg, ...] = [Syntax.make_temp_id(name), ...]
+  'fun
+   | ($arg, ...):
+       $oncer($data)
+       $matcher(($arg, ...), $data, if_blocked, #true, #false)
+   | (_, $('...')):
+       #false'
+
 expr.macro
-| 'matcher(~matches, : $(pattern g:
-                           kind ~group
-                         | '$(bound_as bind_meta.space: 'values') ($bind, ...) $()'
-                         | '($bind, ...) $()'
-                         | '$b': field [bind, ...] = [b]))':
-    'fun | (): (fun | ($g.bind, ...): #true | (& _): #false)
-         | (_): #%literal $(to_string(g))'
+| 'matcher(~matches, : $b)':
+    'fun | (): values_matcher $b
+         | (_): #%literal $(to_string(b))'
 | 'matcher(~is_a, : $ann)':
-    'fun | (): (fun (x): x is_a ($ann))
+    'fun | (): fun (x): x is_a ($ann)
          | (_): #%literal $(to_string(ann))'
 | 'matcher($_, $body)': 'fun () $body'
 

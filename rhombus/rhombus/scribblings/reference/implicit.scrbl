@@ -94,7 +94,8 @@ Here are all of the implicit forms:
     results: -> ~annot
   ~also_meta
   expr.macro '#%parens ($expr)'
-  bind.macro '#%parens ($bind)'
+  bind.macro '#%parens ($values_bind)'
+  bind.macro '#%parens ($bind, ...)'
   annot.macro '#%parens ($annot)'
   entry_point.macro '#%parens ($entry_point)'
   immediate_callee.macro '#%parens ($immediate_callee)'
@@ -104,9 +105,11 @@ Here are all of the implicit forms:
   annot.macro '#%parens ($arg, ...) #,(@rhombus(->, ~annot)) $results'
 ){
 
- Produces the same value as @rhombus(expr), same binding as
- @rhombus(bind), and so on. Multiple expression, bindings, etc.,
- are disallowed.
+ Produces the same value as @rhombus(expr), same annotation as
+ @rhombus(annot), and so on. Multiple expressions, annotations, etc.,
+ are disallowed, but multiple bindings are allowed as in
+ @rhombus(values). Moreover, a multiple-value binding is allowed if it
+ is the only parenthesized binding.
 
  The expression case with an immediate @rhombus(_) in parentheses among
  other @rhombus(term)s is a special case for a function shorthand, and it
@@ -128,6 +131,8 @@ Here are all of the implicit forms:
   #%parens (1+2)
   def (x) = 1+2
   x
+  def (x, y) = values(1, 2)
+  x+y
 )
 
 }

@@ -46,15 +46,15 @@
   bind.macro 'values($bind, ...)'
 ){
 
- The @rhombus(values, ~bind) binding operator can only be used in
- places where it's specifically recognized, normally to match
+ The @rhombus(values, ~bind) binding operator produces a
+ @tech{multiple-value binding}, which can only be used in contexts
+ that support matching
  @tech(~doc: model_doc, ~key: "multiple values"){multiple result values}.
  For example, the left-hand side @rhombus(values_bind)
- position of @rhombus(def) recognizes @rhombus(values, ~bind).
+ position of @rhombus(def) supports multiple-value binding.
 
  Plain parentheses as a binding (as implemented by the
  @rhombus(#%parens, ~bind) form) work as an alias for
- @rhombus(values, ~bind) in the places that recognize
  @rhombus(values, ~bind).
 
 @examples(

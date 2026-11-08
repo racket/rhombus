@@ -208,12 +208,12 @@
             (define (track-all stx)
               (transfer-origin parsed (transfer-origin #'origins stx)))
             (syntax-parse parsed
-              [(#:each bind-gss rhs-blks)
+              [(#:each bind-gs rhs-blks)
                #`(#:splice (for-clause-step
                             orig static?
                             #,(build-binding-clause* #'orig
                                                      #'state
-                                                     (syntax->list #'bind-gss)
+                                                     (syntax->list #'bind-gs)
                                                      (syntax->list #'rhs-blks)
                                                      (syntax-e #'static?)
                                                      #:track track-all)
@@ -223,9 +223,9 @@
                #`(kw
                   (with-syntax-parameters stx-params #,(track-all #'rhs))
                   #:splice (for-clause-step orig static? state . bodys))]
-              [(#:let bind-gs rhs)
+              [(#:let bind-g rhs)
                (define-values (pre-defns evidence post-defns)
-                 (expand-let-clause #'stx-params #'bind-gs #'rhs
+                 (expand-let-clause #'stx-params #'bind-g #'rhs
                                     #:track track-all))
                #`(#:do (#,@pre-defns)
                   #:when #,evidence
@@ -277,32 +277,27 @@
 
 (define-for-syntax (build-binding-clause orig-stx
                                          state-stx
-                                         bind-gs-stx
+                                         bind-g-stx
                                          rhs-blk-stx
                                          static?
                                          #:track track)
   (syntax-parse state-stx
     [[finish rev-clauses rev-bodys oncer matcher init-binder binder stx-params origins]
-     #:do [(define lhs-parsed-stxes (for/list ([bind-g (in-list (syntax->list bind-gs-stx))])
-                                      (syntax-parse bind-g
-                                        [lhs::binding #'lhs.parsed]
-                                        [_ (raise-syntax-error #f
-                                                               "expected a binding"
-                                                               (respan orig-stx)
-                                                               (respan bind-g))])))]
-     #:with (lhs-e::binding-form ...) lhs-parsed-stxes
+     #:with lhs::binding bind-g-stx
+     #:with lhs-e::binding-values-form #'lhs.parsed
      #:with rhs (with-continuation-mark syntax-parameters-key #'stx-params
                   (rhombus-local-expand (enforest-expression-block rhs-blk-stx)))
+     #:do [(define arity (syntax-e #'lhs-e.arity))]
      #:with (static-infos ...) (normalize-static-infos/values
-                                (length lhs-parsed-stxes)
+                                arity
                                 (or (syntax-local-static-info #'rhs #'#%sequence-element)
                                     (extract-index-uniform-result
                                      (syntax-local-static-info #'rhs #'#%index-result))
                                     #'()))
-     #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
-     #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
+     #:with (~var lhs-impl (:binding-impl arity)) #'(lhs-e.infoer-id (static-infos ...) lhs-e.data)
+     #:with lhs-i::binding-info #'lhs-impl.info
      #:with (form-id . _) orig-stx
-     #:with (tmp-id ...) (for/list ([name-id (in-list (syntax->list #'(lhs-i.name-id ...)))])
+     #:with (tmp-id ...) (for/list ([name-id (in-list (syntax->list #'lhs-i.name-ids))])
                            ((make-syntax-introducer) (datum->syntax #f (syntax-e name-id) name-id)))
      (define seq-ctr (syntax-local-static-info #'rhs #'#%sequence-constructor))
      (when (and static? (not seq-ctr))
@@ -312,7 +307,7 @@
                            (respan rhs-blk-stx)))
      (define seq-ctr-t (unpack-term seq-ctr #f #f))
      (define (track-all stx)
-       (transfer-origins lhs-parsed-stxes (track stx)))
+       (transfer-origin #'lhs.parsed (track stx)))
      #`[finish
         ([(tmp-id ...) #,(relocate ; this helps debugging info
                           (respan rhs-blk-stx)
@@ -340,95 +335,89 @@
         ()
         (begin
           oncer
-          (lhs-i.oncer-id lhs-i.data)
-          ...)
+          (lhs-i.oncer-id lhs-i.data))
         (begin
           matcher
-          (lhs-i.matcher-id tmp-id
+          (lhs-i.matcher-id (tmp-id ...)
                             lhs-i.data
                             if/flattened
                             (begin)
-                            (rhs-binding-failure 'form-id tmp-id 'lhs-i.annotation-str))
-          ...)
+                            (rhs-binding-failure 'form-id (list tmp-id ...) 'lhs-i.annotation-str)))
         init-binder
         (begin
           binder
-          (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
-          ...
-          (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-          ...
+          (lhs-i.committer-id (tmp-id ...) lhs-i.evidence-ids lhs-i.data)
+          (lhs-i.binder-id (tmp-id ...) lhs-i.evidence-ids lhs-i.data)
           (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-          ... ...)
+          ...)
         stx-params
         origins]]))
 
 (define-for-syntax (build-binding-clause* orig-stx
                                           state-stx
-                                          bind-gs-stxs
+                                          bind-g-stxs
                                           rhs-blk-stxs
                                           static?
                                           #:track track)
   (for/fold ([state-stx state-stx])
-            ([bind-gs-stx (in-list bind-gs-stxs)]
+            ([bind-g-stx (in-list bind-g-stxs)]
              [rhs-blk-stx (in-list rhs-blk-stxs)])
     (build-binding-clause orig-stx
                           state-stx
-                          bind-gs-stx
+                          bind-g-stx
                           rhs-blk-stx
                           static?
                           #:track track)))
 
-(define (rhs-binding-failure who val binding-str)
-  (raise-binding-failure who "element" val binding-str))
+(define (rhs-binding-failure who vals binding-str)
+  (if (and (pair? vals)
+           (null? (cdr vals)))
+      (raise-binding-failure who "element" (car vals) binding-str)
+      (raise-bindings-failure who "elements" vals binding-str)))
 
 ;; NOTE since we need a "flat" structure for clauses in Racket `for`,
 ;; the expansion needs to pack evidences, if any, into a vector and
 ;; unpack it only after the `#:when` test.  If there isn't any
 ;; evidence in the bindings, we use a simple boolean instead.
-(define-for-syntax (expand-let-clause stx-params bind-gs-stx rhs-stx
+(define-for-syntax (expand-let-clause stx-params bind-g-stx rhs-stx
                                       #:track track)
-  (syntax-parse bind-gs-stx
-    [(lhs::binding ...)
-     #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
+  (syntax-parse bind-g-stx
+    [lhs::binding
+     #:with lhs-e::binding-values-form #'lhs.parsed
      #:with rhs (with-continuation-mark syntax-parameters-key stx-params
                   (rhombus-local-expand (enforest-expression-block rhs-stx)))
+     #:do [(define arity (syntax-e #'lhs-e.arity))]
      #:with (static-infos ...) (normalize-static-infos/values
-                                (length (syntax->list bind-gs-stx))
+                                arity
                                 (extract-static-infos #'rhs))
-     #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
-     #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
-     #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
-     #:with (lhs-i-evidence-id ...) (flatten-id-tree #'(lhs-i.evidence-ids ...))
+     #:with (~var lhs-impl (:binding-impl arity)) #'(lhs-e.infoer-id (static-infos ...) lhs-e.data)
+     #:with lhs-i::binding-info #'lhs-impl.info
+     #:with (lhs-i-name-id ...) #'lhs-i.name-ids
+     #:with (tmp-id ...) (generate-temporaries #'lhs-i.name-ids)
+     #:with (lhs-i-evidence-id ...) (flatten-id-tree #'lhs-i.evidence-ids)
      (define need-evidence? (not (null? (syntax-e #'(lhs-i-evidence-id ...)))))
      (values
       #`((lhs-i.oncer-id lhs-i.data)
-         ...
-         (define-values (tmp-id ...) #,(transfer-origins
-                                        (syntax->list #'(lhs.parsed ...))
+         (define-values (tmp-id ...) #,(transfer-origin
+                                        #'lhs.parsed
                                         (track
-                                         #`(let-values ([(lhs-i.name-id ...) #,(discard-static-infos #'rhs)])
-                                             (values lhs-i.name-id ...)))))
+                                         #`(let-values ([(lhs-i-name-id ...) #,(discard-static-infos #'rhs)])
+                                             (values lhs-i-name-id ...)))))
          (define evidence
            (let ()
-             #,(for/foldr ([success (if need-evidence?
-                                        #'(vector lhs-i-evidence-id ...)
-                                        #'#t)])
-                          ([lhs-i-matcher-id (in-list (syntax->list #'(lhs-i.matcher-id ...)))]
-                           [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
-                           [lhs-i-data (in-list (syntax->list #'(lhs-i.data ...)))])
-                 #`(#,lhs-i-matcher-id #,tmp-id #,lhs-i-data if/blocked
-                                       #,success
-                                       #f)))))
+             (lhs-i.matcher-id (tmp-id ...) lhs-i.data if/blocked
+                               #,(if need-evidence?
+                                     #'(vector lhs-i-evidence-id ...)
+                                     #'#t)
+                               #f))))
       #'evidence
       #`(#,@(if need-evidence?
                 (list #`(define-values (lhs-i-evidence-id ...) (vector->values evidence)))
                 '())
-         (lhs-i.committer-id tmp-id lhs-i.evidence-ids lhs-i.data)
-         ...
-         (lhs-i.binder-id tmp-id lhs-i.evidence-ids lhs-i.data)
-         ...
+         (lhs-i.committer-id (tmp-id ...) lhs-i.evidence-ids lhs-i.data)
+         (lhs-i.binder-id (tmp-id ...) lhs-i.evidence-ids lhs-i.data)
          (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
-         ... ...))]))
+         ...))]))
 
 (define-for-syntax (add-with-syntax-parameters stx-params rhs)
   (if (eqv? (hash-count (syntax-e stx-params)) 0)

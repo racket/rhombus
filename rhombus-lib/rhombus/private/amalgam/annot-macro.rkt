@@ -176,6 +176,7 @@
   (define/arity (annot_meta.is_always_satisfied stx)
     (and (eq? (annotation-kind stx who) 'predicate)
          (syntax-parse stx
+           #:datum-literals (parsed)
            [(parsed #:rhombus/annot a::annotation-predicate-form)
             (always-satisfied-annotation? #'a)]
            [_ #f])))
@@ -228,7 +229,7 @@
                       (wrap-expression body)
                       (pack-static-infos who (unpack-term static-infos who #f))))))]
       [_ (raise-arguments-error* who rhombus-realm
-                                 "not a parsed binding form"
+                                 "not a parsed single-value binding"
                                  "syntax object" binding)]))
   (define/arity (annot_meta.unpack_converter stx)
     #:static-infos ((#%call-result ((#%values (#,(get-syntax-static-infos)

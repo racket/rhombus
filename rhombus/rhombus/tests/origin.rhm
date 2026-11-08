@@ -126,7 +126,8 @@ check_origins(bind_rhm,
                 #'#{!}: 1,
                 #'#{::}: 8,
                 #'List: 6,
-                #'#%literal: 2 })
+                #'#%literal: 5,
+                #'values: 4 })
 
 check_origins(repet_rhm,
               #'#{rhombus/repet},
