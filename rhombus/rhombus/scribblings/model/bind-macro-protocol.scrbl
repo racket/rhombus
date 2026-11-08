@@ -477,6 +477,9 @@ right-hand side, except through a more obscure way.
     x+y+z
     ~error:
       def just_values (x, y) = values(1, 2, 3)
+    match values(1, 2, 3)
+    | (just_values (x, y, z)) when x+y+z == 6:
+        "ok"
 )
 
 As a more serious example of multiple-value bindings, here's a
@@ -576,6 +579,9 @@ binding.
     x+y+z
     ~error:
       def multi(x, y) = values(1, 2, 3)
+    match values(1, 2, 3)
+    | multi(x, y, z) when x+y+z == 6:
+        "ok"
 )
 
 

@@ -288,27 +288,27 @@
 
 @doc(
   ~nonterminal:
-    left_bind: def bind ~defn
-    right_bind: def bind ~defn
+    left_values_bind: def values_bind ~defn
+    right_values_bind: def values_bind ~defn
 
-  bind.macro '$left_bind where $right_bind = $expr'
-  bind.macro '$left_bind where:
-                $right_bind_and_expr
+  bind.macro '$left_values_bind where $right_values_bind = $expr'
+  bind.macro '$left_values_bind where:
+                $right_values_bind_and_expr
                 ...'
 
-  grammar right_bind_and_expr
-  | $right_bind = $expr
-  | $right_bind:
+  grammar right_values_bind_and_expr
+  | $right_values_bind = $expr
+  | $right_values_bind:
       $body
       ...
 ){
 
- Creates a binding that matches only when both @rhombus(left_bind)
- matches and when each @rhombus(right_bind) matches the value of the
+ Creates a binding that matches only when both @rhombus(left_values_bind)
+ matches and when each @rhombus(right_values_bind) matches the values of the
  corresponding @rhombus(expr) or @rhombus(body) sequence. Names bound by
- @rhombus(left_bind) and each @rhombus(right_bind) are visible in
+ @rhombus(left_values_bind) and each @rhombus(right_values_bind) are visible in
  @rhombus(expr)s and @rhombus(body) sequences for subsequent
- @rhombus(right_bind)s.
+ @rhombus(right_values_bind)s.
 
  The @rhombus(where) form should generally be used with parentheses
  around it, since parsing is otherwise likely to interact badly with the
@@ -343,7 +343,17 @@
   ~repl:
     ~error:
       def ([xs] where [x, ...] = xs) = ["oops"]
+  ~repl:
+    def ((x, y, z) where:
+           partial_sum = x+y
+           sum = partial_sum+z):
+      values(1, 2, 3)
+    sum
 )
+
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Added support for multiple-value bindings.})
 
 }
 

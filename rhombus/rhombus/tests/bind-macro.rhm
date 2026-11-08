@@ -573,6 +573,12 @@ check:
   "oops"
   ~throws "result arity mismatch"
 
+check:
+  match values(1, 2, 3)
+  | multi(x, y, z) when x+y+z == 6:
+      "ok"
+  ~is "ok"
+
 // check `bind_meta.get_arity` and `bind_meta.get_values_info`
 expr.macro 'get_arity($(b :: bind_meta.Parsed))':
   let arity = bind_meta.get_arity(b)
@@ -604,6 +610,12 @@ check:
   let just_values (x, y) = values(1, 2, 3)
   "oops"
   ~throws "result arity mismatch"
+
+check:
+  match values(1, 2, 3)
+  | (just_values (x, y, z)) when x+y+z == 6:
+      "ok"
+  ~is "ok"
 
 check:
   ~eval

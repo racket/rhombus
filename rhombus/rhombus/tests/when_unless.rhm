@@ -66,7 +66,7 @@ check:
     let x when x > 0 = 1
     "ok"
   ~throws "unbound identifier"
-  
+
 check:
   ~eval
   module m ~lang rhombus:
@@ -84,3 +84,29 @@ check:
   ~eval
   def (x unless) = 10
   ~throws "unless: expected more terms"
+
+check:
+  match values(1, 2, 3)
+  | (x, y, z) when x+y+z == 6:
+      "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2, 3)
+  | ((x, y, z) when:
+       x+y+z == 6):
+      "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2, 3)
+  | (x, y, z) unless x+y+z != 6:
+      "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2, 3)
+  | ((x, y, z) unless:
+       x+y+z != 6):
+      "ok"
+  ~is "ok"
