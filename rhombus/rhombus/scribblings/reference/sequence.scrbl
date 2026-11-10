@@ -103,16 +103,17 @@ internal state, and the state can even be specific to a particular
     :: Sequence.assume_of(List.of(Any.like_element(seq)))
 ){
 
-Returns a @tech{sequence} whose elements are @tech{lists}
-with the first batch of @rhombus(k) elements of @rhombus(seq),
-then the next batch of @rhombus(k), and so on.
-The last batch will have less than @rhombus(k) elements if
-@rhombus(seq) has a length not a multiple of @rhombus(k).
-If @rhombus(seq) is infinite then the resulting sequence will
-also be infinite.
+ Returns a @tech{sequence} whose elements are @tech{lists}
+ with the first batch of @rhombus(k) elements of @rhombus(seq),
+ then the next batch of @rhombus(k), and so on.
+ The last batch will have less than @rhombus(k) elements if
+ @rhombus(seq) has a length not a multiple of @rhombus(k).
+ If @rhombus(seq) is infinite then the resulting sequence will
+ also be infinite.
 
 @examples(
-  for List (e: Sequence.batch(0..8, 3)): e
+  for List (v in Sequence.batch(0..8, 3)):
+    v
 )
 
 @(history:

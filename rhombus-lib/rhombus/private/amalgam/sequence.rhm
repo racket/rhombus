@@ -96,14 +96,16 @@ fun batch(seq :: Sequence, k :: PosInt) :~ Sequence.assume_of(List.of(Any.like_e
   ~name: Sequence.batch
   Sequence.instantiable(
     fun ():
-      let values(more, get): Sequence.generate(seq)
+      let (has_more, next) = Sequence.generate(seq)
       Sequence.instantiate(
         ~position_to_element:
           fun (_):
-            for List (i: 0..k):
-              break_when: !more()
-              get(),
+            for List (_ in 0..k):
+              break_when !has_more()
+              next(),
         ~position_to_next: values,
         ~initial_position: #false,
         ~continue_at_value:
-          fun (val :: List): val.length() > 0))
+          fun (val :~ List):
+            val.length() > 0
+      ))

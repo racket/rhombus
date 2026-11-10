@@ -370,21 +370,21 @@ check:
   ~is 10
 
 block:
-  let (done, next) = Sequence.generate((0 .. 3).to_sequence())
-  check done() ~is #true
+  let (has_more, next) = Sequence.generate((0 .. 3).to_sequence())
+  check has_more() ~is #true
   check next() ~is 0
-  check done() ~is #true
+  check has_more() ~is #true
   check next() ~is 1
-  check done() ~is #true
+  check has_more() ~is #true
   check next() ~is 2
-  check done() ~is #false
+  check has_more() ~is #false
   check next() ~throws "no more values"
 
 block:
-  let (done, next) = Sequence.generate({#'a: 1}.to_sequence())
-  check done() ~is #true
+  let (has_more, next) = Sequence.generate({#'a: 1}.to_sequence())
+  check has_more() ~is #true
   check next() ~is values(#'a, 1)
-  check done() ~is #false
+  check has_more() ~is #false
   check next() ~throws "no more values"
 
 // Sequence.batch
@@ -392,22 +392,21 @@ check:
   Sequence.batch([], 1)
   ~is_a Sequence
 check:
-  for List (v: Sequence.batch([], 1)): v
+  for List (v in Sequence.batch([], 1)): v
   ~is []
 check:
-  for List (v: Sequence.batch(0..2, 3)): v
+  for List (v in Sequence.batch(0..2, 3)): v
   ~is [[0, 1]]
 check:
-  for List (v: Sequence.batch(0..6, 3)): v
+  for List (v in Sequence.batch(0..6, 3)): v
   ~is [[0, 1, 2], [3, 4, 5]]
 check:
-  for List (v: Sequence.batch(0..8, 3)): v
+  for List (v in Sequence.batch(0..8, 3)): v
   ~is [[0, 1, 2], [3, 4, 5], [6, 7]]
 check:
-  for List (v: Sequence.batch(0..8, 0)): v
-  ~throws:
-    values(
-      "Sequence.batch",
-      "argument does not satisfy annotation",
-      "argument: 0",
-      "annotation: PosInt")
+  for List (v in Sequence.batch(0..8, 0)): v
+  ~throws values(
+    "Sequence.batch: " ++ error.annot_msg("argument"),
+    error.val(~label: "argument", 0).msg,
+    error.annot("PosInt").msg
+  )
