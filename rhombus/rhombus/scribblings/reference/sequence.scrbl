@@ -115,6 +115,9 @@ also be infinite.
   for List (e: Sequence.batch(0..8, 3)): e
 )
 
+@(history:
+    ~added "1.1.0.2")
+
 }
 
 @doc(
