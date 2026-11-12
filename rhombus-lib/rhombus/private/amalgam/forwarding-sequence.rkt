@@ -130,7 +130,7 @@
                      [(#:module #f . _) #'form]
                      [(#:module wrap . _ ) (if (string? (syntax-e #'v))
                                                #'form
-                                               #'(wrap form))]
+                                               (syntax/loc #'form (wrap form)))]
                      [_ #'form])
                    accum))]
       [(_ [state base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] form . forms)
@@ -432,7 +432,7 @@
                                        (with-syntax-parameters stx-params #,(discard-static-infos exp-form)))])])
                        (syntax-parse #'state
                          [(#:module #f . _) exp-form]
-                         [(#:module wrap . _) #`(wrap #,exp-form)]
+                         [(#:module wrap . _) (quasisyntax/loc exp-form (wrap #,exp-form))]
                          [_ exp-form]))])
                 (sequence [#,(saw-end-expr #'state) base-ctx add-ctx remove-ctx all-ctx stx-params saved ex-id] . forms))])])))
 
