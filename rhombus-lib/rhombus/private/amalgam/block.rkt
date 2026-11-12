@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/list
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "list-last.rkt")
          "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
@@ -46,5 +46,5 @@
           #:element-statinfo? #t
           (lambda es
             (values #`(begin . #,(map discard-static-infos es))
-                    (extract-static-infos (last es)))))
+                    (extract-static-infos (list-last es)))))
          #'())]))))

@@ -1,9 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     racket/list
                      "group.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "split-at.rkt"
+                     "list-last.rkt")
          "expression.rkt"
          "repetition.rkt"
          "parse.rkt"
@@ -85,14 +86,13 @@
              (lambda tst+thns+elss
                (define n-thns (length (syntax->list #'(thn ...))))
                (define tst (car tst+thns+elss))
-               (define thns (take (cdr tst+thns+elss) n-thns))
-               (define elss (list-tail (cdr tst+thns+elss) n-thns))
+               (define-values (thns elss) (split-at (cdr tst+thns+elss) n-thns))
                (values #`(if #,(discard-static-infos tst)
                              (begin . #,(map discard-static-infos thns))
                              (begin . #,(map discard-static-infos elss)))
                        (static-infos-or
-                        (extract-static-infos (last thns))
-                        (extract-static-infos (last elss))))))
+                        (extract-static-infos (list-last thns))
+                        (extract-static-infos (list-last elss))))))
             #'())]
           [_
            (raise-syntax-error #f

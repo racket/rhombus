@@ -62,7 +62,6 @@
 
 ;; Run this submodule to refresh the keywords and builtins lists.
 (module+ main
-  (require racket/list)
   (define-runtime-module-path-index rhombus/and_meta
     '(lib "rhombus/and_meta"))
   (dynamic-require rhombus/and_meta #f)
@@ -71,16 +70,15 @@
   (define (operator-like? s)
     (not (regexp-match? #rx"^[a-zA-Z_]" s)))
   (define (get-syms phase+exportss [include? (λ (_sym _sym-str) #t)])
-    (sort
-     (remove-duplicates
-      (for*/list ([phase+exports (in-list phase+exportss)]
-                  [export (in-list (cdr phase+exports))]
-                  #:do [(define sym (car export))
-                        (define sym-str (symbol->string sym))]
-                  #:unless (operator-like? sym-str)
-                  #:when (include? sym sym-str))
-        sym))
-     symbol<?))
+    (hash-keys
+     (for*/hasheq ([phase+exports (in-list phase+exportss)]
+                   [export (in-list (cdr phase+exports))]
+                   #:do [(define sym (car export))
+                         (define sym-str (symbol->string sym))]
+                   #:unless (operator-like? sym-str)
+                   #:when (include? sym sym-str))
+       (values sym #t))
+     #t))
   (define keyword-syms
     (get-syms
      stxs

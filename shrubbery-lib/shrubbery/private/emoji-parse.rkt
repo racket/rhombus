@@ -1,6 +1,5 @@
 #lang racket/base
-(require racket/pretty
-         racket/list)
+(require racket/pretty)
 
 ;; Parse "emoji-sequences.text" and "emoji-zwj-sequences.text" on stdin and
 ;; generate a lexer abbreviation that reocgnizes all sequences. While we

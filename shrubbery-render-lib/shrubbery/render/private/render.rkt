@@ -5,7 +5,6 @@
                   dont-stop?
                   dont-stop-val)
          syntax/parse/pre
-         racket/list
          shrubbery/property
          (for-template "typeset-help.rkt")
          "add-space.rkt"
@@ -55,7 +54,7 @@
           render-in-space))
 
     (define stx (replace-name-refs (syntax-parse stx-in
-                                     #:datum-literals (multi)
+                                     #:datum-literals (multi group)
                                      [(multi g) #'g]
                                      [(group . _) stx-in]
                                      [_ #`(group #,stx)])
@@ -70,12 +69,20 @@
     ;; "pretty" prints to a single line, currently assuming that the input was
     ;; originally on a single line
     (define (id-space-name* id) (id-space-name id space-names))
+    (define (loop-with-sep elem-loop sep elems-stx)
+      (define elems (syntax->list elems-stx))
+      (if (null? elems)
+          elems
+          (cons (elem-loop (car elems))
+                (let loop ([elems (cdr elems)])
+                  (if (null? elems)
+                      elems
+                      (list* sep (elem-loop (car elems)) (loop (cdr elems))))))))
     (define elems
       (let loop ([stx stx])
         (define (seq open elems-stx close #:sep [sep (res tt-comma res-comma)])
           (list (render (res 'paren) open)
-                (add-between (map loop (syntax->list elems-stx))
-                             sep)
+                (loop-with-sep loop sep elems-stx)
                 (render (res 'paren) close)))
         (define (group elems-stx)
           (let g-loop ([elems (syntax->list elems-stx)] [pre-space? #f] [check-prefix? #f])
@@ -130,21 +137,18 @@
            (syntax-parse stx
              #:datum-literals (multi group parens brackets braces block quotes alts op)
              [(multi g ...)
-              (add-between (map loop (syntax->list #'(g ...)))
-                           (render (res 'meta) "; "))]
+              (loop-with-sep loop (render (res 'meta) "; ") #'(g ...))]
              [(group elem ... (block g ...))
               (list (group #'(elem ...))
                     (render (res 'meta) ": ")
-                    (add-between (map loop (syntax->list #'(g ...)))
-                                 (render (res 'meta) "; ")))]
+                    (loop-with-sep loop (render (res 'meta) "; ") #'(g ...)))]
              [(group elem ... (alts (block g ...) ...+))
               (list (group #'(elem ...))
                     (render (res 'meta) " | ")
-                    (add-between
-                     (for/list ([gs (in-list (syntax->list #'((g ...) ...)))])
-                       (add-between (map loop (syntax->list gs))
-                                    (render (res 'meta) "; ")))
-                     (render (res 'meta) " | ")))]
+                    (loop-with-sep (lambda (gs-stx)
+                                     (loop-with-sep loop (render (res 'meta) "; ") gs-stx))
+                                   (render (res 'meta) " | ")
+                                   #'((g ...) ...)))]
              [(group elem ...)
               (group #'(elem ...))]
              [(parens elem ...) (seq "(" #'(elem ...) ")")]
@@ -525,6 +529,10 @@
               start end position-stxes stx-ranges))
 
 (define (id-space-name id space-names #:as-list? [as-list? #f])
+  (define (list-last lst)
+    (if (null? (cdr lst))
+        (car lst)
+        (list-last (cdr lst))))
   (let* ([prop (syntax-property id 'typeset-space-name)]
          [space-names (if prop
                           (full-space-names prop)
@@ -543,7 +551,7 @@
                                   (or space-name #t))))
        (if space-name*
            (if (eq? space-name* #t) #f space-name*)
-           (last space-names))])))
+           (list-last space-names))])))
 
 (define (initial-name-ref elems space-names render-in-space)
   (define (dotted-elems? elems)

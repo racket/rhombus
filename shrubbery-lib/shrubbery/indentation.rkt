@@ -1,6 +1,5 @@
 #lang racket/base
 (require racket/class
-         racket/list
          racket/file
          "variant.rkt"
          "private/edit-help.rkt"
@@ -217,7 +216,8 @@
                                      #:variant variant)
   ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define (add-zero l) (if also-zero? (add-zero-to-end l) l))
-  (define (leftmost l) (if (and leftmost? (pair? l)) (list (last l)) l))
+  (define (list-last l) (if (null? (cdr l)) (car l) (list-last (cdr l))))
+  (define (leftmost l) (if (and leftmost? (pair? l)) (list (list-last l)) l))
   (define candidates (remove-dups (indentation-candidates t (sub1 start)
                                                           #:as-bar? as-bar?
                                                           #:as-operator as-operator
@@ -236,7 +236,9 @@
     [multi?
      (if next-tabs
          (append next-tabs
-                 (take tabs (- (length tabs) (length next-tabs))))
+                 (for/list ([tab (in-list tabs)]
+                            [i (in-range (- (length tabs) (length next-tabs)))])
+                   tab))
          tabs)]
     [(and next-tabs (pair? (cdr next-tabs)))
      (cadr next-tabs)]

@@ -2,12 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property
-                     shrubbery/print
-                     enforest/name-parse
-                     enforest/deprecated
                      rhombus/private/enforest
                      rhombus/private/name-path-op
-                     racket/list
                      rhombus/private/pack)
          (rename-in "typeset-doc.rkt"
                     [doc-typeset-rhombusblock rb])
