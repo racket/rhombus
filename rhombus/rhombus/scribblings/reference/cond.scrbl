@@ -143,22 +143,22 @@
 
 
 @doc(
-  bind.macro '$bind when $expr'
-  bind.macro '$bind when:
+  bind.macro '$values_bind when $expr'
+  bind.macro '$values_bind when:
                 $body
                 ...'
-  bind.macro '$bind unless $expr'
-  bind.macro '$bind unless:
+  bind.macro '$values_bind unless $expr'
+  bind.macro '$values_bind unless:
                 $body
                 ...'
 ){
 
  As binding forms, @rhombus(when, ~bind) and @rhombus(unless, ~bind)
  impose side conditions on a match. These forms match and bind the
- same as the given @rhombus(bind), but only when a @rhombus(expr)
+ same as the given @rhombus(values_bind), but only when a @rhombus(expr)
  or a @rhombus(body) sequence produces a true value for @rhombus(when, ~bind) or @rhombus(#false)
  for @rhombus(unless); otherwise, the binding does not match. The
- bindings created by a match to @rhombus(bind) are available for use
+ bindings created by a match to @rhombus(values_bind) are available for use
  in @rhombus(expr) or @rhombus(body).
 
  A @rhombus(when) or @rhombus(unless) may need to be used with
@@ -184,10 +184,18 @@
     classify(1)
     classify(2)
     classify([1, 2])
+  ~repl:
+    match values(1, 2, 3)
+    | (x, y, z) when x+y+z == 6:
+        "six"
+    | ~else:
+        "other"
 )
 
 @(history:
     ~changed "1.1.0.2":
-      @elem{Add a block @rhombus(body) form.})
+      @elem{Added a block @rhombus(body) form.}
+    ~changed "1.1.0.3":
+      @elem{Added support for multiple-value bindings.})
 
 }

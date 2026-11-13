@@ -370,3 +370,15 @@ check:
   enum Foo | a | b | c
   5 matches Foo.d
   ~throws "binding a namespace extension is not allowed in this context"
+
+// check multiple-value bindings support
+block:
+  import:
+    rhombus/meta open
+  bind.macro 'noop $b':
+    b
+  check:
+    match values(1, 2, 3)
+    | noop (x, y, z):
+        x+y+z
+    ~is 6

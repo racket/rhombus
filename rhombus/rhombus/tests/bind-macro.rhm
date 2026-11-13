@@ -4,10 +4,14 @@ block:
   import "static_arity.rhm"
   static_arity.check ~meta:
     bind_meta.unpack(s)
+    bind_meta.unpack_values(s)
     bind_meta.unpack_info(s)
     bind_meta.pack(s)
+    bind_meta.pack_values(s)
     bind_meta.pack_info(s)
+    bind_meta.get_arity(s)
     bind_meta.get_info(s, stat_info)
+    bind_meta.get_values_info(s, stat_infos)
     bind_meta.is_immediate(s)
 
 // define a binding operator
@@ -474,5 +478,262 @@ check:
 
 check:
   let noop [x, y, z] = [1, 2, 3]
+  x+y+z
+  ~is 6
+
+// check user-defined multiple-value bindings
+bind.macro 'multi($b, ...)':
+  ~all_stx: stx
+  let ['$(b_parsed :: bind_meta.Parsed)', ...] = [b, ...]
+  bind_meta.pack_values('($stx,
+                          $(Function.count(b, ...)),
+                          multi_infoer,
+                          ($b_parsed, ...))')
+
+bind.infoer 'multi_infoer(($static_info, ...), ($b_parsed, ...))':
+  let [b_info, ...] = [bind_meta.get_info(b_parsed, static_info), ...]
+  let ['($b_ann, $b_name, $b_s_infos, ($b_var_info, ...),
+         $_, $_, $b_evidence, $_, $_, $_)',
+       ...]:
+    [bind_meta.unpack_info(b_info), ...]
+  let ann:
+    "multi("
+      +& (match [b_ann, ...]
+          | []:
+              ""
+          | [ann]:
+              ann.unwrap()
+          | [ann0, ann, ...]:
+              String.append(ann0.unwrap(), ", " +& ann.unwrap(), ...))
+      +& ")"
+  '($ann,
+    ($b_name, ...),
+    (($statinfo_meta.values_key,
+      $(statinfo_meta.pack_group('$b_s_infos ...')))),
+    ($b_var_info, ..., ...),
+    multi_oncer,
+    multi_matcher,
+    ($b_evidence, ...),
+    multi_committer,
+    multi_binder,
+    ($b_info, ...))'
+
+bind.oncer 'multi_oncer(($b_info, ...))':
+  let ['($_, $_, $_, $_,
+         $b_oncer, $_, $_, $_, $_, $b_data)',
+       ...]:
+    [bind_meta.unpack_info(b_info), ...]
+  '$b_oncer($b_data)
+   ...'
+
+bind.matcher 'multi_matcher(($in_id, ...), ($b_info, ...),
+                            $IF, $success, $failure)':
+  let ['($_, $_, $_, $_,
+         $_, $b_matcher, $_, $_, $_, $b_data)',
+       ...]:
+    [bind_meta.unpack_info(b_info), ...]
+  recur loop(in_ids = [in_id, ...],
+             b_matchers = [b_matcher, ...],
+             b_datas = [b_data, ...]):
+    match values(in_ids, b_matchers, b_datas)
+    | ([], [], []):
+        success
+    | ([in_id, & more_in_ids], [b_matcher, & more_b_matchers], [b_data, & more_b_datas]):
+        '$b_matcher($in_id, $b_data, $IF,
+                    $(loop(more_in_ids, more_b_matchers, more_b_datas)),
+                    $failure)'
+
+bind.committer 'multi_committer(($in_id, ...),
+                                ($b_evidence, ...),
+                                ($b_info, ...))':
+  let ['($_, $_, $_, $_,
+         $_, $_, $_, $b_committer, $_, $b_data)',
+       ...]:
+    [bind_meta.unpack_info(b_info), ...]
+  '$b_committer($in_id, $b_evidence, $b_data)
+   ...'
+
+bind.committer 'multi_binder(($in_id, ...),
+                             ($b_evidence, ...),
+                             ($b_info, ...))':
+  let ['($_, $_, $_, $_,
+         $_, $_, $_, $_, $b_binder, $b_data)',
+       ...]:
+    [bind_meta.unpack_info(b_info), ...]
+  '$b_binder($in_id, $b_evidence, $b_data)
+   ...'
+
+check:
+  let multi(x, y, z) = values(1, 2, 3)
+  x+y+z
+  ~is 6
+
+check:
+  let multi(x, y) = values(1, 2, 3)
+  "oops"
+  ~throws "result arity mismatch"
+
+check:
+  match values(1, 2, 3)
+  | multi(x, y, z) when x+y+z == 6:
+      "ok"
+  ~is "ok"
+
+// check `bind_meta.get_arity` and `bind_meta.get_values_info`
+expr.macro 'get_arity($(b :: bind_meta.Parsed))':
+  let arity = bind_meta.get_arity(b)
+  '#%literal $arity'
+
+check:
+  get_arity(x) ~is 1
+  get_arity((x)) ~is 1
+  get_arity(()) ~is 0
+  get_arity((x, y)) ~is 2
+  get_arity([x, y]) ~is 1
+
+bind.macro 'just_values $b':
+  ~all_stx: stx
+  bind_meta.pack_values('($stx,
+                          $(bind_meta.get_arity(b)),
+                          just_values_infoer,
+                          $b)')
+
+bind.infoer 'just_values_infoer(($si, ...), $b)':
+  bind_meta.unpack_info(bind_meta.get_values_info(b, [si, ...]))
+
+check:
+  let just_values (x, y, z) = values(1, 2, 3)
+  x+y+z
+  ~is 6
+
+check:
+  let just_values (x, y) = values(1, 2, 3)
+  "oops"
+  ~throws "result arity mismatch"
+
+check:
+  match values(1, 2, 3)
+  | (just_values (x, y, z)) when x+y+z == 6:
+      "ok"
+  ~is "ok"
+
+check:
+  ~eval
+  import: rhombus/meta open
+  bind.macro 'noop':
+    ~all_stx: stx
+    bind_meta.pack_values('($stx, 1, noop_infoer, ())')
+
+  bind.infoer 'noop_infoer(($si_in), ())':
+    '"oops"'
+
+  meta block:
+    let '$(noop :: bind_meta.Parsed)' = 'noop'
+    bind_meta.get_values_info(noop, ['()'])
+  ~throws "noop_infoer: ill-formed unpacked binding info"
+
+meta:
+  block:
+    let one_val = bind_meta.pack_values('(something, 1, infoer, ())')
+    check:
+      bind_meta.get_values_info(one_val, "oops")
+      ~throws values(
+        "bind_meta.get_values_info: " ++ error.annot_msg(),
+        error.annot("Listable.to_list && List.of(Syntax)").msg,
+        error.val("oops").msg,
+    )
+    check:
+      bind_meta.get_values_info(one_val, ["oops"])
+      ~throws values(
+        "bind_meta.get_values_info: " ++ error.annot_msg(),
+        error.annot("Listable.to_list && List.of(Syntax)").msg,
+        error.val(["oops"]).msg,
+    )
+    check:
+      bind_meta.get_values_info(one_val, '()')
+      ~throws values(
+        "bind_meta.get_values_info: " ++ error.annot_msg(),
+        error.annot("Listable.to_list && List.of(Syntax)").msg,
+        error.val('()').msg,
+    )
+
+meta:
+  block:
+    let zero_vals = bind_meta.pack_values('(something, 0, infoer, ())')
+    check:
+      bind_meta.get_values_info(zero_vals, ['()'])
+      ~throws "bind_meta.get_values_info: binding has arity 0, but got 1 unpacked static info"
+    check:
+      bind_meta.get_values_info(zero_vals, ['()', '()'])
+      ~throws "bind_meta.get_values_info: binding has arity 0, but got 2 unpacked static infos"
+
+  block:
+    let one_val = bind_meta.pack_values('(something, 1, infoer, ())')
+    check:
+      bind_meta.get_values_info(one_val, [])
+      ~throws "bind_meta.get_values_info: binding has arity 1, but got 0 unpacked static infos"
+    check:
+      bind_meta.get_values_info(one_val, ['()', '()'])
+      ~throws "bind_meta.get_values_info: binding has arity 1, but got 2 unpacked static infos"
+
+  block:
+    let two_vals = bind_meta.pack_values('(something, 2, infoer, ())')
+    check:
+      bind_meta.get_values_info(two_vals, [])
+      ~throws "bind_meta.get_values_info: binding has arity 2, but got 0 unpacked static infos"
+    check:
+      bind_meta.get_values_info(two_vals, ['()'])
+      ~throws "bind_meta.get_values_info: binding has arity 2, but got 1 unpacked static info"
+
+meta:
+  check:
+    bind_meta.pack_values('(something, 1, infoer, ())',
+                          ~track: "oops")
+    ~throws values(
+      "bind_meta.pack_values: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val("oops").msg,
+    )
+  check:
+    bind_meta.pack_values('(something, 1, infoer, ())',
+                          ~track: ["oops"])
+    ~throws values(
+      "bind_meta.pack_values: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(["oops"]).msg,
+    )
+  check:
+    bind_meta.pack_values('(something, 1, infoer, ())',
+                          ~track: ['a b'])
+    ~throws values(
+      "bind_meta.pack_values: " ++ error.annot_msg(),
+      error.annot("Listable.to_list && List.of(Term)").msg,
+      error.val(['a b']).msg,
+    )
+  block:
+    let old_stx = 'old'
+    let new_stx = 'new'.property(#'origin, old_stx)
+    check:
+      bind_meta.pack_values('(something, 1, infoer, ())',
+                            ~track: [new_stx])
+        .property(#'origin)
+      ~is old_stx
+
+// check that `bind_meta.{unpack,pack}_values` round-trips
+bind.macro 'noop_values $b':
+  bind_meta.pack_values(bind_meta.unpack_values(b))
+
+check:
+  let noop_values x = 10
+  x
+  ~is 10
+
+check:
+  let noop_values [x, y, z] = [1, 2, 3]
+  x+y+z
+  ~is 6
+
+check:
+  let noop_values (x, y, z) = values(1, 2, 3)
   x+y+z
   ~is 6

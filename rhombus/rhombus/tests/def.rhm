@@ -56,20 +56,18 @@ check:
   def (1, 2) = values(1, 1)
   #void
   ~throws values(
-    "value does not satisfy annotation",
-    "1",
-    "2nd",
-    "matching(2)",
+    "def: values do not satisfy annotation",
+    error.vals(~label: "values...", 1, 1).msg,
+    error.annot("values(matching(1), matching(2))").msg,
   )
 
 check:
   def (1, 2) = values(2, 2)
   #void
   ~throws values(
-    "value does not satisfy annotation",
-    "2",
-    "1st",
-    "matching(1)",
+    "def: values do not satisfy annotation",
+    error.vals(~label: "values...", 2, 2).msg,
+    error.annot("values(matching(1), matching(2))").msg,
   )
 
 check:
@@ -184,3 +182,18 @@ check:
   def _ :: Int as x = dynamic(10)
   x < x
   ~is #false
+
+// check multiple-value bindings support
+block:
+  import:
+    rhombus/meta open
+  bind.macro 'noop $b':
+    b
+  check:
+    def noop (x, y, z) = values(1, 2, 3)
+    x+y+z
+    ~is 6
+  check:
+    let noop (x, y, z) = values(1, 2, 3)
+    x+y+z
+    ~is 6

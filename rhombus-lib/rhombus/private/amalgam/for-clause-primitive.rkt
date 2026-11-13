@@ -34,23 +34,16 @@
   ;; Like `:var-decl`, but `in` is recognized in place of `=`
   (define-splicing-syntax-class (:each-decl stx)
     #:datum-literals (group)
-    #:attributes ([bind-g 1] blk)
-    (pattern (~seq (~optional _::values-id-bind) (_::parens bind-g ...) (~and blk (_::block . _))))
-    (pattern (~and (~seq t ...)
-                   (~seq (~optional _::values-id-bind) (_::parens bind-g ...) _::in expr ...+))
-             #:do [(check-multiple-ins #'(t ...))]
-             #:with blk (relocate+reraw
-                         (respan #'(t ...))
-                         #`(block (group expr ...))))
+    #:attributes (bind-g blk)
     (pattern (~and (~seq t ...)
                    (~seq bind ...+ _::in expr ...+))
              #:do [(check-multiple-ins #'(t ...))]
-             #:with (bind-g ...) #`(#,(regroup #'(bind ...)))
+             #:with bind-g (regroup #'(bind ...))
              #:with blk (relocate+reraw
                          (respan #'(t ...))
                          #`(block (group expr ...))))
     (pattern (~seq bind ...+ (~and blk (_::block . _)))
-             #:with (bind-g ...) #`(#,(regroup #'(bind ...))))))
+             #:with bind-g (regroup #'(bind ...)))))
 
 (define-for-clause-syntax each
   (for-clause-transformer
@@ -58,9 +51,9 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(form-id (~var d (:each-decl stx)))
-        #`(#:each ((d.bind-g ...)) (d.blk))]
+        #`(#:each (d.bind-g) (d.blk))]
        [(form-id (tag::block (group (~var d (:each-decl stx))) ...))
-        #`(#:each ((d.bind-g ...) ...) (d.blk ...))]
+        #`(#:each (d.bind-g ...) (d.blk ...))]
        [_
         (raise-syntax-error #f
                             "needs a binding or a block of bindings, each followed by a block"
@@ -102,13 +95,8 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(form-id (~optional _::values-id-bind) (_::parens g ...) (~and rhs (_::block . _)))
-        #`(#:let (g ...) rhs)]
-       [(form-id (~optional _::values-id-bind) (_::parens g ...) _::equal rhs ...+)
-        (check-multiple-equals stx)
-        #`(#:let (g ...) (group rhs ...))]
        [(form-id bind ...+ _::equal rhs ...+)
         (check-multiple-equals stx)
-        #`(#:let ((group bind ...)) (group rhs ...))]
+        #`(#:let #,(regroup #'(bind ...)) (group rhs ...))]
        [(form-id bind ...+ (~and rhs (_::block . _)))
-        #`(#:let ((group bind ...)) rhs)]))))
+        #`(#:let #,(regroup #'(bind ...)) rhs)]))))

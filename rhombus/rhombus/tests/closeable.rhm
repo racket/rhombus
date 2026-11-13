@@ -88,3 +88,17 @@ check:
   #void
   ~throws values(error.annot_msg(),
                  error.annot("Closeable").msg)
+
+// check multiple-value bindings support
+block:
+  import:
+    rhombus/meta open
+  bind.macro 'noop $b':
+    b
+  class A(val):
+    implements Closeable
+    override close(): #void
+  check:
+    Closeable.let noop (x, y, z) = values(A(1), A(2), A(3))
+    x.val + y.val + z.val
+    ~is 6

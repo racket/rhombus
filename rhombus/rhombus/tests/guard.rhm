@@ -189,3 +189,14 @@ check:
   guard.let 1:«» | #false
   0
   ~throws "empty expression for binding"
+
+// check multiple-value bindings support
+block:
+  import:
+    rhombus/meta open
+  bind.macro 'noop $b':
+    b
+  check:
+    guard.let noop (x, y, z) = values(1, 2, 3) | "oops"
+    x+y+z
+    ~is 6

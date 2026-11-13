@@ -40,7 +40,8 @@
  Like @rhombus(expr.macro), but defines an identifier or operator as a
  binding form in the @rhombus(bind, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
- binding description created with @rhombus(bind_meta.pack).
+ binding description created with @rhombus(bind_meta.pack) or
+ @rhombus(bind_meta.pack_values).
 
 @examples(
   ~eval: macro_eval
@@ -62,6 +63,7 @@
  @rhombus(macro_patterns).
 
 }
+
 
 @doc(
   ~meta
@@ -102,13 +104,81 @@
 
 @doc(
   ~meta
+  fun bind_meta.pack_values(
+    stx :: Syntax,
+    ~track: track_stxes :: Listable.to_list && List.of(Term) = []
+  ) :: Syntax
+){
+
+ Packs multiple-value binding information that is represented by a
+ syntax object with four parts: @rhombus(source_form, ~var),
+ @rhombus(arity, ~var), @rhombus(infoer_id, ~var), and
+ @rhombus(data, ~var), combined in the form
+
+ @rhombusblock(
+  '(#,(@rhombus(source_form, ~var)), #,(@rhombus(arity, ~var)), #,(@rhombus(infoer_id, ~var)), #,(@rhombus(data, ~var)))')
+
+ The @rhombus(source_form, ~var) form is the original binding form
+ that is used to report misuse of multiple-value bindings in
+ single-value contexts. The @rhombus(arity, ~var) nonnegative integer
+ specifies how many values the binding matches. The
+ @rhombus(infoer_id, ~var) and @rhombus(data, ~var) parts are as in
+ @rhombus(bind_meta.pack).
+
+ The representation of packed information as a syntax object is
+ unspecified and meant to be opaque.
+
+ See @secref(~doc: model_doc, "bind-macro-protocol") for more explanation and for
+ examples.
+
+@(history:
+    ~added "1.1.0.3")
+
+}
+
+@doc(
+  ~meta
   fun bind_meta.unpack(stx :: Syntax) :: Syntax
 ){
 
  The inverse of @rhombus(bind_meta.pack), normally used only internally in
- the expander.
+ the expander. Multiple-value bindings of arity 1 are ``unpacked'' to
+ single-value bindings by lowering them.
+
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Added support for multiple-value bindings.})
 
 }
+
+@doc(
+  ~meta
+  fun bind_meta.unpack_values(stx :: Syntax) :: Syntax
+){
+
+ The inverse of @rhombus(bind_meta.pack_values), normally used only internally in
+ the expander. Single-value bindings are ``unpacked'' to multiple-value
+ bindings of arity 1 by lifting them.
+
+@(history:
+    ~added "1.1.0.3")
+
+}
+
+@doc(
+  ~meta
+  fun bind_meta.get_arity(bind_stx :: Syntax) :: Syntax
+){
+
+ Reports the arity encoded by the binding form represented by packed
+ @rhombus(bind_stx). A single-value bindings always has arity 1, while
+ a multiple-value binding has its arity from the unpacked form.
+
+@(history:
+    ~added "1.1.0.3")
+
+}
+
 
 @doc(
   ~nonterminal:
@@ -120,7 +190,7 @@
 ){
 
  Defines @rhombus(id) as the infoer ``continuation'' of a
- binding macro's implementation. The infoer is invoked with ``upward''
+ binding macro's implementation. The infoer is invoked with ``downward''
  static information provided by the context of a use of the binding form,
  plus the same data syntax object that was supplied as part of the
  argument to @rhombus(bind_meta.pack). The transformer's result is
@@ -146,8 +216,8 @@
   | ($evidence_id_tree, ...)
 ){
 
- Packs binding information that specific to a use of a binding form,
- which means that ``upward'' has been provided to an infoer, and the
+ Packs binding information that is specific to a use of a binding form,
+ which means that ``downward'' static information has been provided to an infoer, and the
  infoer converts that to initial information about bindings plus
  ``continuations'' to generate the matching expression and variable
  definitions.
@@ -156,7 +226,7 @@
 
  @rhombusblock(
   '(#,(@rhombus(ann_string, ~var)),
-    #,(@rhombus(name_id, ~var)),
+    #,(@rhombus(name_id_or_ids, ~var)),
     ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
     ((#,(@rhombus(defined_id, ~var)),
       [#,(@rhombus(var_use, ~var)), ...],
@@ -171,12 +241,14 @@
    )
 
  The @rhombus(ann_string, ~var) term is for error reporting when a value
- fails to match the binding. It describes the binder's match requires in
+ fails to match the binding. It describes the binder's matching requirements in
  the form of an annotation.
 
- The @rhombus(name_id, ~var) term is for error reporting and
+ The @rhombus(name_id_or_ids, ~var) term is for error reporting and
  reflection in the sense that it is used as the inferred name for a value
- matched to the binder, in case such a name is relevant.
+ matched to the binder, in case such a name is relevant. It is either
+ an identifier (for single-value bindings) or a parenthesized sequence
+ of identifiers (for multiple-value bindings).
 
  The @rhombus(static_key, ~var)--@rhombus(static_value, ~var) pairs
  describe ``upward'' static information for anything that successfully
@@ -217,7 +289,7 @@
  @rhombus(binder_id, ~var) identifiers provide
  the ``continuation'' of the binder's expansion to generate a matching
  expression and a definition sequence. Each identifier in @rhombus(evidence_id_tree)
- should be defined in the output of @rhombus(match_id, ~var);
+ should be defined in the output of @rhombus(matcher_id, ~var);
  a tree with the same shape as @rhombus(evidence_id_tree), but with
  each identifier potentially replaced by a different one, is provided as
  input to @rhombus(committer_id, ~var) and @rhombus(binder_id, ~var).
@@ -225,7 +297,7 @@
  The @rhombus(data, ~var) term is propagated to the use of
  @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
  @rhombus(binder_id, ~var), providing a communication
- channel from an infoer to a matcher and binder.
+ channel from an infoer to a matcher, committer, or binder.
 
  The representation of packed information as a syntax object is
  unspecified and meant to be opaque.
@@ -246,7 +318,8 @@
 
  The inverse of @rhombus(bind_meta.pack_info), which is useful for
  unpacking information about the expansion of nested binding forms
- as produced by @rhombus(bind_meta.get_info).
+ as produced by @rhombus(bind_meta.get_info) or
+ @rhombus(bind_meta.get_values_info).
 
 }
 
@@ -257,8 +330,8 @@
     :: Syntax
 ){
 
- Initiates the expansion of the binding form represented by
- @rhombus(bind_stx) in a context that supplies the ``upward'' static
+ Initiates the expansion of the binding form represented by packed
+ @rhombus(bind_stx) in a context that supplies the ``downward'' static
  information represented by @rhombus(static_info).
 
  Static information is represented by a syntax object that has the
@@ -273,7 +346,46 @@
  the packed syntax object and expose information about the binding's
  expansion.
 
+ The @rhombus(bind_stx) form can also be a multiple-value binding of
+ arity 1, in which case it is lowered to a single-value binding
+ first. If it is a multiple-value binding of any other arities, a
+ syntax error is reported using its @rhombus(source_form, ~var).
+
  See @secref(~doc: model_doc, "bind-macro-protocol") for an example.
+
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Added support for multiple-value bindings.})
+
+}
+
+@doc(
+  ~meta
+  fun bind_meta.get_values_info(
+    bind_stx :: Syntax,
+    static_infos :: Listable.to_list && List.of(Syntax)
+  ) :: Syntax
+){
+
+ Initiates the expansion of the multiple-value binding form
+ represented by packed @rhombus(bind_stx) in a context that supplies
+ the ``downward'' static information represented by
+ @rhombus(static_infos). Each syntax object in @rhombus(static_infos)
+ must have the shape as described in @rhombus(bind_meta.get_info), and
+ the number of syntax objects in @rhombus(static_infos) must be the
+ same as the arity encoded by @rhombus(bind_stx).
+
+ The result is the same kind of opaque syntax object as the result of
+ @rhombus(bind_meta.get_info).
+
+ The @rhombus(bind_stx) form can also be a single-value binding,
+ in which case it is lifted to a multiple-value binding of arity 1
+ first.
+
+ See @secref(~doc: model_doc, "bind-macro-protocol") for an example.
+
+@(history:
+    ~added "1.1.0.3")
 
 }
 
@@ -286,7 +398,8 @@
  Takes the initialized binding-form expansion produced by
  @rhombus(bind_meta.get_info) and reports whether the binding is
  immediate in the same sense as just a variable: the binding always
- matches, and no work is required to convert or unpack the matched value.
+ matches, and no work is required to convert or unpack the matched
+ value. Multiple-value bindings are never immediate in this sense.
 
 }
 
@@ -301,7 +414,7 @@
 
  Defines @rhombus(id) as the oncer ``continuation'' of a binding form's
  expansion. The result is an sequence of definitions for intermediate
- variables for used by a matcher's expansion. The term matched to
+ variables for use by a matcher's expansion. The term matched to
  @rhombus(data_pattern) is whatever data the infoer included at the end
  of its result.
 
@@ -322,12 +435,12 @@
 
 @doc(
   ~nonterminal:
-    id_pattern: #%quotes pattern
+    id_or_ids_pattern: #%quotes pattern
     data_pattern: #%quotes pattern
     IF_pattern: #%quotes pattern
     success_pattern: #%quotes pattern
     fail_pattern: #%quotes pattern
-  defn.macro '«bind.matcher '$id($id_pattern, $data_pattern,
+  defn.macro '«bind.matcher '$id($id_or_ids_pattern, $data_pattern,
                                  $IF_pattern, $success_pattern, $fail_pattern)':
                  $body
                  ...»'
@@ -335,7 +448,9 @@
 
  Defines @rhombus(id) as the matcher ``continuation'' of a
  binding form's expansion. The result is an expression that inspects the
- value of the identifier matched to @rhombus(id_pattern) and uses the
+ value of the identifier (or the values of the parenthesized sequence
+ of identifiers in the case of multiple-value bindings) matched to
+ @rhombus(id_or_ids_pattern) and uses the
  pieces matched by @rhombus(IF_pattern), @rhombus(success_pattern), and
  @rhombus(fail_pattern) to dispatch on match success or failure. The term
  matched to @rhombus(data_pattern) is whatever data the infoer included
@@ -350,7 +465,7 @@
  Any definitions produced by a matcher should not define identifiers
  supplied by a user of the binding form, because those names would not be
  adjusted by @rhombus(let). Instead, such definitions should be deferred
- to the binder function's result.  If early binding is unavoidable (as in
+ to the binder function's result. If early binding is unavoidable (as in
  @rhombus(where, ~bind) or @rhombus(when, ~bind), for example, where
  some binding is needed in the process of matching), using
  @rhombus(bind.forward_sequence) around definitions may restore
@@ -364,22 +479,23 @@
 
 @doc(
   ~nonterminal:
-    id_pattern: #%quotes pattern
+    id_or_ids_pattern: #%quotes pattern
     evidence_id_tree_pattern: #%quotes pattern
     data_pattern: #%quotes pattern
-  defn.macro '«bind.committer '$id($id_pattern, $evidence_id_tree_pattern,
+  defn.macro '«bind.committer '$id($id_or_ids_pattern, $evidence_id_tree_pattern,
                                    $data_pattern)':
                  $body
                  ...»'
 ){
 
  Defines @rhombus(id) as the committer ``continuation'' of a
- binding form's expansion. The result is an sequence of definitions for
- intermediate variables, where
- @rhombus(id_pattern) holds the value that was matched by a matcher. If
+ binding form's expansion. The result is a sequence of definitions for
+ intermediate variables, where the identifier (or the parenthesized
+ sequence of identifiers) matched to @rhombus(id_or_ids_pattern) holds
+ the value (or values) that was matched by a matcher. If
  the matcher included any additional bindings around the success branch,
- then those bindings are in the environment of the definitions generated
- by this binder. The term matched to @rhombus(evidence_id_tree_pattern)
+ those bindings are not necessarily in the environment of the definitions generated
+ by this committer. The term matched to @rhombus(evidence_id_tree_pattern)
  is the evidence tree, and the term matched to
  @rhombus(data_pattern) is whatever data the infoer included at the
  end of its result.
@@ -387,7 +503,7 @@
  The definitions produced by a committer should not define identifiers
  supplied by a user of the binding form, because those names would not be
  adjusted by @rhombus(let). Instead, such definitions should be deferred
- to the binder function's result.  If early binding is unavoidable (as in
+ to the binder function's result. If early binding is unavoidable (as in
  @rhombus(where, ~bind) or @rhombus(when, ~bind), for example, where
  some binding is needed in the process of matching), using
  @rhombus(bind.forward_sequence) around definitions may restore
@@ -400,23 +516,24 @@
 
 @doc(
   ~nonterminal:
-    id_pattern: #%quotes pattern
+    id_or_ids_pattern: #%quotes pattern
     evidence_id_tree_pattern: #%quotes pattern
     data_pattern: #%quotes pattern
-  defn.macro '«bind.binder '$id($id_pattern, $evidence_id_tree_pattern,
+  defn.macro '«bind.binder '$id($id_or_ids_pattern, $evidence_id_tree_pattern,
                                 $data_pattern)':
                  $body
                  ...»'
 ){
 
  Defines @rhombus(id) as the binder ``continuation'' of a
- binding form's expansion. The result is an sequence of definitions for
- the variables that are bound by the expander form, where
- @rhombus(id_pattern) holds the value that was matched by a matcher. If
+ binding form's expansion. The result is a sequence of definitions for
+ the variables that are bound by the expander form, where the identifier (or the parenthesized
+ sequence of identifiers) matched to @rhombus(id_or_ids_pattern) holds
+ the value (or values) that was matched by a matcher. If
  the matcher included any additional bindings around the success branch,
- then those bindings are in the environment of the definitions generated
- by this binder, and any intermediate definitions from the committer are
- also in the environment. The term matched to @rhombus(evidence_id_tree_pattern)
+ those bindings are not necessarily in the environment of the definitions generated
+ by this binder, but any intermediate definitions from the committer are
+ necessarily in the environment. The term matched to @rhombus(evidence_id_tree_pattern)
  is the evidence tree, and the term matched to
  @rhombus(data_pattern) is whatever data the infoer included at the
  end of its result.

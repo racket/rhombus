@@ -1,0 +1,75 @@
+#lang rhombus/static
+
+check:
+  ~eval
+  ()
+  ~throws "(): empty expression"
+
+check:
+  (1) ~is 1
+  (values(1, 2)) ~is values(1, 2)
+
+check:
+  ~eval
+  (1, 2)
+  ~throws "(): too many expressions"
+
+check:
+  match values()
+  | (): "ok"
+  ~is "ok"
+
+check:
+  match 1
+  | (1): "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2)
+  | (values(1, 2)): "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2)
+  | (1, 2): "ok"
+  ~is "ok"
+
+check:
+  match values(1, 2)
+  | ((1, 2)): "ok"
+  ~is "ok"
+
+check:
+  ~eval
+  values() is_a ()
+  ~throws "(): empty annotation"
+
+check:
+  1 is_a (Int) ~is #true
+
+check:
+  ~eval
+  values(1, 2) is_a (Int, Int)
+  ~throws "(): too many annotations"
+
+check:
+  ~eval
+  class A():
+    method one:
+      ()
+  ~throws "(): empty entry point"
+
+check:
+  class A():
+    method one:
+      (fun (): 1)
+  A().one()
+  ~is 1
+
+check:
+  ~eval
+  class A():
+    method one:
+      (fun (): 1,
+       fun (): 2)
+  ~throws "(): too many entry points"

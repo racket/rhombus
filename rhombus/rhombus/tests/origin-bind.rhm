@@ -51,3 +51,7 @@ List[1, 2, 3] matches (List[x, y, z] when:
 List[1, 2, 3] matches (List[x, y, z] unless x + y + z != 6)
 List[1, 2, 3] matches (List[x, y, z] unless:
                          x + y + z != 6)
+
+match values(1, 2, 3)
+| values(values(#%literal 1), values(#%literal 2), values(#%literal 3)):
+    "yes"

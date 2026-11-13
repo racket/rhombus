@@ -10,11 +10,10 @@ meta:
   syntax_class RHS:
     kind: ~group
     fields: e
-  | '$(bound_as expr_meta.space: '=') $(rhs :: expr_meta.Parsed)':
-      field e = rhs
+  | '$(bound_as expr_meta.space: '=') $rhs ...':
+      field e = '$rhs ...'
   | ': $(b :: Block)':
-      match_def '$(rhs :: expr_meta.Parsed)' = 'block $b'
-      field e = rhs
+      field e = 'block $b'
 
 namespace Closeable:
   export:
@@ -30,16 +29,18 @@ namespace Closeable:
                        $body
                        ...':
     ~op_stx: self
-    let rhs = rhs.e
-    let [bind, ...]:
-      match '$bind_seq ...'
-      | '$(bound_as bind_meta.space: 'values') ($bind, ...)': [bind, ...]
-      | '($bind, ...)': [bind, ...]
-      | ~else: ['$bind_seq ...']
-    let rhs_statinfo = statinfo_meta.gather(rhs)
-    let [tmp, ...] = [Syntax.make_temp_id(bind), ...]
-    let [resource, ...] = [Syntax.make_temp_id(bind), ...]
+    let '$(b :: bind_meta.Parsed)' = '$bind_seq ...'
+    let '$(rhs :: expr_meta.Parsed)' = rhs.e
+    let arity = bind_meta.get_arity(b)
+    let [tmp, ...]:
+      for List (_ in 0..arity):
+        Syntax.make_temp_id("tmp")
+    let [resource, ...]:
+      for List (_ in 0..arity):
+        Syntax.make_temp_id("resource")
+    let plain_rhs = statinfo_meta.replace(rhs, '()')
     let all_resources = 'values($resource, ...)'
+    let rhs_statinfo = statinfo_meta.gather(rhs)
     let all_resources_with_statinfo = statinfo_meta.wrap(all_resources, rhs_statinfo)
     values(
       '
@@ -48,7 +49,7 @@ namespace Closeable:
           ...
           try:
             ~initially:
-              let ($tmp, ...) = $rhs
+              let ($tmp, ...) = $plain_rhs
               $resource := ($tmp $('::'.relocate(self)) Closeable)
               ...
             Continuation.barrier:

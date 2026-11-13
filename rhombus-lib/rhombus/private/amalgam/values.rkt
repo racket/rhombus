@@ -17,13 +17,13 @@
          "values-key.rkt"
          (submod "define-arity.rkt" for-info)
          "parens.rkt"
-         "op-literal.rkt"
          "var-decl.rkt"
          "simple-call.rkt"
          "parse.rkt"
          "compound-repetition.rkt"
          "if-blocked.rkt"
-         "binding-failure.rkt")
+         "binding-failure.rkt"
+         "values-binding.rkt")
 
 (provide (for-spaces (rhombus/bind
                       rhombus/annot
@@ -103,12 +103,7 @@
    '((default . stronger))
    'macro
    (lambda (stx)
-     (syntax-parse stx
-       [(head . _)
-        (raise-syntax-error #f
-                            (string-append "not allowed as a pattern (except as a non-nested"
-                                           " pattern by forms that specifically recognize it)")
-                            #'head)]))))
+     (parse-values-binding stx #f))))
 
 (define-annotation-syntax values
   (annotation-prefix-operator

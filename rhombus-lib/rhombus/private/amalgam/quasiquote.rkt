@@ -1352,23 +1352,23 @@
          (define-syntaxes (sid ...) sid-ref)
          ...)]))
 
-(define-for-syntax (handle-syntax-parse-dispatch who
-                                                 val-ids b-parsedss rhss
+(define-for-syntax (handle-syntax-parse-dispatch val-ids who
+                                                 b-parseds rhss
                                                  make-not-stx-expr
                                                  default-k)
   (cond
-    [(and (not (null? b-parsedss))
-          (for/and ([parseds (in-list b-parsedss)])
-            (unless (null? (cdr parseds))
+    [(and (not (null? b-parseds))
+          (for/and ([parsed (in-list b-parseds)])
+            (unless (eqv? (extract-binding-arity parsed) 1)
               (error "handle-syntax-parse-dispatch: must only apply to single-value pattern"))
-            (syntax-parse (car parseds)
+            (syntax-parse parsed
               [b::binding-form
                (free-identifier=? #'b.infoer-id #'syntax-infoer)])))
      ;; since all bindings are syntax patterns, generate a `syntax-parse` form
      ;; without an "else" case, so it synthesize a message when matching fails
      (define repack-multi?
-       (for/or ([parseds (in-list b-parsedss)])
-         (syntax-parse (car parseds)
+       (for/or ([parsed (in-list b-parseds)])
+         (syntax-parse parsed
            [b::binding-form
             (syntax-parse #'b.data
               [(annotation-str pattern repack . _)
@@ -1378,9 +1378,9 @@
              (syntax-parse (#,(if repack-multi? #'repack-as-multi #'repack-as-term) #,(car val-ids))
                #:disable-colon-notation
                #:context '#,who
-               #,@(for/list ([parseds (in-list b-parsedss)]
+               #,@(for/list ([parsed (in-list b-parseds)]
                              [rhs (in-list rhss)])
-                    (syntax-parse (car parseds)
+                    (syntax-parse parsed
                       [b::binding-form
                        #:with b-impl::binding-impl #'(b.infoer-id () b.data)
                        #:with b-info::binding-info #'b-impl.info

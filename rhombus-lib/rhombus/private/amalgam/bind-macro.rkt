@@ -12,7 +12,6 @@
                      "uses-pack.rkt"
                      "operator-syntax-class.rkt"
                      (submod "quasiquote.rkt" convert)
-                     "op-literal.rkt"
                      "binding.rkt"
                      "tail-returner.rkt"
                      "macro-result.rkt"
@@ -24,6 +23,8 @@
                      "syntax-wrap.rkt"
                      "origin.rkt"
                      "origin-check.rkt"
+                     "number.rkt"
+                     "to-list.rkt"
                      (only-in "dollar.rkt"
                               $)
                      (only-in "underscore.rkt"
@@ -65,10 +66,14 @@
     #:fields
     (space
      [pack bind_meta.pack]
+     [pack_values bind_meta.pack_values]
      [pack_info bind_meta.pack_info]
      [unpack bind_meta.unpack]
+     [unpack_values bind_meta.unpack_values]
      [unpack_info bind_meta.unpack_info]
+     [get_arity bind_meta.get_arity]
      [get_info bind_meta.get_info]
+     [get_values_info bind_meta.get_values_info]
      [is_immediate bind_meta.is_immediate]
      [relative_precedence bind_meta.relative_precedence]
      [ends_parse bind_meta.ends_parse]
@@ -135,6 +140,18 @@
         #'(parens (group chain-to-infoer)
                   (group (parsed #:rhombus/bind/chain (b.infoer-id b.data)))))]))
 
+  (define/arity (bind_meta.unpack_values stx)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed)
+      [(parsed #:rhombus/bind b::binding-values-form)
+       (pack-term
+        #`(parens #,(unpack-group (pack-tail #'b.bind-form) #f #f)
+                  (group b.arity)
+                  (group chain-to-values-infoer)
+                  (group (parsed #:rhombus/bind/chain/values (b.infoer-id b.arity b.data)))))]))
+
   (define/arity (bind_meta.unpack_info stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (check-syntax who stx)
@@ -147,7 +164,9 @@
                                                (syntax->list #'((b.bind-static-info ...) ...)))
        (pack-term
         #`(parens (group b.annotation-str)
-                  (group b.name-id)
+                  (group #,(or (attribute b.name-id)
+                               (with-syntax ([(name-id ...) #'b.name-ids])
+                                 #'(parens (group name-id) ...))))
                   (group #,(unpack-static-infos who #'b.static-infos))
                   (group (parens (group (parens (group b.bind-id)
                                                 (group unpacked-uses)
@@ -177,12 +196,47 @@
                                               (binding-form #'infoer-id
                                                             #'data))))]
       [_ (raise-arguments-error* who rhombus-realm
-                                 "ill-formed unpacked binding"
+                                 "ill-formed unpacked single-value binding"
+                                 "syntax object" stx)]))
+
+  (define/arity (bind_meta.pack_values stx #:track [components-in null])
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (define components (check-origins who components-in))
+    (syntax-parse (unpack-term stx who #f)
+      #:literals (chain-to-values-infoer)
+      #:datum-literals (group parsed)
+      [(~or* (_::parens bind-form
+                        (group arity:exact-nonnegative-integer)
+                        (group chain-to-values-infoer) ; shortcut: remove indirection
+                        (group (parsed #:rhombus/bind/chain/values (infoer-id saved-arity data))))
+             (_::parens bind-form
+                        (group arity:exact-nonnegative-integer)
+                        (group infoer-id:identifier)
+                        (group data)))
+       (pack-term #`(parsed #:rhombus/bind #,(transfer-origins
+                                              components
+                                              (binding-values-form (unpack-tail #'bind-form who #f)
+                                                                   #'arity
+                                                                   #'infoer-id
+                                                                   #'data))))]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "ill-formed unpacked multiple-value binding"
                                  "syntax object" stx)]))
 
   (define/arity (bind_meta.pack_info stx)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
     (pack-term #`(parsed #:rhombus/bind/info #,(pack-info who stx))))
+
+  (define/arity (bind_meta.get_arity stx)
+    #:static-infos ((#%call-result #,(get-int-static-infos)))
+    (check-syntax who stx)
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed)
+      [(parsed #:rhombus/bind b) (extract-binding-arity #'b)]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "not a parsed binding"
+                                 "syntax object" stx)]))
 
   (define/arity (bind_meta.get_info stx unpacked-static-infos)
     #:static-infos ((#%call-result #,(get-syntax-static-infos)))
@@ -196,7 +250,41 @@
        (syntax-parse #`(b.infoer-id #,static-infos b.data)
          [impl::binding-impl #'(parsed #:rhombus/bind/info impl.info)])]
       [_ (raise-arguments-error* who rhombus-realm
-                                 "not a parsed binding form"
+                                 "not a parsed single-value binding"
+                                 "syntax object" stx)]))
+
+  (define/arity (bind_meta.get_values_info stx unpacked-static-infoss-in)
+    #:static-infos ((#%call-result #,(get-syntax-static-infos)))
+    (check-syntax who stx)
+    (define unpacked-static-infoss
+      (cond
+        [(to-list #f unpacked-static-infoss-in)
+         => (lambda (unpacked-static-infoss)
+              (and (for/and ([s (in-list unpacked-static-infoss)])
+                     (syntax*? s))
+                   unpacked-static-infoss))]
+        [else #f]))
+    (unless unpacked-static-infoss
+      (raise-annotation-failure who unpacked-static-infoss-in "Listable.to_list && List.of(Syntax)"))
+    (syntax-parse (unpack-term stx who #f)
+      #:datum-literals (parsed)
+      [(parsed #:rhombus/bind b::binding-values-form)
+       (define given-num (length unpacked-static-infoss))
+       (define arity (syntax-e #'b.arity))
+       (define static-infoss
+         (for/list ([s (in-list unpacked-static-infoss)])
+           (pack-static-infos who (unpack-term s who #f))))
+       ;; no ill-formed unpacked static infos, but wrong number
+       (unless (eqv? given-num arity)
+         (raise-arguments-error* who rhombus-realm
+                                 (format "binding has arity ~a, but got ~a unpacked static info~a"
+                                         arity given-num (if (eqv? given-num 1) "" "s"))
+                                 "binding" stx
+                                 "unpacked static infos" unpacked-static-infoss))
+       (syntax-parse #`(b.infoer-id (#,@static-infoss) b.data)
+         [(~var impl (:binding-impl arity)) #'(parsed #:rhombus/bind/info impl.info)])]
+      [_ (raise-arguments-error* who rhombus-realm
+                                 "not a parsed multiple-value binding"
                                  "syntax object" stx)]))
 
   (define/arity (bind_meta.is_immediate stx)
@@ -207,8 +295,7 @@
        (free-identifier=? #'info.matcher-id #'always-succeed)]
       [_ (raise-arguments-error* who rhombus-realm
                                  "not a packed binding info"
-                                 "syntax object" stx)]))
-  )
+                                 "syntax object" stx)])))
 
 (define-defn-syntax infoer
   (definition-transformer
@@ -221,6 +308,14 @@
           #`(define-syntax infoer-id
               (infoer-rhs infoer-id #,stx)))]))))
 
+(define-for-syntax (unpack-maybe-static-infoss who stx)
+  (syntax-parse stx
+    [((~and static-infos ((_ ...) ...)) ...)
+     #`(parens #,@(for/list ([static-info (in-list (syntax->list #'(static-infos ...)))])
+                    (regroup #`(#,(unpack-static-infos who static-info)))))]
+    [_
+     (unpack-static-infos who stx)]))
+
 (begin-for-syntax
   (define-syntax (infoer-rhs stx)
     (syntax-parse stx
@@ -229,7 +324,7 @@
          #:datum-literals (group)
          [(form-id (_::quotes (group infoer-id:identifier
                                      (~and pat
-                                           (_::parens info-pattern
+                                           (_::parens maybe-infos-pattern
                                                       data-pattern))))
                    (block-tag::block body ...))
           (define-values (converted-pattern idrs sidrs vars can-be-empty?)
@@ -240,7 +335,7 @@
                 (syntax-parse stx
                   [(form-id info data)
                    (syntax-parse (regroup #`(form-id
-                                             (parens #,(regroup #`(#,(unpack-static-infos 'who #'info)))
+                                             (parens #,(regroup #`(#,(unpack-maybe-static-infoss 'who #'info)))
                                                      #,(regroup #'(data)))))
                      [#,converted-pattern
                       (let* ([id id-ref] ...)
@@ -297,6 +392,11 @@
           #`(define-syntax builder-id
               (matcher-rhs builder-id #,stx)))]))))
 
+(define-for-syntax (unpack-maybe-ids who stx)
+  (syntax-parse stx
+    [(id ...) #'(parens (group id) ...)]
+    [_ stx]))
+
 (begin-for-syntax
   (define-syntax (matcher-rhs stx)
     (syntax-parse stx
@@ -305,7 +405,7 @@
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
                                      (~and pat
-                                           (_::parens arg-id-pattern
+                                           (_::parens maybe-arg-ids-pattern
                                                       data-pattern
                                                       IF-id-pattern
                                                       success-id-pattern
@@ -317,9 +417,9 @@
                         [(((sid ...) sid-ref . _) ...) sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
-                  [(form-id arg-id data IF success fail)
+                  [(form-id maybe-arg-ids data IF success fail)
                    (syntax-parse (regroup #`(form-id
-                                             (parens #,(regroup #'(arg-id))
+                                             (parens #,(regroup #`(#,(unpack-maybe-ids 'who #'maybe-arg-ids)))
                                                      #,(regroup #'(data))
                                                      #,(regroup #'(if-bridge))
                                                      #,(regroup #'((parsed #:rhombus/expr (maybe-definition success))))
@@ -361,10 +461,20 @@
     #:datum-literals (group parsed)
     [(_ (_::parens (group up-static-infos)
                    (group (parsed #:rhombus/bind/chain (infoer-id data)))))
-     #:with impl::binding-impl #`(infoer-id
-                                  #,(pack-static-infos (syntax-e #'infoer-id)
-                                                       #'up-static-infos)
-                                  data)
+     #:do [(define who (syntax-e #'infoer-id))
+           (define packed-static-infos (pack-static-infos who #'up-static-infos))]
+     #:with impl::binding-impl #`(infoer-id #,packed-static-infos data)
+     #'impl.info]))
+
+(define-syntax (chain-to-values-infoer stx)
+  (syntax-parse stx
+    #:datum-literals (group parsed)
+    [(_ (_::parens (group (_::parens (group up-static-infos) ...))
+                   (group (parsed #:rhombus/bind/chain/values (infoer-id arity data)))))
+     #:do [(define who (syntax-e #'infoer-id))
+           (define packed-static-infoss (map (lambda (v) (pack-static-infos who v))
+                                             (syntax->list #'(up-static-infos ...))))]
+     #:with (~var impl (:binding-impl (syntax-e #'arity))) #`(infoer-id (#,@packed-static-infoss) data)
      #'impl.info]))
 
 (define-for-syntax (parse-chain-to-oncer rhombus stx)
@@ -386,31 +496,35 @@
   ;; depends on `IF` like `if-bridge` does
   (syntax-parse stx
     #:datum-literals (group parsed)
-    [(_ (_::parens (group arg-id:identifier)
+    [(_ (_::parens (~or* (group (_::parens (group multi-arg-id:identifier) ...))
+                         (group single-arg-id:identifier))
                    (group (parsed #:rhombus/bind/info/chain
                                   (oncer-id matcher-id committer-id binder-id data)))
                    (group if-id)
-                   (group success ...)
-                   (group fail ...)))
-     (syntax-parse #'(fail ...)
-       #:datum-literals (parsed)
+                   (~and success-g (group . _))
+                   (~and fail-g (group . _))))
+     (syntax-parse #'fail-g
+       #:datum-literals (group parsed)
        #:literals (maybe-definition if-bridge)
-       [((parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
+       [(group (parsed #:rhombus/expr (maybe-definition (if-bridge IF fail))))
         #:with rhombus rhombus
-        (syntax-parse #'(success ...)
-          [((_::block g ...))
-           #'(matcher-id arg-id data IF (rhombus g ...) fail)]
+        (syntax-parse #'success-g
+          #:datum-literals (group)
+          [(group (_::block g ...))
+           #'(matcher-id (~? (multi-arg-id ...) single-arg-id) data IF (rhombus g ...) fail)]
           [_
-           #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)])]
+           #'(matcher-id (~? (multi-arg-id ...) single-arg-id) data IF (rhombus success-g) fail)])]
        [_
-        #:with s-expr (syntax-parse #'(success ...)
-                        [((tag::block g ...))
+        #:with s-expr (syntax-parse #'success-g
+                        #:datum-literals (group)
+                        [(group (tag::block g ...))
                          #'(rhombus-body-at tag g ...)]
-                        [_ #'(rhombus-expression (group success ...))])
-        #'(matcher-id arg-id data
+                        [_
+                         #'(rhombus-expression success-g)])
+        #'(matcher-id (~? (multi-arg-id ...) single-arg-id) data
                       if-via-rhombus
                       s-expr
-                      (if-reverse-bridge if-id (group fail ...)))])]))
+                      (if-reverse-bridge if-id fail-g))])]))
 
 (define-syntax chain-to-matcher
   (expression-transformer
@@ -436,12 +550,12 @@
 (define-for-syntax (parse-chain-to-committer rhombus stx)
   (syntax-parse stx
     #:datum-literals (parsed group)
-    [(_ (_::parens (group arg-id:identifier)
+    [(_ (_::parens (~or* (group (_::parens (group multi-arg-id:identifier) ...))
+                         (group single-arg-id:identifier))
                    e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
                                   (oncer-id matcher-id committer-id binder-id data)))))
-     #:with rhombus rhombus
-     #`(committer-id arg-id e.packed data)]))
+     #`(committer-id (~? (multi-arg-id ...) single-arg-id) e.packed data)]))
 
 (define-syntax chain-to-committer
   (expression-transformer
@@ -454,12 +568,12 @@
 (define-for-syntax (parse-chain-to-binder rhombus stx)
   (syntax-parse stx
     #:datum-literals (parsed group)
-    [(_ (_::parens (group arg-id:identifier)
+    [(_ (_::parens (~or* (group (_::parens (group multi-arg-id:identifier) ...))
+                         (group single-arg-id:identifier))
                    e::unpacked-evidence-id-tree
                    (group (parsed #:rhombus/bind/info/chain
                                   (oncer-id matcher-id committer-id binder-id data)))))
-     #:with rhombus rhombus
-     #`(binder-id arg-id e.packed data)]))
+     #`(binder-id (~? (multi-arg-id ...) single-arg-id) e.packed data)]))
 
 (define-syntax chain-to-binder
   (expression-transformer
@@ -491,7 +605,7 @@
                   chain-to-committer
                   chain-to-binder)
       [(_::parens name-str-g
-                  name-id-g
+                  name-id-or-ids-g
                   static-infos-g
                   bind-ids-g
                   (group chain-to-oncer)
@@ -503,7 +617,7 @@
                                  (orig-oncer-id orig-matcher-id orig-committer-id orig-binder-id orig-data))))
        ;; hacky: remove indirection to get back to Racket forms
        (loop #'(parens name-str-g
-                       name-id-g
+                       name-id-or-ids-g
                        static-infos-g
                        bind-ids-g
                        (group orig-oncer-id)
@@ -513,7 +627,8 @@
                        (group orig-binder-id)
                        (group orig-data)))]
       [(_::parens (group name-str:string)
-                  (group name-id:identifier)
+                  (group (~or* single-name-id:identifier
+                               (_::parens (group multi-name-id:identifier) ...)))
                   (group static-infos)
                   (group bind-ids)
                   (group oncer-id:identifier)
@@ -532,7 +647,8 @@
        #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos who v))
                                                   (syntax->list #'(bind-static-infos ...)))
        (binding-info #'name-str
-                     #'name-id
+                     #'(~? single-name-id
+                           (multi-name-id ...))
                      (pack-static-infos who #'static-infos)
                      #'((bind-id packed-bind-uses . packed-bind-static-infos) ...)
                      #'oncer-id
@@ -561,7 +677,7 @@
          #:datum-literals (group)
          [(form-id (_::quotes (group builder-id:identifier
                                      (~and pat
-                                           (_::parens arg-id-pattern
+                                           (_::parens maybe-arg-ids-pattern
                                                       evidence-pattern
                                                       data-pattern))))
                    (block-tag::block body ...))
@@ -571,9 +687,9 @@
                         [(((sid ...) sid-ref . _) ...) sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
-                  [(form-id arg-id evidence-tree data)
+                  [(form-id maybe-arg-ids evidence-tree data)
                    (syntax-parse (regroup #`(form-id
-                                             (parens #,(regroup #'(arg-id))
+                                             (parens #,(regroup #`(#,(unpack-maybe-ids 'who #'maybe-arg-ids)))
                                                      #,(unpack-evidence-tree #'evidence-tree)
                                                      #,(regroup #'(data)))))
                      [#,converted-pattern

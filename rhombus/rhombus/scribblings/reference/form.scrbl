@@ -170,16 +170,18 @@ identifiers, expressions, or binding patterns.
   ~nonterminal_key: def ~defn
   grammar bind
   grammar values_bind
-  | $bind
-  | #,(@rhombus(values, ~bind))($bind, ...)
-  | ($bind, ...)
 ){
 
  In syntax descriptions, @rhombus(bind) refers to any @deftech{binding} form,
  which might be simply an identifier, a binding form annotated with
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
- Some forms also handle multiple-value binding forms, as indicated by
- @rhombus(values_bind).
+
+ Some forms also handle @deftech{multiple-value binding} forms, as
+ indicated by @rhombus(values_bind). These include @rhombus(values),
+ @rhombus(#%parens) (usually implicitly used), and user-defined ones.
+
+ All binding forms are multiple-value binding forms, but not vice
+ versa.
 
  Besides all of the binding forms provided by @rhombuslangname(rhombus),
  new ones can be defined with @top_rhombus(bind.macro).

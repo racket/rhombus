@@ -79,8 +79,7 @@ this:
         (code:comment "match `def <binding>: <form> ...`, where")
         (code:comment "`:` grouping is represented by `block`")
         [(_ b::binding (block rhs ...))
-         (build-values-definitions #'b.parsed
-                                   #'(rhombus-block rhs ...))]))))
+         (build-definitions #'b.parsed #'(rhombus-block rhs ...))]))))
 ]
 
 Parsing @racket[b] as @racket[:binding] produces a @racket[parsed]

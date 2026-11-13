@@ -1122,35 +1122,9 @@
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))
 
-(define (raise-bindings-failure who msg what vals annot-str)
-  (raise
-   (exn:fail:contract
-    (error-message->adjusted-string
-     who
-     rhombus-realm
-     (apply string-append
-            msg
-            "\n  " what "...:"
-            (append
-             (if (null? vals)
-                 (list " [none]")
-                 (for/list ([v (in-list vals)])
-                   (string-append "\n   "
-                                  ((error-value->string-handler)
-                                   v
-                                   (error-print-width)))))
-             (if annot-str
-                 (list "\n  annotation: "
-                       (error-contract->adjusted-string
-                        annot-str
-                        rhombus-realm))
-                 '())))
-     rhombus-realm)
-    (current-continuation-marks))))
-
 (define (cases-failure who rest-args kwrest-args . base-args)
   (raise-bindings-failure who
-                          "no matching case for arguments"
+                          #:msg "no matching case for arguments"
                           "arguments"
                           (append base-args rest-args)
                           #f))
@@ -1191,7 +1165,6 @@
 
 (define (raise-results-failure who vals annot-str)
   (raise-bindings-failure who
-                          "results do not satisfy annotation"
                           "results"
                           vals
                           annot-str))

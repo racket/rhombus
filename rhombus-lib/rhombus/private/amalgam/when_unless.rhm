@@ -12,32 +12,44 @@ export:
 
 bind.macro
 | '$bind when: $body':
-    bind_meta.pack('(when_infoer,
-                     ($bind, block: $body))',
-                   ~track: [bind])
+    ~all_stx: stx
+    bind_meta.pack_values('($stx,
+                            $(bind_meta.get_arity(bind)),
+                            when_infoer,
+                            ($bind, block: $body))',
+                          ~track: [bind])
 | '$bind when $expr ... ~nonempty':
-    bind_meta.pack('(when_infoer,
-                     ($bind, $expr ...))',
-                   ~track: [bind])
+    ~all_stx: stx
+    bind_meta.pack_values('($stx,
+                            $(bind_meta.get_arity(bind)),
+                            when_infoer,
+                            ($bind, $expr ...))',
+                          ~track: [bind])
 
 bind.macro
 | '$bind unless: $body':
-    bind_meta.pack('(when_infoer,
-                     ($bind, !(block: $body)))',
-                   ~track: [bind])
+    ~all_stx: stx
+    bind_meta.pack_values('($stx,
+                            $(bind_meta.get_arity(bind)),
+                            when_infoer,
+                            ($bind, !(block: $body)))',
+                          ~track: [bind])
 | '$bind unless $expr ... ~nonempty':
-    bind_meta.pack('(when_infoer,
-                     ($bind, !($expr ...)))',
-                   ~track: [bind])
+    ~all_stx: stx
+    bind_meta.pack_values('($stx,
+                            $(bind_meta.get_arity(bind)),
+                            when_infoer,
+                            ($bind, !($expr ...)))',
+                          ~track: [bind])
 
-bind.infoer 'when_infoer($static_info, ($bind, $expr_g))':
-  let a_info = bind_meta.get_info(bind, static_info)
-  let '($a_ann, $a_name, $a_static_info, $a_var_info, $_, $_, $_, $_, $_, $_)':
+bind.infoer 'when_infoer(($static_info, ...), ($bind, $expr_g))':
+  let a_info = bind_meta.get_values_info(bind, [static_info, ...])
+  let '($a_ann, $a_names, $a_static_info, $a_var_info, $_, $_, $_, $_, $_, $_)':
     bind_meta.unpack_info(a_info)
   let '(($a_var_id, [$a_var_use, ...], $a_statinfo), ...)' = a_var_info
   let ann = Syntax.unwrap(a_ann) +& " when " +& expr_g.to_source_string()
   '($ann,
-    $a_name,
+    $a_names,
     $a_static_info,
     (($a_var_id, [$a_var_use, ...], ()), ...), // drop static info, because we bind it manually
     when_oncer,
@@ -52,15 +64,15 @@ bind.oncer 'when_oncer(($a_info, $expr_g))':
     bind_meta.unpack_info(a_info)
   '$a_oncer($a_data)'
 
-bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
+bind.matcher 'when_matcher(($in_id, ...), ($a_info, $expr_g),
                            $IF, $success, $failure)':
   let '($_, $_, $_, $a_var_info, $a_oncer, $a_matcher, $a_evidence, $a_committer, $a_binder, $a_data)':
     bind_meta.unpack_info(a_info)
   let '(($a_var_id, $a_var_use, $a_statinfo), ...)' = a_var_info
-  '«$a_matcher($in_id, $a_data, $IF,
-               : $a_committer($in_id, $a_evidence, $a_data)
+  '«$a_matcher(($in_id, ...), $a_data, $IF,
+               : $a_committer(($in_id, ...), $a_evidence, $a_data)
                  bind.forward_sequence:
-                   $a_binder($in_id, $a_evidence, $a_data)
+                   $a_binder(($in_id, ...), $a_evidence, $a_data)
                    maybe_statinfo_macro '$a_var_id': '$a_statinfo'
                    ...
                  $IF $expr_g
@@ -68,8 +80,8 @@ bind.matcher 'when_matcher($in_id, ($a_info, $expr_g),
                  | $failure,
                $failure)»'
 
-bind.committer 'when_committer($in_id, $evidence, $data)':
+bind.committer 'when_committer(($in_id, ...), $evidence, $data)':
   ''
 
-bind.binder 'when_binder($in_id, $evidence, $data)':
+bind.binder 'when_binder(($in_id, ...), $evidence, $data)':
   ''
