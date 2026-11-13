@@ -40,7 +40,7 @@ forcibly (e.g., through a custodian shutdown).
 
  A @tech{context parameter} that determines a @deftech{current plumber}
  for @tech{flush callbacks}. For example, creating an output file
- @rhombus{port} registers a @tech{flush callback} with the @tech{current
+ @tech{port} registers a @tech{flush callback} with the @tech{current
   plumber} to flush the port as long as the port is opened.
 
 }
