@@ -2,6 +2,20 @@
 import:
   lib("racket/base.rkt") as rkt
 
+check:
+  error.Clause("me: oops") ~matches error.Clause("me: oops")
+  error.text(~label: "me", "oops") ~matches error.Clause("me: oops")
+  error.val("oops") ~matches error.Clause("value: \"oops\"")
+  error.val(~label: "result", "oops") ~matches error.Clause("result: \"oops\"")
+  error.vals() ~matches error.Clause("values...: [none]")
+  error.vals("oops") ~matches error.Clause("values...:\n   \"oops\"")
+  error.vals("oops", "wow") ~matches error.Clause("values...:\n   \"oops\"\n   \"wow\"")
+  error.vals(~label: "results") ~matches error.Clause("results...: [none]")
+  error.vals(~label: "results", "oops") ~matches error.Clause("results...:\n   \"oops\"")
+  error.vals(~label: "results", "oops", "wow") ~matches error.Clause("results...:\n   \"oops\"\n   \"wow\"")
+  error.annot("Oops") ~matches error.Clause("annotation: Oops")
+  error.annot(~label: "class", "Oops") ~matches error.Clause("class: Oops")
+
 expr.macro 'check_error ($arg, ...):
               $err
               ...':

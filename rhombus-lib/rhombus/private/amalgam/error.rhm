@@ -116,17 +116,12 @@ fun vals(~label: label :: String = "values", v, ...) :~ Clause:
   match [v, ...]
   | []:
       Clause(
-        label ++ ": <none>"
-      )
-  | [v]:
-      Clause(
-        label ++ ":" ++ reindent(to_error_string(v),
-                                 ~label: label)
+        label ++ "...: [none]"
       )
   | [v, ...]:
       Clause(
-        label ++ ":" ++ String.append(reindent(to_error_string(v), ~max_len: 0),
-                                      ...)
+        label ++ "...:" ++ String.append(reindent(to_error_string(v), ~max_len: 0),
+                                         ...)
       )
 
 fun annot(~label: label :: String = "annotation",
