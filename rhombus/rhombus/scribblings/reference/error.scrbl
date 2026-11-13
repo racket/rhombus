@@ -58,7 +58,7 @@
   @item{Start @rhombus(msg) in lowercase, and keep it short. Use
   @rhombus(details) to elaborate on the initial message, but report any
   values or other specifics in @rhombus(clause)s. When @rhombus(details)
-  has multiple sentences, separate then with @litchar{;} and stay in
+  has multiple sentences, separate them with @litchar{;} and stay in
   lowercase mode.}
 
   @item{Normally, @rhombus(Exn.Fail.Annot, ~annot) should be used for
@@ -69,7 +69,7 @@
   @item{To throw an error that complains about a single
   argument--annotation mismatch (in the same way as @rhombus(::)), use
   @rhombus(~exn: Exn.Fail.Annot), use @rhombus(error.annot_msg) to
-  construct @rhombus(message), and use @rhombus(error.annot) to and
+  construct @rhombus(msg), and use @rhombus(error.annot) and
   @rhombus(error.val) to constructs @rhombus(clause)s. Provide the same
   label string to @rhombus(error.annot_msg) and @rhombus(error.val) if it
   is useful to be more specific than @rhombus("value").}
@@ -149,7 +149,7 @@
   fun error.val(~label: label :: String = "value",
                 v :: Any)
     :: error.Clause
-  fun error.vals(~label: label :: String = "value",
+  fun error.vals(~label: label :: String = "values",
                  v :: Any, ...)
     :: error.Clause
   fun error.annot(~label: label :: String = "annotation",
@@ -166,8 +166,11 @@
  each line will get a 3-space prefix to incorporate it into the message
  string; see also @rhombus(error.reindent).
 
- The @rhombus(error.val) and @rhombus(error.vals) function convert each
- @rhombus(v) to a string using @rhombus(repr).
+ The @rhombus(error.val) and @rhombus(error.vals) functions convert each
+ @rhombus(v) to a string using @rhombus(repr). For @rhombus(error.vals),
+ the label should be a plural noun, and @litchar{...} is added after the
+ label to indicate that this clause may be hidden by default in an
+ environment such as DrRacket.
 
  Use @rhombus(error.annot) to report an annotation in an error message,
  where @rhombus(Syntax.to_source_string) may be useful (especially in
@@ -188,6 +191,11 @@
   error.vals(1, 2, 3)
   error.annot("List.of(Int)")
 )
+
+@(history:
+    ~changed "1.1.0.2":
+      @elem{Changed @rhombus(error.vals) to add @litchar{...} after
+            the label and always format the values in separate lines.})
 
 }
 
