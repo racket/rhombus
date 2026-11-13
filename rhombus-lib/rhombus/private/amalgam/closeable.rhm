@@ -108,5 +108,5 @@ fun bind_error(who, vals, ann):
         error.annot_msg(),
         match vals
         | [val]: error.val(val)
-        | ~else: error.vals(~label: "values...", & vals),
+        | ~else: error.vals(& vals),
         error.annot(ann))
