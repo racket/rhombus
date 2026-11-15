@@ -157,6 +157,7 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.unpack_call_result_for(
     call_stx :: Syntax,
     args :: annot_meta.Dependencies
@@ -282,6 +283,7 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.gather(expr_stx :: Syntax)
     :: Syntax
   fun statinfo_meta.replace(expr_stx :: Syntax,
@@ -293,7 +295,7 @@
  in unpacked form. The result of @rhombus(statinfo_meta.gather) can be
  used with @rhombus(statinfo_meta.find) to get the same values as using
  @rhombus(statinfo_meta.lookup) on @rhombus(expr_stx). The result of
- @rhombus(fun statinfo_meta.replace) is the same expression as
+ @rhombus(statinfo_meta.replace) is the same expression as
  @rhombus(expr_stx), but removing any static information that is directly
  attached to @rhombus(expr_stx) and replacing it with
  @rhombus(statinfo_stx).
@@ -301,6 +303,7 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.find(statinfo_stx :: Syntax,
                          key :: Identifier)
     :: maybe(Syntax)
@@ -312,6 +315,7 @@
 }
 
 @doc(
+  ~meta
   fun statinfo_meta.and(statinfo_stx :: Syntax, ...) :: Syntax
   fun statinfo_meta.or(statinfo_stx :: Syntax, ...) :: Syntax
 ){

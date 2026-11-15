@@ -145,6 +145,7 @@
 
 
 @doc(
+  ~meta
   syntax_class impo_meta.ParsedModifier(imp):
     kind: ~group
     fields:

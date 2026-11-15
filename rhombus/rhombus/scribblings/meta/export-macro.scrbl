@@ -138,6 +138,7 @@
 
 
 @doc(
+  ~meta
   syntax_class expo_meta.ParsedModifier(exp):
     kind: ~group
     fields:

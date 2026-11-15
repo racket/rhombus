@@ -270,6 +270,7 @@
 }
 
 @doc(
+  ~meta
   fun expr_meta.relative_precedence(
     left_mode :: matching(#'prefix || #'infix),
     left_op :: Name,

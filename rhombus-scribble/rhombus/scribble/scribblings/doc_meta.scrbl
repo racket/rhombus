@@ -13,10 +13,20 @@
 
 @doc(
   space.transform doc
+){
+
+ The space for documentation forms that can be used within
+ @rhombus(doc).
+
+}
+
+@doc(
+  ~meta
   def doc_meta.space :: SpaceMeta
 ){
 
- A space for documentation forms.
+ A compile-time value that identifies the same space as
+ @rhombus(doc, ~space).
 
 }
 

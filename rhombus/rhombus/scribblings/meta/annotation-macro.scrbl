@@ -333,6 +333,7 @@
 }
 
 @doc(
+  ~meta
   syntax_class annot_meta.BindOp:
     kind: ~term
     fields:

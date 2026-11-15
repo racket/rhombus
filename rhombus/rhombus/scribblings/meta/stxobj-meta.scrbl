@@ -149,6 +149,7 @@
 }
 
 @doc(
+  ~meta
   fun syntax_meta.track_origin(
     stx :: Term,
     orig_stx :: Term || (Listable.to_list && List.of(Term)) = [],
