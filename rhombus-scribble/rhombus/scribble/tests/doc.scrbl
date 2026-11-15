@@ -16,11 +16,13 @@
           Port
           math
           showln
+          #%parens
       rhombus/meta:
         expose:
           expr
           expr_meta
           syntax_meta
+          #%parens
       rhombus/scribble/tests/string_ext open
       rhombus/draw
       rhombus/cmdline
@@ -187,6 +189,7 @@ Starting example:
  Defined by extension.
 
 }
+
 @section{Meta}
 
 @docmodule(rhombus/meta)
@@ -199,14 +202,48 @@ Starting example:
     rhs4: String.more string_amore_rhs ~at: rhombus/annot
 
   defn.macro 'expr.macro'
-  fun syntax_meta.DefinitionContext.add_scopes()
 ){
 
- The @rhombus(expr.macro) form and
- @rhombus(syntax_meta.DefinitionContext.add_scopes) method.
+ The @rhombus(expr.macro) form.
 
  Nonterminal links: @rhombus(rhs), @rhombus(rhs2), @rhombus(rhs3),
  @rhombus(rhs4).
+
+}
+
+@doc(
+  ~meta
+  fun syntax_meta.DefinitionContext.add_scopes()
+){
+
+ The @rhombus(syntax_meta.DefinitionContext.add_scopes) method.
+
+}
+
+@doc(
+  ~meta
+  syntax_class expr_meta.Parsed(
+    pos,
+    pos_opt_a = 1 + 2,
+    pos_opt_b: println("2"); 1,
+    ~kw: kw,
+    ~kw_opt_a: kw_opt_a = 1 + 2,
+    ~kw_opt_b: kw_opt_b: println("2"); 1,
+  )
+){
+
+ A syntax class with complex arguments. Metavariables: @rhombus(pos),
+ @rhombus(pos_opt_a), @rhombus(pos_opt_b), @rhombus(kw),
+ @rhombus(kw_opt_a), and @rhombus(kw_opt_b).
+
+}
+
+@doc(
+  ~also_meta
+  expr.macro '#%parens'
+){
+
+ Parentheses that can be used in both phases.
 
 }
 
@@ -224,7 +261,6 @@ Starting example:
  Prefixed and chained @rhombus(date.Date().to_datetime().to_string()).
 
 }
-
 
 @section{Dotted Paths}
 
@@ -327,22 +363,5 @@ Starting example:
 ){
 
  Actually a function.
-
-}
-
-@doc(
-  syntax_class expr_meta.Parsed(
-    pos,
-    pos_opt_a = 1 + 2,
-    pos_opt_b: println("2"); 1,
-    ~kw: kw,
-    ~kw_opt_a: kw_opt_a = 1 + 2,
-    ~kw_opt_b: kw_opt_b: println("2"); 1,
-  )
-){
-
- A syntax class with complex arguments. Metavariables: @rhombus(pos),
- @rhombus(pos_opt_a), @rhombus(pos_opt_b), @rhombus(kw),
- @rhombus(kw_opt_a), and @rhombus(kw_opt_b).
 
 }

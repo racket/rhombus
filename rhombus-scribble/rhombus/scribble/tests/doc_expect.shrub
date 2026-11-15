@@ -1846,32 +1846,6 @@ html:
                                      href:
                                        "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._expr._%28expr..macro._rhombus%2Fdefn%29%29%29"}:
                                     "expr.macro"
-                  tr: td: p: span {class: "hspace"}: nbsp
-                  tr:
-                    td:
-                      div {class: "RBackgroundLabel SIEHidden"}:
-                        div {class: "RBackgroundLabelInner"}: p: "function"
-                  tr:
-                    td:
-                      table:
-                        tr:
-                          td:
-                            p:
-                              span {class: "stt"}:
-                                a {class: "RktValLink",
-                                   href:
-                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
-                                  "fun"
-                              span {class: "hspace"}: nbsp
-                              a:«»
-                              span:
-                                span {class: "RktSym"}:
-                                  a {class: "RktValDef RktValLink",
-                                     href:
-                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
-                                    "syntax_meta.DefinitionContext.add_scopes"
-                              span {class: "RktPn"}: "("
-                              span {class: "RktPn"}: ")"
               div {class: "SIntrapara"}:
                 "The "
                 span {class: "stt"}:
@@ -1879,13 +1853,7 @@ html:
                      href:
                        "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._expr._%28expr..macro._rhombus%2Fdefn%29%29%29"}:
                     "expr.macro"
-                " form and\n"
-                span {class: "stt"}:
-                  a {class: "RktValLink",
-                     href:
-                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
-                    "syntax_meta.DefinitionContext.add_scopes"
-                " method."
+                " form."
             p:
               "Nonterminal links: "
               span {class: "RktVar"}:
@@ -1912,6 +1880,215 @@ html:
                      "#%28def._%28%28lib._rhombus%2Fscribble%2Ftests%2Fstring_ext..rhm%29._.String._%28.String..more._rhombus%2Fannot._string_amore_rhs%29%29%29"}:
                   "rhs4"
               "."
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "function"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}:
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._fun._rhombus%2Fdefn%29%29"}:
+                                  "fun"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
+                                    "syntax_meta.DefinitionContext.add_scopes"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktPn"}: ")"
+              div {class: "SIntrapara"}:
+                span {class: "Smaller"}:
+                  "Provided as "
+                  span {class: "stt"}: span {class: "RktSym"}: "meta"
+                  "."
+            p:
+              "The "
+              span {class: "stt"}:
+                a {class: "RktValLink",
+                   href:
+                     "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._syntax_meta._%28syntax_meta...Definition.Context..add_scopes._~23false%29%29%29"}:
+                  "syntax_meta.DefinitionContext.add_scopes"
+              " method."
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "syntax class"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              span {class: "stt"}: "syntax_class"
+                              span {class: "hspace"}: nbsp
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._expr_meta._%28expr_meta...Parsed._rhombus%2Fstxclass%29%29%29"}:
+                                    "expr_meta.Parsed"
+                              span {class: "RktPn"}: "("
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktVar"}: "pos"
+                              span {class: "stt"}: ","
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktVar"}: "pos_opt_a"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "="
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "1"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "+"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "2"
+                              span {class: "stt"}: ","
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktVar"}: "pos_opt_b"
+                              span {class: "stt"}: ":"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                                  "println"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVal"}: "\"2\""
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: ";"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "1"
+                              span {class: "stt"}: ","
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktPn"}: "~kw"
+                              span {class: "stt"}: ":"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVar"}: "kw"
+                              span {class: "stt"}: ","
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktPn"}: "~kw_opt_a"
+                              span {class: "stt"}: ":"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVar"}: "kw_opt_a"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "="
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "1"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}: "+"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "2"
+                              span {class: "stt"}: ","
+                        tr:
+                          td:
+                            p:
+                              span {class: "hspace"}:
+                                nbsp
+                                nbsp
+                              span {class: "RktPn"}: "~kw_opt_b"
+                              span {class: "stt"}: ":"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVar"}: "kw_opt_b"
+                              span {class: "stt"}: ":"
+                              span {class: "hspace"}: nbsp
+                              span {class: "stt"}:
+                                a {class: "RktValLink",
+                                   href:
+                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
+                                  "println"
+                              span {class: "RktPn"}: "("
+                              span {class: "RktVal"}: "\"2\""
+                              span {class: "RktPn"}: ")"
+                              span {class: "stt"}: ";"
+                              span {class: "hspace"}: nbsp
+                              span {class: "RktVal"}: "1"
+                              span {class: "stt"}: ","
+                        tr: td: p: span {class: "RktPn"}: ")"
+              div {class: "SIntrapara"}:
+                span {class: "Smaller"}:
+                  "Provided as "
+                  span {class: "stt"}: span {class: "RktSym"}: "meta"
+                  "."
+            p:
+              "A syntax class with complex arguments. Metavariables: "
+              span {class: "RktVar"}: "pos"
+              ",\n"
+              span {class: "RktVar"}: "pos_opt_a"
+              ", "
+              span {class: "RktVar"}: "pos_opt_b"
+              ", "
+              span {class: "RktVar"}: "kw"
+              ",\n"
+              span {class: "RktVar"}: "kw_opt_a"
+              ", and "
+              span {class: "RktVar"}: "kw_opt_b"
+              "."
+            p:
+              div {class: "SIntrapara"}:
+                table:
+                  tr:
+                    td:
+                      div {class: "RBackgroundLabel SIEHidden"}:
+                        div {class: "RBackgroundLabelInner"}: p: "expression"
+                  tr:
+                    td:
+                      table:
+                        tr:
+                          td:
+                            p:
+                              a:«»
+                              span:
+                                span {class: "RktSym"}:
+                                  a {class: "RktValDef RktValLink",
+                                     href:
+                                       "#%28def._%28%28lib._rhombus%2Fmeta..rhm%29._~23~25parens%29%29"}:
+                                    "#%parens"
+              div {class: "SIntrapara"}:
+                span {class: "Smaller"}:
+                  "Provided both normally and  as "
+                  span {class: "stt"}: span {class: "RktSym"}: "meta"
+                  "."
+            p: "Parentheses that can be used in both phases."
           section:
             h2:
               "5"
@@ -2984,140 +3161,4 @@ html:
                                        "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._math._%28math..abs._~23false%29%29%29"}:
                                     "math.abs"
               div {class: "SIntrapara"}: "Actually a function."
-            p:
-              div {class: "SIntrapara"}:
-                table:
-                  tr:
-                    td:
-                      div {class: "RBackgroundLabel SIEHidden"}:
-                        div {class: "RBackgroundLabelInner"}: p: "syntax class"
-                  tr:
-                    td:
-                      table:
-                        tr:
-                          td:
-                            p:
-                              span {class: "stt"}: "syntax_class"
-                              span {class: "hspace"}: nbsp
-                              a:«»
-                              span:
-                                span {class: "RktSym"}:
-                                  span {class: "badlink"}:
-                                    span {class: "RktValLink"}:
-                                      "expr_meta.Parsed"
-                              span {class: "RktPn"}: "("
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktVar"}: "pos"
-                              span {class: "stt"}: ","
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktVar"}: "pos_opt_a"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}: "="
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "1"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}: "+"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "2"
-                              span {class: "stt"}: ","
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktVar"}: "pos_opt_b"
-                              span {class: "stt"}: ":"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}:
-                                a {class: "RktValLink",
-                                   href:
-                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
-                                  "println"
-                              span {class: "RktPn"}: "("
-                              span {class: "RktVal"}: "\"2\""
-                              span {class: "RktPn"}: ")"
-                              span {class: "stt"}: ";"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "1"
-                              span {class: "stt"}: ","
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktPn"}: "~kw"
-                              span {class: "stt"}: ":"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVar"}: "kw"
-                              span {class: "stt"}: ","
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktPn"}: "~kw_opt_a"
-                              span {class: "stt"}: ":"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVar"}: "kw_opt_a"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}: "="
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "1"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}: "+"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "2"
-                              span {class: "stt"}: ","
-                        tr:
-                          td:
-                            p:
-                              span {class: "hspace"}:
-                                nbsp
-                                nbsp
-                              span {class: "RktPn"}: "~kw_opt_b"
-                              span {class: "stt"}: ":"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVar"}: "kw_opt_b"
-                              span {class: "stt"}: ":"
-                              span {class: "hspace"}: nbsp
-                              span {class: "stt"}:
-                                a {class: "RktValLink",
-                                   href:
-                                     "#%28def._%28%28submod._%28lib._rhombus%2Fprivate%2Famalgam..rkt%29._core%29._println%29%29"}:
-                                  "println"
-                              span {class: "RktPn"}: "("
-                              span {class: "RktVal"}: "\"2\""
-                              span {class: "RktPn"}: ")"
-                              span {class: "stt"}: ";"
-                              span {class: "hspace"}: nbsp
-                              span {class: "RktVal"}: "1"
-                              span {class: "stt"}: ","
-                        tr: td: p: span {class: "RktPn"}: ")"
-              div {class: "SIntrapara"}:
-                "A syntax class with complex arguments. Metavariables: "
-                span {class: "RktVar"}: "pos"
-                ",\n"
-                span {class: "RktVar"}: "pos_opt_a"
-                ", "
-                span {class: "RktVar"}: "pos_opt_b"
-                ", "
-                span {class: "RktVar"}: "kw"
-                ",\n"
-                span {class: "RktVar"}: "kw_opt_a"
-                ", and "
-                span {class: "RktVar"}: "kw_opt_b"
-                "."
     div: nbsp
