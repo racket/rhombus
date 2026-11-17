@@ -2,6 +2,9 @@
 import:
   "core-meta.rkt" open
   "closeable.rkt" open
+  "error.rhm" open
+  "if_blocked.rhm" open
+  "maybe_statinfo.rhm" open
 
 export:
   Closeable
@@ -25,41 +28,85 @@ namespace Closeable:
     #void
 
   defn.sequence_macro 'clet $bind_seq ... $(rhs :: RHS)
-                       $body0
                        $body
-                       ...':
+                       ... ~nonempty':
     ~op_stx: self
+    let who = self.to_source_string()
     let '$(b :: bind_meta.Parsed)' = '$bind_seq ...'
     let '$(rhs :: expr_meta.Parsed)' = rhs.e
     let arity = bind_meta.get_arity(b)
+    let plain_rhs = statinfo_meta.replace(rhs, '()')
+    let rhs_statinfo = statinfo_meta.gather(rhs)
+    let '$(closeable_a :: annot_meta.Parsed)' = 'Closeable'
+    let (_, closeable_statinfo) = annot_meta.unpack_predicate(closeable_a)
+    let [val_statinfo, ...]:
+      let maybe_statinfos = statinfo_meta.find(rhs_statinfo, statinfo_meta.values_key)
+      cond
+      | maybe_statinfos:
+          let '$si ...' = statinfo_meta.unpack_group(maybe_statinfos)
+          [si, ...]
+      | arity == 1:
+          [rhs_statinfo]
+      | ~else:
+          []
+    let [val_statinfo, ...]:
+      if [val_statinfo, ...].length() == arity
+      | [statinfo_meta.and(closeable_statinfo, val_statinfo), ...]
+      | for List (_ in 0..arity):
+          closeable_statinfo
+    let info = bind_meta.get_values_info(b, [val_statinfo, ...])
+    let '($ann, ($name, ...), $_, (($var_id, $_, $statinfo), ...),
+          $oncer, $matcher, $evidence, $committer, $binder, $data)':
+      bind_meta.unpack_info(info)
     let [tmp, ...]:
-      for List (_ in 0..arity):
-        Syntax.make_temp_id("tmp")
+      for List (name in [name, ...]):
+        Syntax.make_temp_id(name, ~keep_name: #true)
     let [resource, ...]:
       for List (_ in 0..arity):
         Syntax.make_temp_id("resource")
-    let plain_rhs = statinfo_meta.replace(rhs, '()')
-    let all_resources = 'values($resource, ...)'
-    let rhs_statinfo = statinfo_meta.gather(rhs)
-    let all_resources_with_statinfo = statinfo_meta.wrap(all_resources, rhs_statinfo)
     values(
-      '
-        block:
-          def mutable $resource = #false
-          ...
-          try:
-            ~initially:
-              let ($tmp, ...) = $plain_rhs
-              $resource := ($tmp $('::'.relocate(self)) Closeable)
-              ...
-            Continuation.barrier:
-              let $bind_seq ... = $all_resources_with_statinfo
-              block:
-                $body0
-                $body
-                ...
-            ~finally:
-              ($resource :~ Closeable).close()
-              ...
-      ',
-      '')
+      '«
+         block:
+           def mutable $resource = #false
+           ...
+           $oncer($data)
+           try:
+             ~initially:
+               def ($tmp, ...) = $plain_rhs
+               $resource := check_closeable(#%literal $who, $tmp)
+               ...
+             Continuation.barrier:
+               $matcher(($resource, ...), $data,
+                        if_blocked,
+                        : $committer(($resource, ...), $evidence, $data)
+                          $binder(($resource, ...), $evidence, $data)
+                          maybe_statinfo_macro '$var_id': '$statinfo'
+                          ...
+                          block:
+                            $body
+                            ...,
+                        bind_error(#%literal $who, [$resource, ...], #%literal $ann))
+             ~finally:
+               ($resource :~ $closeable_a).close()
+               ...
+       »',
+      ''
+    )
+
+fun check_closeable(who, val):
+  if val is_a Closeable
+  | val
+  | error(~who: who,
+          ~exn: Exn.Fail.Annot,
+          error.annot_msg(),
+          error.val(val),
+          error.annot("Closeable"))
+
+fun bind_error(who, vals, ann):
+  error(~who: who,
+        ~exn: Exn.Fail.Annot,
+        error.annot_msg(),
+        match vals
+        | [val]: error.val(val)
+        | ~else: error.vals(~label: "values...", & vals),
+        error.annot(ann))

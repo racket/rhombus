@@ -6,6 +6,7 @@ import:
   lib("raco/testing.rkt").#{test-log!}
   "rx_object.rhm".RX
   "error.rhm" open
+  "if_blocked.rhm" open
 
 use_static
 
@@ -189,17 +190,6 @@ meta:
         syntax_meta.error("invalid check line;\n keyword is not a result keyword", stx, kw)
     | ~else:
         syntax_meta.error("invalid check line", stx, bad)
-
-expr.macro 'if_blocked $expr ...
-            | $success
-            | $failure':
-  let success:
-    match success
-    | ': $b': b
-    | ~else: success
-  'if $expr ...
-   | $success
-   | $failure'
 
 expr.macro 'values_matcher $(bind :: bind_meta.Parsed) $()':
   fun make_empty_sis(b):

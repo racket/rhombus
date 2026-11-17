@@ -1,0 +1,17 @@
+#lang rhombus/private/amalgam/core
+import:
+  "core-meta.rkt" open
+
+export:
+  if_blocked
+
+expr.macro 'if_blocked $expr ...
+            | $success
+            | $failure':
+  let success:
+    match success
+    | ': $b': b
+    | ~else: success
+  'if $expr ...
+   | $success
+   | $failure'
