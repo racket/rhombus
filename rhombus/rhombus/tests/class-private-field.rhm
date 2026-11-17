@@ -215,3 +215,22 @@ check:
   class Posn(x, y, private dist):
     expression: ~none
   ~completes
+
+// dynamic access to public fields that come after private fields
+block:
+  use_dynamic
+  class P(private q, z):
+    nonfinal
+    constructor (q, z): super(q, z)
+  class C(a, private b, mutable c, private mutable d, e):
+    extends P
+    constructor (a, b, c, d, e): super(1, 2)(a, b, c, d, e)
+  def x = C("a", "b", "c", "d", "e")
+  fun get(o): [o.a, o.c, o.e, o.z]
+  fun set(o): o.c := "C"
+  check get(x) ~is ["a", "c", "e", 2]
+  set(x)
+  check get(x) ~is ["a", "C", "e", 2]
+  check x.c ~is "C"
+  check dynamic(x).b ~throws "no such field or method"
+  check dynamic(x).d ~throws "no such field or method"

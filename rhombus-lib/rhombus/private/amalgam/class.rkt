@@ -972,10 +972,14 @@
                               [mutable (in-list mutables)]
                               #:when (syntax-e mutable))
                      (list converter ann-str))]
-                  [(maybe-public-mutable-field-name ...)
-                   (for/list ([name (in-list (syntax->list #'(public-field-name ...)))]
-                              [mutator (in-list (syntax->list #'(public-maybe-set-name-field! ...)))])
-                     (and (syntax-e mutator) name))]
+                  [((maybe-public-field-name ...) (maybe-public-mutable-field-name ...))
+                   (for/lists (names mutable-names #:result (list names mutable-names))
+                              ([name (in-list (syntax->list #'(field-name ...)))]
+                               [exposure (in-list exposures)]
+                               [mutable (in-list mutables)])
+                     (define public? (eq? exposure 'public))
+                     (values (and public? name)
+                             (and public? (syntax-e mutable) name)))]
                   [(((method-name method-proc) ...)
                     ((property-name property-proc) ...))
                    (for/fold ([ms '()] [ps '()] #:result (list (reverse ms) (reverse ps)))
@@ -1058,7 +1062,7 @@
                                    #`(list #,@(if abstract-name
                                                   null
                                                   #`((cons prop:field-name->accessor
-                                                           (list* '(public-field-name ...)
+                                                           (list* '(maybe-public-field-name ...)
                                                                   (hasheq (~@ 'super-field-name super-name-field)
                                                                           ...
                                                                           (~@ 'property-name property-proc)

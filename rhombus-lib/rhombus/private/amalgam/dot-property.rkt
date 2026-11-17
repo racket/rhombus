@@ -18,7 +18,8 @@
      (define gen-acc (list-ref info 3))
      (define field-ht
        (for/fold ([ht (cadr field-names+ht+method-ht)]) ([name (in-list field-names)]
-                                                         [i (in-naturals)])
+                                                         [i (in-naturals)]
+                                                         #:when name)
          (hash-set ht name (make-struct-field-accessor gen-acc i name))))
      (for/fold ([ht field-ht]) ([(name proc) (in-hash (cddr field-names+ht+method-ht))])
        (hash-set ht name (lambda (obj) (curry-method proc obj)))))))
