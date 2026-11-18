@@ -260,37 +260,38 @@
                    (syntax-parse b
                      #:datum-literals (group)
                      [(_::block (group (_::parens arg::binding ...) (~and rhs (_::block . _))))
-                      (values #'(arg ...) #'(arg.parsed ...) #'rhs)]
+                      (values (syntax->list #'(arg ...)) (syntax->list #'(arg.parsed ...)) #'rhs)]
                      [(_::block (group bind ...+ (~and rhs (_::block . _))))
                       #:with arg::binding (regroup #`(bind ...))
-                      (values #'(arg) #'(arg.parsed) #'rhs)]
+                      (values (list #'arg) (list #'arg.parsed) #'rhs)]
                      [_ (raise-syntax-error #f
                                             "expected a binding and block for `~catch` alternative"
                                             stx
                                             b)])))
-               (define falses (map (lambda (f) #f) argss))
-               (define falses-stx (datum->syntax #f (map (lambda (f) #'#f) argss)))
+               (define false-stxs (map (lambda (a) #'#f) argss))
+               (define falses (map (lambda (a) #f) argss))
                (define-values (handler arity)
                  (build-case-function no-adjustments '()
                                       #'prompt_handler falses falses
                                       #f #f null
-                                      (datum->syntax #f
-                                                     (for/list ([args (in-list argss)])
-                                                       (for/list ([arg (in-list (syntax->list args))])
-                                                         #'#f)))
-                                      (datum->syntax #f argss) (datum->syntax #f arg-parsedss)
-                                      falses-stx falses-stx
-                                      falses-stx falses-stx
+                                      (for/list ([args (in-list argss)])
+                                        (for/list ([arg (in-list args)])
+                                          #'#f))
+                                      argss arg-parsedss
+                                      false-stxs false-stxs
+                                      false-stxs false-stxs
                                       falses falses null
-                                      (datum->syntax #f rhss)
+                                      rhss
                                       g))
                (values rev-gs (hash-set state 'handler handler))]
               [(group #:catch (_::parens arg::binding ...) (~and rhs (_::block . _)))
-               (define falses-stx (datum->syntax #f (map (lambda (a) #'#f) (syntax->list #'(arg ...)))))
+               (define args (syntax->list #'(arg ...)))
+               (define arg-parseds (syntax->list #'(arg.parsed ...)))
+               (define false-stxs (map (lambda (a) #'#f) args))
                (define-values (handler arity)
                  (build-function no-adjustments '()
                                  #'prompt_handler #f #f
-                                 falses-stx #'(arg ...) #'(arg.parsed ...) falses-stx
+                                 false-stxs args arg-parseds false-stxs
                                  #'#f #'#f
                                  #'#f #'#f
                                  #f #f null
@@ -302,7 +303,7 @@
                (define-values (handler arity)
                  (build-function no-adjustments '()
                                  #'prompt_handler #f #f
-                                 #'(#f) #'(arg) #'(arg.parsed) #'(#f)
+                                 (list #'#f) (list #'arg) (list #'arg.parsed) (list #'#f)
                                  #'#f #'#f
                                  #'#f #'#f
                                  #f #f null

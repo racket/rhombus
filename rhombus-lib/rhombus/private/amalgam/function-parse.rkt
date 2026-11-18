@@ -594,7 +594,7 @@
                           src-ctx)
     (syntax-parse arg-parseds
       [(arg-parsed::binding-form ...)
-       #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length (syntax->list arg-parseds)))
+       #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length arg-parseds))
        #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
        #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
        #:with (tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))
@@ -619,9 +619,9 @@
               #`((#:kwrest kwrest-tmp) ((kwrest-tmp kwrest-info #,kwrest-arg #f)))])
            #'(() ()))
        #:with (((arg-form ...) arg-rhs) ...)
-       (for/list ([kw (in-list (syntax->list kws))]
+       (for/list ([kw (in-list kws)]
                   [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
-                  [default (in-list (syntax->list defaults))])
+                  [default (in-list defaults)])
          (define-values (arg+default arg-rhs)
            (cond
              [(not (syntax-e default))
@@ -637,7 +637,7 @@
             (list (list arg+default) arg-rhs)]
            [else
             (list (list kw arg+default) arg-rhs)]))
-       (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))
+       (define arity (summarize-arity kws defaults (and (syntax-e rest-arg) #t) (and (syntax-e kwrest-arg) #t)))
        (define shifted-arity
          (shift-arity arity (treelist-length (entry-point-adjustment-prefix-arguments adjustments))))
        (define body
@@ -669,7 +669,7 @@
        (define (reloc stx) (relocate+reraw (respan src-ctx) stx))
        (values
         (transfer-origins
-         (append (syntax->list arg-parseds)
+         (append arg-parseds
                  (if rest-parsed (list rest-parsed) null)
                  (if kwrest-parsed (list kwrest-parsed) null)
                  annot-origins)
@@ -713,20 +713,12 @@
   (define (build-case-function adjustments argument-static-infoss
                                function-name outer-whos inner-whos
                                main-converter main-annot-str main-annot-origins
-                               kwss-stx argss-stx arg-parsedss-stx
-                               rest-args-stx rest-parseds-stx
-                               kwrest-args-stx kwrest-parseds-stx
+                               kwss argss arg-parsedss
+                               rest-args rest-parseds
+                               kwrest-args kwrest-parseds
                                converters annot-strs annot-originss
-                               rhss-stx
+                               rhss
                                src-ctx)
-    (define kwss (map syntax->list (syntax->list kwss-stx)))
-    (define argss (map syntax->list (syntax->list argss-stx)))
-    (define arg-parsedss (map syntax->list (syntax->list arg-parsedss-stx)))
-    (define rest-args (syntax->list rest-args-stx))
-    (define rest-parseds (syntax->list rest-parseds-stx))
-    (define kwrest-args (syntax->list kwrest-args-stx))
-    (define kwrest-parseds (syntax->list kwrest-parseds-stx))
-    (define rhss (syntax->list rhss-stx))
     (define aritys
       (for/list ([kws (in-list kwss)]
                  [rest-arg (in-list rest-args)]
@@ -856,17 +848,17 @@
                                body)]))])))))
      shifted-arity))
 
-  (define (build-unsafe-case-function kwss-stx argss-stx arg-parsedss-stx
-                                      rest-args-stx rest-parseds-stx
+  (define (build-unsafe-case-function kwss argss arg-parsedss
+                                      rest-args rest-parseds
                                       bodys
                                       src-ctx)
     (syntax-property
      #`(case-lambda
-         #,@(for/list ([kws (in-list (syntax->list kwss-stx))]
-                       [args (in-list (syntax->list argss-stx))]
-                       [arg-parseds (in-list (syntax->list arg-parsedss-stx))]
-                       [rest-arg (in-list (syntax->list rest-args-stx))]
-                       [rest-parsed (in-list (syntax->list rest-parseds-stx))]
+         #,@(for/list ([kws (in-list kwss)]
+                       [args (in-list argss)]
+                       [arg-parseds (in-list arg-parsedss)]
+                       [rest-arg (in-list rest-args)]
+                       [rest-parsed (in-list rest-parseds)]
                        [body (in-list bodys)])
               (syntax-parse body
                 #:datum-literals (group)
@@ -889,13 +881,14 @@
     (define arg-list
       (apply
        append
-       (for/list ([kw (in-list (syntax->list kws))]
-                  [arg (in-list (syntax->list args))]
-                  [arg-parsed (in-list (syntax->list arg-parseds))])
+       (for/list ([kw (in-list kws)]
+                  [arg (in-list args)]
+                  [arg-parsed (in-list arg-parseds)])
          (cond
            [(syntax-e kw)
             (list kw (extract-arg-id arg-parsed))]
-           [else (list (extract-arg-id arg-parsed))]))))
+           [else
+            (list (extract-arg-id arg-parsed))]))))
     (cond
       [(syntax-e rest-arg)
        (syntax-parse rest-parsed
@@ -914,7 +907,8 @@
               (append arg-list tmp)
               #`(define-syntaxes (bind-id #,(in-repetition-space #'bind-id))
                   (make-expression+repetition #'(([(elem) (in-list #,tmp)])) #'elem (lambda () #'()))))])])]
-      [(list arg-list)]))
+      [else
+       (list arg-list)]))
 
   (define (maybe-add-function-result-definition name extends static-infoss arity unsafe-id defns)
     (define static-infos

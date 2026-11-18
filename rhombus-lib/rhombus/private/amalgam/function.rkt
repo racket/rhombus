@@ -394,21 +394,27 @@
            (check-consistent-unsafes stx (attribute unsafe-kw))
            (for ([args (in-list (syntax->list #'(args ...)))])
              (check-args-for-unsafe stx args #f)))
+         (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
+         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
+         (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
+         (define rest-args (syntax->list #'(rest.arg ...)))
+         (define rest-parseds (syntax->list #'(rest.parsed ...)))
+         (define kwrest-args (syntax->list #'(rest.kwarg ...)))
+         (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (add-name-prefix name-prefix the-name) whos (map (lambda (x) #f) whos)
                                 #f #f null
-                                #'((arg.kw ...) ...)
-                                #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                #'(rest.arg ...) #'(rest.parsed ...)
-                                #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                                kwss argss arg-parsedss
+                                rest-args rest-parseds
+                                kwrest-args kwrest-parseds
                                 (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                                 (filter-whos+unsafes #'(rhs ...))
                                 stx))
          (define unsafe-proc (and any-unsafe?
                                   (build-unsafe-case-function
-                                   #'((arg.kw ...) ...) #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                   #'(rest.arg ...) #'(rest.parsed ...)
+                                   kwss argss arg-parsedss
+                                   rest-args rest-parseds
                                    (attribute unsafe)
                                    stx)))
          (define unsafe-id (and unsafe-proc (car (generate-temporaries (list the-name)))))
@@ -457,21 +463,27 @@
            (check-consistent-unsafes stx (attribute unsafe-kw))
            (for ([args (in-list (syntax->list #'(args-form ...)))])
              (check-args-for-unsafe stx args #f)))
+         (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
+         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
+         (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
+         (define rest-args (syntax->list #'(rest.arg ...)))
+         (define rest-parseds (syntax->list #'(rest.parsed ...)))
+         (define kwrest-args (syntax->list #'(rest.kwarg ...)))
+         (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (or reflect-name (add-name-prefix name-prefix the-name)) whos inner-whos
                                 (attribute main-ret.converter) (attribute main-ret.annot-str) (attribute main-ret.origins)
-                                #'((arg.kw ...) ...)
-                                #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                #'(rest.arg ...) #'(rest.parsed ...)
-                                #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                                kwss argss arg-parsedss
+                                rest-args rest-parseds
+                                kwrest-args kwrest-parseds
                                 (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                                 (filter-whos+unsafes #'(rhs ...))
                                 stx))
          (define unsafe-proc (and any-unsafe?
                                   (build-unsafe-case-function
-                                   #'((arg.kw ...) ...) #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                   #'(rest.arg ...) #'(rest.parsed ...)
+                                   kwss argss arg-parsedss
+                                   rest-args rest-parseds
                                    (attribute unsafe)
                                    stx)))
          (define unsafe-id (and unsafe-proc (car (generate-temporaries (list the-name)))))
@@ -499,8 +511,9 @@
                                             ...
                                             body ...)))
          #:with name::dotted-identifier #'name-seq
-         (define args (syntax->list #'(arg ...)))
          (define kws (syntax->list #'(arg.kw ...)))
+         (define args (syntax->list #'(arg ...)))
+         (define arg-parseds (syntax->list #'(arg.parsed ...)))
          (define defaults (syntax->list #'(arg.default ...)))
          (check-optional-args stx args kws defaults)
          (check-keyword-args stx args kws)
@@ -510,7 +523,7 @@
          (define-values (proc arity)
            (build-function no-adjustments '()
                            (or reflect-name (add-name-prefix name-prefix #'name.name)) #f (extract-who (attribute who-clause) stx)
-                           #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                           kws args arg-parseds defaults
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
                            (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
@@ -520,7 +533,7 @@
                            stx))
          (define unsafe-proc (and (attribute unsafe)
                                   (build-unsafe-function
-                                   #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...)
+                                   kws args arg-parseds
                                    #'rest.arg #'rest.parsed
                                    (attribute unsafe)
                                    stx)))
@@ -599,19 +612,24 @@
      (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
            [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
        (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
-     (define falses (map (lambda (s) #f) (syntax->list #'(rhs ...))))
      (define outer-who (extract-who (attribute outer-who-clause) stx))
      (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
      (define outer-whos (map (lambda (who) outer-who) whos))
      (define reflect-name (extract-name (attribute reflect-name-clause) stx))
+     (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
+     (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
+     (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
+     (define rest-args (syntax->list #'(rest.arg ...)))
+     (define rest-parseds (syntax->list #'(rest.parsed ...)))
+     (define kwrest-args (syntax->list #'(rest.kwarg ...)))
+     (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
      (define-values (proc arity)
        (build-case-function adjustments argument-static-infos
                             (or reflect-name (get-local-name #'form-id adjustments)) outer-whos whos
                             (attribute main-ret.converter) (attribute main-ret.annot-str) (attribute main-ret.origins)
-                            #'((arg.kw ...) ...)
-                            #'((arg ...) ...) #'((arg.parsed ...) ...)
-                            #'(rest.arg ...) #'(rest.parsed ...)
-                            #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                            kwss argss arg-parsedss
+                            rest-args rest-parseds
+                            kwrest-args kwrest-parseds
                             (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
                             (filter-whos #'(rhs ...))
                             stx))
@@ -628,8 +646,9 @@
                                (~optional (~and who-clause (group #:who . _))))
                          ...
                          body ...)))
-     (define args (syntax->list #'(arg ...)))
      (define kws (syntax->list #'(arg.kw ...)))
+     (define args (syntax->list #'(arg ...)))
+     (define arg-parseds (syntax->list #'(arg.parsed ...)))
      (define defaults (syntax->list #'(arg.default ...)))
      (check-optional-args stx args kws defaults)
      (check-keyword-args stx args kws)
@@ -637,7 +656,7 @@
      (define-values (fun arity)
        (build-function adjustments argument-static-infos
                        (or reflect-name (get-local-name #'form-id adjustments)) #f (extract-who (attribute who-clause) stx)
-                       #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                       kws args arg-parseds defaults
                        #'rest.arg #'rest.parsed
                        #'rest.kwarg #'rest.kwparsed
                        (attribute ret.converter) (attribute ret.annot-str) (attribute ret.origins)
@@ -656,24 +675,20 @@
              #'())]))
 
 (define-for-syntax (filter-whos rhss-stx)
-  (datum->syntax
-   #f
-   (for/list ([rhs (in-list (syntax->list rhss-stx))])
-     (syntax-parse rhs
-       #:datum-literals (group)
-       [(tag::block (group #:who . _) body ...)
-        #'(tag body ...)]
-       [_ rhs]))))
+  (for/list ([rhs (in-list (syntax->list rhss-stx))])
+    (syntax-parse rhs
+      #:datum-literals (group)
+      [(tag::block (group #:who . _) body ...)
+       #'(tag body ...)]
+      [_ rhs])))
 
 (define-for-syntax (filter-whos+unsafes rhss-stx)
-  (datum->syntax
-   #f
-   (for/list ([rhs (in-list (syntax->list rhss-stx))])
-     (syntax-parse rhs
-       #:datum-literals (group)
-       [(tag::block (~or* (group #:who . _) (group #:unsafe . _)) ...+ body ...)
-        #'(tag body ...)]
-       [_ rhs]))))
+  (for/list ([rhs (in-list (syntax->list rhss-stx))])
+    (syntax-parse rhs
+      #:datum-literals (group)
+      [(tag::block (~or* (group #:who . _) (group #:unsafe . _)) ...+ body ...)
+       #'(tag body ...)]
+      [_ rhs])))
 
 (define-for-syntax (maybe-add-function-doc doc form-id names headers doc-kw-stx orig-stx defns)
   (define (add-form header)

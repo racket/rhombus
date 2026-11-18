@@ -106,6 +106,13 @@ module ~early unsafeable ~lang rhombus:
   | n(x, y, z, ...):
       ~unsafe: [-1, x, y, z, ...]
       [-2, x, y, z, ...]
+  fun
+  | o(x, y):
+      ~unsafe: [0, x, y]
+      [1, x, y]
+  | o(x, y):
+      ~unsafe: "oops"
+      "oops"
   operator (x %% y):
     ~unsafe: [0, x, y]
     [1, x, y]
@@ -136,6 +143,20 @@ module ~early unsafeable ~lang rhombus:
   | (%/ y):
       ~unsafe: [0, y]
       [1, y]
+  operator
+  | (%+ y):
+      ~unsafe: [0, y]
+      [1, y]
+  | (%+ y):
+      ~unsafe: "oops"
+      "oops"
+  operator
+  | (x %-):
+      ~unsafe: [0, x]
+      [1, x]
+  | (x %-):
+      ~unsafe: "oops"
+      "oops"
 
 module ~early use_as_safe ~lang rhombus:
   import:
@@ -154,6 +175,7 @@ module ~early use_as_safe ~lang rhombus:
   check m(2, 3) ~is [1, 2, 3]
   check n(2, 3, 4, 5, 6) ~is [-2, 2, 3, 4, 5, 6]
   check n(2, 3) ~is [1, 2, 3]
+  check o(2, 3) ~is [1, 2, 3]
   check 2 %% 3 ~is [1, 2, 3]
   check 2 %! ~is [1, 2]
   check %> 2 ~is [1, 2]
@@ -162,6 +184,8 @@ module ~early use_as_safe ~lang rhombus:
   check 2 %* 3 ~is [1, 2, 3]
   check 2 %/ ~is [1, [2]]
   check %/ 2 ~is [1, 2]
+  check %+ 2 ~is [1, 2]
+  check 2 %- ~is [1, 2]
 
 module ~early use_as_unsafe ~lang rhombus:
   import:
@@ -180,6 +204,7 @@ module ~early use_as_unsafe ~lang rhombus:
   check m(2, 3) ~is [0, 2, 3]
   check n(2, 3, 4, 5, 6) ~is [-1, 2, 3, 4, 5, 6]
   check n(2, 3) ~is [0, 2, 3]
+  check o(2, 3) ~is [0, 2, 3]
   check 2 %% 3 ~is [0, 2, 3]
   check 2 %! ~is [0, 2]
   check %> 2 ~is [0, 2]
@@ -188,6 +213,8 @@ module ~early use_as_unsafe ~lang rhombus:
   check 2 %* 3 ~is [0, 2, 3]
   check 2 %/ ~is [0, [2]]
   check %/ 2 ~is [0, 2]
+  check %+ 2 ~is [0, 2]
+  check 2 %- ~is [0, 2]
 
 import self!use_as_safe
 import self!use_as_unsafe

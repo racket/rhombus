@@ -240,46 +240,44 @@
     (when has-unsafe?
       (for ([arg (in-list args)])
         (check-arg-for-unsafe orig-stx (regroup #`(#,arg)) #f)))
-    (define falses (for/list ([a (in-list args)]) #f))
-    (define falsess (for/list ([a (in-list args)]) #'(#f)))
+    (define false-stxs (for/list ([a (in-list args)]) #'#f))
+    (define false-stxss (for/list ([a (in-list args)]) (list #'#f)))
     (define use-name (stx-or (car reflect-names) name))
-    (define (->stx l) (datum->syntax #f l))
     (define-values (proc arity)
       (cond
         [(and (pair? args) (null? (cdr args))
               (not main-converter))
          (build-function no-adjustments '()
                          use-name (stx-or main-who) (stx-or (car whos))
-                         (car falsess) (->stx args) (->stx arg-parseds) (car falsess)
+                         (car false-stxss) args arg-parseds (car false-stxss)
                          #'#f #'#f
                          #'#f #'#f
                          (car ret-converters) (car ret-annot-strs) (car ret-annot-origins)
                          (car rhss)
                          orig-stx)]
         [else
-         (define falses (->stx (for/list ([a (in-list args)]) #'#f)))
          (define main-whos (for/list ([who (in-list whos)]) (stx-or main-who)))
          (build-case-function no-adjustments '()
                               use-name main-whos (map stx-or whos)
                               main-converter main-annot-str main-annot-origins
-                              (->stx falsess) (->stx (map list args)) (->stx (map list arg-parseds))
-                              falses falses
-                              falses falses
+                              false-stxss (map list args) (map list arg-parseds)
+                              false-stxs false-stxs
+                              false-stxs false-stxs
                               ret-converters ret-annot-strs ret-annot-origins
-                              (->stx rhss)
+                              rhss
                               orig-stx)]))
     (cond
       [has-unsafe?
        #`(values #,proc
                  #,(cond
                      [(and (pair? args) (null? (cdr args)))
-                      (build-unsafe-function (car falsess) (->stx args) (->stx arg-parseds)
+                      (build-unsafe-function (car false-stxss) args arg-parseds
                                              #'#f #'#f
                                              (car unsafes)
                                              orig-stx)]
                      [else
-                      (build-unsafe-case-function falsess args arg-parseds
-                                                  falses falses
+                      (build-unsafe-case-function false-stxss (map list args) (map list arg-parseds)
+                                                  false-stxs false-stxs
                                                   unsafes
                                                   orig-stx)]))]
       [else
@@ -298,55 +296,53 @@
     (when has-unsafe?
       (for ([arg (in-list (append lefts rights))])
         (check-arg-for-unsafe orig-stx (regroup #`(#,arg)) #f)))
-    (define falsess (for/list ([a (in-list lefts)]) #'(#f #f)))
+    (define false-stxs (for/list ([a (in-list lefts)]) #'#f))
+    (define false-stxss (for/list ([a (in-list lefts)]) (list #'#f #'#f)))
     (define use-name (stx-or (car reflect-names) name))
-    (define (->stx l) (datum->syntax #f l))
     (define-values (proc arity)
       (cond
         [(and (pair? lefts) (null? (cdr lefts))
               (not main-converter))
          (build-function no-adjustments '()
                          use-name (stx-or main-who) (stx-or (car whos))
-                         (car falsess)
-                         (->stx (list (car lefts) (car rights)))
-                         (->stx (list (car left-parseds) (car right-parseds)))
-                         (car falsess)
+                         (car false-stxss)
+                         (list (car lefts) (car rights))
+                         (list (car left-parseds) (car right-parseds))
+                         (car false-stxss)
                          #'#f #'#f
                          #'#f #'#f
                          (car ret-converters) (car ret-annot-strs) (car ret-annot-origins)
                          (car rhss)
                          orig-stx)]
         [else
-         (define falses (->stx (for/list ([a (in-list lefts)]) #'#f)))
          (define main-whos (for/list ([who (in-list whos)]) (stx-or main-who)))
          (build-case-function no-adjustments '()
                               use-name main-whos (map stx-or whos)
                               main-converter main-annot-str main-annot-origins
-                              (->stx falsess)
-                              (->stx (map list lefts rights))
-                              (->stx (map list left-parseds right-parseds))
-                              falses falses
-                              falses falses
+                              false-stxss
+                              (map list lefts rights)
+                              (map list left-parseds right-parseds)
+                              false-stxs false-stxs
+                              false-stxs false-stxs
                               ret-converters ret-annot-strs ret-annot-origins
-                              (->stx rhss)
+                              rhss
                               orig-stx)]))
     (cond
       [has-unsafe?
        #`(values #,proc
                  #,(cond
                      [(and (pair? lefts) (null? (cdr lefts)))
-                      (build-unsafe-function (car falsess)
-                                             (->stx (list (car lefts) (car rights)))
-                                             (->stx (list (car left-parseds) (car right-parseds)))
+                      (build-unsafe-function (car false-stxss)
+                                             (list (car lefts) (car rights))
+                                             (list (car left-parseds) (car right-parseds))
                                              #'#f #'#f
                                              (car unsafes)
                                              orig-stx)]
                      [else
-                      (define falses (->stx (for/list ([a (in-list lefts)]) #'#f)))
-                      (build-unsafe-case-function (->stx falsess)
-                                                  (->stx (map list lefts rights))
-                                                  (->stx (map list left-parseds right-parseds))
-                                                  falses falses
+                      (build-unsafe-case-function false-stxss
+                                                  (map list lefts rights)
+                                                  (map list left-parseds right-parseds)
+                                                  false-stxs false-stxs
                                                   unsafes
                                                   orig-stx)]))]
       [else
@@ -591,7 +587,7 @@
                                         main-order main-prec main-assc
                                         main-reflect-name main-who)
   (define (maybe-static-infos/main ops)
-    (or main-ret-static-infos        
+    (or main-ret-static-infos
         (let ([static-infoss (map opcase-ret-static-infos ops)])
           (and (pair? static-infoss)
                (for/fold ([static-infos (car static-infoss)]) ([si (in-list (cdr static-infoss))])
