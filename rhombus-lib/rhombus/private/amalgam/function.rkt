@@ -645,13 +645,14 @@
                            #'(rhs-tag body ...)
                            #'rhs)
                        stx))
-     (values (let* ([fun (if (pair? (syntax-e #'ret.static-infos))
-                             (wrap-static-info fun #'#%call-result #'ret.static-infos)
-                             fun)]
+     (values (let* ([fun (wrap-function-static-info fun)]
                     [fun (if arity
                              (wrap-static-info fun #'#%function-arity arity)
+                             fun)]
+                    [fun (if (pair? (syntax-e #'ret.static-infos))
+                             (wrap-static-info fun #'#%call-result #'ret.static-infos)
                              fun)])
-               (wrap-function-static-info fun))
+               fun)
              #'())]))
 
 (define-for-syntax (filter-whos rhss-stx)
