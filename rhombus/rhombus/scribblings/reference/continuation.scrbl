@@ -61,6 +61,13 @@ or by using it with @rhombus(Continuation.in).
  The default prompt handler expects a single thunk, and calls the thunk
  under a prompt with the same tag as the handler's prompt.
 
+ Similar to @rhombus(fun), the argument bindings in a @rhombus(~catch)
+ handler are not allowed to define duplicate identifiers.
+
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Changed to not allow the argument bindings in a @rhombus(~catch)
+            handler to define duplicate identifiers.})
 }
 
 @doc(

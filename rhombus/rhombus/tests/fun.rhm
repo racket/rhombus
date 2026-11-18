@@ -488,3 +488,64 @@ block:
   check f(~a: "anything") ~is "got something else"
   check f(~b: "anything") ~is "got something else"
   check f(~a: "anything", ~b: "anything") ~is "got something else"
+
+// duplicate argument id
+block:
+  import:
+    rhombus/meta open
+  fun dup_msgs():
+    values(
+      "fun: duplicate defined identifier for argument",
+      "x",
+    )
+  expr.macro 'generate_checks':
+    ~op_stx: self
+    let check_id = 'check'.relocate(self)
+    fun make_argss(is_dup):
+      let dup_id:
+        if is_dup
+        | 'x'
+        | Syntax.make_temp_id("x", ~keep_name: #true)
+      let dup_kw = Syntax.make(Keyword.from_string(to_string(dup_id)), dup_id)
+      '
+        (x, $dup_id) (x, [y, $dup_id])
+        (x, & $dup_id) (x, & [y, $dup_id])
+        (x, $dup_id, $('...')) (x, [y, $dup_id], $('...'))
+        (x, $dup_kw) (x, ~y: $dup_id) (x, ~y: [y, $dup_id])
+        (x, ~& { #'~y: $dup_id }) (x, ~& { #'~y: [y, $dup_id] })
+      '
+    fun make_checks(argss, is_eval, result):
+      let '$args ...; ...' = argss
+      let maybe_eval:
+        if is_eval
+        | '~eval'
+        | ''
+      '$('$check_id:
+            $maybe_eval
+            fun f $args:
+              #void
+            $result
+          $check_id:
+            $maybe_eval
+            fun $args:
+              #void
+            $result
+          $check_id:
+            $maybe_eval
+            fun
+            | f $args:
+                #void
+            $result
+          $check_id:
+            $maybe_eval
+            fun
+            | $args:
+                #void
+            $result
+          ')
+       ...
+       ...'
+    'block:
+       $(make_checks(make_argss(#true), #true, '~throws dup_msgs()'))
+       $(make_checks(make_argss(#false), #false, '~completes')) '
+  generate_checks

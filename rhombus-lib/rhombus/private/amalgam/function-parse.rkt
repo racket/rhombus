@@ -3,6 +3,7 @@
                      racket/keyword
                      racket/treelist
                      syntax/parse/pre
+                     syntax/private/boundmap
                      enforest/syntax-local
                      shrubbery/print
                      "srcloc.rkt"
@@ -527,7 +528,31 @@
                  immediate? arity
                  rhs))
 
-  (define ((make-fcase argument-static-infoss make-immediate?)
+  (define (check-duplicate-arg-id stx
+                                  args arg-infos
+                                  rest-arg rest-arg-info
+                                  kwrest-arg kwrest-arg-info)
+    (define seen-ids (make-bound-identifier-mapping))
+    (define (check-info! arg info)
+      (syntax-parse info
+        [info::binding-info
+         (for ([id (in-list (syntax->list #'(info.bind-id ...)))])
+           (when (bound-identifier-mapping-get seen-ids id (lambda () #f))
+             (raise-syntax-error #f
+                                 "duplicate defined identifier for argument"
+                                 stx
+                                 arg
+                                 (list id)))
+           (bound-identifier-mapping-put! seen-ids id #t))]))
+    (for ([arg (in-list args)]
+          [arg-info (in-list arg-infos)])
+      (check-info! arg arg-info))
+    (when (syntax-e rest-arg)
+      (check-info! rest-arg rest-arg-info))
+    (when (syntax-e kwrest-arg)
+      (check-info! kwrest-arg kwrest-arg-info)))
+
+  (define ((make-fcase orig-stx argument-static-infoss make-immediate?)
            kws
            args arg-parseds rest-arg rest-arg-parsed kwrest-arg kwrest-arg-parsed
            converter annot-str
@@ -552,6 +577,10 @@
              [kwrest::binding-form
               #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
               #'kwrest-impl.info])))
+    (check-duplicate-arg-id orig-stx
+                            args arg-infos
+                            rest-arg rest-arg-info
+                            kwrest-arg kwrest-arg-info)
     (define (immediate-info? info)
       (syntax-parse info
         [info::binding-info
@@ -591,32 +620,46 @@
                           kwrest-arg kwrest-parsed
                           converter annot-str annot-origins
                           rhs
-                          src-ctx)
+                          orig-stx)
     (syntax-parse arg-parseds
       [(arg-parsed::binding-form ...)
        #:with (in-static-infos ...) (extract-added-static-infos argument-static-infoss (length arg-parseds))
        #:with (arg-impl::binding-impl ...) #'((arg-parsed.infoer-id in-static-infos arg-parsed.data) ...)
-       #:with (arg-info::binding-info ...) #'(arg-impl.info ...)
+       #:do [(define arg-infos (syntax->list #'(arg-impl.info ...)))]
+       #:with (arg-info::binding-info ...) arg-infos
+       #:do [(define rest-info
+               (and (syntax-e rest-arg)
+                    (syntax-parse rest-parsed
+                      [rest::binding-form
+                       #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
+                       #'rest-impl.info])))
+             (define kwrest-info
+               (and (syntax-e kwrest-arg)
+                    (syntax-parse kwrest-parsed
+                      [kwrest::binding-form
+                       #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
+                       #'kwrest-impl.info])))
+             (check-duplicate-arg-id orig-stx
+                                     args arg-infos
+                                     rest-arg rest-info
+                                     kwrest-arg kwrest-info)]
        #:with (tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))
        #:with (arg ...) args
        #:with (maybe-rest-tmp (maybe-rest-tmp* ...) (rest-def ...) (maybe-match-rest ...))
-       (if (syntax-e rest-arg)
-           (syntax-parse rest-parsed
-             [rest::binding-form
-              #:with rest-impl::binding-impl #'(rest.infoer-id () rest.data)
-              #:with rest-info::binding-info #'rest-impl.info
+       (if rest-info
+           (syntax-parse rest-info
+             [rest-info::binding-info
               #`(rest-tmp-lst
                  (#:rest rest-tmp-lst)
                  ((define rest-tmp (list->treelist rest-tmp-lst)))
                  ((rest-tmp rest-info #,rest-arg #f)))])
            #'(() () () ()))
        #:with ((maybe-kwrest-tmp ...) (maybe-match-kwrest ...))
-       (if (syntax-e kwrest-arg)
-           (syntax-parse kwrest-parsed
-             [kwrest::binding-form
-              #:with kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)
-              #:with kwrest-info::binding-info #'kwrest-impl.info
-              #`((#:kwrest kwrest-tmp) ((kwrest-tmp kwrest-info #,kwrest-arg #f)))])
+       (if kwrest-info
+           (syntax-parse kwrest-info
+             [kwrest-info::binding-info
+              #`((#:kwrest kwrest-tmp)
+                 ((kwrest-tmp kwrest-info #,kwrest-arg #f)))])
            #'(() ()))
        #:with (((arg-form ...) arg-rhs) ...)
        (for/list ([kw (in-list kws)]
@@ -666,7 +709,7 @@
        (define (adjust-args args)
          (append (treelist->list (entry-point-adjustment-prefix-arguments adjustments))
                  args))
-       (define (reloc stx) (relocate+reraw (respan src-ctx) stx))
+       (define (reloc stx) (relocate+reraw (respan orig-stx) stx))
        (values
         (transfer-origins
          (append arg-parseds
@@ -699,7 +742,7 @@
   (define (build-unsafe-function kws args arg-parseds
                                  rest-arg rest-parsed
                                  body
-                                 src-ctx)
+                                 orig-stx)
     (syntax-parse body
       #:datum-literals (group)
       [(group unsafe-kw (tag::block body ...+))
@@ -718,7 +761,7 @@
                                kwrest-args kwrest-parseds
                                converters annot-strs annot-originss
                                rhss
-                               src-ctx)
+                               orig-stx)
     (define aritys
       (for/list ([kws (in-list kwss)]
                  [rest-arg (in-list rest-args)]
@@ -733,7 +776,7 @@
     (define kws? (pair? shifted-arity))
     (define-values (ns fcss)
       (group-by-counts
-       (map (make-fcase argument-static-infoss (not kws?))
+       (map (make-fcase orig-stx argument-static-infoss (not kws?))
             kwss
             argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds
             converters annot-strs
@@ -746,7 +789,7 @@
              (append arg-parsedss
                      annot-originss))
       (relocate+reraw
-       (respan src-ctx)
+       (respan orig-stx)
        #`(case-lambda/kwrest
           #:name #,function-name
           #:arity #,shifted-arity
@@ -851,7 +894,7 @@
   (define (build-unsafe-case-function kwss argss arg-parsedss
                                       rest-args rest-parseds
                                       bodys
-                                      src-ctx)
+                                      orig-stx)
     (syntax-property
      #`(case-lambda
          #,@(for/list ([kws (in-list kwss)]
@@ -869,6 +912,8 @@
      'body-as-unsafe
      #t))
 
+  ;; doesn't check for duplicate argument, because the safe case is
+  ;; already checked
   (define (unsafe-args kws args arg-parseds
                        rest-arg rest-parsed)
     (define (extract-arg-id arg-parsed)

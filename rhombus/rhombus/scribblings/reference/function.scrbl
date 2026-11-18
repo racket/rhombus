@@ -155,10 +155,6 @@ form or @rhombus(fun) expression form, but see also
  reasons, @rhombus(bind) and @rhombus(default_expr) cannot contain an
  immediate @rhombus(=).
 
- A constraint not reflected in the grammar is that all optional
- by-position arguments must follow all required by-position arguments.
- To define a function that works otherwise, use the @vbar form.
-
 @examples(
   ~defn:
     fun f(x, y = x+1):
@@ -176,6 +172,28 @@ form or @rhombus(fun) expression form, but see also
     transform([1, 2])
     transform([1, 2], ~dx: 7)
     transform([1, 2], ~dx: 7, ~scale: 2)
+)
+
+ Although earlier bindings are visible to later bindings as in
+ @rhombus(let), the argument bindings are not allowed to define
+ duplicate identifiers, to prevent unexpected ``shadowing.''
+
+@examples(
+  ~defn:
+    ~error:
+      fun not_allowed(x, x):
+        x
+  ~defn:
+    ~error:
+      fun also_not_allowed(x, [y, x]):
+        x
+)
+
+ Another constraint not reflected in the grammar is that all optional
+ by-position arguments must follow all required by-position arguments.
+ To define a function that works otherwise, use the @vbar form.
+
+@examples(
   ~defn:
     ~error:
       fun invalid(x = 1, y):
@@ -214,28 +232,28 @@ form or @rhombus(fun) expression form, but see also
     is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
-@rhombus(repet_bind #,(@litchar{,}) #,(dots)), then the
-function or function alternative accepts any number of additional
-by-position arguments.
-For @rhombus(#,(@rhombus(&, ~bind)) list_bind), the additional arguments are collected
-into a list value, and that list value is bound to the
-@rhombus(list_bind). Static information associated by @rhombus(List)
-is propagated to @rhombus(list_bind).
-For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
-variable in @rhombus(repet_bind) is bound to a repetition that
-repeats access to that piece of each additional argument.
-Only one by-position rest binding, @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
-@rhombus(repet_bind #,(@litchar{,}) #,(dots)), can appear
-in a @rhombus(rest) sequence.
+ When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
+ @rhombus(repet_bind #,(@litchar{,}) #,(dots)), then the
+ function or function alternative accepts any number of additional
+ by-position arguments.
+ For @rhombus(#,(@rhombus(&, ~bind)) list_bind), the additional arguments are collected
+ into a list value, and that list value is bound to the
+ @rhombus(list_bind). Static information associated by @rhombus(List)
+ is propagated to @rhombus(list_bind).
+ For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
+ variable in @rhombus(repet_bind) is bound to a repetition that
+ repeats access to that piece of each additional argument.
+ Only one by-position rest binding, @rhombus(#,(@rhombus(&, ~bind)) list_bind) or
+ @rhombus(repet_bind #,(@litchar{,}) #,(dots)), can appear
+ in a @rhombus(rest) sequence.
 
-When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(~&, ~bind)) map_bind), then
-the function or function alternative accepts any number of additional
-keyword arguments. The additional keywords and associated argument
-values are collected into an immutable map value to be bound to
-@rhombus(map_bind). Static information associated by @rhombus(Map) is
-propagated to @rhombus(map_bind).
-Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(rest) sequence.
+ When a @rhombus(rest) sequence contains @rhombus(#,(@rhombus(~&, ~bind)) map_bind), then
+ the function or function alternative accepts any number of additional
+ keyword arguments. The additional keywords and associated argument
+ values are collected into an immutable map value to be bound to
+ @rhombus(map_bind). Static information associated by @rhombus(Map) is
+ propagated to @rhombus(map_bind).
+ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(rest) sequence.
 
 @examples(
   ~defn:
@@ -360,7 +378,7 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
  binding must be either an immediate identifier, an identifier annotated
  with @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a single-identifier
  binding form that accepts any argument, such as @rhombus(_, ~bind).
- Keyword are allowed only when a function does not have multiple cases,
+ Keywords are allowed only when a function does not have multiple cases,
  and @rhombus(&, ~bind) or @rhombus(~&) arguments are not allowed. (A
  final repetition argument using @rhombus(ellipsis) is allowed.) When a
  multi-case function has @rhombus(~unsafe) for any case, then it must
@@ -386,11 +404,17 @@ Only one @rhombus(#,(@rhombus(~&, ~bind)) map_bind) can appear in a @rhombus(res
         fixnum_sum([1, 2, 3 ** 100]) // seriously bad in unsafe mode
 )
 
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Changed to not allow the argument bindings to define
+            duplicate identifiers.})
+
 }
 
 
 @doc(
   ~nonterminal:
+    id_name: namespace ~defn
     name_option: fun ~defn
     case_maybe_kw_opt: fun ~defn
     case_maybe_kw: fun ~defn

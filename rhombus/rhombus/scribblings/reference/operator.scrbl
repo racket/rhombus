@@ -88,6 +88,9 @@
  is treated as starting a @rhombus(maybe_res_annot), which is the same
  as in @rhombus(fun) definitions.
 
+ Similar to @rhombus(fun), the two argument bindings in an infix
+ operator are not allowed to define duplicate identifiers.
+
  The new operator is also bound a @tech{repetition} operator, in which
  case its arguments must be repetitions. The depth of the resulting
  repetition is the maximum of the argument repetition depths.
@@ -165,5 +168,10 @@
     1 ^^^ 2 + 3
     ^^^ 4 + 5
 )
+
+@(history:
+    ~changed "1.1.0.3":
+      @elem{Changed to not allow the two argument bindings in an infix
+            operator to define duplicate identifiers.})
 
 }

@@ -356,3 +356,52 @@ check:
     Continuation.escape(~tag: tag)
     ~catch (): 42
   ~is 42
+
+// duplicate argument id
+block:
+  import:
+    rhombus/meta open
+  fun dup_msgs():
+    values(
+      "duplicate defined identifier for argument",
+      "x",
+    )
+  expr.macro 'generate_checks':
+    ~op_stx: self
+    let check_id = 'check'.relocate(self)
+    fun make_argss(is_dup):
+      let dup_id:
+        if is_dup
+        | 'x'
+        | Syntax.make_temp_id("x", ~keep_name: #true)
+      '
+        (x, $dup_id) (x, [y, $dup_id])
+      '
+    fun make_checks(argss, is_eval, result):
+      let '$args ...; ...' = argss
+      let maybe_eval:
+        if is_eval
+        | '~eval'
+        | ''
+      '$('$check_id:
+            $maybe_eval
+            Continuation.prompt:
+              #void
+              ~catch $args:
+                #void
+            $result
+          $check_id:
+            $maybe_eval
+            Continuation.prompt:
+              #void
+              ~catch
+              | $args:
+                  #void
+            $result
+          ')
+       ...
+       ...'
+    'block:
+       $(make_checks(make_argss(#true), #true, '~throws dup_msgs()'))
+       $(make_checks(make_argss(#false), #false, '~completes')) '
+  generate_checks
