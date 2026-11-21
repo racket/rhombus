@@ -123,7 +123,7 @@ block:
   check:
     Closeable.let (c1 :: False, c2 :: False) = values(A(1), A(2))
     #void
-    ~throws values("Closeable.let: " ++ error.annot_msg(),
+    ~throws values("Closeable.let: values do not satisfy annotation",
                    error.vals(A(1), A(2)).msg,
                    error.annot("values(False, False)").msg)
 

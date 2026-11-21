@@ -103,10 +103,14 @@ fun check_closeable(who, val):
           error.annot("Closeable"))
 
 fun bind_error(who, vals, ann):
+  let (annot_msg, vals_clause):
+    match vals
+    | [val]:
+        values(error.annot_msg(), error.val(val))
+    | ~else:
+        values("values do not satisfy annotation", error.vals(& vals))
   error(~who: who,
         ~exn: Exn.Fail.Annot,
-        error.annot_msg(),
-        match vals
-        | [val]: error.val(val)
-        | ~else: error.vals(& vals),
+        annot_msg,
+        vals_clause,
         error.annot(ann))

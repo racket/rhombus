@@ -53,6 +53,15 @@ check:
   ~throws "alternatives are not supported here"
 
 check:
+  def 1 = 2
+  #void
+  ~throws values(
+    "def: " ++ error.annot_msg(),
+    error.val(2).msg,
+    error.annot("matching(1)").msg,
+  )
+
+check:
   def (1, 2) = values(1, 1)
   #void
   ~throws values(
