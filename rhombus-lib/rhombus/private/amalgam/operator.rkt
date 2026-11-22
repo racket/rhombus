@@ -357,17 +357,20 @@
     (define has-unsafe? (check-consistent-unsafes stx "infix" unsafes))
     (with-syntax ([(op-proc) (generate-temporaries (list name))]
                   [(unsafe-proc ...) (generate-temporaries (if has-unsafe? (list name) null))])
-      (cons
-       #`(define-values (op-proc unsafe-proc ...)
-           #,(build-unary-function stx name
-                                   main-converter main-annot-str main-annot-origins
-                                   args rhss
-                                   ret-converters ret-annot-strs ret-annot-origins
-                                   reflect-names main-who whos
-                                   has-unsafe? unsafes))
-       (build-syntax-definitions/maybe-extension
-        '(#f rhombus/repet) name extends
-        (make-prefix name #'op-proc #'(unsafe-proc ...) order prec ret-static-infos)))))
+      (add-top-level
+       #'(op-proc unsafe-proc ...)
+       (append
+        (build-syntax-definitions/maybe-extension
+         '(#f rhombus/repet) name extends
+         (make-prefix name #'op-proc #'(unsafe-proc ...) order prec ret-static-infos))
+        (list
+         #`(define-values (op-proc unsafe-proc ...)
+             #,(build-unary-function stx name
+                                     main-converter main-annot-str main-annot-origins
+                                     args rhss
+                                     ret-converters ret-annot-strs ret-annot-origins
+                                     reflect-names main-who whos
+                                     has-unsafe? unsafes)))))))
 
   (define (generate-infix stx main-who name extends lefts rights order prec assc rhss
                           ret-converters ret-annot-strs ret-annot-origins ret-static-infos
@@ -379,7 +382,7 @@
     (with-syntax ([(op-proc) (generate-temporaries (list name))]
                   [(unsafe-proc ...) (generate-temporaries (if has-unsafe? (list name) null))])
       (add-top-level
-       #'(op-proc)
+       #'(op-proc unsafe-proc ...)
        (append
         (build-syntax-definitions/maybe-extension
          '(#f rhombus/repet) name extends
