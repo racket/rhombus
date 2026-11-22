@@ -475,6 +475,7 @@
   (define (check-arg-for-unsafe stx arg kw-ok?)
     (let loop ([arg arg] [kw-ok? kw-ok?])
       (syntax-parse arg
+        #:datum-literals (group)
         [_::unsafe-compatible-binding #t]
         [(group (_::parens arg)) (loop #'arg #f)]
         [(group _:keyword (_::block arg))

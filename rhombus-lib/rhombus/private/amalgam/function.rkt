@@ -372,8 +372,8 @@
         ;; immediate alts case
         [(form-id (alts-tag::alts
                    (_::block
-                    (group name-seq::dotted-identifier-sequence (~and args (_::parens arg::kw-binding ... rest::maybe-arg-rest))
-                           (~var ret (:ret-annotation (parse-arg-context #'args)))
+                    (group name-seq::dotted-identifier-sequence (~and args-form (_::parens arg::kw-binding ... rest::maybe-arg-rest))
+                           (~var ret (:ret-annotation (parse-arg-context #'args-form)))
                            (~and rhs (_::block
                                       (~alt
                                        (~optional (~and who-clause (group #:who . _)))
@@ -383,17 +383,6 @@
                    ...+))
          #:with (name::dotted-identifier ...) #'(name-seq ...)
          (define names (syntax->list #'(name.name ...)))
-         (define the-name (car names))
-         (check-consistent stx names "name")
-         (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
-               [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
-           (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
-         (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
-         (define any-unsafe? (ormap (lambda (kw) kw) (attribute unsafe-kw)))
-         (when any-unsafe?
-           (check-consistent-unsafes stx (attribute unsafe-kw))
-           (for ([args (in-list (syntax->list #'(args ...)))])
-             (check-args-for-unsafe stx args #f)))
          (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
          (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
          (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
@@ -401,6 +390,17 @@
          (define rest-parseds (syntax->list #'(rest.parsed ...)))
          (define kwrest-args (syntax->list #'(rest.kwarg ...)))
          (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
+         (define the-name (car names))
+         (check-consistent stx names "name")
+         (for ([args (in-list argss)]
+               [kws (in-list kwss)])
+           (check-keyword-args stx args kws))
+         (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
+         (define any-unsafe? (ormap (lambda (kw) kw) (attribute unsafe-kw)))
+         (when any-unsafe?
+           (check-consistent-unsafes stx (attribute unsafe-kw))
+           (for ([args (in-list (syntax->list #'(args-form ...)))])
+             (check-args-for-unsafe stx args #f)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (add-name-prefix name-prefix the-name) whos (map (lambda (x) #f) whos)
@@ -448,11 +448,18 @@
          #:with main-name::dotted-identifier #'main-name-seq
          #:with (name::dotted-identifier ...) #'(name-seq ...)
          (define names (syntax->list #'(name.name ...)))
+         (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
+         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
+         (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
+         (define rest-args (syntax->list #'(rest.arg ...)))
+         (define rest-parseds (syntax->list #'(rest.parsed ...)))
+         (define kwrest-args (syntax->list #'(rest.kwarg ...)))
+         (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define the-name #'main-name.name)
          (check-consistent stx (cons the-name names) "name" #:has-main? #t)
-         (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
-               [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
-           (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
+         (for ([args (in-list argss)]
+               [kws (in-list kwss)])
+           (check-keyword-args stx args kws))
          (define reflect-name (extract-name (attribute reflect-name-clause) stx))
          (define whos (let ([who (extract-who (attribute who-clause) stx)])
                         (for/list ([rhs (in-list (syntax->list #'(rhs ...)))])
@@ -463,13 +470,6 @@
            (check-consistent-unsafes stx (attribute unsafe-kw))
            (for ([args (in-list (syntax->list #'(args-form ...)))])
              (check-args-for-unsafe stx args #f)))
-         (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
-         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
-         (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
-         (define rest-args (syntax->list #'(rest.arg ...)))
-         (define rest-parseds (syntax->list #'(rest.parsed ...)))
-         (define kwrest-args (syntax->list #'(rest.kwarg ...)))
-         (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define-values (proc arity)
            (build-case-function no-adjustments '()
                                 (or reflect-name (add-name-prefix name-prefix the-name)) whos inner-whos
@@ -609,13 +609,6 @@
                                   (~optional (~and who-clause (group #:who . _)))
                                   body ...))))
                ...+))
-     (for ([args-stx (in-list (syntax->list #'((arg ...) ...)))]
-           [kws-stx (in-list (syntax->list #'((arg.kw ...) ...)))])
-       (check-keyword-args stx (syntax->list args-stx) (syntax->list kws-stx)))
-     (define outer-who (extract-who (attribute outer-who-clause) stx))
-     (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
-     (define outer-whos (map (lambda (who) outer-who) whos))
-     (define reflect-name (extract-name (attribute reflect-name-clause) stx))
      (define kwss (map syntax->list (syntax->list #'((arg.kw ...) ...))))
      (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
      (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
@@ -623,6 +616,13 @@
      (define rest-parseds (syntax->list #'(rest.parsed ...)))
      (define kwrest-args (syntax->list #'(rest.kwarg ...)))
      (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
+     (for ([args (in-list argss)]
+           [kws (in-list kwss)])
+       (check-keyword-args stx args kws))
+     (define outer-who (extract-who (attribute outer-who-clause) stx))
+     (define whos (map (lambda (who-clause) (extract-who who-clause stx)) (attribute who-clause)))
+     (define outer-whos (map (lambda (who) outer-who) whos))
+     (define reflect-name (extract-name (attribute reflect-name-clause) stx))
      (define-values (proc arity)
        (build-case-function adjustments argument-static-infos
                             (or reflect-name (get-local-name #'form-id adjustments)) outer-whos whos
