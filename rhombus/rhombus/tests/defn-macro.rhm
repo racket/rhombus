@@ -203,3 +203,32 @@ check:
 block:
   defn.macro '($)g': '"ok"'
   check $g ~is "ok"
+
+// consistent names in multi-case macros
+block:
+  fun inconsistent_msg():
+    values(
+      "inconsistent name",
+      "current case name does not match initial case name"
+    )
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    defn.macro 'do $id':
+      '«defn.macro
+        | '$id': '0'
+        | 'x': '1'»'
+    do x
+    ~throws inconsistent_msg()
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    def foo = 1
+    alias 'x': 'foo'
+    alias 'y': 'foo'
+    defn.macro
+    | 'x': '0'
+    | 'y': '1'
+    ~throws inconsistent_msg()

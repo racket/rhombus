@@ -293,14 +293,20 @@ check:
   macro
   | 'prefix': 'ok'
   | 'preeefix': 'oops'
-  ~throws "case operator does not match the initial case operator"
+  ~throws values(
+    "inconsistent name",
+    "current case name does not match initial case name"
+  )
 
 check:
   ~eval
   macro prefix
   | 'prefix': 'ok'
   | 'preeefix': 'oops'
-  ~throws "case operator does not match the declared operator"
+  ~throws values(
+    "inconsistent name",
+    "current case name does not match declared name"
+  )
 
 check:
   ~eval
@@ -506,3 +512,55 @@ expr.macro 'expr_name $tail ...':
 check expr_name anything.y ~matches 'anything'
 check expr_name math.pi ~matches 'pi'
 check expr_name 11 ~matches #false
+
+// consistent names in multi-case macros
+block:
+  fun inconsistent_msg(has_main):
+    values(
+      "inconsistent name",
+      "current case name does not match "
+        ++ (if has_main | "declared" | "initial case")
+        ++ " name"
+    )
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    defn.macro 'do $id':
+      '«expr.macro
+        | '$id': '0'
+        | 'x': '1'»'
+    do x
+    ~throws inconsistent_msg(#false)
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    defn.macro 'do $id':
+      '«expr.macro $id
+        | 'x': '0'
+        | '$id': '1'»'
+    do x
+    ~throws inconsistent_msg(#true)
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    def foo = 1
+    alias 'x': 'foo'
+    alias 'y': 'foo'
+    expr.macro
+    | 'x': '0'
+    | 'y': '1'
+    ~throws inconsistent_msg(#false)
+  check:
+    ~eval
+    import:
+      rhombus/meta open
+    def foo = 1
+    alias 'x': 'foo'
+    alias 'y': 'foo'
+    expr.macro x
+    | 'y': '0'
+    | 'x': '1'
+    ~throws inconsistent_msg(#true)

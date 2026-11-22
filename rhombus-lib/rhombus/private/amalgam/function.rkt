@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/property
-                     "consistent.rkt"
+                     "consistent-name.rkt"
                      "entry-point-adjustment.rkt"
                      "group.rkt"
                      "srcloc.rkt"
@@ -391,7 +391,7 @@
          (define kwrest-args (syntax->list #'(rest.kwarg ...)))
          (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define the-name (car names))
-         (check-consistent stx names "name")
+         (check-consistent-name stx names)
          (for ([args (in-list argss)]
                [kws (in-list kwss)])
            (check-keyword-args stx args kws))
@@ -456,7 +456,8 @@
          (define kwrest-args (syntax->list #'(rest.kwarg ...)))
          (define kwrest-parseds (syntax->list #'(rest.kwparsed ...)))
          (define the-name #'main-name.name)
-         (check-consistent stx (cons the-name names) "name" #:has-main? #t)
+         (check-consistent-name stx (cons the-name names)
+                                #:has-main? #t)
          (for ([args (in-list argss)]
                [kws (in-list kwss)])
            (check-keyword-args stx args kws))

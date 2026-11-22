@@ -5,7 +5,7 @@
                      enforest/name-parse
                      "name-path-op.rkt"
                      "class-parse.rkt"
-                     "consistent.rkt"
+                     "consistent-name.rkt"
                      "srcloc.rkt"
                      "group.rkt")
          "provide.rkt"
@@ -325,9 +325,8 @@
                                               stx
                                               (respan #'main-ret.seq))]))
                    (define a-ids (syntax->list #'(a-id ...)))
-                   (check-consistent stx
-                                     (if (attribute main-id) (cons #'main-id a-ids) a-ids)
-                                     "name")]
+                   (check-consistent-name stx (if (attribute main-id) (cons #'main-id a-ids) a-ids)
+                                          #:has-main? (and (attribute main-id) #t))]
              #:with id (car a-ids)
              #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'main-ret.seq #'(ret ...))
              #:with form (wrap-class-clause #`(#,mode id
@@ -390,9 +389,8 @@
                                               stx
                                               (respan #'ret.seq))]))
                    (define a-ids (syntax->list #'(a-id ...)))
-                   (check-consistent stx
-                                     (if (attribute main-id) (cons #'main-id a-ids) a-ids)
-                                     "name")]
+                   (check-consistent-name stx (if (attribute main-id) (cons #'main-id a-ids) a-ids)
+                                          #:has-main? (and (attribute main-id) #t))]
              #:with id (car a-ids)
              #:with maybe-ret #'[(parens) ret.seq]
              #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'ret.seq #'(case-ret ...))
@@ -453,7 +451,7 @@
                                                assign-rhs ...+
                                                (~and body2 (_::block . _)))))))
              #:with adj-body1::method-options #'body1
-             #:do [(check-consistent #:who mode #'alts (list #'a-id1 #'a-id2) "name")]
+             #:do [(check-consistent-name stx (list #'a-id1 #'a-id2))]
              #:with form (wrap-class-clause #`(#,mode a-id1
                                                (block (group fun
                                                              (atag
@@ -519,16 +517,15 @@
                            ([forwarding-annot-id args forwarded-ret])
                            (block (group fun args (~@ . forwarding-ret) rhs))))]
     [(_ (atag::alts
-         (btag::block ((~and gtag group) id:identifier
+         (btag::block ((~and gtag group) a-id:identifier
                                          (~and args (_::parens . _)) ret::maybe-ret
                                          (~and body (_::block . _))))
          ...+))
      #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
-     #:with (id0 idx ...) #'(id ...)
-     (for ([idx (in-list (syntax->list #'(idx ...)))])
-       (unless (bound-identifier=? idx #'id0)
-         (raise-syntax-error #f "inconsistent name identifier" stx idx)))
-     (wrap-class-clause #`(#:constructor id0
+     #:do [(define a-ids (syntax->list #'(a-id ...)))
+           (check-consistent-name stx a-ids)]
+     #:with id (car a-ids)
+     (wrap-class-clause #`(#:constructor id
                            ([forwarding-annot-id args forwarded-ret] ...)
                            (block (group fun (atag
                                               (btag (gtag args (~@ . forwarding-ret)

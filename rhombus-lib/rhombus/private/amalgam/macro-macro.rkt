@@ -10,7 +10,7 @@
                      enforest/hier-name-parse
                      enforest/operator
                      enforest/syntax-local
-                     "consistent.rkt"
+                     "consistent-name.rkt"
                      "syntax-class-mixin.rkt"
                      "macro-rhs.rkt"
                      "introducer.rkt"
@@ -467,11 +467,10 @@
                                               main-order main-prec main-assc main-kws
                                               extra-kws extra-shapes)
                   gs rhss))
-  (check-consistent stx
-                    (let ([names (map pre-parsed-name ps)])
-                      (if main-name (cons main-name names) names))
-                    #:has-main? main-name
-                    "operator")
+  (check-consistent-name stx
+                         (let ([names (map pre-parsed-name ps)])
+                           (if main-name (cons main-name names) names))
+                         #:has-main? (and main-name #t))
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym (or main-name (pre-parsed-name (car ps)))
                                                (or main-extends (pre-parsed-extends (car ps)))
@@ -707,9 +706,7 @@
          (define ps (for/list ([g (in-list (syntax->list #'(q.g ...)))]
                                [b (in-list (syntax->list #'((tag body ...) ...)))])
                       (parse-transformer-definition g b)))
-         (check-consistent stx
-                           (map pre-parsed-name ps)
-                           "operator")
+         (check-consistent-name stx (map pre-parsed-name ps))
          (ks ps #`(#,compiletime-id #,ps (opt.self-id ...) (opt.all-id ...) #,(map (lambda (opts)
                                                                                      (extract-extra-binds stx extra-kws extra-shapes opts #f))
                                                                                    (syntax->list #'(opt ...)))))]))

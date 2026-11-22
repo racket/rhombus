@@ -1700,3 +1700,55 @@ block:
     A.make(0) ~is A.make(0)
     A.make(1) ~is A.make(1)
     A.make() ~is A.make(1)
+
+// consistent names in multi-case methods, etc.
+block:
+  import:
+    rhombus/meta open
+  fun inconsistent_msg(has_main):
+    values(
+      "inconsistent name",
+      "current case name does not match "
+        ++ (if has_main | "declared" | "initial case")
+        ++ " name"
+    )
+  expr.macro 'generate_checks':
+    ~op_stx: self
+    let check_id = 'check'.relocate(self)
+    fun make_checks(make_clause_without_main,
+                    make_clause_with_main = #false):
+      let ([make_clause, ...], [has_main, ...]):
+        if make_clause_with_main
+        | values([make_clause_without_main, make_clause_with_main], [#false, #true])
+        | values([make_clause_without_main], [#false])
+      '«
+         $check_id:
+           ~eval
+           import:
+             rhombus/meta open
+           defn.macro 'do $('$') id':
+             'class A(val):
+                nonfinal
+                $(make_clause('$('$') id', 'x'))'
+           do x
+           ~throws inconsistent_msg(#%literal $has_main)
+         ...
+         $check_id:
+           ~eval
+           def foo = 1
+           alias 'x': 'foo'
+           alias 'y': 'foo'
+           class A(val):
+             nonfinal
+             $(make_clause('x', 'y'))
+           ~throws inconsistent_msg(#%literal $has_main)
+         ...
+       »'
+    'block:
+       $(make_checks(fun (id1, id2): 'method | $id1(): 0 | $id2(): 1',
+                     fun (id1, id2): 'method $id1 | $id2(): 0 | $id1(): 1'))
+       $(make_checks(fun (id1, id2): 'abstract method | $id1() | $id2()',
+                     fun (id1, id2): 'abstract method $id1 | $id2() | $id1()'))
+       $(make_checks(fun (id1, id2): 'property | $id1: 0 | $id2 := _: 1'))
+       $(make_checks(fun (id1, id2): 'constructor | $id1(): super(0) | $id2(): super(1)'))'
+  generate_checks

@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      "group.rkt"
                      "srcloc.rkt"
-                     "consistent.rkt"
+                     "consistent-name.rkt"
                      "entry-point-adjustment.rkt")
          "expression.rkt"
          (only-in "repetition.rkt"
@@ -632,13 +632,12 @@
                                     #'i.reflect-name (stx-or #'i.reflect-name use-main-reflect-name) #'i.who #'i.unsafe
                                     #'i.left #'i.right #'i.assc))
          (values (cons opc all) pres (cons opc ins) posts (stx-or #'p.reflect-name use-main-reflect-name))])))
-  (check-consistent stx
-                    (let ([names (map opcase-name all)])
-                      (if main-name
-                          (cons main-name names)
-                          names))
-                    #:has-main? (and main-name #t)
-                    "operator")
+  (check-consistent-name stx
+                         (let ([names (map opcase-name all)])
+                           (if main-name
+                               (cons main-name names)
+                               names))
+                         #:has-main? (and main-name #t))
   (when (and (pair? ins) (pair? posts))
     (raise-syntax-error #f
                         "combination of infix and postfix cases not allowed"

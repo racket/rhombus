@@ -183,14 +183,14 @@ check:
   operator
   | (0 ** a): 0
   | (1 ??): 1
-  ~throws "case operator does not match the initial case operator"
+  ~throws "current case name does not match initial case name"
 
 check:
   ~eval
   operator **:
   | (0 ** a): 0
   | (1 ??): 1
-  ~throws "case operator does not match the declared operator"
+  ~throws "current case name does not match declared name"
 
 check:
   ~eval
@@ -605,4 +605,70 @@ block:
     'block:
        $(make_checks(make_argss(#true), #true, '~throws dup_msgs()'))
        $(make_checks(make_argss(#false), #false, '~completes')) '
+  generate_checks
+
+// consistent names in multi-case operators
+block:
+  import:
+    rhombus/meta open
+  fun inconsistent_msg(has_main):
+    values(
+      "inconsistent name",
+      "current case name does not match "
+        ++ (if has_main | "declared" | "initial case")
+        ++ " name"
+    )
+  expr.macro 'generate_checks':
+    ~op_stx: self
+    let check_id = 'check'.relocate(self)
+    fun make_checks(make_args1,
+                    make_args2 = make_args1):
+      '«
+         $check_id:
+           ~eval
+           import:
+             rhombus/meta open
+           defn.macro 'do $('$') id':
+             'operator
+              | $(make_args1('$('$') id')): 0
+              | $(make_args2('x')): 1'
+           do x
+           ~throws inconsistent_msg(#false)
+         $check_id:
+           ~eval
+           import:
+             rhombus/meta open
+           defn.macro 'do $('$') id':
+             'operator $('$') id
+              | $(make_args1('x')): 0
+              | $(make_args2('$('$') id')): 1'
+           do x
+           ~throws inconsistent_msg(#true)
+         $check_id:
+           ~eval
+           def foo = 1
+           alias 'x': 'foo'
+           alias 'y': 'foo'
+           operator
+           | $(make_args1('x')): 0
+           | $(make_args2('y')): 1
+           ~throws inconsistent_msg(#false)
+         $check_id:
+           ~eval
+           def foo = 1
+           alias 'x': 'foo'
+           alias 'y': 'foo'
+           operator x
+           | $(make_args1('y')): 0
+           | $(make_args2('x')): 1
+           ~throws inconsistent_msg(#true)
+       »'
+    'block:
+       $(make_checks(fun (id): '($id _)'))
+       $(make_checks(fun (id): '(_ $id _)'))
+       $(make_checks(fun (id): '((_) $id)'))
+       $(make_checks(fun (id): '($id _)',
+                     fun (id): '(_ $id _)'))
+       $(make_checks(fun (id): '($id _)',
+                     fun (id): '((_) $id)'))'
   generate_checks
