@@ -1677,3 +1677,26 @@ block:
     def Interleave(~y: y :: Int, x :: Int, z :: Int, ~w: w :: Int) = Interleave("oops", ~y: "no", "well", ~w: "nah")
     "oops"
     ~throws "matching(Interleave(_ :: Int, ~y: _ :: Int, _ :: Int, ~w: _ :: Int))"
+
+// regression test: multi-case constructors
+block:
+  class A(val):
+    constructor
+    | (): super(1)
+    | (val): super(val)
+  check:
+    A(0) ~is A(0)
+    A(1) ~is A(1)
+    A() ~is A(1)
+
+block:
+  class A(val):
+    constructor
+    | make(): super(1)
+    | make(val): super(val)
+    export:
+      make
+  check:
+    A.make(0) ~is A.make(0)
+    A.make(1) ~is A.make(1)
+    A.make() ~is A.make(1)

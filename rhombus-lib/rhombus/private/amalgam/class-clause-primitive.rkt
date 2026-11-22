@@ -519,8 +519,9 @@
                            ([forwarding-annot-id args forwarded-ret])
                            (block (group fun args (~@ . forwarding-ret) rhs))))]
     [(_ (atag::alts
-         (btag::block id:identifier (gtag (~and args (_::parens . _)) ret::maybe-ret
-                                          (~and body (_::block . _))))
+         (btag::block ((~and gtag group) id:identifier
+                                         (~and args (_::parens . _)) ret::maybe-ret
+                                         (~and body (_::block . _))))
          ...+))
      #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
      #:with (id0 idx ...) #'(id ...)
@@ -530,12 +531,12 @@
      (wrap-class-clause #`(#:constructor id0
                            ([forwarding-annot-id args forwarded-ret] ...)
                            (block (group fun (atag
-                                              (btag id (gtag args (~@ . forwarding-ret)
-                                                             body))
+                                              (btag (gtag args (~@ . forwarding-ret)
+                                                          body))
                                               ...)))))]
     [(_ (atag::alts
-         (btag::block (gtag (~and args (_::parens . _)) ret::maybe-ret
-                            (~and body (_::block . _))))
+         (btag::block ((~and gtag group) (~and args (_::parens . _)) ret::maybe-ret
+                                         (~and body (_::block . _))))
          ...+))
      #:with ([forwarding-annot-id forwarding-ret forwarded-ret] ...) (forwarding-annotations #'() #'(ret.seq ...))
      (wrap-class-clause #`(#:constructor #f
