@@ -78,17 +78,17 @@
     (define g (unpack-group form #f #f))
     (unless g (raise-annotation-failure who form "Group"))
     (regroup #`((parsed #:rhombus/expr
-                     (with-syntax-parameters #,stx-params
-                       (rhombus-expression #,g))))))
+                        (with-syntax-parameters #,stx-params
+                          (rhombus-expression #,g))))))
 
   (define (close-defn who stx-params form)
     (unless (syntax? form) (raise-annotation-failure who form "Syntax"))
     (with-syntax ([(defn ...) (unpack-multi form #f #f)])
       (regroup #`((parsed #:rhombus/defn
-                       ((with-syntax-parameters #,stx-params
-                          (begin
-                            (rhombus-definition defn)
-                            ...))))))))
+                          ((with-syntax-parameters #,stx-params
+                             (begin
+                               (rhombus-definition defn)
+                               ...))))))))
 
   (define (call-parse parse form user-data extras)
     (define who '|interleaved parse|)
@@ -245,13 +245,9 @@
        (let* ([extras (hasheq)]
               [extras (if (syntax-e #'defer-tail)
                           (hash-set extras 'tail (regroup #'((parsed
-                                                     #:rhombus/defn
-                                                     ((with-syntax-parameters
-                                                        post-stx-param
-                                                        (rhombus-nested
-                                                         reflect-name
-                                                         effect-id
-                                                         . forms)))))))
+                                                              #:rhombus/defn
+                                                              ((with-syntax-parameters post-stx-param
+                                                                 (rhombus-nested reflect-name effect-id . forms)))))))
                           extras)]
               [extras (if (syntax-e #'no-exports)
                           extras
@@ -293,7 +289,8 @@
                                                  #:with name::dotted-identifier #'name-seq
                                                  (with-syntax ([name-name (syntax-local-introduce #'name.name)])
                                                    (regroup #`((parsed #:rhombus/decl/nestable
-                                                                    ((namespace-export name-name name.extends #,(force exs) forward-base-ctx forward-ctx))))))]
+                                                                       ((namespace-export name-name name.extends #,(force exs)
+                                                                                          forward-base-ctx forward-ctx))))))]
                                                 [_
                                                  (raise-annotation-failure who name "Name")]))]
                                            [else
@@ -309,7 +306,8 @@
 
 (define-syntax (namespace-export stx)
   (syntax-parse stx
-    [(_ name extends fields forward-base-ctx forward-ctx)
+    [(_ name extends fields
+        forward-base-ctx forward-ctx)
      (register-field-check #'(forward-base-ctx forward-ctx . fields))
      #'(define-name-root name
          #:extends extends

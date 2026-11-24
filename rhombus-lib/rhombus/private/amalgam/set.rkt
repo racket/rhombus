@@ -536,7 +536,7 @@
               . tail)
      (generate-set-binding (syntax->list #`((group elem-e ...) ...))
                            (regroup #`(rest-bind #,(get-set-static-infos)
-                              (group rst ...)))
+                                                 (group rst ...)))
                            #'tail
                            mode)]
     [(form-id (_ (group elem-e ...) ...) . tail)

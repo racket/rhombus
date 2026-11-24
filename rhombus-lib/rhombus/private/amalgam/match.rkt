@@ -230,7 +230,7 @@
 (define-for-syntax (parse-matches form tail mode)
   (syntax-parse tail
     [(op . tail)
-     #:with (~var t (:infix-op+binding+tail #'matches)) (regroup #`tail)
+     #:with (~var t (:infix-op+binding+tail #'matches)) (regroup #'tail)
      (values
       (syntax-parse #'t.parsed
         [b::binding-form

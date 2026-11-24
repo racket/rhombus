@@ -475,7 +475,7 @@
   (with-syntax ([(name name? name-convert check?
                        ann ann-terms ann-op-name ann-input-statinfo-indirect)
                  names])
-    (define ann-str (shrubbery-syntax->string (regroup #`ann-terms)))
+    (define ann-str (shrubbery-syntax->string (regroup #'ann-terms)))
     (define all-ann-str
       (if (and super (veneer-desc-predicate-id super))
           (annotation-string-and ann-str

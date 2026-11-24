@@ -31,9 +31,9 @@
   (binding-transformer
    (lambda (stx)
      (do-quotes-binding (regroup #`((quotes
-                                  (group (op $)
-                                         (parens ; needs `#%parens` binding
-                                          (group bounce-to-pattern . #,stx))))))
+                                     (group (op $)
+                                            (parens ; needs `#%parens` binding
+                                             (group bounce-to-pattern . #,stx))))))
                         (lambda (e)
                           (syntax-parse stx
                             [(_ . tail)

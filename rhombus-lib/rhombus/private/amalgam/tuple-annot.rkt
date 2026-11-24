@@ -83,8 +83,8 @@
                                        null)]
                   [List list-id])
       (syntax-parse (regroup #'(List (brackets (group arg-id (op ::) (parsed #:rhombus/annot annot)) ...
-                                            (group last-id (op ::) (parsed #:rhombus/annot last-annot)) ...
-                                            last-dots ...)))
+                                               (group last-id (op ::) (parsed #:rhombus/annot last-annot)) ...
+                                               last-dots ...)))
         [all::binding
          (annotation-binding-form #'all.parsed
                                   #'(rhombus-expression (group List (brackets (group arg-id) ... (group last-id) ... last-dots ...)))

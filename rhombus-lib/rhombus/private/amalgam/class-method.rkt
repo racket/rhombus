@@ -1180,8 +1180,8 @@
                                                              0)
                                                      stx)]))
                                  (list (regroup #`(pre-head ... head
-                                                #,(relocate-all #`(parens (group self-id (op ::) #,@split-reflect-name)))
-                                                (op |.|) (~@ . seq) . tail))))
+                                                   #,(relocate-all #`(parens (group self-id (op ::) #,@split-reflect-name)))
+                                                   (op |.|) (~@ . seq) . tail))))
                                #'doc-kw
                                #'orig-stx
                                null)]

@@ -1443,7 +1443,7 @@
                                        (regroup #`(try-rest-bind #,static-infos form-id
                                                                  #:splice-repetition #,@rep-min+max #,mid-splice-allowed? #,rest-to-repetition #,bounds-key
                                                                  #,(regroup #`(rest-arg ...))
-                                          #,@(cddr args)))
+                                                                 #,@(cddr args)))
                                        make-rest-selector
                                        #f #f))]
                [else

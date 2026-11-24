@@ -1833,7 +1833,7 @@
                      (for/list ([arg (in-list args)]
                                 #:when (arg-kw? arg))
                        (regroup #`(#,(arg-kw-kw arg)
-                                (block (group (parsed #:rhombus/expr #,(arg-id arg)))))))
+                                   (block (group (parsed #:rhombus/expr #,(arg-id arg)))))))
                      (and lists?
                           (regroup #`((parsed
                                        #:rhombus/expr

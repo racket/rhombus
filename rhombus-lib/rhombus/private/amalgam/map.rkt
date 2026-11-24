@@ -884,7 +884,7 @@
                            (syntax->list #'(val.bind ...))
                            (syntax->list #'(val.default ...))
                            (regroup #`(rest-bind #,(get-map-static-infos)
-                              (group rst ...)))
+                                                 (group rst ...)))
                            #'tail
                            mode)]
     [(form-id (_ (group key-e ... (_::block val::val-opt-bind)) ...) . tail)
