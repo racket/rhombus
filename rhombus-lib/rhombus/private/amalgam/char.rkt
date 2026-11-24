@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      shrubbery/print
                      "srcloc.rkt"
-                     "make-get-veneer-like-static-infos.rkt"
+                     "convert-static-infos.rkt"
                      "extract-elem-from-literal.rkt")
          "provide.rkt"
          "expression.rkt"
@@ -88,9 +88,9 @@
     [_ static-info]))
 
 (define-for-syntax (get-char-ci-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-char-static-infos
-                                     convert-char-ci-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-char-static-infos
+                        convert-char-ci-compare-static-info))
 
 (define-annotation-syntax CharCI
   (identifier-annotation char? #,(get-char-ci-static-infos) #:static-only))

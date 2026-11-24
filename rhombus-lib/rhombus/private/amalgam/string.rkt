@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     "make-get-veneer-like-static-infos.rkt")
+                     "convert-static-infos.rkt")
          racket/string
          racket/symbol
          racket/keyword
@@ -202,14 +202,14 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-ci-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-string-static-infos
-                                     convert-string-ci-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-string-static-infos
+                        convert-string-ci-compare-static-info))
 
 (define-for-syntax (get-readable-string-ci-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-readable-string-static-infos
-                                     convert-string-ci-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-readable-string-static-infos
+                        convert-string-ci-compare-static-info))
 
 (define-annotation-syntax MutableString
   (identifier-annotation mutable-string? #,(get-readable-string-static-infos)))
@@ -240,14 +240,14 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-locale-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-string-static-infos
-                                     convert-string-locale-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-string-static-infos
+                        convert-string-locale-compare-static-info))
 
 (define-for-syntax (get-readable-string-locale-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-readable-string-static-infos
-                                     convert-string-locale-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-readable-string-static-infos
+                        convert-string-locale-compare-static-info))
 
 (define-for-syntax (convert-string-locale-ci-compare-static-info static-info)
   (syntax-parse static-info
@@ -262,14 +262,14 @@
     [_ static-info]))
 
 (define-for-syntax (get-string-locale-ci-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-string-static-infos
-                                     convert-string-locale-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-string-static-infos
+                        convert-string-locale-compare-static-info))
 
 (define-for-syntax (get-readable-string-locale-ci-static-infos)
-  (make-get-veneer-like-static-infos static-infos-flatten
-                                     get-readable-string-static-infos
-                                     convert-string-locale-ci-compare-static-info))
+  (convert-static-infos static-infos-flatten
+                        get-readable-string-static-infos
+                        convert-string-locale-ci-compare-static-info))
 
 (define-annotation-syntax StringLocale
   (identifier-annotation immutable-string? #,(get-string-locale-static-infos) #:static-only))
