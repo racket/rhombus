@@ -15,6 +15,7 @@
                      "macro-rhs.rkt"
                      "introducer.rkt"
                      "name-path-op.rkt"
+                     "binder.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "definition.rkt"
@@ -457,6 +458,12 @@
                                                #:form stx)
       p))
 
+(define-for-syntax (add-operator-binders space-sym names stx)
+  (let* ([intro (space->introducer space-sym)]
+         [names (for/list ([name (in-list names)])
+                  (intro (syntax-local-introduce name)))])
+    (add-binders names stx)))
+
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
                                                main-name main-extends main-order main-prec main-assc main-kws
@@ -467,15 +474,18 @@
                                               main-order main-prec main-assc main-kws
                                               extra-kws extra-shapes)
                   gs rhss))
+  (define names (map pre-parsed-name ps))
   (check-consistent-name stx
-                         (let ([names (map pre-parsed-name ps)])
-                           (if main-name (cons main-name names) names))
+                         (if main-name (cons main-name names) names)
                          #:has-main? (and main-name #t))
   (if compiletime-id
-      (build-syntax-definition/maybe-extension space-sym (or main-name (pre-parsed-name (car ps)))
-                                               (or main-extends (pre-parsed-extends (car ps)))
-                                               #`(#,compiletime-id #:multi #,stx #,@ps)
-                                               #:form stx)
+      (add-operator-binders
+       space-sym (if main-name names (cdr names))
+       (build-syntax-definition/maybe-extension space-sym
+                                                (or main-name (car names))
+                                                (or main-extends (pre-parsed-extends (car ps)))
+                                                #`(#,compiletime-id #:multi #,stx #,@ps)
+                                                #:form stx))
       ps))
 
 ;; An operator definition transformer involves a phase-0 binding for
@@ -662,6 +672,15 @@
                     #'(quote (extra-kw ...))
                     #'#f)))))]))
 
+(define-for-syntax (add-transformer-binders space-syms names stxs)
+  (let* ([names (map syntax-local-introduce names)]
+         [namess (for/list ([space-sym (in-list space-syms)])
+                   (map (space->introducer space-sym) names))])
+    (for/list ([stx (in-list stxs)])
+      (for/foldr ([stx stx])
+                 ([names (in-list namess)])
+        (add-binders names stx)))))
+
 (define-for-syntax (make-identifier-syntax-definition-transformer-runtime space-syms
                                                                           compiletime-id
                                                                           extra-kws
@@ -679,12 +698,15 @@
               (values #,@(for/list ([space-sym (in-list space-syms)])
                            name)))))
        (lambda (ps ct)
-         (define name (pre-parsed-name (car ps)))
-         (build-syntax-definitions/maybe-extension
-          space-syms name (pre-parsed-extends (car ps))
-          #`(let ([#,name #,ct])
-              (values #,@(for/list ([space-sym (in-list space-syms)])
-                           name)))))))))
+         (define names (map pre-parsed-name ps))
+         (define the-name (car names))
+         (add-transformer-binders
+          space-syms (cdr names)
+          (build-syntax-definitions/maybe-extension
+           space-syms the-name (pre-parsed-extends (car ps))
+           #`(let ([#,the-name #,ct])
+               (values #,@(for/list ([space-sym (in-list space-syms)])
+                            the-name))))))))))
 
 (define-for-syntax (parse-identifier-syntax-transformer stx compiletime-id extra-kws extra-shapes k ks)
   (syntax-parse stx

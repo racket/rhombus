@@ -172,20 +172,22 @@
                      annot-origins
                      exposure ; 'public, 'private, or 'protected
                      mutability))
-(struct added-method (id rhs-id
-                         rhs
-                         stx-params
-                         ret-forwards ; #f or #`([maybe-id ret] ...) to represent lifted result annotations
-                         maybe-ret   ; #`[args ret-seq] for overall method
-                         result-id
-                         body        ; 'method, 'abstract
-                         replace     ; 'method, 'override
-                         disposition ; 'abstract, 'final, 'private
-                         exposure    ; 'private, 'public, 'protected
-                         kind        ; 'method, 'property
-                         arity       ; #f, integer, or (list integer required-list allowed-list)
-                         reflect-name ; #f or symbol
-                         doc))       ; #f or syntax object
+(struct added-method (id
+                      binders     ; (list binder), nonempty for a multi-case method
+                      rhs-id
+                      rhs
+                      stx-params
+                      ret-forwards ; #f or #`([maybe-id ret] ...) to represent lifted result annotations
+                      maybe-ret   ; #`[args ret-seq] for overall method
+                      result-id
+                      body        ; 'method, 'abstract
+                      replace     ; 'method, 'override
+                      disposition ; 'abstract, 'final, 'private
+                      exposure    ; 'private, 'public, 'protected
+                      kind        ; 'method, 'property
+                      arity       ; #f, integer, or (list integer required-list allowed-list)
+                      reflect-name ; #f or symbol
+                      doc))       ; #f or syntax object
 
 ;; used for a table produced by `extract-method-tables`
 (struct mindex (index final? protected? property? arity inherited? reflect-name))
@@ -257,7 +259,7 @@
     (define id-or-sym (or (hash-ref method-decls k #f)
                           (let ([mix (hash-ref method-mindex k #f)])
                             (and mix
-                                 (hash-ref method-names (mindex-index mix))))))
+                                 (car (hash-ref method-names (mindex-index mix)))))))
     (when id-or-sym
       (define id (if (symbol? id-or-sym)
                      (hash-ref field-ht k #f)

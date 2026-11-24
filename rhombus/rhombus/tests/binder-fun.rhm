@@ -1,0 +1,13 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "binder.rhm"
+
+fun
+| A(0): 0
+| A(1): 1
+| A(n): A(n-1) + A(n-2)
+
+fun B
+| B(0): 0
+| B(1): 1
+| B(n): B(n-1) + B(n-2)

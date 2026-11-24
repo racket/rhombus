@@ -119,18 +119,21 @@
                (add-implements options 'protected-implements #'(id ...) #'(name ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(#:constructor id forward-rets rhs)
+              [(#:constructor id binders forward-rets rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
-               (define rhs-options (hash-set (hash-set options 'constructor-rhs #'rhs)
-                                             'constructor-stx-params (car stx-paramss)))
-               (define rhs+name-options
-                 (if (syntax-e #'id)
-                     (hash-set rhs-options 'constructor-name #'id)
-                     rhs-options))
-               (if (syntax-e #'forward-rets)
-                   (hash-set rhs+name-options 'constructor-forward-rets #'forward-rets)
-                   rhs+name-options)]
+               (let* ([options (hash-set options 'constructor-rhs #'rhs)]
+                      [options (hash-set options 'constructor-stx-params (car stx-paramss))]
+                      [options (if (syntax-e #'id)
+                                   (hash-set options 'constructor-name #'id)
+                                   options)]
+                      [options (if (syntax-e #'binders)
+                                   (hash-set options 'constructor-binders (syntax->list #'binders))
+                                   options)]
+                      [options (if (syntax-e #'forward-rets)
+                                   (hash-set options 'constructor-forward-rets #'forward-rets)
+                                   options)])
+                 options)]
               [(#:expression rhs)
                (when (hash-has-key? options 'expression-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
@@ -239,7 +242,7 @@
                       #:property #:override-property #:protected-property
                       #:final-property #:final-override-property #:final-protected-property
                       #:private-property #:private-override-property))
-      id rhs has-cases? maybe-ret doc)
+      id binders rhs has-cases? maybe-ret doc)
      (define-values (body replace disposition exposure kind)
        (case (syntax-e #'tag)
          [(#:method) (values 'method 'method 'abstract 'public 'method)]
@@ -261,6 +264,9 @@
          [else (error "method kind not handled" #'tag)]))
      (define-values (arity reflect-name) (extract-shape #'rhs))
      (hash-set options 'methods (cons (added-method #'id
+                                                    (if (syntax-e #'binders)
+                                                        (syntax->list #'binders)
+                                                        null)
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
                                                     stx-params
@@ -285,7 +291,7 @@
     [((~and tag (~or* #:abstract #:abstract-protected
                       #:abstract-property #:abstract-protected-property
                       #:abstract-override #:abstract-override-property))
-      id rhs has-cases? maybe-ret doc)
+      id binders rhs has-cases? maybe-ret doc)
      (define-values (replace exposure kind)
        (case (syntax-e #'tag)
          [(#:abstract) (values 'method 'public 'method)]
@@ -297,6 +303,9 @@
          [else (error "method kind not handled" #'tag)]))
      (define-values (arity reflect-name) (extract-shape #'rhs))
      (hash-set options 'methods (cons (added-method #'id
+                                                    (if (syntax-e #'binders)
+                                                        (syntax->list #'binders)
+                                                        null)
                                                     '#:abstract
                                                     #'rhs
                                                     stx-params
@@ -409,21 +418,21 @@
                        [(#:internal id) (case key
                                           [(internal_names) (list #'id)]
                                           [else null])]
-                       [(#:method id rhs . _) (method #'id #'rhs 'public)]
-                       [(#:override id rhs . _) (method #'id #'rhs 'public)]
-                       [(#:protected id rhs . _) (method #'id #'rhs 'protected)]
-                       [(#:private id rhs . _) (method #'id #'rhs 'private)]
-                       [(#:private-override id rhs . _) (method #'id #'rhs 'private)]
-                       [(#:final id rhs . _) (method #'id #'rhs 'public)]
-                       [(#:final-override id rhs . _) (method #'id #'rhs 'public)]
-                       [(#:property id rhs . _) (property #'id #'rhs 'public)]
-                       [(#:protected-property id rhs . _) (property #'id #'rhs 'protected)]
-                       [(#:override-property id rhs . _) (property #'id #'rhs 'public)]
-                       [(#:final-property id rhs . _) (property #'id #'rhs 'public)]
-                       [(#:final-overrode-property id rhs . _) (property #'id #'rhs 'public)]
-                       [(#:private-property id rhs . _) (property #'id #'rhs 'private)]
-                       [(#:private-override-property id rhs . _) (property #'id #'rhs 'private)]
-                       [(#:private-override-property id rhs . _) (property #'id #'rhs 'private)]
+                       [(#:method id binders rhs . _) (method #'id #'rhs 'public)]
+                       [(#:override id binders rhs . _) (method #'id #'rhs 'public)]
+                       [(#:protected id binders rhs . _) (method #'id #'rhs 'protected)]
+                       [(#:private id binders rhs . _) (method #'id #'rhs 'private)]
+                       [(#:private-override id binders rhs . _) (method #'id #'rhs 'private)]
+                       [(#:final id binders rhs . _) (method #'id #'rhs 'public)]
+                       [(#:final-override id binders rhs . _) (method #'id #'rhs 'public)]
+                       [(#:property id binders rhs . _) (property #'id #'rhs 'public)]
+                       [(#:protected-property id binders rhs . _) (property #'id #'rhs 'protected)]
+                       [(#:override-property id binders rhs . _) (property #'id #'rhs 'public)]
+                       [(#:final-property id binders rhs . _) (property #'id #'rhs 'public)]
+                       [(#:final-overrode-property id binders rhs . _) (property #'id #'rhs 'public)]
+                       [(#:private-property id binders rhs . _) (property #'id #'rhs 'private)]
+                       [(#:private-override-property id binders rhs . _) (property #'id #'rhs 'private)]
+                       [(#:private-override-property id binders rhs . _) (property #'id #'rhs 'private)]
                        [(#:constructor . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
                        [(#:expression . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
                        [(#:binding . _) (if (eq? key 'uses_default_binding) '(#f) null)]

@@ -6,6 +6,7 @@
                      "entry-point-adjustment.rkt"
                      "group.rkt"
                      "srcloc.rkt"
+                     "binder.rkt"
                      "annot-context.rkt")
          racket/keyword
          racket/treelist
@@ -364,6 +365,11 @@
    (lambda (stx)
      (parse-anonymous-function stx no-adjustments '()))))
 
+(define-for-syntax (add-function-binders names stxs)
+  (let ([names (map syntax-local-introduce (cdr names))])
+    (for/list ([stx (in-list stxs)])
+      (add-binders names stx))))
+
 (define-defn-syntax fun
   (definition-transformer
     (lambda (stx name-prefix effect-id)
@@ -423,8 +429,10 @@
           unsafe-id unsafe-proc
           (maybe-add-function-result-definition
            the-name extends (syntax->list #'(ret.static-infos ...)) arity unsafe-id
-           (build-definitions/maybe-extension #f the-name extends
-                                              proc)))]
+           (add-function-binders
+            names
+            (build-definitions/maybe-extension #f the-name extends
+                                               proc))))]
         ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
                   (~optional (_::block
@@ -499,7 +507,10 @@
            (attribute doc-kw) stx
            (maybe-add-function-result-definition
             the-name extends (list #'main-ret.static-infos) arity unsafe-id
-            (build-definitions/maybe-extension #f the-name extends proc))))]
+            (add-function-binders
+             (cons the-name names)
+             (build-definitions/maybe-extension #f the-name extends
+                                                proc)))))]
         ;; single-alternative case
         [(form-id name-seq::dotted-identifier-sequence
                   (~and args-form (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest))
@@ -549,7 +560,8 @@
            (attribute doc-kw) stx
            (maybe-add-function-result-definition
             #'name.name #'name.extends (list #'ret.static-infos) arity unsafe-id
-            (build-definitions/maybe-extension #f #'name.name #'name.extends proc))))]
+            (build-definitions/maybe-extension #f #'name.name #'name.extends
+                                               proc))))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or* (~seq (_::parens _ ...) _ ...)
                   (~seq (~optional (_::block . _))

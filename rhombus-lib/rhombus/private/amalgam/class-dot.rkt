@@ -4,6 +4,7 @@
                      enforest/syntax-local
                      "group.rkt"
                      "srcloc.rkt"
+                     "binder.rkt"
                      "class-parse.rkt"
                      "interface-parse.rkt"
                      "veneer-parse.rkt"
@@ -53,7 +54,7 @@
 (define-for-syntax (build-class-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht final?
                                              has-private? method-private method-private-inherit
                                              exposed-internal-id internal-of-id
-                                             expression-macro-rhs intro constructor-given-name
+                                             expression-macro-rhs intro constructor-given-name constructor-binders
                                              exported-of internal-exported-of
                                              dot-provider-rhss parent-dot-providers
                                              names
@@ -84,12 +85,14 @@
                   [(dot-rhs-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))]
                   [(dot-class-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))])
       (define (veneer-constructor)
-        #`(define constructor-name
-            (let ([name (wrap-constructor
-                         name (name-convert #f) (name?)
-                         #,veneer-constructor-rhs
-                         #,veneer-constructor-stx-params)])
-              name)))
+        (add-binders
+         (map syntax-local-introduce constructor-binders)
+         #`(define constructor-name
+             (let ([name (wrap-constructor
+                          name (name-convert #f) (name?)
+                          #,veneer-constructor-rhs
+                          #,veneer-constructor-stx-params)])
+               name))))
       (append
        method-defns
        (append
@@ -126,18 +129,20 @@
           [veneer?
            (cons
             (if (not veneer-constructor-rhs)
-                #`(define constructor-name
-                    (let ([name (lambda (v)
-                                  #,(cond
-                                      [(syntax-e #'name-convert)
-                                       #`(name-convert v 'name)]
-                                      [(syntax-e #'name?)
-                                       #`(begin
-                                           (name? v 'name)
-                                           v)]
-                                      [else
-                                       #`v]))])
-                      name))
+                (add-binders
+                 (map syntax-local-introduce constructor-binders)
+                 #`(define constructor-name
+                     (let ([name (lambda (v)
+                                   #,(cond
+                                       [(syntax-e #'name-convert)
+                                        #`(name-convert v 'name)]
+                                       [(syntax-e #'name?)
+                                        #`(begin
+                                            (name? v 'name)
+                                            v)]
+                                       [else
+                                        #`v]))])
+                       name)))
                 (veneer-constructor))
             (build-syntax-definitions/maybe-extension
              (list #f 'rhombus/repet) #'name #'name-extends
@@ -229,7 +234,7 @@
 
 (define-for-syntax (build-interface-dot-handling method-mindex method-orig-names method-vtable method-results replaced-ht
                                                  internal-name
-                                                 expression-macro-rhs constructor-rhs constructor-stx-params
+                                                 expression-macro-rhs constructor-rhs constructor-stx-params constructor-binders
                                                  dot-provider-rhss parent-dot-providers
                                                  names)
   (with-syntax ([(name reflect-name name-extends tail-name
@@ -272,12 +277,14 @@
               [else #'no-constructor-transformer])))])
        (if constructor-rhs
            (list
-            #`(define constructor-name
-                (let ([name (wrap-constructor
-                             name (#f) (name?)
-                             #,constructor-rhs
-                             #,constructor-stx-params)])
-                  name)))
+            (add-binders
+             (map syntax-local-introduce constructor-binders)
+             #`(define constructor-name
+                 (let ([name (wrap-constructor
+                              name (#f) (name?)
+                              #,constructor-rhs
+                              #,constructor-stx-params)])
+                   name))))
            null)
        (list
         #`(define-name-root name

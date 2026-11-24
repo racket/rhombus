@@ -1,4 +1,4 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 import:
   rhombus/runtime_path
   lib("racket/base.rkt")
@@ -38,19 +38,19 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
              | base.#{make-interned-syntax-introducer}(space_sym)
              | fun (x, mode): x
   let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
-  let origins = MutableMap{}
+  let origins :: MutableMap.later_of(Symbol, Set) = MutableMap{}
   fun search_props(v):
-    cond
-    | v is_a Identifier:
+    match v
+    | v :: Identifier:
         search(v)
-    | v is_a Pair:
-        search_props(Pair.first(v))
-        search_props(Pair.rest(v))
+    | Pair(fst, rst):
+        search_props(fst)
+        search_props(rst)
     | ~else:
         #void
   fun search(stx):
-    cond
-    | stx is_a Syntax:
+    match stx
+    | stx :: Syntax:
         when stx is_a Identifier
           && base.#{syntax-original?}(stx)
           && !stx.property(#'#{identifier-as-keyword})
@@ -62,9 +62,9 @@ fun check_origins(o_rhm, space_sym, expect :: Map):
         // need to search bindings for uses, but don't add bindings
         search_props(base.#{syntax-property}(stx, #'#{disappeared-binding}))
         search(base.#{syntax-e}(stx))
-    | stx is_a Pair:
-        search(Pair.first(stx))
-        search(Pair.rest(stx))
+    | Pair(fst, rst):
+        search(fst)
+        search(rst)
     | ~else:
         #void
   search(exp_stx)

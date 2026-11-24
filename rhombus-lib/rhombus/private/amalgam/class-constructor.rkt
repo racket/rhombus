@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     "binder.rkt"
                      "class-parse.rkt"
                      "entry-point-adjustment.rkt")
          racket/unsafe/undefined
@@ -96,7 +97,7 @@
 ;; is a keyword or `#f` (for by-position) that is eiter boxed
 ;; (optional) or not (required).
 
-(define-for-syntax (build-class-constructor super constructor-rhs constructor-stx-params
+(define-for-syntax (build-class-constructor super constructor-rhs constructor-stx-params constructor-binders
                                             added-fields constructor-exposures
                                             constructor-fields super-constructor-fields super-constructor+-fields
                                             keywords super-keywords super-constructor+-keywords
@@ -320,24 +321,28 @@
           [(and final?
                 (not super))
            (list
-            #`(define constructor-name
-                #,constructor-body))]
+            (add-binders
+             (map syntax-local-introduce constructor-binders)
+             #`(define constructor-name
+                 #,constructor-body)))]
           [else
            (list
             #`(define constructor-maker-name
                 (lambda (make-name)
                   #,constructor-body))
-            #`(define constructor-name
-                #,(cond
-                    [super
-                     (compose-constructor
-                      #'make-name
-                      #`([#,(encode-protocol keywords defaults keywords defaults) name constructor-maker-name]
-                         #,@(or (class-desc-constructor-makers super)
-                                (list (list (encode-protocol super-keywords super-defaults
-                                                             super-constructor+-keywords super-constructor+-defaults)
-                                            (class-desc-id super))))))]
-                    [else #'(constructor-maker-name make-name)])))])]
+            (add-binders
+             (map syntax-local-introduce constructor-binders)
+             #`(define constructor-name
+                 #,(cond
+                     [super
+                      (compose-constructor
+                       #'make-name
+                       #`([#,(encode-protocol keywords defaults keywords defaults) name constructor-maker-name]
+                          #,@(or (class-desc-constructor-makers super)
+                                 (list (list (encode-protocol super-keywords super-defaults
+                                                              super-constructor+-keywords super-constructor+-defaults)
+                                             (class-desc-id super))))))]
+                     [else #'(constructor-maker-name make-name)]))))])]
        [else null])
      (if (syntax-e #'make-converted-name)
          (list

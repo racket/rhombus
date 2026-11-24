@@ -1,0 +1,138 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/runtime_path
+  lib("racket/base.rkt")
+  lib("syntax/modread.rkt")
+
+runtime_path.def fun_rhm: "binder-fun.rhm"
+runtime_path.def operator_rhm: "binder-operator.rhm"
+runtime_path.def macro_rhm: "binder-macro.rhm"
+runtime_path.def class_rhm: "binder-class.rhm"
+
+fun check_binders(o_rhm, space_sym, expect :: Map):
+  Closeable.let inp = Port.Input.open_file(o_rhm)
+  let stx:
+    modread.#{with-module-reading-parameterization}(
+      fun ():
+        base.#{read-syntax}(Port.name(inp), inp)
+    )
+  let exp_stx:
+    parameterize { base.#{current-load-relative-directory}:
+                     Path.parent(o_rhm),
+                   base.#{current-namespace}:
+                     base.#{make-base-namespace}() }:
+      base.#{expand}(stx)
+  let intro: if space_sym
+             | base.#{make-interned-syntax-introducer}(space_sym)
+             | fun (x, mode): x
+  let ns_intro = base.#{make-interned-syntax-introducer}(#'#{rhombus/namespace})
+  let uses :: MutableMap.later_of(Symbol, Set) = MutableMap{}
+  let binders :: MutableMap.later_of(Symbol, Set) = MutableMap{}
+  fun search_props(v, for_binders):
+    match v
+    | v :: Identifier:
+        search(v, for_binders)
+    | Pair(fst, rst):
+        search_props(fst, for_binders)
+        search_props(rst, for_binders)
+    | ~else:
+        #void
+  fun search(stx, for_binders):
+    match stx
+    | stx :: Syntax:
+        when stx is_a Identifier
+          && base.#{syntax-original?}(stx)
+          && !stx.property(#'#{identifier-as-keyword})
+          && (base.#{bound-identifier=?}(stx, intro(stx, #'add))
+                || base.#{bound-identifier=?}(stx, ns_intro(stx, #'add)))
+        | if for_binders
+          | binders[stx.unwrap()] := (binders.maybe[stx.unwrap()] || Set{}) ++ { stx.srcloc() }
+          | uses[stx.unwrap()] := (uses.maybe[stx.unwrap()] || Set{}) ++ { stx.srcloc() }
+        search_props(base.#{syntax-property}(stx, #'origin), #false)
+        search_props(base.#{syntax-property}(stx, #'#{disappeared-use}), #false)
+        // need to search bindings for uses, but don't add bindings
+        search_props(base.#{syntax-property}(stx, #'#{disappeared-binding}), #true)
+        search(base.#{syntax-e}(stx), #false)
+    | Pair(fst, rst):
+        search(fst, for_binders)
+        search(rst, for_binders)
+    | ~else:
+        #void
+  search(exp_stx, #false)
+  for ((sym, Pair(num_binders, num_uses)) in expect):
+    #//
+    check:
+      // assumes that the original binder is counted once as an
+      // identifier that directly appears in code
+      [sym, binders.maybe[sym]?.length() ?> (_ + 1), uses.maybe[sym]?.length() ?> (_ - 1),]
+      ~is [sym, num_binders, num_uses]
+    // TEMP should switch to the above correct check when the
+    // Check Syntax change is in place
+    check:
+      [sym, uses.maybe[sym]?.length()]
+      ~is [sym, num_binders + num_uses]
+
+check_binders(fun_rhm,
+              #false,
+              { #'A: Pair(3, 2),
+                #'B: Pair(4, 2) })
+
+check_binders(operator_rhm,
+              #false,
+              { #'A: Pair(3, 2),
+                #'B: Pair(4, 2),
+                #'C: Pair(3, 2),
+                #'D: Pair(4, 2),
+                #'E: Pair(2, 1),
+                #'F: Pair(3, 1),
+                #'G: Pair(5, 3),
+                #'H: Pair(6, 3),
+                #'I: Pair(6, 4),
+                #'J: Pair(7, 4) })
+
+check_binders(operator_rhm,
+              #'#{rhombus/repet},
+              { #'A: Pair(3, 0),
+                #'B: Pair(4, 0),
+                #'C: Pair(3, 0),
+                #'D: Pair(4, 0),
+                #'E: Pair(2, 0),
+                #'F: Pair(3, 0),
+                #'G: Pair(5, 0),
+                #'H: Pair(6, 0),
+                #'I: Pair(6, 0),
+                #'J: Pair(7, 0) })
+
+check_binders(macro_rhm,
+              #false,
+              { #'A: Pair(3, 2),
+                #'B: Pair(4, 2) })
+
+check_binders(macro_rhm,
+              #'#{rhombus/annot},
+              { #'C: Pair(3, 0),
+                #'D: Pair(4, 0) })
+
+check_binders(macro_rhm,
+              #'#{rhombus/defn},
+              { #'E: Pair(3, 0) })
+
+// -1 here is because identifier disappears
+check_binders(class_rhm,
+              #false,
+              { #'A: Pair(3, 2),
+                #'B: Pair(4, 2),
+                #'C: Pair(2, 1),
+                #'D: Pair(2, 1),
+                #'E: Pair(3-1, 0),
+                #'F: Pair(4-1, 0),
+                #'G: Pair(2, 1),
+                #'H: Pair(3-1, 2),
+                #'I: Pair(4-1, 2),
+                #'J: Pair(2, 1),
+                #'K: Pair(3-1, 0),
+                #'L: Pair(4-1, 0),
+                #'M: Pair(3-1, 2),
+                #'N: Pair(4-1, 2),
+                #'O: Pair(2-1, 1),
+                #'P: Pair(2, 1) })
