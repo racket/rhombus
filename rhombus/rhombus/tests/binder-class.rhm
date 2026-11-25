@@ -1,0 +1,87 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "binder.rhm"
+
+class One(mutable val):
+  nonfinal
+  internal _One
+  method
+  | A(0): 0
+  | A(1): 1
+  | A(n): A(n-1) + A(n-2)
+
+  method B
+  | B(0): 0
+  | B(1): 1
+  | B(n): B(n-1) + B(n-2)
+
+  property
+  | C: val
+  | C := new_val: val := C + new_val
+
+  constructor
+  | D(): D(1)
+  | D(val): super(val)
+
+class Two():
+  nonfinal
+  abstract method
+  | E(0)
+  | E(1)
+  | E(n)
+
+  abstract method F
+  | F(0)
+  | F(1)
+  | F(n)
+
+class Three():
+  extends One
+  constructor
+  | G(): G(1)
+  | G(val): super(val)()
+
+interface Four:
+  method
+  | H(0): 0
+  | H(1): 1
+  | H(n): H(n-1) + H(n-2)
+
+  method I
+  | I(0): 0
+  | I(1): 1
+  | I(n): I(n-1) + I(n-2)
+
+  constructor
+  | J(): J(1)
+  | J(val): _One(val)
+
+interface Five:
+  method
+  | K(0)
+  | K(1)
+  | K(n)
+
+  method L
+  | L(0)
+  | L(1)
+  | L(n)
+
+veneer Six(this :: Box):
+  method
+  | M(0): 0
+  | M(1): 1
+  | M(n): M(n-1) + M(n-2)
+
+  method N
+  | N(0): 0
+  | N(1): 1
+  | N(n): N(n-1) + N(n-2)
+
+  property
+  | O: this.val
+  | O := new_val: this.val := O + new_val
+
+  constructor
+  | P(): P(1)
+  | P(val): Box(val)

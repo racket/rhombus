@@ -98,11 +98,6 @@
        (define-values (private-interfaces protected-interfaces)
          (extract-private-protected-interfaces #'orig-stx options))
 
-       (define expression-macro-rhs (or (hash-ref options 'expression-rhs #f)
-                                        (let ([c (hash-ref options 'constructor-rhs #f)])
-                                          (and (constructor-as-expression? c)
-                                               c))))
-
        (define intro (make-syntax-introducer))
 
        (define converter? (or (hash-ref options 'converter? #f)
@@ -227,6 +222,7 @@
        (define given-constructor-name (hash-ref options 'constructor-name #f))
        (check-consistent-construction #'orig-stx null null null #'name
                                       given-constructor-rhs given-constructor-name given-expression-macro-rhs)
+       (define constructor-binders (hash-ref options 'constructor-binders '()))
        (define constructor-rhs
          (and (not (constructor-as-expression? given-constructor-rhs))
               given-constructor-rhs))
@@ -341,7 +337,7 @@
                                          method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          #f #f
-                                         expression-macro-rhs intro given-constructor-name
+                                         expression-macro-rhs intro given-constructor-name constructor-binders
                                          #f
                                          #f
                                          dot-provider-rhss parent-dot-providers

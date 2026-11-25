@@ -263,6 +263,7 @@
        (define given-constructor-name (hash-ref options 'constructor-name #f))
        (check-consistent-construction #'orig-stx null null null #'name
                                       given-constructor-rhs given-constructor-name given-expression-macro-rhs)
+       (define constructor-binders (hash-ref options 'constructor-binders '()))
        (define constructor-rhs
          (and (not (constructor-as-expression? given-constructor-rhs))
               given-constructor-rhs))
@@ -352,7 +353,7 @@
                                                  prop:internal-name internal-name? internal-name-ref))
                (build-interface-dot-handling method-mindex method-names method-vtable method-results replaced-ht
                                              internal-name
-                                             expression-macro-rhs constructor-rhs given-constructor-stx-params
+                                             expression-macro-rhs constructor-rhs given-constructor-stx-params constructor-binders
                                              dot-provider-rhss parent-dot-providers
                                              #'(name reflect-name name-extends tail-name
                                                      name? name-instance internal-name-ref name-ref-or-error

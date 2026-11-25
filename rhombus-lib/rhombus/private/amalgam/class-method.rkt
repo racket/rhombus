@@ -8,6 +8,7 @@
                      "veneer-parse.rkt"
                      "class-method-result.rkt"
                      "srcloc.rkt"
+                     "binder.rkt"
                      "statically-str.rkt"
                      "entry-point-adjustment.rkt"
                      "maybe-as-original.rkt"
@@ -104,10 +105,11 @@
 
 ;; Results:
 ;;   method-mindex   ; symbol -> mindex
-;;   method-names    ; index -> identifier
+;;   method-names    ; index -> (cons identifier (list binder))
 ;;   method-vtable   ; index -> function-identifier or '#:abstract
 ;;   method-results  ; symbol -> nonempty list of identifiers; first one implies others
-;;   method-private  ; symbol -> identifier or (list identifier); list means property; non-super symbol's identifier attached as 'lhs-id
+;;   method-private  ; symbol -> identifier or (list identifier); list means property
+                     ; non-super symbol's identifier attached as 'lhs-id, and list of binders attached as 'lhs-binders
 ;;   method-private-inherit ; symbol -> (vector ref-id index maybe-result-id) for private methods overridden from interface
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
@@ -137,7 +139,7 @@
   ;; create merged method tables from the superclass (if any) and all superinterfaces;
   ;; we start with the superclass, if any, so the methods from its vtable stay
   ;; in the same place in the new vtable
-  (define-values (ht            ; symbol -> (cons mindex id)
+  (define-values (ht            ; symbol -> (cons mindex (cons id (list binder)))
                   super-priv-ht ; symbol -> identifier or (list identifier), implies not in `ht`
                   priv-inherit-ht ; symbol -> (vector ref-id index maybe-result-id)
                   vtable-ht     ; int -> accessor-identifier or '#:abstract
@@ -169,7 +171,8 @@
                           (mindex-index (car old-val))
                           (hash-count ht)))
             (values shape
-                    (cons (mindex i final? protected? property? arity #t #f) (datum->syntax super-src-name shape))
+                    (cons (mindex i final? protected? property? arity #t #f)
+                          (cons (datum->syntax super-src-name shape) null))
                     i
                     old-val
                     final?
@@ -262,10 +265,10 @@
       (for/fold ([method-results method-results]) ([(sym id) (in-hash (objects-desc-method-result intf))])
         (hash-set method-results sym (cons id (hash-ref method-results sym '()))))))
 
-  (define (private-id/property lhs-id added)
-    (let ([id (syntax-property (added-method-rhs-id added)
-                               'lhs-id
-                               lhs-id)])
+  (define (private-id/property lhs-id lhs-binders added)
+    (let* ([id (added-method-rhs-id added)]
+           [id (syntax-property id 'lhs-id lhs-id)]
+           [id (syntax-property id 'lhs-binders lhs-binders)])
       (if (eq? (added-method-kind added) 'property)
           (list id)
           id)))
@@ -275,6 +278,7 @@
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()])
               ([added (in-list added-methods)])
       (define id (added-method-id added))
+      (define binders (added-method-binders added))
       (define new-here-ht (hash-set here-ht (syntax-e id) id))
       (define (check-consistent-property property?)
         (if property?
@@ -290,8 +294,8 @@
         [(hash-ref here-ht (syntax-e id) #f)
          (raise-syntax-error #f "duplicate method name" stx id)]
         [(hash-ref ht (syntax-e id) #f)
-         => (lambda (mix+id)
-              (define mix (car mix+id))
+         => (lambda (mix+id+binders)
+              (define mix (car mix+id+binders))
               (cond
                 [(eq? 'override (added-method-replace added))
                  (when (eq? (added-method-disposition added) 'private)
@@ -307,7 +311,8 @@
                              (let ([property? (eq? (added-method-kind added) 'property)]
                                    [arity (added-method-arity added)]
                                    [reflect-name (added-method-reflect-name added)])
-                               (hash-set ht (syntax-e id) (cons (mindex idx final? protected? property? arity #f reflect-name) id)))
+                               (hash-set ht (syntax-e id) (cons (mindex idx final? protected? property? arity #f reflect-name)
+                                                                (cons id binders))))
                              ht)
                          (hash-set vtable-ht idx (added-method-rhs-id added))
                          priv-ht
@@ -322,7 +327,7 @@
                  (check-consistent-property (list? rhs))
                  (values ht
                          vtable-ht
-                         (hash-set priv-ht (syntax-e id) (private-id/property id added))
+                         (hash-set priv-ht (syntax-e id) (private-id/property id binders added))
                          new-here-ht)]
                 [(eq? (added-method-replace added) 'override)
                  (raise-syntax-error #f (format "method is in private ~a" super-str) stx id)]
@@ -335,7 +340,7 @@
            [(eq? (added-method-disposition added) 'private)
             (values ht
                     vtable-ht
-                    (hash-set priv-ht (syntax-e id) (private-id/property id added))
+                    (hash-set priv-ht (syntax-e id) (private-id/property id binders added))
                     new-here-ht)]
            [else
             (define pos (hash-count vtable-ht))
@@ -351,7 +356,7 @@
                                             (added-method-arity added)
                                             #f
                                             (added-method-reflect-name added))
-                                    id))
+                                    (cons id binders)))
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
                     new-here-ht)])])))
@@ -362,11 +367,11 @@
         (raise-syntax-error #f (format "method from private ~a must be overridden" super-str) stx name))))
 
   (define method-mindex
-    (for/hasheq ([(k mix+id) (in-hash new-ht)])
-      (values k (car mix+id))))
+    (for/hasheq ([(k mix+id+binders) (in-hash new-ht)])
+      (values k (car mix+id+binders))))
   (define method-names
-    (for/hasheqv ([(s mix+id) (in-hash new-ht)])
-      (values (mindex-index (car mix+id)) (cdr mix+id))))
+    (for/hasheqv ([(k mix+id+binders) (in-hash new-ht)])
+      (values (mindex-index (car mix+id+binders)) (cdr mix+id+binders))))
   (define method-vtable
     (for/vector ([i (in-range (hash-count new-vtable-ht))])
       (hash-ref new-vtable-ht i)))
@@ -387,7 +392,7 @@
     (for/or ([v (in-hash-values new-vtable-ht)]
              [i (in-naturals)])
       (and (eq? v '#:abstract)
-           (hash-ref method-names i))))
+           (car (hash-ref method-names i)))))
 
   (values method-mindex
           method-names
@@ -421,7 +426,7 @@
 
 (define-for-syntax (build-quoted-method-shapes method-vtable method-names method-mindex)
   (for/vector ([i (in-range (vector-length method-vtable))])
-    (define name (hash-ref method-names i))
+    (define name (car (hash-ref method-names i)))
     (define mix (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
     (define sym ((if (mindex-property? mix) list values)
                  ((if (mindex-final? mix) values box)
@@ -956,9 +961,11 @@
                        [(recon-field-accessor recon-field-rhs) ...]
                        serializable)
                  names])
-    (with-syntax ([((method-name method-index/id method-result-id method-kind) ...)
+    (with-syntax ([((method-name method-binders method-index/id method-result-id method-kind) ...)
                    (for/list ([i (in-range (hash-count method-mindex))])
-                     (define raw-m-name (hash-ref method-names i))
+                     (define name+binders (hash-ref method-names i))
+                     (define raw-m-name (car name+binders))
+                     (define binders (cdr name+binders))
                      (define m-name (syntax-e raw-m-name))
                      (define mix (hash-ref method-mindex m-name))
                      ;; We use `raw-m-name` to support local references
@@ -966,6 +973,7 @@
                      ;; inherited name, it will have the scopes of the
                      ;; named superclass or superinterface
                      (list raw-m-name
+                           binders
                            (let ([idx (mindex-index mix)])
                              (cond
                                [veneer-vtable
@@ -978,7 +986,9 @@
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))
                            (if (mindex-property? mix) 'property 'method)))]
-                  [((private-method-name private-method-id/intf private-method-id/intf/property private-method-result-id private-method-kind) ...)
+                  [((private-method-name
+                     private-method-binders
+                     private-method-id/intf private-method-id/intf/property private-method-result-id private-method-kind) ...)
                    (for/list ([m-name (in-list (sort (hash-keys method-private)
                                                      symbol<?))])
                      (define id/property (hash-ref method-private m-name))
@@ -1000,9 +1010,11 @@
                                          (and (pair? r) (car r))))]))
                      (define id/intf (if property? (car id/intf/property) id/intf/property))
                      (define id (if property? (car id/property) id/property))
-                     (define raw-m-name (or (syntax-property id 'lhs-id) m-name))
+                     (define raw-m-name (or (syntax-property id 'lhs-id) (datum->syntax #'name m-name)))
+                     (define binders (or (syntax-property id 'lhs-binders) '()))
                      ;; See above for explanation of `raw-m-name`
-                     (list (datum->syntax #'name raw-m-name)
+                     (list raw-m-name
+                           binders
                            id/intf
                            id/intf/property
                            result-id
@@ -1027,39 +1039,46 @@
                                         #:when (syntax-e rhs))
                                acc))
             (let ()
-              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
-                                                           (quote-syntax field-static-infos)
-                                                           (quote-syntax name-field)
-                                                           (quote-syntax maybe-set-name-field!)))
+              (define-syntax field-name
+                (make-field-syntax (quote-syntax field-name)
+                                   (quote-syntax field-static-infos)
+                                   (quote-syntax name-field)
+                                   (quote-syntax maybe-set-name-field!)))
               ...
-              (define-syntax super-protected-field-name (make-field-syntax (quote-syntax super-protected-field-name)
-                                                                           (quote-syntax super-protected-field-static-infos)
-                                                                           (quote-syntax super-protected-name-field)
-                                                                           (quote-syntax super-protected-maybe-set-name-field!)))
+              (define-syntax super-protected-field-name
+                (make-field-syntax (quote-syntax super-protected-field-name)
+                                   (quote-syntax super-protected-field-static-infos)
+                                   (quote-syntax super-protected-name-field)
+                                   (quote-syntax super-protected-maybe-set-name-field!)))
               ...
-              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
-                                                             (quote-syntax method-index/id)
-                                                             (quote-syntax method-result-id)
-                                                             (quote method-kind)
-                                                             (quote-syntax methods-ref)))
+              (define-syntax/binders method-name
+                #:binders method-binders
+                (make-method-syntax (quote-syntax method-name)
+                                    (quote-syntax method-index/id)
+                                    (quote-syntax method-result-id)
+                                    (quote method-kind)
+                                    (quote-syntax methods-ref)))
               ...
-              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
-                                                                     (quote-syntax private-method-id/intf)
-                                                                     (quote-syntax private-method-result-id)
-                                                                     (quote private-method-kind)
-                                                                     (quote-syntax methods-ref)))
+              (define-syntax/binders private-method-name
+                #:binders private-method-binders
+                (make-method-syntax (quote-syntax private-method-name)
+                                    (quote-syntax private-method-id/intf)
+                                    (quote-syntax private-method-result-id)
+                                    (quote private-method-kind)
+                                    (quote-syntax methods-ref)))
               ...
-              (define-syntax new-private-tables (list* (cons (quote-syntax name)
-                                                             (hasheq (~@ 'private-method-name
-                                                                         (quote-syntax private-method-id/intf/property))
-                                                                     ...
-                                                                     (~@ 'private-field-name
-                                                                         private-field-desc)
-                                                                     ...))
-                                                       (cons (quote-syntax private-interface-name) ; for access to protected members
-                                                             #hasheq())
-                                                       ...
-                                                       (get-private-tables)))
+              (define-syntax new-private-tables
+                (list* (cons (quote-syntax name)
+                             (hasheq (~@ 'private-method-name
+                                         (quote-syntax private-method-id/intf/property))
+                                     ...
+                                     (~@ 'private-field-name
+                                         private-field-desc)
+                                     ...))
+                       (cons (quote-syntax private-interface-name) ; for access to protected members
+                             #hasheq())
+                       ...
+                       (get-private-tables)))
               #,@(for/list ([added (in-list added-methods)]
                             #:when (eq? 'abstract (added-method-body added))
                             #:when (syntax-e (added-method-rhs added)))
@@ -1189,6 +1208,14 @@
                                       "expected a \"self\" identifier immediately after `~doc`"
                                       #'orig-stx
                                       #'doc)])])))))))
+
+(define-syntax (define-syntax/binders stx)
+  (syntax-parse stx
+    [(_ name
+        #:binders (~and binders (_ ...))
+        expr)
+     (define names (map syntax-local-introduce (syntax->list #'binders)))
+     (add-binders names #'(define-syntax name expr))]))
 
 (define-syntax (method-block stx)
   (syntax-parse stx

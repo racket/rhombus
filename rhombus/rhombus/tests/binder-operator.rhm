@@ -1,0 +1,61 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "binder.rhm"
+
+operator
+| A 0: 0
+| A 1: 1
+| A n: (A (n-1)) + (A (n-2))
+
+operator B
+| B 0: 0
+| B 1: 1
+| B n: (B (n-1)) + (B (n-2))
+
+operator
+| 0 C: 0
+| 1 C: 1
+| (n) C: ((n-1) C) + ((n-2) C)
+
+operator D
+| 0 D: 0
+| 1 D: 1
+| (n) D: ((n-1) D) + ((n-2) D)
+
+operator
+| 0 E m: m
+| n E m: (n-1) E (m+1)
+
+operator F
+| 0 F m: m
+| n F m: (n-1) F (m+1)
+
+operator
+| G 0: 0
+| G 1: 1
+| G n: (G (n-1)) + (G (n-2))
+| 0 G m: m
+| n G m: (n-1) G (m+1)
+
+operator H
+| H 0: 0
+| H 1: 1
+| H n: (H (n-1)) + (H (n-2))
+| 0 H m: m
+| n H m: (n-1) H (m+1)
+
+operator
+| I 0: 0
+| I 1: 1
+| I n: (I (n-1)) + (I (n-2))
+| 0 I: 0
+| 1 I: 1
+| (n) I: ((n-1) I) + ((n-2) I)
+
+operator J
+| J 0: 0
+| J 1: 1
+| J n: (J (n-1)) + (J (n-2))
+| 0 J: 0
+| 1 J: 1
+| (n) J: ((n-1) J) + ((n-2) J)

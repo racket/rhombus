@@ -1,0 +1,28 @@
+#lang rhombus/and_meta
+
+// binding arrows in this file checked by "binder.rhm"
+
+expr.macro
+| 'A(0)': '0'
+| 'A(1)': '1'
+| 'A($n)': 'A($(n.unwrap() - 1)) + A($(n.unwrap() - 2))'
+
+expr.macro B
+| 'B(0)': '0'
+| 'B(1)': '1'
+| 'B($n)': 'B($(n.unwrap() - 1)) + B($(n.unwrap() - 2))'
+
+annot.macro
+| 'C(0)': 'matching(0)'
+| 'C(1)': 'matching(1)'
+| 'C($n)': 'Pair.of(C($(n.unwrap() - 1)), C($(n.unwrap() - 2)))'
+
+annot.macro D
+| 'D(0)': 'matching(0)'
+| 'D(1)': 'matching(1)'
+| 'D($n)': 'Pair.of(D($(n.unwrap() - 1)), D($(n.unwrap() - 2)))'
+
+defn.macro
+| 'E(0)': '0'
+| 'E(1)': '1'
+| 'E($n)': 'E($n-1) + E($n-2)'

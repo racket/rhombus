@@ -357,6 +357,7 @@
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
        (define given-constructor-stx-params (hash-ref options 'constructor-stx-params #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
+       (define constructor-binders (hash-ref options 'constructor-binders '()))
        (define given-expression-macro-rhs (hash-ref options 'expression-rhs #f))
        (define constructor-forward-rets (hash-ref options 'constructor-forward-rets #f))
        (define binding-rhs (hash-ref options 'binding-rhs #f))
@@ -481,7 +482,7 @@
 
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
-                       method-names    ; index -> identifier
+                       method-names    ; index -> (cons identifier (list binder))
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier or (list identifier)
@@ -506,7 +507,7 @@
                                       ;; `#t` means "unknown"
                                       #t)]
            [else #f]))
-       
+
        (define reconstructor-rhs
          (cond
            [(hash-ref options 'reconstructor-rhs #f)
@@ -767,7 +768,7 @@
                                                   constructor-fields
                                                   constructor-static-infoss)
                ;; note: class name as expression is bound via `build-class-dot-handling`
-               (build-class-constructor super constructor-rhs given-constructor-stx-params
+               (build-class-constructor super constructor-rhs given-constructor-stx-params constructor-binders
                                         added-fields constructor-exposures
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
@@ -804,7 +805,7 @@
                (build-class-dot-handling method-mindex method-names method-vtable method-results replaced-ht final?
                                          has-private? method-private method-private-inherit
                                          exposed-internal-id #'internal-of
-                                         expression-macro-rhs intro (hash-ref options 'constructor-name #f)
+                                         expression-macro-rhs intro given-constructor-name constructor-binders
                                          (and (not annotation-rhs)
                                               (if has-mutable-constructor-arg?
                                                   #'now_of
@@ -985,7 +986,7 @@
                    (for/fold ([ms '()] [ps '()] #:result (list (reverse ms) (reverse ps)))
                              ([v (in-vector method-vtable)]
                               [i (in-naturals)])
-                     (define name (hash-ref method-names i))
+                     (define name (car (hash-ref method-names i)))
                      (define mix (hash-ref method-mindex (syntax-e name)))
                      (cond
                        [(mindex-protected? mix)
